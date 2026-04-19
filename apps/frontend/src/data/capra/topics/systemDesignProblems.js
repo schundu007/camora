@@ -2083,6 +2083,7 @@ Why Cassandra wins for messages:
       deepDiveTopics: [
         {
           topic: 'Message Ordering and Consistency Guarantees',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-ordering.svg',
           detail: `Ordering is the hardest correctness problem in distributed messaging.
 
 **Within a conversation:**
@@ -2098,6 +2099,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Presence System at 33 Million QPS',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-presence.svg',
           detail: `Presence generates more load than messaging itself and requires careful optimization.
 
 **Architecture:**
@@ -2113,6 +2115,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Hot/Cold Storage Separation',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-hot-cold.svg',
           detail: `Message access patterns have extreme recency bias - 95% of reads are for the last 48 hours.
 
 **Hot tier (Cassandra SSD cluster):**
@@ -2135,6 +2138,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Group Messaging Fan-out Strategies',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-group-fanout.svg',
           detail: `Group messaging creates a classic fan-out problem with different tradeoffs at different scales.
 
 **Fan-out on Write (groups up to ~100 members):**
@@ -2153,6 +2157,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Cross-Region Message Delivery',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-cross-region.svg',
           detail: `With users in 180+ countries, messages frequently cross continental boundaries.
 
 **Regional architecture:**
@@ -2172,6 +2177,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Resumable Media Uploads',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-media-upload.svg',
           detail: `Mobile networks are unreliable - 30% of media uploads are interrupted at least once.
 
 **Chunked upload protocol:**

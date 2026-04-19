@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="300" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Resumable Media Upload — Chunked Transfer</text>
+
+  <!-- Step 1 -->
+  <rect x="20" y="55" width="140" height="100" rx="10" fill="#fff" stroke="#f97316" stroke-width="1.5"/>
+  <rect x="20" y="55" width="140" height="24" rx="10 10 0 0" fill="#f97316"/>
+  <text x="90" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">1. Client Prepares</text>
+  <text x="35" y="98" fill="#475569" font-size="9">Encrypt file (AES-256)</text>
+  <text x="35" y="113" fill="#475569" font-size="9">Split into 256KB chunks</text>
+  <text x="35" y="128" fill="#475569" font-size="9">Generate SHA256 hash</text>
+  <text x="35" y="145" fill="#64748b" font-size="8">Dedup: skip if hash exists</text>
+
+  <!-- Step 2 -->
+  <rect x="190" y="55" width="140" height="100" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="190" y="55" width="140" height="24" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="260" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">2. Upload Chunks</text>
+  <text x="205" y="98" fill="#475569" font-size="9">POST /media/upload</text>
+  <text x="205" y="113" fill="#475569" font-size="9">chunk_index: 1..N</text>
+  <text x="205" y="128" fill="#475569" font-size="9">upload_token: "abc..."</text>
+  <text x="205" y="145" fill="#2563eb" font-size="8" font-weight="600">Resume from last chunk!</text>
+
+  <!-- Step 3 -->
+  <rect x="360" y="55" width="140" height="100" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+  <rect x="360" y="55" width="140" height="24" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="430" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">3. Server Assembly</text>
+  <text x="375" y="98" fill="#475569" font-size="9">Reassemble chunks</text>
+  <text x="375" y="113" fill="#475569" font-size="9">Verify SHA256 hash</text>
+  <text x="375" y="128" fill="#475569" font-size="9">Store in S3 bucket</text>
+  <text x="375" y="145" fill="#475569" font-size="9">Generate thumbnail</text>
+
+  <!-- Step 4 -->
+  <rect x="530" y="55" width="120" height="100" rx="10" fill="#fff" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="530" y="55" width="120" height="24" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="590" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">4. Send Link</text>
+  <text x="545" y="98" fill="#475569" font-size="9">Message contains</text>
+  <text x="545" y="113" fill="#475569" font-size="9">media_url (S3 ref)</text>
+  <text x="545" y="128" fill="#475569" font-size="9">+ thumbnail blob</text>
+  <text x="545" y="145" fill="#16a34a" font-size="8" font-weight="600">NOT the actual file</text>
+
+  <!-- Step 5 -->
+  <rect x="680" y="55" width="100" height="100" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="680" y="55" width="100" height="24" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="730" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">5. CDN Deliver</text>
+  <text x="695" y="98" fill="#475569" font-size="9">Recipient gets</text>
+  <text x="695" y="113" fill="#475569" font-size="9">presigned URL</text>
+  <text x="695" y="128" fill="#475569" font-size="9">Downloads from</text>
+  <text x="695" y="145" fill="#475569" font-size="9">nearest CDN edge</text>
+
+  <!-- Arrows -->
+  <line x1="160" y1="105" x2="186" y2="105" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="330" y1="105" x2="356" y2="105" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="500" y1="105" x2="526" y2="105" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="650" y1="105" x2="676" y2="105" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Network failure scenario -->
+  <rect x="20" y="175" width="760" height="105" rx="10" fill="rgba(239,68,68,0.04)" stroke="rgba(239,68,68,0.15)" stroke-width="1"/>
+  <text x="40" y="198" fill="#1e293b" font-size="11" font-weight="700">📶 What happens when network drops mid-upload?</text>
+
+  <rect x="40" y="210" width="230" height="55" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="230" fill="#ef4444" font-size="10" font-weight="700">Without Resumable Upload</text>
+  <text x="55" y="248" fill="#475569" font-size="9">Upload fails → restart from 0%</text>
+  <text x="55" y="262" fill="#475569" font-size="9">100MB video on 3G = pain</text>
+
+  <rect x="290" y="210" width="230" height="55" rx="8" fill="white" stroke="#16a34a" stroke-width="1"/>
+  <text x="305" y="230" fill="#16a34a" font-size="10" font-weight="700">With Resumable Upload ✓</text>
+  <text x="305" y="248" fill="#475569" font-size="9">Client stores upload_token + last chunk</text>
+  <text x="305" y="262" fill="#475569" font-size="9">Resume from chunk 47/100 → only 53% left</text>
+
+  <rect x="540" y="210" width="220" height="55" rx="8" fill="white" stroke="#2563eb" stroke-width="1"/>
+  <text x="555" y="230" fill="#2563eb" font-size="10" font-weight="700">Server-side Progress</text>
+  <text x="555" y="248" fill="#475569" font-size="9">GET /media/upload/{token}/status</text>
+  <text x="555" y="262" fill="#475569" font-size="9">→ { chunks_received: 47, total: 100 }</text>
+</svg>

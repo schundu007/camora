@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="800" height="320" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Presence System — Handling 33 Million QPS Heartbeats</text>
+
+  <!-- Users -->
+  <rect x="20" y="55" width="140" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="20" y="55" width="140" height="24" rx="10 10 0 0" fill="#f97316"/>
+  <text x="90" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">1 Billion Users</text>
+  <text x="40" y="100" fill="#475569" font-size="10">Every 30 seconds:</text>
+  <text x="40" y="116" fill="#f97316" font-size="11" font-weight="700">PING → Gateway</text>
+  <text x="40" y="135" fill="#ef4444" font-size="10" font-weight="600">= 33M QPS!</text>
+
+  <!-- Gateway batching -->
+  <rect x="200" y="55" width="170" height="100" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="200" y="55" width="170" height="24" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="285" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">Gateway (Batching)</text>
+  <text x="220" y="98" fill="#475569" font-size="10">Batch heartbeats</text>
+  <text x="220" y="114" fill="#475569" font-size="10">locally per 5 seconds</text>
+  <text x="220" y="136" fill="#2563eb" font-size="10" font-weight="600">Reduces QPS by ~5x</text>
+  <text x="220" y="150" fill="#16a34a" font-size="10" font-weight="600">→ ~6.6M QPS to Redis</text>
+
+  <!-- Redis Cluster -->
+  <rect x="420" y="45" width="180" height="120" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="420" y="45" width="180" height="24" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="510" y="62" text-anchor="middle" fill="white" font-size="10" font-weight="700">Redis Cluster (100+ nodes)</text>
+  <text x="440" y="88" fill="#1e293b" font-size="10" font-weight="600">HSET presence:{userId}</text>
+  <text x="440" y="104" fill="#475569" font-size="9" font-family="monospace">  serverId: "gw-42"</text>
+  <text x="440" y="118" fill="#475569" font-size="9" font-family="monospace">  status: "online"</text>
+  <text x="440" y="132" fill="#475569" font-size="9" font-family="monospace">  lastSeen: 1713456789</text>
+  <text x="440" y="150" fill="#ef4444" font-size="9" font-weight="600">TTL: 60s (auto-expire = offline)</text>
+
+  <!-- Subscriber -->
+  <rect x="650" y="55" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="650" y="55" width="130" height="24" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="715" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="700">Pub/Sub</text>
+  <text x="670" y="98" fill="#475569" font-size="10">Notify contacts</text>
+  <text x="670" y="114" fill="#475569" font-size="10">of status change</text>
+  <text x="670" y="136" fill="#7c3aed" font-size="9" font-weight="600">Only on transitions:</text>
+  <text x="670" y="150" fill="#7c3aed" font-size="9">offline↔online</text>
+
+  <!-- Arrows -->
+  <line x1="160" y1="105" x2="196" y2="105" stroke="#f97316" stroke-width="2"/>
+  <line x1="370" y1="105" x2="416" y2="105" stroke="#2563eb" stroke-width="2"/>
+  <line x1="600" y1="105" x2="646" y2="105" stroke="#7c3aed" stroke-width="1.5"/>
+
+  <!-- Optimization strategies -->
+  <rect x="20" y="180" width="760" height="120" rx="10" fill="rgba(37,99,235,0.04)" stroke="rgba(37,99,235,0.12)" stroke-width="1"/>
+  <text x="40" y="205" fill="#1e293b" font-size="12" font-weight="700">Optimization Strategies to Survive 33M QPS</text>
+
+  <rect x="40" y="218" width="220" height="65" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="238" fill="#2563eb" font-size="10" font-weight="700">1. Batch at Gateway</text>
+  <text x="55" y="255" fill="#475569" font-size="9">Aggregate heartbeats locally,</text>
+  <text x="55" y="268" fill="#475569" font-size="9">flush to Redis every 5 seconds</text>
+
+  <rect x="280" y="218" width="230" height="65" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="295" y="238" fill="#2563eb" font-size="10" font-weight="700">2. TTL-based Expiry</text>
+  <text x="295" y="255" fill="#475569" font-size="9">No explicit "offline" write needed.</text>
+  <text x="295" y="268" fill="#475569" font-size="9">Key expires → user is offline.</text>
+
+  <rect x="530" y="218" width="230" height="65" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="545" y="238" fill="#2563eb" font-size="10" font-weight="700">3. Lazy Presence Propagation</text>
+  <text x="545" y="255" fill="#475569" font-size="9">Only notify contacts in ACTIVE</text>
+  <text x="545" y="268" fill="#475569" font-size="9">conversations, not all contacts.</text>
+</svg>

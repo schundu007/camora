@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="300" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Cross-Region Message Delivery</text>
+
+  <!-- Region 1 -->
+  <rect x="20" y="50" width="340" height="180" rx="12" fill="rgba(37,99,235,0.04)" stroke="rgba(37,99,235,0.2)" stroke-width="1.5"/>
+  <text x="40" y="72" fill="#2563eb" font-size="12" font-weight="700">🇺🇸 US-East Region</text>
+
+  <rect x="40" y="85" width="90" height="55" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="85" y="107" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">User A</text>
+  <text x="85" y="127" text-anchor="middle" fill="#f97316" font-size="9">📱 New York</text>
+
+  <rect x="160" y="85" width="90" height="55" rx="8" fill="#2563eb"/>
+  <text x="205" y="107" text-anchor="middle" fill="white" font-size="9" font-weight="700">Gateway</text>
+  <text x="205" y="122" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">US-East</text>
+
+  <rect x="270" y="85" width="70" height="55" rx="8" fill="#f59e0b"/>
+  <text x="305" y="107" text-anchor="middle" fill="white" font-size="9" font-weight="700">Kafka</text>
+  <text x="305" y="122" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">US-East</text>
+
+  <rect x="40" y="160" width="120" height="40" rx="8" fill="#fff" stroke="#ef4444" stroke-width="1"/>
+  <text x="100" y="177" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="600">Redis (Sessions)</text>
+  <text x="100" y="192" text-anchor="middle" fill="#64748b" font-size="8">US-East users</text>
+
+  <rect x="180" y="160" width="120" height="40" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="240" y="177" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">Cassandra</text>
+  <text x="240" y="192" text-anchor="middle" fill="#64748b" font-size="8">US-East replica</text>
+
+  <!-- Region 2 -->
+  <rect x="440" y="50" width="340" height="180" rx="12" fill="rgba(22,163,106,0.04)" stroke="rgba(22,163,106,0.2)" stroke-width="1.5"/>
+  <text x="460" y="72" fill="#16a34a" font-size="12" font-weight="700">🇮🇳 Asia-South Region</text>
+
+  <rect x="460" y="85" width="70" height="55" rx="8" fill="#f59e0b"/>
+  <text x="495" y="107" text-anchor="middle" fill="white" font-size="9" font-weight="700">Kafka</text>
+  <text x="495" y="122" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">Asia relay</text>
+
+  <rect x="560" y="85" width="90" height="55" rx="8" fill="#16a34a"/>
+  <text x="605" y="107" text-anchor="middle" fill="white" font-size="9" font-weight="700">Gateway</text>
+  <text x="605" y="122" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">Asia-South</text>
+
+  <rect x="680" y="85" width="80" height="55" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="720" y="107" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">User B</text>
+  <text x="720" y="127" text-anchor="middle" fill="#16a34a" font-size="9">📱 Mumbai</text>
+
+  <rect x="460" y="160" width="120" height="40" rx="8" fill="#fff" stroke="#ef4444" stroke-width="1"/>
+  <text x="520" y="177" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="600">Redis (Sessions)</text>
+  <text x="520" y="192" text-anchor="middle" fill="#64748b" font-size="8">Asia users</text>
+
+  <rect x="600" y="160" width="120" height="40" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="660" y="177" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">Cassandra</text>
+  <text x="660" y="192" text-anchor="middle" fill="#64748b" font-size="8">Asia replica</text>
+
+  <!-- Cross-region arrow -->
+  <line x1="340" y1="112" x2="456" y2="112" stroke="#f59e0b" stroke-width="3" marker-end="url(#a)" stroke-dasharray="8,4"/>
+  <rect x="358" y="96" width="80" height="18" rx="4" fill="#f59e0b"/>
+  <text x="398" y="109" text-anchor="middle" fill="white" font-size="8" font-weight="700">Cross-Region</text>
+
+  <line x1="130" y1="112" x2="156" y2="112" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="250" y1="112" x2="266" y2="112" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="530" y1="112" x2="556" y2="112" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="650" y1="112" x2="676" y2="112" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Latency note -->
+  <rect x="20" y="248" width="760" height="35" rx="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+  <text x="40" y="271" fill="#92400e" font-size="10" font-weight="600">💡 Cross-region latency: ~100-200ms (US↔Asia). Kafka MirrorMaker replicates topics. Users connect to nearest region via GeoDNS.</text>
+</svg>
