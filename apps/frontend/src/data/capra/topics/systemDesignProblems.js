@@ -1693,7 +1693,6 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'search-flow',
           title: 'Tweet Search Flow',
           description: 'How a search query is processed through the Earlybird search engine',
-          src: '/diagrams/twitter/flow-search.png',
           steps: [
             { step: 1, label: 'Query Parse', detail: 'Tokenize query, handle hashtags/mentions/operators (from:, since:, until:)' },
             { step: 2, label: 'Scatter to Shards', detail: 'Send query to all Earlybird index shards in parallel (time-range partitioned)' },
@@ -4878,6 +4877,301 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           description: 'Photo storage scales at 600 TB/day (all resolutions) — 219 PB/year before replication'
         }
       ],
+      // ── Interview Follow-ups ──
+      interviewFollowups: [
+        {
+          question: 'How would you handle a viral post that gets millions of likes in minutes?',
+          answer: `A viral post creates a "hot key" problem at multiple layers:\n\n**Like writes (could spike to 500K/sec for viral):**\n- Likes written to Cassandra (write-optimized, no row locking) — handles burst natively\n- Redis INCR for real-time approximate count (client shows this immediately via optimistic UI)\n- Kafka batches counter updates to PostgreSQL every 5 seconds — converts 500K individual increments into 1 batch UPDATE\n\n**Feed reads (everyone loading feed to see the viral post):**\n- If poster is a celebrity: post cached in Memcached, millions of reads served from one cache entry\n- If poster is a regular user who went viral: their post was already pushed to followers' feed caches via fan-out on write\n- CDN caches the image at 200+ edge PoPs — S3 origin hit rate drops to <0.1% for viral images\n\n**Notification throttling:**\n- Rate-limit like notifications: batch into "Alice and 1,000 others liked your post" instead of individual push notifications\n- Suppress individual like notifications after 100 likes, switch to aggregate summary every 15 minutes`
+        },
+        {
+          question: 'How do you prevent the feed from showing stale content?',
+          answer: `Feed staleness is the fundamental tension between pre-computing for speed and showing fresh content:\n\n**Short cache TTL:** Pre-computed feeds cached for only 5 minutes in Redis. After TTL expires, the next feed read triggers re-computation with fresh data.\n\n**Real-time injection:** High-priority events (post from close friend, trending content) are injected into existing feed caches via Kafka consumers — bypassing the 5-minute wait.\n\n**Invalidation triggers:**\n- User unfollows someone: ZREM their posts from the feed cache immediately\n- User blocks someone: purge all blocked user's content from cache\n- Post deleted by author: fan-out a delete event to remove postId from all feed caches that contain it\n\n**Chronological fallback:** The "Following" feed tab shows pure chronological order without caching or ranking — always fresh, always complete.`
+        },
+        {
+          question: 'How would you implement hashtag search and trending hashtags?',
+          answer: `**Hashtag indexing:** When a post is created, hashtags are extracted from the caption and indexed in Elasticsearch: document = {postId, hashtags[], createdAt, engagementScore}.\n\n**Hashtag search:** Query Elasticsearch with hashtag term, results ranked by engagement score with recency boost.\n\n**Trending detection:** A streaming pipeline (Kafka Streams or Flink) computes hashtag velocity:\n- Sliding window: count hashtag occurrences in the last 1 hour, 4 hours, 24 hours\n- Trending score = (current_velocity - baseline_velocity) / baseline_velocity\n- Hashtags with trending score > 3x baseline are flagged as "trending"\n- Baseline is the same day/time last week (accounts for daily and weekly patterns)\n\n**Content safety:** Trending hashtags checked against a blocklist. Hijacked hashtags (legitimate tag taken over by spam) detected by sudden content-type shift.`
+        },
+        {
+          question: 'How do you handle private accounts in the feed pipeline?',
+          answer: `Private accounts add access control to every read path:\n\n**Follow request flow:** POST /api/follow/{userId} returns status: PENDING. The account owner must approve. Only after approval is the follow relationship written with status: ACTIVE.\n\n**Feed fan-out:** Private account posts are fanned out only to ACTIVE followers (not PENDING). The fan-out service checks follow status before ZADD to feed cache.\n\n**Direct access:** When visiting a private profile, the API checks the follow status. If not ACTIVE, return profile metadata only (username, bio, post count) — no posts, no stories.\n\n**Search/Explore exclusion:** Private account posts are never indexed in Elasticsearch and never appear in the Explore page or trending hashtag results.\n\n**Visibility change:** If a user switches from public to private, existing posts remain in followers' feed caches but are removed from Explore/search indexes via a background job.`
+        },
+        {
+          question: 'What happens when a user deletes a post?',
+          answer: `Post deletion must propagate across multiple systems:\n\n1. **Database:** Soft-delete the post row: UPDATE posts SET isDeleted = true, deletedAt = now()\n2. **Feed caches:** Publish delete event to Kafka topic: feed-updates. Fan-out consumers remove the postId from all follower feed caches: ZREM feed:{followerId} {postId}\n3. **CDN:** Send purge request to CDN for all image URLs associated with the post\n4. **S3:** Schedule media deletion after 30-day grace period (accidental deletion recovery + legal hold)\n5. **Elasticsearch:** Remove post from search index immediately\n6. **Likes/Comments:** Orphaned — they reference a deleted postId and are never displayed. Cleaned up by background job weekly\n7. **Notifications:** Remove any pending notifications referencing this post\n\n**Consistency:** The user sees immediate deletion (optimistic UI). Background propagation takes 1-5 seconds to reach all feed caches. During this window, some followers may still see the post — acceptable eventual consistency for a social media system.`
+        },
+        {
+          question: 'How would you design Instagram for multi-data-center failover?',
+          answer: `Instagram operates across multiple data centers for both availability and latency:\n\n**Active-active architecture:**\n- Users routed to nearest data center via GeoDNS\n- Each DC has full PostgreSQL shard replicas (read replicas) and Redis cache instances\n- Writes go to the primary DC for each shard (single-leader replication)\n- Cross-DC replication lag: 50-200ms (acceptable for social media)\n\n**Failover scenario (DC goes down):**\n1. GeoDNS detects health check failures, reroutes traffic to nearest surviving DC within 30 seconds\n2. Read replicas in surviving DC promoted to primary for affected shards\n3. Redis feed caches rebuilt from database (cold start, ~30 second degradation in feed quality)\n4. CDN continues serving images from edge PoPs — zero impact on media delivery\n5. RPO: ~1 second of writes may be lost during unplanned failover\n\n**Data consistency tradeoffs:**\n- User auth tokens: replicated synchronously (critical path)\n- Follow graph and feed caches: eventual consistency (rebuild from source on failover)\n- Like/comment counts: async aggregation, minor temporary inaccuracies acceptable`
+        },
+      ],
+      // ── Tips ──
+      tips: [
+        'Lead with the 100:1 read-to-write ratio — this single insight drives every architectural decision from CDN caching to pre-computed feeds to eager image resizing',
+        'Explain hybrid fan-out clearly: push for regular users (<10K followers), pull for celebrities (>10K) — this is the most important design decision and the interviewer expects it',
+        'Calculate storage: 100M photos/day x 2MB x 3 sizes = 600 TB/day = 219 PB/year — back-of-envelope math demonstrates you can think quantitatively about scale',
+        'Mention pre-signed S3 URLs for upload — shows you understand the API server should never touch image bytes, reducing bandwidth and latency',
+        'Discuss blurhash: a 20-30 character string encoding a blurry placeholder, sent inline with feed JSON so the app renders colored skeletons instantly while images load from CDN',
+        'Address the like counter problem explicitly: 4.2B likes/day (48K/sec) causes row contention — async aggregation via Kafka batching is the standard solution',
+        'Mention Instagram runs one of the world\'s largest PostgreSQL deployments — this shows you know the real architecture, not just textbook answers',
+        'Discuss CDN tiers: edge PoPs (95% hit rate) -> regional origin shield (4%) -> S3 origin (1%) — the origin shield prevents thundering herd on cache expiry',
+        'Always mention content moderation: every upload must be scanned before feed distribution — interviewers look for awareness of trust and safety at scale',
+        'End with trade-offs: fan-out write vs read, chronological vs algorithmic, single vs multi-CDN — presenting both sides with a reasoned recommendation shows senior engineering judgment',
+      ],
+      // ── Code Examples ──
+      codeExamples: {
+        python: `# Simplified Instagram Feed Service
+import asyncio
+import json
+from dataclasses import dataclass
+
+CELEBRITY_THRESHOLD = 10_000
+FEED_CACHE_TTL = 300  # 5 minutes
+
+@dataclass
+class Post:
+    id: int
+    user_id: int
+    caption: str
+    media_urls: list
+    like_count: int
+    created_at: float
+    rank_score: float = 0.0
+
+class FeedService:
+    def __init__(self):
+        self.redis = None       # feed cache
+        self.memcached = None   # celebrity post cache
+        self.db = None          # PostgreSQL (sharded)
+        self.ranker = None      # ML ranking model
+
+    async def get_feed(self, user_id: str, cursor=None,
+                       limit=20) -> dict:
+        \"\"\"Hybrid fan-out: cached posts + celebrity merge.\"\"\"
+        # 1. Check pre-computed feed cache (5-min TTL)
+        cached = await self.redis.zrevrange(
+            f"feed:{user_id}", 0, 200
+        )
+        ttl = await self.redis.ttl(f"feed:{user_id}")
+
+        if cached and ttl > 0:
+            post_ids = self._paginate(cached, cursor, limit)
+            posts = await self._hydrate_posts(post_ids)
+            return {"posts": posts, "nextCursor": posts[-1].id}
+
+        # 2. Cache miss -> rebuild feed
+        followees = await self.redis.smembers(
+            f"following:{user_id}"
+        )
+
+        # 3. Get fan-out-on-write posts from cache
+        pushed = await self.redis.zrevrange(
+            f"feed:{user_id}", 0, 500
+        )
+
+        # 4. Pull celebrity posts (fan-out on read)
+        celeb_posts = []
+        for uid in followees:
+            if await self._is_celebrity(uid):
+                posts = await self.memcached.get(
+                    f"celeb_posts:{uid}"
+                )
+                if posts:
+                    celeb_posts.extend(posts[:5])
+
+        # 5. Merge, deduplicate, rank
+        all_ids = list(set(pushed + celeb_posts))
+        posts = await self._hydrate_posts(all_ids)
+        ranked = await self.ranker.rank(user_id, posts)
+
+        # 6. Cache ranked feed (5-min TTL)
+        pipe = self.redis.pipeline()
+        for post in ranked[:200]:
+            pipe.zadd(f"feed:{user_id}",
+                      {str(post.id): post.rank_score})
+        pipe.expire(f"feed:{user_id}", FEED_CACHE_TTL)
+        await pipe.execute()
+
+        return {
+            "posts": ranked[:limit],
+            "nextCursor": ranked[limit - 1].id,
+        }
+
+    async def fan_out_post(self, post: Post):
+        \"\"\"Push postId to follower feed caches.\"\"\"
+        follower_count = await self.db.fetchval(
+            "SELECT followerCount FROM users WHERE id=$1",
+            post.user_id
+        )
+
+        if follower_count > CELEBRITY_THRESHOLD:
+            # Celebrity -> cache in Memcached, no fan-out
+            recent = await self._get_recent(post.user_id)
+            await self.memcached.set(
+                f"celeb_posts:{post.user_id}", recent,
+                ttl=FEED_CACHE_TTL)
+            return
+
+        # Regular user -> push to all followers
+        followers = await self.redis.smembers(
+            f"followers:{post.user_id}"
+        )
+        pipe = self.redis.pipeline()
+        for fid in followers:
+            pipe.zadd(f"feed:{fid}",
+                      {str(post.id): post.created_at})
+        await pipe.execute()
+
+    async def handle_like(self, user_id, post_id):
+        \"\"\"Async like with counter aggregation.\"\"\"
+        # Cassandra: durable write (no row locking)
+        await self.cassandra.execute(
+            "INSERT INTO likes (userId, postId, ts) "
+            "VALUES (?, ?, toTimestamp(now()))",
+            [user_id, post_id])
+
+        # Redis: optimistic counter + user-liked set
+        pipe = self.redis.pipeline()
+        pipe.incr(f"likes:{post_id}")
+        pipe.sadd(f"liked:{user_id}", post_id)
+        await pipe.execute()
+
+        # Kafka: batch counter update to PostgreSQL
+        await self.kafka.produce("like-events", {
+            "userId": user_id, "postId": post_id,
+            "action": "LIKE"})`,
+
+        javascript: `// Simplified Instagram Feed Service (Node.js)
+const Redis = require('ioredis');
+const { Kafka } = require('kafkajs');
+
+const CELEBRITY_THRESHOLD = 10_000;
+const FEED_CACHE_TTL = 300; // 5 minutes
+const FEED_SIZE = 200;
+
+class FeedService {
+  constructor() {
+    this.redis = new Redis(process.env.REDIS_URL);
+    this.memcached = null; // Memcached client
+    this.kafka = new Kafka({ brokers: ['kafka:9092'] });
+  }
+
+  async getFeed(userId, cursor = null, limit = 20) {
+    // 1. Check pre-computed feed cache
+    const cached = await this.redis.zrevrange(
+      \`feed:\${userId}\`, 0, FEED_SIZE
+    );
+    const ttl = await this.redis.ttl(
+      \`feed:\${userId}\`
+    );
+
+    if (cached.length > 0 && ttl > 0) {
+      const postIds = this.paginate(cached, cursor, limit);
+      const posts = await this.hydratePosts(postIds);
+      return {
+        posts,
+        nextCursor: posts[posts.length - 1]?.id,
+        hasMore: cached.length > limit,
+      };
+    }
+
+    // 2. Cache miss -> rebuild with hybrid fan-out
+    const followees = await this.redis.smembers(
+      \`following:\${userId}\`
+    );
+
+    // 3. Separate regular vs celebrity
+    const celebrities = [];
+    for (const uid of followees) {
+      const count = await this.getFollowerCount(uid);
+      if (count > CELEBRITY_THRESHOLD) celebrities.push(uid);
+    }
+
+    // 4. Get pushed posts (already in cache)
+    const pushedIds = await this.redis.zrevrange(
+      \`feed:\${userId}\`, 0, 500
+    );
+
+    // 5. Pull celebrity posts from Memcached
+    const celebIds = [];
+    for (const uid of celebrities) {
+      const posts = await this.memcached.get(
+        \`celeb_posts:\${uid}\`
+      );
+      if (posts) celebIds.push(...posts.slice(0, 5));
+    }
+
+    // 6. Merge, deduplicate, rank
+    const allIds = [...new Set([...pushedIds, ...celebIds])];
+    const posts = await this.hydratePosts(allIds);
+    const ranked = await this.rankPosts(userId, posts);
+
+    // 7. Cache ranked feed
+    const pipe = this.redis.pipeline();
+    for (const post of ranked.slice(0, FEED_SIZE)) {
+      pipe.zadd(\`feed:\${userId}\`,
+        post.rankScore, String(post.id));
+    }
+    pipe.expire(\`feed:\${userId}\`, FEED_CACHE_TTL);
+    await pipe.exec();
+
+    return {
+      posts: ranked.slice(0, limit),
+      nextCursor: ranked[limit - 1]?.id,
+      hasMore: ranked.length > limit,
+    };
+  }
+
+  async fanOutPost(post) {
+    const count = await this.getFollowerCount(post.userId);
+
+    if (count > CELEBRITY_THRESHOLD) {
+      // Celebrity -> update Memcached, skip fan-out
+      const recent = await this.getRecentPosts(post.userId);
+      await this.memcached.set(
+        \`celeb_posts:\${post.userId}\`,
+        recent, { ttl: FEED_CACHE_TTL });
+      return;
+    }
+
+    // Regular user -> push to all follower feeds
+    const followers = await this.redis.smembers(
+      \`followers:\${post.userId}\`
+    );
+    const pipe = this.redis.pipeline();
+    for (const fid of followers) {
+      pipe.zadd(\`feed:\${fid}\`,
+        post.createdAt, String(post.id));
+    }
+    await pipe.exec();
+  }
+
+  async handleLike(userId, postId) {
+    // 1. Durable write to Cassandra
+    await this.cassandra.execute(
+      'INSERT INTO likes (userId, postId, createdAt) '
+      + 'VALUES (?, ?, ?)',
+      [userId, postId, Date.now()]);
+
+    // 2. Optimistic Redis counter + liked set
+    const pipe = this.redis.pipeline();
+    pipe.incr(\`likes:\${postId}\`);
+    pipe.sadd(\`liked:\${userId}\`, postId);
+    await pipe.exec();
+
+    // 3. Kafka event for async PG batch update
+    const producer = this.kafka.producer();
+    await producer.send({
+      topic: 'like-events',
+      messages: [{
+        key: postId,
+        value: JSON.stringify({
+          userId, postId, action: 'LIKE',
+        }),
+      }],
+    });
+  }
+}`,
+      },
     },
     {
       id: 'dropbox',
@@ -6248,6 +6542,347 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         { step: 4, title: 'Per-Shot Encoding + ML Recommendations', description: 'Per-shot encoding for 20% bandwidth savings. ML-powered recommendations driving 80% of discovery. Personalized artwork per user. Chaos engineering (Simian Army) for resilience.', color: '#10b981', icon: 'globe', capacity: '~200M subscribers', rps: '500K', pros: ['Better quality at lower bandwidth', 'Highly personalized experience', '99.99% availability via chaos testing'], cons: ['Enormous encoding compute costs', 'ML model complexity', 'Multi-region architecture overhead'] },
         { step: 5, title: 'Global Scale + AV1 + Edge Intelligence', description: '230M+ subscribers across 190 countries. AV1 codec rollout for 20% more compression. 17,000+ CDN servers at 6,000+ locations. Edge computing for real-time ABR optimization.', color: '#7c3aed', icon: 'cpu', capacity: '230M+ subscribers', rps: '1M+', pros: ['15% of global internet traffic', 'Best-in-class streaming quality', '1,200+ versions per title'], cons: ['~100 PB encoded content storage', 'Content licensing per-country complexity', 'Continued CDN hardware investment'] },
       ],
+      // -- Algorithm Approaches --
+      algorithmApproaches: [
+        {
+          name: 'Consistent Hashing for CDN Node Selection',
+          diagramSrc: '/diagrams/netflix/algo-cdn-routing.png',
+          description: `Route each playback request to the optimal Open Connect Appliance using weighted consistent hashing on (clientIP, contentId).
+
+**How it works:**
+- OCAs are placed on a hash ring with weights proportional to their available bandwidth and health score
+- When a playback request arrives, hash(clientIP + contentId) determines the initial OCA candidate
+- The steering service checks if the candidate OCA has the requested content and is healthy
+- If not, walk clockwise on the ring to the next OCA that satisfies both conditions
+
+**Real-time adjustments:**
+- OCA health scores are updated every 30 seconds based on CPU, bandwidth utilization, and error rate
+- Unhealthy OCAs are temporarily removed from the ring (zero weight)
+- This allows seamless mid-stream redirection at the next segment boundary`,
+          pros: ['Minimal traffic redistribution when OCAs are added/removed (only 1/N users affected)', 'Natural load balancing with weighted placement based on OCA capacity', 'Deterministic routing: same client+content maps to same OCA for caching efficiency', 'No central coordinator needed -- any steering service instance can compute the mapping'],
+          cons: ['Content-awareness adds complexity: must route to a node that HAS the content', 'Hot content (new release) can overload specific OCAs -- mitigated by replicating across multiple OCAs per ISP', 'Weight updates must propagate consistently to all steering service instances']
+        },
+        {
+          name: 'Two-Stage Recommendation Pipeline (Candidate Generation + Ranking)',
+          diagramSrc: '/diagrams/netflix/algo-recommendation.png',
+          description: `Netflix uses a two-stage pipeline to balance computational cost with personalization quality.
+
+**Stage 1: Candidate Generation (filter 17,000 titles to ~2,000)**
+- Multiple independent retrieval models each produce candidate lists:
+  - Matrix factorization: factorize the 260M x 17K user-item interaction matrix into low-dimensional embeddings
+  - Content embeddings: neural network maps title features (genre, cast, plot) into a vector space
+  - Trending: popularity-weighted by region and time window
+- Union of all candidates produces ~2,000 titles per user
+
+**Stage 2: Ranking (score and order the 2,000 candidates)**
+- Deep learning model scores each candidate for this specific user
+- Features: user embedding, item embedding, context (time, device, recency of last watch)
+- Objective: maximize P(watch > 70% of title) -- not just clicks, but meaningful engagement
+- Output: ranked list of titles with scores, grouped into themed rows`,
+          pros: ['Scalable: candidate generation is cheap (embedding lookup), ranking runs on smaller set', 'Each candidate source captures different signals (collaborative, content-based, trending)', 'A/B testable: each stage can be independently experimented on', 'Hourly batch + real-time re-ranking balances freshness with compute cost'],
+          cons: ['Batch pipeline has up to 1-hour staleness for new viewing signals', 'Cold-start problem: new users have no history for collaborative filtering', 'Filter bubble risk: need explicit diversity injection to avoid showing only similar content', 'Computational cost: hourly pipeline for 260M users requires significant Spark cluster resources']
+        },
+        {
+          name: 'Buffer-Based Adaptive Bitrate (ABR) Algorithm',
+          diagramSrc: '/diagrams/netflix/algo-abr.png',
+          description: `Netflix ABR decides which quality level to request for each 4-second video segment based primarily on the playback buffer level.
+
+**Algorithm (simplified):**
+1. Measure current buffer level B (seconds of video buffered ahead)
+2. Measure TCP throughput T for the last N segment downloads (moving average)
+3. Select quality level Q:
+   - If B > B_high (30s): Q = highest quality where bitrate < T (upgrade)
+   - If B_low (10s) < B < B_high: Q = current quality (maintain, no oscillation)
+   - If B < B_low: Q = lowest quality where bitrate < T * 0.8 (downgrade with safety margin)
+   - If B < B_critical (3s): Q = minimum quality (emergency -- prevent rebuffering)
+
+**Hysteresis band:** The gap between B_low and B_high creates a dead zone where quality does not change. This prevents the yo-yo effect of constantly switching quality on a borderline connection.
+
+**Startup strategy:**
+- Start at medium quality (720p) to achieve <3s time-to-first-frame
+- Rapidly upgrade over next 30 seconds as buffer fills`,
+          pros: ['Buffer-based is more stable than bandwidth-based (buffer changes slowly, bandwidth is noisy)', 'Hysteresis prevents annoying quality oscillation on borderline connections', 'Emergency downgrade prevents rebuffering -- the worst user experience', 'Startup optimization prioritizes time-to-first-frame over initial quality'],
+          cons: ['Conservative by design: may underutilize available bandwidth during upgrades', 'Buffer size limits total adaptation speed (30s buffer = 30s to detect persistent improvement)', 'Segment boundary switching (every 4s) means quality cannot change faster than 0.25 Hz', 'Device-specific tuning needed: TV tolerates lower quality less than mobile (larger screen)']
+        },
+        {
+          name: 'Collaborative Filtering via Matrix Factorization',
+          diagramSrc: '/diagrams/netflix/algo-matrix-factorization.png',
+          description: `Map users and titles into a shared low-dimensional embedding space where similar users and similar titles are close together.
+
+**How it works:**
+- Construct a 260M x 17K interaction matrix M where M[user][title] = engagement score
+- Factorize M into two matrices: U (260M x d) and V (17K x d) where d = 100-300 dimensions
+- U[i] is user i's embedding vector; V[j] is title j's embedding vector
+- Predicted engagement = dot_product(U[i], V[j])
+- Training: minimize ||M - U*V^T||^2 + regularization using ALS (Alternating Least Squares)
+
+**Why ALS over SGD?**
+- ALS is embarrassingly parallelizable: fix U, solve for V in parallel across titles
+- Netflix's user-item matrix is extremely sparse (~0.1% of entries non-zero)
+- ALS handles implicit feedback (watched/not watched) naturally via weighted loss`,
+          pros: ['Discovers latent preferences without explicit genre matching', 'Low-dimensional embeddings are storage-efficient: 260M users x 100 floats = ~100 GB', 'ALS is parallelizable and scales well on Spark', 'Handles sparse data well: most users watched only 50-200 of 17,000 titles'],
+          cons: ['Cold-start: new users with no watch history have no embedding', 'Cannot capture sequential patterns (what user watched most recently)', 'Periodic retraining needed: daily computation on full matrix is expensive', 'Popularity bias: popular titles dominate and get recommended disproportionately']
+        }
+      ],
+      // -- Static Diagrams --
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries -- in-scope essentials vs out-of-scope features for the Netflix system design interview', src: '/diagrams/netflix/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Traffic, bandwidth, storage, and CDN capacity calculations with step-by-step math', src: '/diagrams/netflix/capacity-estimation.svg', type: 'estimation' },
+        { id: 'playback-flow', title: 'Video Playback Flow', description: 'Complete end-to-end flow: user presses play through control plane to CDN segment delivery', src: '/diagrams/netflix/playback-flow.svg', type: 'flow' },
+        { id: 'ui-mockup', title: 'Netflix Browse Interface', description: 'The product we are designing -- browse UI with personalized rows, thumbnails, and continue watching', src: '/diagrams/netflix/netflix-ui-mockup.svg', type: 'ui' },
+      ],
+      // -- Charts --
+      charts: [
+        {
+          id: 'cdn-traffic-tiers',
+          title: 'CDN Traffic Distribution by Tier',
+          type: 'bar',
+          data: [
+            { label: 'ISP OCA', value: 95, color: '#10b981' },
+            { label: 'IXP OCA', value: 4, color: '#3b82f6' },
+            { label: 'Origin (S3)', value: 1, color: '#ef4444' },
+          ],
+          unit: '%',
+          description: '95% of video bytes served from ISP-embedded Open Connect Appliances'
+        }
+      ],
+      // -- Interview Follow-ups --
+      interviewFollowups: [
+        {
+          question: 'How would you handle a massive new release like a new season of Stranger Things?',
+          answer: `A major release is the hardest CDN challenge because millions of users request the same never-before-cached content simultaneously.\n\n**Pre-release preparation (6-12 hours before):**\n- Pre-position all encoded variants on ALL OCAs worldwide -- not just predicted popular regions\n- Stagger the global rollout by timezone: release at midnight local time per region\n- Allocate extra origin shield capacity to absorb any cache misses\n\n**Release moment:**\n- Content catalog service flips the availability flag\n- Recommendation pipeline pushes the title to "New Releases" and "Trending" rows\n- Push notification to users who have the previous season in their watch history\n\n**Thundering herd mitigation:**\n- Origin shield collapses duplicate cache miss requests -- 1,000 OCA fetches become 1 S3 read\n- Rate-limit origin fetches per title to prevent S3 overload\n- If an OCA is overloaded, steering service redistributes to alternate OCAs at the same ISP or nearby IXP\n\n**Monitoring:** Real-time dashboards track rebuffer rate, start time, and quality distribution per region.`
+        },
+        {
+          question: 'How does Netflix handle personalized artwork (different thumbnails for different users)?',
+          answer: `Netflix stores 10-20 different thumbnail images per title, and an ML model selects which one to show each user.\n\n**How it works:**\n1. Creative team produces multiple thumbnail variants emphasizing different aspects: romance, action, comedy, star actor\n2. Each variant is tagged with features: dominant genre, featured actor, visual style\n3. Artwork selection model maps (user_embedding, artwork_features) to P(click)\n4. Thumbnail with highest predicted click probability for this user is shown\n\n**Example:** For "Good Will Hunting":\n- Romance fan sees Matt Damon and Minnie Driver together\n- Drama fan sees Robin Williams in a therapy scene\n- Cerebral film fan sees Matt Damon writing equations on a chalkboard\n\n**Infrastructure:** Artwork selection runs during the hourly recommendation pipeline. Selected thumbnail URLs stored in recommendation cache -- no real-time ML inference needed.`
+        },
+        {
+          question: 'What happens when a user switches devices mid-movie (e.g., phone to TV)?',
+          answer: `Cross-device resume is powered by watch_history in Cassandra, updated every 30 seconds.\n\n**Flow:**\n1. User watches on phone: client reports position every 30s to Cassandra\n2. User pauses: final position update sent immediately\n3. User opens TV app: client requests playback with profileId\n4. Playback service reads latest position from Cassandra\n5. TV player seeks to that position and begins buffering\n\n**Edge cases:**\n- Both devices active: last-write-wins in Cassandra. Most recent progress update wins\n- Network lag: position might be up to 30 seconds stale. Better to resume slightly earlier than skip content\n- Different quality: TV might play 4K while phone played 720p. Manifest returns all options, TV ABR selects\n\n**Multi-region:** Cassandra replicates across AWS regions with ~1 second eventual consistency lag -- negligible in practice.`
+        },
+        {
+          question: 'How would you design Netflix for live streaming (e.g., live sports)?',
+          answer: `Live streaming fundamentally changes the architecture because content cannot be pre-positioned.\n\n**Key differences from VOD:**\n- No pre-encoding: must transcode in real-time (sub-second latency)\n- No push CDN: content flows through CDN in real-time\n- No per-shot encoding: no time for multi-pass quality optimization\n- Massive simultaneous demand: all viewers watch the same content at once\n\n**Architecture changes needed:**\n1. Live ingest: receive feed via RTMP/SRT, transcode in real-time with GPU encoding\n2. Low-latency segments: reduce from 4s to 1-2s (or CMAF chunked transfer for sub-second)\n3. CDN topology: multicast-tree -- origin to regional fanout to ISP OCAs\n4. Edge caching: live segments cached ~30 seconds (DVR window), then evicted\n\n**Trade-off:** Netflix's architecture is optimized for the opposite workload. Adding live requires significant infrastructure changes.`
+        },
+        {
+          question: 'How does Netflix handle offline downloads with DRM?',
+          answer: `Offline downloads require persistent DRM licenses that work without internet.\n\n**Download flow:**\n1. User requests download with quality preference\n2. Server checks: subscription active, download count within limit (15-25 titles), content downloadable in region\n3. Server generates offline DRM license: 48-hour playback window, 7-day download window, device-bound\n4. Client downloads encrypted video segments to local storage\n5. DRM license stored in device's trusted execution environment\n\n**Playback without internet:** Client decrypts using stored license -- no server needed. When license expires, must reconnect to renew.\n\n**Anti-piracy:** Content encrypted with AES-128 bound to device hardware ID. Cannot transfer to other devices. Widevine L1 (hardware DRM) required for HD/4K.`
+        },
+        {
+          question: 'How does Netflix implement A/B testing at scale?',
+          answer: `Netflix runs hundreds of concurrent A/B tests across recommendations, UI, streaming, and infrastructure.\n\n**Architecture:**\n- Each user deterministically assigned to experiment groups via hash(userId, experimentId)\n- Consistent assignment: same group for entire experiment duration\n- Experiments can target segments: new users, heavy viewers, specific regions\n\n**What gets tested:** Recommendation algorithms, UI layouts, artwork variants, streaming parameters, encoding quality\n\n**Metrics:**\n- Primary: retention (did user renew next month?)\n- Secondary: hours watched, titles started, search-to-play rate\n- Requires 2+ weeks and millions of users for statistical significance\n\n**Key insight:** Netflix treats EVERYTHING as testable, including chaos engineering parameters.`
+        },
+      ],
+      // -- Interview Tips --
+      tips: [
+        'Lead with the control plane / data plane separation -- this is the most important architectural decision and shows you understand Netflix is really two systems: a standard web app (AWS) and a custom CDN (Open Connect)',
+        'Know the numbers: 260M subscribers, ~100M concurrent at peak, 500M hours/day, 15% of internet traffic, 18,000+ CDN servers, 95% cache hit rate -- real numbers show preparation',
+        'Explain push CDN vs pull CDN: Netflix uses push (proactive ML-predicted placement overnight) not pull (cache-on-first-request) -- this eliminates cache misses and cold-start latency',
+        'Mention per-shot encoding and VMAF: encoding each scene at different bitrates based on complexity achieves 20% better quality -- differentiates you from candidates who just say "encode at multiple bitrates"',
+        'Discuss the ABR algorithm: buffer-based with hysteresis (not bandwidth-based) prevents quality oscillation. Start at 720p for fast startup, upgrade as buffer fills',
+        'Bring up chaos engineering early: Chaos Monkey/Kong are not trivia -- they represent a design philosophy where failure is expected and tested continuously in production',
+        'Calculate CDN cost savings: own CDN at $0.001/GB vs commercial at $0.05/GB -- at exabytes/month scale, this saves hundreds of millions per year',
+        'Mention the recommendation engine drives 80% of viewing -- not a side feature but the core product differentiator. Two-stage pipeline: candidate generation + ranking',
+        'Discuss EVCache as the read path backbone: 95% of API responses come from cache, not database. This is how Netflix serves 2M+ QPS at sub-100ms latency',
+        'End with tradeoffs: push vs pull CDN, pre-encode vs on-demand, collaborative vs content-based recommendations, own CDN vs third-party -- interviewers want engineering judgment, not just a component diagram',
+      ],
+      // -- Code Examples --
+      codeExamples: {
+        python: `# Simplified Netflix Adaptive Bitrate Controller
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class QualityLevel:
+    resolution: str   # "720p", "1080p", "4K"
+    bitrate: int      # kbps
+    codec: str        # "H265", "AV1"
+
+class AdaptiveBitrateController:
+    """Buffer-based ABR algorithm (simplified Netflix)."""
+
+    B_HIGH = 30.0    # seconds -- safe to upgrade
+    B_LOW = 10.0     # seconds -- downgrade territory
+    B_CRITICAL = 3.0 # seconds -- emergency lowest quality
+
+    def __init__(self, quality_levels: List[QualityLevel]):
+        self.levels = sorted(
+            quality_levels, key=lambda q: q.bitrate
+        )
+        self.current_idx = 0  # start at lowest
+        self.throughput_history = []
+
+    def select_quality(self, buffer_secs: float,
+                       last_throughput_kbps: float):
+        """Select quality for next segment."""
+        self.throughput_history.append(last_throughput_kbps)
+        avg_tp = self._moving_avg(window=5)
+
+        if buffer_secs < self.B_CRITICAL:
+            # Emergency: drop to minimum quality
+            self.current_idx = 0
+        elif buffer_secs < self.B_LOW:
+            # Downgrade: highest below throughput
+            self.current_idx = self._highest_below(
+                avg_tp * 0.8  # 20% safety margin
+            )
+        elif buffer_secs > self.B_HIGH:
+            # Upgrade: highest below throughput
+            target = self._highest_below(avg_tp)
+            if target > self.current_idx:
+                self.current_idx = target
+        # else: maintain current (hysteresis zone)
+
+        return self.levels[self.current_idx]
+
+    def _highest_below(self, max_bitrate: float) -> int:
+        best = 0
+        for i, level in enumerate(self.levels):
+            if level.bitrate <= max_bitrate:
+                best = i
+        return best
+
+    def _moving_avg(self, window: int = 5) -> float:
+        recent = self.throughput_history[-window:]
+        return sum(recent) / len(recent) if recent else 0
+
+
+class CDNSteering:
+    """Select optimal Open Connect Appliance."""
+
+    def __init__(self):
+        self.oca_health = {}   # oca_id -> score
+        self.oca_content = {}  # oca_id -> set(content_ids)
+
+    def select_oca(self, client_ip, content_id, isp):
+        """Route to healthiest OCA with the content."""
+        # 1. Filter OCAs at user's ISP
+        candidates = [
+            oca for oca, contents
+            in self.oca_content.items()
+            if content_id in contents
+            and self._is_at_isp(oca, isp)
+        ]
+
+        if not candidates:
+            # Fallback to IXP OCAs
+            candidates = self._get_ixp_ocas(content_id)
+
+        if not candidates:
+            return None  # Last resort: origin S3
+
+        # 2. Select healthiest OCA
+        return max(candidates,
+                   key=lambda o: self.oca_health.get(o, 0))
+
+    def _is_at_isp(self, oca_id, isp):
+        return True  # simplified
+
+    def _get_ixp_ocas(self, content_id):
+        return []  # simplified`,
+
+        javascript: `// Simplified Netflix Playback Service (Node.js)
+class PlaybackService {
+  constructor({ sessionStore, steeringService,
+                drmService, watchHistory, entitlement }) {
+    this.sessions = sessionStore;     // Redis
+    this.steering = steeringService;  // CDN routing
+    this.drm = drmService;
+    this.history = watchHistory;       // Cassandra
+    this.entitlement = entitlement;
+  }
+
+  async initiatePlayback(profileId, contentId,
+                         deviceType, deviceId, clientIp) {
+    // 1. Check subscription entitlement
+    const plan = await this.entitlement.check(profileId);
+    if (!plan.active) {
+      throw new Error('Subscription expired');
+    }
+
+    // 2. Check concurrent stream limit
+    const acctId = plan.accountId;
+    const active = await this.sessions.smembers(
+      \`session:\${acctId}\`
+    );
+    if (active.length >= plan.maxStreams) {
+      throw new Error('Max streams reached');
+    }
+
+    // 3. Register new session (2-min TTL)
+    await this.sessions.sadd(
+      \`session:\${acctId}\`,
+      JSON.stringify({ deviceId, startedAt: Date.now() })
+    );
+    await this.sessions.expire(
+      \`session:\${acctId}\`, 120
+    );
+
+    // 4. Select optimal CDN node
+    const oca = await this.steering.selectOCA({
+      clientIp, contentId, deviceType,
+    });
+
+    // 5. Generate DRM license
+    const license = await this.drm.generateLicense({
+      contentId, deviceId, deviceType,
+      drmSystem: this.getDrmSystem(deviceType),
+    });
+
+    // 6. Get resume position
+    const position = await this.history.getPosition(
+      profileId, contentId
+    );
+
+    // 7. Return manifest pointing to CDN
+    return {
+      manifestUrl: \`https://\${oca.hostname}/\`
+        + \`\${contentId}/\${this.getManifest(deviceType)}\`,
+      cdnNode: oca.id,
+      drmLicense: license,
+      resumePosition: position || 0,
+      subtitles: await this.getSubtitles(contentId),
+      audioTracks: await this.getAudioTracks(contentId),
+    };
+  }
+
+  async reportProgress(profileId, contentId, position,
+                       duration, quality, deviceType) {
+    // Write to Cassandra (fire-and-forget)
+    this.history.upsert({
+      profileId, contentId, position, duration,
+      watchedAt: new Date(),
+      completed: (position / duration) > 0.9,
+      deviceType, qualityWatched: quality,
+    }).catch(err => console.error('Save failed'));
+
+    // Publish to Kafka for analytics
+    this.kafka.publish('viewing-events', {
+      profileId, contentId, position,
+      duration, quality, deviceType,
+      timestamp: Date.now(),
+    });
+
+    return { saved: true };
+  }
+
+  getDrmSystem(deviceType) {
+    const map = {
+      ANDROID: 'WIDEVINE', CHROME: 'WIDEVINE',
+      IOS: 'FAIRPLAY', SAFARI: 'FAIRPLAY',
+      WINDOWS: 'PLAYREADY', TV: 'WIDEVINE',
+    };
+    return map[deviceType] || 'WIDEVINE';
+  }
+
+  getManifest(deviceType) {
+    return ['IOS', 'SAFARI', 'APPLE_TV']
+      .includes(deviceType) ? 'master.m3u8' : 'manifest.mpd';
+  }
+}`,
+      },
+
+
     },
     {
       id: 'amazon',
