@@ -92,25 +92,65 @@ function CapacityPlanningGrid({ estimation }) {
           <span className="font-semibold text-[var(--text-secondary)]">Assumptions:</span> {estimation.assumptions}
         </div>
       )}
-      <div className="p-3">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-[var(--bg-elevated)]/70">
-              <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Value</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell">Calculation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => (
-              <tr key={i} className="hover:bg-[var(--bg-elevated)]/30 transition-colors">
-                <td className="px-3 py-2.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
-                <td className="px-3 py-2.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)]">{row.value}</td>
-                <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden lg:table-cell">{row.detail}</td>
+      <div className="p-3 flex flex-col lg:flex-row gap-4">
+        {/* Table */}
+        <div className="flex-1 min-w-0">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-[var(--bg-elevated)]/70">
+                <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
+                <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Value</th>
+                <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell">Calculation</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} className="hover:bg-[var(--bg-elevated)]/30 transition-colors">
+                  <td className="px-3 py-2.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
+                  <td className="px-3 py-2.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)]">{row.value}</td>
+                  <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden lg:table-cell">{row.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Visual chart — shown on lg+ */}
+        <div className="hidden lg:flex flex-col gap-2 w-[280px] flex-shrink-0 p-3 rounded-xl bg-[var(--bg-elevated)]/50 border border-[var(--border)]">
+          <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest landing-mono mb-1">Scale Overview</h4>
+          {(() => {
+            const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6'];
+            const chartRows = rows.slice(0, 8);
+            const parseNum = (v) => {
+              const s = String(v).replace(/[~,+]/g, '');
+              const m = s.match(/([\d.]+)\s*(B|Billion|M|K|PB|TB|GB|Gbps)?/i);
+              if (!m) return 0;
+              const n = parseFloat(m[1]);
+              const u = (m[2] || '').toLowerCase();
+              if (u === 'b' || u === 'billion') return n * 1e9;
+              if (u === 'm') return n * 1e6;
+              if (u === 'k') return n * 1e3;
+              if (u === 'pb') return n * 1e15;
+              if (u === 'tb') return n * 1e12;
+              if (u === 'gb' || u === 'gbps') return n * 1e9;
+              return n;
+            };
+            const nums = chartRows.map(r => parseNum(r.value));
+            const maxNum = Math.max(...nums.filter(n => n > 0));
+            return chartRows.map((row, i) => {
+              const pct = maxNum > 0 ? Math.max(3, (Math.log10(nums[i] + 1) / Math.log10(maxNum + 1)) * 100) : 3;
+              const color = CHART_COLORS[i % CHART_COLORS.length];
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-[9px] text-[var(--text-muted)] landing-mono w-[90px] flex-shrink-0 truncate text-right" title={row.metric}>{row.metric}</span>
+                  <div className="flex-1 h-4 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}60, ${color})` }} />
+                  </div>
+                  <span className="text-[9px] font-bold text-[var(--text-secondary)] landing-mono w-[60px] flex-shrink-0">{row.value}</span>
+                </div>
+              );
+            });
+          })()}
+        </div>
       </div>
     </div>
   );
@@ -210,7 +250,7 @@ function DataModelSection({ schema }) {
           <h3 className="text-[15px] font-bold text-white landing-display">Data Model</h3>
           <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{tables.length} tables</span>
         </div>
-        <div className="p-3 grid grid-cols-1 gap-3">
+        <div className="p-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
           {tables.map((table, ti) => (
             <div key={ti} className="rounded-xl border border-[var(--border)] overflow-hidden">
               <div className="px-3 py-2 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center gap-2">
@@ -1943,7 +1983,7 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 5. Cloud Architecture Diagram — full width */}
+              {/* 5. Architecture Diagram — THEN immediately show System Flows + Flowcharts */}
               {isSDStyle && topicDetails && (
                 <div id="architecture" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-3 py-2 flex items-center justify-between">
@@ -2020,7 +2060,57 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 6. Architecture Layers + Layered Design */}
+              {/* 6. System Flows + Flowcharts — show right after architecture */}
+              {(topicDetails.createFlow || topicDetails.redirectFlow) && (
+                <div id="flows" className="grid grid-cols-1 lg:grid-cols-2 gap-2 scroll-mt-24">
+                  {topicDetails.createFlow && (
+                    <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                      <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                        <Icon name="arrowRight" size={16} className="text-white" />
+                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.createFlow.title}</h3>
+                      </div>
+                      <div className="p-3">
+                        <ol className="grid grid-cols-1 gap-1">
+                          {topicDetails.createFlow.steps.map((step, i) => (
+                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
+                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">{i + 1}</span>
+                              <span className="text-[var(--text-muted)] text-sm landing-body">{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    </div>
+                  )}
+                  {topicDetails.redirectFlow && (
+                    <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                      <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                        <Icon name="arrowLeft" size={16} className="text-white" />
+                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.redirectFlow.title}</h3>
+                      </div>
+                      <div className="p-3">
+                        <ol className="grid grid-cols-1 gap-1">
+                          {topicDetails.redirectFlow.steps.map((step, i) => (
+                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
+                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">{i + 1}</span>
+                              <span className="text-[var(--text-muted)] text-sm landing-body">{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {topicDetails.flowcharts && topicDetails.flowcharts.length > 0 && (
+                <div className="grid grid-cols-1 gap-2">
+                  {topicDetails.flowcharts.map((fc) => (
+                    <FlowchartCard key={fc.id} flowchart={fc} />
+                  ))}
+                </div>
+              )}
+
+              {/* 7. Architecture Layers + Layered Design */}
               {topicDetails.architectureLayers && (
                 <div id="arch-layers" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
@@ -2136,219 +2226,7 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 8. Basic + Advanced Implementation + Algorithm Approaches */}
-              {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
-                <div id="implementation" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                  {/* Basic Implementation */}
-                  {topicDetails.basicImplementation && (
-                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2 bg-[var(--accent)]">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Basic</span>
-                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
-                      </div>
-                      <div className="p-4">
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
-                        {topicDetails.basicImplementation.svgTemplate && (
-                          <DiagramSVG
-                            template={topicDetails.basicImplementation.svgTemplate}
-                            className="mb-3"
-                          />
-                        )}
-                        {topicDetails.basicImplementation.architecture && !topicDetails.basicImplementation.svgTemplate && (
-                          <div className="rounded-xl overflow-hidden mb-3 border border-[var(--border)]">
-                            <div className="px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center gap-2">
-                              <Icon name="layers" size={12} className="text-[var(--text-muted)]" />
-                              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono">Architecture</span>
-                            </div>
-                            <div className="bg-[#0d1117] overflow-x-auto">
-                              <pre
-                                className="p-4 text-sm leading-6 text-gray-300 landing-mono"
-                                style={{ whiteSpace: 'pre', margin: 0, tabSize: 4 }}
-                              >
-                                {topicDetails.basicImplementation.architecture}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-                        {topicDetails.basicImplementation.problems && (
-                          <div>
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 flex items-center gap-2 landing-display uppercase tracking-wider">
-                              <Icon name="alertTriangle" size={12} className="text-red-500" />
-                              Issues
-                            </h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/15 text-sm landing-body">
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/15 mt-0.5">
-                                    <svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                  </span>
-                                  <span className="text-[var(--text-secondary)]">{problem}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Advanced Implementation */}
-                  {topicDetails.advancedImplementation && (
-                    <div className="rounded-2xl overflow-hidden border border-[var(--accent)]/20 bg-white">
-                      <div className="border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2 bg-[var(--accent)]">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Advanced</span>
-                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
-                      </div>
-                      <div className="p-4">
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
-                        {topicDetails.advancedImplementation.svgTemplate && (
-                          <DiagramSVG
-                            template={topicDetails.advancedImplementation.svgTemplate}
-                            className="mb-3"
-                          />
-                        )}
-                        {topicDetails.advancedImplementation.architecture && !topicDetails.advancedImplementation.svgTemplate && (
-                          <div className="rounded-xl overflow-hidden mb-3 border border-[var(--accent)]/20">
-                            <div className="px-3 py-1.5 bg-[var(--accent)]/10 border-b border-[var(--accent)]/20 flex items-center gap-2">
-                              <Icon name="zap" size={12} className="text-[var(--accent)]" />
-                              <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Architecture</span>
-                            </div>
-                            <div className="bg-[var(--bg-elevated)] overflow-x-auto border-[var(--border)]">
-                              <pre
-                                className="p-4 text-sm leading-7 text-[var(--accent)] landing-mono"
-                                style={{ whiteSpace: 'pre', margin: 0, tabSize: 4 }}
-                              >
-                                {topicDetails.advancedImplementation.architecture}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-                        {topicDetails.advancedImplementation.keyPoints && (
-                          <div className="mb-3">
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 landing-display uppercase tracking-wider">Key Points</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--accent)]/10/50 border border-[var(--accent)]/20 text-sm landing-body">
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/15 mt-0.5">
-                                    <svg className="w-2.5 h-2.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                  </span>
-                                  <span className="text-[var(--text-secondary)]">{point}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {(topicDetails.advancedImplementation.databaseChoice || topicDetails.advancedImplementation.caching) && (
-                          <div className="flex flex-wrap gap-2">
-                            {topicDetails.advancedImplementation.databaseChoice && (
-                              <span className="text-[10px] landing-mono px-2 py-1 rounded-lg border bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20 font-semibold">
-                                DB: {topicDetails.advancedImplementation.databaseChoice}
-                              </span>
-                            )}
-                            {topicDetails.advancedImplementation.caching && (
-                              <span className="text-[10px] landing-mono px-2 py-1 rounded-lg border bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20 font-semibold">
-                                Cache: {topicDetails.advancedImplementation.caching}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Algorithm Approaches */}
-              {topicDetails.algorithmApproaches && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="zap" size={16} className="text-white" />
-                    <h3 className="text-[15px] font-bold text-white landing-display">Algorithm Approaches</h3>
-                  </div>
-                  <div className="p-3 grid grid-cols-1 gap-2">
-                    {topicDetails.algorithmApproaches.map((app, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
-                        <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
-                        <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed">
-                          <FormattedContent content={app.description} color="amber" />
-                        </div>
-                        <div className="space-y-0.5">
-                          {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--accent)] font-bold mr-1">+</span>{p}</div>)}
-                          {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--text-muted)] font-bold mr-1">-</span>{c}</div>)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 9. System Flows (Create + Redirect) + Flowcharts */}
-              {(topicDetails.createFlow || topicDetails.redirectFlow) && (
-                <div id="flows" className="grid grid-cols-1 gap-2 scroll-mt-24">
-                  {/* Create Flow */}
-                  {topicDetails.createFlow && (
-                    <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                        <Icon name="arrowRight" size={16} className="text-white" />
-                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.createFlow.title}</h3>
-                      </div>
-                      {topicDetails.createFlow.diagramSrc && (
-                        <div className="p-3 border-b border-[var(--border)]">
-                          <img src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} className="w-full rounded-lg" style={{ maxHeight: '500px', objectFit: 'contain' }} />
-                        </div>
-                      )}
-                      <div className="p-3">
-                        <ol className="grid grid-cols-1 gap-1">
-                          {topicDetails.createFlow.steps.map((step, i) => (
-                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
-                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">
-                                {i + 1}
-                              </span>
-                              <span className="text-[var(--text-muted)] text-sm landing-body">{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Redirect Flow */}
-                  {topicDetails.redirectFlow && (
-                    <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                        <Icon name="arrowLeft" size={16} className="text-white" />
-                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.redirectFlow.title}</h3>
-                      </div>
-                      {topicDetails.redirectFlow.diagramSrc && (
-                        <div className="p-3 border-b border-[var(--border)]">
-                          <img src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} className="w-full rounded-lg" style={{ maxHeight: '500px', objectFit: 'contain' }} />
-                        </div>
-                      )}
-                      <div className="p-3">
-                        <ol className="grid grid-cols-1 gap-1">
-                          {topicDetails.redirectFlow.steps.map((step, i) => (
-                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
-                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">
-                                {i + 1}
-                              </span>
-                              <span className="text-[var(--text-muted)] text-sm landing-body">{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Flowcharts / Process Diagrams */}
-              {topicDetails.flowcharts && topicDetails.flowcharts.length > 0 && (
-                <div className="grid grid-cols-1 gap-2">
-                  {topicDetails.flowcharts.map((fc) => (
-                    <FlowchartCard key={fc.id} flowchart={fc} />
-                  ))}
-                </div>
-              )}
+              {/* (Implementation + Algorithms moved to after trade-offs) */}
 
               {/* 10. Deep Dive Topics + System Components + Key Design Decisions */}
               {topicDetails.deepDiveTopics && (
@@ -2420,7 +2298,36 @@ export default function TopicDetail({
                 </div>
               ) : null}
 
-              {/* 11. Trade-offs + Edge Cases */}
+              {/* 11. Visual Assets — comparisons, cheat sheets, charts, evolution */}
+              {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {topicDetails.comparisonTables.map((comp) => (
+                    <ComparisonCard key={comp.id} comparison={comp} />
+                  ))}
+                </div>
+              )}
+
+              {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                  {topicDetails.visualCards.map((card) => (
+                    <CheatSheetCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
+
+              {topicDetails.evolutionSteps && topicDetails.evolutionSteps.length > 0 && (
+                <EvolutionTimeline steps={topicDetails.evolutionSteps} />
+              )}
+
+              {topicDetails.charts && topicDetails.charts.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {topicDetails.charts.map((chart) => (
+                    <ChartCard key={chart.id} chart={chart} />
+                  ))}
+                </div>
+              )}
+
+              {/* 12. Trade-offs + Edge Cases */}
               {topicDetails.tradeoffDecisions && (
                 <div id="tradeoff-decisions" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
@@ -2586,47 +2493,90 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 13. Visual Assets — reference section */}
-              {/* Static Architecture Diagrams (pre-generated SVGs) */}
+              {/* Static Architecture Diagrams */}
               {topicDetails.staticDiagrams && topicDetails.staticDiagrams.length > 0 && (
                 <StaticDiagramGrid diagrams={topicDetails.staticDiagrams} title="Architecture Diagrams" />
               )}
 
-              {/* Comparison Cards (side-by-side) */}
-              {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {topicDetails.comparisonTables.map((comp) => (
-                    <ComparisonCard key={comp.id} comparison={comp} />
-                  ))}
-                </div>
-              )}
-
-              {/* Cheat Sheet / Quick Reference Cards */}
-              {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {topicDetails.visualCards.map((card) => (
-                    <CheatSheetCard key={card.id} card={card} />
-                  ))}
-                </div>
-              )}
-
-              {/* Bar/Pie Charts */}
-              {topicDetails.charts && topicDetails.charts.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {topicDetails.charts.map((chart) => (
-                    <ChartCard key={chart.id} chart={chart} />
-                  ))}
-                </div>
-              )}
-
-              {/* Architecture Evolution Timeline */}
-              {topicDetails.evolutionSteps && topicDetails.evolutionSteps.length > 0 && (
-                <EvolutionTimeline steps={topicDetails.evolutionSteps} />
-              )}
-
-              {/* Design Pattern Cards */}
               {topicDetails.patternCards && topicDetails.patternCards.length > 0 && (
                 <PatternCardGrid patterns={topicDetails.patternCards} title="Key Design Patterns" />
+              )}
+
+              {/* 13. Implementation (Basic + Advanced + Algorithms) — moved after trade-offs */}
+              {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
+                <div id="implementation" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                  {topicDetails.basicImplementation && (
+                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
+                      <div className="border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2 bg-[var(--accent)]">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Basic</span>
+                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
+                        {topicDetails.basicImplementation.svgTemplate && <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />}
+                        {topicDetails.basicImplementation.problems && (
+                          <div>
+                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {topicDetails.basicImplementation.problems.map((problem, i) => (
+                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/15 text-sm landing-body">
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/15 mt-0.5"><svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></span>
+                                  <span className="text-[var(--text-secondary)]">{problem}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {topicDetails.advancedImplementation && (
+                    <div className="rounded-2xl overflow-hidden border border-[var(--accent)]/20 bg-white">
+                      <div className="border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2 bg-[var(--accent)]">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Advanced</span>
+                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
+                        {topicDetails.advancedImplementation.svgTemplate && <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />}
+                        {topicDetails.advancedImplementation.keyPoints && (
+                          <div className="mb-3">
+                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 landing-display uppercase tracking-wider">Key Points</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
+                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--accent)]/10/50 border border-[var(--accent)]/20 text-sm landing-body">
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/15 mt-0.5"><svg className="w-2.5 h-2.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>
+                                  <span className="text-[var(--text-secondary)]">{point}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {topicDetails.algorithmApproaches && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="zap" size={16} className="text-white" />
+                    <h3 className="text-[15px] font-bold text-white landing-display">Algorithm Approaches</h3>
+                  </div>
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    {topicDetails.algorithmApproaches.map((app, i) => (
+                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
+                        <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed"><FormattedContent content={app.description} color="amber" /></div>
+                        <div className="space-y-0.5">
+                          {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--accent)] font-bold mr-1">+</span>{p}</div>)}
+                          {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--text-muted)] font-bold mr-1">-</span>{c}</div>)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* 14. Code Examples */}
