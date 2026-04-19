@@ -2,17 +2,59 @@ import { useState } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
 
 // ── ComparisonCard ──────────────────────────────────────────────────────────
-// Side-by-side comparison (e.g., Vertical vs Horizontal Scaling, CP vs AP)
+// Supports two formats:
+//   1. Side-by-side: { left: { color, icon, title, items }, right: { ... } }
+//   2. Table: { headers: [...], rows: [[...]], verdict: '...' }
 export function ComparisonCard({ comparison }) {
-  const { left, right, title } = comparison;
+  const { left, right, title, headers, rows, verdict } = comparison;
+
+  // Table format (headers + rows)
+  if (headers && rows) {
+    return (
+      <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+        <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
+          <Icon name="columns" size={14} className="text-[var(--accent)]" />
+          <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{title}</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs landing-body">
+            <thead>
+              <tr className="border-b border-[var(--border)]">
+                {headers.map((h, i) => (
+                  <th key={i} className="px-3 py-2 text-left text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, ri) => (
+                <tr key={ri} className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--bg-elevated)] transition-colors">
+                  {row.map((cell, ci) => (
+                    <td key={ci} className={`px-3 py-2 text-sm landing-body ${ci === 0 ? 'font-medium text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {verdict && (
+          <div className="px-3 py-2 bg-[var(--accent)]/5 border-t border-[var(--border)] flex items-center gap-2">
+            <Icon name="check" size={12} className="text-[var(--accent)]" />
+            <span className="text-xs font-semibold text-[var(--accent)] landing-body">{verdict}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Side-by-side format (left + right)
+  if (!left || !right) return null;
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="columns" size={14} className="text-[var(--accent)]" />
-        <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
+        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{title}</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#e3e8ee]">
-        {/* Left Column */}
         <div className="p-3">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${left.color}15` }}>
@@ -29,7 +71,6 @@ export function ComparisonCard({ comparison }) {
             ))}
           </div>
         </div>
-        {/* Right Column */}
         <div className="p-3">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${right.color}15` }}>
