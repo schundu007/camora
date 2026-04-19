@@ -294,29 +294,9 @@ function DataModelSection({ schema }) {
  */
 function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
   const [imgError, setImgError] = useState(false);
-  const [scale, setScale] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const transStart = useRef({ x: 0, y: 0 });
-  const containerRef = useRef(null);
-  const imgRef = useRef(null);
 
-  const resetView = useCallback(() => { setScale(1); setTranslate({ x: 0, y: 0 }); }, []);
-  const fitToWidth = useCallback(() => {
-    if (!containerRef.current || !imgRef.current) return;
-    const cw = containerRef.current.clientWidth;
-    const iw = imgRef.current.naturalWidth;
-    const ch = containerRef.current.clientHeight || 500; const ih = imgRef.current.naturalHeight; if (iw > 0 && ih > 0) { setScale(Math.min(cw / iw, ch / ih) * 0.92); setTranslate({ x: 0, y: 0 }); }
-  }, []);
+  useEffect(() => { setImgError(false); }, [topicId, provider]);
 
-  // Reset error state when topic or provider changes
-  useEffect(() => {
-    setImgError(false);
-    resetView();
-  }, [topicId, provider, resetView]);
-
-  // If static image failed to load, fall back to API-generated diagram
   if (imgError) {
     return (
       <CloudArchitectureDiagram
@@ -331,35 +311,20 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      {/* Zoom controls */}
-      <div className="flex items-center justify-end gap-1 mb-2">
-        <button onClick={() => setScale(s => Math.min(s + 0.3, 5))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
-        <span className="text-[10px] font-mono text-[var(--text-muted)] min-w-[3.5ch] text-center">{Math.round(scale * 100)}%</span>
-        <button onClick={() => setScale(s => Math.max(s - 0.3, 0.3))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">−</button>
-        <button onClick={fitToWidth} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
-        <button onClick={resetView} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">1:1</button>
-      </div>
-      <div ref={containerRef}
-        className="rounded-lg select-none flex items-center justify-center"
-        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', maxHeight: '70vh', minHeight: '300px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-        onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.15 : 0.15)), 5)); }}
-        onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
-        onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
-        onMouseUp={() => setDragging(false)} onMouseLeave={() => setDragging(false)}>
-        <img ref={imgRef} src={staticSrc} alt={`${topicId} ${provider.toUpperCase()} architecture diagram`} draggable={false}
-          onLoad={fitToWidth}
+      {/* Simple image — like Medium/docs sites. Scrolls with page, full width. */}
+      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <img
+          src={staticSrc}
+          alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           onError={() => setImgError(true)}
-          style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'center center', maxWidth: 'none', height: 'auto' }} />
+        />
       </div>
-      <div className="mt-2 flex items-center justify-between text-sm text-[var(--text-muted)] landing-mono">
+      <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
         <span>{provider.toUpperCase()} Architecture</span>
         <div className="flex items-center gap-3">
-          <button onClick={onGenerate} className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">
-            Regenerate →
-          </button>
-          <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:text-[var(--accent)]">
-            Full Size →
-          </a>
+          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">Regenerate →</button>
+          <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)]">Full Size →</a>
         </div>
       </div>
     </div>
@@ -694,9 +659,9 @@ export default function TopicDetail({
           {/* Preview: full introduction */}
           {topicDetails.introduction && (
             <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
-              <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                <Icon name="book" size={14} className="text-[var(--accent)]" />
-                <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Introduction</h2>
+              <div className="px-3 py-1.5 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                <Icon name="book" size={14} className="text-white" />
+                <h2 className="text-sm font-bold text-white landing-display">Introduction</h2>
               </div>
               <div className="p-3">
                 <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
@@ -709,9 +674,9 @@ export default function TopicDetail({
           {/* Preview: key concepts */}
           {topicDetails.concepts && topicDetails.concepts.length > 0 && (
             <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
-              <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                <Icon name="puzzle" size={14} style={{ color: topicDetails.color }} />
-                <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Concepts</h2>
+              <div className="px-3 py-1.5 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                <Icon name="puzzle" size={14} className="text-white" />
+                <h2 className="text-sm font-bold text-white landing-display">Key Concepts</h2>
               </div>
               <div className="p-3 flex flex-wrap gap-1.5">
                 {topicDetails.concepts.map((concept, i) => (
@@ -729,10 +694,10 @@ export default function TopicDetail({
             const previewQuestions = topicDetails.keyQuestions.slice(0, previewCount);
             return (
               <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
-                <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                  <Icon name="helpCircle" size={14} className="text-[var(--text-secondary)]" />
-                  <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Questions</h2>
-                  <span className="text-[10px] text-[var(--text-muted)] ml-1">({previewCount} of {topicDetails.keyQuestions.length})</span>
+                <div className="px-3 py-1.5 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                  <Icon name="helpCircle" size={14} className="text-white" />
+                  <h2 className="text-sm font-bold text-white landing-display">Key Questions</h2>
+                  <span className="text-[10px] text-white/80 ml-1">({previewCount} of {topicDetails.keyQuestions.length})</span>
                 </div>
                 <div className="divide-y divide-[var(--border)]">
                   {previewQuestions.map((qa, i) => (
@@ -2125,10 +2090,10 @@ export default function TopicDetail({
                 const TOPIC_COLORS = ['#10b981', '#2D8CFF', '#f59e0b', '#3b82f6', '#ef4444', '#60A5FA', '#14b8a6', '#ec4899'];
                 return (
                 <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]/50">
-                    <Icon name="messageCircle" size={14} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Discussion Points</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] landing-mono">{topicDetails.discussionPoints.length} topics</span>
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="messageCircle" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Discussion Points</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.discussionPoints.length} topics</span>
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.discussionPoints.map((point, i) => {
@@ -2179,9 +2144,9 @@ export default function TopicDetail({
               {/* Algorithm Approaches */}
               {topicDetails.algorithmApproaches && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="zap" size={16} className="text-[var(--text-secondary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Algorithm Approaches</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="zap" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Algorithm Approaches</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.algorithmApproaches.map((app, i) => (
@@ -2203,9 +2168,9 @@ export default function TopicDetail({
               {/* Architecture Layers */}
               {topicDetails.architectureLayers && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[rgba(45,140,255,0.08)]">
-                    <Icon name="layers" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Architecture Layers</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Architecture Layers</h3>
                   </div>
                   <div className="p-3 space-y-1.5">
                     {topicDetails.architectureLayers.map((layer, i) => (
@@ -2226,9 +2191,9 @@ export default function TopicDetail({
               {/* Deep Dive Topics */}
               {topicDetails.deepDiveTopics && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[rgba(45,140,255,0.08)]">
-                    <Icon name="search" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Deep Dive Topics</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="search" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Deep Dive Topics</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
@@ -2246,9 +2211,9 @@ export default function TopicDetail({
               {/* Trade-off Decisions */}
               {topicDetails.tradeoffDecisions && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="gitBranch" size={16} className="text-[var(--text-secondary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Trade-off Decisions</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="gitBranch" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Trade-off Decisions</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.tradeoffDecisions.map((d, i) => (
@@ -2270,10 +2235,10 @@ export default function TopicDetail({
               {/* Edge Cases — Critical scenarios to address in interviews */}
               {topicDetails.edgeCases && (
                 <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-red-500/5">
-                    <Icon name="alertTriangle" size={14} className="text-red-400" />
-                    <h3 className="text-sm font-bold text-red-400 landing-display">Edge Cases</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 landing-mono">{topicDetails.edgeCases.length} cases</span>
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="alertTriangle" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Edge Cases</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.edgeCases.length} cases</span>
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.edgeCases.map((ec, i) => (
@@ -2300,10 +2265,10 @@ export default function TopicDetail({
               {/* Tradeoffs — Key design decisions and their consequences */}
               {topicDetails.tradeoffs && (
                 <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]/50">
-                    <Icon name="gitBranch" size={14} className="text-[var(--text-secondary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Tradeoffs</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-secondary)] landing-mono">{topicDetails.tradeoffs.length} decisions</span>
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="gitBranch" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Tradeoffs</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.tradeoffs.length} decisions</span>
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.tradeoffs.map((t, i) => (
@@ -2341,10 +2306,10 @@ export default function TopicDetail({
               {/* Layered Design — Architectural layer breakdown */}
               {topicDetails.layeredDesign && (
                 <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]/50">
-                    <Icon name="layers" size={14} className="text-[var(--text-secondary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-secondary)] landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Layered Design</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
                   </div>
                   <div className="p-2.5 space-y-0">
                     {topicDetails.layeredDesign.map((layer, i) => {
@@ -2387,9 +2352,9 @@ export default function TopicDetail({
               {/* Interview Follow-up Questions */}
               {topicDetails.interviewFollowups && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[rgba(245,158,11,0.08)]">
-                    <Icon name="helpCircle" size={16} className="text-[var(--warning)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Common Follow-up Questions</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="helpCircle" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Common Follow-up Questions</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
@@ -2410,9 +2375,9 @@ export default function TopicDetail({
               {/* Code Implementations (object format with language keys) */}
               {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10">
-                    <Icon name="code" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Implementation Code</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="code" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Implementation Code</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
@@ -2437,9 +2402,9 @@ export default function TopicDetail({
                   {/* System Components */}
                   {!topicDetails.introduction && topicDetails.components && (
                     <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                      <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                        <Icon name="layers" size={14} className="text-[var(--accent)]" />
-                        <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">System Components</h3>
+                      <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                        <Icon name="layers" size={14} className="text-white" />
+                        <h3 className="text-sm font-bold text-white landing-display">System Components</h3>
                       </div>
                       <div className="p-3">
                         <div className="flex flex-wrap gap-2">
@@ -2456,10 +2421,10 @@ export default function TopicDetail({
                   {/* Key Design Decisions — Numbered timeline cards */}
                   {topicDetails.keyDecisions && (
                     <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
-                      <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10/50">
-                        <Icon name="lightbulb" size={14} className="text-[var(--accent)]" />
-                        <h3 className="text-sm font-bold text-[var(--accent)] landing-display">Key Design Decisions</h3>
-                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">{topicDetails.keyDecisions.length}</span>
+                      <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                        <Icon name="lightbulb" size={14} className="text-white" />
+                        <h3 className="text-sm font-bold text-white landing-display">Key Design Decisions</h3>
+                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.keyDecisions.length}</span>
                       </div>
                       <div className="p-3">
                         <div className="flex flex-nowrap gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
@@ -2484,9 +2449,9 @@ export default function TopicDetail({
               {/* LLD Core Entities */}
               {topicDetails.coreEntities && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="box" size={16} className="text-[var(--text-primary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Core Entities</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="box" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Core Entities</h3>
                   </div>
                   <div className="p-3">
                     <div className="grid grid-cols-1 gap-2">
@@ -2504,9 +2469,9 @@ export default function TopicDetail({
               {/* LLD Design Patterns */}
               {topicDetails.designPatterns && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="puzzle" size={16} className="text-[var(--text-primary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Design Patterns</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="puzzle" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Design Patterns</h3>
                   </div>
                   <div className="p-4">
                     <ul className="grid grid-cols-1 gap-1">
@@ -2524,9 +2489,9 @@ export default function TopicDetail({
               {/* LLD Implementation Code */}
               {topicDetails.implementation && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="code" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-[var(--accent)] landing-display">Implementation</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="code" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Implementation</h3>
                   </div>
                   <div className="overflow-x-auto bg-[#0d1117]">
                     <pre
@@ -2546,9 +2511,9 @@ export default function TopicDetail({
               {/* Concurrency Concepts */}
               {topicDetails.concepts && Array.isArray(topicDetails.concepts) && topicDetails.concepts[0]?.name && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="cpu" size={16} className="text-[var(--text-primary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Core Concepts</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="cpu" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Core Concepts</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.concepts.map((concept, i) => (
@@ -2564,9 +2529,9 @@ export default function TopicDetail({
               {/* Concurrency Primitives */}
               {topicDetails.primitives && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="lock" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Synchronization Primitives</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="lock" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Synchronization Primitives</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.primitives.map((prim, i) => (
@@ -2585,9 +2550,9 @@ export default function TopicDetail({
               {/* Concurrency Classic Problems */}
               {topicDetails.problems && topicDetails.problems[0]?.solution && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="alertTriangle" size={16} className="text-[var(--text-primary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Classic Problems</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="alertTriangle" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Classic Problems</h3>
                   </div>
                   <div className="grid  gap-2 p-3">
                     {topicDetails.problems.map((problem, i) => (
@@ -2607,9 +2572,9 @@ export default function TopicDetail({
               {/* Concurrency Data Structures */}
               {topicDetails.structures && (
                 <div className="rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                    <Icon name="database" size={16} className="text-[var(--text-primary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Concurrent Data Structures</h3>
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="database" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Concurrent Data Structures</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.structures.map((struct, i) => (
@@ -2638,9 +2603,9 @@ export default function TopicDetail({
                 const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
                 return (
                   <div id="overview" className="scroll-mt-24 rounded-2xl border border-[var(--border)] overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(45,140,255,0.06) 0%, var(--bg-surface) 100%)' }}>
-                    <div className="px-4 py-2 border-b border-[var(--border)] bg-[var(--accent)]/10/60 flex items-center gap-2">
-                      <Icon name="book" size={14} className="text-[var(--accent)]" />
-                      <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Overview</h2>
+                    <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                      <Icon name="book" size={14} className="text-white" />
+                      <h2 className="text-sm font-bold text-white landing-display">Overview</h2>
                     </div>
                     <div className="p-5">
                       {quoteMatch ? (
@@ -2675,10 +2640,10 @@ export default function TopicDetail({
               {/* Key Principles */}
               {topicDetails.principles && topicDetails.principles.length > 0 && (
                 <div className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
-                  <div className="px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                    <Icon name="award" size={14} style={{ color: topicDetails.color }} />
-                    <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Principles</h2>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{topicDetails.principles.length} principles</span>
+                  <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                    <Icon name="award" size={14} className="text-white" />
+                    <h2 className="text-sm font-bold text-white landing-display">Key Principles</h2>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono bg-white/20 text-white">{topicDetails.principles.length} principles</span>
                   </div>
                   <div className="p-3 flex flex-wrap gap-1.5">
                     {topicDetails.principles.map((principle, i) => (
@@ -2695,12 +2660,12 @@ export default function TopicDetail({
           {/* Key Questions — Expandable single-column cards */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
-              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]/50">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: topicDetails.color }}>
+              <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-white/20">
                   <Icon name="messageSquare" size={12} className="text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Questions & Answers</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-secondary)] landing-mono">{topicDetails.keyQuestions.length} questions</span>
+                <h3 className="text-sm font-bold text-white landing-display">Questions & Answers</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.keyQuestions.length} questions</span>
               </div>
               <div className="p-2.5 space-y-2">
                 {topicDetails.keyQuestions.map((item, index) => {
@@ -2841,12 +2806,12 @@ export default function TopicDetail({
           {/* STAR Framework Example — structured cards with colored labels */}
           {topicDetails.starExample && (
             <div id="star-example" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
-              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(45,140,255,0.08) 50%, rgba(239,68,68,0.06) 100%)' }}>
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}>
+              <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-white/20">
                   <Icon name="target" size={12} className="text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">STAR Framework Example</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: 'linear-gradient(135deg, #3b82f620, #10b98120)', color: '#2D8CFF' }}>4 steps</span>
+                <h3 className="text-sm font-bold text-white landing-display">STAR Framework Example</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono bg-white/20 text-white">4 steps</span>
               </div>
               <div className="p-4">
                 <div className="relative">
@@ -2890,12 +2855,12 @@ export default function TopicDetail({
           {/* Example Response */}
           {topicDetails.exampleResponse && (
             <div id="example-response" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
-              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10/50">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--accent)]/15">
-                  <Icon name="messageSquare" size={12} className="text-[var(--accent)]" />
+              <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-white/20">
+                  <Icon name="messageSquare" size={12} className="text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Example Response</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">Ready to use</span>
+                <h3 className="text-sm font-bold text-white landing-display">Example Response</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">Ready to use</span>
               </div>
               <div className="p-5">
                 <div className="relative rounded-xl p-5" style={{ background: `linear-gradient(135deg, ${topicDetails.color}06, ${topicDetails.color}02)`, borderLeft: `4px solid ${topicDetails.color}40` }}>
@@ -2931,12 +2896,12 @@ export default function TopicDetail({
           {/* Practice Questions — accordion-style expandable items */}
           {topicDetails.sampleQuestions && topicDetails.sampleQuestions.length > 0 && (
             <div id="sample-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
-              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${topicDetails.color}15` }}>
-                  <Icon name="helpCircle" size={12} style={{ color: topicDetails.color }} />
+              <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-white/20">
+                  <Icon name="helpCircle" size={12} className="text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Practice Questions</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{topicDetails.sampleQuestions.length} questions</span>
+                <h3 className="text-sm font-bold text-white landing-display">Practice Questions</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono bg-white/20 text-white">{topicDetails.sampleQuestions.length} questions</span>
               </div>
               <div className="p-2.5 space-y-1.5">
                 {topicDetails.sampleQuestions.map((q, i) => (
@@ -2952,14 +2917,14 @@ export default function TopicDetail({
           {/* Tips for Success — green-tinted cards with checkmarks */}
           {topicDetails.tips && (
             <div id="tips" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
-              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10/50">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--accent)]/15">
-                  <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-white/20">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Tips for Success</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">{topicDetails.tips.length} tips</span>
+                <h3 className="text-sm font-bold text-white landing-display">Tips for Success</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.tips.length} tips</span>
               </div>
               <div className="p-2.5 space-y-1.5">
                 {topicDetails.tips.map((tip, i) => (
