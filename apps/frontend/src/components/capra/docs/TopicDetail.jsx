@@ -588,30 +588,36 @@ export default function TopicDetail({
     return s;
   }, [topicDetails, activePage, isSDStyle, isCodingStyle]);
 
-  // Track active TOC section on scroll — uses scroll position for reliability
+  // Track active TOC section on scroll
+  // Content scrolls inside #app-scroll-container, NOT window
   const [activeTocId, setActiveTocId] = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
   useEffect(() => {
     if (!tocSections.length) return;
+    const scrollContainer = document.getElementById('app-scroll-container') || window;
     const handleScroll = () => {
       const ids = tocSections.map(s => s.id);
       const offsets = ids.map(id => {
         const el = document.getElementById(id);
         return el ? el.getBoundingClientRect().top : Infinity;
       });
-      // Find the last section that has scrolled past the top threshold
       let active = ids[0];
       for (let i = 0; i < offsets.length; i++) {
         if (offsets[i] < 200) active = ids[i];
       }
       setActiveTocId(active);
-      // Scroll progress
-      const docH = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docH > 0 ? Math.min(1, window.scrollY / docH) : 0);
+      // Scroll progress — use container's scrollTop, not window.scrollY
+      if (scrollContainer instanceof HTMLElement) {
+        const scrollH = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        setScrollProgress(scrollH > 0 ? Math.min(1, scrollContainer.scrollTop / scrollH) : 0);
+      } else {
+        const docH = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollProgress(docH > 0 ? Math.min(1, window.scrollY / docH) : 0);
+      }
     };
     handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [tocSections, selectedTopic]);
 
   return (
@@ -684,7 +690,7 @@ export default function TopicDetail({
       )}
 
       {/* Right: Topic content */}
-      <div className="flex-1 min-w-0 lg:max-w-[65%] mx-auto">
+      <div className="flex-1 min-w-0 lg:max-w-[75%] mx-auto">
       {/* Topic Header — no duplicate breadcrumb */}
       <div className="rounded-xl p-3 mb-3 border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between mb-2">
