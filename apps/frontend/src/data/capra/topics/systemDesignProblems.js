@@ -717,27 +717,27 @@ follows {
             path: '/api/tweets',
             params: 'content, mediaIds[], replyToId?',
             response: '201 Created { tweetId, createdAt }',
-            notes: 'Creates a new tweet, triggers fan-out'
+            description: 'Creates a new tweet and triggers the fan-out pipeline. For users with <10K followers, the tweet is pushed to each follower\'s pre-computed timeline cache (fan-out on write). For celebrity users, followers pull the tweet at read time. Media attachments are uploaded separately and referenced by ID.'
           },
           {
             method: 'GET',
             path: '/api/timeline',
             params: 'cursor?, limit=20',
             response: '200 { tweets[], nextCursor }',
-            notes: 'Returns personalized home timeline'
+            description: 'Returns the personalized home timeline using cursor-based pagination. Merges pre-computed timeline from Redis cache with real-time tweets from followed celebrities (hybrid fan-out). The cursor is a tweet ID for consistent pagination even as new tweets arrive.'
           },
           {
             method: 'POST',
             path: '/api/users/{id}/follow',
             response: '200 { following: true }',
-            notes: 'Follow a user'
+            description: 'Follow a user. Triggers an async job to backfill the follower\'s timeline with the followed user\'s recent tweets. Updates the social graph in a graph database and increments follower/following counters.'
           },
           {
             method: 'GET',
             path: '/api/search',
             params: 'q, type=tweets|users, cursor?',
             response: '200 { results[], nextCursor }',
-            notes: 'Full-text search via Elasticsearch'
+            description: 'Full-text search across tweets and user profiles using Elasticsearch. Tweets are indexed in near real-time via a Kafka consumer. Results are ranked by relevance, recency, and engagement metrics. Supports hashtag search, mention search, and phrase matching.'
           }
         ]
       },
@@ -963,26 +963,26 @@ rides {
             path: '/api/rides',
             params: 'pickupLocation, dropoffLocation',
             response: '201 { rideId, estimatedFare, estimatedETA }',
-            notes: 'Request a ride, triggers driver matching'
+            description: 'Initiates a ride request. The system queries a geospatial index (QuadTree or S2 Geometry) to find available drivers within a radius, calculates estimated fare using surge pricing model, and sends push notifications to the nearest eligible drivers. Uses a matching algorithm that considers driver distance, rating, and acceptance rate.'
           },
           {
             method: 'PUT',
             path: '/api/drivers/location',
             params: 'latitude, longitude, heading, speed',
             response: '200 { success }',
-            notes: 'Driver location update (every 3-4 seconds)'
+            description: 'Receives driver GPS location updates every 3-4 seconds. Updates are batched and written to an in-memory spatial index (Redis with geospatial commands or a custom QuadTree). The location is also published to a Kafka topic for real-time ride tracking and ETA recalculation. At peak, this endpoint handles 1M+ updates per second.'
           },
           {
             method: 'GET',
             path: '/api/rides/{id}',
             response: '200 { ride, driverLocation, eta }',
-            notes: 'Get ride status with real-time driver location'
+            description: 'Returns current ride status, real-time driver location, and dynamically recalculated ETA. The ETA uses live traffic data from the routing service and the driver\'s current speed/heading. Ride status transitions: REQUESTED → ACCEPTED → ARRIVING → IN_PROGRESS → COMPLETED.'
           },
           {
             method: 'WS',
             path: '/ws/ride/{id}',
             response: 'Real-time ride updates',
-            notes: 'WebSocket for live location during ride'
+            description: 'WebSocket connection for live ride tracking. Pushes driver location updates (every 2 seconds), ETA changes, ride status transitions, and driver messages to the rider\'s app. Falls back to polling at /api/rides/{id} if WebSocket connection drops.'
           }
         ]
       },
@@ -1233,31 +1233,36 @@ watch_history {
             method: 'POST',
             path: '/api/upload/init',
             params: '{ title, description, tags[], privacy }',
-            response: '{ uploadId, uploadUrl, chunkSize }'
+            response: '{ uploadId, uploadUrl, chunkSize }',
+            description: 'Initializes a resumable upload session. Returns a unique uploadId and a pre-signed URL for direct upload to object storage (S3). The chunkSize (typically 8MB) is determined by the server based on the file size. Upload metadata is stored in the database immediately; the video status is set to UPLOADING.'
           },
           {
             method: 'PUT',
             path: '/api/upload/{uploadId}/chunk',
             params: '{ chunkNumber, data, checksum }',
-            response: '{ received: true, progress: 45% }'
+            response: '{ received: true, progress: 45% }',
+            description: 'Uploads a single chunk of the video file. Each chunk includes a CRC32 checksum for integrity verification. If a chunk fails, only that chunk needs to be re-uploaded (resumable). Chunks are written directly to object storage. The upload service tracks which chunks have been received to support resume after network failures.'
           },
           {
             method: 'POST',
             path: '/api/upload/{uploadId}/complete',
             params: '{}',
-            response: '{ videoId, status: PROCESSING, eta: 600 }'
+            response: '{ videoId, status: PROCESSING, eta: 600 }',
+            description: 'Finalizes the upload and triggers the transcoding pipeline. The raw video is read from object storage and sent to a distributed transcoding cluster (FFmpeg workers). The video is transcoded into multiple resolutions (360p, 720p, 1080p, 4K) in parallel. Each resolution is segmented into 4-second chunks for adaptive bitrate streaming. Estimated processing time depends on video length and resolution.'
           },
           {
             method: 'GET',
             path: '/api/video/{id}/manifest',
             params: '?format=hls|dash',
-            response: 'HLS/DASH manifest with quality options'
+            response: 'HLS/DASH manifest with quality options',
+            description: 'Returns the adaptive bitrate streaming manifest (M3U8 for HLS, MPD for DASH). The manifest lists all available quality levels and their segment URLs served from the nearest CDN edge. The player automatically switches quality based on the viewer\'s bandwidth. Popular videos are pre-cached at edge locations; long-tail content is fetched from regional or origin storage on demand.'
           },
           {
             method: 'GET',
             path: '/api/feed/home',
             params: '?pageToken=',
-            response: '{ videos[], nextPageToken }'
+            response: '{ videos[], nextPageToken }',
+            description: 'Returns the personalized home feed using a recommendation engine. Combines collaborative filtering (users who watched X also watched Y), content-based signals (category, tags, creator), and engagement metrics (watch time, likes, shares). Results are pre-computed hourly and served from cache. Uses opaque page tokens for pagination to handle feed updates between requests.'
           }
         ]
       },
@@ -1545,27 +1550,27 @@ messages {
             path: '/ws/chat',
             params: 'authToken in header',
             response: 'Bidirectional message stream',
-            notes: 'Primary channel for real-time messaging'
+            description: 'Persistent WebSocket connection for real-time messaging. Each device maintains one connection to a chat server. Messages are end-to-end encrypted (Signal Protocol) before transmission. The server routes messages by looking up the recipient\'s connected chat server in a presence service. Handles typing indicators, online status, and delivery receipts over the same connection.'
           },
           {
             method: 'POST',
             path: '/api/messages',
             params: 'conversationId, content, mediaUrl?',
             response: '201 { messageId, sentAt }',
-            notes: 'Fallback when WebSocket unavailable'
+            description: 'REST fallback for sending messages when WebSocket is unavailable (poor network). The message is encrypted client-side, stored in the recipient\'s message queue, and delivered when they reconnect. Provides at-least-once delivery with client-side deduplication using messageId.'
           },
           {
             method: 'GET',
             path: '/api/conversations/{id}/messages',
             params: 'before?, limit=50',
             response: '200 { messages[], hasMore }',
-            notes: 'Sync message history'
+            description: 'Fetches message history for a conversation using cursor-based pagination (before=messageId). Used for initial sync when the app opens, scrolling back through chat history, and restoring messages on a new device. Messages are stored per-user (not per-conversation) for efficient sharding.'
           },
           {
             method: 'PUT',
             path: '/api/messages/{id}/read',
             response: '200 { readAt }',
-            notes: 'Mark message as read'
+            description: 'Marks a message as read and sends a read receipt to the sender via their WebSocket connection. Read receipts are batched (multiple messages marked read at once) to reduce server load. The sender sees blue double-check marks when the recipient reads.'
           }
         ]
       },
