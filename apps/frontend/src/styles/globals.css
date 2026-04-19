@@ -7,67 +7,67 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds — white, matching landing page */
-    --bg-base: #FFFFFF;
-    --bg-app: #FFFFFF;
-    --bg-surface: #F7F8FA;
-    --bg-elevated: #EEF0F4;
-    --bg-overlay: rgba(0,0,0,0.4);
+    /* Backgrounds — Icy Frost: cool blue-white tones */
+    --bg-base: #F0F7FF;
+    --bg-app: #F0F7FF;
+    --bg-surface: #E8F1FC;
+    --bg-elevated: #DDE9F7;
+    --bg-overlay: rgba(10,30,60,0.35);
 
-    /* Borders */
-    --border: #E2E5EB;
-    --border-hover: #CBD0D9;
-    --border-focus: #2D8CFF;
+    /* Borders — frosty blue edges */
+    --border: #C4D9F2;
+    --border-hover: #A8C8EB;
+    --border-focus: #38BDF8;
 
-    /* Text — dark on white */
-    --text-primary: #1A1D23;
-    --text-secondary: #4A5568;
-    --text-muted: #8C95A6;
-    --text-dimmed: #C8CDD6;
+    /* Text — dark navy on frost */
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-muted: #7096BF;
+    --text-dimmed: #B0CBE6;
 
-    /* Accent (Zoom Blue) */
-    --accent: #2D8CFF;
-    --accent-hover: #1A7AE6;
-    --accent-subtle: rgba(45,140,255,0.08);
-    --accent-text: #2D8CFF;
+    /* Accent — Icy cyan-blue (matches logo) */
+    --accent: #22D3EE;
+    --accent-hover: #06B6D4;
+    --accent-subtle: rgba(34,211,238,0.10);
+    --accent-text: #0891B2;
 
-    /* Semantic */
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --info: #2D8CFF;
+    /* Semantic — frost-compatible */
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --info: #38BDF8;
 
     /* Difficulty (unified across all pages) */
-    --easy: #10B981;
-    --easy-bg: rgba(16,185,129,0.08);
-    --easy-border: rgba(16,185,129,0.2);
-    --medium: #F59E0B;
-    --medium-bg: rgba(245,158,11,0.08);
-    --medium-border: rgba(245,158,11,0.2);
-    --hard: #EF4444;
-    --hard-bg: rgba(239,68,68,0.08);
-    --hard-border: rgba(239,68,68,0.2);
+    --easy: #34D399;
+    --easy-bg: rgba(52,211,153,0.10);
+    --easy-border: rgba(52,211,153,0.25);
+    --medium: #FBBF24;
+    --medium-bg: rgba(251,191,36,0.10);
+    --medium-border: rgba(251,191,36,0.25);
+    --hard: #F87171;
+    --hard-bg: rgba(248,113,113,0.10);
+    --hard-border: rgba(248,113,113,0.25);
 
-    /* Category (minimal — blue shades only) */
-    --cat-primary: #2D8CFF;
-    --cat-primary-bg: rgba(45,140,255,0.08);
-    --cat-secondary: #6366F1;
-    --cat-secondary-bg: rgba(99,102,241,0.08);
-    --cat-tertiary: #06B6D4;
-    --cat-tertiary-bg: rgba(6,182,212,0.08);
+    /* Category — icy blue spectrum */
+    --cat-primary: #38BDF8;
+    --cat-primary-bg: rgba(56,189,248,0.10);
+    --cat-secondary: #818CF8;
+    --cat-secondary-bg: rgba(129,140,248,0.10);
+    --cat-tertiary: #22D3EE;
+    --cat-tertiary-bg: rgba(34,211,238,0.10);
 
-    /* Fonts — Camora custom (Clash Display + Satoshi) */
+    /* Fonts — Camora custom (Winter Kei + Satoshi) */
     --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display: 'Winter Kei', 'Clash Display', 'Satoshi', sans-serif;
     --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    --font-brand: 'Clash Display', sans-serif;
+    --font-brand: 'Winter Kei', 'Clash Display', sans-serif;
 
-    /* Shadows (light mode) */
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.08);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
-    --shadow-xl: 0 16px 48px rgba(0,0,0,0.12);
+    /* Shadows — cool blue frost glow */
+    --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
+    --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
+    --shadow-md: 0 4px 12px rgba(56,189,248,0.10);
+    --shadow-lg: 0 8px 24px rgba(56,189,248,0.12);
+    --shadow-xl: 0 16px 48px rgba(56,189,248,0.15);
     --card-shadow: var(--shadow-sm);
 
     /* Layout */
@@ -100,26 +100,26 @@
 
   /* Light theme — opt-in via class on body or root container */
   .light-theme {
-    --bg-app: #ffffff;
-    --bg-surface: #f9fafb;
-    --bg-elevated: #f3f4f6;
-    --border: #e5e7eb;
-    --border-hover: #d1d5db;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
-    --text-dimmed: #d1d5db;
-    --accent-subtle: rgba(45,140,255,0.08);
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --bg-app: #F0F7FF;
+    --bg-surface: #E8F1FC;
+    --bg-elevated: #DDE9F7;
+    --border: #C4D9F2;
+    --border-hover: #A8C8EB;
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-muted: #7096BF;
+    --text-dimmed: #B0CBE6;
+    --accent-subtle: rgba(34,211,238,0.10);
+    --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
+    --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
+    --shadow-md: 0 4px 12px rgba(56,189,248,0.10);
+    --shadow-lg: 0 8px 24px rgba(56,189,248,0.12);
     --card-shadow: var(--shadow-sm);
-    --bg: #ffffff;
-    --bg2: #f9fafb;
-    --surface: #ffffff;
-    --surface2: #f3f4f6;
-    --nav-bg: rgba(255,255,255,0.95);
+    --bg: #F0F7FF;
+    --bg2: #E8F1FC;
+    --surface: #F0F7FF;
+    --surface2: #DDE9F7;
+    --nav-bg: rgba(240,247,255,0.92);
   }
 
   *, *::before, *::after {
