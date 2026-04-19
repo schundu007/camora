@@ -2460,6 +2460,9 @@ export default function TopicDetail({
                               </span>
                               <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display flex-1">{point.topic}</h4>
                             </div>
+                            {point.diagramSrc && (
+                              <img src={point.diagramSrc} alt={point.topic} className="w-full rounded-lg border border-[var(--border)] mb-3" loading="lazy" style={{ maxHeight: '240px', objectFit: 'contain' }} />
+                            )}
                             <ul className="space-y-1.5 ml-8">
                               {visiblePoints.map((p, j) => (
                                 <li key={j} className="flex items-start gap-2 text-sm landing-body">
@@ -2583,8 +2586,11 @@ export default function TopicDetail({
                     {topicDetails.algorithmApproaches.map((app, i) => (
                       <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
                         <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
+                        {app.diagramSrc && (
+                          <img src={app.diagramSrc} alt={app.name} className="w-full rounded-lg border border-[var(--border)] mb-2" loading="lazy" style={{ maxHeight: '280px', objectFit: 'contain' }} />
+                        )}
                         <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed"><FormattedContent content={app.description} color="amber" /></div>
-                        <div className="space-y-0.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
                           {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--accent)] font-bold mr-1">+</span>{p}</div>)}
                           {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--text-muted)] font-bold mr-1">-</span>{c}</div>)}
                         </div>
