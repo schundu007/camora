@@ -535,15 +535,13 @@ export default function DocsPage({ onBack }) {
 
   const topicDetails = getSelectedTopicDetails();
 
-  // Reset diagram when topic changes — auto-load from DB cache if available
+  // Reset diagram when topic changes — restore from local cache only (no auto-generation)
   useEffect(() => {
     setDiagramData(null);
     setDiagramError(null);
     const cacheKey = `${selectedTopic}-${diagramDetailLevel}-${diagramCloudProvider}`;
     if (selectedTopic && diagramCache[cacheKey]) {
       setDiagramData(diagramCache[cacheKey]);
-    } else if (selectedTopic && activePage === 'system-design' && topicDetails?.title) {
-      handleGenerateDiagram(topicDetails.title, diagramDetailLevel, diagramCloudProvider);
     }
   }, [selectedTopic, topicDetails?.title]);
 
