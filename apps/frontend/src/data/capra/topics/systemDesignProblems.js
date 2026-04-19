@@ -3853,31 +3853,36 @@ refunds {
             method: 'POST',
             path: '/v1/payment_intents',
             params: '{ amount, currency, payment_method, confirm: true }',
-            response: '{ id, status, amount, client_secret }'
+            response: '{ id, status, amount, client_secret }',
+            description: 'Creates a payment intent representing a customer\'s intention to pay. The intent goes through states: requires_payment_method → requires_confirmation → processing → succeeded/failed. Uses idempotency keys to prevent duplicate charges on network retries. The client_secret is used by the frontend SDK to securely confirm the payment without exposing the full API key.'
           },
           {
             method: 'POST',
             path: '/v1/payment_intents/{id}/capture',
             params: '{ amount_to_capture }',
-            response: '{ id, status: captured, amount_captured }'
+            response: '{ id, status: captured, amount_captured }',
+            description: 'Captures a previously authorized payment. Authorization holds funds on the customer\'s card without charging. Capture must occur within 7 days (card network rules). Partial capture is supported — capture less than the authorized amount and the remainder is released. Used in marketplaces where the merchant ships before charging.'
           },
           {
             method: 'POST',
             path: '/v1/refunds',
             params: '{ payment_intent, amount, reason }',
-            response: '{ id, status, amount }'
+            response: '{ id, status, amount }',
+            description: 'Issues a full or partial refund to the original payment method. Refunds are processed asynchronously — the status transitions from pending to succeeded over 5-10 business days. The refund amount is debited from the merchant\'s balance. Reason codes (duplicate, fraudulent, requested_by_customer) are tracked for dispute prevention analytics.'
           },
           {
             method: 'POST',
             path: '/v1/payouts',
             params: '{ amount, currency, destination }',
-            response: '{ id, status, arrival_date }'
+            response: '{ id, status, arrival_date }',
+            description: 'Transfers funds from the platform\'s Stripe balance to a connected merchant\'s bank account. Payout timing depends on the merchant\'s payout schedule (daily, weekly, monthly). Uses the ACH network for US banks and SWIFT/SEPA for international. Arrival date is estimated based on the destination bank\'s processing time.'
           },
           {
             method: 'GET',
             path: '/v1/balance',
             params: '',
-            response: '{ available: [{amount, currency}], pending: [{amount, currency}] }'
+            response: '{ available: [{amount, currency}], pending: [{amount, currency}] }',
+            description: 'Returns the current account balance split into available (can be paid out) and pending (processing, not yet available). Pending funds become available after the settlement period (typically 2 business days for card payments). Balance is maintained using double-entry bookkeeping to ensure financial accuracy.'
           }
         ]
       },
@@ -4240,9 +4245,12 @@ url_frontier {
       apiDesign: {
         description: 'Search and autocomplete endpoints',
         endpoints: [
-          { method: 'GET', path: '/search', params: 'q, page, lang, safe', response: '{ results[], total, spelling?, suggestions[] }' },
-          { method: 'GET', path: '/autocomplete', params: 'prefix, lang', response: '{ suggestions[] }' },
-          { method: 'GET', path: '/images', params: 'q, size, color', response: '{ images[], total }' }
+          { method: 'GET', path: '/search', params: 'q, page, lang, safe', response: '{ results[], total, spelling?, suggestions[] }',
+            description: 'Processes a search query through the full pipeline: query parsing → spell correction → query expansion (synonyms) → index lookup across distributed shards → ranking (PageRank + BM25 + freshness + user signals) → snippet generation → result assembly. Each shard searches its portion of the web index in parallel. Results from all shards are merged and re-ranked by the aggregator. Typical latency target: <200ms for the entire pipeline.' },
+          { method: 'GET', path: '/autocomplete', params: 'prefix, lang', response: '{ suggestions[] }',
+            description: 'Returns search suggestions as the user types, updated after each keystroke. Suggestions are pre-computed from popular query logs and stored in a trie data structure. The trie is sharded by prefix and replicated globally for low latency (<50ms). Suggestions are personalized based on the user\'s search history and trending queries in their region.' },
+          { method: 'GET', path: '/images', params: 'q, size, color', response: '{ images[], total }',
+            description: 'Searches an image index built by a crawler that extracts images from web pages. Images are indexed by surrounding text, alt tags, EXIF metadata, and visual features (computed via CNN embeddings). Supports filtering by size, color, usage rights, and type. Thumbnails are served from CDN; clicking loads the full image from the source page.' }
         ]
       },
 
@@ -4604,11 +4612,16 @@ device_tokens {
       apiDesign: {
         description: 'Notification sending and preference management',
         endpoints: [
-          { method: 'POST', path: '/api/notify', params: '{ userId, templateId, channel, priority, data }', response: '{ notificationId }' },
-          { method: 'POST', path: '/api/notify/bulk', params: '{ userIds[], templateId, data }', response: '{ batchId }' },
-          { method: 'GET', path: '/api/notifications/:userId', params: 'page, unread', response: '{ notifications[], total }' },
-          { method: 'PUT', path: '/api/preferences/:userId', params: '{ channels, quietHours }', response: '{ success }' },
-          { method: 'POST', path: '/api/devices/register', params: '{ userId, platform, token }', response: '{ success }' }
+          { method: 'POST', path: '/api/notify', params: '{ userId, templateId, channel, priority, data }', response: '{ notificationId }',
+            description: 'Sends a notification to a single user through the specified channel (push, email, SMS, in-app). Uses a template engine to render personalized content from the data payload. Priority levels (critical, high, normal, low) determine delivery speed and retry behavior. Critical notifications bypass quiet hours and rate limits. Messages are queued in Kafka and processed by channel-specific workers.' },
+          { method: 'POST', path: '/api/notify/bulk', params: '{ userIds[], templateId, data }', response: '{ batchId }',
+            description: 'Sends the same notification to thousands or millions of users. Creates a batch job that fans out to individual notification tasks. Uses partitioned Kafka topics for parallel processing. Supports segmentation (send to users who match criteria). Rate-limited to avoid overwhelming downstream providers (APNs, FCM, Twilio). Returns a batchId for tracking delivery progress.' },
+          { method: 'GET', path: '/api/notifications/:userId', params: 'page, unread', response: '{ notifications[], total }',
+            description: 'Returns the user\'s notification inbox with pagination. Notifications are stored in a per-user partition in Cassandra for high read throughput. Supports filtering by unread status. Each notification includes read/unread state, timestamp, channel, and deep link. Unread count is maintained in a Redis counter for badge display.' },
+          { method: 'PUT', path: '/api/preferences/:userId', params: '{ channels, quietHours }', response: '{ success }',
+            description: 'Updates the user\'s notification preferences including opted-in channels (push, email, SMS), quiet hours (no notifications between 10pm-8am), and per-category opt-out (marketing, social, transactional). Preferences are cached in Redis and checked before every notification delivery. Transactional notifications (password reset, payment confirmation) cannot be opted out of.' },
+          { method: 'POST', path: '/api/devices/register', params: '{ userId, platform, token }', response: '{ success }',
+            description: 'Registers a device for push notifications. Stores the platform-specific push token (APNs token for iOS, FCM token for Android). Each user can have multiple devices. Tokens are validated against the push provider on registration. Stale tokens are automatically removed when the push provider returns an invalid token error during delivery.' }
         ]
       },
 
@@ -4975,11 +4988,16 @@ rate_limit_logs {
       apiDesign: {
         description: 'Rate limiting check and management endpoints',
         endpoints: [
-          { method: 'GET', path: '/api/ratelimit/check', params: 'key, cost=1', response: '{ allowed, remaining, resetAt, retryAfter }' },
-          { method: 'POST', path: '/api/ratelimit/rules', params: '{ name, keyPattern, limit, window, algorithm }', response: '{ ruleId }' },
-          { method: 'PUT', path: '/api/ratelimit/rules/:id', params: '{ limit, window }', response: '{ success }' },
-          { method: 'GET', path: '/api/ratelimit/status/:key', params: '-', response: '{ currentUsage, limit, resetAt }' },
-          { method: 'DELETE', path: '/api/ratelimit/rules/:id', params: '-', response: '{ success }' }
+          { method: 'GET', path: '/api/ratelimit/check', params: 'key, cost=1', response: '{ allowed, remaining, resetAt, retryAfter }',
+            description: 'Checks whether a request should be allowed under the configured rate limit. The key parameter identifies what\'s being rate-limited (e.g., user ID, IP address, API key). Uses Redis with atomic Lua scripts for distributed rate limiting. Supports multiple algorithms: token bucket (burst-friendly), sliding window (smooth), and fixed window (simple). Returns remaining quota and reset time in response headers.' },
+          { method: 'POST', path: '/api/ratelimit/rules', params: '{ name, keyPattern, limit, window, algorithm }', response: '{ ruleId }',
+            description: 'Creates a new rate limiting rule. Each rule specifies a key pattern (e.g., \'user:{userId}:api\'), limit (requests allowed), window (time period in seconds), and algorithm (token_bucket, sliding_window, fixed_window). Rules are stored in a configuration database and cached in each rate limiter instance. Changes propagate within seconds via pub/sub.' },
+          { method: 'PUT', path: '/api/ratelimit/rules/:id', params: '{ limit, window }', response: '{ success }',
+            description: 'Updates an existing rate limiting rule\'s limit or window. Takes effect within seconds as the configuration is propagated via Redis pub/sub to all rate limiter instances. Existing counters are preserved — if the new limit is lower than current usage, the client is rate-limited until the window resets.' },
+          { method: 'GET', path: '/api/ratelimit/status/:key', params: '-', response: '{ currentUsage, limit, resetAt }',
+            description: 'Returns the current rate limit status for a specific key. Shows how many requests have been consumed in the current window, the configured limit, and when the window resets. Used for monitoring dashboards and debugging rate limit issues. Does not consume a request from the quota.' },
+          { method: 'DELETE', path: '/api/ratelimit/rules/:id', params: '-', response: '{ success }',
+            description: 'Deletes a rate limiting rule. Associated counters in Redis are cleaned up asynchronously. Active requests are no longer rate-limited once the rule is deleted. Deletion is logged for audit purposes.' }
         ]
       },
 
@@ -5426,31 +5444,36 @@ queue_positions {
             method: 'GET',
             path: '/api/events/{id}/seats',
             params: '?section=',
-            response: '{ seats: [{id, row, number, status, price}] }'
+            response: '{ seats: [{id, row, number, status, price}] }',
+            description: 'Returns the real-time seat map for an event section. Each seat includes its current status (available, held, sold), price tier, and coordinates for the interactive map. Seat availability is read from a Redis cache updated by the booking service. For high-demand events (Taylor Swift, Super Bowl), this endpoint handles 100K+ concurrent requests via aggressive caching with 1-second TTL.'
           },
           {
             method: 'POST',
             path: '/api/events/{id}/hold',
             params: '{ seatIds[] }',
-            response: '{ holdId, expiresAt, total } or { error: ALREADY_HELD }'
+            response: '{ holdId, expiresAt, total } or { error: ALREADY_HELD }',
+            description: 'Temporarily reserves selected seats for 10 minutes while the user completes checkout. Uses distributed locking (Redis SETNX) to prevent two users from holding the same seat. If the hold expires without checkout, seats are automatically released. Returns ALREADY_HELD if any selected seat is unavailable. The hold is atomic — either all seats are held or none.'
           },
           {
             method: 'POST',
             path: '/api/checkout',
             params: '{ holdId, paymentMethod }',
-            response: '{ bookingId, tickets[], barcodes[] }'
+            response: '{ bookingId, tickets[], barcodes[] }',
+            description: 'Completes the ticket purchase for held seats. Charges the payment method, converts held seats to sold status, generates unique barcodes (encrypted with event-specific keys to prevent counterfeiting), and sends confirmation email with digital tickets. The entire operation is wrapped in a distributed transaction — if payment fails, the hold is released immediately.'
           },
           {
             method: 'DELETE',
             path: '/api/holds/{holdId}',
             params: '',
-            response: '{ released: true }'
+            response: '{ released: true }',
+            description: 'Releases a seat hold before expiry, making the seats available for other buyers. Called when a user abandons checkout or removes seats from their cart. The release is immediate — seats become bookable within milliseconds. A background job also sweeps for expired holds every 30 seconds as a safety net.'
           },
           {
             method: 'GET',
             path: '/api/queue/{eventId}',
             params: '',
-            response: '{ position, estimatedWait, status }'
+            response: '{ position, estimatedWait, status }',
+            description: 'Returns the user\'s position in the virtual waiting room queue for high-demand events. When tickets go on sale, users are assigned a random queue position to ensure fairness (not first-come-first-served to prevent bot advantage). Users are admitted in batches of ~1000. The estimated wait is calculated from batch processing rate and current position.'
           },
           {
             method: 'POST',
