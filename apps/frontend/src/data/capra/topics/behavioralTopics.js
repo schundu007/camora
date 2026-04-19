@@ -89,10 +89,14 @@ export const behavioralTopics = [
       title: 'Tell Me About Yourself',
       icon: 'user',
       color: '#10b981',
-      questions: 5,
+      questions: 6,
       description: 'Your 60-90 second elevator pitch.',
 
-      introduction: `"Tell me about yourself" is often the first question in any interview. It sets the tone for the entire conversation and is your chance to make a strong first impression. A well-crafted response showcases your relevant experience, demonstrates your communication skills, and creates a narrative that guides the rest of the interview.`,
+      introduction: `"Tell me about yourself" is often the first question in any interview and arguably the most important. It sets the tone for the entire conversation, shapes the interviewer's first impression, and—when done well—creates a narrative arc that guides every follow-up question in your favor. Studies from hiring platforms show that interviewers form a strong initial impression within the first 90 seconds, making this your highest-leverage moment.
+
+What interviewers are really testing: communication clarity (can you explain your career concisely?), self-awareness (do you know what's relevant?), and intentionality (do you have a clear career trajectory, or are you just drifting?). A great answer tells a story of deliberate growth—from where you started, through key inflection points, to why this specific role is the logical next chapter.
+
+A mediocre answer recites a resume chronologically, buries the lead under irrelevant details, or rambles past the 90-second mark. A great answer is a curated highlight reel: 60-90 seconds, three to four sentences per section, ending with genuine enthusiasm for the role. The interviewer should walk away thinking, "This person knows exactly who they are and why they're here."`,
 
       keyQuestions: [
         {
@@ -165,29 +169,113 @@ export const behavioralTopics = [
 2. Note their tech stack and challenges
 3. Understand their culture and values
 4. Mention specific reasons you're interested`
+        },
+        {
+          question: 'How do I handle this question at different career stages?',
+          answer: `**New Grad / Early Career (0-2 years)**:
+Lead with education and projects. "I recently graduated from [University] with a CS degree, where I focused on machine learning. During my internship at [Company], I built a feature that reduced customer churn predictions from weekly to real-time. I'm excited about this role because it combines my ML background with production engineering at scale."
+
+**Mid-Level (3-6 years)**:
+Lead with your current role and a signature achievement. "I'm a Software Engineer at [Company] where I own our notification delivery pipeline—2 billion pushes per day across iOS, Android, and web. Before that, I spent 3 years building backend APIs at a fintech startup. I'm looking to move into a senior role where I can influence architecture decisions, and your team's work on event-driven systems is exactly that opportunity."
+
+**Senior / Staff (7+ years)**:
+Lead with scope of impact and the thread connecting your career. "I've spent 10 years building and scaling distributed systems. Currently I'm a Staff Engineer at [Company] leading a cross-team initiative to migrate our monolith to microservices—70 services, 200 engineers affected. The common thread in my career has been taking on complex, ambiguous infrastructure problems and turning them into well-defined platforms. I'm drawn to [Your Company] because your challenge of unifying three acquired codebases is exactly that kind of problem."
+
+**Career Switcher**:
+Acknowledge the pivot, but connect the dots. "I spent 5 years in data science building recommendation models. I realized I was happiest when I was deploying those models—building APIs, setting up pipelines, debugging production issues. So I deliberately transitioned into backend engineering, bringing my ML knowledge along. That intersection of data and systems is what excites me about this ML infrastructure role."`
+        },
+        {
+          question: 'What if I have gaps or non-linear career paths?',
+          answer: `**Handling Career Gaps**:
+Don't apologize. Frame gaps positively and briefly—then move on. The gap isn't your story; your growth is.
+
+"After 4 years at [Company], I took 6 months to travel and study system design deeply. I came back with a clearer focus on distributed systems and joined [Next Company] specifically because of their scale challenges."
+
+**Handling Frequent Job Changes**:
+Connect the dots with a growth narrative. "I've intentionally sought roles that stretched me: first backend fundamentals at a startup, then distributed systems at scale, then leading a platform team. Each move was driven by wanting to tackle the next layer of complexity."
+
+**Handling Industry Switches**:
+Highlight transferable skills and deliberate intent. "I started in finance building trading systems—that gave me a deep appreciation for low-latency, fault-tolerant design. When I moved to consumer tech, I brought that reliability mindset to a domain where most engineers think 'move fast and break things.' The result was systems that were both fast AND reliable."
+
+**Key Principles for Non-Linear Paths**:
+- Every experience taught you something relevant—find the thread
+- Interviewers care about trajectory, not perfection
+- Brief explanation + forward momentum beats detailed justification
+- The best narratives make non-linear paths seem inevitable in hindsight`
+        },
+        {
+          question: 'How do I practice and deliver this naturally?',
+          answer: `**Preparation Method**:
+
+**Step 1: Write Three Versions**
+- 30-second version (elevator pitch for casual encounters)
+- 60-second version (standard interview answer)
+- 2-minute version (for "walk me through your resume" prompts)
+
+**Step 2: Record and Review**
+- Record yourself on your phone
+- Listen for filler words ("um," "like," "so basically")
+- Time it—most people run 2x longer than they think
+
+**Step 3: Practice with Transitions**
+The transitions between sections matter most:
+- "That experience led me to..." (natural flow)
+- "Building on that..." (growth arc)
+- "Which brings me to why I'm here..." (closing pivot)
+
+**Delivery Tips**:
+- Speak slightly slower than feels natural—nerves speed you up
+- Make eye contact (or look at the camera in virtual interviews)
+- Vary your tone—don't sound like you're reading a script
+- Pause briefly between sections to let the interviewer process
+- End on a forward-looking note, not a trailing "...yeah"
+
+**Common Delivery Mistakes**:
+- Starting with "Well, um, so..." → Start with a confident declarative sentence
+- Trailing off at the end → Prepare a strong closing line
+- Speaking in monotone → Practice emphasizing key achievements
+- Fidgeting or looking away → Record yourself to catch body language`
         }
       ],
 
       starExample: {
-        situation: 'Currently a senior engineer at [Company] working on [domain]',
-        task: 'Led development of [key project/feature]',
-        action: 'Designed architecture, mentored team, delivered on time',
-        result: 'Improved performance by X%, reduced costs by Y%'
+        situation: 'Currently a senior engineer at a fintech company, leading the real-time payments team processing $2B in daily transactions across 15 countries',
+        task: 'Led the migration from a batch processing system to real-time settlement, coordinating with 3 partner banks and 4 internal teams',
+        action: 'Designed the event-driven architecture using Kafka and CDC, built the idempotency layer, mentored 2 junior engineers on distributed systems patterns, and created an automated rollback system',
+        result: 'Reduced settlement time from T+1 to near-real-time (< 30 seconds), cut operational costs by 35%, and the architecture became the template for 3 other payment products'
       },
 
-      exampleResponse: `"I'm a Senior Software Engineer with 6 years of experience in distributed systems and backend development. Currently at Stripe, I lead a team building our real-time fraud detection platform that processes 500M transactions daily.
+      exampleResponse: `"I'm a Senior Software Engineer with 6 years of experience in distributed systems and backend development. Currently at Stripe, I lead a team building our real-time fraud detection platform that processes 500M transactions daily. My biggest recent win was redesigning our rule evaluation engine to support real-time ML model inference—we cut false positive rates by 40% while maintaining sub-100ms latency at peak load.
 
-Before Stripe, I was at a Series B startup where I was the third engineer. I built our core API from scratch, and as we grew to 50 engineers, I transitioned into a tech lead role managing our platform team.
+Before Stripe, I was at a Series B startup where I was the third engineer. I built our core API from scratch, and as we grew to 50 engineers, I transitioned into a tech lead role managing our platform team. That experience taught me how to balance moving fast with building foundations that scale—a lesson I've applied at every stage since.
 
 What excites me about [Your Company] is the scale of your technical challenges and the opportunity to work on [specific product/problem]. I've followed your engineering blog and was particularly impressed by your approach to [specific technology or initiative]. I'd love to bring my experience in building reliable systems at scale to help solve similar problems here."`,
 
+      principles: [
+        'Present-Past-Future: Start with who you are now, explain how you got here, then connect to why you want this role',
+        'Curate ruthlessly: Include only what\'s relevant to THIS role—your career is the raw material, not the finished product',
+        'Show trajectory: Every career move should sound intentional, even if it wasn\'t at the time',
+        'End with the "why here": The strongest close connects your experience directly to their specific challenges',
+        'Be conversational, not rehearsed: Know your key points but speak naturally—scripts sound robotic'
+      ],
+
+      sampleQuestions: [
+        'Tell me about yourself',
+        'Walk me through your resume',
+        'Give me a brief overview of your background',
+        'What brings you here today?',
+        'How would you describe your career journey?',
+        'What should I know about you that\'s not on your resume?'
+      ],
+
       tips: [
-        'Keep it to 60-90 seconds',
-        'Focus on relevant experience for the role',
-        'End with why you\'re excited about this opportunity',
-        'Practice but don\'t memorize word-for-word',
-        'Use the Present-Past-Future framework',
-        'Quantify achievements where possible'
+        'Keep it to 60-90 seconds—set a timer when practicing',
+        'Focus on relevant experience for the role, not your entire history',
+        'End with why you\'re excited about this specific opportunity',
+        'Practice but don\'t memorize word-for-word—know your key points',
+        'Use the Present-Past-Future framework for natural flow',
+        'Quantify achievements where possible (revenue, users, latency, team size)',
+        'Prepare a 30-second and 2-minute version in addition to the standard 60-second version'
       ]
     },
     {
@@ -195,10 +283,14 @@ What excites me about [Your Company] is the scale of your technical challenges a
       title: 'Leadership',
       icon: 'users',
       color: '#3b82f6',
-      questions: 12,
+      questions: 6,
       description: 'Demonstrate leading without authority, mentoring, and driving results.',
 
-      introduction: `Leadership questions assess your ability to influence, guide, and enable others—regardless of your title. Companies want to see that you can step up, take ownership, and drive results through collaboration. This is especially important for senior individual contributors and anyone aspiring to management.`,
+      introduction: `Leadership questions assess your ability to influence, guide, and enable others—regardless of your title. At FAANG companies, leadership is expected at every level: an L4/E4 engineer leads a feature, an L5/E5 leads a project, an L6/E6 leads a team or initiative. The question isn't whether you have "manager" in your title—it's whether you can step up, take ownership, and drive results through collaboration.
+
+What interviewers are really testing: Can you influence without authority? Do you take initiative before being asked? Can you align people with different priorities toward a shared goal? Do you develop others, or just do the work yourself? The strongest signals come from stories where you led despite having no formal authority—where people followed you because of your ideas, not your title.
+
+A mediocre answer describes managing a project (assigning tickets, running standups). A great answer shows you changing the trajectory of a team or initiative: identifying a problem nobody else saw, rallying people around a solution, navigating resistance, and delivering measurable impact. The best leaders in tech don't just ship code—they multiply the output of everyone around them.`,
 
       keyQuestions: [
         {
@@ -296,22 +388,47 @@ What excites me about [Your Company] is the scale of your technical challenges a
         }
       ],
 
+      starExample: {
+        situation: 'Production incidents were averaging 3 per week, burning out on-call engineers and eroding customer trust. No one owned the problem because it spanned multiple teams.',
+        task: 'As a senior IC with no direct reports, I decided to take ownership of reliability improvements across the platform—despite this being outside my team\'s official scope.',
+        action: 'Proposed a "Production Excellence" initiative to my skip-level manager and got budget for a cross-team task force of 4 engineers. Created on-call runbooks, automated the 10 most common incident remediations, introduced error budgets, and ran weekly blameless post-mortems to identify systemic patterns.',
+        result: 'Reduced incidents from 3/week to less than 1/week within 3 months. MTTR dropped from 45 minutes to 12 minutes. The initiative was adopted company-wide, I presented the approach at the engineering all-hands, and it became a key factor in my Staff Engineer promotion.'
+      },
+
+      exampleResponse: `"At my previous company, I noticed our platform team was drowning in cross-cutting concerns—every feature team needed authentication, logging, and rate limiting, but each was building their own version. There were 6 different auth implementations across 40 services, each with different security postures.
+
+I didn't have authority over other teams, but I saw the risk. I drafted an RFC proposing a shared platform SDK, gathered usage data showing we were spending 20% of engineering time on duplicated infrastructure, and presented the business case to our VP of Engineering. Once I had top-level support, I formed a working group with one engineer from each of the four largest teams.
+
+The key challenge was getting buy-in from teams who had already built their own solutions. I didn't mandate adoption—instead, I made the SDK so easy to use that teams chose it voluntarily. We migrated 35 of 40 services within two quarters, reduced auth-related security incidents to zero, and freed up roughly 15% of engineering capacity. Three of the engineers in the working group later told me it was the most impactful project they'd worked on."`,
+
+      principles: [
+        'Lead with influence, not authority: The most impressive leadership stories come from people who had no formal power but drove change anyway',
+        'Multiply others: Great leaders don\'t just do the work—they enable everyone around them to do better work',
+        'Take ownership of problems, not just tasks: Leaders see gaps and fill them before being asked',
+        'Build consensus through data and empathy: Persuade with evidence and by genuinely understanding others\' concerns',
+        'Develop people deliberately: Mentoring, pairing, creating growth opportunities—these are leadership actions, not management tasks',
+        'Accept accountability for outcomes: Leaders own both the wins and the losses of their initiatives'
+      ],
+
       sampleQuestions: [
-        'Tell me about a time you led a project',
-        'How do you motivate team members?',
-        'Describe a time you had to make an unpopular decision',
+        'Tell me about a time you led a project or initiative without formal authority',
+        'How do you motivate team members who are disengaged?',
+        'Describe a time you had to make an unpopular decision and bring people along',
         'How do you handle underperforming team members?',
-        'Tell me about a time you mentored someone',
-        'How do you build trust with your team?'
+        'Tell me about a time you mentored someone and it changed their trajectory',
+        'How do you build trust with a new team?',
+        'Describe a time you drove a technical vision across multiple teams',
+        'Tell me about a time you had to lead through a crisis'
       ],
 
       tips: [
         'Leadership isn\'t just for managers—show how you lead as an IC',
-        'Focus on influence, not authority',
-        'Show how you enabled others\' success',
-        'Use specific examples with measurable outcomes',
-        'Demonstrate empathy and emotional intelligence',
-        'Show that you take initiative without being asked'
+        'Focus on influence, not authority—the best stories involve persuasion, not mandates',
+        'Show how you enabled others\' success, not just your own output',
+        'Use specific examples with measurable outcomes (team velocity, incident reduction, adoption rates)',
+        'Demonstrate empathy and emotional intelligence—especially in difficult situations',
+        'Show that you take initiative without being asked—proactive leadership is the strongest signal',
+        'For Amazon interviews, map your leadership stories to their Leadership Principles explicitly'
       ]
     },
     {
@@ -319,10 +436,14 @@ What excites me about [Your Company] is the scale of your technical challenges a
       title: 'Conflict Resolution',
       icon: 'messageSquare',
       color: '#f59e0b',
-      questions: 8,
+      questions: 6,
       description: 'How you handle disagreements and difficult conversations.',
 
-      introduction: `Conflict is inevitable in any workplace. Interviewers ask these questions to assess your emotional intelligence, communication skills, and ability to maintain productive relationships even during disagreements. The best answers show that you can disagree professionally, find common ground, and turn conflicts into better outcomes.`,
+      introduction: `Conflict is inevitable in any workplace—and interviewers know it. When they ask conflict questions, they're not looking for people who avoid disagreements (that's a red flag). They're looking for people who can engage in productive conflict: disagree respectfully, seek to understand before being understood, and turn friction into better outcomes.
+
+What interviewers are testing: emotional intelligence (can you manage your own reactions?), communication skills (can you disagree without being disagreeable?), problem-solving under interpersonal pressure, and maturity (do you focus on the problem or the person?). At senior levels, they also assess whether you can navigate organizational politics and conflicting stakeholder interests without burning bridges.
+
+A mediocre answer sounds diplomatic but vague: "I listened to their perspective and we found a compromise." A great answer includes a specific technical disagreement with real stakes (not just a personality clash), shows your reasoning process, demonstrates genuine empathy for the other side, and arrives at a resolution that made the team stronger. The best conflict stories end with the relationship improving, not just surviving.`,
 
       keyQuestions: [
         {
@@ -397,21 +518,46 @@ Both agreed when they saw the full picture. The key was making the trade-off exp
         }
       ],
 
+      starExample: {
+        situation: 'I was the backend tech lead on a checkout rewrite. A senior frontend engineer wanted to implement a single-page checkout with client-side validation only, arguing it would be faster to ship. I believed we needed server-side validation for PCI compliance and fraud prevention—a fundamental architectural disagreement with real financial risk.',
+        task: 'Resolve the disagreement without damaging our working relationship or delaying the project beyond the Black Friday deadline.',
+        action: 'Instead of escalating immediately, I first asked the frontend engineer to walk me through their reasoning—I learned they had a valid concern about latency impact on conversion rates. I then prepared a comparison document: Option A (client-only) vs. Option B (client + server) with latency benchmarks, security implications, and PCI audit risk. I proposed a hybrid: client-side validation for UX speed with async server-side validation that wouldn\'t block the user flow. We presented both approaches to the team and let the group weigh in.',
+        result: 'The team chose the hybrid approach. Checkout latency improved 200ms vs. the old system, we passed PCI audit with zero findings, and the frontend engineer later said the collaboration made the final design better than either of our original proposals. We co-authored the architectural decision record together.'
+      },
+
+      exampleResponse: `"Last year, my team was deciding whether to adopt GraphQL for our new API layer or stick with REST. I was a strong advocate for GraphQL because our mobile clients were making 8-12 REST calls per screen, causing significant over-fetching and battery drain. A principal engineer on the platform team pushed back hard—he argued that GraphQL would increase backend complexity, make caching harder, and create a learning curve for 30+ engineers.
+
+Rather than lobbying for my position, I suggested we run a structured evaluation. I asked him to define the criteria he cared most about (operational complexity, caching, team ramp-up time) while I defined mine (mobile performance, developer experience, payload efficiency). We built a small proof-of-concept together, testing both approaches on our highest-traffic endpoint.
+
+The data showed GraphQL reduced mobile payload sizes by 60% but did complicate our CDN caching strategy. We landed on a compromise: GraphQL for mobile-facing APIs where over-fetching was severe, REST for internal service-to-service communication where caching mattered more. The principal engineer appreciated that I took his concerns seriously enough to quantify them, and we've collaborated effectively on three projects since. The hybrid approach actually became our architectural standard."`,
+
+      principles: [
+        'Seek to understand before being understood: Always ask "help me understand your perspective" before presenting yours',
+        'Disagree with data, not opinions: Run benchmarks, gather metrics, build POCs—let evidence settle technical disputes',
+        'Focus on the problem, not the person: "This approach has risks" not "Your approach is wrong"',
+        'Propose alternatives, don\'t just reject: "What if we tried X instead?" is more productive than "No"',
+        'Accept the decision gracefully: Once a decision is made, commit fully—even if it wasn\'t your preference',
+        'Strengthen the relationship: The best conflict resolutions end with mutual respect, not just a truce'
+      ],
+
       sampleQuestions: [
-        'Tell me about a disagreement with a coworker',
-        'How do you handle conflicting priorities?',
-        'Describe a time you had to push back on a decision',
+        'Tell me about a disagreement with a coworker on a technical decision',
+        'How do you handle conflicting priorities from different stakeholders?',
+        'Describe a time you had to push back on a decision from leadership',
         'Tell me about a time you had a conflict with your manager',
-        'How do you handle receiving critical feedback?'
+        'How do you handle receiving critical feedback?',
+        'Describe a situation where two teams had opposing goals and you had to mediate',
+        'Tell me about a time you changed your mind during a technical debate'
       ],
 
       tips: [
-        'Show empathy and active listening',
-        'Focus on the problem, not the person',
-        'Demonstrate finding win-win solutions',
-        'Never badmouth previous colleagues or companies',
-        'Use "I" statements, not "they" statements',
-        'Show how the relationship improved after the conflict'
+        'Show empathy and active listening—interviewers watch for genuine curiosity about the other side',
+        'Focus on the problem, not the person—never characterize the other party negatively',
+        'Demonstrate finding win-win solutions rather than zero-sum victories',
+        'Never badmouth previous colleagues or companies—it always reflects poorly on you',
+        'Use "I" statements not "they" statements: "I felt concerned about..." not "They were being unreasonable..."',
+        'Show how the relationship improved after the conflict—this is the strongest ending',
+        'Pick a conflict with real stakes (technical, business, or organizational) not a personality clash'
       ]
     },
     {
@@ -419,10 +565,14 @@ Both agreed when they saw the full picture. The key was making the trade-off exp
       title: 'Failures & Mistakes',
       icon: 'alertTriangle',
       color: '#f43f5e',
-      questions: 7,
+      questions: 6,
       description: 'Show self-awareness and ability to learn from setbacks.',
 
-      introduction: `Failure questions are among the most important in behavioral interviews. They reveal your self-awareness, accountability, resilience, and growth mindset. Companies want to know that you can acknowledge mistakes, learn from them, and become better as a result. A good failure story can be more impressive than a success story.`,
+      introduction: `Failure questions are among the most important in behavioral interviews—and most candidates get them wrong. The biggest mistake is choosing a "safe" failure that's really a humble brag ("I worked too hard and burned out") or blaming external factors ("The requirements kept changing"). Interviewers see through both instantly.
+
+What interviewers are really testing: self-awareness (can you honestly assess what went wrong?), accountability (do you own the mistake or deflect?), resilience (did you recover or crumble?), and growth mindset (did you actually change your behavior?). At Amazon, this maps directly to "Earn Trust" and "Learn and Be Curious." At Google, it signals intellectual humility.
+
+A great failure story follows the 30/70 rule: spend 30% describing what went wrong and 70% on what you learned, how you changed, and the evidence that you've applied those lessons since. The failure should be genuine and significant enough to matter—a production outage, a missed launch, a wrong architectural bet—but not career-ending. The learning should be specific and lasting: not "I learned to communicate better" but "I now run a pre-mortem before every launch, and the last three launches had zero P0 incidents."`,
 
       keyQuestions: [
         {
@@ -489,21 +639,48 @@ Now I encourage my team to challenge assumptions. Some of our best improvements 
         }
       ],
 
+      starExample: {
+        situation: 'I was leading the backend migration of our user authentication service from a monolithic session-based system to distributed JWT-based auth. The migration affected every service in our microservices architecture—42 services, 200K daily active users.',
+        task: 'Execute the migration with zero downtime and backward compatibility during the transition period.',
+        action: 'I built a technically sound migration plan with dual-write during transition. But I made a critical error: I didn\'t involve the mobile team early enough. I assumed the token format change was transparent to clients—it wasn\'t. Mobile clients cached old session tokens and couldn\'t handle JWT refresh flows. The result was 15% of mobile users getting logged out repeatedly on launch day.',
+        result: 'I immediately rolled back to the old auth system, wrote a detailed post-mortem within 24 hours, and took full ownership in front of the engineering org. I then rebuilt the migration plan with mobile-first compatibility testing, created a client SDK that handled both token formats, and re-launched 3 weeks later with zero issues. The lesson—always identify ALL consumers of your API before changing it—became part of our migration checklist and prevented similar issues on two subsequent migrations.'
+      },
+
+      exampleResponse: `"My biggest failure was a database migration I led that caused a 4-hour partial outage affecting our payments processing. I was migrating our transaction history from PostgreSQL to a time-series database to improve query performance. I'd tested thoroughly in staging with realistic data volumes and was confident in the migration plan.
+
+What I missed was a subtle difference between staging and production: our staging database had uniform data distribution, but production had severe hot spots—our top 100 merchants generated 60% of all transactions. During the migration, the hot-spot rows caused lock contention that cascaded into connection pool exhaustion across our payment processing service. For 4 hours, about 30% of transactions failed.
+
+I rolled back within 20 minutes of detecting the issue, but some merchants had already been affected. I wrote a public post-mortem, presented it to the entire engineering org, and took complete ownership. The root cause was that I tested with representative data volume but not representative data distribution.
+
+What I changed permanently: I now require production-parity testing for any data migration—same distribution, same hot spots, same concurrency patterns. I built a tool that generates synthetic datasets matching production's statistical profile. Since then, I've led four more migrations with zero downtime. That one failure made me fundamentally better at capacity planning, and the testing tool is now used by every team doing migrations."`,
+
+      principles: [
+        'Own it completely: Never say "we" when you mean "I made a mistake." Accountability is the strongest signal.',
+        'Pick a real failure: Choose something with genuine consequences—not a humble brag or a trivial error',
+        'Follow the 30/70 rule: 30% on what went wrong, 70% on what you learned and changed',
+        'Show systemic change: Don\'t just say you "learned to be more careful"—describe specific processes, tools, or habits you built',
+        'Demonstrate the lesson stuck: Reference a subsequent situation where you applied the learning successfully',
+        'Never blame others: Even if others contributed to the failure, focus on what YOU could have done differently'
+      ],
+
       sampleQuestions: [
         'Tell me about a time you failed',
         'Describe a mistake and how you handled it',
         'What\'s your biggest professional regret?',
         'Tell me about a time you received negative feedback',
-        'Describe a project that didn\'t go as planned'
+        'Describe a project that didn\'t go as planned',
+        'Tell me about a time your judgment was wrong',
+        'Describe a technical decision you made that you would reverse if you could'
       ],
 
       tips: [
         'Choose a REAL failure, not a humble brag ("I work too hard")',
         'Take full ownership—never blame others or circumstances',
         'Spend 70% of your answer on what you learned and changed',
-        'Show how you\'ve applied that lesson since',
+        'Show how you\'ve applied that lesson since with a specific follow-up example',
         'Demonstrate growth mindset and resilience',
-        'It\'s okay if the failure was significant—that makes the learning more meaningful'
+        'It\'s okay if the failure was significant—that makes the learning more meaningful',
+        'Avoid failures from more than 5 years ago unless the lesson is extraordinary'
       ]
     },
     {
@@ -511,10 +688,14 @@ Now I encourage my team to challenge assumptions. Some of our best improvements 
       title: 'Achievements',
       icon: 'star',
       color: '#22c55e',
-      questions: 9,
+      questions: 6,
       description: 'Highlight your biggest wins and impact.',
 
-      introduction: `Achievement questions let you showcase your best work and demonstrate the impact you can bring to a new role. These are your opportunity to shine—but the key is being specific about YOUR contribution, quantifying impact, and explaining why it was challenging. A great achievement story shows technical excellence, business awareness, and the ability to deliver results.`,
+      introduction: `Achievement questions are your chance to sell yourself—and most engineers undersell. The typical mistake is describing what the team did without isolating your specific contribution, or leading with technical details before establishing business context. Interviewers have heard thousands of "I built a microservice" stories; what they remember are stories with clear stakes, clever decisions, and quantified outcomes.
+
+What interviewers are testing: Can you identify what matters (not just what's technically interesting)? Can you articulate YOUR unique contribution? Do you understand how technical work connects to business results? Can you handle a complex, high-stakes project from start to finish? The strongest candidates have 3-5 polished achievement stories that demonstrate different competencies: technical depth, leadership, innovation, business impact, and cross-functional influence.
+
+A mediocre achievement story sounds like a resume bullet: "I built a caching layer that improved performance." A great achievement story creates a narrative arc: stakes ("$50K/month in lost transactions"), diagnosis ("discovered a retry storm nobody else had identified"), decision-making ("chose circuit breaker over rate limiting because..."), impact ("99.9% uptime through Black Friday"), and ripple effects ("became the template for 3 other services"). Make the interviewer think, "I want this person solving OUR problems."`,
 
       keyQuestions: [
         {
@@ -642,16 +823,50 @@ The common thread is finding high-leverage opportunities where a relatively smal
         }
       ],
 
-      sampleQuestions: [
-        "What's your proudest accomplishment?",
-        'Describe your biggest technical achievement',
-        'Tell me about a time you exceeded expectations'
+      starExample: {
+        situation: 'Our e-commerce search was returning irrelevant results for 30% of queries, driving users to competitors. The existing Elasticsearch setup used basic term matching with no query understanding. Previous attempts to fix it had failed because the search team treated it as a pure infrastructure problem.',
+        task: 'As the newly hired senior engineer on the search team, I was given 6 weeks to measurably improve search relevance before the holiday season.',
+        action: 'Instead of tuning Elasticsearch parameters (which had been tried before), I took a user-centric approach. I analyzed 10,000 search sessions to understand failure patterns. I found that 60% of poor results came from synonym mismatches ("sneakers" vs "athletic shoes") and 25% from typos. I implemented a query preprocessing pipeline: spell correction using a Levenshtein automaton, synonym expansion from a curated dictionary I built from click-through data, and category-boosting based on user browsing history. I also set up an A/B testing framework so we could measure relevance improvements scientifically.',
+        result: 'Search relevance (measured by click-through rate on first-page results) improved from 45% to 78%. Revenue from search-originated sessions increased 23% during the holiday season. The A/B testing framework became the standard for all product experimentation at the company. I was promoted to tech lead of the search team based on this project.'
+      },
+
+      exampleResponse: `"The achievement I'm most proud of is building a real-time anomaly detection system for our SaaS platform that prevented an estimated $4M in customer churn over its first year.
+
+We were losing enterprise customers because service degradation would go undetected for hours—our monitoring only caught outages, not slow degradation. I proposed building a system that could detect subtle performance anomalies before they became outages.
+
+The technical challenge was significant: we had 200+ services generating 50 million metrics per minute, and we needed to detect anomalies within 60 seconds without drowning engineers in false positives. I evaluated three approaches: statistical (Z-score), ML-based (isolation forest), and hybrid. After testing on historical incident data, I chose the hybrid approach—statistical for simple metrics with predictable patterns, ML for complex multi-dimensional signals.
+
+I built the system with Apache Flink for stream processing, trained models on 6 months of historical data, and implemented a confidence scoring system that reduced false positives to under 5%. The key insight was correlating anomalies across related services—a single slow endpoint might be noise, but three correlated anomalies across the request path is almost always real.
+
+In its first quarter, the system detected 12 incidents an average of 23 minutes before our existing monitoring. Three of those would have been P0 outages affecting our largest enterprise customers. The VP of Engineering called it 'the most impactful infrastructure project of the year,' and I was invited to present the approach at our company's engineering conference."`,
+
+      principles: [
+        'Lead with business impact, then explain the technical solution: "$50K saved" is more memorable than "reduced latency by 200ms"',
+        'Isolate YOUR contribution: Use "I" for your actions, "we" for team context—interviewers need to know what was uniquely yours',
+        'Explain why it was hard: Without establishing difficulty, even great achievements sound routine',
+        'Show the ripple effect: The best achievements influence beyond the immediate problem—new standards, shared tools, cultural shifts',
+        'Prepare multiple achievements: Have separate stories for technical depth, leadership, innovation, and cross-functional impact',
+        'Connect to the role: Emphasize the aspects of your achievement most relevant to the job you\'re interviewing for'
       ],
+
+      sampleQuestions: [
+        "What's your proudest professional accomplishment?",
+        'Describe your biggest technical achievement',
+        'Tell me about a time you exceeded expectations',
+        'What impact have you had in your current role?',
+        'Tell me about a project you initiated on your own',
+        'Describe your most innovative solution to a problem',
+        'What is the most challenging project you\'ve worked on?'
+      ],
+
       tips: [
-        'Quantify impact: revenue, performance, users affected',
-        'Explain WHY it was challenging',
-        'Show your specific contribution vs team effort',
-        'Connect to skills relevant for the role'
+        'Quantify impact with specific numbers: revenue, performance metrics, users affected, time saved',
+        'Explain WHY it was challenging—set the stakes before describing the solution',
+        'Show your specific contribution vs. team effort—interviewers want YOUR signal',
+        'Connect to skills relevant for the role you\'re interviewing for',
+        'Prepare 3-5 achievement stories covering different competencies (technical, leadership, innovation)',
+        'Include the "ripple effect"—how your achievement influenced beyond the immediate project',
+        'Practice the story to stay under 3 minutes while hitting all key points'
       ]
     },
     {
@@ -659,10 +874,14 @@ The common thread is finding high-leverage opportunities where a relatively smal
       title: 'Problem Solving',
       icon: 'lightbulb',
       color: '#ef4444',
-      questions: 15,
+      questions: 6,
       description: 'Demonstrate analytical thinking and creative solutions.',
 
-      introduction: `Problem-solving questions assess your analytical abilities, creativity, and structured thinking. Interviewers want to understand HOW you think, not just what you did. The best answers walk through your thought process, show how you gathered information, evaluated options, and made decisions—especially when facing ambiguity or incomplete information.`,
+      introduction: `Problem-solving questions are the behavioral equivalent of a coding interview—they assess HOW you think, not just what you did. Interviewers are watching for structured thinking, hypothesis-driven investigation, and the ability to navigate ambiguity without freezing up. These questions appear in every FAANG loop and carry significant weight in leveling decisions.
+
+What interviewers are testing: analytical rigor (do you break problems down systematically?), creativity (do you consider non-obvious solutions?), collaboration (do you leverage expertise from others?), and judgment (do you know when you have enough information to act vs. when to keep investigating?). At senior levels, they also assess whether you can identify the RIGHT problem to solve—not just solve the one handed to you.
+
+A mediocre answer describes solving a well-defined bug. A great answer shows you navigating genuine complexity: multiple root causes interacting, incomplete information, time pressure, cross-team dependencies, and a solution that required both technical depth and strategic thinking. The best problem-solving stories demonstrate that you don't just fight fires—you prevent them by seeing patterns others miss.`,
 
       keyQuestions: [
         {
@@ -818,16 +1037,48 @@ The ambiguity became a clear, measurable project."`
         }
       ],
 
+      starExample: {
+        situation: 'Our payment processing system had intermittent failures—about 2% of transactions failed, but only during specific 15-minute windows throughout the day. The issue had persisted for 3 months with multiple engineers investigating without resolution. Customer complaints were escalating.',
+        task: 'As the senior backend engineer, I was asked to take over the investigation and either fix the issue or identify why previous attempts had failed—within 2 weeks.',
+        action: 'Previous engineers had focused on the payment service itself. I took a step back and mapped the entire transaction flow end-to-end, correlating failure timestamps with every system event. I discovered the 15-minute windows coincided with our Kubernetes autoscaler adding nodes—during scale-up, DNS resolution briefly failed for our payment provider\'s endpoint due to a CoreDNS caching bug. The failures weren\'t in our payment code at all; they were infrastructure-level DNS timeouts. I implemented a fix in three layers: DNS pre-warming on new nodes, a local DNS cache with stale-serve capability, and a retry with exponential backoff specifically for DNS resolution failures.',
+        result: 'Transaction failure rate dropped from 2% to 0.01% within 24 hours of deployment. The fix recovered an estimated $180K in monthly failed transactions. I documented the debugging methodology as a "cross-layer investigation playbook" that became required reading for on-call engineers, reducing MTTR for similar cross-cutting issues by 60%.'
+      },
+
+      exampleResponse: `"The most complex problem I solved was tracking down why our real-time analytics pipeline was silently dropping about 5% of events—but only for users in certain geographic regions, and only during specific hours. The data team had flagged the discrepancy but couldn't find a pattern.
+
+I started by mapping the full event path: client SDK → API gateway → Kafka → Flink processor → ClickHouse. I instrumented each hop with correlation IDs and built a reconciliation job that compared events at each stage. This revealed the drops were happening between Kafka and Flink, but only for events that arrived during Flink checkpoint operations.
+
+The root cause was subtle: our Flink job used event-time processing with a watermark delay of 30 seconds. For users in regions with high network latency (Southeast Asia, parts of Africa), events sometimes arrived just past the watermark threshold during checkpoint operations, causing them to be silently dropped as 'late events.' The geographic pattern matched perfectly.
+
+I redesigned the watermark strategy to use a tiered approach: different watermark delays based on the source region's typical latency profile, with a global catch-up window that ran hourly to process any events that fell through. The fix eliminated 99.8% of the drops and the data team confirmed analytics accuracy went from 95% to 99.97%. The tiered watermark pattern was adopted by two other streaming pipelines at the company."`,
+
+      principles: [
+        'Think in systems, not components: The best problem-solvers trace issues across layers (app, infrastructure, network, data) rather than assuming the problem is in their code',
+        'Hypothesize before investigating: Form a theory, then design the minimum experiment to confirm or refute it—don\'t just read logs randomly',
+        'Separate symptoms from root causes: "The database is slow" is a symptom. "We\'re doing a full table scan on a 100M row table because an index was dropped" is a root cause',
+        'Make the implicit explicit: When you discover a pattern, document it so others can benefit—debugging playbooks, monitoring dashboards, and runbooks multiply your impact',
+        'Know when to ask for help: The best problem-solvers leverage expertise from others rather than spending days in a silo',
+        'Prevent, don\'t just fix: A great problem-solver fixes the bug AND prevents the class of bugs from recurring'
+      ],
+
       sampleQuestions: [
         'Describe a complex problem you solved',
         'How do you approach ambiguous problems?',
-        'Tell me about a time you had to make a decision with incomplete information'
+        'Tell me about a time you had to make a decision with incomplete information',
+        'Walk me through how you debug a production issue',
+        'Tell me about a time you identified a problem that no one else saw',
+        'Describe a time when the obvious solution turned out to be wrong',
+        'How do you prioritize when you have multiple urgent problems simultaneously?'
       ],
+
       tips: [
-        'Walk through your thought process step by step',
-        'Show how you gathered information',
-        'Explain tradeoffs you considered',
-        'Highlight collaboration when appropriate'
+        'Walk through your thought process step by step—show the interviewer HOW you think',
+        'Show how you gathered information and formed hypotheses before jumping to solutions',
+        'Explain tradeoffs you considered—why you chose approach A over B and C',
+        'Highlight collaboration: who else you brought in and why',
+        'Include prevention: how you made sure this class of problem doesn\'t recur',
+        'Quantify the impact of your solution (revenue saved, time reduced, incidents prevented)',
+        'Pick problems with genuine complexity—not just bugs you found by reading stack traces'
       ]
     },
     {
@@ -835,10 +1086,14 @@ The ambiguity became a clear, measurable project."`
       title: 'STAR Framework',
       icon: 'target',
       color: '#8b5cf6',
-      questions: 4,
+      questions: 6,
       description: 'The proven method for structuring behavioral answers.',
 
-      introduction: `The STAR method provides a structured approach to answering behavioral interview questions. It ensures responses are clear, concise, and compelling rather than rambling and unfocused. Without structure, candidates often leave interviewers asking: "Who is 'we'?", "What was YOUR specific role?", "How much impact did you actually have?"`,
+      introduction: `The STAR method (Situation, Task, Action, Result) is the single most effective framework for answering behavioral interview questions. Every major tech company—Amazon, Google, Meta, Microsoft—evaluates behavioral answers using some form of this structure. Without it, candidates ramble, bury their contributions in team accomplishments, and leave interviewers guessing: "Who is 'we'?", "What was YOUR specific role?", "How much impact did you actually have?"
+
+But STAR is a compass, not a cage. The best candidates internalize the framework so deeply that their answers feel natural and conversational while still hitting every structural element. The goal is to tell a compelling story where the interviewer can clearly identify the challenge, your unique contribution, and the measurable outcome—all in 2-3 minutes.
+
+The most common mistake is spending 60% of the answer on Situation and Task (the setup) and rushing through Action and Result (the payoff). The ideal ratio is roughly 15% Situation, 10% Task, 50% Action, and 25% Result. Your actions are what demonstrate your competency—that's where interviewers are scoring you. The result seals the deal with quantified impact.`,
 
       keyQuestions: [
         {
@@ -907,15 +1162,75 @@ Numbers are memorable and credible. "Improved by 40%" beats "improved significan
 **Mistake 5: Being too vague**
 ❌ "I communicated effectively with stakeholders"
 ✅ "I created a weekly status report and held bi-weekly sync meetings with the PM and design teams"`
+        },
+        {
+          question: 'How do I prepare STAR stories before an interview?',
+          answer: `**The Story Banking Method**
+
+**Step 1: Inventory Your Experiences (60 minutes)**
+List 15-20 significant work experiences: projects, incidents, conflicts, failures, innovations. Don't filter yet—just brainstorm.
+
+**Step 2: Map to Competencies (30 minutes)**
+Common competencies tested: leadership, conflict resolution, failure/learning, technical problem-solving, communication, innovation, time management, dealing with ambiguity. Map each story to 2-3 competencies it demonstrates.
+
+**Step 3: Write STAR Outlines (2-3 hours)**
+For your top 10 stories, write bullet-point STAR outlines. Don't write scripts—scripts sound rehearsed. Write key points and numbers.
+
+**Step 4: Practice Aloud (1-2 hours)**
+Tell each story out loud. Time yourself—aim for 2-3 minutes. Record and listen back for filler words, unclear transitions, and missing details.
+
+**Step 5: Prepare Variants**
+Each story should work for multiple questions. Your "led a migration project" story might answer "tell me about leadership," "a technical challenge," or "working with cross-functional teams." Practice pivoting the emphasis.
+
+**Pro Tip**: Keep a running "story bank" document. After every meaningful project, incident, or achievement, jot down a STAR outline while the details are fresh.`
+        },
+        {
+          question: 'How do I handle follow-up questions after giving a STAR answer?',
+          answer: `**Follow-Up Question Types and How to Handle Them**
+
+**"Tell me more about..."** (They want depth)
+The interviewer is interested in a specific part of your story. Go deeper on that section with additional technical details or context. "Great question. The reason I chose that approach was..."
+
+**"What would you do differently?"** (They want self-awareness)
+Show reflection and growth. "Looking back, I would have involved the security team earlier. At the time I didn't realize the compliance implications, which added 2 weeks to the timeline."
+
+**"What was the hardest part?"** (They want to see struggle)
+Be honest about challenges. Don't make it sound too easy. "The hardest part was convincing the VP of Product to delay the launch. I had to present the data three different ways before the risk was clear."
+
+**"How did you measure success?"** (They want rigor)
+Show you think about outcomes quantitatively. "We measured success across three dimensions: technical (p99 latency under 100ms), business (conversion rate improvement), and operational (on-call pages per week)."
+
+**"What did others think?"** (They want collaboration signal)
+Reference specific feedback. "My tech lead later told me that my approach to the post-mortem changed how the team thinks about incident response. The CTO mentioned it in the quarterly all-hands."
+
+**Key Principle**: Follow-ups are where interviewers separate rehearsed answers from genuine experience. If you lived the story, follow-ups are easy. If you inflated it, this is where you'll stumble.`
         }
       ],
 
+      principles: [
+        'The 15/10/50/25 ratio: Spend 15% on Situation, 10% on Task, 50% on Action, 25% on Result—Actions are where you demonstrate competency',
+        'Use "I" not "we": Every action should clarify YOUR specific contribution, even in team contexts',
+        'Quantify everything: "Improved performance by 40%" beats "improved performance significantly" every time',
+        'Be a storyteller, not a reporter: Create a narrative arc with tension, decision-making, and resolution',
+        'Prepare 10-12 stories that cover all major competencies: leadership, failure, conflict, technical depth, innovation, communication'
+      ],
+
+      sampleQuestions: [
+        'Tell me about a time when you had to [competency]',
+        'Give me an example of [specific situation]',
+        'Describe a situation where you [behavior]',
+        'Walk me through a project where you [skill]',
+        'What would you do if [hypothetical scenario]?'
+      ],
+
       tips: [
-        'Practice your stories out loud - they should be 2-3 minutes',
-        'Prepare 10-15 stories that cover different competencies',
-        'Use "I" statements to show YOUR contribution',
-        'Always quantify results with specific metrics',
-        'Have alternative angles for the same story'
+        'Practice your stories out loud—they should be 2-3 minutes each',
+        'Prepare 10-15 stories that cover different competencies across all categories',
+        'Use "I" statements to show YOUR contribution—interviewers are evaluating YOU, not your team',
+        'Always quantify results with specific metrics (dollars, percentages, time saved)',
+        'Have alternative angles for the same story—one story can answer 3-4 different questions',
+        'Time yourself—most candidates go 5+ minutes when they should be at 2-3 minutes',
+        'Record yourself and listen back—you\'ll catch filler words and unclear transitions'
       ]
     },
     {
@@ -1059,10 +1374,14 @@ Cover these categories:
       title: 'Why This Company?',
       icon: 'building',
       color: '#ec4899',
-      questions: 4,
+      questions: 6,
       description: 'Show genuine interest and research.',
 
-      introduction: `This question reveals whether you've done your homework. Generic answers like "I've heard you have great culture" signal insufficient preparation. The best answers show specific knowledge about the company, genuine enthusiasm for the opportunity, and clear alignment between your goals and what the company offers.`,
+      introduction: `"Why this company?" seems simple but it's a trap for the unprepared. Generic answers—"Great culture," "Interesting problems," "I admire your mission"—signal that you're applying broadly and haven't done real research. Interviewers hear these empty phrases dozens of times per week and immediately discount them.
+
+What interviewers are testing: Have you invested time understanding what makes THIS company different? Can you articulate specific technical challenges, product directions, or cultural values that genuinely excite you? Is there authentic alignment between your career trajectory and what this role offers? The best answers reference something you could only know from real research: a recent engineering blog post, a specific product decision, a team's approach to a technical problem, or an insight from talking to current employees.
+
+A mediocre answer is interchangeable across companies—you could say it at Google, Stripe, or a random startup. A great answer is so specific that it could only apply to THIS company. It connects three threads: something genuine about the company that excites you, something specific about the role that matches your skills, and something about your career direction that makes this the logical next step. When done well, the interviewer thinks, "This person actually gets us."`,
 
       keyQuestions: [
         {
@@ -1138,12 +1457,38 @@ Cover these categories:
         }
       ],
 
+      exampleResponse: `"I've been following Datadog's growth for the past two years, and three things specifically drew me to this role. First, your approach to unified observability—combining metrics, traces, and logs into a single platform—mirrors exactly the philosophy I developed while building our internal monitoring stack at my current company. I read your engineering blog post on how you handle 40 trillion data points per day with sub-second query latency, and the architectural decisions around your custom time-series database are fascinating.
+
+Second, this specific role on the APM team interests me because application performance monitoring is where I've built the deepest expertise. At my current company, I designed our distributed tracing system from scratch—handling 500K spans per second across 200 services. I've experienced firsthand the limitations of stitching together open-source tools, which gives me a real appreciation for what Datadog has built as an integrated product.
+
+Third, I talked to two engineers on the team through a mutual connection, and both mentioned the strong ownership culture—engineers own their features from design through production, including the on-call. That aligns with how I work best. I'm not interested in throwing code over a wall; I want to build something and be accountable for its reliability. The combination of hard technical problems, a product I genuinely admire, and a culture of ownership is why Datadog is my top choice."`,
+
+      principles: [
+        'Be specific enough that your answer couldn\'t apply to any other company—reference actual products, blog posts, or technical decisions',
+        'Connect three threads: company excitement + role alignment + your career direction',
+        'Show you\'ve done real research: engineering blog, recent launches, team structure, tech stack',
+        'Demonstrate pull not push: You\'re drawn to this company, not running from your current one',
+        'Talk to current employees if possible: "I spoke with [name] on the team and..." is the strongest signal of genuine interest'
+      ],
+
+      sampleQuestions: [
+        'Why do you want to work here?',
+        'Why this company over our competitors?',
+        'What do you know about our company?',
+        'Why are you interested in this role?',
+        'What attracted you to this position?',
+        'Why should we hire you over other candidates?',
+        'Where do you see yourself contributing here?'
+      ],
+
       tips: [
-        'Reference specific products, blog posts, or initiatives',
-        'Connect the company\'s mission to your personal values',
-        'Show you understand their technical challenges',
-        'Demonstrate enthusiasm without being over-the-top',
-        'Prepare different angles for different interviewers'
+        'Reference specific products, blog posts, or initiatives you\'ve researched',
+        'Connect the company\'s mission to your personal values and career goals',
+        'Show you understand their technical challenges—not just their marketing',
+        'Demonstrate genuine enthusiasm without being over-the-top or sycophantic',
+        'Prepare different angles for different interviewers (recruiter vs. engineer vs. manager)',
+        'If you\'ve used their product, share your experience as a user—it shows authentic interest',
+        'Mention conversations with current employees if you\'ve had any'
       ]
     },
     {
