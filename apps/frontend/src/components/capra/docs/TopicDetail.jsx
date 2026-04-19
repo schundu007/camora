@@ -589,32 +589,39 @@ export default function TopicDetail({
     return s;
   }, [topicDetails, activePage, isSDStyle, isCodingStyle]);
 
-  // Track active TOC section on scroll
-  // Content scrolls inside #app-scroll-container, NOT window
+  // Track active TOC section on scroll — find the section currently visible in viewport
   const [activeTocId, setActiveTocId] = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
   useEffect(() => {
     if (!tocSections.length) return;
     const scrollContainer = document.getElementById('app-scroll-container') || window;
+    let ticking = false;
     const handleScroll = () => {
-      const ids = tocSections.map(s => s.id);
-      const offsets = ids.map(id => {
-        const el = document.getElementById(id);
-        return el ? el.getBoundingClientRect().top : Infinity;
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const ids = tocSections.map(s => s.id);
+        // Find the last section whose top edge has scrolled above 30% of viewport
+        const threshold = window.innerHeight * 0.3;
+        let active = ids[0];
+        for (let i = ids.length - 1; i >= 0; i--) {
+          const el = document.getElementById(ids[i]);
+          if (el && el.getBoundingClientRect().top <= threshold) {
+            active = ids[i];
+            break;
+          }
+        }
+        setActiveTocId(active);
+        // Scroll progress
+        if (scrollContainer instanceof HTMLElement) {
+          const scrollH = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+          setScrollProgress(scrollH > 0 ? Math.min(1, scrollContainer.scrollTop / scrollH) : 0);
+        } else {
+          const docH = document.documentElement.scrollHeight - window.innerHeight;
+          setScrollProgress(docH > 0 ? Math.min(1, window.scrollY / docH) : 0);
+        }
+        ticking = false;
       });
-      let active = ids[0];
-      for (let i = 0; i < offsets.length; i++) {
-        if (offsets[i] < 200) active = ids[i];
-      }
-      setActiveTocId(active);
-      // Scroll progress — use container's scrollTop, not window.scrollY
-      if (scrollContainer instanceof HTMLElement) {
-        const scrollH = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-        setScrollProgress(scrollH > 0 ? Math.min(1, scrollContainer.scrollTop / scrollH) : 0);
-      } else {
-        const docH = document.documentElement.scrollHeight - window.innerHeight;
-        setScrollProgress(docH > 0 ? Math.min(1, window.scrollY / docH) : 0);
-      }
     };
     handleScroll();
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
@@ -623,67 +630,47 @@ export default function TopicDetail({
 
   return (
     <div className="landing-root animate-fade-in flex gap-6">
-      {/* Left: Hierarchical Table of Contents sidebar */}
+      {/* Left: Table of Contents sidebar */}
       {tocSections.length > 2 && (
-        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '72px', width: '220px' }}>
+        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '72px', width: '200px' }}>
           <nav>
-            {/* Header with progress bar */}
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-[13px] font-bold text-[var(--text-primary)] landing-display tracking-tight">On This Page</h4>
-              <span className="text-[10px] font-mono text-[var(--text-muted)]">{Math.round(scrollProgress * 100)}%</span>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3 landing-mono">On This Page</h4>
+            <div className="relative pl-3" style={{ borderLeft: '2px solid var(--border)' }}>
+              {tocSections.map(({ id, label, children }) => {
+                const isActive = activeTocId === id;
+                return (
+                  <div key={id} className="relative">
+                    {/* Active indicator bar overlaying the left border */}
+                    {isActive && (
+                      <div className="absolute -left-[3px] top-0 w-[4px] rounded-full bg-[var(--accent)]" style={{ height: children?.length ? `${20 + children.length * 18}px` : '28px' }} />
+                    )}
+                    <a
+                      href={`#${id}`}
+                      onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                      className={`block py-1 text-[12.5px] leading-snug transition-colors landing-body ${
+                        isActive ? 'text-[var(--accent)] font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                      }`}
+                    >
+                      {label}
+                    </a>
+                    {children?.length > 0 && isActive && (
+                      <div className="pl-2.5 pb-1 space-y-0">
+                        {children.map((child, ci) => (
+                          <span key={ci} className="block py-[2px] text-[11px] text-[var(--text-muted)]/70 landing-body leading-snug truncate" title={child}>{child}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <div className="h-0.5 rounded-full bg-[var(--border)] mb-4 overflow-hidden">
-              <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-150" style={{ width: `${scrollProgress * 100}%` }} />
-            </div>
-
-            {/* Sections */}
-            <div className="relative">
-              {/* Vertical track line */}
-              <div className="absolute left-[5px] top-0 bottom-0 w-px bg-[var(--border)]" />
-
-              <div className="space-y-0.5">
-                {tocSections.map(({ id, label, children }) => {
-                  const isActive = activeTocId === id;
-                  return (
-                    <div key={id}>
-                      {/* Parent section */}
-                      <a
-                        href={`#${id}`}
-                        onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                        className="group flex items-start gap-2.5 py-1.5 transition-all"
-                      >
-                        {/* Track dot */}
-                        <span className={`mt-1.5 w-[11px] h-[11px] rounded-full flex-shrink-0 border-2 transition-all duration-200 ${
-                          isActive
-                            ? 'bg-[var(--accent)] border-[var(--accent)] shadow-[0_0_6px_rgba(45,140,255,0.4)]'
-                            : 'bg-white border-[var(--border)] group-hover:border-[var(--accent)]'
-                        }`} />
-                        <span className={`text-[13px] leading-snug transition-colors landing-body ${
-                          isActive
-                            ? 'text-[var(--accent)] font-bold'
-                            : 'text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]'
-                        }`}>
-                          {label}
-                        </span>
-                      </a>
-
-                      {/* Children — only show for active section */}
-                      {children && children.length > 0 && isActive && (
-                        <div className="ml-[22px] pl-3 border-l-2 border-[var(--accent)]/30 space-y-0 mb-1 animate-fade-in">
-                          {children.map((child, ci) => (
-                            <span
-                              key={ci}
-                              className="block py-[3px] text-[11px] text-[var(--text-muted)] landing-body leading-snug truncate"
-                              title={child}
-                            >
-                              {child}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+            {/* Progress */}
+            <div className="mt-4 pt-3 border-t border-[var(--border)]">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1 rounded-full bg-[var(--border)] overflow-hidden">
+                  <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-200" style={{ width: `${scrollProgress * 100}%` }} />
+                </div>
+                <span className="text-[10px] font-mono text-[var(--text-muted)] min-w-[28px] text-right">{Math.round(scrollProgress * 100)}%</span>
               </div>
             </div>
           </nav>
