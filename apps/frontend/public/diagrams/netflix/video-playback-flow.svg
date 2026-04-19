@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="#fafbfc" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="22" font-weight="700">Video Playback Flow: Click Play to Streaming</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="13">End-to-end flow from play button through DRM, CDN steering, and adaptive bitrate delivery</text>
+
+  <!-- 1. Client Device -->
+  <rect x="15" y="90" width="110" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="90" width="110" height="30" rx="12 12 0 0" fill="#ef4444"/>
+  <text x="70" y="110" text-anchor="middle" fill="white" font-size="11" font-weight="700">Client</text>
+  <text x="70" y="142" text-anchor="middle" fill="#64748b" font-size="20">&#x1F4FA;</text>
+  <text x="70" y="165" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Click Play</text>
+  <text x="70" y="180" text-anchor="middle" fill="#94a3b8" font-size="8">TV / Mobile / Web</text>
+  <text x="70" y="195" text-anchor="middle" fill="#94a3b8" font-size="8">Netflix App</text>
+
+  <!-- Arrow 1 -->
+  <line x1="125" y1="148" x2="150" y2="148" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <text x="138" y="140" text-anchor="middle" fill="#2563eb" font-size="7" font-weight="600">&#x2460;</text>
+
+  <!-- 2. Playback Service -->
+  <rect x="160" y="90" width="120" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="160" y="90" width="120" height="30" rx="12 12 0 0" fill="#2563eb"/>
+  <text x="220" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">Playback API</text>
+  <text x="220" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Session init</text>
+  <text x="220" y="158" text-anchor="middle" fill="#64748b" font-size="9">Entitlement check</text>
+  <text x="220" y="173" text-anchor="middle" fill="#64748b" font-size="9">Resume position</text>
+  <text x="220" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Java / AWS</text>
+
+  <!-- Arrow 2 -->
+  <line x1="280" y1="148" x2="305" y2="148" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <text x="293" y="140" text-anchor="middle" fill="#2563eb" font-size="7" font-weight="600">&#x2461;</text>
+
+  <!-- 3. DRM License -->
+  <rect x="315" y="90" width="115" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="315" y="90" width="115" height="30" rx="12 12 0 0" fill="#7c3aed"/>
+  <text x="372" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">DRM License</text>
+  <text x="372" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">License server</text>
+  <text x="372" y="158" text-anchor="middle" fill="#64748b" font-size="9">Widevine / FairPlay</text>
+  <text x="372" y="173" text-anchor="middle" fill="#64748b" font-size="9">PlayReady</text>
+  <text x="372" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Decrypt keys</text>
+
+  <!-- Arrow 3 -->
+  <line x1="430" y1="148" x2="455" y2="148" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+  <text x="443" y="140" text-anchor="middle" fill="#7c3aed" font-size="7" font-weight="600">&#x2462;</text>
+
+  <!-- 4. Steering Service -->
+  <rect x="465" y="90" width="120" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="465" y="90" width="120" height="30" rx="12 12 0 0" fill="#f97316"/>
+  <text x="525" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">Steering</text>
+  <text x="525" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Select best OCA</text>
+  <text x="525" y="158" text-anchor="middle" fill="#64748b" font-size="9">Network probes</text>
+  <text x="525" y="173" text-anchor="middle" fill="#64748b" font-size="9">ISP locality</text>
+  <text x="525" y="188" text-anchor="middle" fill="#64748b" font-size="9">Server health</text>
+  <text x="525" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Zuul / Edge</text>
+
+  <!-- Arrow 4 -->
+  <line x1="585" y1="148" x2="610" y2="148" stroke="#f97316" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="598" y="140" text-anchor="middle" fill="#f97316" font-size="7" font-weight="600">&#x2463;</text>
+
+  <!-- 5. OCA / CDN Edge -->
+  <rect x="620" y="90" width="115" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="620" y="90" width="115" height="30" rx="12 12 0 0" fill="#16a34a"/>
+  <text x="677" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">OCA Server</text>
+  <text x="677" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Manifest URL</text>
+  <text x="677" y="158" text-anchor="middle" fill="#64748b" font-size="9">DASH / HLS</text>
+  <text x="677" y="173" text-anchor="middle" fill="#64748b" font-size="9">Chunked segments</text>
+  <text x="677" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Open Connect</text>
+
+  <!-- Arrow 5 -->
+  <line x1="735" y1="148" x2="760" y2="148" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <text x="748" y="140" text-anchor="middle" fill="#16a34a" font-size="7" font-weight="600">&#x2464;</text>
+
+  <!-- 6. ABR Buffering -->
+  <rect x="770" y="90" width="120" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="770" y="90" width="120" height="30" rx="12 12 0 0" fill="#2563eb"/>
+  <text x="830" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">ABR Buffer</text>
+  <text x="830" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Buffer ~40s ahead</text>
+  <text x="830" y="158" text-anchor="middle" fill="#64748b" font-size="9">Bandwidth probe</text>
+  <text x="830" y="173" text-anchor="middle" fill="#64748b" font-size="9">Buffer health</text>
+  <text x="830" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Client-side</text>
+
+  <!-- Arrow 6 -->
+  <line x1="890" y1="148" x2="915" y2="148" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <text x="903" y="140" text-anchor="middle" fill="#2563eb" font-size="7" font-weight="600">&#x2465;</text>
+
+  <!-- 7. Quality Adaptation -->
+  <rect x="925" y="90" width="120" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="925" y="90" width="120" height="30" rx="12 12 0 0" fill="#f97316"/>
+  <text x="985" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">Quality Adapt</text>
+  <text x="985" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Bitrate switching</text>
+  <text x="985" y="158" text-anchor="middle" fill="#64748b" font-size="9">480p &#x2194; 1080p &#x2194; 4K</text>
+  <text x="985" y="173" text-anchor="middle" fill="#64748b" font-size="9">Per-shot encoding</text>
+  <text x="985" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Dynamic optimizer</text>
+
+  <!-- Arrow 7 -->
+  <line x1="1045" y1="148" x2="1070" y2="148" stroke="#f97316" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <text x="1058" y="140" text-anchor="middle" fill="#f97316" font-size="7" font-weight="600">&#x2466;</text>
+
+  <!-- 8. Progress Reports -->
+  <rect x="1080" y="90" width="105" height="120" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1080" y="90" width="105" height="30" rx="12 12 0 0" fill="#16a34a"/>
+  <text x="1132" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">Telemetry</text>
+  <text x="1132" y="140" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Progress reports</text>
+  <text x="1132" y="158" text-anchor="middle" fill="#64748b" font-size="9">Every 30 seconds</text>
+  <text x="1132" y="173" text-anchor="middle" fill="#64748b" font-size="9">QoE metrics</text>
+  <text x="1132" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">Kafka pipeline</text>
+
+  <!-- Return arrow: Telemetry back to Playback -->
+  <path d="M 1132 210 L 1132 250 L 220 250 L 220 215" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrowGreen)"/>
+  <rect x="580" y="240" width="160" height="16" rx="4" fill="#16a34a"/>
+  <text x="660" y="252" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2467; Progress + resume position</text>
+
+  <!-- Additional detail boxes -->
+
+  <!-- DRM detail -->
+  <rect x="280" y="280" width="180" height="55" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#s)"/>
+  <rect x="280" y="280" width="180" height="20" rx="8 8 0 0" fill="#7c3aed"/>
+  <text x="370" y="294" text-anchor="middle" fill="white" font-size="8" font-weight="700">DRM Details</text>
+  <text x="295" y="315" fill="#64748b" font-size="8">License valid per session</text>
+  <text x="295" y="328" fill="#64748b" font-size="8">Device-specific key exchange</text>
+
+  <!-- Steering detail -->
+  <rect x="510" y="280" width="180" height="55" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#s)"/>
+  <rect x="510" y="280" width="180" height="20" rx="8 8 0 0" fill="#f97316"/>
+  <text x="600" y="294" text-anchor="middle" fill="white" font-size="8" font-weight="700">OCA Selection Criteria</text>
+  <text x="525" y="315" fill="#64748b" font-size="8">Network latency + bandwidth</text>
+  <text x="525" y="328" fill="#64748b" font-size="8">ISP peering + server load</text>
+
+  <!-- ABR detail -->
+  <rect x="740" y="280" width="180" height="55" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#s)"/>
+  <rect x="740" y="280" width="180" height="20" rx="8 8 0 0" fill="#2563eb"/>
+  <text x="830" y="294" text-anchor="middle" fill="white" font-size="8" font-weight="700">Adaptive Bitrate</text>
+  <text x="755" y="315" fill="#64748b" font-size="8">Start low, ramp up quality</text>
+  <text x="755" y="328" fill="#64748b" font-size="8">Switch mid-stream seamlessly</text>
+
+  <!-- Legend -->
+  <rect x="30" y="355" width="1140" height="35" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="377" fill="#1e293b" font-size="10" font-weight="700">Flow:</text>
+  <text x="100" y="377" fill="#475569" font-size="9">&#x2460; Play &#x2192; &#x2461; Session + entitlement &#x2192; &#x2462; DRM license &#x2192; &#x2463; Select nearest OCA &#x2192; &#x2464; Get manifest &#x2192; &#x2465; Buffer segments &#x2192; &#x2466; Adapt quality &#x2192; &#x2467; Report every 30s</text>
+</svg>
