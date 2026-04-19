@@ -220,11 +220,11 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         ))}
       </div>
 
-      {/* Camo hint for non-technical rounds */}
+      {/* Icicle hint for non-technical rounds */}
       <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-8" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
         <span className="text-xs" style={{ color: '#0369A1' }}>
-          For <strong>HR, Hiring Manager & Behavioral</strong> rounds — use the <strong>Camo</strong> copilot (bottom-right ★ icon)
+          For <strong>HR, Hiring Manager & Behavioral</strong> rounds — use the <strong>Icicle</strong> copilot (bottom-right ★ icon)
         </span>
       </div>
 
