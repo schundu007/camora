@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="380" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Audio Streaming — Gapless Playback with Prefetching</text>
+
+  <!-- Player -->
+  <rect x="20" y="55" width="140" height="120" rx="10" fill="#fff" stroke="#1db954" stroke-width="2"/>
+  <rect x="20" y="55" width="140" height="28" rx="10 10 0 0" fill="#1db954"/>
+  <text x="90" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="700">🎵 Audio Player</text>
+
+  <text x="35" y="100" fill="#1e293b" font-size="9">Ogg Vorbis decoder</text>
+  <text x="35" y="118" fill="#1e293b" font-size="9">10-15s buffer ahead</text>
+  <text x="35" y="136" fill="#1e293b" font-size="9">Adaptive quality</text>
+  <text x="35" y="154" fill="#1db954" font-size="9" font-weight="600">Start in &lt;200ms</text>
+  <text x="35" y="168" fill="#64748b" font-size="8">96/160/320 kbps</text>
+
+  <line x1="160" y1="115" x2="195" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- CDN -->
+  <rect x="200" y="60" width="140" height="110" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="200" y="60" width="140" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="270" y="78" text-anchor="middle" fill="white" font-size="11" font-weight="700">🌐 CDN Edge</text>
+
+  <text x="215" y="105" fill="#1e293b" font-size="9">HTTP range requests</text>
+  <text x="215" y="123" fill="#22c55e" font-size="9" font-weight="600">80%+ cache hit rate</text>
+  <text x="215" y="141" fill="#64748b" font-size="8">Top 1% tracks cached</text>
+  <text x="215" y="158" fill="#64748b" font-size="8">at edge on SSD</text>
+
+  <!-- Origin -->
+  <line x1="340" y1="115" x2="375" y2="115" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#a)"/>
+  <text x="355" y="105" fill="#94a3b8" font-size="7">miss</text>
+
+  <rect x="380" y="80" width="100" height="70" rx="8" fill="#64748b"/>
+  <text x="430" y="110" text-anchor="middle" fill="white" font-size="10" font-weight="700">Origin</text>
+  <text x="430" y="128" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">GCS/S3</text>
+  <text x="430" y="142" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">~30 PB</text>
+
+  <!-- Gapless playback visualization -->
+  <rect x="20" y="195" width="460" height="160" rx="10" fill="#fff" stroke="#1db954" stroke-width="1.5"/>
+  <rect x="20" y="195" width="460" height="28" rx="10 10 0 0" fill="#1db954"/>
+  <text x="250" y="213" text-anchor="middle" fill="white" font-size="12" font-weight="700">🎶 Gapless Playback — Zero Gap Between Tracks</text>
+
+  <!-- Current track timeline -->
+  <text x="35" y="245" fill="#1e293b" font-size="9" font-weight="600">Current Track:</text>
+  <rect x="120" y="235" width="300" height="18" rx="3" fill="#1db954"/>
+  <rect x="330" y="235" width="90" height="18" rx="0 3 3 0" fill="rgba(29,185,84,0.4)"/>
+  <text x="270" y="248" text-anchor="middle" fill="white" font-size="8" font-weight="600">Playing...</text>
+  <text x="375" y="248" text-anchor="middle" fill="white" font-size="7">70%</text>
+
+  <!-- Prefetch indicator -->
+  <text x="430" y="248" fill="#f97316" font-size="8" font-weight="700">↓ Prefetch starts!</text>
+
+  <!-- Next track -->
+  <text x="35" y="280" fill="#1e293b" font-size="9" font-weight="600">Next Track:</text>
+  <rect x="120" y="270" width="100" height="18" rx="3" fill="#3b82f6"/>
+  <rect x="220" y="270" width="200" height="18" rx="3" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-dasharray="3,3"/>
+  <text x="170" y="283" text-anchor="middle" fill="white" font-size="8" font-weight="600">Buffered</text>
+  <text x="320" y="283" text-anchor="middle" fill="#3b82f6" font-size="7">Downloading...</text>
+
+  <!-- Crossfade zone -->
+  <rect x="120" y="300" width="300" height="35" rx="6" fill="rgba(29,185,84,0.08)" stroke="#1db954" stroke-dasharray="4,3"/>
+  <text x="270" y="318" text-anchor="middle" fill="#1db954" font-size="9" font-weight="600">Crossfade Zone (last 2 seconds)</text>
+  <text x="270" y="332" text-anchor="middle" fill="#64748b" font-size="8">Fade out current + Fade in next = seamless transition</text>
+
+  <!-- Quality levels -->
+  <rect x="510" y="195" width="270" height="160" rx="10" fill="#fff" stroke="#e2e8f0"/>
+  <rect x="510" y="195" width="270" height="28" rx="10 10 0 0" fill="#1e293b"/>
+  <text x="645" y="213" text-anchor="middle" fill="white" font-size="11" font-weight="700">Audio Quality Levels</text>
+
+  <rect x="525" y="235" width="60" height="20" rx="4" fill="#94a3b8"/>
+  <text x="555" y="249" text-anchor="middle" fill="white" font-size="8" font-weight="600">96 kbps</text>
+  <text x="600" y="249" fill="#64748b" font-size="8">Free tier (mobile)</text>
+
+  <rect x="525" y="262" width="90" height="20" rx="4" fill="#3b82f6"/>
+  <text x="570" y="276" text-anchor="middle" fill="white" font-size="8" font-weight="600">160 kbps</text>
+  <text x="630" y="276" fill="#64748b" font-size="8">Normal quality</text>
+
+  <rect x="525" y="289" width="130" height="20" rx="4" fill="#1db954"/>
+  <text x="590" y="303" text-anchor="middle" fill="white" font-size="8" font-weight="600">320 kbps</text>
+  <text x="670" y="303" fill="#64748b" font-size="8">Premium HQ</text>
+
+  <rect x="525" y="316" width="170" height="20" rx="4" fill="#a855f7"/>
+  <text x="610" y="330" text-anchor="middle" fill="white" font-size="8" font-weight="600">1411 kbps (FLAC)</text>
+  <text x="710" y="330" fill="#64748b" font-size="8">HiFi</text>
+
+  <!-- Bottom note -->
+  <rect x="20" y="362" width="760" height="14" rx="4" fill="rgba(29,185,84,0.08)"/>
+  <text x="400" y="374" text-anchor="middle" fill="#1db954" font-size="9" font-weight="600">30M concurrent streams • 4.8 Tbps bandwidth • Start in &lt;200ms • Gapless crossfade • Adaptive quality</text>
+</svg>
