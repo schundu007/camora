@@ -2084,15 +2084,15 @@ Quick quality first: 360p available in minutes, 4K later`
         keyChallenge: 'Delivering 100 billion messages per day with sub-second latency while maintaining end-to-end encryption — the server itself cannot read any message content.',
       },
 
-      introduction: `WhatsApp is the world's most widely used messaging application, connecting over 2 billion monthly active users across 180+ countries. At its peak, the system delivers over 100 billion messages per day with sub-second latency, making it one of the most demanding distributed systems ever built.
+      introduction: `WhatsApp is the world's most widely used messaging application, connecting over **2 billion** monthly active users across **180+ countries**. At its peak, the system delivers over **100 billion messages per day** with sub-second latency, making it one of the most demanding distributed systems ever built.
 
-This is one of the most popular system design interview questions because it tests a wide range of skills: real-time communication (persistent WebSocket connections), delivery guarantees (messages must never be lost, even when users are offline for days), strong ordering (messages within a conversation must appear in the correct sequence), and end-to-end encryption (the server itself cannot read message content).
+This is one of the most popular system design interview questions because it tests a wide range of skills: real-time communication (persistent **WebSocket** connections), delivery guarantees (messages must never be lost, even when users are offline for days), strong ordering (messages within a conversation must appear in the correct sequence), and **end-to-end encryption** (the server itself cannot read message content).
 
-What makes messaging fundamentally different from other systems like social media feeds or search engines? Feed systems are read-heavy and can tolerate eventual consistency - if a tweet appears 5 seconds late, nobody notices. Messaging is write-heavy and demands strong delivery guarantees. If a message is lost, duplicated, or arrives out of order, the user experience breaks immediately. Users expect the "double check mark" system to be perfectly reliable: one grey check = sent to server, two grey checks = delivered to recipient device, two blue checks = read by recipient.
+What makes messaging fundamentally different from other systems like social media feeds or search engines? Feed systems are read-heavy and can tolerate **eventual consistency** - if a tweet appears 5 seconds late, nobody notices. Messaging is **write-heavy** and demands strong delivery guarantees. If a message is lost, duplicated, or arrives out of order, the user experience breaks immediately. Users expect the "double check mark" system to be perfectly reliable: one grey check = sent to server, two grey checks = delivered to recipient device, two blue checks = read by recipient.
 
-The scale challenge is immense: 1 billion daily active users maintaining persistent connections, each sending ~50 messages per day, with presence updates (online/last seen) creating an additional 33 million QPS heartbeat load. The system must handle graceful degradation during network partitions, seamless offline-to-online transitions, group messaging fan-out to up to 1,024 members, and media transfers (images, video, documents) - all while maintaining end-to-end encryption using the Signal Protocol.
+The scale challenge is immense: **1 billion daily active users** maintaining persistent connections, each sending ~50 messages per day, with presence updates (online/last seen) creating an additional **33 million QPS** heartbeat load. The system must handle graceful degradation during network partitions, seamless offline-to-online transitions, group messaging fan-out to up to **1,024 members**, and media transfers (images, video, documents) - all while maintaining end-to-end encryption using the **Signal Protocol**.
 
-In this design, we will walk through capacity estimation, the core messaging architecture, how to scale WebSocket connections across thousands of servers, the message delivery pipeline with guaranteed at-least-once semantics, presence tracking at massive scale, group messaging strategies, and media handling.`,
+In this design, we will walk through capacity estimation, the core messaging architecture, how to scale WebSocket connections across thousands of servers, the message delivery pipeline with guaranteed **at-least-once** semantics, presence tracking at massive scale, group messaging strategies, and media handling.`,
 
       // ── Back-of-Envelope Estimation ──
       estimation: {
@@ -2712,15 +2712,15 @@ Why Cassandra wins for messages:
           detail: `Ordering is the hardest correctness problem in distributed messaging.
 
 **Within a conversation:**
-- Server assigns monotonic sequence numbers via atomic Redis INCR on key seq:{conversationId}
-- Cassandra stores messages with sequenceNum as clustering key (DESC for efficient "latest first" reads)
+- Server assigns **monotonic sequence numbers** via atomic **Redis INCR** on key seq:{conversationId}
+- **Cassandra** stores messages with **sequenceNum** as clustering key (DESC for efficient "latest first" reads)
 - Clients display messages sorted by sequenceNum, never by client timestamp (clocks are unreliable)
-- On reconnection, client provides lastSequenceNum and receives all messages after it
+- On reconnection, client provides **lastSequenceNum** and receives all messages after it
 
 **Conflict resolution:**
 - Two users typing simultaneously in a group: both messages get unique sequence numbers, no conflict
-- Network partition causes message to arrive at two servers: client-generated UUID deduplicates
-- Sequence counter is a hot key for popular groups: pre-allocate ranges per chat server to reduce contention`
+- Network partition causes message to arrive at two servers: **client-generated UUID** deduplicates
+- Sequence counter is a **hot key** for popular groups: pre-allocate ranges per chat server to reduce contention`
         },
         {
           topic: 'Presence System at 33 Million QPS',
@@ -2728,35 +2728,35 @@ Why Cassandra wins for messages:
           detail: `Presence generates more load than messaging itself and requires careful optimization.
 
 **Architecture:**
-- Redis cluster with 100+ shards handles all presence state (HSET/HGET with TTL)
-- Each chat server batches heartbeats from its 100K connections and pipelines updates to Redis (reduces 100K individual writes to 1 batch per second)
-- Presence changes propagated via Redis pub/sub to subscribers (only users in active conversations)
+- **Redis cluster** with **100+ shards** handles all presence state (HSET/HGET with TTL)
+- Each chat server batches heartbeats from its **100K connections** and pipelines updates to Redis (reduces 100K individual writes to **1 batch per second**)
+- Presence changes propagated via **Redis pub/sub** to subscribers (only users in active conversations)
 
 **Optimizations that make it feasible:**
-- Lazy presence: only track users active in last 24 hours (reduces working set by 60%)
-- Sampling for contact lists: batch poll 100 users every 60 seconds instead of real-time
-- Bloom filter check before Redis query: skip users with no online contacts
-- Separate "typing" from "presence" - typing indicators are pure WebSocket, never hit Redis`
+- **Lazy presence**: only track users active in last 24 hours (reduces working set by **60%**)
+- Sampling for contact lists: batch poll 100 users every **60 seconds** instead of real-time
+- **Bloom filter** check before Redis query: skip users with no online contacts
+- Separate "typing" from "presence" - typing indicators are pure **WebSocket**, never hit Redis`
         },
         {
           topic: 'Hot/Cold Storage Separation',
           diagramSrc: '/diagrams/whatsapp/deep-dive-hot-cold.png',
-          detail: `Message access patterns have extreme recency bias - 95% of reads are for the last 48 hours.
+          detail: `Message access patterns have extreme recency bias - **95% of reads** are for the last **48 hours**.
 
 **Hot tier (Cassandra SSD cluster):**
-- Messages from the last 30 days
-- All active offline_queue entries
-- High IOPS SSDs, replicated across 3 availability zones
+- Messages from the last **30 days**
+- All active **offline_queue** entries
+- High IOPS **SSDs**, replicated across **3 availability zones**
 - Serves the vast majority of read/write traffic
 
 **Warm tier (Cassandra HDD cluster):**
-- Messages from 30 days to 1 year
+- Messages from 30 days to **1 year**
 - Lower-cost storage, same schema, accessed only when user scrolls far back in history
-- Read latency is higher (10-50ms vs 1-5ms) but acceptable for historical browsing
+- Read latency is higher (**10-50ms** vs **1-5ms**) but acceptable for historical browsing
 
 **Cold tier (S3 + Glacier):**
 - Messages older than 1 year, exported in compressed encrypted batches
-- Media files older than 90 days automatically transitioned via S3 lifecycle policies
+- Media files older than **90 days** automatically transitioned via **S3 lifecycle policies**
 - Accessed only for legal compliance or user-initiated full history export
 
 **Data movement:** Background job continuously migrates data from hot -> warm -> cold based on message timestamp.`
@@ -2764,12 +2764,12 @@ Why Cassandra wins for messages:
         {
           topic: 'Group Messaging Fan-out Strategies',
           diagramSrc: '/diagrams/whatsapp/deep-dive-group-fanout.png',
-          detail: `Group messaging creates a classic fan-out problem with different tradeoffs at different scales.
+          detail: `Group messaging creates a classic **fan-out problem** with different tradeoffs at different scales.
 
 **Fan-out on Write (groups up to ~100 members):**
 - Server delivers the message to every member individually
 - Pros: instant delivery, simple client logic (just receive messages)
-- Cons: write amplification (1 message = 100 deliveries), higher server load
+- Cons: **write amplification** (1 message = 100 deliveries), higher server load
 
 **Fan-out on Read (groups with 100-1,024 members):**
 - Server stores message once in the group partition
@@ -2778,47 +2778,47 @@ Why Cassandra wins for messages:
 - Pros: minimal write amplification, efficient storage
 - Cons: slightly higher read latency, client must manage sync state
 
-**WhatsApp hybrid:** Fan-out on write for online members (instant delivery), fan-out on read for offline members (lazy sync on reconnect). Delivery receipts aggregated as "delivered to X of Y members" to prevent O(N^2) receipt traffic in large groups.`
+**WhatsApp hybrid:** **Fan-out on write** for online members (instant delivery), **fan-out on read** for offline members (lazy sync on reconnect). Delivery receipts aggregated as "delivered to X of Y members" to prevent **O(N^2)** receipt traffic in large groups.`
         },
         {
           topic: 'Cross-Region Message Delivery',
           diagramSrc: '/diagrams/whatsapp/deep-dive-cross-region.png',
-          detail: `With users in 180+ countries, messages frequently cross continental boundaries.
+          detail: `With users in **180+ countries**, messages frequently cross continental boundaries.
 
 **Regional architecture:**
-- Each major region (US-East, US-West, EU, Asia-Pacific, South America) has its own Kafka cluster and Cassandra ring
-- Users connect to the nearest region via GeoDNS routing
-- Intra-region messages route through the local Kafka cluster (latency: ~50ms)
+- Each major region (US-East, US-West, EU, Asia-Pacific, South America) has its own **Kafka cluster** and **Cassandra ring**
+- Users connect to the nearest region via **GeoDNS** routing
+- Intra-region messages route through the local Kafka cluster (latency: **~50ms**)
 
 **Cross-region routing:**
 - When sender and recipient are in different regions, the local Kafka cluster forwards to the remote region's relay topic
-- Kafka MirrorMaker (or custom relay service) asynchronously replicates cross-region topics
-- Cross-region latency: 150-300ms depending on physical distance (acceptable for messaging, unlike real-time video)
+- **Kafka MirrorMaker** (or custom relay service) asynchronously replicates cross-region topics
+- Cross-region latency: **150-300ms** depending on physical distance (acceptable for messaging, unlike real-time video)
 
 **Consistency across regions:**
-- Sequence numbers are assigned in the sender's region and are globally unique (region prefix + counter)
+- Sequence numbers are assigned in the sender's region and are **globally unique** (region prefix + counter)
 - If both users in a 1:1 chat are in different regions, one region is designated as the "home" region for that conversation
-- Presence data is replicated across regions with eventual consistency (1-2 second lag is acceptable for online/offline status)`
+- Presence data is replicated across regions with **eventual consistency** (1-2 second lag is acceptable for online/offline status)`
         },
         {
           topic: 'Resumable Media Uploads',
           diagramSrc: '/diagrams/whatsapp/deep-dive-media-upload.png',
-          detail: `Mobile networks are unreliable - 30% of media uploads are interrupted at least once.
+          detail: `Mobile networks are unreliable - **30%** of media uploads are interrupted at least once.
 
 **Chunked upload protocol:**
-1. Client requests an upload session: POST /api/media/upload/init -> returns uploadToken + chunkSize (256KB)
+1. Client requests an upload session: POST /api/media/upload/init -> returns **uploadToken** + chunkSize (**256KB**)
 2. Client splits encrypted file into chunks and uploads sequentially: PUT /api/media/upload/{token}/chunk/{n}
-3. Server stores each chunk in a temporary staging area (local disk or S3 multipart upload)
+3. Server stores each chunk in a temporary staging area (local disk or **S3 multipart upload**)
 4. If upload is interrupted, client resumes: GET /api/media/upload/{token}/status -> returns lastChunkReceived
 5. Client resumes from chunk lastChunkReceived + 1
-6. On completion, server assembles chunks into final encrypted blob in S3
+6. On completion, server assembles chunks into final encrypted blob in **S3**
 
 **Optimizations:**
-- Parallel chunk upload (up to 3 concurrent) on fast networks
-- Adaptive chunk size: larger chunks on WiFi (1MB), smaller on cellular (256KB)
-- Upload tokens expire after 24 hours - client must restart if expired
-- Server validates SHA-256 checksum of each chunk for integrity
-- Content-addressable storage: if the identical encrypted blob already exists in S3, skip storage and return existing URL`
+- Parallel chunk upload (up to **3 concurrent**) on fast networks
+- **Adaptive chunk size**: larger chunks on WiFi (**1MB**), smaller on cellular (**256KB**)
+- Upload tokens expire after **24 hours** - client must restart if expired
+- Server validates **SHA-256** checksum of each chunk for integrity
+- **Content-addressable storage**: if the identical encrypted blob already exists in S3, skip storage and return existing URL`
         }
       ],
 
@@ -2827,70 +2827,70 @@ Why Cassandra wins for messages:
         {
           name: 'Consistent Hashing for Connection Routing',
           diagramSrc: '/diagrams/whatsapp/algo-consistent-hashing.png',
-          description: `Route each user to a specific chat server using consistent hashing on userId.
+          description: `Route each user to a specific chat server using **consistent hashing** on userId.
 
 **How it works:**
-- Chat servers are placed on a hash ring at multiple virtual node positions
+- Chat servers are placed on a **hash ring** at multiple **virtual node** positions
 - When a user connects, hash(userId) determines which chat server they are assigned to
-- The mapping is stored in Redis: userId -> serverId for O(1) lookup by other servers
-- When a server is added/removed, only ~1/N of users need to be remapped (minimal disruption)
+- The mapping is stored in **Redis**: userId -> serverId for **O(1)** lookup by other servers
+- When a server is added/removed, only **~1/N** of users need to be remapped (minimal disruption)
 
-**Example:** With 10,000 chat servers and 256 virtual nodes each, the hash ring has 2.56M positions. Adding one server only remaps ~0.01% of users.`,
+**Example:** With **10,000 chat servers** and **256 virtual nodes** each, the hash ring has **2.56M** positions. Adding one server only remaps **~0.01%** of users.`,
           pros: ['Minimal remapping when servers are added/removed (only 1/N users affected)', 'Even distribution of connections across servers with virtual nodes', 'Simple O(1) lookup for message routing between servers', 'No central coordinator needed - any server can compute the mapping'],
           cons: ['Hot spots possible if a celebrity user drives disproportionate traffic to one server', 'Virtual nodes add memory overhead for the hash ring (manageable at ~100MB)', 'Server removal causes connection storm as affected users reconnect simultaneously']
         },
         {
           name: 'Fan-out on Write vs Fan-out on Read (Group Messages)',
           diagramSrc: '/diagrams/whatsapp/algo-fanout.png',
-          description: `Two opposing strategies for delivering group messages to N members.
+          description: `Two opposing strategies for delivering group messages to **N members**.
 
 **Fan-out on Write:**
-- When a message is sent, the server immediately creates N delivery tasks (one per member)
-- Each member's chat server receives the message and delivers via WebSocket
+- When a message is sent, the server immediately creates **N delivery tasks** (one per member)
+- Each member's chat server receives the message and delivers via **WebSocket**
 - Best for small groups where instant delivery matters
 
 **Fan-out on Read:**
 - Message stored once in the group partition
 - Members are notified "new message available" and pull it when they open the group
-- Best for large groups where write amplification is prohibitive
+- Best for large groups where **write amplification** is prohibitive
 
 **Hybrid (recommended):**
 - Fan-out on write for online members (instant delivery)
 - Fan-out on read for offline members (pull on reconnect)
-- Threshold at ~100 members to switch strategies`,
+- Threshold at **~100 members** to switch strategies`,
           pros: ['Fan-out on Write: instant delivery, simple client', 'Fan-out on Read: minimal write amplification, storage-efficient', 'Hybrid combines best of both: fast for online users, efficient for offline'],
           cons: ['Fan-out on Write: O(N) write amplification per message in large groups', 'Fan-out on Read: higher client complexity, slight delivery delay', 'Hybrid: more complex server logic to manage two codepaths']
         },
         {
           name: 'Message Queue with ACK-based Guaranteed Delivery',
           diagramSrc: '/diagrams/whatsapp/algo-ack-delivery.png',
-          description: `Ensure every message is delivered at least once using an acknowledgment protocol.
+          description: `Ensure every message is delivered **at least once** using an acknowledgment protocol.
 
 **How it works:**
-1. Server persists message to Cassandra AND enqueues in offline_queue for recipient
-2. If recipient is online: deliver via WebSocket, wait for client ACK
+1. Server persists message to **Cassandra** AND enqueues in **offline_queue** for recipient
+2. If recipient is online: deliver via **WebSocket**, wait for client ACK
 3. On ACK received: remove from offline_queue (message confirmed delivered)
-4. If no ACK within 30 seconds: retry delivery (up to 3 times)
-5. If recipient goes offline: message stays in offline_queue with 30-day TTL
-6. On reconnection: flush entire offline_queue to client, wait for batch ACK
+4. If no ACK within **30 seconds**: retry delivery (up to **3 times**)
+5. If recipient goes offline: message stays in offline_queue with **30-day TTL**
+6. On reconnection: flush entire offline_queue to client, wait for **batch ACK**
 
-**Idempotency:** Client-generated UUID (messageId) ensures that retries do not create duplicate messages. Client maintains a set of recently received messageIds and silently drops duplicates.`,
+**Idempotency:** Client-generated **UUID** (messageId) ensures that retries do not create duplicate messages. Client maintains a set of recently received messageIds and silently drops duplicates.`,
           pros: ['Zero message loss: every message is either delivered or persisted for later delivery', 'Automatic retry with exponential backoff handles transient failures', 'Client-side deduplication via UUID prevents duplicate display on retry'],
           cons: ['At-least-once semantics means the client must handle deduplication logic', 'Offline queue can grow very large for users offline for days (mitigated by 30-day TTL)', 'ACK round-trip adds ~50ms to the delivery pipeline']
         },
         {
           name: 'Double Ratchet Algorithm (Signal Protocol)',
           diagramSrc: '/diagrams/whatsapp/algo-double-ratchet.png',
-          description: `Provides end-to-end encryption with forward secrecy and break-in recovery.
+          description: `Provides **end-to-end encryption** with **forward secrecy** and **break-in recovery**.
 
 **How it works:**
-- Initial key agreement via X3DH (Extended Triple Diffie-Hellman) using pre-key bundles
-- Each message uses a unique encryption key derived from a ratcheting chain
-- The "double ratchet" combines a Diffie-Hellman ratchet (new DH keys per round-trip) with a symmetric-key ratchet (KDF chain for each message)
-- Forward secrecy: compromising the current key does not reveal past messages
-- Break-in recovery: even if current state is compromised, future messages become secure after the next DH ratchet step
+- Initial key agreement via **X3DH** (Extended Triple Diffie-Hellman) using **pre-key bundles**
+- Each message uses a unique encryption key derived from a **ratcheting chain**
+- The "**double ratchet**" combines a **Diffie-Hellman ratchet** (new DH keys per round-trip) with a **symmetric-key ratchet** (KDF chain for each message)
+- **Forward secrecy**: compromising the current key does not reveal past messages
+- **Break-in recovery**: even if current state is compromised, future messages become secure after the next DH ratchet step
 
-**Performance:** Key derivation is fast (~0.1ms per message). The main overhead is the initial X3DH handshake (~5ms) which happens only once per user pair.`,
+**Performance:** Key derivation is fast (**~0.1ms** per message). The main overhead is the initial **X3DH handshake** (**~5ms**) which happens only once per user pair.`,
           pros: ['Forward secrecy: past messages remain secure even if keys are later compromised', 'Break-in recovery: future messages become secure after next DH exchange', 'Per-message keys: compromise of one message does not affect any other message', 'Proven security model: used by Signal, WhatsApp, and other major messaging apps'],
           cons: ['Complexity: implementing correctly is extremely difficult (use battle-tested libraries like libsignal)', 'Multi-device support requires encrypting each message N times (once per device)', 'Key management overhead: pre-key bundles must be replenished and distributed', 'Cannot do server-side search or content moderation on encrypted messages']
         }
@@ -3088,7 +3088,7 @@ Why Cassandra wins for messages:
       interviewFollowups: [
         {
           question: 'How do you handle the thundering herd when a chat server crashes with 100K connections?',
-          answer: `When a chat server dies, all 100K clients disconnect simultaneously and attempt to reconnect. Without mitigation, they all hit the load balancer at once, potentially cascading the failure.\n\n**Solution:** Clients use **exponential backoff with jitter**: base delay of 1s, doubled each retry (1s, 2s, 4s, 8s...) up to 30s max, plus a random jitter of 0-50% of the delay. This spreads reconnections over ~30 seconds instead of a single spike.\n\nThe connection router detects the dead server via health checks and stops routing new connections to it. In-flight messages are safe because they were already persisted to Cassandra before the crash. Redis presence entries auto-expire via TTL (60s), so stale "online" status self-heals.`
+          answer: `When a chat server dies, all **100K clients** disconnect simultaneously and attempt to reconnect. Without mitigation, they all hit the load balancer at once, potentially cascading the failure.\n\n**Solution:** Clients use **exponential backoff with jitter**: base delay of 1s, doubled each retry (1s, 2s, 4s, 8s...) up to **30s max**, plus a random jitter of 0-50% of the delay. This spreads reconnections over ~30 seconds instead of a single spike.\n\nThe connection router detects the dead server via health checks and stops routing new connections to it. In-flight messages are safe because they were already persisted to **Cassandra** before the crash. **Redis** presence entries auto-expire via **TTL (60s)**, so stale "online" status self-heals.`
         },
         {
           question: 'How would you implement disappearing messages?',
@@ -3469,37 +3469,265 @@ feed_cache {
         ]
       },
 
+      // ── Key Questions (Expanded to 10) ──
       keyQuestions: [
         {
-          question: 'How do we generate feeds for 500M daily users?',
-          answer: `Two approaches:
-1. Push model (active users): Pre-generate feed when followees post
-   - Store feed in Redis/Cassandra cache
-   - Update on new posts from followed users
-   - Good for users with <1000 followings
+          question: 'How does the photo upload and processing pipeline work?',
+          answer: `The upload pipeline must handle 1,200 QPS (peaking at 3,000) while generating multiple image versions:
 
-2. Pull model (inactive/celebrity followers): Generate on-demand
-   - Query posts from followed users at read time
-   - Merge and rank in real-time
-   - Cache result for short TTL
+1. Client uploads original photo (avg 2MB) to a pre-signed S3 URL via the Upload Service
+2. Upload Service validates the image (format, size, dimensions) and stores the raw original in S3
+3. A message is published to the Image Processing Queue (SQS/Kafka) with the S3 key and metadata
+4. Image Processing Workers consume from the queue and perform:
+   a. EXIF extraction: orientation, GPS (for location tag), camera metadata
+   b. Resize to 4 standard versions: 150px thumbnail, 320px (mobile list), 640px (mobile detail), 1080px (desktop/tablet)
+   c. Format conversion: generate WebP versions alongside JPEG for ~30% size savings
+   d. Apply server-side filters if requested (color grading, contrast adjustments)
+   e. Content moderation: run through ML model for nudity/violence/spam detection
+5. All processed versions uploaded to S3 Processed bucket with predictable key naming: {postId}/{resolution}.{format}
+6. S3 triggers CDN cache warming for the most common resolution (640px) at nearby edge locations
+7. Post record in the database is updated with media URLs and processing status
+8. If moderation flags the image, it is held for human review before appearing in any feed
 
-Hybrid: Push for regular users, pull for celebrity followers (>1M)`
+Key optimization: The 150px thumbnail is generated first and returned immediately so the post can appear in feeds while higher resolutions are still processing. Users see a blur-up effect as full resolution loads.`
         },
         {
-          question: 'How much storage for images?',
-          answer: `95M posts/day × average 1.5 images/post = 142M images/day
-Average image 2MB (multiple resolutions) = 284TB/day
-Monthly: 284TB × 30 = 8.5PB/month
-Use object storage (S3) with CDN caching for delivery.
-Generate thumbnails + multiple resolutions (150px, 320px, 640px, 1080px).`
+          question: 'How does feed generation work with the hybrid fan-out approach?',
+          answer: `Instagram uses a hybrid fan-out model to balance latency and write amplification:
+
+**Fan-out on Write (for regular users with <10K followers):**
+1. When a user publishes a post, the Fan-out Service fetches their follower list
+2. For each follower, the postId is inserted into their pre-computed feed cache (Redis sorted set, scored by timestamp)
+3. Each follower feed cache is capped at ~500 posts to bound memory
+4. Write amplification: 1 post = N feed cache inserts (acceptable for N < 10K)
+
+**Fan-out on Read (for celebrity accounts with 10K+ followers):**
+1. When a celebrity posts, the postId is NOT pushed to any follower cache
+2. Instead, a celebrity posts index is maintained per celebrity (recent 100 posts)
+3. When a follower reads their feed, the Feed Service merges their cached feed with recent posts from followed celebrities
+4. This merge happens at read time but is fast because there are typically <20 followed celebrities
+
+**Hybrid merge at read time:**
+1. Get pre-computed feed from Redis (fan-out on write posts)
+2. Get recent posts from followed celebrity accounts (fan-out on read)
+3. Merge both lists, remove duplicates
+4. Pass through the ML Ranking Service: score by engagement (likes, comments, saves), relationship strength, recency, and content type preference
+5. Return top 20 posts with cursor for pagination
+
+The threshold between push and pull (10K followers) is tunable based on system load.`
         },
         {
-          question: 'How do Stories work with 24h expiry?',
-          answer: `Store stories with createdAt and expiresAt (createdAt + 24h)
-Query: WHERE expiresAt > NOW() for active stories
-Background job cleans up expired stories
-Use Redis sorted set with expiry timestamp as score
-Ring buffer pattern: Stories are circular, auto-evict after 24h`
+          question: 'How does the CDN architecture handle 230 GB/s of image egress?',
+          answer: `Instagram uses a multi-tier CDN architecture to serve images with a 95% cache hit rate:
+
+**Tier 1 -- Edge PoPs (Point of Presence):**
+- Hundreds of edge locations worldwide (via CDN provider like Akamai/Fastly + Meta own edge)
+- Stores the most popular images (top 20% by access frequency)
+- 95% of requests are served here with <50ms latency
+- Cache key: {postId}/{resolution}/{format} -- predictable, no query strings
+- TTL: 30 days for photos (they never change once published)
+
+**Tier 2 -- Regional Caches (Origin Shield):**
+- 10-20 regional cache clusters (US-East, US-West, EU, Asia-Pacific, etc.)
+- Catches edge misses before they hit origin -- 4% of requests hit here
+- Reduces origin load by 20x compared to no shield
+
+**Tier 3 -- Origin (S3):**
+- Only ~1% of requests reach origin storage
+- S3 with cross-region replication for durability
+- Origin bandwidth: ~12 GB/s (1% of 230 GB/s total egress)
+
+**Cache warming strategy:**
+- When a new post is published, the 640px version is proactively pushed to edge PoPs in the poster region
+- Celebrity posts are pushed to all major PoPs globally
+- Stories are cached aggressively because they are viewed repeatedly within 24 hours
+
+**Format negotiation:**
+- CDN checks the Accept header: serve WebP to supporting browsers, JPEG as fallback
+- Saves ~30% bandwidth for WebP-capable clients (majority of modern mobile/desktop)`
+        },
+        {
+          question: 'How does the image processing and resizing pipeline work at scale?',
+          answer: `Processing 100M images per day (1,200 QPS) requires a highly parallelized pipeline:
+
+**Architecture:**
+- Image Processing Queue: Kafka topic partitioned by userId for ordering guarantees
+- Worker fleet: 500+ processing servers with GPU acceleration for ML tasks
+- Each worker handles ~3 images/second (resize + encode + moderate)
+
+**Processing steps per image:**
+1. Decode original (JPEG/PNG/HEIC) into raw pixel buffer
+2. Auto-orient using EXIF data (mobile photos often have rotation metadata)
+3. Resize to 4 versions using Lanczos resampling (highest quality):
+   - 150x150px: square thumbnail for grid view (center-crop)
+   - 320px wide: mobile feed preview
+   - 640px wide: mobile full-screen view
+   - 1080px wide: desktop/tablet view (max resolution stored)
+4. Encode each size in both JPEG (quality 85) and WebP (quality 80)
+5. Generate a 20x20px blur placeholder (base64-encoded, ~200 bytes, sent inline with feed response)
+6. Strip EXIF for privacy (remove GPS, camera serial) but preserve orientation
+7. Run content moderation ML model (nudity detection, violence, spam text overlay)
+8. Upload all versions to S3 Processed bucket
+
+**Pre-generate vs resize-on-fly:**
+- Instagram pre-generates all 4 sizes at upload time (not on-demand)
+- Why: 100:1 read-to-write ratio means each image is viewed hundreds of times
+- Pre-generating costs ~285 TB/day storage but saves billions of on-the-fly resize operations
+- Trade-off: slightly more storage cost vs massive read latency savings`
+        },
+        {
+          question: 'How would you design the Explore page recommendation engine?',
+          answer: `The Explore page surfaces content from accounts the user does NOT follow:
+
+**Candidate Generation (broad funnel -- millions of posts down to ~10K):**
+1. Collaborative filtering: Users similar to you engaged with these posts
+   - Build user embeddings from interaction history (likes, saves, follows, time spent)
+   - Find nearest neighbors in embedding space using approximate nearest neighbor (ANN) search
+2. Content-based: Posts similar to ones you have liked
+   - Image embeddings via CNN (ResNet/EfficientNet) extract visual features
+   - Text embeddings from captions and hashtags via transformer model
+3. Trending: Posts with rapidly increasing engagement velocity in the user region/language
+4. Topic clusters: Map user interests to topic categories (food, travel, fitness, etc.)
+
+**Ranking (narrow funnel -- 10K down to ~50 displayed):**
+- ML ranking model scores each candidate post
+- Features: post engagement rate, poster quality score, visual quality score, freshness, diversity
+- Multi-objective optimization: maximize engagement while maintaining content diversity
+
+**Serving architecture:**
+- Candidate generation runs offline (every few hours) and stores candidates per user in a feature store
+- Ranking happens online at request time (must be <100ms)
+- Results cached per user with 15-minute TTL`
+        },
+        {
+          question: 'How does the Stories architecture handle 500M stories/day with 24-hour TTL?',
+          answer: `Stories are fundamentally different from posts -- ephemeral, viewed sequentially, with a fixed 24-hour lifespan:
+
+**Storage model:**
+- Each story stored in Redis as a sorted set entry: ZADD user:{userId}:stories {expiresAt} {storyId}
+- Story media (image/short video) stored in S3 with a 48-hour object lifecycle rule
+- Story metadata (storyId, mediaUrl, type, viewCount) in Cassandra partitioned by userId
+
+**Story tray (the ring at top of feed):**
+1. When user opens the app, fetch followed users story status in batch
+2. For each followed userId: ZRANGEBYSCORE user:{userId}:stories NOW() +INF
+3. Sort the story tray: unseen stories first, then close friends, then recency
+4. Prefetch the first story media for the top 5 users in the tray
+
+**Posting a story:**
+1. Client uploads media to S3 via pre-signed URL
+2. Story record created in Cassandra + ZADD to Redis sorted set
+3. No fan-out to follower feeds -- stories are pulled on-demand from the tray
+
+**Auto-expiration:**
+- Redis sorted sets naturally support range queries by timestamp
+- Background cleanup job runs every 5 minutes: ZREMRANGEBYSCORE 0 {NOW}
+- S3 lifecycle policy auto-deletes media after 48 hours
+- Story highlights: user can pin stories to persistent storage, removing the TTL
+
+**View tracking:**
+- Each story view recorded asynchronously via Kafka
+- View list stored in Cassandra: story_views (storyId, viewerUserId, viewedAt)
+- View counts are eventually consistent (batch incremented every 30 seconds)`
+        },
+        {
+          question: 'How do you store and query the social graph (follow relationships)?',
+          answer: `The social graph is the backbone of Instagram -- it determines whose content appears in your feed:
+
+**Data model:**
+- follows table: (followerId, followeeId, createdAt, status)
+- Status: ACTIVE (public account follow), PENDING (private account request)
+- Denormalized counters: followerCount and followingCount on users table (updated async)
+
+**Why not a graph database?**
+- Graph databases excel at multi-hop traversals but Instagram primarily needs 1-hop queries
+- "Who does user X follow?" and "Who follows user X?" are simple key-value lookups
+- At Instagram scale (100B+ follow edges), sharded PostgreSQL is more operationally proven
+
+**Sharding strategy:**
+- Shard follows table by followerId (outgoing edges)
+- "Who does X follow?" is a single-shard query (fast)
+- "Who follows X?" requires scatter-gather -- mitigated by a reverse index sharded by followeeId
+- Follower list cached in Redis for active users
+
+**Celebrity accounts (10M+ followers):**
+- Follower list too large to cache in Redis (~80MB for 10M userIds)
+- Only cache the count + most recent 1,000 followers
+- Full list materialized in Cassandra (partition by followeeId, clustered by createdAt DESC)`
+        },
+        {
+          question: 'How do you scale likes and comments to handle viral posts?',
+          answer: `A viral post can receive millions of likes in minutes -- naive counting creates a database hot key:
+
+**Like system:**
+- likes table: (postId, userId, createdAt) -- compound PK prevents double-likes
+- Like count NOT incremented synchronously per like
+- Instead: buffered in Redis (INCR post:{postId}:likes) and flushed to DB every 5 seconds
+- Redis absorbs the burst: 100K likes/minute = only 12 DB writes/minute for the count
+
+**Comment system:**
+- comments table: (commentId, postId, userId, text, createdAt) partitioned by postId
+- Displayed in Top Comments (ranked by likes) and Newest (chronological) order
+- For viral posts: only load top 20 comments initially, paginate the rest
+
+**Hot key mitigation for celebrity posts:**
+- Solution 1: Write-behind buffer -- Redis absorbs writes, DB gets batched updates
+- Solution 2: Counter sharding -- split post:{postId}:likes into N shards, sum on read
+- Solution 3: Approximate counts -- for posts with >100K likes, show "1.2M" not exact count
+
+**Notification fan-out:**
+- Likes do NOT generate push notifications for every like
+- Batch notifications ("Alice and 47 others liked your photo") sent every 15 minutes
+- Comments generate individual notifications (higher signal value)`
+        },
+        {
+          question: 'How would you handle content moderation at 100M uploads per day?',
+          answer: `Content moderation is a multi-layered pipeline processing every upload before it appears in feeds:
+
+**Layer 1 -- Automated ML screening (every upload, <2 seconds):**
+- Image classification model (CNN) detects: nudity, violence, hate symbols, self-harm, spam
+- Score > 0.95: auto-reject. Score 0.7-0.95: flag for human review. Score < 0.7: auto-approve
+
+**Layer 2 -- Proactive scanning (post-publication):**
+- Periodic re-scan with updated ML models
+- Cross-reference against known banned content hashes (PhotoDNA/CSAM databases)
+
+**Layer 3 -- User reports:**
+- Report queue prioritized by: number of reports, reporter trust score, content virality
+- Human moderators review within 24 hours
+
+**Scale numbers:**
+- 100M uploads/day = 1,157 uploads/sec to moderate
+- ML inference: ~100ms per image on GPU -- need ~200 GPU workers at 60% utilization
+- Human review queue: ~5-10% flagged = 5-10M reviews/day`
+        },
+        {
+          question: 'What database choices would you make for Instagram?',
+          answer: `Instagram data has diverse access patterns requiring a polyglot persistence strategy:
+
+**PostgreSQL -- User profiles, posts metadata, follows (social graph):**
+- Strong consistency for user profiles, relational queries for social graph
+- Sharded by userId using Vitess or Citus for horizontal scaling
+- Instagram famously ran on a single PostgreSQL instance for years before sharding
+- Handles: ~50K write QPS, ~500K read QPS (with read replicas)
+
+**Cassandra -- Feed cache, like/comment events, story views:**
+- Write-optimized (LSM-tree) for high-throughput event streams
+- Feed cache: partition by userId, clustering by postTimestamp DESC
+- Handles: ~200K write QPS for feed updates and engagement events
+
+**Redis -- Feed cache (hot tier), stories tray, counters:**
+- Sub-millisecond reads for feed serving (500K-1M QPS)
+- Sorted sets for story TTL management
+- Counter sharding for viral post like counts
+- Memory budget: ~50TB across cluster (500M DAU x 100KB avg feed cache)
+
+**Elasticsearch -- Search (users, hashtags, locations):**
+- Full-text search with fuzzy matching, autocomplete, geo-search
+
+**S3 -- All media assets (photos, videos, stories):**
+- Lifecycle policies: Standard to Infrequent Access (1 year) to Glacier (3 years)
+- CDN origin for all image serving`
         }
       ],
 
