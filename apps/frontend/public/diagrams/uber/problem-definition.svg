@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgPD" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="480" fill="url(#bgPD)" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" fill="white" font-size="22" font-weight="800">Design Uber — Problem Definition</text>
+  <text x="600" y="62" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="13">Real-time ride matching for 202M monthly users across 15,000+ cities</text>
+
+  <!-- Stats Row -->
+  <rect x="40" y="85" width="160" height="60" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="120" y="108" text-anchor="middle" fill="#fbbf24" font-size="20" font-weight="800">42M</text>
+  <text x="120" y="130" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Trips / Day</text>
+
+  <rect x="220" y="85" width="160" height="60" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="300" y="108" text-anchor="middle" fill="#fbbf24" font-size="20" font-weight="800">10M+</text>
+  <text x="300" y="130" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Active Drivers</text>
+
+  <rect x="400" y="85" width="160" height="60" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="480" y="108" text-anchor="middle" fill="#fbbf24" font-size="20" font-weight="800">3.3M/s</text>
+  <text x="480" y="130" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Location Updates</text>
+
+  <rect x="580" y="85" width="160" height="60" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="660" y="108" text-anchor="middle" fill="#fbbf24" font-size="20" font-weight="800">&lt;30s</text>
+  <text x="660" y="130" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Match Latency</text>
+
+  <rect x="760" y="85" width="160" height="60" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="840" y="108" text-anchor="middle" fill="#fbbf24" font-size="20" font-weight="800">15K+</text>
+  <text x="840" y="130" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Cities</text>
+
+  <rect x="940" y="85" width="160" height="60" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+  <text x="1020" y="108" text-anchor="middle" fill="#fbbf24" font-size="20" font-weight="800">99.99%</text>
+  <text x="1020" y="130" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Availability</text>
+
+  <!-- In Scope -->
+  <rect x="40" y="170" width="540" height="270" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(34,197,94,0.5)" stroke-width="1.5"/>
+  <rect x="40" y="170" width="540" height="36" rx="12 12 0 0" fill="rgba(34,197,94,0.2)"/>
+  <text x="310" y="194" text-anchor="middle" fill="#4ade80" font-size="14" font-weight="700">In Scope</text>
+
+  <text x="70" y="230" fill="white" font-size="13">1. Rider-driver matching with geospatial queries</text>
+  <text x="70" y="255" fill="white" font-size="13">2. Real-time GPS tracking during rides</text>
+  <text x="70" y="280" fill="white" font-size="13">3. ETA calculation with live traffic</text>
+  <text x="70" y="305" fill="white" font-size="13">4. Dynamic surge pricing</text>
+  <text x="70" y="330" fill="white" font-size="13">5. Fare estimation and payment processing</text>
+  <text x="70" y="355" fill="white" font-size="13">6. Rating system (bidirectional)</text>
+  <text x="70" y="380" fill="white" font-size="13">7. Ride history and trip receipts</text>
+  <text x="70" y="405" fill="white" font-size="13">8. Safety features (trip sharing, emergency)</text>
+
+  <!-- Out of Scope -->
+  <rect x="610" y="170" width="540" height="270" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(239,68,68,0.5)" stroke-width="1.5"/>
+  <rect x="610" y="170" width="540" height="36" rx="12 12 0 0" fill="rgba(239,68,68,0.2)"/>
+  <text x="880" y="194" text-anchor="middle" fill="#f87171" font-size="14" font-weight="700">Out of Scope</text>
+
+  <text x="640" y="230" fill="rgba(255,255,255,0.7)" font-size="13">1. Food delivery (Uber Eats)</text>
+  <text x="640" y="255" fill="rgba(255,255,255,0.7)" font-size="13">2. Driver onboarding &amp; background checks</text>
+  <text x="640" y="280" fill="rgba(255,255,255,0.7)" font-size="13">3. Autonomous vehicle integration</text>
+  <text x="640" y="305" fill="rgba(255,255,255,0.7)" font-size="13">4. Freight and logistics</text>
+  <text x="640" y="330" fill="rgba(255,255,255,0.7)" font-size="13">5. Financial services (Uber Money)</text>
+  <text x="640" y="355" fill="rgba(255,255,255,0.7)" font-size="13">6. Map/routing engine internals</text>
+
+  <!-- Key Challenge -->
+  <rect x="40" y="450" width="1110" height="22" rx="6" fill="rgba(251,191,36,0.15)" stroke="rgba(251,191,36,0.4)"/>
+  <text x="600" y="466" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">Key Challenge: Match riders with nearby drivers in &lt;30s while processing 10M+ GPS updates/sec across 15,000 cities</text>
+</svg>

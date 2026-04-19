@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgRF" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bgRF)" rx="16"/>
+  <text x="600" y="35" text-anchor="middle" fill="white" font-size="20" font-weight="800">Ride Request Flow — End to End</text>
+
+  <!-- Rider -->
+  <rect x="30" y="65" width="120" height="50" rx="10" fill="#6366f1" stroke="white" stroke-width="1.5"/>
+  <text x="90" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="700">Rider App</text>
+
+  <!-- Arrow 1 -->
+  <line x1="150" y1="90" x2="190" y2="90" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowY)"/>
+  <defs><marker id="arrowY" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#fbbf24"/></marker></defs>
+
+  <!-- API Gateway -->
+  <rect x="195" y="65" width="120" height="50" rx="10" fill="#3b82f6" stroke="white" stroke-width="1.5"/>
+  <text x="255" y="88" text-anchor="middle" fill="white" font-size="11" font-weight="700">API Gateway</text>
+  <text x="255" y="102" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Auth + Rate Limit</text>
+
+  <line x1="315" y1="90" x2="355" y2="90" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowY)"/>
+
+  <!-- Cell Router -->
+  <rect x="360" y="65" width="120" height="50" rx="10" fill="#8b5cf6" stroke="white" stroke-width="1.5"/>
+  <text x="420" y="88" text-anchor="middle" fill="white" font-size="11" font-weight="700">Cell Router</text>
+  <text x="420" y="102" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">S2 Cell Lookup</text>
+
+  <line x1="480" y1="90" x2="520" y2="90" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowY)"/>
+
+  <!-- Matching Engine -->
+  <rect x="525" y="60" width="140" height="60" rx="10" fill="#ec4899" stroke="white" stroke-width="2"/>
+  <text x="595" y="85" text-anchor="middle" fill="white" font-size="12" font-weight="800">Matching Engine</text>
+  <text x="595" y="100" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Score + Rank + Dispatch</text>
+
+  <!-- Redis -->
+  <rect x="525" y="155" width="140" height="45" rx="10" fill="#ef4444" stroke="white" stroke-width="1.5"/>
+  <text x="595" y="183" text-anchor="middle" fill="white" font-size="11" font-weight="700">Redis Geo Index</text>
+  <line x1="595" y1="120" x2="595" y2="155" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowY)"/>
+  <text x="610" y="142" fill="rgba(255,255,255,0.6)" font-size="9">GEORADIUS 5km</text>
+
+  <!-- Driver Push -->
+  <line x1="665" y1="90" x2="720" y2="90" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowY)"/>
+  <rect x="725" y="65" width="130" height="50" rx="10" fill="#f97316" stroke="white" stroke-width="1.5"/>
+  <text x="790" y="85" text-anchor="middle" fill="white" font-size="11" font-weight="700">Push Notification</text>
+  <text x="790" y="100" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">15s Accept Timer</text>
+
+  <line x1="855" y1="90" x2="895" y2="90" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowY)"/>
+
+  <!-- Driver App -->
+  <rect x="900" y="65" width="120" height="50" rx="10" fill="#22c55e" stroke="white" stroke-width="1.5"/>
+  <text x="960" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="700">Driver App</text>
+
+  <!-- Accept flow back -->
+  <line x1="960" y1="115" x2="960" y2="240" stroke="#4ade80" stroke-width="2"/>
+  <line x1="960" y1="240" x2="90" y2="240" stroke="#4ade80" stroke-width="2"/>
+  <line x1="90" y1="240" x2="90" y2="270" stroke="#4ade80" stroke-width="2" marker-end="url(#arrowG)"/>
+  <defs><marker id="arrowG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4ade80"/></marker></defs>
+  <text x="530" y="233" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="600">Driver Accepts → MATCHED → Notify Rider with Driver Info + ETA</text>
+
+  <!-- WebSocket Tracking Phase -->
+  <rect x="30" y="275" width="1140" height="130" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+  <text x="600" y="300" text-anchor="middle" fill="white" font-size="14" font-weight="700">Real-Time Tracking Phase (WebSocket)</text>
+
+  <rect x="60" y="315" width="150" height="40" rx="8" fill="#6366f1"/>
+  <text x="135" y="340" text-anchor="middle" fill="white" font-size="11" font-weight="600">Driver GPS (3s)</text>
+
+  <line x1="210" y1="335" x2="260" y2="335" stroke="white" stroke-width="1.5" marker-end="url(#arrowW)"/>
+  <defs><marker id="arrowW" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="white"/></marker></defs>
+
+  <rect x="265" y="315" width="150" height="40" rx="8" fill="#ef4444"/>
+  <text x="340" y="340" text-anchor="middle" fill="white" font-size="11" font-weight="600">Redis Update</text>
+
+  <line x1="415" y1="335" x2="465" y2="335" stroke="white" stroke-width="1.5" marker-end="url(#arrowW)"/>
+
+  <rect x="470" y="315" width="150" height="40" rx="8" fill="#f97316"/>
+  <text x="545" y="340" text-anchor="middle" fill="white" font-size="11" font-weight="600">Kafka Publish</text>
+
+  <line x1="620" y1="335" x2="670" y2="335" stroke="white" stroke-width="1.5" marker-end="url(#arrowW)"/>
+
+  <rect x="675" y="315" width="150" height="40" rx="8" fill="#8b5cf6"/>
+  <text x="750" y="340" text-anchor="middle" fill="white" font-size="11" font-weight="600">WS Broadcast</text>
+
+  <line x1="825" y1="335" x2="875" y2="335" stroke="white" stroke-width="1.5" marker-end="url(#arrowW)"/>
+
+  <rect x="880" y="315" width="150" height="40" rx="8" fill="#22c55e"/>
+  <text x="955" y="340" text-anchor="middle" fill="white" font-size="11" font-weight="600">Rider Map Update</text>
+
+  <text x="600" y="385" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="11">ETA recalculated every 30s • Fare metered from GPS trace • Trip status: ARRIVING → IN_PROGRESS → COMPLETED</text>
+</svg>

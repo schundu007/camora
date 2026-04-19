@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgETA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient>
+    <marker id="aE" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="white"/></marker>
+  </defs>
+
+  <rect width="1200" height="380" fill="url(#bgETA)" rx="16"/>
+  <text x="600" y="35" text-anchor="middle" fill="white" font-size="20" font-weight="800">ETA Prediction with Live Traffic</text>
+
+  <!-- Data Sources -->
+  <rect x="30" y="65" width="200" height="290" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+  <text x="130" y="90" text-anchor="middle" fill="white" font-size="13" font-weight="700">Data Sources</text>
+
+  <rect x="45" y="105" width="170" height="35" rx="6" fill="#3b82f6"/>
+  <text x="130" y="127" text-anchor="middle" fill="white" font-size="10" font-weight="600">Road Network Graph</text>
+
+  <rect x="45" y="150" width="170" height="35" rx="6" fill="#22c55e"/>
+  <text x="130" y="172" text-anchor="middle" fill="white" font-size="10" font-weight="600">Historical Travel Times</text>
+
+  <rect x="45" y="195" width="170" height="35" rx="6" fill="#f97316"/>
+  <text x="130" y="217" text-anchor="middle" fill="white" font-size="10" font-weight="600">Live Driver GPS Speeds</text>
+
+  <rect x="45" y="240" width="170" height="35" rx="6" fill="#ef4444"/>
+  <text x="130" y="262" text-anchor="middle" fill="white" font-size="10" font-weight="600">Incidents / Closures</text>
+
+  <rect x="45" y="285" width="170" height="35" rx="6" fill="#a855f7"/>
+  <text x="130" y="307" text-anchor="middle" fill="white" font-size="10" font-weight="600">Weather / Events</text>
+
+  <!-- Processing Pipeline -->
+  <line x1="230" y1="200" x2="280" y2="200" stroke="white" stroke-width="1.5" marker-end="url(#aE)"/>
+
+  <rect x="285" y="80" width="200" height="120" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(59,130,246,0.4)"/>
+  <text x="385" y="105" text-anchor="middle" fill="#60a5fa" font-size="12" font-weight="700">Route Computation</text>
+  <text x="385" y="128" text-anchor="middle" fill="white" font-size="10">Contraction Hierarchies</text>
+  <text x="385" y="145" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Weighted directed graph</text>
+  <text x="385" y="160" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Edge weight = travel time</text>
+  <text x="385" y="178" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="700">Sub-millisecond path query</text>
+
+  <rect x="285" y="215" width="200" height="110" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(249,115,22,0.4)"/>
+  <text x="385" y="240" text-anchor="middle" fill="#fb923c" font-size="12" font-weight="700">Traffic Overlay</text>
+  <text x="385" y="263" text-anchor="middle" fill="white" font-size="10">Real-time speed per segment</text>
+  <text x="385" y="280" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Aggregate from driver fleet GPS</text>
+  <text x="385" y="297" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Update multipliers every 30s</text>
+
+  <!-- ML Model -->
+  <line x1="485" y1="175" x2="540" y2="175" stroke="white" stroke-width="1.5" marker-end="url(#aE)"/>
+
+  <rect x="545" y="100" width="200" height="150" rx="12" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="645" y="130" text-anchor="middle" fill="#c084fc" font-size="13" font-weight="800">ML ETA Model</text>
+  <text x="645" y="155" text-anchor="middle" fill="white" font-size="10">Gradient Boosted Trees</text>
+  <text x="645" y="175" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Features: route + traffic + time</text>
+  <text x="645" y="192" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">+ weather + day-of-week</text>
+  <text x="645" y="215" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">Per-city trained model</text>
+  <text x="645" y="235" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">Retrained weekly on trip data</text>
+
+  <!-- Output -->
+  <line x1="745" y1="175" x2="810" y2="175" stroke="#fbbf24" stroke-width="2" marker-end="url(#aE)"/>
+
+  <rect x="815" y="110" width="180" height="130" rx="12" fill="rgba(34,197,94,0.2)" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="905" y="140" text-anchor="middle" fill="#4ade80" font-size="14" font-weight="800">ETA Output</text>
+  <text x="905" y="168" text-anchor="middle" fill="white" font-size="11">Pickup ETA: 4 min</text>
+  <text x="905" y="188" text-anchor="middle" fill="white" font-size="11">Trip Duration: 22 min</text>
+  <text x="905" y="208" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10">Confidence: ±2 min (95%)</text>
+  <text x="905" y="228" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">Refreshed every 30 seconds</text>
+
+  <!-- Accuracy stats -->
+  <rect x="1020" y="110" width="155" height="130" rx="10" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+  <text x="1098" y="138" text-anchor="middle" fill="white" font-size="12" font-weight="700">Accuracy</text>
+  <text x="1098" y="165" text-anchor="middle" fill="#4ade80" font-size="16" font-weight="800">95%</text>
+  <text x="1098" y="182" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="9">within 2 minutes</text>
+  <text x="1098" y="210" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="700">&lt;10ms</text>
+  <text x="1098" y="227" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="9">computation latency</text>
+
+  <!-- Bottom note -->
+  <rect x="30" y="345" width="1140" height="25" rx="6" fill="rgba(255,255,255,0.05)"/>
+  <text x="600" y="363" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">A/B tested continuously • Separate models per city (NYC ≠ Mumbai) • Fallback: straight-line × avg speed</text>
+</svg>
