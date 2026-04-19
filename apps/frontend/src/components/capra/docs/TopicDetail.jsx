@@ -2071,21 +2071,22 @@ export default function TopicDetail({
                         <Icon name="arrowRight" size={16} className="text-white" />
                         <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.createFlow.title}</h3>
                       </div>
-                      {topicDetails.createFlow.diagramSrc && (
-                        <div className="p-3 border-b border-[var(--border)]">
-                          <img src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} className="w-full rounded-lg" style={{ maxHeight: '450px', objectFit: 'contain' }} loading="lazy" />
+                      {topicDetails.createFlow.diagramSrc ? (
+                        <div className="p-3">
+                          <img src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} className="w-full rounded-lg" style={{ maxHeight: '500px', objectFit: 'contain' }} loading="lazy" />
+                        </div>
+                      ) : (
+                        <div className="p-3">
+                          <ol className="space-y-1">
+                            {topicDetails.createFlow.steps.map((step, i) => (
+                              <li key={i} className="flex items-start gap-2 py-1">
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
+                                <span className="text-[var(--text-secondary)] text-sm landing-body">{step}</span>
+                              </li>
+                            ))}
+                          </ol>
                         </div>
                       )}
-                      <div className="p-3">
-                        <ol className="grid grid-cols-1 gap-1">
-                          {topicDetails.createFlow.steps.map((step, i) => (
-                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
-                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">{i + 1}</span>
-                              <span className="text-[var(--text-muted)] text-sm landing-body">{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
                     </div>
                   )}
                   {topicDetails.redirectFlow && (
@@ -2094,21 +2095,22 @@ export default function TopicDetail({
                         <Icon name="arrowLeft" size={16} className="text-white" />
                         <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.redirectFlow.title}</h3>
                       </div>
-                      {topicDetails.redirectFlow.diagramSrc && (
-                        <div className="p-3 border-b border-[var(--border)]">
-                          <img src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} className="w-full rounded-lg" style={{ maxHeight: '450px', objectFit: 'contain' }} loading="lazy" />
+                      {topicDetails.redirectFlow.diagramSrc ? (
+                        <div className="p-3">
+                          <img src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} className="w-full rounded-lg" style={{ maxHeight: '500px', objectFit: 'contain' }} loading="lazy" />
+                        </div>
+                      ) : (
+                        <div className="p-3">
+                          <ol className="space-y-1">
+                            {topicDetails.redirectFlow.steps.map((step, i) => (
+                              <li key={i} className="flex items-start gap-2 py-1">
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
+                                <span className="text-[var(--text-secondary)] text-sm landing-body">{step}</span>
+                              </li>
+                            ))}
+                          </ol>
                         </div>
                       )}
-                      <div className="p-3">
-                        <ol className="grid grid-cols-1 gap-1">
-                          {topicDetails.redirectFlow.steps.map((step, i) => (
-                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
-                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">{i + 1}</span>
-                              <span className="text-[var(--text-muted)] text-sm landing-body">{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
                     </div>
                   )}
                 </div>

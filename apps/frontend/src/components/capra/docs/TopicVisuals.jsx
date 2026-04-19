@@ -473,23 +473,20 @@ export function FlowchartCard({ flowchart }) {
             />
           </div>
         )}
-        {/* Step boxes — shown as fallback (no diagram) or when toggled open */}
+        {/* Step list — compact vertical list, only when toggled or no diagram */}
         {flowchart.steps && (!hasDiagram || showSteps) && (
-          <div className={`flex flex-wrap items-center gap-1 ${hasDiagram ? 'mt-3 pt-3 border-t border-[var(--border)]' : ''}`}>
-            {flowchart.steps.map((s, i) => (
-              <div key={i} className="flex items-center gap-1">
-                <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                  <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[9px] font-bold flex items-center justify-center landing-mono flex-shrink-0">{s.step}</span>
+          <div className={`${hasDiagram ? 'mt-3 pt-3 border-t border-[var(--border)]' : ''}`}>
+            <ol className="space-y-1">
+              {flowchart.steps.map((s, i) => (
+                <li key={i} className="flex items-start gap-2 py-1">
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold flex items-center justify-center landing-mono flex-shrink-0 mt-0.5">{s.step}</span>
                   <div>
-                    <div className="text-[11px] font-semibold text-[var(--text-primary)] landing-display leading-tight">{s.label}</div>
-                    <div className="text-[9px] text-[var(--text-muted)] landing-mono leading-tight">{s.detail}</div>
+                    <span className="text-[12px] font-semibold text-[var(--text-primary)] landing-display">{s.label}</span>
+                    {s.detail && <span className="text-[11px] text-[var(--text-muted)] landing-body ml-1">— {s.detail}</span>}
                   </div>
-                </div>
-                {i < flowchart.steps.length - 1 && (
-                  <Icon name="arrowRight" size={12} className="text-[var(--text-muted)] flex-shrink-0" />
-                )}
-              </div>
-            ))}
+                </li>
+              ))}
+            </ol>
           </div>
         )}
       </div>
