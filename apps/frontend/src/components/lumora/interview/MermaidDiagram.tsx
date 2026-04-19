@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface MermaidDiagramProps {
   content: string;
@@ -13,98 +13,124 @@ function cleanForMermaid(raw: string): string {
   d = d.replace(/&amp;/g, ' and ').replace(/&/g, ' and ');
   d = d.replace(/[""]/g, '"').replace(/['']/g, "'");
   d = d.replace(/  +/g, ' ');
-  if (!d.match(/^(graph|flowchart)/i)) {
+  if (!d.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph)/i)) {
     d = 'graph TD\n' + d;
   }
   return d;
 }
 
-let mermaidLoadPromise: Promise<any> | null = null;
-function loadMermaidCDN(): Promise<any> {
-  if ((window as any).mermaid) return Promise.resolve((window as any).mermaid);
-  if (mermaidLoadPromise) return mermaidLoadPromise;
-  mermaidLoadPromise = new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
-    s.onload = () => {
-      const poll = setInterval(() => {
-        if ((window as any).mermaid) { clearInterval(poll); resolve((window as any).mermaid); }
-      }, 50);
-      setTimeout(() => { clearInterval(poll); reject(new Error('timeout')); }, 10000);
-    };
-    s.onerror = () => reject(new Error('CDN failed'));
-    document.head.appendChild(s);
-  });
-  return mermaidLoadPromise;
-}
-
 // Cache rendered SVGs so re-renders don't re-trigger Mermaid
 const svgCache = new Map<string, string>();
 
+// Singleton mermaid instance loaded via dynamic import
+let mermaidInstance: any = null;
+let mermaidLoading: Promise<any> | null = null;
+
+async function getMermaid() {
+  if (mermaidInstance) return mermaidInstance;
+  if (mermaidLoading) return mermaidLoading;
+  mermaidLoading = (async () => {
+    const mod = await import('mermaid');
+    mermaidInstance = mod.default;
+    mermaidInstance.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      fontSize: 14,
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 15 },
+      securityLevel: 'loose',
+    });
+    return mermaidInstance;
+  })();
+  return mermaidLoading;
+}
+
 export function MermaidDiagram({ content, className = '' }: MermaidDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const theme = 'light';
-  const contentKey = content.trim().slice(0, 100); // Cache key
+  const [error, setError] = useState<string | null>(null);
+  const [rendering, setRendering] = useState(true);
+  const renderedRef = useRef(false);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    renderedRef.current = false;
+    setError(null);
+    setRendering(true);
 
     const raw = content.trim();
-    if (!raw) return;
+    if (!raw) { setRendering(false); return; }
 
-    // If already has rendered SVG, don't touch it
-    if (el.querySelector('svg')) return;
-
-    // Check cache first
-    const cacheKey = `${contentKey}-${theme}`;
-    if (svgCache.has(cacheKey)) {
-      el.innerHTML = svgCache.get(cacheKey)!;
-      return;
-    }
-
-    // ASCII art fallback — use textContent to prevent XSS
+    // ASCII art — render directly
     if (/[┌┐└┘│─╔╗╚╝║═]/.test(raw) || /\+-{3,}/.test(raw)) {
-      const pre = document.createElement('pre');
-      pre.style.cssText = "font-family:'Courier New',monospace;font-size:14px;white-space:pre;overflow-x:auto;padding:8px;line-height:1.4";
-      pre.textContent = raw;
       el.innerHTML = '';
+      const pre = document.createElement('pre');
+      pre.style.cssText = "font-family:'Courier New',monospace;font-size:14px;white-space:pre;overflow-x:auto;padding:12px;line-height:1.4";
+      pre.textContent = raw;
       el.appendChild(pre);
+      setRendering(false);
       return;
     }
 
     const cleaned = cleanForMermaid(raw);
+    const cacheKey = cleaned.slice(0, 200);
+
+    // Check cache
+    if (svgCache.has(cacheKey)) {
+      el.innerHTML = svgCache.get(cacheKey)!;
+      setRendering(false);
+      return;
+    }
 
     (async () => {
       try {
-        const mermaid = await loadMermaidCDN();
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          fontSize: 16,
-          flowchart: { useMaxWidth: true, htmlLabels: false, curve: 'basis' },
-          securityLevel: 'strict',
-        });
-
+        const mermaid = await getMermaid();
         const id = `mmd-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         const { svg } = await mermaid.render(id, cleaned);
 
-        if (el) {
+        if (el && !renderedRef.current) {
+          renderedRef.current = true;
           el.innerHTML = svg;
           svgCache.set(cacheKey, svg);
+
+          // Style the SVG for better visibility
+          const svgEl = el.querySelector('svg');
+          if (svgEl) {
+            svgEl.style.maxWidth = '100%';
+            svgEl.style.height = 'auto';
+          }
         }
-      } catch (err) {
-        console.warn('[Mermaid] Falling back:', err);
-        if (el && !el.querySelector('svg')) {
-          const pre = document.createElement('pre');
-          pre.style.cssText = "font-family:'Courier New',monospace;font-size:14px;white-space:pre;overflow-x:auto;padding:8px;line-height:1.4";
-          pre.textContent = cleaned;
-          el.innerHTML = '';
-          el.appendChild(pre);
-        }
+      } catch (err: any) {
+        console.error('[MermaidDiagram] Render error:', err);
+        setError(err?.message || 'Failed to render diagram');
+      } finally {
+        setRendering(false);
       }
     })();
-  }, [content, theme, contentKey]);
 
-  return <div ref={containerRef} className={`overflow-auto p-2 min-h-[300px] ${className}`} />;
+    return () => { renderedRef.current = true; };
+  }, [content]);
+
+  if (rendering) {
+    return (
+      <div className={`flex items-center justify-center p-8 min-h-[200px] ${className}`}>
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+          <span className="text-sm text-[var(--text-muted)]">Rendering diagram...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`p-4 ${className}`}>
+        <p className="text-xs text-red-500 mb-2 font-medium">Diagram render failed: {error}</p>
+        <pre className="text-xs font-mono bg-gray-50 border border-gray-200 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap text-gray-600 max-h-[300px] overflow-y-auto">
+          {cleanForMermaid(content)}
+        </pre>
+      </div>
+    );
+  }
+
+  return <div ref={containerRef} className={`overflow-auto p-2 ${className}`} />;
 }
