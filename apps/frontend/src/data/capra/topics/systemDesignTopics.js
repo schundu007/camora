@@ -5369,7 +5369,7 @@ Client-side:  Service A ──────────▶ Service B    (direct)
       title: 'Rate Limiting',
       icon: 'shield',
       color: '#f43f5e',
-      questions: 12,
+      questions: 11,
       description: 'Protect services from abuse and overload.',
       concepts: ['Token bucket', 'Leaky bucket', 'Fixed window', 'Sliding window', 'Sliding window counter', 'Distributed rate limiting', 'Redis Lua scripts', 'Rate limit headers', 'DDoS protection', 'Adaptive throttling'],
       tips: [
@@ -5431,52 +5431,198 @@ token_buckets (Redis) {
 
       keyQuestions: [
         {
-          question: 'Which algorithm should we use?',
-          answer: `**Token Bucket** (Most common):
-- Tokens refill at steady rate into bucket
-- Allows bursts up to bucket capacity
-- Used by Stripe, AWS
+          question: 'How does the token bucket algorithm work step by step, and why is it the most common choice?',
+          answer: `**Token Bucket** is the most widely deployed rate limiting algorithm, used by AWS API Gateway, Stripe, and most cloud providers. It naturally allows controlled bursts while enforcing an average rate.
 
-**Sliding Window Log**:
-- Track timestamp of each request
-- Most accurate but memory intensive
+**How it works — step by step**:
+\`\`\`
+Bucket capacity: 10 tokens, Refill rate: 2 tokens/second
 
-**Fixed Window Counter**:
-- Simple but has boundary burst problem
-- User sends 100 req at 0:59 + 100 at 1:00
-
-**Leaky Bucket**:
-- Smooths traffic to constant rate
-- Good for streaming/consistent throughput`
-        },
-        {
-          question: 'How do we implement distributed rate limiting?',
-          answer: `**Centralized Redis** (Recommended):
-- All servers check Redis
-- Use Lua scripts for atomic check-and-decrement:
-\`\`\`lua
-local tokens = redis.call('GET', key) or bucket_size
-if tokens >= cost then
-  redis.call('DECRBY', key, cost)
-  return {1, tokens - cost}
-end
-return {0, tokens}
+t=0.0s: Bucket = 10 tokens (full)
+t=0.0s: 5 requests arrive, consume 5 tokens, Bucket = 5
+t=0.0s: 3 more requests, consume 3 tokens, Bucket = 2
+t=0.5s: 1 token refilled, Bucket = 3
+t=1.0s: 1 token refilled, Bucket = 4
+t=1.0s: 6 requests arrive, only 4 allowed, 2 REJECTED
+t=2.0s: 2 tokens refilled, Bucket = 2
 \`\`\`
 
-**Local Cache + Sync**:
-- Each server has local counter
-- Periodically sync to Redis
-- Less accurate but faster`
+**The math**: Average sustainable rate = refill rate (2 req/sec). Maximum burst = bucket capacity (10 requests instantly). After a burst, throttles to refill rate.
+
+**Why token bucket wins for most APIs**: O(1) memory per key (just two numbers), naturally handles bursts, tunable via two parameters (capacity + refill rate), maps directly to business tiers: Free = bucket(10, 1/sec), Pro = bucket(100, 10/sec).`
         },
         {
-          question: 'What happens when Redis is down?',
-          answer: `**Fail Open**: Allow requests (risk overload)
-**Fail Closed**: Deny all (frustrate users)
+          question: 'What is the difference between sliding window log, sliding window counter, and fixed window counter?',
+          answer: `These three algorithms trade off accuracy, memory, and simplicity.
 
-**Hybrid** (Recommended):
-- Fall back to local rate limiting
-- Each server has approximate limit
-- Degraded accuracy, maintained protection`
+**Fixed Window Counter** — simplest, but flawed:
+\`\`\`
+Window: 1 minute, Limit: 100 requests
+THE BOUNDARY PROBLEM:
+User sends 100 at 0:59, then 100 at 1:00
+= 200 requests in 2 seconds, but each window sees only 100
+\`\`\`
+Memory: O(1). Precision: Poor (allows up to 2x limit at boundaries). Use when simplicity matters most.
+
+**Sliding Window Log** — most precise, most expensive: Stores EVERY request timestamp in a sorted set. On new request: remove old entries, count remaining, allow or reject. Memory: O(n) per key. Precision: Exact. Redis implementation: ZADD + ZREMRANGEBYSCORE + ZCARD. Use when strict compliance is mandatory (financial APIs).
+
+**Sliding Window Counter** — the production sweet spot: Uses weighted average of current + previous window counts. If previous window had 84 requests, current has 36, and we are 25% into current window: estimated count = (84 * 0.75) + 36 = 99. Memory: O(1). Precision: ~99.997% accuracy (Cloudflare data). Use for most production APIs.
+
+**Comparison**:
+| Algorithm | Memory | Precision | Burst at Boundary | Complexity |
+|-----------|--------|-----------|-------------------|------------|
+| Fixed Window | O(1) | Low | Up to 2x limit | Trivial |
+| Sliding Log | O(n) | Exact | None | Moderate |
+| Sliding Counter | O(1) | ~99.997% | Minimal | Low |
+| Token Bucket | O(1) | Approximate | Controlled burst | Low |`
+        },
+        {
+          question: 'How do you implement distributed rate limiting with Redis, and why are Lua scripts essential?',
+          answer: `**The core problem**: With multiple servers behind a load balancer, each server must share rate limit state. Without coordination, N servers each allowing 100 req/sec results in N * 100 req/sec total.
+
+**Why Lua scripts (not MULTI/EXEC)**: Rate limiting requires conditional logic — read count, IF under limit THEN increment, ELSE reject. MULTI/EXEC queues commands atomically but cannot read a value and branch on it. Without atomicity, race conditions are guaranteed under high concurrency:
+\`\`\`
+Server A: GET count -> 99
+Server B: GET count -> 99  (also reads 99!)
+Server A: INCR -> 100 (allows)
+Server B: INCR -> 101 (ALSO allows, limit violated!)
+\`\`\`
+
+**Production sliding window counter in Lua**:
+\`\`\`lua
+local key = KEYS[1]
+local window_ms = tonumber(ARGV[1])
+local limit = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+
+redis.call('ZREMRANGEBYSCORE', key, 0, now - window_ms)
+local count = redis.call('ZCARD', key)
+
+if count < limit then
+  redis.call('ZADD', key, now, now .. ':' .. math.random(1000000))
+  redis.call('PEXPIRE', key, window_ms)
+  return {1, limit - count - 1}  -- allowed, remaining
+end
+return {0, 0}  -- rejected
+\`\`\`
+
+**Key decisions**: Use composite keys for scoping (rl:user:12345, rl:ip:203.0.113.42). Use Redis Cluster with hash tags for sharding. Pipeline multiple rate limit checks. Monitor 429 response rates in Prometheus.`
+        },
+        {
+          question: 'What rate limit response headers should an API return, and how should clients handle 429s?',
+          answer: `**Standard Rate Limit Headers** (adopted by Stripe, GitHub, Twitter):
+\`\`\`
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4234
+X-RateLimit-Reset: 1620000060
+
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 0
+Retry-After: 30
+\`\`\`
+
+**GitHub's real headers**: X-RateLimit-Limit: 5000, X-RateLimit-Used: 13, X-RateLimit-Resource: core. They distinguish rate limit "resources" — core API (5000/hr), search (30/min), GraphQL (5000 points/hr) each have independent limits.
+
+**Stripe's approach**: Returns 429 with Retry-After header. Combines per-API-key limits with overall account limits, plus concurrent request limiters (max simultaneous in-flight).
+
+**Client-side handling — exponential backoff with jitter**: On 429, read Retry-After header. If absent, use exponential backoff (1s, 2s, 4s). Add random jitter (0-50% of base delay) to prevent thundering herd — without jitter, all rate-limited clients retry at the same instant, causing another wave of 429s. Max 3 retries before failing.`
+        },
+        {
+          question: 'How do you rate limit at different layers — client, CDN edge, gateway, application, database?',
+          answer: `Rate limiting should be applied at multiple layers, each serving a different purpose. A single layer is never sufficient.
+
+**Layer 1 — Client-Side Throttling**: Read X-RateLimit-Remaining from responses. Queue requests locally when near limit. Exponential backoff on 429. Stripe's Node.js SDK auto-retries with maxNetworkRetries: 3.
+
+**Layer 2 — CDN/Edge (DDoS Protection)**: Cloudflare detects DDoS at 10K+ req/sec threshold. AWS Shield provides automatic L3/L4 mitigation. AWS WAF does IP-based rate limiting. Key distinction: does NOT know about users or API keys — blunt instrument for volumetric attacks.
+
+**Layer 3 — API Gateway (User-Level)**: Kong rate limiting plugin with Redis backend. AWS API Gateway usage plans: Free (100 req/day), Pro (10K/day), Enterprise (100K/day). The gateway is the ideal place — centralizes rate limiting before requests reach application servers.
+
+**Layer 4 — Application Layer (Endpoint-Specific)**: Different limits per operation: POST /auth/login at 10 req/15min (brute force), GET /users at 60 req/min, POST /ai/generate at 20 req/min (expensive).
+
+**Layer 5 — Database Connection Pool**: PostgreSQL max_connections = 100. PgBouncer multiplexes 1000 app connections over 100 DB connections.
+
+**Why multi-layer matters**: Edge blocks DDoS floods. Gateway enforces fair per-user quotas. Application protects expensive endpoints. Database prevents connection exhaustion. Removing any layer leaves a gap.`
+        },
+        {
+          question: 'What is the difference between per-user, per-IP, and per-API-key rate limiting?',
+          answer: `The rate limiting key fundamentally changes what you protect and who you protect it from.
+
+**Per-IP**: Works for unauthenticated traffic, good first-pass DDoS protection. Critical weakness: corporate offices have 5000 employees behind ONE public IP — all share one rate limit bucket. VPN/Tor users change IP to bypass. Necessary but never sufficient alone.
+
+**Per-API-Key** (most common for public APIs): Identity-based, survives IP changes, maps to billing tiers. How Stripe does it: separate keys for test vs production, per-key independent limits. Weakness: requires authentication, cannot rate limit anonymous traffic.
+
+**Per-User** (best for authenticated APIs): Fairest — same limit regardless of IP, device, or API key count. GitHub uses this: 5,000 req/hr per authenticated user. Weakness: requires authentication on every request.
+
+**Composite Rate Limiting** (production recommendation): Apply multiple limits simultaneously — per-IP (1000 req/min for DDoS), per-user (100 req/min for fairness), per-endpoint (10 req/min for expensive operations), per-org (10K req/min for enterprise). A request must pass ALL applicable limits.
+
+GitHub uses composite limits: primary (5,000/hr per user) + secondary (80 content-generating req/min, 100 concurrent max).`
+        },
+        {
+          question: 'How does the fixed window boundary burst problem work, and how do sliding windows fix it?',
+          answer: `**The boundary burst problem** is the most important flaw in rate limiting algorithms. User sends 100 requests at 0:59 (end of window 1), then 100 at 1:00 (start of window 2). Each window sees 100 (at limit), but the actual rate is 200 requests in 2 seconds — 2x the intended limit.
+
+**Sliding window log fixes it**: Instead of discrete windows, track every request timestamp. At 1:00, the sliding window looks back 60 seconds to 0:00 — it sees all 100 requests from 0:59 are still in the window. The 101st request is rejected. No boundary to exploit.
+
+**Sliding window counter approximates it efficiently**: Keep two counters (current + previous window). Use weighted average: if previous had 84 requests, current has 36, and we are 25% into current window, estimate = (84 * 0.75) + 36 = 99. O(1) memory, ~99.997% accuracy per Cloudflare production data. The small inaccuracy comes from assuming uniform distribution in the previous window.`
+        },
+        {
+          question: 'How do you handle burst allowance, and what is the token bucket refill math?',
+          answer: `**Why bursts matter**: Users don't send requests at a constant rate. Dashboard opens fire 15 API calls simultaneously. Mobile app syncs after being offline. Rejecting all burst traffic degrades user experience.
+
+**Token bucket math**:
+\`\`\`
+Capacity (C) = 50, Refill rate (R) = 10/sec
+Max burst = C = 50 requests instantly
+Sustained rate = R = 10 req/sec
+Time to refill from empty = C/R = 5 seconds
+
+User idle for 30s: tokens = min(50, 10*30) = 50 (capped)
+Can send 50 instantly, then throttled to 10/sec
+\`\`\`
+
+**Cost-weighted limiting** — not all requests are equal: GET /users costs 1 token, POST /ai/generate costs 10. A user with 100 tokens can do 100 reads OR 10 AI generations. GitHub GraphQL uses this: each query has a "point cost" based on complexity, limit is 5,000 points/hour not 5,000 requests.
+
+**Leaky bucket for anti-burst**: If your backend cannot handle bursts (single-threaded worker, rate-limited downstream), leaky bucket queues requests and drains at a fixed rate. Adds latency but protects fragile backends. Used for SMS APIs (Twilio), email sending.
+
+**Tier configuration**: Free = 1 req/sec sustained, 5 burst. Pro = 10/sec, 50 burst. Enterprise = 100/sec, 500 burst. Internal = 1000/sec, 5000 burst.`
+        },
+        {
+          question: 'How do you rate limit WebSocket connections differently from HTTP APIs?',
+          answer: `**The fundamental difference**: HTTP is request-response (stateless), WebSocket is long-lived, bidirectional, stateful. Traditional per-request rate limiting doesn't directly apply.
+
+**What to rate limit**:
+1. **Connection rate**: 5 new connections/min per user. Prevents connection flooding. Reject upgrade with HTTP 429 if exceeded.
+2. **Message rate**: 100 messages/min per connection. The primary concern. Send warning first, close on repeated violation (don't immediately disconnect — disruptive).
+3. **Concurrent connections**: Max 10 per user. Prevents resource exhaustion from hundreds of idle connections.
+4. **Payload size**: 64KB for chat, 1MB for file transfer. Reject oversized messages without processing.
+
+**Unique challenges**: Each connection lives on a specific server — need Redis for distributed total count. Closing a WebSocket is disruptive (loses real-time state). Better to send rate limit warnings and drop/queue messages before disconnecting. Implement backpressure by pausing reads when processing queue exceeds threshold.`
+        },
+        {
+          question: 'What is the difference between DDoS protection and application rate limiting?',
+          answer: `These solve fundamentally different problems at different layers.
+
+**DDoS Protection** (Layer 3/4): Stops volumetric attacks — SYN floods, UDP floods, DNS amplification, HTTP floods from botnets. Scale: millions to billions of packets/sec. Detection: traffic pattern anomalies, IP reputation. Response: must be instant (sub-second). Tools: Cloudflare (209 Tbps capacity), AWS Shield. Does NOT know about users, API keys, or business logic.
+
+**Application Rate Limiting** (Layer 7): Stops abuse by identified actors — one user scraping your database, bot creating fake accounts, free-tier user exceeding fair usage. Scale: hundreds to thousands req/sec per actor. Detection: user identity, API key, endpoint context. Tools: Redis + Lua, Kong, AWS API Gateway.
+
+**Why you need BOTH**: Without DDoS protection, 10M req/sec botnet overwhelms your load balancer — your rate limiter never sees the traffic (application is already dead). Without application rate limiting, DDoS protection sees one authenticated user scraping 100K calls/minute as "normal" legitimate traffic.
+
+**Layered defense**: Internet -> Cloudflare/Shield (volumetric) -> CDN edge rate limiting (IP-based) -> API Gateway (per-user/key) -> Application middleware (per-endpoint) -> Database connection pool (resource protection).`
+        },
+        {
+          question: 'What happens when the rate limiter (Redis) goes down?',
+          answer: `**Option 1 — Fail Open** (allow all): Zero impact on users, API stays functional. But abusers get unlimited access and downstream services may be overwhelmed. Use for non-critical APIs or brief outages.
+
+**Option 2 — Fail Closed** (reject all): Maximum protection but 100% API downtime. Use only for compliance-critical financial APIs.
+
+**Option 3 — Fail to Local** (recommended): Each server maintains an in-memory token bucket with local_limit = global_limit / expected_server_count. If 4 servers, each allows 25% of total. Less accurate but maintains protection. Periodically sync with Redis when it recovers.
+
+**Circuit breaker around Redis**: Wrap Redis rate limiter in circuit breaker. CLOSED = check Redis. OPEN = use local limiting (stops hammering dead Redis). HALF-OPEN = try Redis every 30 seconds. Auto-recovery when Redis returns.
+
+**Prevention is better**: Use Redis Sentinel (automatic failover in 10-30s), Redis Cluster (shards + replicas), or managed Redis (AWS ElastiCache multi-AZ). Most production systems should use managed Redis.`
         }
       ],
 
@@ -5693,16 +5839,20 @@ return {0, tokens}
       color: '#8b5cf6',
       questions: 10,
       description: 'Service decomposition, communication, and orchestration.',
-      concepts: ['Service boundaries', 'API Gateway', 'Service discovery', 'Circuit breaker', 'Saga pattern', 'Event sourcing'],
+      concepts: ['Service boundaries', 'API Gateway', 'Service discovery', 'Circuit breaker', 'Saga pattern', 'Event sourcing', 'Service mesh', 'Database per service', 'Distributed tracing', 'CQRS'],
       tips: [
-        'Start monolith, extract services when boundaries are clear',
-        'Use API gateway for auth, rate limiting, routing',
-        'Circuit breaker prevents cascade failures'
+        'Start with a modular monolith — extract services only when team size exceeds 8-10 engineers or specific components need independent scaling',
+        'Amazon\'s "two-pizza team" rule: if a team needs more than two pizzas, the service is too big',
+        'Netflix circuit breaker defaults: open after 20 requests with >50% failure rate in a 10-second rolling window',
+        'Database per service is non-negotiable — shared databases create deployment coupling that defeats the purpose of microservices',
+        'Use async events for state changes, sync REST/gRPC only when you need an immediate response'
       ],
 
-      introduction: `Microservices architecture structures an application as a collection of loosely coupled, independently deployable services. Each service owns its data and can be developed, deployed, and scaled independently.
+      introduction: `Microservices architecture structures an application as a collection of loosely coupled, independently deployable services. Each service owns its data, its schema, and its deployment lifecycle. The promise is compelling: independent scaling, autonomous teams, technology diversity, and fault isolation. But the reality is that microservices trade the complexity of a large codebase for the complexity of a distributed system — network partitions, eventual consistency, distributed tracing, and operational overhead that can overwhelm teams that are not ready for it.
 
-Netflix has 700+ microservices, Amazon has thousands. While powerful, microservices add complexity—you're trading one type of problem (monolith scaling) for another (distributed systems). Understanding when and how to use them is crucial.`,
+The companies that have made microservices work at scale are instructive. Netflix operates over 1,000 microservices on AWS, serving 260+ million subscribers across 190 countries. They built an entire open-source ecosystem to manage this complexity: Zuul (API gateway), Eureka (service discovery), Hystrix (circuit breaker, now succeeded by Resilience4j), and Conductor (workflow orchestration). Amazon pioneered the "two-pizza team" model — each service is owned by a team small enough to be fed by two pizzas (6-8 people), with full operational responsibility ("you build it, you run it"). Uber scaled to over 1,000 services but later acknowledged that many had tangled dependencies, leading to a platform consolidation effort. Shopify took a different path entirely — they built a "modular monolith" with strict module boundaries instead of microservices, and it powers one of the largest e-commerce platforms in the world.
+
+The critical lesson from these examples is that microservices are an organizational scaling strategy, not just a technical one. Conway's Law states that system architecture mirrors organizational communication structure — microservices work when you have independent teams that need independent deployment. For teams smaller than 10 engineers, or products in the early validation stage, a monolith or modular monolith is almost always the right starting point. The overhead of service discovery, distributed tracing, inter-service auth, saga-based transactions, and per-service CI/CD pipelines is enormous, and paying that cost before you have the team size and domain clarity to justify it is premature optimization at its most expensive.`,
 
       functionalRequirements: [
         'Independent deployment of services',
@@ -5763,253 +5913,271 @@ Service Registry (Consul/Eureka):
 
       keyQuestions: [
         {
-          question: 'How do you decompose a monolith into microservices?',
-          answer: `**Domain-Driven Design (DDD) Approach**:
+          question: 'When should you use microservices vs a monolith, and what is the decision framework?',
+          answer: `**The decision is primarily organizational, not technical.** Conway's Law states that system architecture mirrors team communication structure. Microservices work when you have independent teams that need independent deployment.
 
-1. **Identify Bounded Contexts**:
-   - User Management: Registration, profiles, auth
-   - Orders: Cart, checkout, order history
-   - Inventory: Stock levels, warehouses
-   - Payments: Processing, refunds, billing
-
-2. **Start with the Strangler Pattern**:
+**Decision Framework**:
 \`\`\`
-┌────────────────────────────────────────────┐
-│              Monolith                       │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐       │
-│  │  Users  │ │ Orders  │ │Inventory│       │
-│  └─────────┘ └─────────┘ └─────────┘       │
-└────────────────────────────────────────────┘
-                    │
-          Extract one at a time
-                    ▼
-┌──────────────┐  ┌──────────────────────────┐
-│    User      │  │      Monolith            │
-│   Service    │  │  Orders + Inventory      │
-│  (extracted) │  │                          │
-└──────────────┘  └──────────────────────────┘
+Team size < 10 engineers?
+  -> YES: Monolith (or modular monolith)
+       Microservices overhead will slow you down.
+
+Product in early validation (MVP/startup)?
+  -> YES: Monolith
+       Requirements change too fast for stable service boundaries.
+       Shopify built a modular monolith powering $235B+ in GMV.
+
+Multiple teams (3+) needing independent deploys?
+  -> YES: Consider microservices
+       Teams stepping on each other in a shared codebase is
+       the #1 sign you need service boundaries.
+
+Specific component needs independent scaling?
+  -> YES: Extract that ONE service first
+       Don't go from monolith to 50 services overnight.
+       Amazon did this gradually over 5+ years.
 \`\`\`
 
-3. **Guidelines for Service Boundaries**:
-   - Single responsibility (one reason to change)
-   - Own their data (no shared databases!)
-   - Team-sized (2-pizza team can own it)
-   - Business capability aligned
-   - Independently deployable
+**Real-world examples**:
+- **Netflix** (~1,000+ services): 260M subscribers, thousands of engineers. They deploy hundreds of times per day across independent teams.
+- **Amazon** (~thousands of services): Pioneered the "two-pizza team" rule. Each team owns services end-to-end ("you build it, you run it").
+- **Shopify** (modular monolith): Chose NOT to go microservices. Strict module boundaries work for their deployment model.
+- **Uber** (~1,000+ services, then consolidated): Scaled too fast, accumulated sprawl, spent years untangling dependencies.
 
-**Anti-patterns**:
-- Nano-services (too small)
-- Distributed monolith (tightly coupled services)
-- Shared database between services`
+**When NOT to use microservices**: Team < 10 people, no CI/CD maturity, no container orchestration, no distributed tracing, unclear domain boundaries.
+
+**The modular monolith middle ground**: Structure your monolith with strict module boundaries. When a module genuinely needs independent scaling, extract it. Shopify, Basecamp, and GitHub all use this approach.`
         },
         {
-          question: 'How do services communicate with each other?',
-          answer: `**Synchronous Communication**:
+          question: 'How does service discovery work — Consul, Eureka, and DNS-based approaches?',
+          answer: `**The Problem**: In a monolith, you call functions directly. In microservices, services run on dynamic IPs across multiple instances that scale up/down. How does Order Service find User Service when its address changes every deployment?
 
-1. **REST over HTTP**:
-\`\`\`
-Order Service ──GET /users/123──▶ User Service
-              ◀──{ user data }───
-\`\`\`
-- Simple, widely understood
-- Tight coupling (caller waits)
-- Good for: Queries, simple operations
+**Client-Side Discovery** (Eureka, Consul): Services self-register with a registry on startup. The calling service queries the registry for available instances and does its own load balancing. Direct call — no intermediate proxy hop.
+- **Eureka** (Netflix): Java-centric, AP system (availability over consistency), peer-to-peer replication.
+- **Consul** (HashiCorp): Multi-language, supports KV store, health checks, and service mesh. CP system.
 
-2. **gRPC**:
-\`\`\`
-Order Service ──GetUser(123)──▶ User Service
-              ◀──User proto────
-\`\`\`
-- Binary protocol (faster)
-- Strong typing with Protobuf
-- Streaming support
-- Good for: Internal service calls
+**Server-Side Discovery** (AWS ALB, Kubernetes): Client calls a stable load balancer endpoint. The LB handles discovery and routing. Simpler client code, but adds a network hop.
 
-**Asynchronous Communication**:
-
-3. **Message Queues**:
-\`\`\`
-Order Service ──[OrderCreated]──▶ Queue
-                                    │
-Inventory ◀────────────────────────┘
-Email     ◀────────────────────────┘
-Analytics ◀────────────────────────┘
-\`\`\`
-- Loose coupling
-- Better fault tolerance
-- Good for: Events, long-running tasks
-
-**When to use each**:
-| Pattern | Use Case |
-|---------|----------|
-| Sync (REST/gRPC) | Need immediate response |
-| Async (Events) | Fire-and-forget, eventual consistency |
-| gRPC | High-performance internal calls |
-| REST | Public APIs, simple integrations |`
-        },
-        {
-          question: 'What is the Circuit Breaker pattern?',
-          answer: `**The Problem**: Cascading failures
-\`\`\`
-Order Service ──▶ User Service (DOWN)
-      │
-      └──▶ Waiting... waiting... TIMEOUT
-      └──▶ Retry... TIMEOUT
-      └──▶ Resources exhausted
-      └──▶ Order Service ALSO DOWN!
-\`\`\`
-
-**Circuit Breaker States**:
-\`\`\`
-┌─────────┐    Failures exceed     ┌─────────┐
-│ CLOSED  │────threshold──────────▶│  OPEN   │
-│ (normal)│                        │ (fail   │
-└─────────┘                        │  fast)  │
-     ▲                             └────┬────┘
-     │                                  │
-     │    Success                       │ Timeout
-     │                                  │
-     │                             ┌────▼────┐
-     └─────────────────────────────│HALF-OPEN│
-                                   │ (test)  │
-                                   └─────────┘
-\`\`\`
-
-**Implementation**:
-\`\`\`python
-class CircuitBreaker:
-    def call(self, func):
-        if self.state == OPEN:
-            if time.now() > self.open_until:
-                self.state = HALF_OPEN
-            else:
-                raise CircuitOpenException()
-
-        try:
-            result = func()
-            self.on_success()
-            return result
-        except Exception as e:
-            self.on_failure()
-            raise e
-
-    def on_failure(self):
-        self.failure_count += 1
-        if self.failure_count >= THRESHOLD:
-            self.state = OPEN
-            self.open_until = time.now() + TIMEOUT
-\`\`\`
-
-**Libraries**: Hystrix (Netflix), Resilience4j, Polly`
-        },
-        {
-          question: 'How do you handle distributed transactions?',
-          answer: `**The Problem**: No ACID across services
-\`\`\`
-Order Service:  Create order ✓
-Payment Service: Charge card ✓
-Inventory:      Reduce stock ✗ (FAILS!)
-
-Now what? Order exists, card charged, but no inventory!
-\`\`\`
-
-**Solution 1: Saga Pattern (Choreography)**:
-\`\`\`
-Events flow between services:
-
-1. Order Created ──────────────────▶
-2.                 ◀── Payment Charged
-3. Inventory Reserved ─────────────▶
-4. (or) Inventory Failed ──────────▶
-5.                 ◀── Payment Refunded
-6. Order Cancelled ────────────────▶
-\`\`\`
-- Each service reacts to events
-- Compensating transactions for rollback
-- Decentralized, no coordinator
-
-**Solution 2: Saga Pattern (Orchestration)**:
-\`\`\`
-┌─────────────────┐
-│  Saga           │
-│  Orchestrator   │
-└────────┬────────┘
-         │
-         ├──▶ 1. Create Order
-         ├──▶ 2. Charge Payment
-         ├──▶ 3. Reserve Inventory
-         │
-         │    If any step fails:
-         ├──▶ Compensate (reverse order)
-         │
-         └──▶ Mark saga complete
-\`\`\`
-- Central coordinator
-- Easier to understand flow
-- Single point of failure
-
-**Compensating Transactions**:
-| Action | Compensation |
-|--------|--------------|
-| Create order | Cancel order |
-| Charge card | Refund card |
-| Reserve stock | Release stock |
-| Send email | Send cancellation email |`
-        },
-        {
-          question: 'How does service discovery work?',
-          answer: `**The Problem**: How does Order Service find User Service?
-- IP addresses change
-- Instances scale up/down
-- Services move between hosts
-
-**Client-Side Discovery**:
-\`\`\`
-┌────────────────┐
-│Service Registry│
-│   (Consul)     │
-└───────┬────────┘
-        │ 2. user-service:
-        │    [10.0.0.1, 10.0.0.2]
-        │
-┌───────▼────────┐         ┌─────────────────┐
-│  Order Service │──3.────▶│  User Service   │
-│                │  call   │  (10.0.0.1)     │
-└────────────────┘         └─────────────────┘
-        │
-        │ 1. Query registry
-
-- Client queries registry
-- Client does load balancing
-- Examples: Eureka, Consul
-\`\`\`
-
-**Server-Side Discovery**:
-\`\`\`
-┌────────────────┐         ┌─────────────────┐
-│  Order Service │───1.───▶│   Load Balancer │
-└────────────────┘  call   └────────┬────────┘
-                                    │
-                           2. Route │
-                                    │
-┌──────────────────────────────────▼─────────┐
-│                User Services               │
-│   [10.0.0.1]    [10.0.0.2]    [10.0.0.3]  │
-└────────────────────────────────────────────┘
-
-- Load balancer queries registry
-- Client just calls load balancer
-- Examples: AWS ALB, Kubernetes Service
-\`\`\`
-
-**Kubernetes Service Discovery**:
+**Kubernetes DNS-Based Discovery** (the modern default):
 \`\`\`yaml
-# user-service is DNS name
+# Every Kubernetes Service gets a DNS entry:
+http://user-service.default.svc.cluster.local:8080/users/123
+
+# Short form within same namespace:
 http://user-service:8080/users/123
 
-# Kubernetes resolves to pod IPs
-# Built-in load balancing
-\`\`\``
+# Kubernetes resolves to pod IPs via kube-dns/CoreDNS
+# Built-in load balancing across pods (iptables/IPVS rules)
+\`\`\`
+Kubernetes has made server-side discovery the default. You define a Service resource, K8s creates a stable DNS name, and traffic is automatically distributed across healthy pods.
+
+**When to use each**:
+| Approach | Use When |
+|----------|----------|
+| Kubernetes DNS | Running on K8s (most modern deployments) |
+| Consul | Multi-cloud, non-K8s, need KV store + service mesh |
+| Eureka | Java/Spring ecosystem, Netflix-style architecture |
+| AWS Cloud Map | AWS-native, ECS/Fargate services |`
+        },
+        {
+          question: 'How do services communicate — sync REST/gRPC vs async message queues?',
+          answer: `**This is the most impactful architectural decision in microservices.** Choosing sync when you should use async creates cascading failures or unnecessary complexity.
+
+**Synchronous — REST over HTTP**: Caller WAITS for response. If Payment Service is slow, Order Service is slow. If Payment is DOWN, Order returns error. Each hop adds 5-50ms. Both services must be up simultaneously. Best for: queries needing immediate response, user-facing confirmations.
+
+**Synchronous — gRPC**: Same temporal coupling as REST, but 3-7x faster (binary Protobuf + HTTP/2). Strong typing with code generation. Bidirectional streaming. Best for: high-volume internal calls, polyglot environments.
+
+**Asynchronous — Message Queues (Kafka/SQS/RabbitMQ)**: Order Service publishes an event and moves on immediately. If Email Service is down, the message stays in the queue until recovery. Decoupling, resilience, scalability. Best for: events triggering multiple downstream actions, eventual consistency.
+
+**Decision Framework**:
+| Question | Sync (REST/gRPC) | Async (Events) |
+|----------|-------------------|----------------|
+| Need immediate response? | Yes | No |
+| Multiple consumers? | No (point-to-point) | Yes (fan-out) |
+| Downstream failure ok? | No | Yes (queue buffers) |
+| Data consistency? | Strong | Eventual |
+
+**Real-world patterns**: Order placement = sync (user needs confirmation). Order fulfillment = async (inventory, shipping, email independent). User profile read = sync gRPC. User signup = sync for account creation + async for welcome email, analytics.`
+        },
+        {
+          question: 'How does the Circuit Breaker pattern work, with real Netflix production parameters?',
+          answer: `**The Problem — Cascading Failures**: When Service A depends on Service B, and B becomes slow, A's threads pile up waiting. A's thread pool exhausts, causing A to stop responding to ITS callers. Netflix experienced this firsthand — a single high-latency downstream service caused their entire API to become unresponsive.
+
+**Circuit Breaker States**: CLOSED (normal) -> failure rate exceeds threshold -> OPEN (fail fast, return fallback) -> sleep window expires -> HALF-OPEN (test one request) -> success returns to CLOSED, failure returns to OPEN.
+
+**Netflix Hystrix Default Parameters** (real production values):
+\`\`\`
+requestVolumeThreshold = 20
+  Need 20+ requests in rolling window before circuit can trip.
+errorThresholdPercentage = 50
+  Opens when >50% of requests fail.
+rollingStats.timeInMilliseconds = 10000
+  10-second rolling window for failure tracking.
+sleepWindowInMilliseconds = 5000
+  Wait 5 seconds before testing (half-open).
+thread.timeoutInMilliseconds = 1000
+  Each downstream request times out after 1 second.
+\`\`\`
+
+**Fallback strategies** (what to return when circuit is open):
+1. **Cached data**: Netflix returns generic "Top 10" list when personalized recommendations service is down.
+2. **Default value**: If pricing service is down, show "Contact for price."
+3. **Graceful degradation**: Show product page without reviews instead of error.
+4. **Queue for later**: Queue email for delivery when email service recovers.
+
+**Bulkhead Pattern** (used alongside circuit breaker): Each dependency gets its own isolated thread pool. If user-service is slow, only its 10 threads are affected — payment-service calls use a completely separate pool. eBay adopted this for their Secure Token service — a circuit breaker trips for one overloaded consumer while all other services continue authenticating normally.
+
+**Modern alternatives**: Hystrix is in maintenance mode. Use Resilience4j (Java), Polly (.NET), or service mesh circuit breaking (Istio/Envoy YAML config, no code changes).`
+        },
+        {
+          question: 'How does the Saga pattern handle distributed transactions across services?',
+          answer: `**The Problem**: In a monolith, a database transaction ensures atomicity. In microservices, each service has its own database — no distributed ACID transaction spans services.
+
+\`\`\`
+Order Service:    CREATE order     (orders_db)    -- SUCCESS
+Payment Service:  CHARGE card      (payments_db)  -- SUCCESS
+Inventory:        REDUCE stock     (inventory_db) -- FAILS!
+
+Order exists, card charged, stock not reserved. Inconsistent.
+\`\`\`
+
+**Saga — Choreography** (event-driven, no coordinator): Each service publishes events, others react. Order Service publishes "OrderCreated", Payment subscribes and charges, publishes "PaymentCharged", Inventory subscribes and reserves stock. On failure, compensating events flow in reverse (refund, cancel).
+
+**Pros**: No single coordinator (no SPOF), loosely coupled. **Cons**: Hard to visualize overall flow, difficult to debug.
+
+**Saga — Orchestration** (central coordinator): A Saga Orchestrator calls each service in sequence. On failure at step 3, it compensates steps 2 and 1 in reverse order.
+
+**Pros**: Clear workflow visibility, easier error handling. **Cons**: Orchestrator is SPOF, can become bottleneck.
+
+**Compensating Transactions**:
+| Step | Action | Compensation |
+|------|--------|--------------|
+| 1 | Create order | Cancel order |
+| 2 | Charge card ($99) | Refund card ($99) |
+| 3 | Reserve 5 units | Release 5 units |
+| 4 | Schedule shipping | Cancel shipping |
+| 5 | Send confirmation | Send cancellation email |
+
+**Critical details**: Compensations must be idempotent (retries are possible). Each step should be recorded in a saga log (outbox pattern) for crash recovery. Some compensations are imperfect — you cannot un-send an email.
+
+**When to use each**: Choreography for 2-3 step simple event chains. Orchestration for 4+ step complex business workflows.`
+        },
+        {
+          question: 'What is the API Gateway pattern in microservices, and which gateways do companies use?',
+          answer: `**Without an API Gateway**, every client must know about every service, manage multiple URLs, duplicate auth logic, and make multiple round trips for one screen.
+
+**With an API Gateway**: Single entry point handles SSL termination, JWT validation, rate limiting, request routing, protocol translation (REST to gRPC), response aggregation, logging, and canary routing.
+
+**Popular API Gateways**:
+| Gateway | Used By | Strengths |
+|---------|---------|-----------|
+| **Kong** | Mashable, The RealReal | Open source, 200+ plugins, Lua extensibility |
+| **AWS API Gateway** | Most AWS shops | Serverless, Lambda integration, auto-scaling |
+| **Envoy** | Lyft, Square, Dropbox | gRPC-native, xDS API, Istio backbone |
+| **Zuul** | Netflix | Java-based, battle-tested at Netflix scale |
+| **NGINX** | Widely used | Battle-tested performance, Lua scripting |
+
+**BFF Pattern** (Backend for Frontend): Instead of one gateway for all clients, create specialized gateways per client type. Netflix uses separate gateways for TV, mobile, and web — each optimizes response payload for its client.
+
+**Gateway Anti-patterns**: Never put business logic in the gateway (infrastructure concerns only). Always deploy as a cluster behind a load balancer. Keep transformations lightweight.`
+        },
+        {
+          question: 'How do you manage data in microservices — database per service vs shared database?',
+          answer: `**Database per service is the fundamental rule.** If services share a database, you have a distributed monolith — schema changes in one service break another, you cannot deploy or scale independently.
+
+**Shared Database (anti-pattern)**: Order Service adds a column, must coordinate with ALL services. Heavy reads in one service slow writes in another. Cannot use different database technologies per service.
+
+**Database per Service (correct)**:
+\`\`\`
+Order Service   --> orders_db    (PostgreSQL)
+User Service    --> users_db     (PostgreSQL)
+Search Service  --> search_index (Elasticsearch)
+Session Service --> sessions_db  (Redis)
+Analytics       --> analytics_db (ClickHouse)
+\`\`\`
+Each service owns its schema, chooses optimal DB technology, evolves independently, scales independently.
+
+**The hard problem — cross-service queries**: Cannot JOIN across databases. Solutions:
+
+1. **API Composition**: Gateway calls multiple services and merges results. Simple but adds latency (sequential calls) and temporal coupling.
+
+2. **CQRS with materialized views**: Each service publishes events to an event bus. A denormalized read database stores pre-joined data. Best read performance but adds event processing complexity and eventual consistency.
+
+3. **Data replication via events**: Each service subscribes to events and stores local copies of data it needs. Fast reads but duplicated storage and eventual consistency.`
+        },
+        {
+          question: 'What is a service mesh (Istio, Linkerd), and what problem does it solve?',
+          answer: `**The Problem**: At 50-500 microservices, every service needs mTLS encryption, retry logic, circuit breaking, load balancing, distributed tracing, and access policies. Implementing these in every service in every language is unmaintainable.
+
+**Service Mesh**: A dedicated infrastructure layer deploying a sidecar proxy alongside every service. All traffic flows through the sidecar, handling cross-cutting concerns with zero code changes.
+
+**What it provides**:
+1. **Mutual TLS (mTLS)**: Automatic encryption and authentication between all services. Zero-trust networking.
+2. **Traffic management**: Canary deployments, A/B testing, traffic mirroring, sophisticated load balancing.
+3. **Observability**: Automatic distributed tracing, per-service metrics, dependency graphs.
+4. **Resilience**: Circuit breaking, retries, timeouts — configured via YAML, not code.
+5. **Access control**: Service-to-service authorization policies.
+
+**Istio vs Linkerd**:
+| Feature | Istio | Linkerd |
+|---------|-------|---------|
+| Sidecar | Envoy (C++) | Linkerd-proxy (Rust) |
+| Complexity | High (many CRDs) | Low (simpler model) |
+| Features | Most comprehensive | Focused on core networking |
+| Latency | Higher | 40-400% less than Istio (2025 benchmarks) |
+| Best for | Large enterprises | Teams prioritizing simplicity |
+
+**When you DON'T need a mesh**: Fewer than 20-30 services, single language ecosystem, not on Kubernetes, no dedicated platform engineering team.
+
+**When you DO need a mesh**: 50+ services in multiple languages, regulatory mTLS requirement, centralized traffic control without code changes, critical distributed tracing needs.`
+        },
+        {
+          question: 'How does distributed tracing and observability work across microservices?',
+          answer: `**The Problem**: User reports "checkout is slow." In microservices, checkout touches 6 services, 6 log streams, 3 databases. Without distributed tracing, finding the bottleneck is nearly impossible.
+
+**The Three Pillars of Observability**:
+
+**1. Distributed Tracing** (Jaeger, Zipkin, Datadog APM): A trace ID propagated through ALL services shows the full request path with timing:
+\`\`\`
+Trace ID: abc-123-def
+API Gateway      [450ms total]
+  User Service     [15ms]
+  Order Service    [380ms]
+    Inventory        [12ms]
+    Payment          [350ms]  <-- BOTTLENECK
+      Stripe API       [340ms]  <-- External API slow
+\`\`\`
+Every outgoing request includes a traceparent header. Each service creates a child span, records timing, passes the trace ID downstream. With service mesh, trace propagation is automatic.
+
+**2. Centralized Logging** (ELK, Loki): Every log entry includes the trace ID. Search by trace ID to see ALL logs across ALL services for one user request.
+
+**3. Metrics** (Prometheus + Grafana): RED metrics per service — Rate (rps), Errors (% 5xx), Duration (p50/p95/p99). Alert on p99 latency and error rate thresholds.
+
+**Netflix's observability stack**: Atlas (billions of metrics/min), Edgar (distributed tracing), Mantis (real-time stream processing), Lumen (dashboarding).
+
+**Minimum for production**: Structured JSON logs with trace IDs, Prometheus + RED metrics, Jaeger/Zipkin tracing, Grafana dashboards with alerts, centralized log aggregation.`
+        },
+        {
+          question: 'When should you NOT use microservices, and what are the common failure patterns?',
+          answer: `**Premature microservices adoption is one of the most expensive architectural mistakes.**
+
+**Signal 1 — Small team (< 10-15 engineers)**: 5 engineers with microservices spend 40% of time on infrastructure (CI/CD per service, monitoring, on-call rotation, Kubernetes). Same team with a monolith spends 90% on features.
+
+**Signal 2 — Unclear domain boundaries**: Drawing boundaries wrong is extremely expensive — splitting a service requires data migration, API redesign, consumer changes. In a monolith, moving code between modules is a refactor. In microservices, it is a multi-sprint project.
+
+**Signal 3 — No DevOps maturity**: Microservices require automated CI/CD per service, container orchestration, centralized logging, distributed tracing, service discovery, health checks, and automated rollback.
+
+**Common Failure Patterns**:
+
+1. **Distributed Monolith**: Services call each other synchronously in chains (A->B->C->D). Deploy A? Must also deploy B. D is slow? A, B, C are all slow. ALL the complexity with NONE of the independence.
+
+2. **Nano-services**: "StringFormatterService" with 50 lines of code, its own database, CI/CD, monitoring. This should be a library. Services encapsulate business capabilities, not utilities.
+
+3. **Shared database**: User Service and Order Service share one DB. Schema change in users table breaks Order Service. This is a monolith pretending to be microservices.
+
+4. **Ignoring network unreliability**: In a monolith, function calls always succeed or throw. In microservices, HTTP calls can timeout, fail, succeed with lost response, or succeed twice. Without timeouts, retries, circuit breakers, and idempotency, you WILL have cascading failures.
+
+**The recommended path**: Start with modular monolith -> when team hits 10-15 engineers, identify extraction candidates -> extract one service at a time using Strangler Fig pattern -> never extract everything at once.`
         }
       ],
 
@@ -9330,7 +9498,7 @@ Composite Index:
       title: 'Proxies',
       icon: 'shield',
       color: '#8b5cf6',
-      questions: 7,
+      questions: 5,
       description: 'Forward and reverse proxies, Layer 4 vs Layer 7, and their role in modern architectures.',
       concepts: ['Forward Proxy', 'Reverse Proxy', 'Layer 4 Proxy', 'Layer 7 Proxy', 'SSL/TLS Termination', 'Caching Proxy', 'API Gateway as Proxy', 'Service Mesh Sidecar Proxy'],
       tips: [
@@ -13752,7 +13920,7 @@ Requires coordination between producer and consumer:
       title: 'REST vs RPC vs GraphQL',
       icon: 'code',
       color: '#8b5cf6',
-      questions: 8,
+      questions: 12,
       description: 'REST vs gRPC vs GraphQL trade-offs for API communication patterns.',
       concepts: ['REST Constraints', 'gRPC & Protocol Buffers', 'GraphQL Schema & Resolvers', 'HTTP/2 Multiplexing', 'API Versioning', 'Overfetching vs Underfetching', 'Streaming RPCs', 'Federation'],
       tips: [
@@ -14035,6 +14203,267 @@ Solution: DataLoader (batching + caching)
    - Simple but clutters the service definition
 
 **Interview tip**: Mention that Protobuf's binary encoding makes unknown fields safe -- this is a key advantage over JSON where unknown fields require explicit handling.`
+        },
+        {
+          question: 'What are the six REST constraints and why does each matter?',
+          answer: `**REST** is not just "HTTP with JSON." Roy Fielding's dissertation defines six architectural constraints that, together, produce the properties we value in web APIs.
+
+**1. Client-Server separation**:
+- Client handles UI, server handles data and logic
+- Enables independent evolution of frontend and backend
+- Mobile, web, and IoT clients share the same API
+
+**2. Statelessness**:
+- Each request contains ALL information needed to process it
+- Server stores no session state between requests
+- Enables horizontal scaling: any server can handle any request
+
+  Stateful (bad):
+  POST /login -> server stores session
+  GET /orders -> server looks up session -> knows user
+
+  Stateless (good):
+  GET /orders
+  Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+  -> Token contains user identity, no server state needed
+
+**3. Cacheability**:
+- Responses must declare themselves cacheable or non-cacheable
+- Cache-Control, ETag, Last-Modified headers
+- Enables CDNs, browser caches, proxy caches
+
+  Cache-Control: public, max-age=3600
+  ETag: "abc123"
+  -> Saves bandwidth AND backend load
+
+**4. Uniform Interface** (most important):
+- Resource identification via URIs: /users/123
+- Resource manipulation through representations (JSON, XML)
+- Self-descriptive messages: Content-Type, methods convey meaning
+- HATEOAS: Links in responses guide client navigation
+
+**5. Layered System**:
+- Client doesn't know if it's talking to server or intermediary
+- Enables load balancers, CDNs, API gateways transparently
+- Each layer only knows about the layer it interacts with
+
+**6. Code on Demand** (optional):
+- Server can send executable code to client (JavaScript)
+- The only optional constraint
+- Enables dynamic client behavior
+
+**Interview tip**: Most candidates only discuss "HTTP verbs + JSON." Mentioning statelessness, cacheability, and HATEOAS demonstrates deeper understanding.`
+        },
+        {
+          question: 'How do gRPC streaming patterns work and when do you use each?',
+          answer: `gRPC supports **four communication patterns**, all multiplexed over a single HTTP/2 connection:
+
+**1. Unary RPC** (request-response):
+  rpc GetUser(GetUserRequest) returns (User);
+
+  Client ──request──> Server
+  Client <──response── Server
+
+  Use: Simple lookups, CRUD operations
+  Equivalent to REST GET/POST
+
+**2. Server Streaming RPC**:
+  rpc ListUsers(ListUsersRequest) returns (stream User);
+
+  Client ──request──────────> Server
+  Client <──user1──────────── Server
+  Client <──user2──────────── Server
+  Client <──user3──────────── Server
+  Client <──(end of stream)── Server
+
+  Use: Stock price ticker, search results, log tailing
+  Real example: gRPC health check Watch() streams status updates
+
+**3. Client Streaming RPC**:
+  rpc UploadFile(stream FileChunk) returns (UploadResult);
+
+  Client ──chunk1──> Server
+  Client ──chunk2──> Server
+  Client ──chunk3──> Server
+  Client ──(done)──> Server
+  Client <──result── Server
+
+  Use: File uploads, batch writes, sensor data ingestion
+  Server processes chunks as they arrive
+
+**4. Bidirectional Streaming RPC**:
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+
+  Client ──msg──> Server
+  Client <──msg── Server
+  Client ──msg──> Server
+  Client ──msg──> Server
+  Client <──msg── Server
+  (both sides send independently)
+
+  Use: Chat, multiplayer games, collaborative editing
+  Most powerful but most complex pattern
+
+**Performance characteristics**:
+
+  Pattern             | Connections | Latency      | Complexity
+  ────────────────────|───────────���─|──────────��───|───────────
+  Unary               | 1 per call  | Single RTT   | Low
+  Server streaming    | 1 (reused)  | First-byte + | Medium
+  Client streaming    | 1 (reused)  | Accumulate   | Medium
+  Bidirectional       | 1 (reused)  | Continuous   | High
+
+**Flow control**:
+- HTTP/2 provides built-in flow control per stream
+- Server can signal backpressure if client sends too fast
+- Window size limits how much data can be in flight
+
+**Deadlines and cancellation**:
+- Client sets a deadline: ctx, cancel := context.WithTimeout(5 * time.Second)
+- If deadline expires, both sides clean up
+- Critical for streaming: prevents resource leaks on hung streams
+
+**Interview tip**: When asked about real-time features, propose gRPC server streaming as an alternative to WebSockets. It provides type safety, built-in flow control, and works through standard HTTP/2 infrastructure.`
+        },
+        {
+          question: 'How do you benchmark and compare API performance across paradigms?',
+          answer: `**Methodology**: Compare REST, gRPC, and GraphQL under identical conditions with the same underlying data and logic.
+
+**Serialization benchmark (encoding + decoding a User object)**:
+
+  Format      | Encode   | Decode   | Size     | Ratio
+  ────────────|──────────|──────────|──────────|─��─────
+  JSON (REST) | 45 us    | 52 us    | 200 B    | 1.0x
+  Protobuf    | 4 us     | 6 us     | 48 B     | 0.24x
+  Avro        | 8 us     | 10 us    | 42 B     | 0.21x
+  MessagePack | 12 us    | 14 us    | 120 B    | 0.60x
+
+  Protobuf: ~10x faster encode, ~4x smaller on the wire
+
+**End-to-end latency benchmark (1000 requests, same server)**:
+
+  Paradigm    | p50     | p99     | RPS (max) | Bandwidth
+  ────────────|─────────|─────────|───────────|──────────
+  REST/JSON   | 8 ms    | 45 ms   | 12,000    | 2.4 MB/s
+  gRPC/Proto  | 2 ms    | 12 ms   | 48,000    | 0.6 MB/s
+  GraphQL     | 10 ms   | 55 ms   | 9,000     | 1.8 MB/s
+
+  gRPC wins on latency and throughput
+  REST wins on simplicity and caching
+  GraphQL wins on flexibility (fewer round trips)
+
+**Where REST outperforms gRPC**:
+1. **Cached reads**: REST with CDN returns in <1ms
+   gRPC has no standard caching layer
+   GET /api/products/123 -> CDN hit -> 0.5ms
+   ProductService.Get(123) -> always hits server -> 2ms
+
+2. **Browser-direct requests**:
+   REST: fetch('/api/users/123') -- native
+   gRPC: Requires grpc-web proxy (extra hop, ~3ms overhead)
+
+3. **Debugging and inspection**:
+   curl https://api.example.com/users/123
+   vs grpcurl -plaintext localhost:50051 user.UserService/GetUser
+
+**Where GraphQL outperforms REST**:
+1. **Reducing round trips** (mobile on 3G):
+   REST: GET /user/1 + GET /user/1/posts + GET /user/1/friends = 3 RTTs
+   GraphQL: 1 query, 1 RTT (500ms savings on 3G)
+
+2. **Payload optimization**:
+   REST returns all 20 user fields (2KB)
+   GraphQL returns only name + avatar (200B)
+   10x bandwidth savings on mobile
+
+**Load testing approach**:
+1. Define realistic request mix (80% reads, 20% writes)
+2. Gradually increase RPS until p99 exceeds SLO
+3. Measure: latency percentiles, throughput ceiling, CPU usage, error rate
+4. Compare at same throughput level, not maximum capacity
+5. Include connection setup cost (gRPC amortizes over single connection)
+
+**Interview tip**: Never just say "gRPC is faster." Specify the dimension: gRPC has lower per-call latency but REST with caching often has lower end-to-end latency for reads. Show you understand the full picture.`
+        },
+        {
+          question: 'How do you evolve a REST API without breaking existing clients?',
+          answer: `**API evolution** is one of the hardest problems in distributed systems. Once an API is published, clients depend on its structure, and breaking changes cause outages.
+
+**Backward-compatible changes** (safe):
+- Adding new optional fields to responses
+- Adding new endpoints
+- Adding new query parameters (optional)
+- Adding new HTTP headers (optional)
+- Deprecating fields (still return them)
+
+**Breaking changes** (require versioning):
+- Removing or renaming response fields
+- Changing field types (string -> number)
+- Changing URL structure
+- Changing authentication scheme
+- Removing endpoints
+
+**Versioning strategies**:
+
+1. **URL versioning** (most common):
+   GET /api/v1/users/123
+   GET /api/v2/users/123
+
+   Pros: Clear, easy to route, easy to cache separately
+   Cons: URL pollution, hard to share links across versions
+
+2. **Header versioning**:
+   GET /api/users/123
+   Accept: application/vnd.myapi.v2+json
+
+   Pros: Clean URLs, content negotiation
+   Cons: Harder to test, less visible
+
+3. **Query parameter**:
+   GET /api/users/123?version=2
+
+   Pros: Simple, backward compatible (default to latest)
+   Cons: Can't cache different versions on same URL
+
+**Deprecation process**:
+
+  Phase 1: Add new field alongside old field
+  { "name": "Alice", "fullName": "Alice Smith" }  // both present
+
+  Phase 2: Mark old field as deprecated
+  Sunset: Sat, 01 Jan 2027 00:00:00 GMT
+  Deprecation: true
+
+  Phase 3: Monitor usage of deprecated field
+  Log warnings when clients use old field
+  Contact top consumers directly
+
+  Phase 4: Remove after sunset date
+  Return 410 Gone for removed endpoints
+
+**Expand-Contract pattern** (for database + API changes):
+
+  Step 1 (Expand): Add new column, write to both old and new
+  Step 2 (Migrate): Backfill old data to new column
+  Step 3 (Contract): Remove old column after all clients migrated
+
+  API equivalent:
+  Step 1: New endpoint + old endpoint (both work)
+  Step 2: Redirect old -> new (HTTP 301)
+  Step 3: Remove old endpoint after deprecation period
+
+**Stripe's approach** (industry gold standard):
+- API versions are dates: 2024-01-15
+- Each version is immutable
+- New features added as new versions
+- Clients pin to a version, upgrade when ready
+- Version transformers convert between versions internally
+
+  Client sends: Stripe-Version: 2024-01-15
+  Server internally uses latest model
+  Response transformed to match client's version
+
+**Interview tip**: Mention Stripe's versioning as a real-world example. It shows you understand that API evolution is not just a technical problem but an organizational one requiring deprecation policies, client communication, and backward compatibility guarantees.`
         }
       ],
 
@@ -14180,7 +14609,7 @@ Solution: DataLoader (batching + caching)
       title: 'Synchronous vs Asynchronous Communication',
       icon: 'shuffle',
       color: '#8b5cf6',
-      questions: 8,
+      questions: 12,
       description: 'Sync vs async communication patterns, when to use each, and hybrid architectures.',
       concepts: ['Request-Response (Sync)', 'Message Queues (Async)', 'Event-Driven Architecture', 'Pub/Sub', 'Saga Pattern', 'Choreography vs Orchestration', 'Backpressure', 'Dead Letter Queues'],
       tips: [
@@ -14455,6 +14884,285 @@ Common Async Patterns:
 - Examples: RxJava, Project Reactor, Akka Streams
 
 **Interview tip**: Always mention backpressure when designing any async system. It shows you think about failure modes and capacity planning.`
+        },
+        {
+          question: 'How do Promises, CompletableFuture, and async/await relate to async communication?',
+          answer: `These are **language-level async primitives** that enable non-blocking concurrency within a single service. They are distinct from **system-level async** (message queues) but complement it.
+
+**Promise / Future** (represents a value that will exist later):
+
+  JavaScript (Promise):
+  const result = fetch('/api/users/123')  // returns Promise
+    .then(response => response.json())    // chained transformation
+    .then(user => console.log(user.name)) // use the value
+    .catch(error => handleError(error));  // handle failure
+
+  Java (CompletableFuture):
+  CompletableFuture<User> future = userService.getUser(123);
+  future.thenApply(user -> user.getName())
+        .thenAccept(name -> log.info("User: {}", name))
+        .exceptionally(ex -> { log.error("Failed", ex); return null; });
+
+**async/await** (syntactic sugar over Promises):
+
+  JavaScript:
+  async function getUser(id) {
+    try {
+      const response = await fetch('/api/users/' + id);
+      const user = await response.json();
+      return user;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+**Concurrent execution (fan-out)**:
+
+  // Sequential (slow): 300ms total
+  const user = await getUser(123);      // 100ms
+  const orders = await getOrders(123);  // 100ms
+  const reviews = await getReviews(123); // 100ms
+
+  // Parallel (fast): 100ms total
+  const [user, orders, reviews] = await Promise.all([
+    getUser(123),
+    getOrders(123),
+    getReviews(123)
+  ]);
+
+  Java equivalent:
+  CompletableFuture.allOf(userFuture, ordersFuture, reviewsFuture)
+    .thenRun(() -> {
+      User user = userFuture.join();
+      List<Order> orders = ordersFuture.join();
+    });
+
+**How this connects to system-level async**:
+- **Within a service**: Use async/await for non-blocking I/O (DB calls, HTTP calls)
+- **Between services**: Use message queues for decoupled async communication
+- **Best of both**: Service receives message from queue, processes with async/await internally
+
+**Thread model comparison**:
+
+  Pattern               | Threads | Concurrency | Throughput
+  ----------------------|---------|-------------|----------
+  Blocking (1 thread/req)| 200     | 200         | Low
+  Thread pool           | 200     | 200         | Medium
+  async/await (Node.js) | 1       | 10,000+     | High
+  Virtual threads (Java)| 1M+     | 1M+         | Very high
+
+**Interview tip**: When designing a service, mention that internal operations use async/await for non-blocking I/O while inter-service communication uses message queues. This shows understanding of both levels of async.`
+        },
+        {
+          question: 'What is reactive programming and how does it differ from traditional async?',
+          answer: `**Reactive programming** treats data as **streams** that you subscribe to and transform. Instead of pulling data, data is pushed to you. Built-in support for backpressure, error handling, and composition.
+
+**Traditional async** (pull-based, imperative):
+  const users = await db.query("SELECT * FROM users");
+  const filtered = users.filter(u => u.active);
+  const emails = filtered.map(u => u.email);
+  await sendBulkEmail(emails);
+
+**Reactive** (push-based, declarative):
+  db.streamQuery("SELECT * FROM users")
+    .filter(user => user.active)
+    .map(user => user.email)
+    .buffer(100)
+    .flatMap(batch => sendBulkEmail(batch))
+    .subscribe(
+      result => log.info("Batch sent"),
+      error => log.error("Failed", error),
+      () => log.info("All done")
+    );
+
+**Key reactive patterns**:
+
+1. **Observable/Flux** (data stream):
+   Source -> [transform] -> [filter] -> [buffer] -> Subscriber
+
+2. **Backpressure** (built-in):
+   Publisher produces 1000 items/sec
+   Subscriber requests 100 items/sec
+   Publisher slows down automatically (no overflow)
+
+3. **Error handling** (propagation):
+   stream.onErrorResume(ex -> fallbackStream)
+         .retry(3)
+         .onErrorReturn(defaultValue);
+
+**Reactive frameworks**:
+
+  Language | Framework        | Use Case
+  --------|------------------|----------------------
+  Java    | Project Reactor  | Spring WebFlux
+  Java    | RxJava           | Android, general
+  JS      | RxJS             | Angular, real-time UIs
+  Kotlin  | Kotlin Flow      | Android, Coroutines
+
+**When reactive shines**:
+- High-concurrency servers (10K+ connections)
+- Real-time data processing (stock tickers, IoT)
+- Composing multiple async data sources
+- Systems with natural backpressure needs
+
+**When to avoid reactive**:
+- Simple CRUD applications (unnecessary complexity)
+- Batch processing with fixed datasets
+- Team unfamiliar with reactive paradigm
+- Debugging is significantly harder (stack traces are opaque)
+
+**Spring WebFlux example** (reactive web server):
+
+  @GetMapping("/users/{id}")
+  Mono<User> getUser(@PathVariable Long id) {
+    return userRepository.findById(id)
+      .flatMap(user -> enrichWithOrders(user))
+      .timeout(Duration.ofSeconds(5))
+      .onErrorResume(ex -> Mono.just(fallbackUser));
+  }
+
+  // Handles 10,000+ concurrent requests with a few threads
+  // Traditional Spring MVC would need 10,000 threads
+
+**Interview tip**: Mention reactive programming when designing systems that handle many concurrent connections (chat, notifications, dashboards). Compare it to traditional thread-per-request models to show understanding of the throughput advantage.`
+        },
+        {
+          question: 'What are the callback, event emitter, and observer patterns for async communication?',
+          answer: `These are fundamental **async patterns** that appear at every level of system design, from in-process event handling to distributed pub/sub.
+
+**1. Callback pattern** (simplest):
+  Function passed as argument, called when work completes.
+
+  // Node.js style
+  fs.readFile('/data/users.json', (error, data) => {
+    if (error) handleError(error);
+    else processData(data);
+  });
+
+  Distributed equivalent: **Webhooks**
+  POST /api/payments
+  { "callback_url": "https://myapp.com/webhook/payment" }
+  -> Payment service calls your URL when done
+
+  Pros: Simple, universal
+  Cons: Callback hell (nested callbacks), hard to compose
+
+**2. Event Emitter pattern**:
+  Object emits named events, listeners react.
+
+  const order = new OrderProcessor();
+  order.on('validated', () => chargePayment());
+  order.on('paid', () => reserveInventory());
+  order.on('failed', (error) => notifyUser(error));
+  order.process(orderData);
+
+  Distributed equivalent: **Event bus / Pub-sub**
+  orderService.emit('order.created', orderData);
+  paymentService.on('order.created', handleNewOrder);
+
+  Pros: Loose coupling, easy to add listeners
+  Cons: Hard to trace flow, no guaranteed ordering
+
+**3. Observer pattern** (GoF):
+  Subject maintains list of observers, notifies on state change.
+
+  Distributed equivalent: **Change Data Capture (CDC)**
+  Database -> CDC Stream -> Service A
+                         -> Service B
+
+**4. Pub/Sub pattern** (scalable observer):
+
+  Publisher -> Topic -> Subscriber A (own queue)
+                     -> Subscriber B (own queue)
+
+  Each subscriber has its own queue = independent processing speed
+
+**Comparison matrix**:
+
+  Pattern        | Coupling   | Scalability | Traceability
+  --------------|------------|-------------|-------------
+  Callback      | Tight      | Low         | Easy
+  Event Emitter | Medium     | Medium      | Medium
+  Observer      | Medium     | Medium      | Medium
+  Pub/Sub       | Loose      | High        | Hard
+  Webhook       | Loose      | High        | Hard
+
+**In-process to distributed progression**:
+  Callback -> Event Emitter -> Observer -> Pub/Sub -> Event Streaming
+  (same process)           (same process)          (distributed)
+
+**Interview tip**: Show the interviewer you understand the progression from in-process callbacks to distributed pub/sub. This demonstrates both programming and system design knowledge.`
+        },
+        {
+          question: 'How do you design an event-driven architecture and what are the pitfalls?',
+          answer: `**Event-driven architecture (EDA)** uses events as the primary communication mechanism between services. Services react to events rather than being explicitly called.
+
+**Core components**:
+  Event Producer -> Event Broker -> Event Consumer
+  (emits facts)    (routes/stores)  (reacts to facts)
+
+  Key distinction: Events are FACTS about what happened, not commands.
+  "OrderPlaced" (event/fact) vs "ProcessPayment" (command)
+
+**Architecture patterns**:
+
+1. **Event Notification** (thin events):
+   { type: "user.updated", data: { userId: "123" } }
+   Consumer fetches full data from source if needed
+
+2. **Event-Carried State Transfer** (fat events):
+   { type: "user.updated", data: { userId: "123", name: "Alice", email: "..." } }
+   Consumer has all data it needs, no extra calls
+
+3. **Event Sourcing** (events as truth):
+   All state changes stored as events
+   Current state = replay all events from beginning
+   Events: [AccountCreated, Deposited(500), Withdrawn(100)]
+   Balance = 0 + 500 - 100 = 400
+
+4. **CQRS** (Command Query Responsibility Segregation):
+   Write side: Events -> Event Store (append only)
+   Read side:  Events -> Projections (optimized read models)
+
+**Common pitfalls**:
+
+1. **Event ordering issues**:
+   Events arrive out of order across partitions
+   Fix: Partition key (user_id) for related events
+
+2. **Eventual consistency confusion**:
+   User places order, immediately checks status: "Order not found"
+   Fix: Read-your-writes consistency or show "processing" state
+
+3. **Schema evolution**:
+   Producer changes event format, consumers break
+   Fix: Schema registry, backward-compatible changes only
+
+4. **Debugging difficulty**:
+   Request spans 5 services via events -- where did it fail?
+   Fix: Correlation IDs, distributed tracing (Jaeger/Zipkin)
+
+5. **Dual-write problem**:
+   Service writes to DB AND publishes event -- if one fails, inconsistency
+   Fix: Transactional outbox pattern
+
+   BEGIN TRANSACTION;
+     INSERT INTO orders (...);
+     INSERT INTO outbox (event_type, payload);
+   COMMIT;
+   -- Separate process reads outbox and publishes to broker
+
+6. **Consumer failure handling**:
+   Consumer crashes mid-processing
+   Fix: At-least-once delivery + idempotent consumers
+
+**Real-world EDA stack**:
+  Producers -> Kafka (event bus) -> Consumers
+  + Schema Registry (contracts)
+  + Dead Letter Topic (failures)
+  + Monitoring (consumer lag)
+
+**Interview tip**: When proposing EDA, always address: (1) how you handle ordering, (2) how you ensure exactly-once processing, (3) how you debug across services, and (4) how you handle the dual-write problem.`
         }
       ],
 
@@ -14619,7 +15327,7 @@ Common Async Patterns:
       title: 'Quorum Consensus',
       icon: 'users',
       color: '#10b981',
-      questions: 8,
+      questions: 13,
       description: 'N/R/W quorum, strong consistency, and read/write path design in distributed databases.',
       concepts: ['Quorum Formula (W + R > N)', 'Read Quorum', 'Write Quorum', 'Sloppy Quorum', 'Hinted Handoff', 'Read Repair', 'Anti-Entropy', 'Tunable Consistency'],
       tips: [
@@ -14945,6 +15653,418 @@ Two clients write different values to the same key concurrently:
 - Read repair rate (stale reads per second)
 - Anti-entropy scan completion time
 - Clock skew across nodes`
+        },
+        {
+          question: 'How does tunable consistency work in practice, and how do Cassandra and DynamoDB implement it?',
+          answer: `**Tunable consistency** lets you choose different consistency levels per operation on the same database. The same cluster can serve both strongly consistent and eventually consistent reads.
+
+**Cassandra consistency levels**:
+
+  Level          | Nodes Required | Behavior
+  ---------------|----------------|-----------------------------
+  ONE            | 1              | Fastest, may be stale
+  TWO            | 2              | Slightly more consistent
+  THREE          | 3              | Even more consistent
+  QUORUM         | (N/2)+1        | Majority = strong if W+R>N
+  LOCAL_QUORUM   | Majority in DC | Strong within datacenter
+  EACH_QUORUM    | Majority/DC    | Strong across all DCs
+  ALL            | N              | Slowest, strongest, least available
+
+  Per-query usage:
+  // Fast read for analytics
+  SELECT * FROM page_views WHERE page_id = ? USING CONSISTENCY ONE;
+
+  // Strong read for balance check
+  SELECT balance FROM accounts WHERE id = ? USING CONSISTENCY QUORUM;
+
+  // Fast write for logging
+  INSERT INTO access_log (...) USING CONSISTENCY ONE;
+
+  // Durable write for payment
+  INSERT INTO transactions (...) USING CONSISTENCY QUORUM;
+
+**DynamoDB consistency options**:
+
+  // Eventually consistent read (default, 50% cheaper, ~10ms)
+  const params = { TableName: 'Users', Key: { id: '123' } };
+  const result = await dynamodb.get(params).promise();
+
+  // Strongly consistent read (latest data guaranteed, ~20ms)
+  const params = {
+    TableName: 'Users',
+    Key: { id: '123' },
+    ConsistentRead: true
+  };
+
+  DynamoDB internally uses a leader-based quorum:
+  - Writes always go to all 3 replicas
+  - Eventually consistent: read from any 1 replica
+  - Strongly consistent: read from leader replica
+
+**Real-world per-table strategy**:
+
+  Table               | Write CL  | Read CL      | Why
+  --------------------|-----------|--------------|------------------
+  user_sessions       | ONE       | ONE          | Speed, ephemeral
+  user_profiles       | QUORUM    | ONE          | Durable write, fast read
+  financial_txns      | QUORUM    | QUORUM       | Strong consistency
+  analytics_events    | ONE       | ONE          | Best effort
+  inventory_counts    | QUORUM    | QUORUM       | Prevent overselling
+
+**Pitfall: W+R <= N does NOT mean "no consistency"**:
+- It means stale reads are POSSIBLE, not guaranteed
+- In practice, async replication is fast (milliseconds)
+- Most reads will see fresh data; stale reads are rare but unpredictable
+
+**Interview tip**: When using Cassandra or DynamoDB, always specify the consistency level per operation. Saying "we use Cassandra" without discussing consistency levels is a red flag.`
+        },
+        {
+          question: 'Walk through NWR configuration examples for different use cases.',
+          answer: `**NWR configuration** determines the behavior of a quorum-based system. Different use cases demand different tuning.
+
+**Example 1: E-commerce product catalog (read-heavy)**
+
+  N=3, W=3, R=1 (ALL writes, ONE reads)
+
+  Write path: Client -> Coordinator -> {R1, R2, R3} all ACK -> done
+  Read path:  Client -> Coordinator -> R1 ACK -> done
+
+  W+R = 3+1 = 4 > 3 = N (strong consistency)
+
+  Trade-off:
+  + Reads are fast (1 replica, ~2ms)
+  + Reads always see latest data (all replicas have it)
+  - Writes are slow (wait for all 3, ~15ms)
+  - Write availability: if ANY node is down, writes fail
+
+  Best for: Product catalog, configuration data, reference data
+  Anti-pattern: High write volume (writes bottleneck)
+
+**Example 2: Social media posts (write-heavy)**
+
+  N=3, W=1, R=3 (ONE write, ALL reads)
+
+  Write path: Client -> Coordinator -> R1 ACK -> done (fast!)
+  Read path:  Client -> Coordinator -> {R1, R2, R3} all ACK -> done
+
+  W+R = 1+3 = 4 > 3 = N (strong consistency)
+
+  Trade-off:
+  + Writes are fast (1 replica, ~2ms)
+  - Reads are slow (wait for all 3, ~15ms)
+  - Read availability: if ANY node is down, reads fail
+  - Risk: if write node fails before replication, data lost
+
+  Best for: Write-heavy ingestion, time-series data
+  Anti-pattern: User-facing reads (too slow)
+
+**Example 3: General purpose (balanced)**
+
+  N=3, W=2, R=2 (QUORUM writes, QUORUM reads)
+
+  Write path: Wait for 2 of 3
+  Read path:  Wait for 2 of 3
+
+  W+R = 2+2 = 4 > 3 = N (strong consistency)
+
+  Trade-off:
+  + Balanced read/write performance
+  + Tolerates 1 node failure for both reads and writes
+  + Most common configuration
+
+  Best for: Most applications, balanced workloads
+
+**Example 4: Analytics (maximum availability)**
+
+  N=3, W=1, R=1 (ONE write, ONE read)
+
+  W+R = 1+1 = 2 < 3 = N (eventual consistency!)
+
+  Trade-off:
+  + Fastest reads and writes (~1ms)
+  + Highest availability (any single node can serve)
+  - May read stale data
+  - No consistency guarantee
+
+  Best for: Metrics, counters, approximate analytics
+
+**Example 5: Multi-datacenter deployment**
+
+  N=6 (3 per DC), W=4, R=3
+
+  Write: 4 of 6 must ACK (at least 2 per DC)
+  Read:  3 of 6 must respond
+
+  W+R = 4+3 = 7 > 6 = N (strong consistency)
+
+  If one DC is completely lost (3 nodes):
+  Remaining 3 nodes: W=4 needs 4, only 3 available -> writes fail
+  Fix: LOCAL_QUORUM = 2 of 3 within each DC (survives DC loss)
+
+**Quick reference table**:
+
+  Use Case          | N | W | R | W+R>N | Consistency
+  ------------------|---|---|---|-------|------------
+  Read-optimized    | 3 | 3 | 1 | Yes   | Strong
+  Write-optimized   | 3 | 1 | 3 | Yes   | Strong
+  Balanced          | 3 | 2 | 2 | Yes   | Strong
+  High availability | 3 | 1 | 1 | No    | Eventual
+  Multi-DC strong   | 5 | 3 | 3 | Yes   | Strong
+  Multi-DC local    | 6 | LOCAL_QUORUM | LOCAL_QUORUM | Per-DC | Per-DC strong
+
+**Interview tip**: Draw the NWR diagram for your specific use case. Show which nodes participate in reads vs writes. This visual explanation is much more effective than just stating numbers.`
+        },
+        {
+          question: 'How does hinted handoff work in detail, and what are its limitations?',
+          answer: `**Hinted handoff** is the mechanism that keeps a distributed system available when some replicas are temporarily unreachable. A healthy node stores a "hint" (the write data) and forwards it when the target node recovers.
+
+**Detailed flow**:
+
+  Normal write (N=3, W=2, key "user:1" -> replicas {A, B, C}):
+
+  Client -> Coordinator
+  Coordinator -> A (ACK)
+  Coordinator -> B (ACK)  W=2 met, respond success
+  Coordinator -> C (ACK)  async
+
+  Hinted handoff (C is down):
+
+  Client -> Coordinator
+  Coordinator -> A (ACK)
+  Coordinator -> B (ACK)  W=2 met, respond success
+  Coordinator -> C (TIMEOUT!)
+  Coordinator -> D: "Store this for C: {key=user:1, value=Alice, target=C}"
+
+  D stores the hint:
+  hint_store: {
+    target_node: C,
+    key: "user:1",
+    value: "Alice",
+    timestamp: 1704067200,
+    received_at: 1704067201,
+    ttl: 3600  // hint expires after 1 hour
+  }
+
+  When C comes back online:
+  D detects C is alive (via gossip/heartbeat)
+  D sends: "Here is data I held for you: {user:1 -> Alice}"
+  C stores the data
+  D deletes the hint
+
+**Hint storage structure (Cassandra)**:
+
+  system.hints table:
+  ┌──────────┬──────────┬───────────┬──────────┐
+  │ target   │ hint_id  │ mutation  │ created  │
+  ├──────────┼──────────┼───────────┼──────────┤
+  │ node-C   │ uuid-1   │ {binary}  │ 14:30:01 │
+  │ node-C   │ uuid-2   │ {binary}  │ 14:30:02 │
+  │ node-E   │ uuid-3   │ {binary}  │ 14:35:10 │
+  └──────────┴──────────┴───────────┴──────────┘
+
+**Limitations and failure modes**:
+
+1. **Hint node also fails**:
+   D holds hints for C, but D crashes before C recovers
+   -> Hints are permanently lost
+   -> C is missing writes that were hinted to D
+   Fix: Anti-entropy repair catches this eventually
+
+2. **Hint TTL expiration**:
+   C is down for longer than hint TTL (e.g., 3 hours, TTL = 1 hour)
+   -> Expired hints are deleted, C misses those writes
+   Fix: Run full anti-entropy repair after prolonged outage
+
+3. **Hint storm on recovery**:
+   C was down for an hour, 1 million hints accumulated on D
+   C comes back, D floods C with 1M writes
+   -> C is overwhelmed, may go down again
+   Fix: Throttle hint delivery rate (Cassandra: hinted_handoff_throttle)
+
+4. **Sloppy quorum false confidence**:
+   W=2 met because D accepted the hint, but D is not a real replica for this key
+   If D fails before delivering hint, data has only W=1 durability
+   -> Sloppy quorum does NOT guarantee the same durability as strict quorum
+
+5. **Disk space exhaustion**:
+   Many nodes down -> massive hint accumulation on healthy nodes
+   -> Healthy nodes run out of disk space
+   Fix: max_hints_file_size_in_mb, max_hint_window_in_ms
+
+**Cassandra configuration**:
+  hinted_handoff_enabled: true
+  max_hint_window_in_ms: 10800000  # 3 hours
+  hinted_handoff_throttle_in_kb: 1024
+  max_hints_delivery_threads: 2
+  max_hints_file_size_in_mb: 128
+
+**Interview tip**: When discussing hinted handoff, always mention its limitations. Candidates who only describe the happy path miss the critical insight that hints can be lost, making anti-entropy repair essential as a safety net.`
+        },
+        {
+          question: 'How do anti-entropy Merkle trees work step by step for replica synchronization?',
+          answer: `**Anti-entropy** is the background process that ensures all replicas eventually hold identical data. It uses **Merkle trees** to efficiently identify differences without comparing every record.
+
+**Step 1: Build Merkle tree per replica per partition**
+
+  Replica A holds keys: k1=v1, k2=v2, k3=v3, k4=v4
+
+  Leaf level: hash each key-value pair
+  h(k1,v1) = aa  h(k2,v2) = bb  h(k3,v3) = cc  h(k4,v4) = dd
+
+  Internal nodes: hash children together
+  h(aa,bb) = AB    h(cc,dd) = CD
+
+  Root: h(AB,CD) = ROOT_A
+
+**Step 2: Compare root hashes between replicas**
+
+  Replica A: ROOT_A = X123
+  Replica B: ROOT_B = X123
+  -> Roots match! No differences. Done. (O(1) comparison)
+
+  Replica A: ROOT_A = X123
+  Replica C: ROOT_C = Y456
+  -> Roots differ! Must descend to find differences.
+
+**Step 3: Descend to find divergent subtrees**
+
+  Replica A          Replica C
+  Root: X123         Root: Y456         <- differ, descend
+   L: AB              L: AB             <- same! skip entire left half
+   R: CD              R: CZ             <- differ, descend
+     L: cc              L: cc           <- same! k3 matches
+     R: dd              R: ee           <- DIFFER! k4 is different
+
+  Result: Only k4 differs. Transfer k4 from A to C (or vice versa).
+  Compared: 5 hashes instead of 4 records
+  For 1 billion records: ~30 comparisons (log2(1B))
+
+**Step 4: Resolve the difference**
+
+  A has k4=v4 (timestamp t=100)
+  C has k4=v4_old (timestamp t=50)
+  -> A's version is newer, send k4=v4 to C
+
+  If both have different values with same timestamp:
+  -> Use conflict resolution strategy (LWW, vector clocks, app merge)
+
+**Cassandra implementation details**:
+
+  - Merkle tree built per token range per table
+  - Tree depth: 15 levels (2^15 = 32,768 leaf nodes)
+  - Each leaf covers a range of tokens
+  - Tree rebuilt fresh for each repair (not maintained incrementally)
+
+  nodetool repair:
+  1. Coordinator picks two replicas for a token range
+  2. Both build Merkle trees (CPU + I/O intensive)
+  3. Exchange and compare trees
+  4. Stream differing ranges
+  5. Repeat for all token ranges and all replica pairs
+
+**DynamoDB approach**:
+  - Uses Merkle trees for anti-entropy between storage nodes
+  - Trees built over partition key hash ranges
+  - Automatic background process (users don't run it manually)
+
+**Performance considerations**:
+
+  Operation               | Cost
+  ------------------------|------------------
+  Build Merkle tree       | O(N) read all data
+  Compare two trees       | O(log N) hash comparisons
+  Transfer differences    | O(D) where D = # differences
+  Full repair of 100 GB   | ~30 minutes (disk I/O bound)
+
+**Scheduling anti-entropy**:
+  - Run incrementally: repair 1/7th of data each day (weekly cycle)
+  - Run after prolonged outage (hinted handoff may have missed data)
+  - Monitor last successful repair time per table
+  - Alert if repair has not completed within SLA
+
+**Interview tip**: When discussing anti-entropy, explain why Merkle trees are efficient: comparing two replicas with 1 billion records requires only ~30 hash comparisons instead of comparing all records one by one.`
+        },
+        {
+          question: 'How does the quorum formula apply to real-world systems like Cassandra, DynamoDB, and Riak?',
+          answer: `Each Dynamo-style database implements the quorum concept differently. Understanding these differences is critical for choosing the right database and configuring it correctly.
+
+**Cassandra**:
+  - Replication factor (N) is set per keyspace
+  - W and R are set per query (not globally)
+  - Supports LOCAL_QUORUM for multi-DC deployments
+
+  CREATE KEYSPACE my_app WITH replication = {
+    'class': 'NetworkTopologyStrategy',
+    'us-east': 3,
+    'eu-west': 3
+  };
+
+  -- Strong read within datacenter
+  SELECT * FROM users WHERE id = ? CONSISTENCY LOCAL_QUORUM;
+  -- Reads from majority in local DC only (2 of 3)
+  -- Does NOT wait for remote DC
+
+  -- Strong read across ALL datacenters
+  SELECT * FROM users WHERE id = ? CONSISTENCY EACH_QUORUM;
+  -- Majority in EACH DC must respond
+  -- Slow (cross-DC latency) but globally consistent
+
+  Cassandra quirk: QUORUM = global majority
+  With 6 replicas (3 per DC): QUORUM = 4
+  If us-east is down: eu-west has 3, needs 4 -> UNAVAILABLE
+  Use LOCAL_QUORUM instead: needs 2 of 3 in eu-west -> available
+
+**DynamoDB**:
+  - Replication is fixed: N=3 always (3 replicas per partition)
+  - W is always 2 of 3 (internally, after leader confirms)
+  - R has two modes: eventually consistent (1 of 3) or strongly consistent (leader)
+
+  DynamoDB does NOT use the traditional W+R>N formula.
+  Instead, it uses a leader-based protocol:
+  - Writes go to leader, replicated to 2 followers
+  - Strong reads go to leader only
+  - Eventually consistent reads go to any replica
+
+  You cannot set W=1 or R=3 in DynamoDB -- it is opaque.
+
+  Gotcha: DynamoDB Global Tables use last-writer-wins
+  across regions -- NOT quorum-based consistency
+
+**Riak**:
+  - Most configurable quorum system
+  - N, R, W set per bucket (equivalent of table)
+  - PR and PW: "primary" quorum (strict, no sloppy quorum)
+
+  Riak bucket properties:
+  {
+    "n_val": 3,          // N: total replicas
+    "r": "quorum",       // R: read from majority
+    "w": "quorum",       // W: write to majority
+    "pr": 0,             // Primary read: no strict requirement
+    "pw": 0,             // Primary write: allows sloppy quorum
+    "dw": "quorum"       // Durable write: must be on disk
+  }
+
+  Riak distinction:
+  - W: node received the write (in memory)
+  - DW: node persisted the write (on disk)
+  - PW: write reached a PRIMARY replica (not a sloppy handoff node)
+
+  For maximum safety: PW=2, DW=2
+  (write to 2 primary replicas AND persisted to disk)
+
+**Comparison table**:
+
+  Feature            | Cassandra       | DynamoDB       | Riak
+  -------------------|-----------------|----------------|----------
+  N configurable     | Per keyspace    | Fixed (3)      | Per bucket
+  W/R configurable   | Per query       | Read only      | Per bucket
+  Sloppy quorum      | No              | N/A            | Yes (default)
+  Multi-DC quorum    | LOCAL_QUORUM    | Global Tables  | Per DC config
+  Conflict resolution| LWW             | LWW            | Vector clocks
+  Anti-entropy       | Merkle tree     | Merkle tree    | Merkle tree + AAE
+
+**Interview tip**: When the interviewer mentions a specific database, tailor your quorum discussion to that database's actual implementation. Saying "N=3, W=2, R=2" for DynamoDB shows you are reciting theory without understanding the product.`
         }
       ],
 
@@ -15112,7 +16232,7 @@ Two clients write different values to the same key concurrently:
       title: 'Leader-Follower Replication',
       icon: 'award',
       color: '#ef4444',
-      questions: 8,
+      questions: 13,
       description: 'Leader election, replication strategies, failover mechanisms, and consensus protocols.',
       concepts: ['Single-Leader Replication', 'Multi-Leader Replication', 'Leader Election (Raft/Paxos)', 'Synchronous vs Asynchronous Replication', 'Failover & Fencing', 'Split-Brain Problem', 'Replication Lag', 'Consensus Protocols'],
       tips: [
@@ -15444,6 +16564,408 @@ In system design interviews, leader-follower replication appears in every databa
   Availability      | Leader failure   | Any DC can serve
   Complexity        | Low              | High
   Use case          | Single DC        | Multi-DC, offline`
+        },
+        {
+          question: 'How does the Paxos consensus protocol work and how does it compare to Raft?',
+          answer: `**Paxos** is the foundational consensus protocol, invented by Leslie Lamport. It solves the problem of getting distributed nodes to agree on a single value, even when nodes may fail.
+
+**Basic Paxos (single-decree)**:
+
+Three roles: Proposer, Acceptor, Learner
+
+Phase 1: PREPARE
+  Proposer -> all Acceptors: "Prepare(n)" where n is a unique proposal number
+  Acceptor: if n > highest_seen_n:
+    Promise not to accept proposals < n
+    Reply with any previously accepted value
+  else: reject (already promised to higher n)
+
+Phase 2: ACCEPT
+  Proposer receives majority promises:
+  If any promise included an accepted value:
+    Propose THAT value (not its own!)
+  Else: Propose its own value
+
+  Proposer -> all Acceptors: "Accept(n, value)"
+  Acceptor: if n >= highest_promised_n:
+    Accept the value
+  else: reject
+
+  Value is CHOSEN when majority of acceptors accept it
+
+**Example (3 acceptors, proposer wants value "A")**:
+
+  Proposer 1: Prepare(1) -> Acceptors {X, Y, Z}
+  X: Promise(1), Y: Promise(1), Z: Promise(1)
+  Proposer 1: Accept(1, "A") -> Acceptors {X, Y, Z}
+  X: Accepted, Y: Accepted -> MAJORITY -> "A" is chosen
+
+**Paxos problems in practice**:
+1. **Livelock**: Two proposers alternate preempting each other
+   P1: Prepare(1), P2: Prepare(2), P1: Prepare(3), P2: Prepare(4)...
+   Fix: Random backoff, elect a distinguished proposer (leader)
+
+2. **Multi-Paxos**: Extends basic Paxos for a sequence of values
+   Elect a stable leader (distinguished proposer)
+   Leader can skip Phase 1 for subsequent proposals
+   This is what production systems actually use
+
+3. **Complexity**: Paxos is notoriously hard to implement correctly
+   Google Chubby paper: "There are significant gaps between the description of the Paxos algorithm and the needs of a real-world system"
+
+**Raft vs Paxos comparison**:
+
+  Aspect            | Raft                    | Paxos
+  ------------------|-------------------------|------------------------
+  Design goal       | Understandability       | Theoretical correctness
+  Leader            | Required, explicit      | Optional (Multi-Paxos)
+  Log              | Entries must be contiguous| Gaps allowed
+  Election          | Randomized timeout      | Prepare/Promise
+  Membership change | Joint consensus         | Not specified
+  Implementation    | ~2000 LOC              | ~5000 LOC (Multi-Paxos)
+  Used by           | etcd, CockroachDB, TiKV | Chubby, Spanner, Megastore
+
+**Why Raft won in practice**:
+- Equivalent correctness guarantees
+- Much easier to understand and implement
+- Clear separation of leader election, log replication, and safety
+- Better specified for membership changes
+
+**Interview tip**: Know that Paxos and Raft solve the same problem with equivalent guarantees. In interviews, explain Raft (simpler) but mention Paxos to show awareness. If asked about Spanner, mention that it uses Paxos groups.`
+        },
+        {
+          question: 'How does ZooKeeper coordinate leader election and distributed locks?',
+          answer: `**ZooKeeper** provides coordination primitives that higher-level systems use for leader election, distributed locks, configuration management, and service discovery.
+
+**ZooKeeper data model**:
+  Hierarchical namespace (like a filesystem):
+  /
+  /app
+  /app/leader          <- current leader info
+  /app/lock            <- distributed lock
+  /app/members/        <- cluster membership
+  /app/members/node-1  <- ephemeral node
+  /app/members/node-2  <- ephemeral node
+
+**Ephemeral nodes**: Automatically deleted when the creating session ends (client disconnects or crashes). This is the foundation of failure detection.
+
+**Leader election recipe**:
+
+  Step 1: Each candidate creates an ephemeral sequential node
+  /election/candidate-0000000001  (Node A)
+  /election/candidate-0000000002  (Node B)
+  /election/candidate-0000000003  (Node C)
+
+  Step 2: Node with lowest sequence number is the leader
+  candidate-0000000001 -> Node A is leader!
+
+  Step 3: Non-leaders watch the node just before them
+  Node B watches candidate-0000000001
+  Node C watches candidate-0000000002
+
+  Step 4: If leader (A) crashes:
+  A's session ends -> ZooKeeper deletes candidate-0000000001
+  B's watch fires -> B checks if it now has lowest number -> YES -> B is leader
+
+  Why "watch predecessor" not "watch leader":
+  If all nodes watch the leader, leader crash causes N watches to fire
+  -> "Thundering herd" problem
+  Watching predecessor: only 1 watch fires per failure = O(1)
+
+**Distributed lock recipe**:
+
+  Acquire lock:
+  1. Create ephemeral sequential node: /lock/lock-0000000005
+  2. Get all children of /lock/
+  3. If my node has lowest sequence -> I have the lock
+  4. Otherwise, watch the node just before mine
+
+  Release lock:
+  1. Delete my ephemeral node
+  2. Next waiter's watch fires -> they check and acquire
+
+  Crash recovery:
+  If lock holder crashes -> ephemeral node deleted automatically
+  Next waiter acquires the lock
+  No deadlocks from crashed processes!
+
+**ZooKeeper guarantees**:
+- **Linearizable writes**: All writes go through the leader and are ordered
+- **Sequential consistency for reads**: Reads may be stale (served from followers)
+- **Atomic broadcasts**: All nodes see writes in the same order
+- **Session semantics**: Ephemeral nodes + watches tied to sessions
+
+**ZooKeeper vs etcd**:
+
+  Feature          | ZooKeeper        | etcd
+  -----------------|------------------|------------------
+  Protocol         | ZAB              | Raft
+  Data model       | Hierarchical     | Flat key-value
+  Language         | Java             | Go
+  Watch model      | One-time         | Continuous stream
+  Max data per node| 1 MB             | 1.5 MB
+  Consistency      | Sequential reads | Linearizable reads
+  Used by          | Kafka, HBase     | Kubernetes, CoreDNS
+
+**Interview tip**: ZooKeeper is the answer when interviewers ask "how would you coordinate X?" where X is leader election, distributed locks, configuration management, or service discovery. Mention it alongside etcd and Consul as modern alternatives.`
+        },
+        {
+          question: 'What is a leader lease and how does it prevent split-brain?',
+          answer: `A **leader lease** is a time-bounded token that grants exclusive leadership rights. The leader must periodically renew the lease; if it expires, the leader must stop accepting writes.
+
+**How it works**:
+
+  Leader acquires lease: lease_start = now(), lease_duration = 10s
+  Leader knows: "I am leader until lease_start + 10s"
+
+  Timeline:
+  t=0   Leader acquires lease (valid until t=10)
+  t=3   Leader renews lease (valid until t=13)
+  t=6   Leader renews lease (valid until t=16)
+  t=9   Network partition! Renewal fails!
+  t=16  Lease expires -> Leader STOPS accepting writes
+  t=17  Followers detect leader is gone -> Start election
+  t=18  New leader acquires lease
+
+  Key safety property:
+  Old leader STOPS at t=16
+  New leader STARTS at t=18
+  Gap ensures no overlap (no split-brain)
+
+**Why the gap matters**:
+
+  SAFE (with lease):
+  t=16: Old leader lease expires, stops writes
+  t=17: Election begins
+  t=18: New leader starts
+  No overlap: only one leader accepts writes at any time
+
+  UNSAFE (without lease):
+  t=9:  Followers think leader is dead, start election
+  t=10: New leader starts accepting writes
+  t=10: Old leader is alive and ALSO accepting writes
+  -> SPLIT-BRAIN! Two leaders!
+
+**Clock skew problem**:
+
+  Old leader's clock runs SLOW:
+  Old leader thinks: "My lease is valid until t=16" (its clock says t=14)
+  Actual time: t=17 (lease should have expired!)
+  New leader: Elected at real time t=17
+  -> Both leaders active simultaneously!
+
+  Fix 1: Use bounded clock skew
+    lease_expiry = lease_duration - max_clock_skew
+    10s lease - 1s max skew = 9s effective lease
+
+  Fix 2: Use monotonic clocks (not wall clocks)
+    Monotonic clocks never go backward or adjust
+
+  Fix 3: Fencing tokens (defense in depth)
+    Even if lease check fails, fencing token prevents stale writes
+
+**Fencing tokens + lease (belt and suspenders)**:
+
+  Old leader: lease acquired, fence_token = 42
+  New leader: lease acquired, fence_token = 43
+
+  Storage system:
+  if request.fence_token < last_seen_fence_token:
+    REJECT (stale leader)
+
+  Old leader: write(data, token=42) -> REJECTED (43 > 42)
+  New leader: write(data, token=43) -> ACCEPTED
+
+**Where leases are used**:
+
+  System          | Lease Mechanism
+  ----------------|---------------------------
+  etcd            | Leader lease via Raft
+  Chubby (Google) | Master lease with sequence numbers
+  HDFS NameNode   | Active NameNode holds lease
+  Redis (Redlock) | Lock with TTL (similar concept)
+  DynamoDB        | Leader election for partitions
+
+**Interview tip**: When discussing leader election, always mention the lease mechanism. It is the practical answer to "how do you prevent split-brain?" and shows you understand time-based safety guarantees.`
+        },
+        {
+          question: 'How do you detect leader failure quickly without causing false positives?',
+          answer: `**The detection dilemma**: Fast detection (short timeouts) causes more false positives. Slow detection (long timeouts) means longer outages during real failures. Finding the right balance is critical.
+
+**Failure detection mechanisms**:
+
+1. **Fixed timeout heartbeat**:
+   Leader sends heartbeat every 1 second
+   Follower timeout: 5 seconds (5 missed heartbeats)
+
+   Timeline (real failure at t=3):
+   t=0: heartbeat received
+   t=1: heartbeat received
+   t=2: heartbeat received
+   t=3: LEADER CRASHES
+   t=4: no heartbeat
+   t=5: no heartbeat
+   t=6: no heartbeat
+   t=7: no heartbeat
+   t=8: TIMEOUT -> declare dead -> start election
+   Detection time: 5 seconds
+
+2. **Phi accrual failure detector** (adaptive):
+   Track inter-arrival times of heartbeats
+   Compute probability that the leader has failed
+
+   If heartbeats normally arrive every 1s +/- 200ms:
+   After 2s silence: phi=2 (probably just delayed)
+   After 4s silence: phi=6 (likely failed)
+   After 6s silence: phi=12 (almost certainly failed)
+
+   Threshold phi=8 -> declare failed
+   Adapts to network conditions automatically
+
+3. **Consensus-based detection**:
+   Multiple monitors vote on whether leader is dead
+   Majority must agree before triggering election
+   Prevents single monitor false positive
+
+   Redis Sentinel: 3 sentinels, 2 must agree leader is down
+   ZooKeeper: session timeout after missing heartbeats
+
+**Tuning for different environments**:
+
+  Environment       | Heartbeat | Timeout   | Why
+  ------------------|-----------|-----------|-------------------
+  Same rack         | 100ms     | 500ms     | Low latency, fast detect
+  Same datacenter   | 1s        | 5s        | Normal latency
+  Cross datacenter  | 2s        | 15s       | High latency, avoid false pos
+  Kubernetes pod    | 10s       | 30s       | GC pauses, startup time
+
+**Common false positive causes and mitigations**:
+
+1. **GC pause (Java)**:
+   Cause: 2-second stop-the-world GC pause
+   Heartbeat missed during pause -> false positive
+   Fix: Timeout > max GC pause time
+        Or use low-latency GC (ZGC, Shenandoah)
+
+2. **CPU saturation**:
+   Cause: 100% CPU, heartbeat thread starved
+   Fix: Dedicate CPU for heartbeat, use real-time priority
+
+3. **Network congestion**:
+   Cause: Burst of traffic delays heartbeat packets
+   Fix: Send heartbeats on separate network/VLAN
+        Use phi accrual to adapt to jitter
+
+4. **Cloud environment variability**:
+   Cause: Noisy neighbors, virtualization overhead
+   Fix: Longer timeouts, use multiple detection signals
+
+**Multi-signal detection** (production best practice):
+
+  Don't rely on a single signal. Combine:
+  1. Heartbeat timeout (primary signal)
+  2. TCP connection state (is the connection alive?)
+  3. Application-level health check (can it serve requests?)
+  4. Peer reports (do other nodes also think leader is dead?)
+
+  Only trigger failover when multiple signals agree.
+
+**Interview tip**: When discussing failure detection, mention the trade-off explicitly: "We set the timeout to 10 seconds because our p99 network latency is 200ms, max GC pause is 3 seconds, and we want at least 3 missed heartbeats before declaring failure. This gives us a detection time under 15 seconds with near-zero false positives."  `
+        },
+        {
+          question: 'How does leader-follower replication work at companies like PostgreSQL, MySQL, and MongoDB?',
+          answer: `Each database implements leader-follower replication differently. Understanding these differences helps you choose the right database and configure it correctly.
+
+**PostgreSQL (Streaming Replication)**:
+
+  Architecture:
+  Primary (Leader) -> Standby (Follower)
+  WAL (Write-Ahead Log) streamed continuously
+
+  Write path:
+  1. Client sends INSERT to primary
+  2. Primary writes to WAL on disk
+  3. Primary streams WAL records to standbys
+  4. Standby applies WAL records (replay)
+
+  Synchronous modes:
+  - synchronous_commit = on: Wait for WAL flush on primary only
+  - synchronous_commit = remote_write: Wait for standby to receive
+  - synchronous_commit = remote_apply: Wait for standby to apply
+
+  synchronous_standby_names = 'standby1'  // which standby is sync
+
+  Failover: pg_promote() or automated via Patroni
+  - Patroni: etcd-based leader election + automatic failover
+  - pgBouncer: Connection pooler redirects clients
+
+  PostgreSQL replication slots:
+  - Prevent WAL segments from being deleted before standby catches up
+  - Without slots: standby falls too far behind -> needs full base backup
+
+**MySQL (Binlog Replication)**:
+
+  Architecture:
+  Source (Leader) -> Replica (Follower)
+  Binary log (binlog) contains row-level changes
+
+  Replication formats:
+  - STATEMENT: Replicate SQL statements (simple, non-deterministic risk)
+  - ROW: Replicate actual row changes (safe, more bandwidth)
+  - MIXED: Automatic choice (default in MySQL 8)
+
+  GTID (Global Transaction ID):
+  Each transaction gets a unique ID: server_uuid:sequence_number
+  Enables automatic failover (replicas know exactly where they stopped)
+
+  MySQL Group Replication (built-in Paxos):
+  - Single-primary: One node accepts writes (like traditional)
+  - Multi-primary: Any node accepts writes (conflict detection)
+  - Automatic failover without external tools
+
+  InnoDB Cluster = Group Replication + MySQL Shell + MySQL Router
+
+**MongoDB (Replica Sets)**:
+
+  Architecture:
+  Primary -> Secondary -> Secondary (+ optional Arbiter)
+  Oplog (operation log) on capped collection
+
+  Election:
+  - Modified Raft protocol (since MongoDB 3.2)
+  - Priority-based: higher priority nodes preferred as primary
+  - Arbiter: votes but holds no data (tie-breaking)
+
+  Read preference:
+  - primary: Always read from primary (consistent)
+  - primaryPreferred: Primary, fall back to secondary
+  - secondary: Read from secondaries (scale reads)
+  - nearest: Read from lowest latency node
+
+  Write concern:
+  db.collection.insertOne(doc, { writeConcern: { w: "majority", j: true } })
+  w: "majority" -> wait for majority acknowledgment
+  j: true -> wait for journal flush (durable)
+
+  Automatic failover:
+  - Election triggered when primary unreachable (10s default)
+  - Fastest election: ~2 seconds
+  - Reads to secondaries continue during election
+  - Writes fail during election (~12 seconds)
+
+**Comparison table**:
+
+  Feature            | PostgreSQL      | MySQL           | MongoDB
+  -------------------|-----------------|-----------------|------------------
+  Replication unit   | WAL records     | Binlog events   | Oplog entries
+  Replication mode   | Physical        | Logical (row)   | Logical (ops)
+  Sync option        | Yes (per-txn)   | Semi-sync       | Write concern
+  Failover tool      | Patroni         | InnoDB Cluster  | Built-in
+  Max replicas       | Unlimited       | Unlimited       | 50 (7 voting)
+  Read from replica  | Hot standby     | Read replica    | Read preference
+  Conflict handling  | N/A (single)    | GTID ordering   | Raft consensus
+
+**Interview tip**: When asked about leader-follower replication, reference a specific database. Saying "PostgreSQL uses WAL streaming with Patroni for automated failover" is much stronger than generic descriptions.`
         }
       ],
 
@@ -15618,7 +17140,7 @@ In system design interviews, leader-follower replication appears in every databa
       title: 'Heartbeat Mechanism',
       icon: 'activity',
       color: '#ef4444',
-      questions: 7,
+      questions: 11,
       description: 'Failure detection, health checks, liveness vs readiness probes, and distributed health monitoring.',
       concepts: ['Heartbeat Protocol', 'Failure Detection', 'Phi Accrual Detector', 'Liveness vs Readiness', 'Gossip Protocol', 'Health Check Patterns', 'Timeout Tuning', 'Cascading Failure Prevention'],
       tips: [
@@ -15930,6 +17452,347 @@ Receiving node merges: keep highest heartbeat count per node
    - Shallow check (liveness): Process alive? -> restart if not
    - Deep check (readiness): Dependencies connected? -> remove from LB
    - Don't restart based on deep checks (causes cascading restarts)`
+        },
+        {
+          question: 'How does the phi accrual failure detector work mathematically?',
+          answer: `The **phi accrual failure detector** replaces the binary alive/dead decision with a continuous **suspicion level** that adapts to observed network behavior.
+
+**Core idea**: Instead of asking "has the heartbeat timed out?" (yes/no), ask "how likely is it that the node has failed given how long we have been waiting?"
+
+**Mathematical foundation**:
+
+  1. Track heartbeat inter-arrival times:
+     Samples: [1.0s, 1.1s, 0.9s, 1.2s, 1.0s, 0.8s, 1.1s]
+     Mean (mu): 1.01s
+     Variance (sigma^2): 0.014
+
+  2. Model arrival times as a normal distribution:
+     P(next heartbeat arrives within t seconds) = CDF(t, mu, sigma)
+
+  3. Compute phi for current wait time:
+     phi(t) = -log10(1 - CDF(t, mu, sigma))
+     = -log10(P(heartbeat NOT arrived by time t))
+
+  4. Interpret phi:
+     phi = 1: 10% chance node has failed
+     phi = 2: 1% chance node has failed
+     phi = 4: 0.01% chance node has failed
+     phi = 8: 0.000001% chance (Cassandra default threshold)
+
+**Walkthrough example**:
+
+  Heartbeat history: mu=1.0s, sigma=0.15s
+
+  Wait time = 1.0s: phi = 0.5 (normal, probably just in transit)
+  Wait time = 1.5s: phi = 2.3 (unusual, maybe slow network)
+  Wait time = 2.0s: phi = 5.8 (suspicious, likely failed)
+  Wait time = 3.0s: phi = 14.2 (almost certainly failed)
+
+  With threshold = 8: declare dead after ~2.2s wait
+
+  Compare to fixed timeout:
+  Fixed 3s timeout: always waits 3 seconds regardless of network
+  Phi detector: adapts to actual observed latency patterns
+
+**Adaptation to different networks**:
+
+  Stable network (sigma=0.05s):
+  phi=8 reached at t = mu + 4*sigma = 1.2s
+  Fast detection because we are confident in the pattern
+
+  Unstable network (sigma=0.5s):
+  phi=8 reached at t = mu + 4*sigma = 3.0s
+  Slower detection because uncertainty is higher
+
+  The detector automatically adjusts without manual tuning!
+
+**Sliding window**:
+  Don't use all historical samples (network conditions change)
+  Keep last 1000 samples in a sliding window
+  Recalculate mu and sigma as new samples arrive
+
+**Implementation (pseudocode)**:
+
+  class PhiAccrualDetector {
+    samples = SlidingWindow(1000);
+    lastHeartbeat = now();
+
+    heartbeatReceived() {
+      interval = now() - lastHeartbeat;
+      samples.add(interval);
+      lastHeartbeat = now();
+    }
+
+    phi() {
+      timeSinceLast = now() - lastHeartbeat;
+      mu = samples.mean();
+      sigma = samples.stddev();
+      // Probability heartbeat has NOT arrived
+      pLate = 1 - normalCDF(timeSinceLast, mu, sigma);
+      return -log10(pLate);
+    }
+
+    isAvailable(threshold = 8) {
+      return phi() < threshold;
+    }
+  }
+
+**Used by**:
+- Cassandra: phi_convict_threshold = 8 (configurable)
+- Akka Cluster: Default failure detector
+- Apache Flink: Task manager failure detection
+
+**Interview tip**: Explaining the phi accrual detector with the mathematical intuition (probability of failure given observed heartbeat patterns) demonstrates deep distributed systems knowledge. Most candidates only know fixed timeouts.`
+        },
+        {
+          question: 'How do you tune heartbeat intervals for optimal trade-off between detection speed and false positives?',
+          answer: `Heartbeat tuning is a **balancing act** between four competing goals: fast detection, low false positive rate, minimal network overhead, and cost efficiency.
+
+**The fundamental trade-off equation**:
+
+  Detection time = heartbeat_interval * missed_count + propagation_delay
+
+  Example: 1s interval, 3 missed required, 200ms propagation
+  Detection time = 1 * 3 + 0.2 = 3.2 seconds
+
+**Tuning methodology**:
+
+Step 1: Measure your network
+  - Collect p50, p95, p99 round-trip times
+  - Measure packet loss rate
+  - Test during peak traffic (worst case)
+
+  Results: p50=0.5ms, p95=2ms, p99=15ms, loss=0.01%
+
+Step 2: Set heartbeat interval
+  - Must be >> network p99 latency (avoid false positives from jitter)
+  - Must be << acceptable detection time
+
+  Rule of thumb: interval = 5-10x p99 network latency
+  interval = 10 * 15ms = 150ms (too aggressive for most systems)
+  Practical: 1-5 seconds for most distributed systems
+
+Step 3: Set missed heartbeat threshold
+  - False positive probability per check = packet loss rate
+  - For 3 consecutive misses: P(false positive) = loss^3 = 0.01%^3 = 10^-12
+
+  missed_count = 3 is standard
+  missed_count = 5 for unreliable networks
+
+Step 4: Validate with simulation
+
+  Network conditions   | Interval | Misses | Detection | False pos/year
+  ---------------------|----------|--------|-----------|---------------
+  Same rack (LAN)      | 500ms    | 3      | 1.5s      | ~0
+  Same DC (reliable)   | 1s       | 3      | 3s        | ~0
+  Cross DC (WAN)       | 5s       | 3      | 15s       | ~1 per month
+  Unreliable network   | 5s       | 5      | 25s       | ~0
+
+**Special considerations**:
+
+1. **GC-heavy applications (Java)**:
+   G1GC max pause: 200ms typically, 2s worst case
+   Timeout must be > worst case GC: interval * misses > 2s
+   Use: 1s interval * 3 misses = 3s (safe with margin)
+
+2. **Container environments (Kubernetes)**:
+   Pod startup: 10-60 seconds
+   Use startupProbe with longer timeout
+   livenessProbe: periodSeconds=10, failureThreshold=3 (30s timeout)
+   readinessProbe: periodSeconds=5, failureThreshold=1 (5s to remove from LB)
+
+3. **Geo-distributed clusters**:
+   Cross-continent RTT: 100-300ms
+   Network jitter: +/- 50ms
+   Use: 5s interval, 5 misses = 25s detection
+   Or use phi accrual to adapt automatically
+
+**Network overhead calculation**:
+
+  N nodes, each sends heartbeat every T seconds:
+  Messages per second = N / T
+
+  1000 nodes, 1s interval:
+  1000 msg/s from one monitor (manageable)
+
+  1000 nodes, gossip (k=3 peers per round):
+  1000 * 3 / 1 = 3000 msg/s total (distributed across nodes)
+  Per node: 3 sent + ~3 received = 6 msg/s (trivial)
+
+**Interview tip**: Show the interviewer you can calculate detection time and false positive rates. Use concrete numbers from the environment (same-DC vs cross-DC) rather than generic "set a timeout."  `
+        },
+        {
+          question: 'What is the false positive vs detection speed trade-off, and how do production systems handle it?',
+          answer: `The **false positive vs detection speed** trade-off is the most important decision in failure detection design. Getting it wrong in either direction causes real production incidents.
+
+**Cost of false positives** (declaring a healthy node dead):
+- Unnecessary leader election -> brief write outage
+- Traffic rerouted to other nodes -> potential overload
+- If rerouted nodes also flagged -> cascading failure
+- Wasted resources: re-creating replicas, rebalancing data
+- User impact: Connection reset, request retry, brief errors
+
+**Cost of slow detection** (failing to detect a dead node):
+- Dead node receives traffic -> requests fail
+- Replication lag grows -> data increasingly stale
+- If leader is dead -> no writes accepted (complete write outage)
+- Dependent services wait -> cascading timeouts
+
+**The detection time spectrum**:
+
+  Too fast         Balanced          Too slow
+  |------|------------|------------|------|
+  500ms   3 seconds    15 seconds   60 seconds
+   Many     Few           Very few      Zero
+  false    false          false pos    false pos
+  pos      pos            BUT slow      BUT very
+                          detection     slow recovery
+
+**How production systems handle it**:
+
+1. **AWS ELB health checks**:
+   - Interval: 30 seconds
+   - Unhealthy threshold: 2 failures
+   - Healthy threshold: 10 successes
+   - Detection: ~60 seconds (conservative)
+   - Hysteresis: 10 successes to re-add (prevents flapping)
+
+2. **Kubernetes**:
+   - Liveness: period=10s, failure=3 -> 30s to restart
+   - Readiness: period=5s, failure=1 -> 5s to remove from service
+   - Startup: period=5s, failure=60 -> 5 minutes for slow apps
+   - Different probes for different actions
+
+3. **Cassandra** (phi accrual):
+   - phi_convict_threshold = 8
+   - Adapts to network conditions
+   - Typically detects in 5-15 seconds
+   - Very low false positive rate (<0.001%)
+
+4. **Redis Sentinel**:
+   - down-after-milliseconds = 30000 (30 seconds)
+   - Requires quorum agreement (2 of 3 sentinels)
+   - Two-phase: subjectively down -> objectively down
+   - Subjective: one sentinel thinks it is down
+   - Objective: quorum agrees it is down -> trigger failover
+
+**Multi-signal approach** (best practice):
+
+  Don't rely on heartbeats alone. Combine signals:
+
+  Signal 1: Heartbeat timeout (network reachable?)
+  Signal 2: Request failure rate (can it serve traffic?)
+  Signal 3: Latency spike (is it degraded?)
+  Signal 4: Peer reports (do others see the same thing?)
+
+  Scoring:
+  heartbeat_miss: +3 points
+  request_failure_rate > 50%: +2 points
+  p99_latency > 10x normal: +1 point
+  2+ peers report suspect: +2 points
+
+  Threshold: >= 5 points -> declare unhealthy
+
+  This reduces false positives while maintaining fast detection.
+
+**Graduated response** (not binary alive/dead):
+
+  Score 0-2: HEALTHY -> full traffic
+  Score 3-4: DEGRADED -> reduce traffic by 50%
+  Score 5-6: SUSPECT -> drain traffic, prepare failover
+  Score 7+: DEAD -> complete failover
+
+  Gradual response prevents cascading failures from sudden shifts.
+
+**Interview tip**: The best answer is not a single number but a strategy: "We use phi accrual for adaptive detection, require quorum agreement to prevent false positives, and implement graduated health states to avoid cascading failures from sudden traffic shifts."  `
+        },
+        {
+          question: 'How does gossip protocol disseminate cluster membership and health information?',
+          answer: `The **gossip protocol** (epidemic protocol) spreads information through a cluster the way rumors spread in a social network: each node tells a few peers, who tell a few more peers, until everyone knows.
+
+**How gossip works**:
+
+  Every T seconds, each node:
+  1. Pick k random peers (typically k=1 to 3)
+  2. Send them my membership table
+  3. Receive their membership table
+  4. Merge tables (keep most recent info per node)
+
+  Round 0: Node A knows: {A: alive, B: alive, C: unknown}
+  Round 1: A gossips to B: "Here is what I know"
+           B replies: "I know C is alive"
+           A now knows: {A: alive, B: alive, C: alive}
+  Round 2: A gossips to C: "Here is what I know"
+           Information spreads to all nodes
+
+**Convergence speed**: O(log N) rounds
+
+  Nodes:    10      100      1,000    10,000
+  Rounds:   ~4      ~7       ~10      ~14
+  Time:     4s      7s       10s      14s (1s/round)
+
+  With k=3 (gossip to 3 peers per round), convergence is even faster.
+
+**SWIM protocol** (Scalable Weakly-consistent Infection-style Membership):
+
+  SWIM adds **failure detection** on top of gossip:
+
+  Step 1: PING
+  Node A randomly pings Node B: "Are you alive?"
+  If B responds: B is alive, done.
+
+  Step 2: INDIRECT PING (if B does not respond)
+  A asks k random nodes to ping B on its behalf:
+  A -> C: "Please ping B for me"
+  A -> D: "Please ping B for me"
+  If C or D gets a response from B: B is alive (A's direct ping was lost)
+
+  Step 3: SUSPECT (if all indirect pings fail)
+  A marks B as "suspected dead"
+  A gossips: "B is suspected"
+  B has a grace period to refute: "I am alive!" (disseminated via gossip)
+
+  Step 4: DEAD (if B does not refute within timeout)
+  B marked as dead, gossip: "B is dead"
+  All nodes eventually learn B is dead
+
+**Membership state machine per node**:
+
+  ALIVE -> SUSPECT -> DEAD
+    ^        |
+    +--------+  (refutation: node proves it is alive)
+
+**Gossip payload (piggybacking)**:
+  Each gossip message carries membership updates:
+
+  {
+    "sender": "node-A",
+    "members": [
+      { "id": "node-B", "state": "alive", "incarnation": 5, "heartbeat": 1042 },
+      { "id": "node-C", "state": "suspect", "incarnation": 3, "heartbeat": 1035 },
+      { "id": "node-D", "state": "dead", "incarnation": 2 }
+    ]
+  }
+
+  Incarnation number: Incremented when a node refutes a suspicion
+  Higher incarnation = more authoritative claim of being alive
+
+**Bandwidth efficiency**:
+
+  Per-node cost per round: k * message_size
+  k=3, message_size = 500 bytes (membership of 100 nodes)
+  Per node per second: 3 * 500 = 1.5 KB/s
+  1000-node cluster: 1.5 MB/s total (distributed across nodes)
+
+  Compare to centralized: 1000 * 500 bytes/s from one monitor = 500 KB/s FROM ONE NODE
+
+**Production implementations**:
+- **Cassandra**: Gossip every 1 second, carries token ownership + schema version
+- **Consul/Serf**: SWIM-based, uses UDP for gossip, TCP for state transfer
+- **HashiCorp Memberlist**: Go library, configurable LAN/WAN profiles
+- **Akka Cluster**: Gossip with vector clocks for consistency
+
+**Interview tip**: Gossip protocol is the answer when asked "how do you detect failures in a 10,000-node cluster?" Centralized monitoring cannot scale, but gossip has O(1) per-node overhead regardless of cluster size.`
         }
       ],
 
@@ -16095,7 +17958,7 @@ Receiving node merges: keep highest heartbeat count per node
       title: 'Checksums & Data Integrity',
       icon: 'checkCircle',
       color: '#ef4444',
-      questions: 7,
+      questions: 11,
       description: 'Data integrity verification, ETags, content-addressable storage, and corruption detection.',
       concepts: ['CRC32 / MD5 / SHA-256', 'Content-Addressable Storage', 'ETags & HTTP Caching', 'Merkle Trees', 'Bit Rot & Silent Corruption', 'End-to-End Integrity', 'HMAC for Tamper Detection', 'Data Scrubbing'],
       tips: [
@@ -16404,6 +18267,334 @@ Merkle Tree (used for replica comparison):
    - With 3 copies: probability of all 3 corrupting = ~10^-21
 
 **Interview tip**: Mention bit rot when discussing storage systems. It shows you understand that "data at rest" is not truly at rest and needs active protection.`
+        },
+        {
+          question: 'Compare CRC32, MD5, SHA-1, and SHA-256 -- when do you use each?',
+          answer: `Each hash algorithm occupies a different point on the **speed vs security** spectrum. Choosing the wrong one wastes performance or creates vulnerabilities.
+
+**Algorithm comparison**:
+
+  Algorithm | Output  | Speed     | Collision     | Security | Use Case
+  ----------|---------|-----------|---------------|----------|------------------
+  CRC32     | 4 bytes | ~20 GB/s  | Easy to forge | None     | Network, disk I/O
+  xxHash    | 8 bytes | ~30 GB/s  | Easy to forge | None     | Hash tables, dedup
+  MD5       | 16 bytes| ~600 MB/s | Known broken  | Broken   | ETags, fingerprints
+  SHA-1     | 20 bytes| ~400 MB/s | Known broken  | Broken   | Git (legacy), legacy
+  SHA-256   | 32 bytes| ~200 MB/s | Infeasible    | Strong   | Security, blockchain
+  BLAKE3    | 32 bytes| ~3 GB/s   | Infeasible    | Strong   | Modern replacement
+
+**When to use CRC32**:
+  - TCP/UDP packet checksums (speed critical, no adversary)
+  - Disk block integrity (detect random bit flips)
+  - Network frame check sequences (Ethernet FCS)
+  - NOT for deduplication (collision rate too high for large datasets)
+
+  CRC32 collision probability:
+  For 1 million files: ~0.01% chance of collision
+  For 1 billion files: ~23% chance of collision (birthday paradox!)
+
+**When to use MD5** (despite being "broken"):
+  - HTTP ETags for caching (no security needed)
+  - File deduplication in trusted environments
+  - Content fingerprinting for cache keys
+  - NOT for password hashing, NOT for security
+
+  MD5 is "broken" for cryptographic use (deliberate collisions possible)
+  But for accidental collision detection, MD5 is perfectly fine and fast
+
+  AWS S3 Content-MD5 header: Upload integrity verification
+  ETag: "d8e8fca2dc0f896fd7cb4cb0031ba249"
+
+**When to use SHA-1**:
+  - Git object addressing (historical, being replaced)
+  - Legacy systems that already use it
+  - NOT for new systems (SHAttered attack proved collisions possible in 2017)
+
+  Git is migrating from SHA-1 to SHA-256 for this reason.
+
+**When to use SHA-256**:
+  - Content-addressable storage (address = SHA-256 of content)
+  - Docker image digests (immutable, verifiable)
+  - Digital signatures and certificates (TLS)
+  - Blockchain (Bitcoin, Ethereum use SHA-256 or Keccak-256)
+  - Any case where an adversary might forge data
+
+**When to use HMAC** (keyed hash):
+  HMAC = Hash-based Message Authentication Code
+  HMAC-SHA256(key, message) = authentication + integrity
+
+  Use when you need to verify both:
+  1. Data has not been tampered with (integrity)
+  2. Data comes from a trusted sender (authentication)
+
+  Example: API request signing
+  signature = HMAC-SHA256(api_secret, request_body)
+  Server recomputes and compares
+
+**Decision flowchart**:
+  Need security against adversary? -> SHA-256 or BLAKE3
+  Need authentication (who sent it)? -> HMAC-SHA256
+  Need fast integrity check (trusted env)? -> CRC32 or xxHash
+  Need content fingerprint for caching? -> MD5 (fast, good enough)
+  Need content address for dedup? -> SHA-256 (collision-safe)
+
+**Interview tip**: When designing a storage or caching system, specify which hash algorithm you would use and why. Saying "we use a hash" without specifying the algorithm is vague. Saying "CRC32 for block integrity, SHA-256 for content addressing" shows precision.`
+        },
+        {
+          question: 'How do HDFS block checksums work end to end?',
+          answer: `HDFS provides a comprehensive checksum system that protects data from writing through reading, with background scrubbing to catch silent corruption.
+
+**HDFS write path with checksums**:
+
+  Client -> DataNode (Pipeline: DN1 -> DN2 -> DN3)
+
+  1. Client splits file into blocks (default: 128 MB)
+  2. Client computes CRC32 checksum per 512-byte chunk
+     128 MB block / 512 bytes = 262,144 checksums per block
+     Checksum overhead: 262,144 * 4 bytes = ~1 MB per 128 MB block (~0.78%)
+
+  3. Client sends data + checksums to first DataNode in pipeline
+  4. DN1 verifies: CRC32(received_chunk) == received_checksum
+  5. DN1 stores data + checksum, forwards to DN2
+  6. DN2 verifies and forwards to DN3
+  7. DN3 verifies and sends ACK back through pipeline
+
+  If ANY DataNode detects mismatch: pipeline fails, client retries
+
+  Storage layout on DataNode:
+  /data/block_1234567890          <- actual data (128 MB)
+  /data/block_1234567890.meta     <- checksums + metadata (~1 MB)
+
+**HDFS read path with checksums**:
+
+  1. Client requests block from NameNode
+  2. NameNode returns list of DataNodes holding the block
+  3. Client reads from nearest DataNode
+  4. DataNode sends data + stored checksums
+  5. Client verifies: CRC32(received_data) == stored_checksum
+
+  If checksum fails:
+  - Client marks this replica as corrupt
+  - Client tries next DataNode in the list
+  - Reports corruption to NameNode
+  - NameNode triggers re-replication from healthy replica
+
+**Background scrubbing (DataBlockScanner)**:
+
+  Each DataNode periodically reads and verifies ALL local blocks:
+
+  Configuration:
+  dfs.datanode.scan.period.hours = 504 (21 days default)
+
+  Process:
+  for each block on this DataNode:
+    read block data from disk
+    compute CRC32 for each 512-byte chunk
+    compare with stored checksums
+    if mismatch: report to NameNode for re-replication
+
+  Throttled to avoid impacting production reads:
+  - Scans during low-traffic periods
+  - Rate limited to X MB/s
+  - Prioritizes blocks not recently accessed
+
+**What the NameNode tracks**:
+
+  Block report from DN1:
+  {
+    block_1234: { status: "healthy", last_scan: "2024-01-15T10:30:00" },
+    block_5678: { status: "corrupt", last_scan: "2024-01-15T10:31:00" }
+  }
+
+  NameNode actions for corrupt block:
+  1. Reduce replication count for this block (now 2 of 3 healthy)
+  2. Schedule re-replication from healthy DataNode
+  3. Delete corrupt replica after new replica is confirmed
+
+**End-to-end integrity guarantee**:
+
+  Write: Client computes checksum -> pipeline verifies at each hop -> stored
+  Read:  DataNode sends checksum -> Client verifies -> application gets data
+  Rest:  Scrubber periodically verifies -> NameNode re-replicates if corrupt
+
+  No step trusts the previous step. Each layer independently verifies.
+
+**Interview tip**: When designing a distributed file system, mention HDFS's three-layer checksum approach: write-time verification, read-time verification, and background scrubbing. This demonstrates understanding of defense-in-depth for data integrity.`
+        },
+        {
+          question: 'How do you detect and recover from network corruption in distributed systems?',
+          answer: `Network corruption occurs when data is modified in transit between nodes. While TCP checksums catch most corruption, they are not sufficient for end-to-end integrity in distributed systems.
+
+**Why TCP checksums are not enough**:
+
+  TCP checksum: 16-bit ones-complement sum
+  - Detects most random bit errors
+  - Does NOT detect: byte reordering, some multi-bit errors
+  - Error detection rate: ~99.998% for random errors
+  - For 1 million packets/second: ~20 undetected corrupt packets per second!
+
+  Research (Stone & Partridge, 2000):
+  "1 in 16 million to 1 in 10 billion TCP segments have undetected corruption"
+  At datacenter scale, this happens regularly.
+
+**Corruption sources**:
+  - Faulty NIC hardware
+  - Memory errors in network switches
+  - Cosmic rays flipping bits in router buffers
+  - Software bugs in network drivers
+  - Cable degradation (especially at high speeds)
+
+**Layer-by-layer protection**:
+
+  Layer 2 (Ethernet):  FCS (CRC32) on each frame
+  Layer 4 (TCP/UDP):   16-bit checksum on segment
+  Layer 7 (Application): Content-MD5 or SHA-256 on payload
+
+  Each layer catches errors the layer below might miss.
+
+**Application-level integrity patterns**:
+
+1. **Request/Response checksums**:
+   Client -> Server:
+     POST /upload
+     Content-MD5: rL0Y20zC+Fzt72VPzMSk2A==
+     Body: [binary data]
+
+   Server verifies: MD5(body) == Content-MD5
+   If mismatch: return 400 Bad Request, client retries
+
+2. **gRPC message integrity**:
+   gRPC uses HTTP/2 which has frame-level checksums
+   Additional: message-level CRC32 in protobuf
+
+3. **Kafka message checksums**:
+   Each message has a CRC32 checksum
+   Broker verifies on receive
+   Consumer verifies on read
+   Corrupt messages are rejected
+
+4. **Database replication integrity**:
+   PostgreSQL WAL: Each WAL record has a CRC32
+   MySQL binlog: Checksum per event (binlog_checksum = CRC32)
+   If replication stream is corrupted: slave stops and alerts
+
+**End-to-end integrity pattern**:
+
+  Producer                       Consumer
+  [data] -> SHA-256(data) -> [data + hash] -> network -> [data + hash]
+                                                              |
+                                                    SHA-256(received_data)
+                                                    == received_hash?
+                                                    YES: process
+                                                    NO: reject, request retransmission
+
+  This catches ALL corruption between producer and consumer,
+  regardless of which intermediate system corrupted the data.
+
+**Recovery strategies**:
+
+  1. **Retry from source**: Re-request the data
+  2. **Read from replica**: If one copy is corrupt, read another
+  3. **Forward error correction**: Reed-Solomon codes can fix corruption
+     without retransmission (used in QR codes, RAID-6, S3)
+  4. **Checksummed chunks**: Only retransmit the corrupted chunk,
+     not the entire payload
+
+**Interview tip**: When designing data pipelines or storage systems, always mention application-level checksums on top of TCP. The standard response is: "TCP catches most errors, but at our scale we need end-to-end checksums to guarantee integrity."  `
+        },
+        {
+          question: 'How do content-addressable storage systems use checksums for deduplication and immutability?',
+          answer: `**Content-addressable storage (CAS)** uses the hash of data as its address. This simple idea has profound implications for deduplication, integrity, caching, and immutability.
+
+**How CAS works**:
+
+  Traditional storage: you choose the address
+  PUT /files/report.pdf -> stored at /files/report.pdf
+
+  Content-addressable: the address IS the hash
+  PUT data -> hash = SHA-256(data) -> stored at /blobs/{hash}
+  GET /blobs/a7ffc6f8bf1ed766... -> returns the original data
+
+**Deduplication (automatic)**:
+
+  File A (5 GB video): SHA-256 = abc123...
+  File B (5 GB video, same content): SHA-256 = abc123...
+  File C (5 GB video, different): SHA-256 = def456...
+
+  Storage used: 10 GB (not 15 GB)
+  Dedup ratio: 33% savings (with just 2 duplicates)
+
+  At enterprise scale:
+  - Backup systems: 10-50x dedup ratio (incremental changes)
+  - Container images: 5-10x dedup (shared base layers)
+  - Document storage: 2-5x dedup (version copies)
+
+**Chunked deduplication** (like rsync, borgbackup, restic):
+
+  File split into variable-size chunks (Rabin fingerprinting):
+  File v1: [chunk-aaa][chunk-bbb][chunk-ccc][chunk-ddd]
+  File v2: [chunk-aaa][chunk-bbb][chunk-eee][chunk-ddd]
+                                   ^^^^^^^^^
+                                   Only new chunk stored
+
+  Content-defined chunking: Chunk boundaries determined by content
+  -> Insertions don't shift all subsequent chunks
+  -> Average chunk size: 4-8 MB
+
+**Real-world CAS implementations**:
+
+  Git:
+  blob = SHA-1(content)
+  tree = SHA-1(list of blobs)
+  commit = SHA-1(tree + parent + message)
+
+  $ git cat-file -p HEAD
+  tree 4a5b...
+  parent 8c3d...
+
+  Every object is content-addressed and immutable.
+  Branches are just pointers to commit hashes.
+
+  Docker:
+  Image layers are content-addressed by SHA-256
+  docker pull nginx@sha256:abc123...
+
+  Layer sharing across images:
+  Image A: [layer-1: aaa][layer-2: bbb][layer-3: ccc]
+  Image B: [layer-1: aaa][layer-2: bbb][layer-4: ddd]
+  Shared: layer-1 and layer-2 stored once
+
+  IPFS:
+  Every file gets a Content Identifier (CID)
+  CID = multihash(content) = version + hash_algo + digest
+  Enables decentralized, content-addressed web
+
+**Immutability guarantee**:
+
+  Because address = hash(content):
+  - Content at address X can NEVER change
+  - If you modify content, the hash changes -> new address
+  - Old address still points to old content
+
+  This enables:
+  - Infinite cache TTL (content never changes at an address)
+  - Audit trails (every version has a unique address)
+  - Integrity verification (recompute hash, compare with address)
+
+**CAS for distributed systems**:
+
+  Replication:
+  Node A has blob abc123
+  Node B has blob abc123
+  They are guaranteed identical (same hash = same content)
+  No need to compare contents, just compare hashes
+
+  Garbage collection:
+  Track which hashes are referenced
+  Delete unreferenced blobs
+  Safe: no other blob can reference the same address with different content
+
+**Interview tip**: Mention CAS when designing file storage, CDN, or backup systems. The key insight is that the hash serves three purposes simultaneously: address, integrity check, and deduplication key.`
         }
       ],
 
@@ -16551,7 +18742,7 @@ Merkle Tree (used for replica comparison):
       title: 'Strong vs Eventual Consistency',
       icon: 'scale',
       color: '#10b981',
-      questions: 10,
+      questions: 15,
       description: 'Linearizability, causal consistency, eventual consistency, and the consistency spectrum.',
       concepts: ['Linearizability', 'Sequential Consistency', 'Causal Consistency', 'Read-Your-Writes', 'Monotonic Reads', 'Eventual Consistency', 'Tunable Consistency', 'Session Consistency'],
       tips: [
@@ -16914,6 +19105,268 @@ Instead of a single timestamp, TrueTime returns an interval:
 - Complex infrastructure only feasible at Google-scale
 
 **Interview tip**: Mention Spanner when asked if strong consistency can work globally. It is the gold standard example of paying engineering complexity for the strongest guarantees.`
+        },
+        {
+          question: 'What is sequential consistency and how does it differ from linearizability?',
+          answer: `**Sequential consistency** requires that all operations appear to execute in some sequential order that is consistent with the program order of each individual process. However, this order does NOT need to match real-time ordering.
+
+**Linearizability vs Sequential Consistency**:
+
+  Linearizability (stronger):
+  - Operations appear to take effect at some point during their execution
+  - This point must respect real-time ordering
+  - If op A completes before op B starts, A appears before B
+
+  Sequential consistency (weaker):
+  - All processes see the same global order of operations
+  - This order respects each process's program order
+  - BUT may NOT respect real-time ordering across processes
+
+**Example showing the difference**:
+
+  Process 1: write(x=1) at t=0, completes at t=5
+  Process 2: write(x=2) at t=10, completes at t=15
+  Process 3: read(x) at t=20
+
+  Linearizable: Process 3 MUST read x=2
+  (write x=2 completed before read started)
+
+  Sequentially consistent: Process 3 may read x=1 OR x=2
+  Valid ordering: write(x=2), write(x=1), read(x) -> returns 1
+  This violates real-time order but is sequentially consistent
+
+**ZooKeeper's model**:
+  - Writes: Linearizable (all go through the leader, globally ordered)
+  - Reads: Sequentially consistent (served from any node)
+
+  Client 1: write(x=1) -> acknowledged by leader
+  Client 2: read(x) from follower -> may return old value
+  To get linearizable reads: call sync() before read
+
+**When sequential consistency is sufficient**:
+  - Audit logs: All observers see the same order, real-time alignment not critical
+  - Message ordering: Messages within a channel must be in order
+  - Distributed counters: All nodes agree on final count
+
+**Interview tip**: The key distinction between linearizability and sequential consistency is real-time ordering. Mentioning this difference demonstrates precise understanding.`
+        },
+        {
+          question: 'What are read-your-writes and monotonic reads guarantees, and how do you implement them?',
+          answer: `These are **session-level consistency guarantees** between eventual consistency and linearizability.
+
+**Read-Your-Writes (RYW)**:
+A client always sees the results of its own writes.
+
+  Without RYW:
+  Client: write(name="Alice") -> Replica A (leader)
+  Client: read(name) -> Replica B (stale) -> returns "Bob"
+
+  With RYW:
+  Client: write(name="Alice")
+  Client: read(name) -> guaranteed to return "Alice"
+
+**Implementation strategies for RYW**:
+
+1. **Read from leader after write**: Route reads to leader for T seconds after writing
+2. **Write timestamp tracking**: Client stores last_write_timestamp, server ensures reads reflect at least that position
+3. **Sticky sessions**: Route all user requests to the same replica
+4. **Token-based**: Write returns position token, next read includes token
+
+**Monotonic Reads**: Once you see a value, you never see an older one.
+
+  Without: read(x) -> "v5", then read(x) -> "v3" (went backward!)
+  With: read(x) -> "v5", then read(x) -> "v5" or newer
+
+**Implementation strategies for monotonic reads**:
+
+1. **Sticky sessions**: hash(user_id) % replicas -> always same replica
+2. **Version tracking**: Client tracks minimum version seen
+3. **Causal tokens**: MongoDB causal sessions with afterClusterTime
+
+**Combining guarantees**:
+
+  Guarantee          | User Experience
+  -------------------|--------------------------------------------
+  None (eventual)    | May see old data, data may go backward
+  Monotonic reads    | Data never goes backward, but may be stale
+  Read-your-writes   | Own writes visible, others may be stale
+  Both               | Own writes visible, data never goes backward
+  Causal             | Cause-effect preserved
+  Linearizable       | Everything consistent, most expensive
+
+**Production pattern (Facebook TAO)**:
+  - Write to leader in write region
+  - Read from local follower (fast)
+  - After user writes: read from leader for 20 seconds (RYW)
+  - Sticky sessions per user for monotonic reads
+
+**Interview tip**: When discussing eventually consistent systems, mention "we implement read-your-writes by routing reads to the leader briefly after writes." This shows practical knowledge.`
+        },
+        {
+          question: 'How does tunable consistency work in Cassandra with per-query consistency levels?',
+          answer: `**Cassandra** provides the most granular tunable consistency of any major database. You set different consistency levels per query.
+
+**All Cassandra consistency levels**:
+
+  Write Levels:
+  ANY          -> At least 1 node (including hinted handoff, weakest)
+  ONE          -> 1 replica confirms
+  TWO          -> 2 replicas confirm
+  THREE        -> 3 replicas confirm
+  QUORUM       -> (RF/2)+1 replicas (global majority)
+  LOCAL_ONE    -> 1 replica in local DC
+  LOCAL_QUORUM -> Majority in local DC
+  EACH_QUORUM  -> Majority in EACH DC
+  ALL          -> All replicas (strongest, least available)
+
+**Per-query consistency (the killer feature)**:
+
+  // User profile read (fast, staleness OK)
+  SELECT * FROM users WHERE id = ?
+  USING CONSISTENCY LOCAL_ONE;
+
+  // Account balance (must be accurate)
+  SELECT balance FROM accounts WHERE id = ?
+  USING CONSISTENCY LOCAL_QUORUM;
+
+  // Financial transaction (strongest guarantee)
+  INSERT INTO transactions (...) VALUES (...)
+  USING CONSISTENCY EACH_QUORUM;
+
+  // Analytics write (best effort)
+  INSERT INTO page_views (...) VALUES (...)
+  USING CONSISTENCY ANY;
+
+**Multi-datacenter example (RF=3 per DC)**:
+
+  US-East (3 replicas)    EU-West (3 replicas)
+  [R1] [R2] [R3]          [R4] [R5] [R6]
+
+  LOCAL_QUORUM write in US-East: needs 2 of 3 -> ~5ms
+  QUORUM write: needs 4 of 6 -> crosses DC -> ~100ms
+  EACH_QUORUM: needs 2/3 in US + 2/3 in EU -> slowest but globally safe
+
+  Practical default: LOCAL_QUORUM writes + LOCAL_QUORUM reads
+  -> Strong within DC, eventual across DCs, survives DC failure
+
+**The W + R > N rule in Cassandra**:
+
+  RF=3: LOCAL_QUORUM write (W=2) + LOCAL_QUORUM read (R=2)
+  W+R = 4 > 3 = N -> Strong within local DC
+
+  But: LOCAL_QUORUM does NOT guarantee cross-DC consistency.
+
+**Common mistakes**:
+1. QUORUM with RF=2: QUORUM = 2 = ALL -> no fault tolerance
+2. ALL for writes: any replica down = writes fail
+3. W=ONE + R=ONE: W+R=2 < 3=N -> may read stale data
+
+**Interview tip**: Mention LOCAL_QUORUM as the practical default for multi-DC Cassandra. It provides strong consistency within a datacenter while maintaining availability during cross-DC partitions.`
+        },
+        {
+          question: 'What are the practical differences between monotonic writes, monotonic reads, and causal consistency?',
+          answer: `These session guarantees each address a different user-visible anomaly. Understanding their differences helps you choose the minimum guarantee needed.
+
+**Monotonic Reads**: Data never goes backward for a client.
+  read(x) -> "v5", then read(x) -> never returns "v3"
+  Use case: Timeline never shows older posts after refresh
+
+**Monotonic Writes**: Writes are applied in client order.
+  write(x=1), write(x=2) -> all replicas see x=1 before x=2
+  Use case: Document edits applied in order
+
+**Read-Your-Writes**: See your own changes immediately.
+  write(name="Alice"), read(name) -> always "Alice"
+  Use case: Profile update visible after save
+
+**Causal Consistency**: Cause-effect relationships preserved.
+  If B depends on A, everyone sees A before B.
+  Use case: Reply visible only after the original message
+
+**None implies the others**:
+  Monotonic reads does NOT give you read-your-writes
+  Read-your-writes does NOT give you monotonic reads
+  Causal consistency implies all three
+
+**Hierarchy**:
+  Eventual < Monotonic reads < Read-your-writes < Causal < Linearizable
+
+**Implementation comparison**:
+
+  Guarantee        | Implementation              | Overhead
+  -----------------|-----------------------------|----------
+  Monotonic reads  | Sticky sessions or version  | Low
+  Monotonic writes | Sequential writes per client| Low
+  Read-your-writes | Read from write node briefly| Medium
+  Causal           | Vector clocks or logical ts | Medium-High
+  Linearizable     | Consensus protocol          | High
+
+**Real database implementations**:
+
+  MongoDB (causal sessions):
+  All three + causal via cluster time tracking
+
+  DynamoDB:
+  RYW via ConsistentRead=true, no built-in monotonic reads
+
+  Cassandra:
+  No built-in session guarantees; use QUORUM for RYW
+
+**Interview tip**: State which session guarantees each part of your system needs: "Profile updates need read-your-writes. The news feed needs monotonic reads. Cross-service ordering needs causal consistency."  `
+        },
+        {
+          question: 'How do you implement consistency guarantees across microservices?',
+          answer: `In microservices, data is spread across services with separate databases. No single transaction spans all services.
+
+**The problem**:
+  Order Service -> Payment Service -> Inventory Service
+  If payment succeeds but inventory fails: inconsistent state
+
+**Pattern 1: Saga with eventual consistency**
+
+  Choreography:
+  1. Order: Create order (PENDING) -> emit "order.created"
+  2. Payment: Charge -> emit "payment.charged"
+  3. Inventory: Reserve stock -> emit "stock.reserved"
+  4. Order: Update to CONFIRMED
+
+  Compensation on failure:
+  3. Inventory fails -> emit "stock.failed"
+  4. Payment: Refund (compensating transaction)
+  5. Order: Cancel (compensating transaction)
+
+**Pattern 2: Transactional outbox**
+
+  BEGIN TRANSACTION;
+    INSERT INTO orders (id, status) VALUES ('ord-123', 'PENDING');
+    INSERT INTO outbox (topic, payload) VALUES ('order.created', '...');
+  COMMIT;
+  // Separate process publishes from outbox to Kafka
+
+**Pattern 3: CQRS for read consistency**
+
+  Write side: Each service writes to its own DB + publishes events
+  Read side: Consumer builds denormalized read model from all events
+  Read model is eventually consistent but provides unified view
+
+**Consistency per pattern**:
+
+  Pattern              | Write       | Read       | Complexity
+  ---------------------|-------------|------------|----------
+  Synchronous calls    | Immediate   | Strong     | Low (fragile)
+  Saga (choreography)  | Eventual    | Eventual   | Medium
+  Saga (orchestration) | Eventual    | Eventual   | High
+  Outbox + CDC         | At-least-once| Eventual  | Medium
+  CQRS                 | Per-service | Eventual   | High
+
+**Cross-service rules**:
+1. Each service owns its data and is source of truth
+2. Cross-service consistency is always eventual
+3. Use idempotency keys for duplicate messages
+4. Design for compensation, not rollback
+5. Monitor event processing lag and saga completion rates
+
+**Interview tip**: Never propose 2PC across microservices. Explain sagas with compensating transactions and the outbox pattern for reliable event publishing.`
         }
       ],
 
@@ -17082,7 +19535,7 @@ Instead of a single timestamp, TrueTime returns an interval:
       title: 'Latency vs Throughput',
       icon: 'barChart',
       color: '#f59e0b',
-      questions: 8,
+      questions: 13,
       description: "Little's Law, back-of-envelope math, capacity planning, and performance optimization.",
       concepts: ["Little's Law (L = λW)", 'Tail Latency (p99, p999)', 'Back-of-Envelope Estimation', 'Capacity Planning', 'Amdahl\'s Law', 'Bandwidth vs Throughput', 'Queueing Theory Basics', 'SLO/SLA Definitions'],
       tips: [
