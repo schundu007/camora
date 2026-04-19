@@ -456,16 +456,17 @@ export function FlowchartCard({ flowchart }) {
         <p className="px-3 pt-2 text-xs text-[var(--text-muted)] landing-body">{flowchart.description}</p>
       )}
       <div className="p-3">
-        {/* Diagram image — primary visual */}
+        {/* Diagram image — primary visual, constrained height */}
         {hasDiagram && (
-          <div>
+          <div className="flex justify-center">
             {!imgLoaded && (
-              <div className="w-full h-48 bg-[var(--bg-elevated)] rounded-lg animate-pulse" />
+              <div className="w-full h-40 bg-[var(--bg-elevated)] rounded-lg animate-pulse" />
             )}
             <img
               src={flowchart.src}
               alt={flowchart.title}
-              className={`w-full rounded-lg border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+              className={`rounded-lg border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+              style={{ maxHeight: '320px', maxWidth: '100%', objectFit: 'contain' }}
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
               loading="lazy"
