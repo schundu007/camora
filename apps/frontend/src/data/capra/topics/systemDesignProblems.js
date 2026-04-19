@@ -16299,6 +16299,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
       discussionPoints: [
         {
           topic: 'Search Ranking',
+          diagramSrc: '/diagrams/airbnb/deep-dive-geospatial.png',
           points: [
             'Quality score: Photos, completeness, responsiveness',
             'Conversion rate: Bookings / views',
@@ -16309,6 +16310,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
         },
         {
           topic: 'Trust & Safety',
+          diagramSrc: '/diagrams/airbnb/deep-dive-reviews.png',
           points: [
             'Identity verification for hosts and guests',
             'Photo verification for listings',
@@ -16319,6 +16321,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
         },
         {
           topic: 'Dynamic Pricing',
+          diagramSrc: '/diagrams/airbnb/deep-dive-pricing.png',
           points: [
             'Demand signals: Search volume, booking pace',
             'Local events: Concerts, conferences',
@@ -16329,6 +16332,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
         },
         {
           topic: 'Calendar Optimization',
+          diagramSrc: '/diagrams/airbnb/deep-dive-double-booking.png',
           points: [
             'Store ranges vs individual dates trade-off',
             'Efficient queries for month views',
