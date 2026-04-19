@@ -898,6 +898,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
           id: 'shorten-url-flow',
           title: 'Shorten URL Flow',
           description: 'Complete flow from user submitting a long URL to receiving the short code',
+          src: '/diagrams/url-shortener/shorten-flow.svg',
           steps: [
             { step: 1, label: 'Client Request', detail: 'POST /api/v1/shorten with long_url, optional custom_alias and expire_at' },
             { step: 2, label: 'Rate Limit Check', detail: 'API gateway checks token bucket: 100 shortens/hour per user or IP' },
@@ -912,6 +913,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
           id: 'redirect-url-flow',
           title: 'Redirect URL Flow',
           description: 'How a short URL request is resolved and redirected to the original URL',
+          src: '/diagrams/url-shortener/redirect-flow.svg',
           steps: [
             { step: 1, label: 'Client Request', detail: 'GET /{short_code} — browser or app follows the short link' },
             { step: 2, label: 'CDN Check', detail: 'CloudFront/Cloudflare checks edge cache — serves 80% of requests in <50ms' },
@@ -920,6 +922,12 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
             { step: 5, label: 'Redirect Response', detail: '301/302 redirect with Location header to the original long URL. Return 404 if expired or not found.' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for URL shortening service', src: '/diagrams/url-shortener/problem-definition.svg', type: 'overview' },
+        { id: 'capacity', title: 'Capacity Estimation', description: 'Traffic, storage, bandwidth, cache calculations', src: '/diagrams/url-shortener/capacity-estimation.svg', type: 'estimation' },
+        { id: 'shorten', title: 'URL Shortening Flow', description: 'Client to API Gateway to URL Service to DB with cache warming', src: '/diagrams/url-shortener/shorten-flow.svg', type: 'flow' },
+        { id: 'redirect', title: 'URL Redirect Flow', description: 'CDN cache check, Redis lookup, DB fallback with analytics', src: '/diagrams/url-shortener/redirect-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -1685,6 +1693,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'search-flow',
           title: 'Tweet Search Flow',
           description: 'How a search query is processed through the Earlybird search engine',
+          src: '/diagrams/twitter/flow-search.png',
           steps: [
             { step: 1, label: 'Query Parse', detail: 'Tokenize query, handle hashtags/mentions/operators (from:, since:, until:)' },
             { step: 2, label: 'Scatter to Shards', detail: 'Send query to all Earlybird index shards in parallel (time-range partitioned)' },
