@@ -443,7 +443,7 @@ export default function JobPrepPage() {
       <div style={{ minHeight: '100vh' }}>
         <SiteNav />
         <div className="flex items-center justify-center">
-          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
+          <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 py-16 text-center">
             <div style={{ width: '48px', height: '48px', border: '4px solid rgba(45,140,255,0.15)', borderTopColor: 'var(--accent)', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
             <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading preparation plan...</p>
           </div>
@@ -459,7 +459,7 @@ export default function JobPrepPage() {
       <div style={{ minHeight: '100vh' }}>
         <SiteNav />
         <div>
-          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
+          <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
@@ -479,7 +479,7 @@ export default function JobPrepPage() {
       <div style={{ minHeight: '100vh' }}>
         <SiteNav />
         <div>
-          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
+          <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="var(--danger)" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
@@ -506,7 +506,7 @@ export default function JobPrepPage() {
 
         {/* ── Header ── */}
         <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 flex-wrap mb-4" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
               <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
@@ -542,7 +542,7 @@ export default function JobPrepPage() {
         </div>
 
         {/* ── Main content area ── */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* ── Tech Stack Extracted ── */}
           {techStack.length > 0 && (

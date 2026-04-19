@@ -179,7 +179,7 @@ export default function PricingPage() {
       </section>
 
       {/* Plans */}
-      <section className="w-full lg:max-w-[70%] mx-auto px-6 py-14">
+      <section className="w-full lg:max-w-[65%] mx-auto px-6 py-14">
         {/* Plans header removed — already in page header above */}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
@@ -253,7 +253,7 @@ export default function PricingPage() {
       </section>
 
       {/* Competitor comparison — CSS Grid */}
-      <section className="w-full lg:max-w-[70%] mx-auto px-6 pt-4 pb-16">
+      <section className="w-full lg:max-w-[65%] mx-auto px-6 pt-4 pb-16">
         <div className="text-center mb-8">
           <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
           <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Compare the competition.</h2>
@@ -370,7 +370,7 @@ export default function PricingPage() {
 
       {/* FAQ */}
       <section className="px-6 py-16">
-        <div className="w-full lg:max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[65%] mx-auto">
           <div className="mb-10 text-center">
             <span className="section-label">FAQ</span>
             <h2 className="heading-2 mt-3">Common questions</h2>

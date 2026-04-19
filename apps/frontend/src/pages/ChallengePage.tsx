@@ -263,7 +263,7 @@ export default function ChallengePage() {
         <div className="ch-hero-orb ch-orb-3" />
         <div className="ch-hero-grid" />
 
-        <div className="relative z-10 w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: 'calc(85vh - 82px)', paddingTop: 48, paddingBottom: 48 }}>
+        <div className="relative z-10 w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: 'calc(85vh - 82px)', paddingTop: 48, paddingBottom: 48 }}>
           {/* Badge */}
           <div className="ch-badge">
             <span className="ch-badge-dot" />
@@ -319,7 +319,7 @@ export default function ChallengePage() {
 
       {/* ═══ QUALIFICATION ═══ */}
       <section className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           {!isAuthenticated ? (
             <div className="ch-glass-card text-center py-12 px-6">
               <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--success)' } as any}>
@@ -446,7 +446,7 @@ export default function ChallengePage() {
 
       {/* ═══ PRIZES — Holographic cards ═══ */}
       <section className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
             <span className="ch-section-tag">Rewards</span>
             <h2 className="ch-section-title">Prize Pool</h2>
@@ -470,7 +470,7 @@ export default function ChallengePage() {
 
       {/* ═══ FOUNDING TEAM ═══ */}
       <section className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
             <span className="ch-section-tag" style={{ color: 'var(--accent)' }}>Opportunity</span>
             <h2 className="ch-section-title">Join the Founding Team</h2>
@@ -527,7 +527,7 @@ export default function ChallengePage() {
 
       {/* ═══ CATEGORIES — Glowing glass cards ═══ */}
       <section className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
             <span className="ch-section-tag">Categories</span>
             <h2 className="ch-section-title">What We're Looking For</h2>
@@ -572,7 +572,7 @@ export default function ChallengePage() {
 
       {/* ═══ HOW IT WORKS — Connected timeline ═══ */}
       <section className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
             <span className="ch-section-tag">Process</span>
             <h2 className="ch-section-title">How It Works</h2>
@@ -594,7 +594,7 @@ export default function ChallengePage() {
 
       {/* ═══ TECH STACK ═══ */}
       <section className="ch-section" style={{ paddingTop: 24, paddingBottom: 24 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 text-center">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 text-center">
           <span className="ch-section-tag">Built With</span>
           <div className="flex flex-wrap justify-center gap-5 mt-6">
             {TECH_STACK.map((t) => (
@@ -609,7 +609,7 @@ export default function ChallengePage() {
 
       {/* ═══ LEADERBOARD — Dark table ═══ */}
       <section className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
             <span className="ch-section-tag" style={{ color: 'var(--warning)' }}>Rankings</span>
             <h2 className="ch-section-title">Leaderboard</h2>
@@ -638,7 +638,7 @@ export default function ChallengePage() {
 
       {/* ═══ RULES ═══ */}
       <section id="rules" className="ch-section">
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
             <span className="ch-section-tag">Guidelines</span>
             <h2 className="ch-section-title">Rules</h2>
