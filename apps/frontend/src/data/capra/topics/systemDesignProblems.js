@@ -17613,6 +17613,22 @@ No coordination, but:
       difficulty: 'Medium',
       description: 'Design a news aggregation service that collects and ranks news from multiple sources.',
 
+      productMeta: {
+        name: 'Google News',
+        tagline: 'Aggregating 5M articles daily from 20K+ sources',
+        stats: [
+          { label: 'DAU', value: '100M' },
+          { label: 'Articles/Day', value: '5M' },
+          { label: 'Sources', value: '20K+' },
+          { label: 'Feed QPS', value: '5.8K' },
+        ],
+        scope: {
+          inScope: ['Aggregate articles from 20K+ RSS/web sources', 'Deduplicate and cluster similar articles into stories', 'Categorize into topics (Politics, Sports, Tech)', 'Personalized feed based on user interests', 'Trending and breaking news detection', 'Full Coverage view for a story'],
+          outOfScope: ['Original journalism / content creation', 'Paywall bypass or full-text scraping', 'Social commenting or user-generated content', 'Advertising auction system'],
+        },
+        keyChallenge: 'Ingesting 5M articles daily from 20K sources, detecting near-duplicate content with SimHash/MinHash, clustering them into stories in real-time, and generating personalized feeds for 100M users in under 200ms.',
+      },
+
       introduction: `Google News aggregates articles from 50,000+ sources, groups similar articles into stories, and ranks them by relevance and freshness. The key challenges are: ingesting millions of articles daily, detecting duplicate/similar content, and personalizing the feed for each user.
 
 Unlike social feeds, news requires understanding what a story *is* (clustering), not just who posted it. Multiple outlets cover the same event - we need to group them and show diverse perspectives.`,
@@ -17635,6 +17651,20 @@ Unlike social feeds, news requires understanding what a story *is* (clustering),
         'Handle 1B+ article views per day',
         'Fresh content (< 1 hour old) always available'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '100M DAU, 5M articles/day from 20K+ sources, average article record ~5 KB, 10 feed requests/user/day, stories retained 30 days.',
+        calculations: [
+          { label: 'Ingestion rate', value: '~58/s', detail: '5M articles/day / 86,400 = ~58 articles ingested per second' },
+          { label: 'Feed read QPS', value: '~5,800/s', detail: '100M DAU x 5 feed loads/day / 86,400 = ~5,800 feed requests/sec' },
+          { label: 'Peak read QPS', value: '~17K/s', detail: '3x average during morning news rush hours' },
+          { label: 'Article storage (30d)', value: '~750 GB', detail: '5M/day x 30 days x 5 KB = 750 GB raw article data' },
+          { label: 'Embedding storage', value: '~450 GB', detail: '150M articles x 768 dims x 4 bytes = ~450 GB vector storage' },
+          { label: 'Search index size', value: '~2 TB', detail: 'Elasticsearch index with full-text, entities, and metadata for 150M articles' },
+          { label: 'Cache memory', value: '~50 GB', detail: 'Pre-computed feeds for top categories + trending stories per country in Redis' },
+        ]
+      },
 
       dataModel: {
         description: 'Articles, stories (clusters), and sources',
@@ -17876,6 +17906,313 @@ if story.article_count grew > 10x in last hour:
 if story involves major entity (president, CEO):
     story.score *= 1.5  # Importance boost
 \`\`\``
+        },
+        {
+          question: 'How does deduplication work with SimHash and MinHash?',
+          answer: `**The Problem**: Same story rewritten by 100 outlets — need to detect near-duplicates, not just exact copies.
+
+**SimHash (Locality-Sensitive Hashing)**:
+\`\`\`
+1. Tokenize article into weighted features (TF-IDF)
+2. For each feature, compute a standard hash (64-bit)
+3. Aggregate weighted hash bits into a single 64-bit fingerprint
+4. Compare fingerprints: Hamming distance < 3 = near-duplicate
+
+Advantage: O(1) comparison, compact storage
+Used for: Fast first-pass dedup before clustering
+\`\`\`
+
+**MinHash (Jaccard Similarity Estimation)**:
+\`\`\`
+1. Convert article into a set of shingles (3-word phrases)
+2. Apply k independent hash functions to the set
+3. Keep the minimum hash value from each function
+4. Compare MinHash signatures: fraction matching ≈ Jaccard similarity
+
+Advantage: Probabilistically accurate similarity estimation
+Used for: Story clustering — articles with Jaccard > 0.5 are candidates
+\`\`\`
+
+**Pipeline Integration**:
+\`\`\`
+New article arrives:
+  1. Compute SimHash → check bloom filter for exact dupes → skip if found
+  2. Compute MinHash signature → query LSH index for similar articles
+  3. If similar articles found (Jaccard > 0.5):
+       → Assign to existing story cluster
+  4. If no match:
+       → Generate full embedding → HNSW search for semantic similarity
+       → Create new story if truly novel
+\`\`\`
+
+SimHash handles trivial duplicates at ingestion speed; MinHash handles paraphrased versions; embeddings handle semantically similar but differently worded articles.`
+        },
+        {
+          question: 'How do we detect trending and breaking news?',
+          answer: `**Velocity-Based Detection**:
+\`\`\`
+For each story cluster, track article arrival velocity:
+
+velocity(story, t) = articles_in_window(t, t-5min)
+baseline(story)    = avg_articles_per_5min(last 24h)
+trend_score        = velocity / max(baseline, 1)
+
+if trend_score > 10:
+    mark_as_BREAKING
+elif trend_score > 3:
+    mark_as_TRENDING
+\`\`\`
+
+**Sliding Window Counters**:
+\`\`\`
+Redis sorted set per story cluster:
+  ZADD story:{id}:velocity {timestamp} {article_id}
+  ZCOUNT story:{id}:velocity {now-5min} {now}  → current velocity
+  ZCOUNT story:{id}:velocity {now-24h} {now}   → baseline
+
+5-minute windows, checked every 30 seconds
+\`\`\`
+
+**Breaking News Pipeline**:
+\`\`\`
+1. Velocity detector fires BREAKING event → Kafka
+2. Breaking news consumer:
+   - Boost story score by 2x in ranking
+   - Push notification to users following the topic
+   - Reduce clustering threshold (0.85 → 0.75) to catch variants faster
+   - Pin to top of country/category feeds
+3. Breaking status auto-expires after 4 hours without new velocity
+\`\`\`
+
+**Entity-Based Signals**:
+\`\`\`
+High-importance entities boost trending detection:
+  - Head of state mentioned → lower velocity threshold
+  - Natural disaster keywords → immediate escalation
+  - Financial market entities → real-time alert path
+\`\`\``
+        },
+        {
+          question: 'How does personalization work without creating filter bubbles?',
+          answer: `**User Interest Model**:
+\`\`\`
+user_profile = {
+  explicit: [followed topics, saved sources, language],
+  implicit: {
+    topic_weights: {Politics: 0.3, Tech: 0.5, Sports: 0.1, ...},
+    source_affinities: {NYT: 0.8, TechCrunch: 0.9, ...},
+    entity_interests: {AI: 0.9, Elections: 0.6, ...}
+  },
+  embedding: vector(128)  -- learned from click history
+}
+\`\`\`
+
+**Two-Stage Personalization**:
+\`\`\`
+Stage 1 — Candidate Generation (offline, every 15 min):
+  - Retrieve top 500 stories from followed categories
+  - Add stories matching high-weight entities
+  - Include trending stories regardless of preferences
+
+Stage 2 — Real-time Re-ranking (online, per request):
+  score(story) = 0.4 * freshness
+               + 0.3 * cosine_sim(user.embedding, story.embedding)
+               + 0.2 * source_authority
+               + 0.1 * engagement_velocity
+\`\`\`
+
+**Filter Bubble Prevention**:
+\`\`\`
+Diversity constraints applied post-ranking:
+  1. Max 3 consecutive stories from same category
+  2. At least 2 categories in every 10-story batch
+  3. Inject 1 "serendipity" story per page from unexplored topics
+  4. Major breaking news always included regardless of preferences
+  5. Opposing-viewpoint injection for political/opinion stories
+\`\`\`
+
+**Measuring Bubble Risk**:
+\`\`\`
+diversity_score = unique_categories_clicked / total_clicks (30-day window)
+if diversity_score < 0.3:
+    increase exploration weight from 0.1 → 0.25
+\`\`\``
+        },
+        {
+          question: 'How do we build source authority scoring?',
+          answer: `**Authority Signals**:
+\`\`\`
+source_authority = weighted_sum(
+  0.3 * citation_score,     # How often other sources cite this one
+  0.2 * editorial_rating,   # Manual editorial review (1-10)
+  0.2 * factual_accuracy,   # Fact-check record
+  0.15 * link_authority,     # PageRank-style from inbound links
+  0.15 * longevity_score     # Years of operation, consistency
+)
+\`\`\`
+
+**Citation Graph (PageRank Variant)**:
+\`\`\`
+Build a citation graph between sources:
+  - Source A links to Source B's article → edge A→B
+  - Compute PageRank over the source graph
+  - AP, Reuters, BBC naturally emerge as high-authority
+
+Recomputed weekly from crawl data
+\`\`\`
+
+**Factual Accuracy Tracking**:
+\`\`\`
+Track corrections, retractions, and fact-check verdicts:
+  - Integrate with fact-checking organizations (IFCN)
+  - Monitor for correction notices on source websites
+  - User reports of inaccuracies (weighted by reporter credibility)
+
+accuracy_score = 1.0 - (corrections / total_articles) * penalty_weight
+\`\`\`
+
+**Dynamic Authority Adjustment**:
+\`\`\`
+Authority is not static:
+  - New source starts at 0.3 (probationary)
+  - Increases with consistent quality over 6 months
+  - Drops sharply on confirmed misinformation
+  - Different authority per topic (ESPN high for sports, low for politics)
+\`\`\``
+        },
+        {
+          question: 'How do we extract content from articles efficiently?',
+          answer: `**Content Extraction Pipeline**:
+\`\`\`
+Raw HTML → Readability Algorithm → Clean Text + Metadata
+
+1. Fetch HTML (respect robots.txt, 5s timeout)
+2. DOM parsing: Remove nav, footer, ads, sidebars
+3. Main content extraction (Readability/Trafilatura):
+   - Identify article body by text density heuristics
+   - Extract: title, author, publish date, main image
+4. Clean text: strip HTML tags, normalize whitespace
+5. Language detection (fastText model)
+\`\`\`
+
+**NLP Processing**:
+\`\`\`
+For each extracted article:
+  1. Named Entity Recognition (NER):
+     - People, Organizations, Locations, Events
+     - SpaCy or Flair NER model
+     - Store as structured entities: {type, name, salience}
+
+  2. Topic Classification:
+     - Multi-label classifier (BERT fine-tuned on news categories)
+     - Output: {Politics: 0.8, Economy: 0.6, Tech: 0.1}
+
+  3. Summary Generation:
+     - Extractive: Select top 3 sentences by TF-IDF salience
+     - Used for story headline selection and feed previews
+
+  4. Embedding Generation:
+     - sentence-transformers on title + first 200 words
+     - 768-dim vector for similarity search
+\`\`\`
+
+**Performance at Scale**:
+\`\`\`
+58 articles/sec ingestion rate:
+  - Content fetching: 100+ async workers with connection pooling
+  - NLP pipeline: GPU-accelerated batch processing (32 articles/batch)
+  - Embedding generation: ~5ms per article on GPU
+  - Total pipeline latency: ~2 seconds per article end-to-end
+\`\`\``
+        },
+        {
+          question: 'How do we handle multi-language and cross-lingual stories?',
+          answer: `**Per-Language Processing**:
+\`\`\`
+Separate pipelines per language group:
+  - Language detection at ingestion (fastText, 99%+ accuracy)
+  - Language-specific NER models (SpaCy per language)
+  - Language-specific tokenizers and stopwords
+  - Separate Elasticsearch indices per language
+\`\`\`
+
+**Cross-Lingual Story Linking**:
+\`\`\`
+Same event covered in English, Spanish, French, etc.:
+
+Option 1: Multilingual Embeddings
+  - Use multilingual-e5 or LaBSE model
+  - Same semantic content in different languages → similar embeddings
+  - Cluster across languages using embedding similarity
+
+Option 2: Entity-Based Linking
+  - Extract entities in each language
+  - Normalize to Wikidata IDs (language-independent)
+  - Stories sharing 3+ entities within 24h → likely same event
+  - Link as "Same story in other languages"
+
+Hybrid approach recommended: embeddings for clustering,
+entities for verification
+\`\`\`
+
+**Country-Specific Feeds**:
+\`\`\`
+Feed generation considers:
+  1. User's country → prefer local sources
+  2. User's language → filter by language
+  3. Global stories → include regardless of location
+  4. Regional relevance: earthquake in Japan shown to US users too
+
+source_relevance(user, source) =
+  0.5 * same_country(user, source) +
+  0.3 * same_language(user, source) +
+  0.2 * global_importance(story)
+\`\`\``
+        },
+        {
+          question: 'How do we make the feed cacheable while keeping it fresh?',
+          answer: `**Caching Strategy**:
+\`\`\`
+Three tiers of cacheability:
+
+Tier 1 — Top Stories (same for all users in a country):
+  - CDN cache with 2-minute TTL
+  - Invalidate on BREAKING news event
+  - Serves ~40% of all feed requests
+
+Tier 2 — Category Feeds (Sports, Tech, etc.):
+  - Redis cache per country+category
+  - 5-minute TTL, refreshed by background job
+  - Serves ~30% of feed requests
+
+Tier 3 — Personalized Feeds (unique per user):
+  - Cannot cache at CDN (user-specific)
+  - Pre-compute candidate stories every 15 min
+  - Apply lightweight re-ranking at request time (~20ms)
+  - Redis cache of candidate set with 15-min TTL
+\`\`\`
+
+**Cache Invalidation for Breaking News**:
+\`\`\`
+When BREAKING story detected:
+  1. Publish invalidation event to all edge caches
+  2. CDN purge for affected country/category paths
+  3. Update pre-computed candidate sets immediately
+  4. Push notification to mobile clients to refresh
+
+Latency from event → user sees it:
+  - CDN-cached users: ~2 min (TTL expiry)
+  - With cache purge: ~10 seconds
+  - Push notification: ~5 seconds
+\`\`\`
+
+**Feed Freshness Metrics**:
+\`\`\`
+Monitor and alert on:
+  - p50 story age in feed (target: < 2 hours)
+  - % of feeds with content < 1 hour old (target: > 80%)
+  - Breaking news latency: detection → feed appearance (target: < 5 min)
+\`\`\``
         }
       ],
 
@@ -18091,7 +18428,121 @@ if story involves major entity (president, CEO):
           purpose: 'Delivers personalized news feeds to users with low latency and real-time updates.',
           components: ['Personalization engine', 'Feed cache (Redis)', 'CDN', 'Push notification service']
         }
-      ]
+      ],
+
+      comparisonTables: [
+        {
+          id: 'dedup-techniques',
+          title: 'SimHash vs MinHash vs Embedding Similarity',
+          headers: ['Aspect', 'SimHash', 'MinHash (LSH)', 'Embedding Cosine'],
+          rows: [
+            ['Speed', 'O(1) comparison', 'O(k) where k = signature size', 'O(d) where d = dimension'],
+            ['Accuracy', 'Good for near-exact duplicates', 'Good for set overlap (Jaccard)', 'Best for semantic similarity'],
+            ['Storage', '8 bytes per fingerprint', '~100 bytes per signature', '~3 KB per 768-dim vector'],
+            ['Threshold Tuning', 'Hamming distance cutoff', 'Band/row LSH parameters', 'Cosine similarity threshold'],
+            ['Use Case', 'Fast first-pass URL/title dedup', 'Shingle-based article grouping', 'Semantic story clustering'],
+            ['False Positives', 'Low', 'Moderate (tunable)', 'Higher for similar topics'],
+          ],
+          verdict: 'Use all three in a cascade: SimHash for trivial dedup, MinHash for paraphrase detection, embeddings for semantic clustering'
+        },
+        {
+          id: 'feed-generation-strategy',
+          title: 'Pre-computed Feeds vs On-the-fly Ranking',
+          headers: ['Aspect', 'Pre-computed Feeds', 'On-the-fly Ranking', 'Hybrid (Recommended)'],
+          rows: [
+            ['Latency', '<10ms (cache read)', '100-200ms (compute)', '~20ms (cached candidates + light re-rank)'],
+            ['Freshness', 'Stale by TTL interval', 'Always fresh', 'Fresh within 15 min + breaking news override'],
+            ['Cost', 'High fan-out on every new story', 'Compute per request', 'Moderate (batch candidates + cheap re-rank)'],
+            ['Personalization', 'Full personalization baked in', 'Full personalization at read time', 'Candidate filtering + real-time scoring'],
+            ['Breaking News', 'Delayed until next recompute', 'Instant', 'Instant via cache invalidation'],
+            ['Scale', 'O(users) storage for feeds', 'O(QPS) compute', 'O(active users) storage'],
+          ],
+          verdict: 'Hybrid: pre-compute candidate set every 15 min, apply lightweight real-time re-ranking per request'
+        },
+        {
+          id: 'clustering-algorithms',
+          title: 'DBSCAN vs Hierarchical Clustering vs Online Incremental',
+          headers: ['Aspect', 'DBSCAN', 'Hierarchical', 'Online Incremental'],
+          rows: [
+            ['Batch vs Stream', 'Batch only', 'Batch only', 'Real-time streaming'],
+            ['Cluster Shape', 'Arbitrary shapes', 'Nested hierarchy', 'Centroid-based'],
+            ['# Clusters', 'Auto-detected', 'Dendrogram cut', 'Grows dynamically'],
+            ['Complexity', 'O(n log n) with index', 'O(n^2) or O(n^3)', 'O(1) per article'],
+            ['News Suitability', 'Good for periodic re-clustering', 'Good for topic taxonomy', 'Best for real-time story assignment'],
+            ['Merge/Split', 'Rerun needed', 'Cut at different levels', 'Dynamic merge on similarity threshold'],
+          ],
+          verdict: 'Online incremental for real-time story assignment; periodic DBSCAN for cluster cleanup and merge'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'article-ingestion-flow',
+          title: 'Article Ingestion Pipeline',
+          description: 'From RSS poll to searchable, clustered article',
+          steps: [
+            { step: 1, label: 'Feed Poll', detail: 'Scheduler triggers RSS poll for source based on adaptive interval (5 min to 1 hour)' },
+            { step: 2, label: 'URL Dedup', detail: 'Check Bloom filter for already-crawled URLs; skip known URLs to save bandwidth' },
+            { step: 3, label: 'Content Fetch', detail: 'HTTP GET full article; extract text with Readability algorithm; parse metadata' },
+            { step: 4, label: 'SimHash Dedup', detail: 'Compute 64-bit SimHash fingerprint; check for near-exact duplicates (Hamming distance < 3)' },
+            { step: 5, label: 'NLP Processing', detail: 'Extract entities, classify topic, generate summary, compute 768-dim embedding' },
+            { step: 6, label: 'Story Clustering', detail: 'Query vector DB for similar stories; assign to existing cluster or create new story' },
+            { step: 7, label: 'Index and Store', detail: 'Write to PostgreSQL (metadata), Elasticsearch (search index), vector DB (embedding)' },
+          ]
+        },
+        {
+          id: 'feed-generation-flow',
+          title: 'Feed Generation Flow',
+          description: 'How a personalized news feed is assembled for a user request',
+          steps: [
+            { step: 1, label: 'Request Received', detail: 'User opens news app; API receives GET /api/news/for-you with auth token' },
+            { step: 2, label: 'Profile Lookup', detail: 'Fetch user interest profile from Redis cache (topic weights, source affinities, embedding)' },
+            { step: 3, label: 'Candidate Retrieval', detail: 'Load pre-computed candidate stories (top 500) from Redis; filter by language and country' },
+            { step: 4, label: 'Real-time Scoring', detail: 'Score each candidate: 0.4*freshness + 0.3*relevance + 0.2*authority + 0.1*engagement' },
+            { step: 5, label: 'Diversity Enforcement', detail: 'Apply constraints: max 3 consecutive same-category, inject serendipity stories' },
+            { step: 6, label: 'Response Assembly', detail: 'Return top 20 stories with headlines, summaries, source counts, and cursor for pagination' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#4285f4',
+          items: [
+            { label: 'Kafka (Ingestion)', value: '58 articles/sec', bar: 60 },
+            { label: 'Elasticsearch (Search)', value: '2 TB index', bar: 85 },
+            { label: 'Milvus (Vector DB)', value: '450 GB embeddings', bar: 75 },
+            { label: 'Redis (Feed Cache)', value: '50 GB / 5.8K QPS', bar: 90 },
+            { label: 'PostgreSQL (Metadata)', value: '750 GB articles', bar: 70 },
+            { label: 'SpaCy + BERT (NLP)', value: 'GPU-accelerated', bar: 65 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '100M DAU', value: 'Daily active users', bar: 90 },
+            { label: '5M articles/day', value: 'Ingested from 20K+ sources', bar: 80 },
+            { label: '5.8K feed QPS', value: 'Average feed requests/sec', bar: 70 },
+            { label: '<200ms feed latency', value: 'P95 feed generation time', bar: 85 },
+            { label: '<5 min breaking news', value: 'Detection to feed appearance', bar: 75 },
+            { label: '150M articles stored', value: '30-day retention window', bar: 65 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'RSS Aggregator', description: 'Simple cron job polls RSS feeds, stores articles in PostgreSQL, displays chronologically.', color: '#94a3b8', icon: 'server', capacity: '~100 sources', rps: '10', pros: ['Simple to build and understand', 'No ML dependencies', 'Standard SQL queries'], cons: ['No deduplication', 'No personalization', 'Cannot handle breaking news'] },
+        { step: 2, title: 'Dedup + Categories', description: 'Add SimHash deduplication, basic topic classification, and Elasticsearch for search.', color: '#2D8CFF', icon: 'layers', capacity: '~5K sources', rps: '500', pros: ['Eliminates obvious duplicates', 'Category-based browsing', 'Full-text search'], cons: ['Paraphrased duplicates still slip through', 'No story clustering', 'Sequential polling is slow'] },
+        { step: 3, title: 'NLP + Clustering', description: 'Distributed crawlers with Kafka, embedding-based story clustering, entity extraction.', color: '#f59e0b', icon: 'zap', capacity: '~20K sources', rps: '3K', pros: ['Semantic story grouping', 'Named entity recognition', 'Parallel ingestion at scale'], cons: ['GPU costs for NLP pipeline', 'Clustering accuracy tuning', 'Complex debugging'] },
+        { step: 4, title: 'Personalization', description: 'User interest profiles, two-stage personalized feed generation, collaborative filtering.', color: '#10b981', icon: 'globe', capacity: '100M DAU', rps: '10K', pros: ['Relevant feeds per user', 'Filter bubble prevention', 'Engagement metrics improve 40%'], cons: ['Cold start for new users', 'Profile storage and compute cost', 'Recommendation model maintenance'] },
+        { step: 5, title: 'Global Multi-Language', description: 'Cross-lingual story linking, per-country CDN caching, real-time breaking news pipeline with push notifications.', color: '#7c3aed', icon: 'cpu', capacity: '50K+ sources', rps: '20K+', pros: ['Worldwide coverage in 40+ languages', 'Sub-5-minute breaking news detection', 'CDN offloads 40% of traffic'], cons: ['Cross-lingual model accuracy varies', 'Per-country regulatory compliance', 'Operational complexity at global scale'] },
+      ],
     },
     {
       id: 'leaderboard',
@@ -18101,6 +18552,22 @@ if story involves major entity (president, CEO):
       color: '#f59e0b',
       difficulty: 'Medium',
       description: 'Design a real-time leaderboard for millions of players.',
+
+      productMeta: {
+        name: 'Gaming Leaderboard',
+        tagline: 'Real-time ranking for 100M+ players',
+        stats: [
+          { label: 'Players', value: '100M+' },
+          { label: 'Updates/Sec', value: '50K' },
+          { label: 'Top-10 Query', value: '<1ms' },
+          { label: 'Storage', value: '2.6 GB' },
+        ],
+        scope: {
+          inScope: ['Update player scores in real-time', 'Get top-N player rankings', 'Get specific player rank and percentile', 'Around-me ranking (neighbors)', 'Multiple leaderboards (daily, weekly, all-time)', 'Time-windowed boards with automatic reset'],
+          outOfScope: ['Game matchmaking logic', 'Anti-cheat game client validation', 'Social features (friends, chat)', 'Tournament bracket management'],
+        },
+        keyChallenge: 'Handling 50K score updates/sec with O(log N) Redis sorted set operations while serving sub-millisecond top-10 queries across 100M players, with sharding and tie-breaking strategies.',
+      },
 
       introduction: `Gaming leaderboards show player rankings in real-time. The classic approach uses Redis Sorted Sets, which provide O(log N) operations for both updates and rank lookups - perfect for millions of players.
 
@@ -18118,12 +18585,26 @@ The key challenges are: handling high write throughput during game events, provi
 
       nonFunctionalRequirements: [
         'Support 100M+ players',
-        'Handle 10K+ score updates per second',
+        'Handle 50K+ score updates per second',
         'Handle 100K+ rank lookups per second',
-        'Rank lookup < 10ms',
+        'Top-10 query < 1ms',
         'Real-time updates (< 1 second delay)',
         'Support 1000+ different leaderboards'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '100M players, 50K score updates/sec, average player entry ~26 bytes (8-byte score + 18-byte player ID), 1000 concurrent leaderboards, daily/weekly/all-time per game.',
+        calculations: [
+          { label: 'Write QPS', value: '50K/s', detail: '50,000 ZADD operations per second across all leaderboards' },
+          { label: 'Read QPS', value: '100K/s', detail: '100,000 rank lookups/sec (ZREVRANK, ZREVRANGE combined)' },
+          { label: 'Memory per board', value: '~2.6 GB', detail: '100M players x 26 bytes per entry = ~2.6 GB for one sorted set' },
+          { label: 'Total Redis memory', value: '~50 GB', detail: '~20 active leaderboards x 2.6 GB average = ~50 GB (most boards smaller)' },
+          { label: 'Snapshot storage', value: '~10 GB/month', detail: 'Daily top-1000 snapshots x 1000 boards x 30 days x ~300 bytes each' },
+          { label: 'Network bandwidth', value: '~5 MB/s', detail: '50K writes x 100 bytes per command = ~5 MB/s ingress' },
+          { label: 'Persistence backup', value: '~100 GB', detail: 'PostgreSQL score history for anti-cheat and analytics' },
+        ]
+      },
 
       dataModel: {
         description: 'Redis sorted sets with persistence backup',
@@ -18199,7 +18680,7 @@ Sorted Set uses Skip List internally:
 - Memory efficient: stores only (member, score) pairs
 
 For 100M players:
-- ~100M × (8 byte score + ~20 byte player ID) ≈ 3GB
+- ~100M x (8 byte score + ~18 byte player ID) = ~2.6GB
 - All fits in memory!
 \`\`\`
 
@@ -18246,7 +18727,7 @@ def reset_weekly_leaderboard(game_id):
 
 **Composite Leaderboards**:
 \`\`\`
-For complex scoring (kills × 10 + assists × 5 + wins × 100):
+For complex scoring (kills x 10 + assists x 5 + wins x 100):
 
 Option 1: Compute score on client, send composite
   POST { playerId, score: 1500 }
@@ -18360,6 +18841,298 @@ Shard by leaderboard key:
   - Natural load distribution
   - Hash tags for same-shard operations
 \`\`\``
+        },
+        {
+          question: 'How do we handle ZADD vs ZINCRBY for score updates?',
+          answer: `**Two approaches for updating scores**:
+
+**ZADD — Absolute Score (Replace)**:
+\`\`\`
+ZADD leaderboard:game1 1500 player123
+  - Sets player123's score to exactly 1500
+  - Previous score is overwritten
+  - Use when: game server computes total score
+
+Best for:
+  - Sports: final match score is absolute
+  - Rating systems: ELO/MMR is recalculated
+  - Leaderboards where only latest score matters
+\`\`\`
+
+**ZINCRBY — Incremental Score (Add)**:
+\`\`\`
+ZINCRBY leaderboard:game1 50 player123
+  - Adds 50 to player123's current score
+  - Atomic — safe with concurrent updates
+  - Use when: accumulating points over time
+
+Best for:
+  - XP/experience points
+  - Kill counts, achievement scores
+  - Event-based scoring (each action adds points)
+\`\`\`
+
+**Important Consideration**:
+\`\`\`
+ZINCRBY is atomic but ZADD with MAX is not natively supported.
+For "keep highest score":
+
+  ZADD leaderboard:game1 GT 1500 player123
+  (GT flag: only update if new score > current — Redis 6.2+)
+
+For "keep lowest score" (speedrun boards):
+  ZADD leaderboard:game1 LT 300 player123
+  (LT flag: only update if new score < current)
+\`\`\`
+
+Choose based on game mechanics. Most competitive leaderboards use ZADD GT (best score wins).`
+        },
+        {
+          question: 'How do we implement around-me ranking?',
+          answer: `**The Problem**: Player wants to see who is ranked just above and below them.
+
+**Redis Implementation**:
+\`\`\`python
+def get_around_me(game_id, player_id, range_size=5):
+    key = f"leaderboard:{game_id}:alltime"
+
+    # Get player's rank (0-indexed, highest score = rank 0)
+    rank = redis.zrevrank(key, player_id)
+    if rank is None:
+        return None  # Player not on leaderboard
+
+    # Get range: 5 above and 5 below
+    start = max(0, rank - range_size)
+    end = rank + range_size
+
+    results = redis.zrevrange(key, start, end, withscores=True)
+
+    return {
+        "player_rank": rank + 1,  # 1-indexed for display
+        "neighbors": [
+            {"player_id": pid, "score": score, "rank": start + i + 1}
+            for i, (pid, score) in enumerate(results)
+        ]
+    }
+\`\`\`
+
+**Complexity**: O(log N) for ZREVRANK + O(log N + M) for ZREVRANGE = O(log N + M)
+For 100M players: ~27 operations (log2(100M)) — sub-millisecond.
+
+**Edge Cases**:
+\`\`\`
+1. Player at rank 1 (top of leaderboard):
+   - No players above → start = 0, show only players below
+
+2. Player at the bottom:
+   - end > total players → Redis returns whatever exists
+
+3. Player not on leaderboard:
+   - ZREVRANK returns nil → return approximate rank from percentile buckets
+
+4. Score ties in neighborhood:
+   - Players at same rank appear together
+   - Sort secondarily by player_id for stable ordering
+\`\`\``
+        },
+        {
+          question: 'How do we handle tie-breaking?',
+          answer: `**The Problem**: Two players with score 1500 — who ranks higher?
+
+**Strategy 1: Timestamp Tie-Breaking (Composite Score)**:
+\`\`\`
+Encode timestamp into the score:
+  composite_score = score * 10^10 + (MAX_TIMESTAMP - timestamp)
+
+Example:
+  Player A: score=1500, time=1000 → 15000009999999000
+  Player B: score=1500, time=1200 → 15000009999998800
+
+  Player A ranks higher (reached 1500 first)
+
+Redis sees them as different scores — no tie!
+\`\`\`
+
+**Strategy 2: Secondary Sort Key**:
+\`\`\`
+Store secondary sort in a separate hash:
+  ZADD leaderboard:game1 1500 player_a
+  ZADD leaderboard:game1 1500 player_b
+  HSET player_timestamps player_a 1000
+  HSET player_timestamps player_b 1200
+
+On display, break ties by checking timestamps.
+Slower but cleaner data model.
+\`\`\`
+
+**Strategy 3: Fractional Scores**:
+\`\`\`
+Use fractional part for tie-breaking:
+  score = integer_score + (1.0 - timestamp / MAX_TIMESTAMP)
+
+Player A: 1500.999999000  (earlier = higher fraction)
+Player B: 1500.999998800
+
+Works with Redis float scores (ZADD accepts doubles)
+Risk: floating point precision issues at large scale
+\`\`\`
+
+**Recommendation**: Strategy 1 (composite integer score) — most reliable, no precision issues, native Redis integer comparison.`
+        },
+        {
+          question: 'How do we implement time-windowed leaderboards efficiently?',
+          answer: `**Multiple Concurrent Windows**:
+\`\`\`
+On every score update, write to ALL active windows:
+
+def update_score(game_id, player_id, score):
+    pipe = redis.pipeline()
+
+    # All-time
+    pipe.zadd(f"lb:{game_id}:alltime", {player_id: score}, gt=True)
+
+    # Current season
+    pipe.zadd(f"lb:{game_id}:season:S5", {player_id: score}, gt=True)
+
+    # Current week
+    week = datetime.now().strftime("%Y-W%W")
+    pipe.zadd(f"lb:{game_id}:weekly:{week}", {player_id: score}, gt=True)
+
+    # Current day
+    day = datetime.now().strftime("%Y-%m-%d")
+    pipe.zadd(f"lb:{game_id}:daily:{day}", {player_id: score}, gt=True)
+
+    pipe.execute()  # Single round trip, 4 commands
+\`\`\`
+
+**Automatic Expiry**:
+\`\`\`
+# Old daily boards expire after 7 days
+redis.expire(f"lb:{game_id}:daily:2024-06-01", 7 * 86400)
+
+# Old weekly boards expire after 30 days
+redis.expire(f"lb:{game_id}:weekly:2024-W22", 30 * 86400)
+
+# Season boards snapshotted to PostgreSQL before expiry
+\`\`\`
+
+**Snapshot Before Reset**:
+\`\`\`
+At end of each period:
+  1. ZREVRANGE top 1000 with scores
+  2. Store in PostgreSQL leaderboard_snapshots table
+  3. Set TTL on Redis key for gradual expiry
+  4. New period key starts empty — first score creates it
+\`\`\`
+
+**Memory Management**:
+\`\`\`
+Active keys at any time:
+  - 1 all-time per game
+  - 1 current season per game
+  - 1 current week per game
+  - 1 current day per game
+  = 4 sorted sets per game
+
+For 100 games: 400 active sorted sets
+Most daily boards are small (only active players that day)
+\`\`\``
+        },
+        {
+          question: 'How do we persist and recover leaderboard data?',
+          answer: `**Redis Persistence Options**:
+\`\`\`
+1. RDB Snapshots (point-in-time):
+   - Save to disk every N seconds if M keys changed
+   - Compact binary format
+   - Risk: lose data between snapshots
+
+2. AOF (Append-Only File):
+   - Log every write command
+   - Replay on restart
+   - Options: always, everysec, no (OS flush)
+   - Recommended: everysec (max 1 second data loss)
+
+3. RDB + AOF (recommended for production):
+   - AOF for durability
+   - RDB for fast restart (load RDB, then replay AOF tail)
+\`\`\`
+
+**PostgreSQL Backup Strategy**:
+\`\`\`
+Async backup pipeline:
+  1. Every score update → Kafka topic
+  2. Consumer batches writes to PostgreSQL every 5 seconds
+  3. scores_history table stores every update for anti-cheat
+
+Recovery procedure:
+  1. Start fresh Redis
+  2. Load latest RDB snapshot
+  3. Replay PostgreSQL scores since snapshot time:
+     SELECT player_id, MAX(score), game_id
+     FROM scores_history
+     WHERE recorded_at > snapshot_time
+     GROUP BY player_id, game_id
+  4. ZADD each record back into Redis
+\`\`\`
+
+**Sentinel for High Availability**:
+\`\`\`
+Redis Sentinel cluster:
+  - 1 master + 2 replicas
+  - Automatic failover if master dies (<30 seconds)
+  - Replicas serve read traffic (ZREVRANGE queries)
+  - Only master handles writes (ZADD/ZINCRBY)
+\`\`\``
+        },
+        {
+          question: 'How do we implement a friends leaderboard?',
+          answer: `**The Challenge**: Each player has a unique friends list — can't use a single sorted set.
+
+**Option 1: On-the-Fly Computation**:
+\`\`\`python
+def get_friends_leaderboard(player_id, game_id):
+    # Get friend list (from social graph service)
+    friends = get_friends(player_id)  # e.g., 200 friends
+    friends.append(player_id)  # Include self
+
+    key = f"leaderboard:{game_id}:alltime"
+
+    # Get each friend's score
+    pipe = redis.pipeline()
+    for friend in friends:
+        pipe.zscore(key, friend)
+    scores = pipe.execute()
+
+    # Build and sort locally
+    rankings = []
+    for friend, score in zip(friends, scores):
+        if score is not None:
+            rankings.append({"player_id": friend, "score": score})
+
+    rankings.sort(key=lambda x: x["score"], reverse=True)
+    return rankings[:50]  # Top 50 friends
+\`\`\`
+
+**Complexity**: O(F) Redis commands (pipelined = 1 round trip) where F = friends count.
+For 200 friends: ~200 ZSCORE in one pipeline — very fast.
+
+**Option 2: ZINTERSTORE (Redis-side)**:
+\`\`\`
+# Create a temporary set with just friend IDs
+SADD temp:friends:player123 friend1 friend2 friend3 ...
+
+# Intersect with leaderboard (keeps scores from leaderboard)
+ZINTERSTORE temp:result 2 leaderboard:game1:alltime temp:friends:player123 WEIGHTS 1 0
+
+# Read result
+ZREVRANGE temp:result 0 49 WITHSCORES
+
+# Clean up
+DEL temp:friends:player123 temp:result
+\`\`\`
+
+**Recommendation**: Option 1 for small friend lists (<500), Option 2 for very large friend lists. Cache the result for 30 seconds since friend leaderboards don't need to be real-time.`
         }
       ],
 
@@ -18567,7 +19340,121 @@ Shard by leaderboard key:
           purpose: 'Stores historical leaderboard snapshots and provides recovery data if the in-memory layer fails.',
           components: ['PostgreSQL snapshot store', 'Periodic snapshot job', 'Historical leaderboard query service']
         }
-      ]
+      ],
+
+      comparisonTables: [
+        {
+          id: 'redis-vs-sql-leaderboard',
+          title: 'Redis Sorted Set vs SQL for Leaderboards',
+          headers: ['Aspect', 'Redis Sorted Set', 'SQL (PostgreSQL)', 'Hybrid (Recommended)'],
+          rows: [
+            ['Rank Lookup', 'O(log N) — ZREVRANK', 'O(N) — COUNT(*) WHERE score >', 'Redis for real-time, SQL for historical'],
+            ['Top-N Query', 'O(log N + M) — ZREVRANGE', 'O(N log N) — ORDER BY + LIMIT', 'Redis for live, SQL for archived'],
+            ['Update Score', 'O(log N) — ZADD', 'O(log N) — UPDATE + reindex', 'Redis primary, async SQL backup'],
+            ['Storage', 'In-memory (~2.6 GB / 100M)', 'On-disk (unlimited)', 'Hot data in Redis, cold in SQL'],
+            ['Durability', 'AOF/RDB (risk of data loss)', 'ACID guarantees', 'Redis + async PostgreSQL write-behind'],
+            ['Tie Handling', 'Lexicographic on member ID', 'ORDER BY score DESC, time ASC', 'Composite score in Redis (score*10^10 + timestamp)'],
+          ],
+          verdict: 'Redis for real-time rankings, PostgreSQL for persistence and historical queries; use both together'
+        },
+        {
+          id: 'sharding-strategies',
+          title: 'Leaderboard Sharding Strategies',
+          headers: ['Aspect', 'By Game ID', 'By Score Range', 'By Region'],
+          rows: [
+            ['Data Locality', 'All scores for one game on one shard', 'Scores split across shards', 'Players near each other on same shard'],
+            ['Hotspot Risk', 'Popular games create hot shards', 'Even distribution', 'Even if regions balanced'],
+            ['Cross-Shard Query', 'None (full board on one shard)', 'Required for global rank', 'Required for global rank'],
+            ['Scaling Trigger', 'New games added', 'Score distribution changes', 'Player count per region grows'],
+            ['Rank Computation', 'Direct (single sorted set)', 'offset[shard] + local rank', 'Merge top-N from each region'],
+            ['Best For', '<100 games, varied popularity', '1 game with 1B+ players', 'Global multiplayer games'],
+          ],
+          verdict: 'Shard by game ID for most cases; score-range sharding only for single-game boards exceeding 100M+ players'
+        },
+        {
+          id: 'zadd-vs-zincrby',
+          title: 'ZADD (Absolute) vs ZINCRBY (Incremental)',
+          headers: ['Aspect', 'ZADD (Set Score)', 'ZINCRBY (Add to Score)'],
+          rows: [
+            ['Operation', 'Replace score with new value', 'Add delta to current score'],
+            ['Atomicity', 'Atomic per member', 'Atomic per member'],
+            ['Concurrency', 'Last write wins', 'All increments are applied'],
+            ['Use Case', 'ELO rating, best score', 'XP points, kill counts'],
+            ['Idempotency', 'Idempotent (same result on retry)', 'NOT idempotent (retry doubles increment)'],
+            ['GT/LT Flags', 'ZADD GT (only if higher), ZADD LT (only if lower)', 'Not applicable'],
+          ],
+          verdict: 'ZADD GT for best-score leaderboards; ZINCRBY for cumulative scoring with dedup guard on the producer side'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'score-update-flow',
+          title: 'Score Update Flow',
+          description: 'From game event to updated leaderboard rank',
+          steps: [
+            { step: 1, label: 'Game Event', detail: 'Game server determines player earned points (e.g., match won, achievement unlocked)' },
+            { step: 2, label: 'Score Validation', detail: 'Anti-cheat service validates: score within expected range, update rate not suspicious' },
+            { step: 3, label: 'Kafka Publish', detail: 'Publish score event to Kafka topic partitioned by game_id for ordered processing' },
+            { step: 4, label: 'Consumer Processing', detail: 'Score processor reads event, applies composite score encoding (score*10^10 + timestamp)' },
+            { step: 5, label: 'Multi-Board Write', detail: 'Pipeline ZADD GT to all active boards: alltime, season, weekly, daily (1 round trip)' },
+            { step: 6, label: 'Async Persistence', detail: 'Write score to PostgreSQL scores_history table via batch insert (every 5 seconds)' },
+            { step: 7, label: 'Return New Rank', detail: 'ZREVRANK on alltime board returns player new rank; respond to game client' },
+          ]
+        },
+        {
+          id: 'leaderboard-query-flow',
+          title: 'Leaderboard Query Flow',
+          description: 'How a player views the leaderboard and their rank',
+          steps: [
+            { step: 1, label: 'Client Request', detail: 'Player opens leaderboard screen; GET /api/leaderboard/:gameId/top?limit=100&timeframe=weekly' },
+            { step: 2, label: 'CDN Cache Check', detail: 'Top-100 cached at CDN edge with 10-second TTL; serves 80% of requests' },
+            { step: 3, label: 'Redis Query', detail: 'ZREVRANGE with WITHSCORES for top N; ZREVRANK for requesting player rank' },
+            { step: 4, label: 'Enrich Response', detail: 'Batch lookup player display names and avatars from user service cache' },
+            { step: 5, label: 'Around-Me View', detail: 'If player not in top N, compute neighborhood: 5 players above and below their rank' },
+            { step: 6, label: 'Return Response', detail: 'Return rankings array with rank, displayName, score, avatar; include player own rank + percentile' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#f59e0b',
+          items: [
+            { label: 'Redis Sorted Sets', value: '2.6 GB / 100M players', bar: 95 },
+            { label: 'Kafka (Write Buffer)', value: '50K events/sec', bar: 85 },
+            { label: 'PostgreSQL (Backup)', value: '100 GB history', bar: 60 },
+            { label: 'CDN (Top-N Cache)', value: '80% read offload', bar: 90 },
+            { label: 'Redis Sentinel', value: '<30s failover', bar: 75 },
+            { label: 'Anti-Cheat Service', value: 'Real-time validation', bar: 50 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '100M+ players', value: 'Total registered players', bar: 90 },
+            { label: '50K writes/sec', value: 'Score updates per second', bar: 85 },
+            { label: '100K reads/sec', value: 'Rank lookups per second', bar: 95 },
+            { label: '<1ms top-10 query', value: 'ZREVRANGE latency', bar: 100 },
+            { label: '2.6 GB per board', value: 'Memory for 100M entries', bar: 70 },
+            { label: '1000+ boards', value: 'Concurrent leaderboards', bar: 60 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'SQL Leaderboard', description: 'PostgreSQL table with score column, ORDER BY for rankings. Simple but O(N) rank queries.', color: '#94a3b8', icon: 'server', capacity: '~10K players', rps: '100', pros: ['Simple to implement', 'ACID guarantees', 'Rich query support'], cons: ['O(N) rank computation', 'Cannot handle real-time updates at scale', 'Slow for large player bases'] },
+        { step: 2, title: 'Redis Sorted Set', description: 'Single Redis instance with sorted set for O(log N) operations. In-memory speed for rank lookups.', color: '#2D8CFF', icon: 'layers', capacity: '~10M players', rps: '10K', pros: ['O(log N) rank lookup and update', 'Sub-millisecond latency', 'Purpose-built Redis commands'], cons: ['Single point of failure', 'No durability without AOF', 'Memory-limited'] },
+        { step: 3, title: 'Cluster + Persistence', description: 'Redis Cluster with Sentinel failover, async PostgreSQL backup, Kafka write buffering.', color: '#f59e0b', icon: 'zap', capacity: '~100M players', rps: '50K', pros: ['Horizontal scaling across shards', 'Automatic failover', 'Durable score history'], cons: ['Cross-shard queries for global rank', 'Kafka adds latency', 'Operational complexity'] },
+        { step: 4, title: 'CDN + Approximate Rank', description: 'CDN caching for top-N, approximate ranking for tail players, composite scores for tie-breaking.', color: '#10b981', icon: 'globe', capacity: '~500M players', rps: '200K', pros: ['80% read traffic offloaded to CDN', 'Sub-ms rank for all players', 'Clean tie-breaking'], cons: ['Stale CDN data (10s TTL)', 'Approximate ranks less satisfying for mid-tier players', 'Composite score encoding complexity'] },
+        { step: 5, title: 'Global Multi-Game Platform', description: 'Per-game sharding, friends leaderboards, historical analytics, anti-cheat ML pipeline, multi-region deployment.', color: '#7c3aed', icon: 'cpu', capacity: '1B+ players', rps: '500K+', pros: ['Supports thousands of games simultaneously', 'Rich social features', 'ML-powered cheat detection'], cons: ['Multi-region consistency challenges', 'Complex capacity planning per game', 'High operational overhead'] },
+      ],
     },
     {
       id: 'hotel-booking',
@@ -18578,9 +19465,25 @@ Shard by leaderboard key:
       difficulty: 'Medium',
       description: 'Design a hotel booking system with search, availability, and reservations.',
 
+      productMeta: {
+        name: 'Booking.com',
+        tagline: 'Hotel reservation with 31M listings worldwide',
+        stats: [
+          { label: 'Listings', value: '31M' },
+          { label: 'Nights/Year', value: '1.2B' },
+          { label: 'Visits/Month', value: '560M' },
+          { label: 'Revenue', value: '$26.9B' },
+        ],
+        scope: {
+          inScope: ['Search hotels by location, dates, and guests', 'Real-time availability and dynamic pricing', 'Booking with instant confirmation (double-booking prevention)', 'Cancellation with policy-based refunds', 'Reservation state machine (HOLD → CONFIRMED → COMPLETED)', 'Multi-channel inventory management'],
+          outOfScope: ['Flight/car rental bundling', 'Loyalty rewards program', 'Hotel property management system', 'Review moderation ML pipeline'],
+        },
+        keyChallenge: 'Preventing double-bookings with optimistic locking across 31M listings while serving 560M monthly searches with sub-500ms latency and supporting dynamic pricing that changes in real-time based on demand.',
+      },
+
       introduction: `Booking.com handles 2M+ properties with complex inventory: multiple room types, varying prices by date, and real-time availability. The core challenge is preventing double-bookings while maintaining fast search results.
 
-Unlike simple e-commerce, hotel inventory is date-specific - a room available on June 15 might be booked on June 16. This creates an explosion of inventory states (30M rooms × 365 days = 10B+ room-nights to track).`,
+Unlike simple e-commerce, hotel inventory is date-specific - a room available on June 15 might be booked on June 16. This creates an explosion of inventory states (30M rooms x 365 days = 10B+ room-nights to track).`,
 
       functionalRequirements: [
         'Search hotels by location, dates, guests',
@@ -18602,6 +19505,20 @@ Unlike simple e-commerce, hotel inventory is date-specific - a room available on
         '99.99% availability',
         'Handle surge during peak seasons'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '31M listings, 560M visits/month, 1.2B room-nights/year, 5 room types per hotel on average, 365-day availability calendar, average booking ~2.5 nights.',
+        calculations: [
+          { label: 'Search QPS', value: '~6,500/s', detail: '560M visits/month / 30 / 86,400 = ~6,500 searches/sec (assuming 3 searches/visit)' },
+          { label: 'Booking QPS', value: '~40/s', detail: '1.2B nights/year / 365 / 86,400 / 2.5 avg nights = ~38 bookings/sec' },
+          { label: 'Inventory rows', value: '~56B', detail: '31M listings x 5 room types x 365 days = ~56B room-night records (sparse)' },
+          { label: 'Inventory storage', value: '~2.2 TB', detail: 'Sparse storage: ~200M active rows x 40 bytes + metadata = ~2.2 TB' },
+          { label: 'Search index size', value: '~500 GB', detail: 'Elasticsearch: 31M hotels x ~15 KB per document (details, amenities, geo)' },
+          { label: 'Photo storage', value: '~50 TB', detail: '31M hotels x ~30 photos x 50 KB average = ~50 TB on S3' },
+          { label: 'Cache memory', value: '~200 GB', detail: 'Redis: hotel details cache + availability cache + search result cache' },
+        ]
+      },
 
       dataModel: {
         description: 'Hotels, rooms, inventory, and bookings',
@@ -18672,11 +19589,11 @@ bookings {
           answer: `**The Challenge**:
 \`\`\`
 Naive approach: Store each room individually
-  30M rooms × 365 days = 10.9 billion rows
+  30M rooms x 365 days = 10.9 billion rows
   Every search needs to join with this!
 
 Better: Store availability count per room TYPE per date
-  5 room types × 2M hotels × 365 days = 3.6B rows (still huge)
+  5 room types x 2M hotels x 365 days = 3.6B rows (still huge)
 \`\`\`
 
 **Inventory Model**:
@@ -18827,7 +19744,7 @@ Need to:
 │                        ▼                               │
 │   Phase 3: Ranking                                     │
 │   ┌──────────────────────────────────────────────────┐ │
-│   │  Score = relevance × review_score × price_value  │ │
+│   │  Score = relevance x review_score x price_value   │ │
 │   │  + Personalization (user's past preferences)     │ │
 │   │  + Business rules (promoted properties)          │ │
 │   └──────────────────────────────────────────────────┘ │
@@ -18846,6 +19763,421 @@ Availability: Cache briefly or compute live
 
 Search results: Cache by query hash
   "NYC + June 15-17 + 2 guests" → cached 5 min
+\`\`\``
+        },
+        {
+          question: 'How does the reservation state machine work?',
+          answer: `**Booking States**:
+\`\`\`
+┌──────────┐     ┌───────────┐     ┌───────────┐
+│  HOLD    │────►│ CONFIRMED │────►│ COMPLETED │
+│ (10 min) │     │           │     │           │
+└────┬─────┘     └─────┬─────┘     └───────────┘
+     │                 │
+     ▼                 ▼
+┌──────────┐     ┌───────────┐
+│ EXPIRED  │     │ CANCELLED │
+└──────────┘     └───────────┘
+\`\`\`
+
+**State Transitions**:
+\`\`\`
+HOLD → CONFIRMED:
+  Trigger: Payment succeeds
+  Action: Decrement inventory permanently, send confirmation email
+  Timeout: 10 minutes (auto-expire if payment not completed)
+
+HOLD → EXPIRED:
+  Trigger: 10-minute TTL expires
+  Action: Restore inventory counts, release room hold
+
+CONFIRMED → COMPLETED:
+  Trigger: Check-out date passes
+  Action: Mark booking as completed, trigger review request
+
+CONFIRMED → CANCELLED:
+  Trigger: User cancels or no-show
+  Action: Process refund per policy, restore inventory
+\`\`\`
+
+**Implementation with Redis TTL**:
+\`\`\`python
+def create_hold(user_id, room_type_id, dates):
+    hold_id = generate_uuid()
+
+    # Atomically decrement inventory
+    with db.transaction():
+        for date in dates:
+            result = db.execute(
+                "UPDATE room_inventory SET available = available - 1 "
+                "WHERE room_type_id = %s AND date = %s AND available > 0",
+                [room_type_id, date]
+            )
+            if result.rowcount == 0:
+                raise NotAvailable(f"No rooms on {date}")
+
+        # Create hold record
+        db.execute(
+            "INSERT INTO bookings (id, status, expires_at) "
+            "VALUES (%s, 'HOLD', NOW() + INTERVAL '10 minutes')",
+            [hold_id]
+        )
+
+    # Set Redis TTL for auto-expiry
+    redis.setex(f"hold:{hold_id}", 600, json.dumps(dates))
+
+    return hold_id
+\`\`\`
+
+**Expired Hold Cleanup**:
+\`\`\`
+Background job runs every 30 seconds:
+  SELECT id, room_type_id, dates FROM bookings
+  WHERE status = 'HOLD' AND expires_at < NOW()
+
+  For each expired hold:
+    - Restore inventory counts
+    - Update status to EXPIRED
+\`\`\``
+        },
+        {
+          question: 'How does dynamic pricing work?',
+          answer: `**Pricing Factors**:
+\`\`\`
+room_price(room_type, date) =
+  base_rate
+  x demand_multiplier(date)
+  x day_of_week_factor(date)
+  x seasonality_factor(date)
+  x occupancy_factor(hotel, date)
+  x competitor_adjustment(hotel, date)
+  - promotional_discount(user, hotel)
+\`\`\`
+
+**Demand Multiplier**:
+\`\`\`
+Based on search-to-book conversion for the area:
+  demand = searches_for_date / available_rooms_in_area
+
+  if demand > 2.0: multiplier = 1.5  (high demand)
+  if demand > 1.5: multiplier = 1.3
+  if demand > 1.0: multiplier = 1.1
+  if demand < 0.5: multiplier = 0.8  (low demand, discount)
+\`\`\`
+
+**Occupancy-Based Pricing**:
+\`\`\`
+As hotel fills up, price increases:
+  occupancy = booked_rooms / total_rooms
+
+  0-50% occupancy: base_rate
+  50-70%: base_rate x 1.15
+  70-85%: base_rate x 1.35
+  85-95%: base_rate x 1.60
+  95-100%: base_rate x 2.00 (last rooms premium)
+\`\`\`
+
+**Competitor Rate Monitoring**:
+\`\`\`
+Crawl competitor prices daily:
+  - Same hotel on Expedia, Hotels.com, direct website
+  - Rate parity: contractual obligation to match prices
+  - If competitor is 10% cheaper, auto-adjust downward
+
+Price quotes have 15-minute TTL:
+  - Lock displayed price for user's session
+  - Honor quoted price at checkout even if price changed
+\`\`\``
+        },
+        {
+          question: 'How do we handle the payment saga for bookings?',
+          answer: `**The Problem**: Booking involves multiple steps that can fail independently.
+
+**Saga Pattern**:
+\`\`\`
+Step 1: Reserve Inventory     → Compensate: Release inventory
+Step 2: Charge Payment        → Compensate: Refund payment
+Step 3: Confirm Booking       → Compensate: Cancel booking
+Step 4: Send Confirmation     → Compensate: Send cancellation
+
+If any step fails, execute compensating actions in reverse order.
+\`\`\`
+
+**Orchestrated Saga Implementation**:
+\`\`\`
+Booking Orchestrator:
+
+  try:
+    1. hold = inventory_service.create_hold(room, dates)
+    2. charge = payment_service.charge(user, amount)
+    3. booking = booking_service.confirm(hold, charge)
+    4. notification_service.send_confirmation(booking)
+    return SUCCESS
+
+  except PaymentFailed:
+    inventory_service.release_hold(hold)
+    return PAYMENT_FAILED
+
+  except InventoryUnavailable:
+    return SOLD_OUT
+
+  except NotificationFailed:
+    # Booking is confirmed — notification can retry async
+    queue.publish("retry_notification", booking.id)
+    return SUCCESS  # Don't fail booking for notification issue
+\`\`\`
+
+**Idempotency**:
+\`\`\`
+Every step must be idempotent for safe retries:
+  - Inventory hold: check if hold already exists before creating
+  - Payment charge: use idempotency_key to prevent double-charging
+  - Booking confirm: check if booking already confirmed
+
+POST /api/bookings
+  Headers: Idempotency-Key: "uuid-from-client"
+
+Server checks: if idempotency_key exists in cache,
+  return previous result without re-executing
+\`\`\``
+        },
+        {
+          question: 'How do we handle rate parity across channels?',
+          answer: `**The Problem**: Same hotel room listed on Booking.com, Expedia, Hotels.com, and the hotel's own website — prices must be consistent.
+
+**Channel Manager Architecture**:
+\`\`\`
+┌────────────────────────────────────────────────────────┐
+│               Channel Manager                          │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│   Hotel PMS (Property Management System)               │
+│        │                                               │
+│        ▼                                               │
+│   Channel Manager Hub                                  │
+│        │                                               │
+│   ┌────┼────┬─────────┬──────────┐                     │
+│   ▼    ▼    ▼         ▼          ▼                     │
+│  Booking Expedia  Hotels.com  Direct   Airbnb          │
+│  .com                        Website                   │
+│                                                        │
+│   All channels get same:                               │
+│   - Availability count                                 │
+│   - Base price (may differ by commission)              │
+│   - Restrictions (min stay, closed dates)              │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+\`\`\`
+
+**Inventory Sync Protocol**:
+\`\`\`
+When a booking happens on ANY channel:
+  1. Channel sends booking notification → Channel Manager
+  2. Channel Manager decrements central inventory
+  3. Pushes updated availability to ALL other channels
+  4. Latency target: < 30 seconds for full propagation
+
+Risk: During the 30-second window, another channel
+might sell the same room → overbooking
+\`\`\`
+
+**Rate Parity Enforcement**:
+\`\`\`
+Price consistency rules:
+  - Base rate must be identical across all channels
+  - Commission model: hotel pays 15-25% to each channel
+  - Net rate to hotel is the same regardless of channel
+  - Member discounts (e.g., Booking.com Genius) allowed
+    as long as they come from the channel's commission
+
+Monitoring:
+  - Daily rate scraper checks all channels
+  - Alert if price deviation > 2% detected
+  - Contractual penalty for rate parity violations
+\`\`\``
+        },
+        {
+          question: 'How do we handle cancellations and refunds?',
+          answer: `**Cancellation Policies**:
+\`\`\`
+Three common policy types:
+
+1. Free Cancellation:
+   - Cancel before cutoff_date → 100% refund
+   - Cancel after cutoff_date → charge first night
+   - Typical cutoff: 24-48 hours before check-in
+
+2. Non-Refundable:
+   - No refund regardless of cancellation timing
+   - Typically 10-20% cheaper than flexible rate
+   - Inventory NOT released (hotel keeps revenue)
+
+3. Partial Refund:
+   - Sliding scale based on proximity to check-in:
+     > 7 days: 100% refund
+     3-7 days: 75% refund
+     1-3 days: 50% refund
+     < 24 hours: No refund
+\`\`\`
+
+**Cancellation Processing**:
+\`\`\`python
+def cancel_booking(booking_id, user_id):
+    booking = db.get_booking(booking_id)
+
+    # Verify ownership
+    if booking.user_id != user_id:
+        raise Unauthorized()
+
+    # Calculate refund based on policy
+    policy = booking.hotel.cancellation_policy
+    days_until_checkin = (booking.check_in - today()).days
+    refund_pct = calculate_refund_percentage(policy, days_until_checkin)
+    refund_amount = booking.total_price * refund_pct
+
+    with db.transaction():
+        # Update booking status
+        booking.status = 'CANCELLED'
+        booking.cancelled_at = now()
+        booking.refund_amount = refund_amount
+
+        # Release inventory back to pool
+        for date in date_range(booking.check_in, booking.check_out):
+            db.execute(
+                "UPDATE room_inventory SET available = available + 1 "
+                "WHERE room_type_id = %s AND date = %s",
+                [booking.room_type_id, date]
+            )
+
+    # Process refund async
+    payment_service.refund(booking.payment_id, refund_amount)
+
+    # Notify hotel
+    notification_service.notify_hotel(booking.hotel_id, "CANCELLATION", booking_id)
+
+    return {"refund_amount": refund_amount, "status": "CANCELLED"}
+\`\`\``
+        },
+        {
+          question: 'How do we build inventory search at scale?',
+          answer: `**The Challenge**: 500M searches/day, each needing geo-filter + availability check + price.
+
+**Pre-Computed Availability Index**:
+\`\`\`
+Background job (runs every 5 minutes):
+  For each hotel:
+    For each date in next 90 days:
+      has_availability = ANY room type has available > 0
+      min_price = MIN(price) across available room types
+
+  Store in Elasticsearch:
+    hotel_search_doc = {
+      hotel_id, name, location, star_rating, amenities,
+      availability: {
+        "2024-06-15": { available: true, min_price: 149 },
+        "2024-06-16": { available: true, min_price: 159 },
+        ...
+      }
+    }
+\`\`\`
+
+**Search Query Execution**:
+\`\`\`
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "geo_distance": { "distance": "10km", "location": "40.7,-74.0" }},
+        { "range": { "availability.2024-06-15.min_price": { "lte": 200 }}},
+        { "term": { "availability.2024-06-15.available": true }},
+        { "term": { "availability.2024-06-16.available": true }}
+      ]
+    }
+  }
+}
+
+Returns 500 candidates in ~50ms
+\`\`\`
+
+**Stale Index Mitigation**:
+\`\`\`
+Pre-computed index can be 5 min stale:
+  - OK for search results page (approximate)
+  - NOT OK for booking page (must be exact)
+
+On hotel detail page:
+  → Query room_inventory directly for exact availability
+  → Fresh data, takes ~10ms per hotel
+
+This two-phase approach:
+  1. Fast approximate search (Elasticsearch, pre-computed)
+  2. Exact availability on demand (PostgreSQL, real-time)
+\`\`\``
+        },
+        {
+          question: 'How do we ensure idempotency in the booking flow?',
+          answer: `**The Problem**: Network timeout after payment → user retries → double charge.
+
+**Idempotency Key Pattern**:
+\`\`\`
+Client generates a UUID before starting checkout:
+  POST /api/bookings
+  Headers: {
+    Idempotency-Key: "550e8400-e29b-41d4-a716-446655440000"
+  }
+
+Server checks Redis:
+  key = f"idempotency:{idempotency_key}"
+  existing = redis.get(key)
+
+  if existing:
+    return existing  # Return same response, no re-execution
+
+  # Execute booking
+  result = process_booking(request)
+
+  # Store result for 24 hours
+  redis.setex(key, 86400, json.dumps(result))
+
+  return result
+\`\`\`
+
+**Payment Idempotency**:
+\`\`\`
+Stripe natively supports idempotency:
+  stripe.PaymentIntent.create(
+    amount=15000,
+    currency="usd",
+    idempotency_key="booking-550e8400"
+  )
+
+If retried with same key, Stripe returns original charge
+→ No double charging
+\`\`\`
+
+**Database-Level Idempotency**:
+\`\`\`sql
+-- Unique constraint on idempotency_key prevents duplicate bookings
+CREATE UNIQUE INDEX idx_booking_idempotency
+ON bookings(idempotency_key)
+WHERE idempotency_key IS NOT NULL;
+
+-- Insert with conflict handling
+INSERT INTO bookings (id, idempotency_key, ...)
+VALUES (...)
+ON CONFLICT (idempotency_key) DO NOTHING
+RETURNING *;
+\`\`\`
+
+**End-to-End Idempotency Chain**:
+\`\`\`
+Client → API (idempotency_key)
+         → Inventory (hold_id is idempotent)
+         → Payment (Stripe idempotency_key)
+         → Booking (DB unique constraint)
+         → Notification (message dedup in Kafka)
+
+Every layer is safe to retry independently.
 \`\`\``
         }
       ],
@@ -19075,7 +20407,121 @@ Search results: Cache by query hash
           purpose: 'Stores hotel metadata, reviews, photos, and historical booking data for analytics.',
           components: ['PostgreSQL (bookings)', 'Redis (session/cache)', 'S3 (photos)', 'Analytics warehouse']
         }
-      ]
+      ],
+
+      comparisonTables: [
+        {
+          id: 'locking-strategies',
+          title: 'Pessimistic vs Optimistic Locking for Bookings',
+          headers: ['Aspect', 'Pessimistic (SELECT FOR UPDATE)', 'Optimistic (Version Column)', 'Reservation Hold'],
+          rows: [
+            ['Mechanism', 'Row-level DB lock during transaction', 'Version check on UPDATE', 'Temporary inventory decrement with TTL'],
+            ['Concurrency', 'Blocks other transactions', 'Allows concurrent reads', 'Allows concurrent reads'],
+            ['Conflict Handling', 'Wait for lock release', 'Retry on version mismatch', 'Fail if no inventory for hold'],
+            ['User Experience', 'Slower checkout (lock wait)', 'May fail at last step', 'Smooth — room reserved while paying'],
+            ['Double-Booking Risk', 'Zero', 'Zero (with retry)', 'Zero (inventory pre-decremented)'],
+            ['Best For', 'High-contention rooms (last few left)', 'Low-contention (many rooms available)', 'Checkout flows with payment processing'],
+          ],
+          verdict: 'Use reservation hold for the user-facing flow, pessimistic locking for the inventory decrement within the hold creation'
+        },
+        {
+          id: 'search-architecture',
+          title: 'Single-Phase vs Two-Phase Hotel Search',
+          headers: ['Aspect', 'Single-Phase (SQL Only)', 'Two-Phase (ES + SQL)', 'Pre-computed Index'],
+          rows: [
+            ['Latency', '2-5 seconds', '200-500ms', '50-100ms'],
+            ['Accuracy', '100% real-time', '99% (Phase 2 verifies)', '95% (index staleness)'],
+            ['Scale', '~1K QPS', '~10K QPS', '~50K QPS'],
+            ['Complexity', 'Low', 'Medium', 'High (sync job needed)'],
+            ['Availability Freshness', 'Real-time', 'Real-time on Phase 2', '5-minute lag'],
+            ['Best For', 'MVP / small inventory', 'Production booking sites', 'Search result pages (not booking)'],
+          ],
+          verdict: 'Two-phase for production: Elasticsearch for fast candidate filtering, PostgreSQL for exact availability verification'
+        },
+        {
+          id: 'pricing-models',
+          title: 'Static vs Dynamic vs AI-Based Pricing',
+          headers: ['Aspect', 'Static Pricing', 'Rule-Based Dynamic', 'ML-Based Revenue Mgmt'],
+          rows: [
+            ['Complexity', 'Low — set and forget', 'Medium — configurable rules', 'High — trained model'],
+            ['Revenue Optimization', 'Baseline', '10-15% uplift', '20-30% uplift'],
+            ['Reaction Speed', 'Manual updates', 'Real-time rule evaluation', 'Predictive (prices set ahead)'],
+            ['Transparency', 'Fully explainable', 'Rule-based, auditable', 'Black box (needs explainability layer)'],
+            ['Setup Cost', 'None', 'Rules engine + demand data', 'ML pipeline + training data'],
+            ['Best For', 'Small hotels', 'Mid-size chains', 'Large OTAs (Booking, Expedia)'],
+          ],
+          verdict: 'Rule-based dynamic pricing for most hotels; ML-based for OTA platform-level optimization'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'booking-flow',
+          title: 'Hotel Booking Flow',
+          description: 'End-to-end flow from search to confirmed reservation',
+          steps: [
+            { step: 1, label: 'Search', detail: 'User enters location, dates, guests; Elasticsearch returns candidate hotels with approximate availability' },
+            { step: 2, label: 'Select Hotel', detail: 'User views hotel detail page; exact availability fetched from inventory DB for selected dates' },
+            { step: 3, label: 'Create Hold', detail: 'User clicks "Book Now"; inventory atomically decremented with 10-minute TTL hold' },
+            { step: 4, label: 'Payment', detail: 'User enters payment details; Stripe charges card with idempotency key' },
+            { step: 5, label: 'Confirm Booking', detail: 'Hold upgraded to CONFIRMED status; booking record created with confirmation code' },
+            { step: 6, label: 'Notification', detail: 'Confirmation email with ICS calendar attachment sent; hotel notified via channel manager' },
+            { step: 7, label: 'Post-Booking', detail: 'Availability index updated for search; analytics event published for revenue tracking' },
+          ]
+        },
+        {
+          id: 'cancellation-flow',
+          title: 'Cancellation and Refund Flow',
+          description: 'Processing a booking cancellation with policy-based refund calculation',
+          steps: [
+            { step: 1, label: 'Cancel Request', detail: 'User clicks cancel; system loads booking and hotel cancellation policy' },
+            { step: 2, label: 'Policy Evaluation', detail: 'Calculate refund: free (100%), partial (50-75%), or non-refundable (0%) based on days until check-in' },
+            { step: 3, label: 'User Confirmation', detail: 'Display refund amount and ask user to confirm; show refund timeline (3-5 business days)' },
+            { step: 4, label: 'Release Inventory', detail: 'Atomically increment room_inventory.available for all booked dates' },
+            { step: 5, label: 'Process Refund', detail: 'Stripe refund with original payment intent; partial refund if policy dictates' },
+            { step: 6, label: 'Notify Parties', detail: 'Cancellation email to user; availability update pushed to all distribution channels' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#003580',
+          items: [
+            { label: 'Elasticsearch (Search)', value: '500 GB / 31M hotels', bar: 85 },
+            { label: 'PostgreSQL (Inventory)', value: '2.2 TB sharded', bar: 80 },
+            { label: 'Redis (Cache)', value: '200 GB / TTL-based', bar: 90 },
+            { label: 'Stripe (Payments)', value: 'Idempotent charges', bar: 70 },
+            { label: 'Kafka (Events)', value: 'Booking + cancellation events', bar: 65 },
+            { label: 'S3 (Photos)', value: '50 TB hotel images', bar: 55 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '31M listings', value: 'Hotels and properties worldwide', bar: 95 },
+            { label: '560M visits/month', value: 'Monthly website/app visits', bar: 90 },
+            { label: '1.2B nights/year', value: 'Room-nights booked annually', bar: 85 },
+            { label: '<500ms search', value: 'P95 search result latency', bar: 80 },
+            { label: '~40 bookings/sec', value: 'Booking throughput', bar: 50 },
+            { label: '$26.9B revenue', value: 'Annual platform revenue', bar: 100 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single-DB Booking', description: 'PostgreSQL with geo-queries, availability joins, and pessimistic locking. Works for small inventory.', color: '#94a3b8', icon: 'server', capacity: '~10K hotels', rps: '50', pros: ['Simple architecture', 'Strong consistency', 'Easy to reason about'], cons: ['Slow search (geo + availability joins)', 'Database bottleneck', 'No caching'] },
+        { step: 2, title: 'Search + Cache', description: 'Add Elasticsearch for geo-search, Redis for hotel detail caching, two-phase search with availability verification.', color: '#2D8CFF', icon: 'layers', capacity: '~500K hotels', rps: '2K', pros: ['Sub-500ms search results', 'Hotel details cached at edge', 'Separation of read/write paths'], cons: ['Availability index can be stale', 'Cache invalidation complexity', 'Two systems to maintain'] },
+        { step: 3, title: 'Reservation Holds', description: 'Implement hold pattern with TTL, optimistic locking, Kafka for async notifications, Stripe for payments.', color: '#f59e0b', icon: 'zap', capacity: '~5M hotels', rps: '10K', pros: ['No more "booked while you paid" failures', 'Idempotent payment flow', 'Async notification delivery'], cons: ['Hold management adds complexity', 'Expired holds need cleanup', 'Saga pattern for failure recovery'] },
+        { step: 4, title: 'Dynamic Pricing', description: 'Rule-based dynamic pricing engine, demand monitoring, competitor rate scraping, yield management algorithms.', color: '#10b981', icon: 'globe', capacity: '~20M hotels', rps: '30K', pros: ['15-20% revenue uplift', 'Real-time demand response', 'Rate parity enforcement'], cons: ['Complex pricing rules to maintain', 'Price display consistency challenges', 'Competitor scraping reliability'] },
+        { step: 5, title: 'Global Multi-Channel', description: 'Channel manager for Expedia/Hotels.com sync, ML pricing, sharded inventory, multi-region deployment with active-active.', color: '#7c3aed', icon: 'cpu', capacity: '31M+ listings', rps: '100K+', pros: ['Full channel distribution', 'ML-optimized revenue management', 'Global low-latency search'], cons: ['Cross-channel sync latency (30s window)', 'Multi-region consistency', 'Extremely complex operations'] },
+      ],
     },
     {
       id: 'google-maps',
@@ -19085,6 +20531,22 @@ Search results: Cache by query hash
       color: '#4285f4',
       difficulty: 'Hard',
       description: 'Design a mapping and navigation system with real-time traffic.',
+
+      productMeta: {
+        name: 'Google Maps',
+        tagline: 'Navigation and mapping for 2 billion users',
+        stats: [
+          { label: 'MAU', value: '2B+' },
+          { label: 'Map Data', value: '20+ PB' },
+          { label: 'Routes/Hour', value: '100M+' },
+          { label: 'POIs', value: '250M+' },
+        ],
+        scope: {
+          inScope: ['Render map tiles at 22+ zoom levels', 'Calculate driving/walking/transit routes', 'Real-time traffic from crowdsourced GPS data', 'Point-of-interest search and geocoding', 'ETA prediction with traffic-aware routing', 'Offline map download for regions'],
+          outOfScope: ['Street View 360 imagery pipeline', 'Indoor mapping and floor plans', 'Ride-hailing integration', 'Autonomous driving HD maps'],
+        },
+        keyChallenge: 'Serving 10B+ tile requests/day from a CDN, computing 100M+ routes/hour using contraction hierarchies on a 1B-segment road graph, and integrating real-time traffic from millions of GPS-reporting phones with sub-2-minute freshness.',
+      },
 
       introduction: `Google Maps combines multiple complex systems: map rendering at 20+ zoom levels, shortest-path routing on a graph with 1 billion road segments, real-time traffic from millions of phones, and place search across 200M+ businesses.
 
@@ -19109,6 +20571,20 @@ The key insight is that maps are mostly static (roads don't change often), so we
         'Real-time traffic updates every 1-2 minutes',
         'Cover 1 billion road segments globally'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '2B MAU, 10B tile requests/day, 100M routes/hour, 250M POIs, 22 zoom levels, 1B road segments globally.',
+        calculations: [
+          { label: 'Tile request QPS', value: '~115K/s', detail: '10B tile requests/day / 86,400 = ~115K tile requests/sec' },
+          { label: 'Routing QPS', value: '~28K/s', detail: '100M routes/hour / 3,600 = ~27,800 routing requests/sec' },
+          { label: 'Tile storage', value: '~20 PB', detail: 'Pre-rendered tiles across 22 zoom levels for the entire globe (most at high zoom)' },
+          { label: 'Road graph memory', value: '~50 GB', detail: '1B segments x ~50 bytes (nodes, weight, geometry ref) = ~50 GB in-memory graph' },
+          { label: 'Traffic data throughput', value: '~5 GB/min', detail: 'Millions of GPS reports x ~500 bytes per update, aggregated every 1-2 min' },
+          { label: 'POI index size', value: '~200 GB', detail: '250M POIs x ~800 bytes per document in Elasticsearch' },
+          { label: 'CDN bandwidth', value: '~50 Tbps peak', detail: '115K tiles/sec x ~50 KB average tile size = ~5.75 GB/s + geographic distribution' },
+        ]
+      },
 
       dataModel: {
         description: 'Road graph, tiles, places, and traffic',
@@ -19182,8 +20658,8 @@ tiles {
 ├────────────────────────────────────────────────────────┤
 │                                                        │
 │   Zoom 0: 1 tile (entire world)                        │
-│   Zoom 1: 4 tiles (2×2)                                │
-│   Zoom 2: 16 tiles (4×4)                               │
+│   Zoom 1: 4 tiles (2x2)                                │
+│   Zoom 2: 16 tiles (4x4)                               │
 │   ...                                                  │
 │   Zoom 18: 68 billion tiles                            │
 │   Zoom 22: 17 trillion tiles (not all exist)           │
@@ -19208,7 +20684,7 @@ Example: /tiles/15/5241/12661.png
 **Rendering Strategy**:
 \`\`\`
 Option 1: Pre-render all tiles (static maps)
-  - Billions of tiles × 22 zoom levels
+  - Billions of tiles x 22 zoom levels
   - Store in object storage (S3)
   - Serve via CDN
   - Problem: Takes petabytes, updates are slow
@@ -19352,6 +20828,419 @@ Speed = real-time if available
 Confidence interval:
   "45-55 minutes depending on traffic"
 \`\`\``
+        },
+        {
+          question: 'How do contraction hierarchies achieve sub-millisecond routing?',
+          answer: `**The Key Insight**: Most nodes in a road graph are unimportant (residential streets). Important nodes (highway junctions) connect long-distance routes.
+
+**Preprocessing Phase (Offline, ~2-4 hours)**:
+\`\`\`
+1. Order nodes by importance:
+   - Highway junctions > arterial intersections > local streets
+   - Importance = number of shortest paths passing through node
+
+2. Contract nodes bottom-up:
+   For each unimportant node v:
+     - Remove v from graph
+     - For each pair of neighbors (u, w):
+       If shortest u→w path went through v:
+         Add shortcut edge u→w with weight = w(u,v) + w(v,w)
+
+3. Result: Augmented graph with shortcuts
+   - Original edges + shortcut edges
+   - Each node has an "importance level"
+\`\`\`
+
+**Query Phase (Online, <1ms)**:
+\`\`\`
+Bidirectional Dijkstra with one rule:
+  "Only traverse edges going UP in importance"
+
+Forward search from origin:
+  → Climbs up to highway-level nodes
+
+Backward search from destination:
+  → Climbs up to highway-level nodes
+
+They meet at a high-importance node in the middle.
+
+Why it's fast:
+  - Each search only explores ~500 nodes (instead of millions)
+  - Shortcuts skip over thousands of contracted nodes
+  - Cross-country route: ~500 + 500 = 1000 node visits
+  - At 1 microsecond per node: ~1ms total
+\`\`\`
+
+**Real-time Traffic Overlay**:
+\`\`\`
+Problem: CH preprocessing assumes static edge weights.
+Traffic changes weights every 2 minutes.
+
+Solution: Customizable CH
+  1. Preprocess hierarchy once (static graph structure)
+  2. At query time, use current traffic weights for original edges
+  3. Recompute shortcut weights lazily (only for affected shortcuts)
+  4. Small set of affected edges → fast weight update
+
+Alternative: A* for last-mile routing (near origin/destination)
+where traffic matters most, CH for the highway portion.
+\`\`\``
+        },
+        {
+          question: 'How does the tile serving CDN architecture work?',
+          answer: `**Tile Serving Pipeline**:
+\`\`\`
+Client request: GET /tiles/15/5241/12661.png
+
+1. CDN Edge (CloudFront/Akamai):
+   - Check edge cache → HIT: return immediately (<50ms)
+   - MISS: forward to origin
+
+2. Regional Cache (Redis/Memcached):
+   - Check regional cache → HIT: return, populate edge cache
+   - MISS: forward to tile server
+
+3. Tile Server (Origin):
+   - Check S3/GCS for pre-rendered tile → return if exists
+   - If not pre-rendered: render on-demand from vector data
+   - Cache result at all tiers
+
+Cache-Control: public, max-age=86400, s-maxage=604800
+\`\`\`
+
+**CDN Cache Strategy**:
+\`\`\`
+Hot tiles (city centers, zoom 10-16):
+  - Pre-warmed in CDN cache
+  - ~95% cache hit rate
+  - ~100M unique tiles cover most traffic
+
+Cold tiles (rural, zoom 18-22):
+  - Rendered on-demand
+  - Cached on first request
+  - May take 200-500ms on first load
+
+Vector tiles (mobile):
+  - Protobuf format, ~20KB per tile (vs 50KB PNG)
+  - Client renders with custom style
+  - 60% bandwidth savings
+  - Supports dark mode, custom colors
+\`\`\`
+
+**Global CDN Architecture**:
+\`\`\`
+200+ edge locations worldwide
+  - Each edge: ~100TB SSD cache
+  - Total CDN storage: ~20PB cached tiles
+  - Average distance to user: <50km
+
+Tile invalidation:
+  - Road changes are rare (weekly map updates)
+  - Invalidate only affected tiles by z/x/y coordinates
+  - Versioned tile URLs: /tiles/v3/15/5241/12661.pbf
+  - New version → new URL → no stale cache issues
+\`\`\``
+        },
+        {
+          question: 'How do offline maps work?',
+          answer: `**Region Download**:
+\`\`\`
+User selects a region (city, state, country):
+
+Download package includes:
+  1. Vector tiles for the region (all zoom levels)
+  2. Road graph subset (for offline routing)
+  3. POI data (names, categories, locations)
+  4. Address database (for offline geocoding)
+
+Package sizes:
+  - City (San Francisco): ~150 MB
+  - State (California): ~600 MB
+  - Country (Japan): ~1.5 GB
+\`\`\`
+
+**Graph Partitioning for Download**:
+\`\`\`
+1. Define bounding box for requested region
+2. Extract all road segments within the box
+3. Include border nodes that connect to outside region
+   (so routes can start/end at region boundaries)
+4. Pre-compute contraction hierarchy for the sub-graph
+5. Compress and package for download
+\`\`\`
+
+**On-Device Routing**:
+\`\`\`
+Same CH algorithm runs on phone:
+  - Sub-graph loaded into memory
+  - Routes computed in <100ms on modern phones
+  - No network needed
+
+Limitations:
+  - No real-time traffic (use historical patterns)
+  - No routes outside downloaded region
+  - POI data may be stale
+
+Staleness handling:
+  - Show "last updated: 3 days ago" badge
+  - Auto-download differential updates on WiFi
+  - Prompt for update if data > 30 days old
+\`\`\`
+
+**Differential Updates**:
+\`\`\`
+Instead of re-downloading entire region:
+  - Server computes diff since last download
+  - Only changed tiles, road segments, and POIs
+  - Typical diff: 5-15% of full package size
+  - Applied as patches to local data
+\`\`\``
+        },
+        {
+          question: 'How does POI search and geocoding work?',
+          answer: `**POI Search Architecture**:
+\`\`\`
+Query: "coffee shops near me"
+
+1. Parse intent:
+   - Category: "coffee_shop"
+   - Location: user's current GPS coordinates
+   - Radius: default 2km
+
+2. Elasticsearch query:
+   {
+     "query": {
+       "bool": {
+         "must": [
+           { "match": { "category": "coffee_shop" }},
+           { "geo_distance": { "distance": "2km", "location": user_coords }}
+         ]
+       }
+     },
+     "sort": [
+       { "_geo_distance": { "location": user_coords, "order": "asc" }},
+       { "rating": { "order": "desc" }},
+       { "popularity": { "order": "desc" }}
+     ]
+   }
+
+3. Ranking factors:
+   score = 0.3 * distance_score
+         + 0.3 * rating_score
+         + 0.2 * popularity_score  (visit frequency from GPS data)
+         + 0.1 * open_now_bonus
+         + 0.1 * photo_quality_score
+\`\`\`
+
+**Geocoding (Address → Coordinates)**:
+\`\`\`
+Input: "1600 Amphitheatre Parkway, Mountain View, CA"
+
+Steps:
+  1. Parse address into components:
+     { street: "1600 Amphitheatre Parkway", city: "Mountain View", state: "CA" }
+  2. Lookup city → bounding box
+  3. Search street name within bounding box (fuzzy match)
+  4. Interpolate house number along street geometry
+  5. Return: { lat: 37.4220, lng: -122.0841 }
+
+Reverse geocoding (Coordinates → Address):
+  - R-tree spatial index on address points
+  - Find nearest address point to given coordinates
+  - Snap to nearest road segment
+  - Interpolate house number from road geometry
+\`\`\`
+
+**S2 Geometry Library**:
+\`\`\`
+Google's spatial indexing system:
+  - Divides Earth's surface into hierarchical cells
+  - Each cell has a unique 64-bit ID
+  - Enables efficient spatial queries and indexing
+
+Used for:
+  - Tile coordinate computation
+  - Geo-fencing (is point inside polygon?)
+  - Nearest-neighbor POI search
+  - Region containment checks for offline maps
+\`\`\``
+        },
+        {
+          question: 'How does ETA prediction work?',
+          answer: `**ETA Computation**:
+\`\`\`
+Basic ETA = sum of (segment_length / segment_speed)
+            for each segment in the route
+
+Where segment_speed comes from (priority order):
+  1. Real-time traffic (if data available, <5 min old)
+  2. Historical pattern (same day-of-week, same time)
+  3. Road speed limit (fallback)
+\`\`\`
+
+**ML-Enhanced ETA**:
+\`\`\`
+Features for ETA model:
+  - Route distance and segment count
+  - Current traffic conditions along route
+  - Historical traffic patterns for this time/day
+  - Destination type (parking time: airport=10min, store=2min)
+  - Weather conditions
+  - Special events (concerts, sports games)
+  - Day type (weekday, weekend, holiday)
+
+Model output:
+  - Point estimate: 47 minutes
+  - Confidence interval: 42-55 minutes
+  - Updated every 2 minutes during navigation
+\`\`\`
+
+**Live ETA Updates During Navigation**:
+\`\`\`
+While driving:
+  1. Track actual progress vs estimated progress
+  2. Re-query traffic for remaining route segments
+  3. Recalculate ETA with updated traffic data
+  4. If a faster route exists (>5 min savings):
+     → Suggest reroute to driver
+
+ETA recalculation frequency:
+  - Every 2 minutes for traffic data refresh
+  - Immediately on reroute or missed turn
+  - Immediately on incident reported ahead
+\`\`\`
+
+**Historical Pattern Database**:
+\`\`\`
+For each road segment, store:
+  speed_pattern[day_of_week][hour] = avg_speed
+
+Example: Highway 101, segment #42381
+  Monday 8am: 25 mph (rush hour)
+  Monday 2pm: 60 mph (off-peak)
+  Saturday 8am: 55 mph (weekend)
+  Saturday 2pm: 50 mph (weekend traffic)
+
+Built from years of anonymized GPS data.
+Used when real-time data is unavailable.
+\`\`\``
+        },
+        {
+          question: 'How does map-matching work for traffic data?',
+          answer: `**The Problem**: GPS coordinates from phones are noisy (5-20m accuracy) and don't fall exactly on roads.
+
+**Map-Matching Algorithm**:
+\`\`\`
+Input: Sequence of GPS points (lat, lng, timestamp)
+Output: Sequence of road segments the device traveled on
+
+Hidden Markov Model (HMM) approach:
+  - States: Candidate road segments near each GPS point
+  - Emissions: Probability of GPS point given road segment
+    (based on distance from road)
+  - Transitions: Probability of traveling between segments
+    (based on routing distance vs straight-line distance)
+
+Viterbi algorithm finds most likely sequence of road segments.
+\`\`\`
+
+**Example**:
+\`\`\`
+GPS point at (37.7749, -122.4194) with 10m accuracy:
+  Candidate roads:
+    1. Market Street (5m away) → emission prob = 0.8
+    2. Mission Street (15m away) → emission prob = 0.3
+    3. Freeway (50m away) → emission prob = 0.01
+
+Previous GPS point was on Market Street:
+  → Transition Market→Market = 0.9 (straight road)
+  → Transition Market→Mission = 0.1 (requires turn)
+  → Transition Market→Freeway = 0.01 (requires ramp)
+
+HMM selects: Market Street (highest combined probability)
+\`\`\`
+
+**Speed Computation from Matched Points**:
+\`\`\`
+After map-matching:
+  Point A on segment X at time T1
+  Point B on segment X at time T2
+  Distance along segment: D meters
+
+  Speed = D / (T2 - T1)
+
+Aggregate across all devices on segment X:
+  current_speed = median(all_device_speeds)
+  (median is robust to outliers — stopped buses, etc.)
+
+Filter out:
+  - Speeds < 3 km/h (pedestrians, stopped)
+  - Speeds > 200 km/h (GPS glitches)
+  - Devices not on a road (parks, parking lots)
+\`\`\``
+        },
+        {
+          question: 'How does S2 geometry enable spatial indexing?',
+          answer: `**S2 Cell System**:
+\`\`\`
+Earth's surface → Cube → 6 faces → Hilbert curve subdivision
+
+S2 projects the sphere onto a cube, then subdivides each face
+using a space-filling Hilbert curve into hierarchical cells.
+
+Cell levels (0-30):
+  Level 0: 6 cells (cube faces), ~85M km^2 each
+  Level 12: ~3.3 km^2 per cell (city blocks)
+  Level 16: ~0.013 km^2 per cell (individual buildings)
+  Level 30: ~1 cm^2 per cell (maximum precision)
+
+Each cell has a 64-bit ID:
+  - 3 bits for cube face
+  - 2 bits per level (up to 60 bits for level 30)
+  - Hierarchical: parent cell ID is a prefix of child cell IDs
+\`\`\`
+
+**Why S2 for Maps**:
+\`\`\`
+1. Spatial indexing:
+   - Store POIs with their S2 cell IDs
+   - Range query on cell IDs = spatial query
+   - "Find POIs near me" = find cells near my cell
+
+2. Tile coordinate mapping:
+   - Each map tile corresponds to an S2 cell range
+   - Efficient tile-to-data lookup
+
+3. Region covering:
+   - Approximate any polygon with a set of S2 cells
+   - "Is this point inside the San Francisco boundary?"
+   = "Is this point's S2 cell in SF's covering set?"
+
+4. Proximity search:
+   - Find all S2 cells within radius R of a point
+   - Query database for entities in those cells
+   - Much faster than computing distances for all entities
+\`\`\`
+
+**Implementation in Database**:
+\`\`\`
+-- Store S2 cell ID with each POI
+CREATE TABLE places (
+  id BIGINT PRIMARY KEY,
+  name VARCHAR(200),
+  s2_cell_id BIGINT,  -- level 16 cell containing this place
+  ...
+);
+CREATE INDEX idx_s2 ON places(s2_cell_id);
+
+-- Nearby query: find cells within radius, then query
+SELECT * FROM places
+WHERE s2_cell_id BETWEEN ? AND ?  -- range for covering cells
+ORDER BY s2_distance(s2_cell_id, ?) ASC
+LIMIT 20;
+\`\`\`
+
+Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for large datasets because they use simple integer range scans.`
         }
       ],
 
@@ -19578,7 +21467,121 @@ Confidence interval:
           purpose: 'Packages map tiles and routing graphs for download so navigation works without connectivity.',
           components: ['Region packager', 'Differential update generator', 'On-device routing engine', 'Staleness tracker']
         }
-      ]
+      ],
+
+      comparisonTables: [
+        {
+          id: 'routing-algorithms',
+          title: 'Dijkstra vs A* vs Contraction Hierarchies',
+          headers: ['Aspect', 'Dijkstra', 'A*', 'Contraction Hierarchies'],
+          rows: [
+            ['Complexity', 'O(E + V log V)', 'O(E + V log V) but faster in practice', 'O(log V) query after O(VE) preprocess'],
+            ['Preprocessing', 'None', 'None', '2-4 hours offline'],
+            ['Query Time (1B edges)', '~10 seconds', '~2 seconds', '<1 millisecond'],
+            ['Real-time Traffic', 'Easy (update weights)', 'Easy (update weights)', 'Hard (invalidates shortcuts)'],
+            ['Memory', 'O(V + E)', 'O(V + E)', 'O(V + E + shortcuts)'],
+            ['Best For', 'Small graphs, dynamic weights', 'Medium graphs, good heuristics', 'Large static graphs, production routing'],
+          ],
+          verdict: 'Contraction hierarchies for production routing; A* for walking/cycling (smaller graph); Dijkstra for real-time rerouting on local segments'
+        },
+        {
+          id: 'tile-formats',
+          title: 'Raster PNG vs Vector Protobuf Tiles',
+          headers: ['Aspect', 'Raster (PNG)', 'Vector (Protobuf/MVT)'],
+          rows: [
+            ['Size per Tile', '~50 KB (256x256)', '~20 KB'],
+            ['Rendering', 'Server-side (pre-rendered)', 'Client-side (GPU-accelerated)'],
+            ['Styling', 'Fixed at render time', 'Dynamic (dark mode, custom colors)'],
+            ['Label Rotation', 'Not possible (baked in)', 'Follows map rotation'],
+            ['Bandwidth', 'High (every style needs separate tiles)', 'Low (one tile, many styles)'],
+            ['Client CPU', 'None (just display image)', 'Moderate (render pipeline)'],
+          ],
+          verdict: 'Vector tiles for mobile apps (smaller, styleable); raster tiles for web embeds and low-power devices'
+        },
+        {
+          id: 'spatial-indexing',
+          title: 'PostGIS vs S2 Geometry vs H3 for Spatial Indexing',
+          headers: ['Aspect', 'PostGIS (R-tree)', 'S2 Geometry', 'H3 (Uber)'],
+          rows: [
+            ['Index Type', 'R-tree on geometries', 'Hilbert curve cell IDs', 'Hexagonal grid cells'],
+            ['Query Speed', 'Good for complex geometries', 'Excellent for point lookups', 'Good for area aggregation'],
+            ['Storage', 'Geometry column (variable)', '64-bit integer per point', '64-bit integer per cell'],
+            ['Aggregation', 'Arbitrary polygons', 'Cell-level aggregation', 'Hexagonal bins (uniform area)'],
+            ['Edge Distortion', 'None (exact geometry)', 'Some (cube projection)', 'Minimal (hexagons)'],
+            ['Best For', 'Complex spatial queries', 'Point indexing at global scale', 'Heatmaps and spatial analytics'],
+          ],
+          verdict: 'S2 for point-based spatial indexing at Google scale; PostGIS for complex polygon queries; H3 for ride-sharing analytics'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'routing-flow',
+          title: 'Route Calculation Flow',
+          description: 'How a driving directions request is processed from query to polyline response',
+          steps: [
+            { step: 1, label: 'Geocode Endpoints', detail: 'Resolve origin and destination to lat/lng coordinates if addresses were provided' },
+            { step: 2, label: 'Graph Partition Lookup', detail: 'Determine which graph partitions contain origin and destination using S2 cell mapping' },
+            { step: 3, label: 'Traffic Weight Overlay', detail: 'Fetch current traffic speeds for road segments in origin/destination areas from traffic store' },
+            { step: 4, label: 'CH Bidirectional Search', detail: 'Run contraction hierarchy search from both ends; combine shortcuts with traffic-adjusted local edges' },
+            { step: 5, label: 'Multi-Route Generation', detail: 'Compute 2-3 alternative routes by penalizing edges from the primary route and re-searching' },
+            { step: 6, label: 'ETA Calculation', detail: 'Sum segment travel times using real-time traffic, historical patterns, and ML adjustment factors' },
+            { step: 7, label: 'Response Assembly', detail: 'Encode route as polyline, generate turn-by-turn steps, return with distance, duration, and alternatives' },
+          ]
+        },
+        {
+          id: 'traffic-pipeline-flow',
+          title: 'Real-time Traffic Pipeline',
+          description: 'From phone GPS update to traffic-colored map tiles',
+          steps: [
+            { step: 1, label: 'GPS Report', detail: 'Phone sends anonymized location update: (lat, lng, speed, heading, timestamp) every 3-5 seconds' },
+            { step: 2, label: 'Kafka Ingestion', detail: 'Location updates published to Kafka topic partitioned by geographic region' },
+            { step: 3, label: 'Map Matching', detail: 'HMM-based algorithm matches noisy GPS points to specific road segments' },
+            { step: 4, label: 'Speed Aggregation', detail: 'Flink computes median speed per road segment from all matched device reports (5-min window)' },
+            { step: 5, label: 'Traffic Store Update', detail: 'Write speed_ratio per segment to Traffic DB; publish to edge weight update stream' },
+            { step: 6, label: 'Traffic Tile Generation', detail: 'Generate color-coded overlay tiles (green/yellow/red) for map display; push to CDN' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#4285f4',
+          items: [
+            { label: 'CDN (Tile Serving)', value: '115K tiles/sec', bar: 95 },
+            { label: 'Contraction Hierarchies', value: '<1ms routing query', bar: 100 },
+            { label: 'Flink (Traffic Stream)', value: '5 GB/min GPS data', bar: 85 },
+            { label: 'Elasticsearch (POI)', value: '250M places indexed', bar: 80 },
+            { label: 'S2 Geometry (Spatial)', value: '64-bit cell indexing', bar: 75 },
+            { label: 'Object Storage (Tiles)', value: '20+ PB map data', bar: 90 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '2B+ MAU', value: 'Monthly active users worldwide', bar: 95 },
+            { label: '10B tiles/day', value: 'Map tile requests served', bar: 90 },
+            { label: '100M routes/hour', value: 'Directions computed', bar: 85 },
+            { label: '1B road segments', value: 'Global road graph size', bar: 80 },
+            { label: '<200ms tile load', value: 'CDN edge cache latency', bar: 100 },
+            { label: '<2 min traffic', value: 'Traffic data freshness', bar: 75 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Static Map Server', description: 'Pre-rendered raster tiles served from object storage via CDN. Dijkstra routing on full road graph.', color: '#94a3b8', icon: 'server', capacity: '~1M users', rps: '1K', pros: ['Simple tile serving infrastructure', 'Correct shortest paths', 'CDN handles read scale'], cons: ['Petabytes of pre-rendered tiles', 'Slow routing (seconds per query)', 'No traffic awareness'] },
+        { step: 2, title: 'Vector Tiles + A*', description: 'Switch to vector tiles for 60% bandwidth savings. A* routing with heuristics for faster queries.', color: '#2D8CFF', icon: 'layers', capacity: '~50M users', rps: '10K', pros: ['Dynamic styling and dark mode', 'Smaller tile downloads', 'Faster routing with heuristics'], cons: ['Client GPU required for rendering', 'Still slow for long routes', 'No real-time traffic'] },
+        { step: 3, title: 'Contraction Hierarchies', description: 'Pre-computed routing shortcuts enable sub-ms query times. Graph partitioned across servers.', color: '#f59e0b', icon: 'zap', capacity: '~500M users', rps: '50K', pros: ['<1ms routing queries', 'Cross-country routes in milliseconds', 'Partitioned for horizontal scaling'], cons: ['Hours of preprocessing on graph changes', 'Traffic integration requires special handling', 'Complex graph update pipeline'] },
+        { step: 4, title: 'Real-time Traffic', description: 'Crowdsourced GPS data processed via Flink, map-matching with HMM, traffic-aware routing and ETA.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '100K', pros: ['Live traffic conditions on map', 'Accurate ETAs with traffic', 'Automatic rerouting during navigation'], cons: ['Privacy concerns (anonymization needed)', 'Coverage gaps in low-adoption areas', 'High-throughput stream processing cost'] },
+        { step: 5, title: 'Global Platform', description: 'ML ETA prediction, offline maps with differential updates, S2 spatial indexing, multi-region active-active with 200+ CDN edge locations.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '500K+', pros: ['Sub-200ms tile load globally', 'ML-enhanced ETA accuracy', 'Offline navigation for any region'], cons: ['20+ PB of map data to maintain', 'Complex multi-region consistency', 'Enormous operational surface area'] },
+      ],
     },
     {
       id: 'zoom',
