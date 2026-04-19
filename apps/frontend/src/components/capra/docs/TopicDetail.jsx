@@ -2295,7 +2295,7 @@ export default function TopicDetail({
                     </div>
                   )}
 
-                  {/* Key Design Decisions — Numbered timeline cards */}
+                  {/* Key Design Decisions — Diagram + Numbered cards */}
                   {topicDetails.keyDecisions && (
                     <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
                       <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
@@ -2303,17 +2303,32 @@ export default function TopicDetail({
                         <h3 className="text-[15px] font-bold text-white landing-display">Key Design Decisions</h3>
                         <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.keyDecisions.length}</span>
                       </div>
+                      {/* Decision architecture diagram */}
+                      {(() => {
+                        const diagSrc = `/diagrams/${selectedTopic}/key-decisions.png`;
+                        return (
+                          <div className="p-3 pb-0">
+                            <img
+                              src={diagSrc}
+                              alt="Key Design Decisions"
+                              className="w-full rounded-lg border border-[var(--border)]"
+                              style={{ maxHeight: '500px', objectFit: 'contain' }}
+                              loading="lazy"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                          </div>
+                        );
+                      })()}
                       <div className="p-3">
-                        <div className="flex flex-nowrap gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                           {topicDetails.keyDecisions.map((decision, i) => (
-                            <div key={i} className="flex-shrink-0 w-56 p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/20 hover:shadow-sm transition-all">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-[var(--accent)]/100 text-white landing-mono">
+                            <div key={i} className="p-3 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/20 hover:shadow-sm transition-all">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)] text-white landing-mono">
                                   {i + 1}
                                 </span>
-                                <div className="h-px flex-1 bg-[var(--accent)]/30" />
                               </div>
-                              <p className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{decision}</p>
+                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed landing-body">{decision}</p>
                             </div>
                           ))}
                         </div>
