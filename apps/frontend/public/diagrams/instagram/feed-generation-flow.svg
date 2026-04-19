@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Instagram Feed Generation Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">Hybrid fan-out: pre-computed cache + celebrity pull + ML ranking + ad injection</text>
+
+  <!-- User Opens -->
+  <rect x="15" y="105" width="110" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="105" width="110" height="28" rx="10 10 0 0" fill="#e4405f"/>
+  <text x="70" y="124" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Opens</text>
+  <text x="70" y="152" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">GET /api/feed</text>
+  <text x="70" y="170" text-anchor="middle" fill="#64748b" font-size="9">cursor + limit=20</text>
+  <text x="70" y="200" text-anchor="middle" fill="#64748b" font-size="16">&#x1F4F1;</text>
+
+  <!-- Redis Cache -->
+  <rect x="170" y="90" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="170" y="90" width="120" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="230" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Redis Cache</text>
+  <text x="230" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Fan-Out-on-Write</text>
+  <text x="230" y="154" text-anchor="middle" fill="#64748b" font-size="9">ZREVRANGE</text>
+  <text x="230" y="170" text-anchor="middle" fill="#64748b" font-size="9">feed:{userId}</text>
+  <text x="230" y="186" text-anchor="middle" fill="#64748b" font-size="9">Pre-computed posts</text>
+  <text x="230" y="206" text-anchor="middle" fill="#94a3b8" font-size="8">5-min TTL</text>
+
+  <!-- Celebrity Posts -->
+  <rect x="335" y="90" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="335" y="90" width="120" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="395" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Celebrity Pull</text>
+  <text x="395" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Fan-Out-on-Read</text>
+  <text x="395" y="154" text-anchor="middle" fill="#64748b" font-size="9">Fetch from followed</text>
+  <text x="395" y="170" text-anchor="middle" fill="#64748b" font-size="9">celebrities (>10K)</text>
+  <text x="395" y="186" text-anchor="middle" fill="#64748b" font-size="9">Recent 24h posts</text>
+  <text x="395" y="206" text-anchor="middle" fill="#94a3b8" font-size="8">DB query</text>
+
+  <!-- Merge -->
+  <rect x="500" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="500" y="105" width="100" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="550" y="124" text-anchor="middle" fill="white" font-size="11" font-weight="700">Merge</text>
+  <text x="550" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Combine + Dedup</text>
+  <text x="550" y="168" text-anchor="middle" fill="#64748b" font-size="9">Pushed + pulled</text>
+  <text x="550" y="184" text-anchor="middle" fill="#64748b" font-size="9">Remove by postId</text>
+  <text x="550" y="200" text-anchor="middle" fill="#94a3b8" font-size="8">~1000 candidates</text>
+
+  <!-- ML Rank -->
+  <rect x="645" y="90" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="645" y="90" width="120" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="705" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">ML Rank</text>
+  <text x="705" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Engagement Score</text>
+  <text x="705" y="154" text-anchor="middle" fill="#64748b" font-size="9">P(like), P(save)</text>
+  <text x="705" y="170" text-anchor="middle" fill="#64748b" font-size="9">Relationship signal</text>
+  <text x="705" y="186" text-anchor="middle" fill="#64748b" font-size="9">Recency boost</text>
+  <text x="705" y="206" text-anchor="middle" fill="#94a3b8" font-size="8">Neural network</text>
+
+  <!-- Inject Ads -->
+  <rect x="810" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="810" y="105" width="100" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="860" y="124" text-anchor="middle" fill="white" font-size="11" font-weight="700">Inject Ads</text>
+  <text x="860" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Diversity Rules</text>
+  <text x="860" y="168" text-anchor="middle" fill="#64748b" font-size="9">Max 2/creator</text>
+  <text x="860" y="184" text-anchor="middle" fill="#64748b" font-size="9">Sponsored insert</text>
+  <text x="860" y="200" text-anchor="middle" fill="#94a3b8" font-size="8">Business rules</text>
+
+  <!-- Return Feed -->
+  <rect x="955" y="105" width="110" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="955" y="105" width="110" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="1010" y="124" text-anchor="middle" fill="white" font-size="11" font-weight="700">Return Feed</text>
+  <text x="1010" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Top 20 Posts</text>
+  <text x="1010" y="168" text-anchor="middle" fill="#64748b" font-size="9">With cursor</text>
+  <text x="1010" y="184" text-anchor="middle" fill="#64748b" font-size="9">Cache result</text>
+  <text x="1010" y="200" text-anchor="middle" fill="#94a3b8" font-size="8">&lt;200ms total</text>
+
+  <!-- Client -->
+  <rect x="1110" y="120" width="75" height="80" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1110" y="120" width="75" height="24" rx="10 10 0 0" fill="#e4405f"/>
+  <text x="1147" y="138" text-anchor="middle" fill="white" font-size="10" font-weight="700">Client</text>
+  <text x="1147" y="162" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Render</text>
+  <text x="1147" y="178" text-anchor="middle" fill="#64748b" font-size="9">Infinite scroll</text>
+
+  <!-- Flow Arrows -->
+  <line x1="125" y1="155" x2="167" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="127" y="141" width="38" height="14" rx="3" fill="#2563eb"/>
+  <text x="146" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="290" y1="155" x2="332" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="292" y="141" width="38" height="14" rx="3" fill="#f97316"/>
+  <text x="311" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="455" y1="155" x2="497" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="457" y="141" width="38" height="14" rx="3" fill="#2563eb"/>
+  <text x="476" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <line x1="600" y1="155" x2="642" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="602" y="141" width="38" height="14" rx="3" fill="#7c3aed"/>
+  <text x="621" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <line x1="765" y1="155" x2="807" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="767" y="141" width="38" height="14" rx="3" fill="#16a34a"/>
+  <text x="786" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464;</text>
+
+  <line x1="910" y1="155" x2="952" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="912" y="141" width="38" height="14" rx="3" fill="#2563eb"/>
+  <text x="931" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465;</text>
+
+  <line x1="1065" y1="155" x2="1107" y2="155" stroke="#e4405f" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1067" y="141" width="38" height="14" rx="3" fill="#e4405f"/>
+  <text x="1086" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2466;</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; User opens app, check Redis for pre-computed feed (fan-out-on-write)</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Fetch recent posts from followed celebrities (fan-out-on-read, &gt;10K followers)</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Merge pushed + pulled posts, deduplicate by postId (~1000 candidates)</text>
+  <text x="430" y="381" fill="#475569" font-size="9">&#x2463; ML ranks by P(engagement): likes, saves, relationship, recency</text>
+  <text x="430" y="397" fill="#475569" font-size="9">&#x2464; Inject sponsored ads, enforce diversity rules (max 2 per creator)</text>
+  <text x="430" y="413" fill="#475569" font-size="9">&#x2465; Return top 20 posts with pagination cursor, cache ranked feed (5-min TTL)</text>
+  <text x="850" y="381" fill="#475569" font-size="9">&#x2466; Client renders feed with infinite scroll</text>
+  <rect x="850" y="390" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="866" y="399" fill="#475569" font-size="9">Total latency target: &lt;200ms end-to-end</text>
+</svg>

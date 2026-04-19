@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Typeahead Suggestion Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">User types "sys" through CDN cache, trie prefix lookup, frequency scoring, personalization, top-5 render</text>
+
+  <!-- User Types -->
+  <rect x="15" y="100" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="100" width="120" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="75" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Types</text>
+  <text x="75" y="147" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="700">"sys"</text>
+  <text x="75" y="167" text-anchor="middle" fill="#64748b" font-size="9">150ms debounce</text>
+  <text x="75" y="183" text-anchor="middle" fill="#64748b" font-size="9">Local LRU check</text>
+  <text x="75" y="207" text-anchor="middle" fill="#64748b" font-size="14">&#x2328;&#xFE0F;</text>
+
+  <!-- CDN Cache -->
+  <rect x="185" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="185" y="95" width="120" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="245" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">CDN Cache</text>
+  <text x="245" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Edge Check</text>
+  <text x="245" y="160" text-anchor="middle" fill="#64748b" font-size="9">1-3 char: 99% hit</text>
+  <text x="245" y="176" text-anchor="middle" fill="#64748b" font-size="9">5-min TTL</text>
+  <text x="245" y="192" text-anchor="middle" fill="#64748b" font-size="9">~50ms latency</text>
+  <text x="245" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">CloudFront/Fastly</text>
+
+  <!-- Trie Lookup -->
+  <rect x="355" y="85" width="140" height="150" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="355" y="85" width="140" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="425" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Trie Lookup</text>
+  <text x="425" y="132" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Prefix Match</text>
+  <text x="425" y="150" text-anchor="middle" fill="#64748b" font-size="9">O(k) traversal</text>
+  <text x="425" y="166" text-anchor="middle" fill="#64748b" font-size="9">k = prefix length</text>
+  <text x="425" y="182" text-anchor="middle" fill="#64748b" font-size="9">Pre-computed top-10</text>
+  <text x="425" y="198" text-anchor="middle" fill="#64748b" font-size="9">per node</text>
+  <text x="425" y="222" text-anchor="middle" fill="#94a3b8" font-size="8">~10 GB in-memory, 26 shards</text>
+
+  <!-- Score by Frequency -->
+  <rect x="545" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="545" y="95" width="120" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="605" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Score + Rank</text>
+  <text x="605" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Frequency Sort</text>
+  <text x="605" y="160" text-anchor="middle" fill="#64748b" font-size="9">Search frequency</text>
+  <text x="605" y="176" text-anchor="middle" fill="#64748b" font-size="9">Trending boost</text>
+  <text x="605" y="192" text-anchor="middle" fill="#64748b" font-size="9">Recency signal</text>
+  <text x="605" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Pre-computed scores</text>
+
+  <!-- Personalize -->
+  <rect x="715" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="715" y="95" width="120" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="775" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Personalize</text>
+  <text x="775" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">User Blend</text>
+  <text x="775" y="160" text-anchor="middle" fill="#64748b" font-size="9">70% global results</text>
+  <text x="775" y="176" text-anchor="middle" fill="#64748b" font-size="9">30% user history</text>
+  <text x="775" y="192" text-anchor="middle" fill="#64748b" font-size="9">Redis per-user</text>
+  <text x="775" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">If authenticated</text>
+
+  <!-- Return Top-5 -->
+  <rect x="885" y="105" width="110" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="885" y="105" width="110" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="940" y="124" text-anchor="middle" fill="white" font-size="11" font-weight="700">Return Top-5</text>
+  <text x="940" y="152" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">JSON Response</text>
+  <text x="940" y="170" text-anchor="middle" fill="#64748b" font-size="9">Apply blocklist</text>
+  <text x="940" y="186" text-anchor="middle" fill="#64748b" font-size="9">Safe search filter</text>
+  <text x="940" y="202" text-anchor="middle" fill="#94a3b8" font-size="8">&lt;50ms total</text>
+
+  <!-- Client Renders -->
+  <rect x="1045" y="100" width="135" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1045" y="100" width="135" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="1112" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">Client Renders</text>
+  <text x="1112" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Dropdown</text>
+  <text x="1112" y="165" text-anchor="middle" fill="#64748b" font-size="9">Highlight prefix bold</text>
+  <text x="1112" y="181" text-anchor="middle" fill="#64748b" font-size="9">Type icons (query/entity)</text>
+  <text x="1112" y="197" text-anchor="middle" fill="#64748b" font-size="9">Keyboard nav</text>
+
+  <!-- Flow Arrows -->
+  <line x1="135" y1="155" x2="182" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="137" y="141" width="42" height="14" rx="3" fill="#f97316"/>
+  <text x="158" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="305" y1="155" x2="352" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="307" y="141" width="42" height="14" rx="3" fill="#2563eb"/>
+  <text x="328" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="495" y1="155" x2="542" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="497" y="141" width="42" height="14" rx="3" fill="#7c3aed"/>
+  <text x="518" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <line x1="665" y1="155" x2="712" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="667" y="141" width="42" height="14" rx="3" fill="#ef4444"/>
+  <text x="688" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <line x1="835" y1="155" x2="882" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="837" y="141" width="42" height="14" rx="3" fill="#16a34a"/>
+  <text x="858" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464;</text>
+
+  <line x1="995" y1="155" x2="1042" y2="155" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="997" y="141" width="42" height="14" rx="3" fill="#22c55e"/>
+  <text x="1018" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465;</text>
+
+  <!-- CDN cache hit shortcut arrow -->
+  <path d="M 245 228 Q 245 270 940 270 Q 940 260 940 218" stroke="#f97316" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowOrange)"/>
+  <rect x="530" y="260" width="120" height="14" rx="3" fill="#f97316"/>
+  <text x="590" y="270" text-anchor="middle" fill="white" font-size="8" font-weight="600">CDN hit: skip to return</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; User types "sys", 150ms debounce, check local LRU cache, then hit CDN edge (99% hit for 1-3 char)</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; On CDN miss: route to trie shard (by first char), O(k) prefix lookup returns pre-computed top-10</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Score by search frequency + trending boost + recency signal</text>
+  <text x="430" y="381" fill="#475569" font-size="9">&#x2463; Personalize: blend 70% global + 30% per-user search history (Redis)</text>
+  <text x="430" y="397" fill="#475569" font-size="9">&#x2464; Apply blocklist + safe search filter, return top-5 suggestions (&lt;50ms)</text>
+  <text x="430" y="413" fill="#475569" font-size="9">&#x2465; Client renders dropdown with bold prefix highlight and type indicators</text>
+  <rect x="860" y="372" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="876" y="381" fill="#475569" font-size="9">Dashed: CDN cache hit path (skips trie + ranking)</text>
+</svg>

@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Ticketmaster On-Sale Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">Fan joins virtual queue, waits for position, enters purchase flow, selects seats, pays, ticket issued</text>
+
+  <!-- Fan Hits Buy -->
+  <rect x="10" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="10" y="105" width="100" height="26" rx="10 10 0 0" fill="#026CDF"/>
+  <text x="60" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Fan Hits Buy</text>
+  <text x="60" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">CAPTCHA</text>
+  <text x="60" y="166" text-anchor="middle" fill="#64748b" font-size="9">Verify identity</text>
+  <text x="60" y="182" text-anchor="middle" fill="#64748b" font-size="9">Bot prevention</text>
+  <text x="60" y="202" text-anchor="middle" fill="#64748b" font-size="14">&#x1F3AB;</text>
+
+  <!-- Virtual Queue -->
+  <rect x="145" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="145" y="90" width="110" height="26" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="200" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Virtual Queue</text>
+  <text x="200" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Random Position</text>
+  <text x="200" y="152" text-anchor="middle" fill="#64748b" font-size="9">Redis ZADD</text>
+  <text x="200" y="168" text-anchor="middle" fill="#64748b" font-size="9">Fair (not FIFO)</text>
+  <text x="200" y="184" text-anchor="middle" fill="#64748b" font-size="9">Prevents gaming</text>
+  <text x="200" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">14M+ users peak</text>
+
+  <!-- Wait -->
+  <rect x="290" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="290" y="105" width="100" height="26" rx="10 10 0 0" fill="#f97316"/>
+  <text x="340" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Wait</text>
+  <text x="340" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">WebSocket</text>
+  <text x="340" y="166" text-anchor="middle" fill="#64748b" font-size="9">Position updates</text>
+  <text x="340" y="182" text-anchor="middle" fill="#64748b" font-size="9">Every 10 seconds</text>
+  <text x="340" y="198" text-anchor="middle" fill="#64748b" font-size="9">CDN queue page</text>
+
+  <!-- Enter Purchase -->
+  <rect x="425" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="425" y="90" width="110" height="26" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="480" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Enter Purchase</text>
+  <text x="480" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Admitted</text>
+  <text x="480" y="152" text-anchor="middle" fill="#64748b" font-size="9">15-min session</text>
+  <text x="480" y="168" text-anchor="middle" fill="#64748b" font-size="9">Controlled rate</text>
+  <text x="480" y="184" text-anchor="middle" fill="#64748b" font-size="9">N users/sec</text>
+  <text x="480" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">10K shoppers max</text>
+
+  <!-- Select Seats -->
+  <rect x="570" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="570" y="90" width="110" height="26" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="625" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Select Seats</text>
+  <text x="625" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Seat Map</text>
+  <text x="625" y="152" text-anchor="middle" fill="#64748b" font-size="9">CDN snapshot</text>
+  <text x="625" y="168" text-anchor="middle" fill="#64748b" font-size="9">+ WS live deltas</text>
+  <text x="625" y="184" text-anchor="middle" fill="#64748b" font-size="9">Or "Best Available"</text>
+  <text x="625" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Real-time avail</text>
+
+  <!-- Lock Seats -->
+  <rect x="715" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="715" y="105" width="100" height="26" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="765" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Lock (10min)</text>
+  <text x="765" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Redis SETNX</text>
+  <text x="765" y="166" text-anchor="middle" fill="#64748b" font-size="9">10-min TTL hold</text>
+  <text x="765" y="182" text-anchor="middle" fill="#64748b" font-size="9">Auto-release</text>
+  <text x="765" y="198" text-anchor="middle" fill="#64748b" font-size="9">on timeout</text>
+
+  <!-- Payment -->
+  <rect x="850" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="850" y="90" width="110" height="26" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="905" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Payment</text>
+  <text x="905" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Stripe</text>
+  <text x="905" y="152" text-anchor="middle" fill="#64748b" font-size="9">PaymentIntent</text>
+  <text x="905" y="168" text-anchor="middle" fill="#64748b" font-size="9">Verify hold active</text>
+  <text x="905" y="184" text-anchor="middle" fill="#64748b" font-size="9">Charge card</text>
+  <text x="905" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Idempotent</text>
+
+  <!-- Ticket Issued -->
+  <rect x="995" y="105" width="110" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="995" y="105" width="110" height="26" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1050" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Ticket Issued</text>
+  <text x="1050" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Confirmed</text>
+  <text x="1050" y="166" text-anchor="middle" fill="#64748b" font-size="9">Status = SOLD</text>
+  <text x="1050" y="182" text-anchor="middle" fill="#64748b" font-size="9">Encrypted barcode</text>
+  <text x="1050" y="198" text-anchor="middle" fill="#64748b" font-size="9">Email confirm</text>
+
+  <!-- Arrows -->
+  <line x1="110" y1="155" x2="142" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="107" y="141" width="32" height="14" rx="3" fill="#ef4444"/>
+  <text x="123" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="255" y1="155" x2="287" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="252" y="141" width="32" height="14" rx="3" fill="#f97316"/>
+  <text x="268" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="390" y1="155" x2="422" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="387" y="141" width="32" height="14" rx="3" fill="#16a34a"/>
+  <text x="403" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <line x1="535" y1="155" x2="567" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="532" y="141" width="32" height="14" rx="3" fill="#2563eb"/>
+  <text x="548" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <line x1="680" y1="155" x2="712" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="677" y="141" width="32" height="14" rx="3" fill="#ef4444"/>
+  <text x="693" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464;</text>
+
+  <line x1="815" y1="155" x2="847" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="812" y="141" width="32" height="14" rx="3" fill="#7c3aed"/>
+  <text x="828" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465;</text>
+
+  <line x1="960" y1="155" x2="992" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="957" y="141" width="32" height="14" rx="3" fill="#16a34a"/>
+  <text x="973" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2466;</text>
+
+  <!-- Release arrow (timeout) -->
+  <path d="M 765 215 Q 765 260 625 260 Q 570 260 570 228" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arrow)"/>
+  <text x="700" y="274" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">Timeout: release seats back to pool</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; Fan clicks Buy, CAPTCHA verified, joins virtual queue with random position (Redis ZADD)</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Wait in queue with WebSocket position updates every 10 seconds</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Position reached, admitted to purchase experience (15-min session, controlled rate)</text>
+  <text x="430" y="381" fill="#475569" font-size="9">&#x2463; Select seats from CDN seat map + WebSocket live availability deltas</text>
+  <text x="430" y="397" fill="#475569" font-size="9">&#x2464; Lock selected seats with Redis SETNX (10-min TTL, auto-release on abandon)</text>
+  <text x="430" y="413" fill="#475569" font-size="9">&#x2465; Process payment (Stripe PaymentIntent), verify hold still active before charging</text>
+  <text x="870" y="381" fill="#475569" font-size="9">&#x2466; Ticket confirmed (SOLD), encrypted barcode generated, email sent</text>
+  <rect x="870" y="390" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="886" y="399" fill="#475569" font-size="9">Dashed = timeout/release path</text>
+</svg>

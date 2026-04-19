@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Dropbox File Sync Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">File changed, client detects via inotify, chunk+hash, compare, upload changed chunks, notify other devices</text>
+
+  <!-- File Changed -->
+  <rect x="10" y="100" width="110" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="10" y="100" width="110" height="28" rx="10 10 0 0" fill="#0061ff"/>
+  <text x="65" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">File Changed</text>
+  <text x="65" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Local Edit</text>
+  <text x="65" y="165" text-anchor="middle" fill="#64748b" font-size="9">User saves file</text>
+  <text x="65" y="181" text-anchor="middle" fill="#64748b" font-size="9">In Dropbox folder</text>
+  <text x="65" y="207" text-anchor="middle" fill="#64748b" font-size="14">&#x1F4C4;</text>
+
+  <!-- Client Detects -->
+  <rect x="160" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="160" y="95" width="120" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="220" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Client Detects</text>
+  <text x="220" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">FS Watcher</text>
+  <text x="220" y="160" text-anchor="middle" fill="#64748b" font-size="9">inotify (Linux)</text>
+  <text x="220" y="176" text-anchor="middle" fill="#64748b" font-size="9">FSEvents (macOS)</text>
+  <text x="220" y="192" text-anchor="middle" fill="#64748b" font-size="9">ReadDirChanges (Win)</text>
+  <text x="220" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Sync engine queue</text>
+
+  <!-- Chunk + Hash -->
+  <rect x="320" y="90" width="120" height="140" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="320" y="90" width="120" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="380" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Chunk + Hash</text>
+  <text x="380" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Block Splitter</text>
+  <text x="380" y="154" text-anchor="middle" fill="#64748b" font-size="9">4 MB blocks</text>
+  <text x="380" y="170" text-anchor="middle" fill="#64748b" font-size="9">SHA-256 per block</text>
+  <text x="380" y="186" text-anchor="middle" fill="#64748b" font-size="9">Content-addressed</text>
+  <text x="380" y="218" text-anchor="middle" fill="#94a3b8" font-size="8">Dedup-ready</text>
+
+  <!-- Compare Hashes -->
+  <rect x="480" y="90" width="120" height="140" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="480" y="90" width="120" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="540" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Compare Hashes</text>
+  <text x="540" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Server Check</text>
+  <text x="540" y="154" text-anchor="middle" fill="#64748b" font-size="9">Send hash list</text>
+  <text x="540" y="170" text-anchor="middle" fill="#64748b" font-size="9">Server replies:</text>
+  <text x="540" y="186" text-anchor="middle" fill="#64748b" font-size="9">"missing blocks"</text>
+  <text x="540" y="202" text-anchor="middle" fill="#64748b" font-size="9">40-60% dedup</text>
+  <text x="540" y="218" text-anchor="middle" fill="#94a3b8" font-size="8">Global block store</text>
+
+  <!-- Upload Changed -->
+  <rect x="640" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="640" y="95" width="120" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="700" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Upload Changed</text>
+  <text x="700" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Only Diff Blocks</text>
+  <text x="700" y="160" text-anchor="middle" fill="#64748b" font-size="9">4-8 parallel uploads</text>
+  <text x="700" y="176" text-anchor="middle" fill="#64748b" font-size="9">Hash as S3 key</text>
+  <text x="700" y="192" text-anchor="middle" fill="#64748b" font-size="9">Skip existing blocks</text>
+  <text x="700" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">S3 block store</text>
+
+  <!-- Metadata Update -->
+  <rect x="800" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="800" y="95" width="120" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="860" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Metadata Update</text>
+  <text x="860" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Commit Version</text>
+  <text x="860" y="160" text-anchor="middle" fill="#64748b" font-size="9">Block hash list</text>
+  <text x="860" y="176" text-anchor="middle" fill="#64748b" font-size="9">New file version</text>
+  <text x="860" y="192" text-anchor="middle" fill="#64748b" font-size="9">Metadata DB</text>
+  <text x="860" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Sharded by userId</text>
+
+  <!-- Notify Devices -->
+  <rect x="960" y="95" width="110" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="960" y="95" width="110" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="1015" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Notify Devices</text>
+  <text x="1015" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Long Polling</text>
+  <text x="1015" y="160" text-anchor="middle" fill="#64748b" font-size="9">Push to all devices</text>
+  <text x="1015" y="176" text-anchor="middle" fill="#64748b" font-size="9">&lt;1s latency</text>
+  <text x="1015" y="192" text-anchor="middle" fill="#64748b" font-size="9">Firewall friendly</text>
+  <text x="1015" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Notification svc</text>
+
+  <!-- Pull Chunks -->
+  <rect x="1105" y="115" width="80" height="85" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1105" y="115" width="80" height="24" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1145" y="133" text-anchor="middle" fill="white" font-size="9" font-weight="700">Pull Chunks</text>
+  <text x="1145" y="158" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Other Devices</text>
+  <text x="1145" y="174" text-anchor="middle" fill="#64748b" font-size="8">Download diff</text>
+  <text x="1145" y="188" text-anchor="middle" fill="#64748b" font-size="8">Assemble file</text>
+
+  <!-- Arrows -->
+  <line x1="120" y1="155" x2="157" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="120" y="141" width="34" height="14" rx="3" fill="#2563eb"/>
+  <text x="137" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="280" y1="155" x2="317" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="280" y="141" width="34" height="14" rx="3" fill="#f97316"/>
+  <text x="297" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="440" y1="155" x2="477" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="440" y="141" width="34" height="14" rx="3" fill="#7c3aed"/>
+  <text x="457" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <line x1="600" y1="155" x2="637" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="600" y="141" width="34" height="14" rx="3" fill="#16a34a"/>
+  <text x="617" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <line x1="760" y1="155" x2="797" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="760" y="141" width="34" height="14" rx="3" fill="#2563eb"/>
+  <text x="777" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464;</text>
+
+  <line x1="920" y1="155" x2="957" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="920" y="141" width="34" height="14" rx="3" fill="#ef4444"/>
+  <text x="937" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465;</text>
+
+  <line x1="1070" y1="155" x2="1102" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="1070" y="141" width="28" height="14" rx="3" fill="#16a34a"/>
+  <text x="1084" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2466;</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; File changed, client detects via OS watcher (inotify/FSEvents/ReadDirChanges)</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Split file into 4MB blocks, compute SHA-256 hash for each block</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Send hashes to server, compare against global block store (40-60% dedup)</text>
+  <text x="430" y="381" fill="#475569" font-size="9">&#x2463; Upload only missing/changed blocks in parallel (4-8 concurrent), hash as S3 key</text>
+  <text x="430" y="397" fill="#475569" font-size="9">&#x2464; Commit metadata: ordered block hash list, new file version in metadata DB</text>
+  <text x="430" y="413" fill="#475569" font-size="9">&#x2465; Notify other user devices via long polling &#x2466; Other devices pull changed chunks only</text>
+</svg>
