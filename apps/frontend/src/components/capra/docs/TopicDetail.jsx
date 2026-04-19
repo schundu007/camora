@@ -159,9 +159,22 @@ function DataModelSection({ schema }) {
         // Skip closing braces/parens
         if (line === '}' || line === ')' || line === ');') continue;
 
-        // Parse field: "  id uuid PK" or "  name varchar(255) NOT NULL" etc.
-        const fieldMatch = line.match(/^\s*(\w+)\s+([\w()]+(?:\(\d+\))?)\s*(.*)?$/);
-        if (fieldMatch) {
+        // Parse field: "id: bigint PK" or "id bigint PK" or "name varchar(255) NOT NULL" or "PRIMARY KEY (...)"
+        // Handle colon-separated format: "fieldName: type notes"
+        const colonMatch = line.match(/^\s*(\w+)\s*:\s*([\w()]+(?:\(\d+\))?)\s*(.*)?$/);
+        // Handle space-separated format: "fieldName type notes"
+        const spaceMatch = line.match(/^\s*(\w+)\s+([\w()]+(?:\(\d+\))?)\s*(.*)?$/);
+        // Handle compound keys: "PRIMARY KEY (a, b)" or "CLUSTERING KEY (x DESC)"
+        const keyMatch = line.match(/^\s*(PRIMARY|CLUSTERING|PARTITION)\s+KEY\s*\(([^)]+)\)/i);
+
+        const fieldMatch = colonMatch || spaceMatch;
+        if (keyMatch) {
+          currentTable.fields.push({
+            name: keyMatch[1].toUpperCase(),
+            type: 'KEY',
+            notes: `(${keyMatch[2].trim()})`,
+          });
+        } else if (fieldMatch) {
           const notes = (fieldMatch[3] || '').replace(/,\s*$/, '').trim();
           currentTable.fields.push({
             name: fieldMatch[1],
@@ -2075,9 +2088,9 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 7. API Design + Data Model — side by side */}
+              {/* 7. API Design + Data Model — stacked vertically */}
               {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
-                <div className={`grid gap-3 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className="space-y-3 scroll-mt-24">
                   {/* API Design — Stripe-style endpoint cards */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
                     <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
@@ -2279,8 +2292,13 @@ export default function TopicDetail({
                         <Icon name="arrowRight" size={16} className="text-white" />
                         <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.createFlow.title}</h3>
                       </div>
+                      {topicDetails.createFlow.diagramSrc && (
+                        <div className="p-3 border-b border-[var(--border)]">
+                          <img src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} className="w-full rounded-lg" style={{ maxHeight: '500px', objectFit: 'contain' }} />
+                        </div>
+                      )}
                       <div className="p-3">
-                        <ol className="grid grid-cols-1  gap-1">
+                        <ol className="grid grid-cols-1 gap-1">
                           {topicDetails.createFlow.steps.map((step, i) => (
                             <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
                               <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">
@@ -2301,8 +2319,13 @@ export default function TopicDetail({
                         <Icon name="arrowLeft" size={16} className="text-white" />
                         <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.redirectFlow.title}</h3>
                       </div>
+                      {topicDetails.redirectFlow.diagramSrc && (
+                        <div className="p-3 border-b border-[var(--border)]">
+                          <img src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} className="w-full rounded-lg" style={{ maxHeight: '500px', objectFit: 'contain' }} />
+                        </div>
+                      )}
                       <div className="p-3">
-                        <ol className="grid grid-cols-1  gap-1">
+                        <ol className="grid grid-cols-1 gap-1">
                           {topicDetails.redirectFlow.steps.map((step, i) => (
                             <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
                               <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--border)] landing-mono">
@@ -2571,7 +2594,7 @@ export default function TopicDetail({
 
               {/* Comparison Cards (side-by-side) */}
               {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                   {topicDetails.comparisonTables.map((comp) => (
                     <ComparisonCard key={comp.id} comparison={comp} />
                   ))}
