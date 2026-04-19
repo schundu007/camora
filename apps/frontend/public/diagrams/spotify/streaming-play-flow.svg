@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Spotify Streaming Play Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Track selection through adaptive bitrate streaming to scrobble event</text>
+
+  <!-- 1. Select Track -->
+  <rect x="20" y="120" width="130" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="20" y="120" width="130" height="30" rx="10 10 0 0" fill="#1DB954"/>
+  <text x="85" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Select Track</text>
+  <text x="85" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Client App</text>
+  <text x="85" y="185" text-anchor="middle" fill="#64748b" font-size="9">User taps play</text>
+  <text x="85" y="200" text-anchor="middle" fill="#64748b" font-size="9">Resolve track ID</text>
+  <text x="85" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">REST API call</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="150" y1="175" x2="188" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="152" y="155" width="36" height="16" rx="4" fill="#1DB954"/>
+  <text x="170" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Audio CDN -->
+  <rect x="198" y="120" width="140" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="198" y="120" width="140" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="268" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Audio CDN</text>
+  <text x="268" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Edge Server</text>
+  <text x="268" y="185" text-anchor="middle" fill="#64748b" font-size="9">Closest PoP lookup</text>
+  <text x="268" y="200" text-anchor="middle" fill="#64748b" font-size="9">OGG Vorbis chunks</text>
+  <text x="268" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Global CDN network</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="338" y1="175" x2="376" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="340" y="155" width="36" height="16" rx="4" fill="#2563eb"/>
+  <text x="358" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Adaptive Bitrate -->
+  <rect x="386" y="120" width="140" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="386" y="120" width="140" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="456" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Adaptive Bitrate</text>
+  <text x="456" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">ABR Engine</text>
+  <text x="456" y="185" text-anchor="middle" fill="#64748b" font-size="9">Network probe</text>
+  <text x="456" y="200" text-anchor="middle" fill="#64748b" font-size="9">96/160/320 kbps</text>
+  <text x="456" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Dynamic switching</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="526" y1="175" x2="564" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="528" y="155" width="36" height="16" rx="4" fill="#7c3aed"/>
+  <text x="546" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Buffer Manager -->
+  <rect x="574" y="120" width="130" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="574" y="120" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="639" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Buffer Manager</text>
+  <text x="639" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Playback Buffer</text>
+  <text x="639" y="185" text-anchor="middle" fill="#64748b" font-size="9">Pre-fetch 30s ahead</text>
+  <text x="639" y="200" text-anchor="middle" fill="#64748b" font-size="9">Decode to PCM</text>
+  <text x="639" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Ring buffer</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="704" y1="175" x2="742" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="706" y="155" width="36" height="16" rx="4" fill="#f97316"/>
+  <text x="724" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Crossfade -->
+  <rect x="752" y="120" width="130" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="752" y="120" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="817" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Crossfade</text>
+  <text x="817" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Audio Mixer</text>
+  <text x="817" y="185" text-anchor="middle" fill="#64748b" font-size="9">Overlap 0-12s</text>
+  <text x="817" y="200" text-anchor="middle" fill="#64748b" font-size="9">Volume curve</text>
+  <text x="817" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Gapless playback</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="882" y1="175" x2="920" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="884" y="155" width="36" height="16" rx="4" fill="#ec4899"/>
+  <text x="902" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Scrobble Event -->
+  <rect x="930" y="120" width="140" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="930" y="120" width="140" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1000" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Scrobble Event</text>
+  <text x="1000" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Analytics</text>
+  <text x="1000" y="185" text-anchor="middle" fill="#64748b" font-size="9">Fire after 30s play</text>
+  <text x="1000" y="200" text-anchor="middle" fill="#64748b" font-size="9">Update play count</text>
+  <text x="1000" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Royalty accounting</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="315" width="10" height="10" rx="2" fill="#1DB954"/>
+  <text x="76" y="325" fill="#475569" font-size="10">1. User selects track, client resolves track ID and metadata</text>
+  <rect x="60" y="333" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="343" fill="#475569" font-size="10">2. Audio chunks fetched from nearest CDN edge server</text>
+  <rect x="60" y="351" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="361" fill="#475569" font-size="10">3. ABR engine selects optimal bitrate based on bandwidth</text>
+
+  <rect x="600" y="315" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="325" fill="#475569" font-size="10">4. Buffer pre-fetches and decodes audio chunks</text>
+  <rect x="600" y="333" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="343" fill="#475569" font-size="10">5. Crossfade blends current and next track transitions</text>
+  <rect x="600" y="351" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="361" fill="#475569" font-size="10">6. Scrobble event fires after 30s for analytics and royalties</text>
+</svg>

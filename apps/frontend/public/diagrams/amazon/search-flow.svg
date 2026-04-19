@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="450" fill="#fafbfc" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="36" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Amazon Product Search Flow</text>
+  <text x="600" y="56" text-anchor="middle" fill="#64748b" font-size="12">Query processing from user input through OpenSearch to ranked results</text>
+
+  <!-- Query Input -->
+  <rect x="20" y="115" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="20" y="115" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="85" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Query</text>
+  <text x="85" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Search bar</text>
+  <text x="85" y="180" text-anchor="middle" fill="#64748b" font-size="9">"iPhone 15 case"</text>
+  <text x="85" y="195" text-anchor="middle" fill="#64748b" font-size="9">+ filters</text>
+
+  <!-- API Gateway -->
+  <rect x="185" y="115" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="185" y="115" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="250" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">API Gateway</text>
+  <text x="250" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Rate limit</text>
+  <text x="250" y="180" text-anchor="middle" fill="#64748b" font-size="9">Auth + routing</text>
+  <text x="250" y="195" text-anchor="middle" fill="#64748b" font-size="9">Query parsing</text>
+
+  <!-- Search Service (OpenSearch) -->
+  <rect x="350" y="115" width="140" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="350" y="115" width="140" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="420" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Search Service</text>
+  <text x="420" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">OpenSearch</text>
+  <text x="420" y="180" text-anchor="middle" fill="#64748b" font-size="9">20+ shards parallel</text>
+  <text x="420" y="195" text-anchor="middle" fill="#64748b" font-size="9">BM25 scoring</text>
+
+  <!-- Product Catalog -->
+  <rect x="530" y="115" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="530" y="115" width="130" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="595" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Product Catalog</text>
+  <text x="595" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">DynamoDB</text>
+  <text x="595" y="180" text-anchor="middle" fill="#64748b" font-size="9">12M+ products</text>
+  <text x="595" y="195" text-anchor="middle" fill="#64748b" font-size="9">Hydrate details</text>
+
+  <!-- Price / Availability -->
+  <rect x="700" y="115" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="700" y="115" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="765" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Price + Avail</text>
+  <text x="765" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Real-time check</text>
+  <text x="765" y="180" text-anchor="middle" fill="#64748b" font-size="9">Redis cached</text>
+  <text x="765" y="195" text-anchor="middle" fill="#64748b" font-size="9">Prime eligibility</text>
+
+  <!-- ML Ranking -->
+  <rect x="870" y="115" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="870" y="115" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="935" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">ML Ranking</text>
+  <text x="935" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Learning-to-Rank</text>
+  <text x="935" y="180" text-anchor="middle" fill="#64748b" font-size="9">200+ features</text>
+  <text x="935" y="195" text-anchor="middle" fill="#64748b" font-size="9">Top 1K re-scored</text>
+
+  <!-- Response -->
+  <rect x="1040" y="115" width="130" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1040" y="115" width="130" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1105" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Response</text>
+  <text x="1105" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Ranked results</text>
+  <text x="1105" y="180" text-anchor="middle" fill="#64748b" font-size="9">Facets + filters</text>
+  <text x="1105" y="195" text-anchor="middle" fill="#64748b" font-size="9">&lt;200ms total</text>
+
+  <!-- Redis Cache (below search) -->
+  <rect x="330" y="265" width="140" height="45" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="330" y="265" width="140" height="18" rx="8 8 0 0" fill="#ef4444"/>
+  <text x="400" y="278" text-anchor="middle" fill="white" font-size="9" font-weight="700">Redis Query Cache</text>
+  <text x="400" y="300" text-anchor="middle" fill="#64748b" font-size="9">60% hit rate for popular queries</text>
+
+  <!-- Arrows -->
+  <line x1="150" y1="160" x2="181" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="150" y="143" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="161" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <line x1="315" y1="160" x2="346" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="316" y="143" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="327" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <line x1="490" y1="160" x2="526" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="493" y="143" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="504" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <line x1="660" y1="160" x2="696" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="663" y="143" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="674" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <line x1="830" y1="160" x2="866" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="833" y="143" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="844" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <line x1="1000" y1="160" x2="1036" y2="160" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="1003" y="143" width="22" height="14" rx="3" fill="#16a34a"/>
+  <text x="1014" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- Cache arrow -->
+  <line x1="400" y1="215" x2="400" y2="261" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+  <text x="425" y="242" fill="#ef4444" font-size="9">Cache check</text>
+
+  <!-- Legend -->
+  <rect x="30" y="355" width="1140" height="65" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="377" fill="#1e293b" font-size="11" font-weight="700">Flow Steps:</text>
+  <rect x="55" y="387" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="70" y="396" fill="#475569" font-size="9">1 User submits search query with optional filters</text>
+  <rect x="55" y="401" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="70" y="410" fill="#475569" font-size="9">2 API Gateway parses query, rate limits, routes</text>
+  <text x="340" y="396" fill="#475569" font-size="9">3 OpenSearch fans out across 20+ shards in parallel</text>
+  <text x="340" y="410" fill="#475569" font-size="9">4 Hydrate product details from DynamoDB catalog</text>
+  <text x="680" y="396" fill="#475569" font-size="9">5 Check real-time price + availability + Prime status</text>
+  <text x="680" y="410" fill="#475569" font-size="9">6 ML re-ranks top 1K candidates, returns results &lt;200ms</text>
+</svg>
