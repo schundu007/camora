@@ -11770,7 +11770,46 @@ rate_limit_logs {
   allowed: boolean
   remaining: int
   timestamp: timestamp
+}`,
+        examples: [
+          {
+            table: 'rate_limit_rules',
+            label: 'Token Bucket Rule',
+            json: `{
+  "id": "rule_api_default",
+  "name": "API Default Rate Limit",
+  "key_pattern": "user:{userId}:api",
+  "limit": 1000,
+  "window_seconds": 60,
+  "algorithm": "TOKEN_BUCKET",
+  "burst_size": 1500,
+  "tier": "PRO",
+  "created_at": "2026-01-15T00:00:00Z"
 }`
+          },
+          {
+            table: 'token_buckets',
+            label: 'Active Bucket State (Redis)',
+            json: `{
+  "key": "bucket:user:500123:api_calls",
+  "tokens": 847.5,
+  "last_refill": "2026-04-19T14:23:00Z",
+  "ttl": 60
+}`
+          },
+          {
+            table: 'sliding_window',
+            label: 'Sliding Window Log (Redis)',
+            json: `{
+  "key": "window:ip:203.0.113.42:login",
+  "members": [1745071385, 1745071390, 1745071401],
+  "score": "timestamp",
+  "currentCount": 3,
+  "windowSize": 900,
+  "limit": 10
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -12519,7 +12558,54 @@ queue_positions {
   position: bigint
   joinedAt: timestamp
   status: enum(WAITING, SHOPPING, EXPIRED)
+}`,
+        examples: [
+          {
+            table: 'events',
+            label: 'Concert Event',
+            json: `{
+  "id": "evt_taylor_2026_sf",
+  "venueId": "venue_chase_center",
+  "artistId": "artist_taylor_swift",
+  "name": "Taylor Swift | The Eras Tour 2026",
+  "dateTime": "2026-07-15T19:30:00Z",
+  "onsaleDate": "2026-04-19T10:00:00Z",
+  "presaleDates": {"amex": "2026-04-17T10:00:00Z", "fan": "2026-04-18T10:00:00Z"},
+  "status": "ONSALE"
 }`
+          },
+          {
+            table: 'seats',
+            label: 'Held Seat (Checkout Timer)',
+            json: `{
+  "id": "seat_101_F_12",
+  "eventId": "evt_taylor_2026_sf",
+  "section": "101",
+  "row": "F",
+  "number": 12,
+  "status": "HELD",
+  "price": 249.50,
+  "holdExpiry": "2026-04-19T14:33:05Z",
+  "holdUserId": 500123,
+  "version": 3
+}`
+          },
+          {
+            table: 'bookings',
+            label: 'Confirmed Ticket Purchase',
+            json: `{
+  "id": "book_7723910421",
+  "userId": 500123,
+  "eventId": "evt_taylor_2026_sf",
+  "seatIds": ["seat_101_F_12", "seat_101_F_13"],
+  "totalAmount": 499.00,
+  "paymentId": "pi_3Nq8kR2eZvKYlo2C",
+  "status": "CONFIRMED",
+  "barcode": "TM2026071584291054",
+  "createdAt": "2026-04-19T14:25:42Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -13153,7 +13239,42 @@ user_history {
   query: varchar
   timestamp: timestamp
   clicked_result: varchar
+}`,
+        examples: [
+          {
+            table: 'trie_nodes',
+            label: 'Trie Prefix Node',
+            json: `{
+  "prefix": "how t",
+  "suggestions": [
+    {"text": "how to design a URL shortener", "score": 94200, "type": "trending"},
+    {"text": "how to cook pasta", "score": 88100, "type": "evergreen"},
+    {"text": "how to tie a tie", "score": 72400, "type": "evergreen"}
+  ],
+  "updated_at": "2026-04-19T06:00:00Z"
 }`
+          },
+          {
+            table: 'query_stats',
+            label: 'Trending Query',
+            json: `{
+  "query": "system design interview 2026",
+  "count": 284729,
+  "last_searched": "2026-04-19T14:23:05Z",
+  "trending_score": 8.42
+}`
+          },
+          {
+            table: 'user_history',
+            label: 'Personal Search History',
+            json: `{
+  "user_id": "u_500123",
+  "query": "design youtube system",
+  "timestamp": "2026-04-19T14:05:32Z",
+  "clicked_result": "https://example.com/youtube-system-design"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -17985,7 +18106,46 @@ trending_topics {
   trend_score: float
   started_trending: timestamp
   updated_at: timestamp
+}`,
+        examples: [
+          {
+            table: 'trend_aggregates',
+            label: 'Sliding Window Count',
+            json: `{
+  "topic": "#SystemDesign",
+  "region": "US",
+  "time_bucket": "2026-04-19T14:00:00Z",
+  "count": 4829,
+  "velocity": 948.2,
+  "baseline": 120.5,
+  "trend_score": 7.87
 }`
+          },
+          {
+            table: 'trending_topics',
+            label: 'Ranked Trending Topic',
+            json: `{
+  "region": "US",
+  "rank": 3,
+  "topic": "#SystemDesign",
+  "category": "Technology",
+  "tweet_count": 284729,
+  "trend_score": 7.87,
+  "started_trending": "2026-04-19T12:30:00Z",
+  "updated_at": "2026-04-19T14:23:00Z"
+}`
+          },
+          {
+            table: 'user_topic_counts',
+            label: 'Per-User Spam Detection',
+            json: `{
+  "user_id": 884291,
+  "topic": "#SystemDesign",
+  "count": 2,
+  "time_bucket": "2026-04-19T14:00:00Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -18654,7 +18814,52 @@ paste_views {
   viewed_at: timestamp
   viewer_ip: inet
   -- Aggregate hourly for dashboard
+}`,
+        examples: [
+          {
+            table: 'pastes',
+            label: 'Code Paste with Syntax Highlighting',
+            json: `{
+  "short_key": "xK9mP2vL",
+  "content_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb924",
+  "content_url": "s3://pastebin-content/xK/9m/P2vL",
+  "title": "Redis Connection Pool Example",
+  "syntax": "python",
+  "password_hash": null,
+  "expires_at": "2026-05-19T08:31:22Z",
+  "created_at": "2026-04-19T08:31:22Z",
+  "view_count": 1847,
+  "creator_ip": "203.0.113.42",
+  "creator_user_id": "u_500123"
 }`
+          },
+          {
+            table: 'pastes',
+            label: 'Password-Protected Paste',
+            json: `{
+  "short_key": "aB3x7KpQ",
+  "content_hash": "sha256:7f83b1657ff1fc53b92dc18148a1d65d",
+  "content_url": "s3://pastebin-content/aB/3x/7KpQ",
+  "title": "API Keys (Encrypted)",
+  "syntax": "text",
+  "password_hash": "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+  "expires_at": "2026-04-20T08:31:22Z",
+  "created_at": "2026-04-19T14:00:00Z",
+  "view_count": 3,
+  "creator_ip": "198.51.100.17",
+  "creator_user_id": null
+}`
+          },
+          {
+            table: 'paste_views',
+            label: 'View Analytics Event',
+            json: `{
+  "paste_key": "xK9mP2vL",
+  "viewed_at": "2026-04-19T14:23:05Z",
+  "viewer_ip": "192.0.2.88"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -19231,7 +19436,47 @@ content {
   fetchedAt: timestamp
   html: text compressed
   links: text[]
+}`,
+        examples: [
+          {
+            table: 'urls',
+            label: 'URL in Crawl Queue',
+            json: `{
+  "urlHash": "sha256:a3b7c2e9f14d8e6b",
+  "url": "https://engineering.uber.com/distributed-tracing",
+  "domain": "engineering.uber.com",
+  "priority": 0.85,
+  "lastCrawled": "2026-04-12T06:00:00Z",
+  "nextCrawl": "2026-04-19T06:00:00Z",
+  "crawlStatus": "DONE",
+  "contentHash": "sha256:7f83b1657ff1fc53"
 }`
+          },
+          {
+            table: 'domains',
+            label: 'Domain Crawl Policy',
+            json: `{
+  "domain": "engineering.uber.com",
+  "robotsTxt": "User-agent: *\\nDisallow: /admin/\\nCrawl-delay: 2",
+  "crawlDelay": 2,
+  "lastFetch": "2026-04-19T03:00:00Z"
+}`
+          },
+          {
+            table: 'content',
+            label: 'Fetched Page Content',
+            json: `{
+  "contentHash": "sha256:7f83b1657ff1fc53",
+  "url": "https://engineering.uber.com/distributed-tracing",
+  "fetchedAt": "2026-04-19T03:15:22Z",
+  "html": "<html>...(compressed)...</html>",
+  "links": [
+    "https://engineering.uber.com/microservices",
+    "https://engineering.uber.com/kafka-at-scale"
+  ]
+}`
+          }
+        ]
       },
 
       keyQuestions: [
@@ -19613,7 +19858,47 @@ feed_cache {
   user_id: bigint
   feed_json: bytes -- pre-rendered top 50 posts
   ttl: 5 minutes
+}`,
+        examples: [
+          {
+            table: 'posts',
+            label: 'User Post',
+            json: `{
+  "id": 9928374651,
+  "user_id": 500123,
+  "content": "Just shipped our new ML pipeline — 40% faster inference!",
+  "media_ids": [88472910, 88472911],
+  "audience": "FRIENDS",
+  "created_at": "2026-04-19T14:23:05Z",
+  "like_count": 247,
+  "comment_count": 18,
+  "share_count": 5
 }`
+          },
+          {
+            table: 'friendships',
+            label: 'Friendship with Closeness Score',
+            json: `{
+  "user_id": 500123,
+  "friend_id": 772391,
+  "closeness_score": 0.87,
+  "created_at": "2023-06-15T10:00:00Z"
+}`
+          },
+          {
+            table: 'user_feeds',
+            label: 'Pre-computed Feed',
+            json: `{
+  "user_id": 772391,
+  "feed_items": [
+    {"post_id": 9928374651, "score": 0.94, "timestamp": "2026-04-19T14:23:05Z"},
+    {"post_id": 9928374502, "score": 0.82, "timestamp": "2026-04-19T13:15:00Z"},
+    {"post_id": 9928374201, "score": 0.71, "timestamp": "2026-04-19T11:00:00Z"}
+  ],
+  "last_updated": "2026-04-19T14:23:06Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -20426,7 +20711,42 @@ node_registry {
   status: enum(ALIVE, SUSPECT, DEAD)
   last_heartbeat: timestamp
   data_size_bytes: bigint
+}`,
+        examples: [
+          {
+            table: 'storage_node',
+            label: 'Key-Value Entry with Vector Clock',
+            json: `{
+  "key": "user:500123:profile",
+  "value": "{name: 'Alex Chen', email: 'alex@example.com'}",
+  "version": {"node_1": 3, "node_2": 2, "node_3": 3},
+  "created_at": "2026-04-19T14:23:05Z",
+  "expires_at": null,
+  "checksum": "crc32:a7c3e9f1"
 }`
+          },
+          {
+            table: 'partition_map',
+            label: 'Hash Ring Partition',
+            json: `{
+  "hash_range_start": 0,
+  "hash_range_end": 1073741823,
+  "primary_node": "node_1",
+  "replica_nodes": ["node_2", "node_3"]
+}`
+          },
+          {
+            table: 'node_registry',
+            label: 'Cluster Node',
+            json: `{
+  "node_id": "node_1",
+  "address": "10.0.1.42:6379",
+  "status": "ALIVE",
+  "last_heartbeat": "2026-04-19T14:23:04Z",
+  "data_size_bytes": 8472910540
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -21100,7 +21420,47 @@ Twitter's Snowflake solves this elegantly: each machine generates IDs independen
 
 Example: 1288834974657 + 1023 + 4095
 Binary: 0_10010110001101011010101110010000001_1111111111_111111111111
-Decimal: 1234567890123456789`
+Decimal: 1234567890123456789`,
+        examples: [
+          {
+            table: 'snowflake_id',
+            label: 'Decoded Snowflake ID',
+            json: `{
+  "id": 1913582947201839104,
+  "binary": "0_10010110001101011010101_1111111111_000000000001",
+  "timestamp_ms": 1745071385342,
+  "timestamp": "2026-04-19T14:23:05.342Z",
+  "machine_id": 1023,
+  "datacenter_id": 15,
+  "sequence": 1
+}`
+          },
+          {
+            table: 'id_batch',
+            label: 'Batch ID Generation',
+            json: `{
+  "batchSize": 100,
+  "machineId": 42,
+  "startId": 1913582947201839104,
+  "endId": 1913582947201839203,
+  "generatedAt": "2026-04-19T14:23:05Z",
+  "latencyMs": 0.02
+}`
+          },
+          {
+            table: 'machine_registry',
+            label: 'ID Generator Instance',
+            json: `{
+  "machineId": 42,
+  "datacenterId": 3,
+  "hostname": "id-gen-us-east-042",
+  "lastSequence": 2847,
+  "idsGenerated": 847291054,
+  "startedAt": "2026-04-01T00:00:00Z",
+  "clockSkewMs": 0
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -21773,7 +22133,52 @@ sources {
   category: varchar(50) -- primary focus
   country: varchar(2)
   language: varchar(10)
+}`,
+        examples: [
+          {
+            table: 'articles',
+            label: 'Crawled News Article',
+            json: `{
+  "id": 8847291054,
+  "source_id": 42019,
+  "url": "https://techcrunch.com/2026/04/19/ai-infrastructure-trends",
+  "title": "AI Infrastructure Spending Hits $200B in 2026",
+  "summary": "Global spending on AI infrastructure is projected to reach $200 billion...",
+  "published_at": "2026-04-19T08:00:00Z",
+  "crawled_at": "2026-04-19T08:02:15Z",
+  "category": "technology",
+  "language": "en",
+  "entities": {"orgs": ["NVIDIA", "Google", "Microsoft"], "people": ["Jensen Huang"]}
 }`
+          },
+          {
+            table: 'stories',
+            label: 'News Story Cluster',
+            json: `{
+  "id": 7723910,
+  "headline": "AI Infrastructure Spending Hits $200B in 2026",
+  "category": "technology",
+  "created_at": "2026-04-19T08:02:15Z",
+  "updated_at": "2026-04-19T14:23:00Z",
+  "article_count": 47,
+  "trending_score": 8.42
+}`
+          },
+          {
+            table: 'sources',
+            label: 'News Source',
+            json: `{
+  "id": 42019,
+  "name": "TechCrunch",
+  "domain": "techcrunch.com",
+  "rss_url": "https://techcrunch.com/feed/",
+  "authority_score": 0.92,
+  "category": "technology",
+  "country": "US",
+  "language": "en"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -22697,7 +23102,48 @@ leaderboard_snapshots {
   leaderboard_type: varchar(20)
   snapshot_date: date
   rankings: jsonb -- top 1000 for historical reference
+}`,
+        examples: [
+          {
+            table: 'sorted_set',
+            label: 'Redis Leaderboard Entry',
+            json: `{
+  "key": "leaderboard:fortnite:daily",
+  "member": "player_884291",
+  "score": 2347,
+  "rank": 42,
+  "percentile": 99.8,
+  "command": "ZADD leaderboard:fortnite:daily 2347 player_884291"
 }`
+          },
+          {
+            table: 'scores_history',
+            label: 'Score History Record',
+            json: `{
+  "id": 9928374651,
+  "player_id": 884291,
+  "game_id": "fortnite",
+  "score": 2347,
+  "leaderboard_type": "DAILY",
+  "recorded_at": "2026-04-19T14:23:05Z"
+}`
+          },
+          {
+            table: 'leaderboard_snapshots',
+            label: 'Daily Snapshot',
+            json: `{
+  "id": 7723910,
+  "game_id": "fortnite",
+  "leaderboard_type": "DAILY",
+  "snapshot_date": "2026-04-19",
+  "rankings": [
+    {"rank": 1, "player_id": 772391, "score": 4891},
+    {"rank": 2, "player_id": 884291, "score": 2347},
+    {"rank": 3, "player_id": 500123, "score": 2103}
+  ]
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -23628,7 +24074,50 @@ bookings {
   total_price: decimal(10,2)
   status: enum(CONFIRMED, CANCELLED, COMPLETED)
   created_at: timestamp
+}`,
+        examples: [
+          {
+            table: 'hotels',
+            label: 'Hotel Property',
+            json: `{
+  "id": 884291,
+  "name": "The Ritz-Carlton, San Francisco",
+  "location": {"lat": 37.7872, "lng": -122.4065},
+  "city_id": 42019,
+  "star_rating": 5,
+  "amenities": ["wifi", "pool", "spa", "gym", "restaurant", "valet"],
+  "check_in_time": "15:00",
+  "check_out_time": "11:00",
+  "cancellation_policy": {"free_until_hours": 48, "penalty_pct": 100}
 }`
+          },
+          {
+            table: 'room_inventory',
+            label: 'Room Availability (Date)',
+            json: `{
+  "room_type_id": 7723,
+  "date": "2026-05-01",
+  "available": 3,
+  "price": 599.00
+}`
+          },
+          {
+            table: 'bookings',
+            label: 'Confirmed Reservation',
+            json: `{
+  "id": 9928374651,
+  "user_id": 500123,
+  "hotel_id": 884291,
+  "room_type_id": 7723,
+  "check_in": "2026-05-01",
+  "check_out": "2026-05-04",
+  "guests": 2,
+  "total_price": 1797.00,
+  "status": "CONFIRMED",
+  "created_at": "2026-04-19T14:25:42Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -24693,7 +25182,46 @@ tiles {
   y: int -- tile y coordinate
   data: bytes -- pre-rendered PNG or vector
   -- 22 zoom levels, billions of tiles
+}`,
+        examples: [
+          {
+            table: 'road_segments',
+            label: 'Highway Road Segment',
+            json: `{
+  "id": 884291054,
+  "start_node": 7723910,
+  "end_node": 7723911,
+  "geometry": "LINESTRING(-122.4194 37.7749, -122.4108 37.7851)",
+  "road_type": "HIGHWAY",
+  "speed_limit": 65,
+  "one_way": true,
+  "length_meters": 1247
 }`
+          },
+          {
+            table: 'places',
+            label: 'Restaurant POI',
+            json: `{
+  "id": 42019847,
+  "name": "Tartine Bakery",
+  "location": {"lat": 37.7614, "lng": -122.4241},
+  "category": "bakery",
+  "address": "600 Guerrero St, San Francisco, CA 94110",
+  "phone": "+14154876600",
+  "hours": {"mon": "08:00-19:00", "sat": "07:30-20:00", "sun": "07:30-20:00"},
+  "rating": 4.5
+}`
+          },
+          {
+            table: 'traffic_segments',
+            label: 'Live Traffic Data',
+            json: `{
+  "segment_id": 884291054,
+  "timestamp": "2026-04-19T14:23:00Z",
+  "speed_ratio": 0.35
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -25751,7 +26279,48 @@ recordings {
   storage_url: varchar(500)
   duration_seconds: int
   status: enum(RECORDING, PROCESSING, READY, FAILED)
+}`,
+        examples: [
+          {
+            table: 'meetings',
+            label: 'Active Meeting',
+            json: `{
+  "id": "mtg_a3f8c91e-7b24-4d5f",
+  "host_user_id": "usr_30045",
+  "title": "Q2 Architecture Review",
+  "password_hash": "$2b$10$N9qo8uLOickgx2ZMRZoMye",
+  "scheduled_start": "2026-04-19T14:00:00Z",
+  "actual_start": "2026-04-19T14:02:15Z",
+  "actual_end": null,
+  "settings": {"waitingRoom": true, "muteOnEntry": true, "maxParticipants": 100}
 }`
+          },
+          {
+            table: 'participants',
+            label: 'Active Participant',
+            json: `{
+  "meeting_id": "mtg_a3f8c91e-7b24-4d5f",
+  "user_id": "usr_72003",
+  "display_name": "Alex Chen",
+  "joined_at": "2026-04-19T14:03:22Z",
+  "left_at": null,
+  "role": "PARTICIPANT",
+  "audio_enabled": true,
+  "video_enabled": false
+}`
+          },
+          {
+            table: 'media_sessions',
+            label: 'WebRTC Media Session',
+            json: `{
+  "participant_id": "usr_72003",
+  "sfu_server": "sfu-us-west-007.zoom.us",
+  "sdp_offer": "v=0\\no=- 4698572 2 IN IP4 127.0.0.1...",
+  "sdp_answer": "v=0\\no=- 4698573 2 IN IP4 10.0.1.42...",
+  "ice_candidates": [{"candidate": "a=candidate:1 1 udp 2122260223 192.168.1.5 54321 typ host"}]
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -26471,7 +27040,45 @@ posts {
   posted_at: timestamp
   like_count: int
   comment_count: int
+}`,
+        examples: [
+          {
+            table: 'members',
+            label: 'Professional Profile',
+            json: `{
+  "id": 884291,
+  "name": "Alex Chen",
+  "headline": "Staff Software Engineer at Google | Distributed Systems",
+  "location": "San Francisco Bay Area",
+  "industry": "Technology",
+  "profile_photo_url": "https://media.licdn.com/dms/image/884291.jpg",
+  "skills": ["distributed-systems", "golang", "kubernetes", "system-design"]
 }`
+          },
+          {
+            table: 'connections',
+            label: 'Professional Connection',
+            json: `{
+  "member_id": 884291,
+  "connected_member_id": 772391,
+  "connected_at": "2024-06-15T10:00:00Z"
+}`
+          },
+          {
+            table: 'jobs',
+            label: 'Open Job Listing',
+            json: `{
+  "id": 9928374,
+  "company_id": 42019,
+  "title": "Senior Backend Engineer",
+  "location": "San Francisco, CA (Hybrid)",
+  "skills_required": ["golang", "distributed-systems", "postgresql"],
+  "experience_level": "Senior",
+  "posted_at": "2026-04-15T09:00:00Z",
+  "status": "OPEN"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -27581,7 +28188,42 @@ trending_queries (real-time) {
   query: varchar
   window_count: bigint
   window_start: timestamp
+}`,
+        examples: [
+          {
+            table: 'trie_nodes',
+            label: 'Prefix Node with Top-K',
+            json: `{
+  "prefix": "syst",
+  "children": {"e": "node_ref_syste", "a": "node_ref_systa"},
+  "top_k": [
+    {"query": "system design interview", "score": 284729},
+    {"query": "system design primer", "score": 142891},
+    {"query": "systematic trading", "score": 89421}
+  ],
+  "is_terminal": false
 }`
+          },
+          {
+            table: 'query_frequencies',
+            label: 'Query Frequency Record',
+            json: `{
+  "query": "system design interview",
+  "frequency": 284729,
+  "last_updated": "2026-04-19T14:00:00Z",
+  "decay_score": 94210.5
+}`
+          },
+          {
+            table: 'trending_queries',
+            label: 'Real-time Trending Query',
+            json: `{
+  "query": "openai gpt-5 release",
+  "window_count": 48291,
+  "window_start": "2026-04-19T14:00:00Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -27913,7 +28555,49 @@ cart_items {
   product_id: uuid FK
   quantity: int
   added_at: timestamp
+}`,
+        examples: [
+          {
+            table: 'products',
+            label: 'Product Listing',
+            json: `{
+  "id": "prod_a3f8c91e",
+  "seller_id": "seller_42019",
+  "name": "Sony WH-1000XM5 Wireless Headphones",
+  "category_id": "cat_electronics",
+  "price": 348.00,
+  "images": ["/img/xm5_1.jpg", "/img/xm5_2.jpg"],
+  "attributes": {"color": "Black", "noiseCancellation": true, "batteryHours": 30},
+  "avg_rating": 4.8,
+  "review_count": 42891
 }`
+          },
+          {
+            table: 'inventory',
+            label: 'Warehouse Stock (Optimistic Lock)',
+            json: `{
+  "product_id": "prod_a3f8c91e",
+  "warehouse_id": "wh_us_west_01",
+  "quantity": 1847,
+  "reserved": 42,
+  "version": 127
+}`
+          },
+          {
+            table: 'orders',
+            label: 'Shipped Order',
+            json: `{
+  "id": "ord_9928374651",
+  "user_id": "usr_500123",
+  "status": "SHIPPED",
+  "items": [{"product_id": "prod_a3f8c91e", "qty": 1, "price": 348.00}],
+  "total": 376.92,
+  "payment_id": "pi_3Nq8kR2eZvKYlo2C",
+  "shipping_address": {"city": "Seattle", "state": "WA", "zip": "98101"},
+  "created_at": "2026-04-17T10:00:00Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -28127,7 +28811,46 @@ messages {
   status: map<user_id, enum(SENT, DELIVERED, READ)>
 }
 
--- Partitioned by conversation_id, sorted by timestamp`
+-- Partitioned by conversation_id, sorted by timestamp`,
+        examples: [
+          {
+            table: 'messages',
+            label: 'Encrypted Message',
+            json: `{
+  "message_id": "msg_550e8400-e29b-41d4",
+  "conversation_id": "conv_98234",
+  "sender_id": "usr_30045",
+  "content": "<encrypted_signal_protocol_payload>",
+  "media_url": null,
+  "type": "TEXT",
+  "timestamp": 1745071385342,
+  "status": {"usr_72003": "READ", "usr_500123": "DELIVERED"}
+}`
+          },
+          {
+            table: 'conversations',
+            label: 'Group Conversation',
+            json: `{
+  "conversation_id": "conv_98234",
+  "type": "GROUP",
+  "participants": ["usr_30045", "usr_72003", "usr_500123"],
+  "group_name": "Backend Team",
+  "created_at": "2024-06-15T10:00:00Z"
+}`
+          },
+          {
+            table: 'users',
+            label: 'User with E2E Keys',
+            json: `{
+  "user_id": "usr_30045",
+  "phone": "+14155550123",
+  "display_name": "Jordan Rivera",
+  "avatar_url": "https://cdn.msg.app/avatars/30045.jpg",
+  "last_seen": "2026-04-19T14:23:05Z",
+  "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE..."
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -28333,7 +29056,44 @@ alert_rules {
   severity: enum(WARNING, CRITICAL)
   notification_channels: varchar[]
   evaluation_interval: interval
+}`,
+        examples: [
+          {
+            table: 'data_points',
+            label: 'CPU Metric Data Point',
+            json: `{
+  "metric_name": "cpu.usage",
+  "tags": {"host": "web-07", "region": "us-east-1", "service": "api-gateway"},
+  "timestamp": 1745071385,
+  "value": 73.2
 }`
+          },
+          {
+            table: 'alert_rules',
+            label: 'Critical Alert Rule',
+            json: `{
+  "id": "alert_cpu_critical",
+  "name": "API Gateway CPU Critical",
+  "metric_query": "avg(cpu.usage){service:api-gateway} > 90",
+  "condition": "ABOVE",
+  "threshold": 90.0,
+  "window": "5 minutes",
+  "severity": "CRITICAL",
+  "notification_channels": ["pagerduty-oncall", "slack-incidents"],
+  "evaluation_interval": "30 seconds"
+}`
+          },
+          {
+            table: 'data_points',
+            label: 'Request Latency P99',
+            json: `{
+  "metric_name": "http.request.latency_p99",
+  "tags": {"host": "web-07", "endpoint": "/api/search", "method": "GET"},
+  "timestamp": 1745071385,
+  "value": 247.5
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -28544,7 +29304,49 @@ merchants {
   settlement_account: varchar
   fee_rate: decimal(4,4) -- e.g. 0.029 = 2.9%
   webhook_url: varchar
+}`,
+        examples: [
+          {
+            table: 'payments',
+            label: 'Authorized Payment',
+            json: `{
+  "id": "pay_a3f8c91e-7b24",
+  "idempotency_key": "order_20260419_500123_x7k9",
+  "merchant_id": "merch_42019",
+  "amount": 34800,
+  "currency": "USD",
+  "status": "AUTHORIZED",
+  "card_token": "tok_visa_4242",
+  "processor_ref": "ch_3Nq8kR2eZvKYlo2C",
+  "created_at": "2026-04-19T14:02:11Z",
+  "updated_at": "2026-04-19T14:02:45Z"
 }`
+          },
+          {
+            table: 'ledger_entries',
+            label: 'Double-Entry Ledger',
+            json: `{
+  "id": "le_88291054",
+  "payment_id": "pay_a3f8c91e-7b24",
+  "type": "DEBIT",
+  "account_id": "acct_merchant_42019",
+  "amount": 33786,
+  "balance_after": 284715000,
+  "created_at": "2026-04-19T14:02:45Z"
+}`
+          },
+          {
+            table: 'merchants',
+            label: 'Registered Merchant',
+            json: `{
+  "id": "merch_42019",
+  "name": "Acme Electronics",
+  "settlement_account": "acct_ba_9928374651",
+  "fee_rate": 0.029,
+  "webhook_url": "https://acme.com/webhooks/payments"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -28755,7 +29557,40 @@ quadtree_node {
   boundary: {lat_min, lat_max, lng_min, lng_max}
   businesses: list (if leaf, max 100 items)
   children: [NW, NE, SW, SE] (if internal node)
+}`,
+        examples: [
+          {
+            table: 'businesses',
+            label: 'Nearby Business',
+            json: `{
+  "id": "biz_tartine_sf",
+  "name": "Tartine Bakery",
+  "latitude": 37.7614,
+  "longitude": -122.4241,
+  "geohash": "9q8yyz",
+  "category_id": "cat_bakery",
+  "avg_rating": 4.5,
+  "price_range": 2
 }`
+          },
+          {
+            table: 'geohash_index',
+            label: 'Geohash Cell Lookup',
+            json: `{
+  "geohash_prefix": "9q8yyz",
+  "business_ids": ["biz_tartine_sf", "biz_blue_bottle_sf", "biz_ritual_sf", "biz_starbucks_sf_12"]
+}`
+          },
+          {
+            table: 'quadtree_node',
+            label: 'Quadtree Leaf Node',
+            json: `{
+  "boundary": {"lat_min": 37.76, "lat_max": 37.77, "lng_min": -122.43, "lng_max": -122.42},
+  "businesses": ["biz_tartine_sf", "biz_blue_bottle_sf"],
+  "children": null
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -28936,7 +29771,45 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
   created_at: timestamp
   expires_at: timestamp (nullable)
   click_count: bigint DEFAULT 0
+}`,
+        examples: [
+          {
+            table: 'urls',
+            label: 'Short URL Mapping',
+            json: `{
+  "short_code": "xK9mP2v",
+  "long_url": "https://www.example.com/blog/2026/system-design-interview-complete-guide?utm_source=linkedin",
+  "user_id": "usr_500123",
+  "created_at": "2026-04-19T08:31:22Z",
+  "expires_at": null,
+  "click_count": 2847
 }`
+          },
+          {
+            table: 'urls',
+            label: 'Expiring Campaign URL',
+            json: `{
+  "short_code": "sale26q2",
+  "long_url": "https://shop.example.com/summer-sale-2026",
+  "user_id": "usr_42019",
+  "created_at": "2026-04-01T00:00:00Z",
+  "expires_at": "2026-06-30T23:59:59Z",
+  "click_count": 89421
+}`
+          },
+          {
+            table: 'urls',
+            label: 'Anonymous Short URL',
+            json: `{
+  "short_code": "aB3x7Kp",
+  "long_url": "https://docs.google.com/document/d/1a2b3c4d5e",
+  "user_id": null,
+  "created_at": "2026-04-19T14:23:05Z",
+  "expires_at": "2026-04-26T14:23:05Z",
+  "click_count": 0
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -29133,7 +30006,49 @@ Count-Min Sketch {
   width: 10000 (hash buckets)
   depth: 7 (hash functions)
   // Estimates frequency with known error bound
+}`,
+        examples: [
+          {
+            table: 'sorted_set',
+            label: 'Redis Top-K Entry',
+            json: `{
+  "key": "topk:songs:daily",
+  "member": "song_bohemian_rhapsody",
+  "score": 284729,
+  "rank": 1,
+  "command": "ZADD topk:songs:daily 284729 song_bohemian_rhapsody"
 }`
+          },
+          {
+            table: 'rankings_history',
+            label: 'Historical Ranking Snapshot',
+            json: `{
+  "id": 9928374651,
+  "category": "songs",
+  "timeframe": "DAILY",
+  "item_id": "song_bohemian_rhapsody",
+  "score": 284729,
+  "rank": 1,
+  "snapshot_at": "2026-04-19T00:00:00Z"
+}`
+          },
+          {
+            table: 'count_min_sketch',
+            label: 'Approximate Counter State',
+            json: `{
+  "category": "songs",
+  "timeframe": "hourly",
+  "width": 10000,
+  "depth": 7,
+  "total_items_tracked": 847291,
+  "estimated_count_for": {
+    "item": "song_bohemian_rhapsody",
+    "estimate": 12847,
+    "error_bound": "±128"
+  }
+}`
+          }
+        ]
       },
 
       apiDesign: {
