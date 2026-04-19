@@ -10299,10 +10299,25 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
       color: '#f59e0b',
       difficulty: 'Medium',
       description: 'Design a scalable notification system supporting push, SMS, and email.',
+      productMeta: {
+        name: 'Notification System',
+        tagline: 'Multi-channel notification delivery at billions/day scale',
+        stats: [
+          { label: 'Notifications/Day', value: '10B+' },
+          { label: 'Channels', value: '4 (Push/Email/SMS/In-App)' },
+          { label: 'Urgent Delivery', value: '<1 sec' },
+          { label: 'Delivery Rate', value: '99.9%' },
+        ],
+        scope: {
+          inScope: ['Push notifications (iOS APNs, Android FCM, Web Push)', 'Email notifications (transactional + marketing)', 'SMS delivery (OTP, alerts)', 'In-app notification center', 'User preference management', 'Template-based message rendering'],
+          outOfScope: ['Email marketing campaign builder', 'A/B testing framework', 'Notification content creation tools', 'Analytics dashboard UI', 'GDPR consent management'],
+        },
+        keyChallenge: 'Delivering 10B+ notifications per day across 4 channels with <1 second latency for urgent messages (OTP, fraud alerts), while respecting user preferences, quiet hours, rate limits, and handling provider failover (FCM/APNs/SendGrid/Twilio).',
+      },
 
-      introduction: `A notification system delivers messages to users across multiple channels: push notifications, SMS, email, and in-app messages. Companies like Facebook, Uber, and Amazon send billions of notifications daily.
+      introduction: `A notification system delivers messages to users across multiple channels: push notifications, SMS, email, and in-app messages. Companies like Facebook, Uber, and Amazon send billions of notifications daily — Facebook alone sends over 10 billion push notifications per day.
 
-The key challenges are: handling different priority levels (OTP codes vs marketing), managing user preferences, ensuring reliable delivery with retries, and scaling to billions of notifications per day while maintaining low latency for urgent messages.`,
+The key challenges are: handling different priority levels (OTP codes must arrive in <1 second vs marketing can wait hours), managing user preferences and quiet hours per timezone, ensuring 99.9% reliable delivery with exponential backoff retries, and scaling to billions of notifications per day while maintaining low latency for urgent messages.`,
 
       functionalRequirements: [
         'Send push notifications (iOS, Android, Web)',
@@ -10325,6 +10340,21 @@ The key challenges are: handling different priority levels (OTP codes vs marketi
         'Support quiet hours per timezone',
         'Analytics: delivery, open, click rates'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '10B notifications/day across 4 channels. Distribution: 60% push, 25% email, 10% in-app, 5% SMS. Average notification payload 500 bytes. 500M registered users.',
+        calculations: [
+          { label: 'Notification QPS (avg)', value: '~115K/s', detail: '10B notifications/day / 86,400 = ~115,740 notifications/sec average' },
+          { label: 'Peak QPS', value: '~350K/s', detail: '3x peak factor during morning hours and promotional events' },
+          { label: 'Push Notifications/Day', value: '~6B', detail: '10B x 60% = 6B push notifications (FCM + APNs + Web Push)' },
+          { label: 'Email Volume/Day', value: '~2.5B', detail: '10B x 25% = 2.5B emails via SendGrid/SES' },
+          { label: 'SMS Volume/Day', value: '~500M', detail: '10B x 5% = 500M SMS messages (most expensive channel)' },
+          { label: 'Storage (30 days)', value: '~150 TB', detail: '10B/day x 500 bytes x 30 days = 150 TB notification records' },
+          { label: 'Device Token Storage', value: '~50 GB', detail: '500M users x avg 2 devices x 50 bytes per token = 50 GB' },
+          { label: 'SMS Cost/Day', value: '~$5M', detail: '500M SMS x $0.01/msg = $5M/day (reason SMS is used sparingly)' },
+        ]
+      },
 
       dataModel: {
         description: 'Notifications, templates, and user preferences',
@@ -10504,6 +10534,139 @@ const userTime = convertToTimezone(now(), user.timezone);
 - Push notifications essentially free
 - Email: $0.0001/msg with SendGrid
 - Batch similar notifications into digests`
+        },
+        {
+          question: 'How does push notification delivery differ across platforms?',
+          answer: `**Apple Push Notification service (APNs)**:
+- HTTP/2 protocol with persistent connections
+- Max payload: 4 KB
+- Requires device token + TLS certificate
+- Rate limit: ~2,000/sec per connection (multiple connections allowed)
+- Feedback service reports invalid tokens
+
+**Firebase Cloud Messaging (FCM)**:
+- Supports Android, iOS (via APNs proxy), and Web Push
+- Max payload: 4 KB
+- Supports topic-based messaging (send to all subscribers of a topic)
+- Batch API: Up to 500 messages per request
+- No hard rate limit but implements backoff on errors
+
+**Web Push**:
+- Uses VAPID (Voluntary Application Server Identification)
+- Max payload: ~4 KB
+- Requires service worker on the client
+- Browser-specific push services (Google, Mozilla, Microsoft)
+
+**Key Design Decision**: Abstract all platforms behind a unified push sender interface. Each platform worker manages its own connection pool, retry logic, and token validation.`
+        },
+        {
+          question: 'How do we implement notification deduplication?',
+          answer: `Users receiving the same notification twice is a common failure mode, especially with at-least-once delivery guarantees.
+
+**Deduplication Strategies**:
+
+**1. Idempotency Key**:
+- Every notification request includes a unique idempotency_key
+- Before processing, check Redis: EXISTS dedup:{idempotency_key}
+- If exists: skip. If not: SET with TTL of 24 hours
+
+**2. Content-Based Dedup**:
+- Hash of (userId + templateId + data) = content fingerprint
+- Prevent sending identical content within a time window
+
+**3. Rate-Based Dedup**:
+- Max 1 notification of same type per user per hour
+- Uses sliding window counter in Redis
+
+**4. Queue-Level Dedup**:
+- Kafka consumer group ensures each message processed by exactly one worker
+- Idempotent consumer pattern: track processed message offsets
+
+**Trade-off**: Dedup adds ~1ms Redis lookup per notification. At 115K/sec, this requires a dedicated Redis cluster.`
+        },
+        {
+          question: 'How do we handle notification batching and digests?',
+          answer: `Sending every individual event as a separate notification causes fatigue. Batching combines related notifications into digests.
+
+**Batching Types**:
+
+**1. Time-Based Batching**:
+- Collect notifications for 5-60 minutes, then send digest
+- Example: "3 people liked your post" instead of 3 separate notifications
+
+**2. Count-Based Batching**:
+- Send digest after N notifications accumulate
+- Example: After 10 new followers, send "You have 10 new followers"
+
+**3. Smart Digest (ML-Based)**:
+- ML model predicts optimal send time per user
+- Features: past open times, timezone, device activity patterns
+- Maximize open rate by sending when user is most likely to engage
+
+**Implementation**:
+- Batch buffer: Redis hash per userId per notification type
+- Flush trigger: timer OR count threshold OR priority override
+- Urgent notifications always bypass batching`
+        },
+        {
+          question: 'How do we implement provider failover for high availability?',
+          answer: `No single provider has 100% uptime. Multi-vendor setup with automatic failover ensures delivery.
+
+**Provider Configuration**:
+- Push: Primary FCM + Secondary APNs direct
+- Email: Primary SendGrid + Secondary Amazon SES + Tertiary Mailgun
+- SMS: Primary Twilio + Secondary Vonage (Nexmo)
+
+**Circuit Breaker Pattern**:
+1. Track error rate per provider (sliding 1-minute window)
+2. If error rate > 30%: Open circuit, route to secondary
+3. After 5 minutes: Half-open, send 10% traffic to test recovery
+4. If recovery confirmed: Close circuit, restore primary
+
+**Cost Consideration**: SES ($0.10/1000 emails) vs SendGrid ($0.50/1000). Use cheaper provider as primary when both available.`
+        },
+        {
+          question: 'How do we track delivery, open, and click rates?',
+          answer: `**Tracking Events**:
+1. **Sent**: Worker called provider API successfully
+2. **Delivered**: Provider webhook confirms delivery (FCM receipt, SendGrid delivered event)
+3. **Opened**: Tracking pixel loaded in email, or app reports notification tap
+4. **Clicked**: User clicked deep link in notification
+5. **Dismissed**: User swiped away without tapping
+
+**Email Open Tracking**:
+- Invisible 1x1 pixel: /track/open/{notificationId}.png
+- When loaded, record open event in Kafka
+- Limitation: Apple Mail privacy blocks image loading
+
+**Aggregation Pipeline**:
+- Raw events -> Kafka -> Flink (1-min windows) -> ClickHouse
+- Dashboard: delivery rate, open rate, CTR per template and channel
+- Alert: if delivery rate drops below 95% in 5-minute window`
+        },
+        {
+          question: 'How do we handle notification localization globally?',
+          answer: `A global system must deliver messages in the user's preferred language.
+
+**Template with i18n**:
+- Templates stored with placeholders: "Hello {{name}}, {{body}}"
+- Translation files per locale: en-US, es-MX, ja-JP, etc.
+- Template engine selects locale from user preference
+
+**Locale Resolution Order**:
+1. User-set language preference
+2. App/device language setting
+3. Country of registration (fallback)
+
+**SMS Considerations**:
+- GSM-7 for Latin scripts: 160 chars/segment
+- UCS-2 for CJK characters: 70 chars/segment (2x cost)
+- Keep SMS under 160 chars for single-segment delivery
+
+**Dynamic Content**:
+- Dates formatted per locale (en-US: "Jan 5" vs de-DE: "5. Jan.")
+- Currency formatting ($10.00 vs 10,00 EUR)
+- Number formatting (1,000.50 vs 1.000,50)`
         }
       ],
 
@@ -10671,6 +10834,167 @@ const userTime = convertToTimezone(now(), user.timezone);
         { name: 'Delivery Layer', purpose: 'Send notifications through platform-specific channels with retry logic', components: ['Push Sender (APNs/FCM)', 'Email Sender (SES/SendGrid)', 'SMS Sender (Twilio)', 'In-App WebSocket'] },
         { name: 'Analytics & Feedback Layer', purpose: 'Track delivery status, open rates, and handle unsubscribes', components: ['Delivery Tracker', 'Analytics Pipeline', 'Feedback Processor', 'Unsubscribe Handler'] },
       ],
+      deepDiveTopics: [
+        {
+          topic: 'Priority Queue Architecture',
+          detail: `Use separate Kafka topics per priority level with different consumer group sizes.
+
+**URGENT (P0)**: OTP codes, security alerts, fraud warnings. Dedicated consumer group with 10x workers. Bypass rate limits and quiet hours. Target: <1 second delivery.
+**NORMAL (P1)**: Order updates, message notifications. Standard consumer group. Respect rate limits. Target: <5 seconds.
+**BATCH (P2)**: Marketing emails, weekly digests. Low-priority consumers, process during off-peak hours. Respect unsubscribes.
+
+Each priority level has independent auto-scaling based on queue depth. Urgent queue workers are always warm (no cold start).`
+        },
+        {
+          topic: 'Device Token Lifecycle Management',
+          detail: `Push tokens become stale when users uninstall apps, get new devices, or clear app data.
+
+**Token Refresh**: On each app launch, client registers current push token. Server compares with stored token and updates if changed.
+**Invalid Token Detection**: When APNs/FCM returns "InvalidRegistration" or "Unregistered", mark token as invalid immediately. After 3 consecutive failures, remove token.
+**Multi-Device**: Users may have 2-5 devices (phone, tablet, watch). Send to all active devices, let OS handle dedup.
+**Token Storage**: Redis hash per userId mapping deviceId to push token and platform. TTL: 90 days since last activity.`
+        },
+        {
+          topic: 'Email Deliverability',
+          detail: `Email delivery depends heavily on sender reputation and authentication.
+
+**Authentication**: SPF (authorized sending IPs), DKIM (cryptographic signature), DMARC (policy for failed auth). All three required for inbox placement.
+**IP Warm-up**: New sending IPs start with low volume (100 emails/day), gradually increase over 4-6 weeks to build reputation.
+**Dedicated vs Shared IPs**: Transactional emails (order confirmations) use dedicated IPs. Marketing emails use separate IPs to protect transactional reputation.
+**Bounce Management**: Hard bounces (invalid address) removed immediately. Soft bounces retried 3 times over 72 hours then suppressed.`
+        },
+        {
+          topic: 'In-App Notification Center',
+          detail: `The in-app notification inbox stores read/unread notifications with pagination.
+
+**Storage**: Cassandra partitioned by userId, clustered by timestamp descending. Each user's notifications co-located for fast range queries.
+**Unread Count**: Redis counter per userId incremented on send, decremented on read. Powers the badge count on the app icon.
+**Real-Time Push**: WebSocket connection pushes new in-app notifications instantly. Falls back to polling every 30 seconds if WebSocket unavailable.
+**Retention**: Keep last 90 days of notifications. Older notifications archived to S3 for compliance.`
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'push-providers',
+          title: 'Push Notification Provider Comparison',
+          headers: ['Aspect', 'FCM (Google)', 'APNs (Apple)', 'Web Push'],
+          rows: [
+            ['Platforms', 'Android, iOS, Web', 'iOS, macOS, watchOS', 'Chrome, Firefox, Safari'],
+            ['Max Payload', '4 KB', '4 KB', '~4 KB'],
+            ['Protocol', 'HTTP/2 or XMPP', 'HTTP/2', 'HTTP/2 (RFC 8030)'],
+            ['Rate Limit', 'No hard limit (backoff)', '~2,000/sec/connection', 'Varies by browser vendor'],
+            ['Batch Support', '500 msgs/request', 'One at a time', 'One at a time'],
+            ['Delivery Receipt', 'Yes (Firebase Analytics)', 'Limited', 'No'],
+          ],
+          verdict: 'FCM is the most feature-rich; APNs required for iOS; Web Push for browser-only users'
+        },
+        {
+          id: 'channel-cost-comparison',
+          title: 'Notification Channel Cost and Speed',
+          headers: ['Aspect', 'Push', 'Email', 'SMS', 'In-App'],
+          rows: [
+            ['Cost per Message', 'Free', '$0.0001-0.001', '$0.01-0.05', 'Free'],
+            ['Delivery Speed', '<1 second', '1-30 seconds', '1-10 seconds', 'Instant (WebSocket)'],
+            ['Delivery Rate', '~85% (token validity)', '~95% (inbox)', '~98%', '~100% (if online)'],
+            ['Open Rate', '~5-15%', '~20-30%', '~95%', '~60%'],
+            ['Best For', 'Real-time alerts', 'Rich content, receipts', 'OTP, critical alerts', 'Activity feed'],
+            ['User Control', 'OS-level toggle', 'Unsubscribe link', 'Reply STOP', 'In-app settings'],
+          ],
+          verdict: 'Push for real-time at zero cost; SMS for critical messages where delivery is paramount; email for rich content'
+        },
+        {
+          id: 'single-vs-priority-queue',
+          title: 'Single Queue vs Priority Queues',
+          headers: ['Aspect', 'Single Queue', 'Priority Queues (Recommended)'],
+          rows: [
+            ['Implementation', 'Simple, one Kafka topic', 'Multiple topics per priority'],
+            ['OTP Delivery', 'Delayed by marketing backlog', '<1 second guaranteed'],
+            ['Head-of-Line Blocking', 'Yes (bulk sends block urgent)', 'No (independent processing)'],
+            ['Scaling', 'Uniform scaling', 'Scale each priority independently'],
+            ['Cost', 'Lower (fewer resources)', 'Higher (dedicated workers per tier)'],
+            ['Monitoring', 'Single queue depth', 'Per-priority SLA tracking'],
+          ],
+          verdict: 'Priority queues essential for any system handling both OTP/security alerts and marketing notifications'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'notification-delivery-flow',
+          title: 'Notification Delivery Flow',
+          description: 'End-to-end flow from notification request to user delivery with preference checks',
+          steps: [
+            { step: 1, label: 'API Request', detail: 'Internal service sends notification request: userId, templateId, channel, priority, data payload.' },
+            { step: 2, label: 'Validation', detail: 'Validate request schema, check template exists, verify userId is valid. Assign unique notificationId.' },
+            { step: 3, label: 'Preference Check', detail: 'Query user preferences from Redis cache: is channel enabled? Is user in quiet hours? Is category unsubscribed?' },
+            { step: 4, label: 'Template Render', detail: 'Resolve user locale, render template with data variables. Generate channel-specific payload (push JSON, email HTML, SMS text).' },
+            { step: 5, label: 'Priority Routing', detail: 'Route to appropriate Kafka topic: urgent (P0), normal (P1), or batch (P2) based on priority level.' },
+            { step: 6, label: 'Worker Processing', detail: 'Channel-specific worker dequeues message. Look up device token/email/phone. Call provider API (FCM/SendGrid/Twilio).' },
+            { step: 7, label: 'Delivery + Tracking', detail: 'On success: update status to SENT. Provider webhook confirms DELIVERED. Track open/click events asynchronously.' },
+          ]
+        },
+        {
+          id: 'retry-flow',
+          title: 'Retry and Dead Letter Queue Flow',
+          description: 'How failed notifications are retried with exponential backoff before reaching the dead letter queue',
+          steps: [
+            { step: 1, label: 'Initial Send', detail: 'Worker calls provider API. If 2xx response: mark as SENT. If error (5xx, timeout, rate limit): enter retry flow.' },
+            { step: 2, label: 'Retry 1 (1s)', detail: 'Immediate retry after 1 second. Handles transient network blips and brief provider hiccups.' },
+            { step: 3, label: 'Retry 2 (5s)', detail: 'Second retry at 5 seconds. Handles brief provider degradation or rate limiting cooldown.' },
+            { step: 4, label: 'Retry 3 (30s)', detail: 'Third retry at 30 seconds. If provider is still failing, circuit breaker may switch to secondary provider.' },
+            { step: 5, label: 'Retry 4 (5min)', detail: 'Fourth retry at 5 minutes. For non-urgent notifications only. Urgent notifications escalate to alternate channel.' },
+            { step: 6, label: 'Dead Letter Queue', detail: 'After max retries: move to DLQ. Alert on-call team. Manual review for patterns (invalid tokens, provider outage).' },
+          ]
+        },
+        {
+          id: 'bulk-send-flow',
+          title: 'Bulk Notification Send Flow',
+          description: 'How a marketing campaign sends notifications to millions of users efficiently',
+          steps: [
+            { step: 1, label: 'Campaign Created', detail: 'Marketing team creates campaign with template, audience segment (e.g., users active in last 30 days), and schedule.' },
+            { step: 2, label: 'Audience Resolution', detail: 'Query user database for segment. Batch into chunks of 10K users. Create Kafka messages for each chunk.' },
+            { step: 3, label: 'Fan-Out', detail: 'Fan-out workers expand each chunk into individual notification tasks. Apply per-user preferences and quiet hours.' },
+            { step: 4, label: 'Rate-Limited Send', detail: 'Send at controlled rate to avoid overwhelming providers. FCM: batch 500/request. SendGrid: 3000 emails/sec.' },
+            { step: 5, label: 'Progress Tracking', detail: 'Track sent/delivered/failed counts in Redis. Expose real-time progress to campaign dashboard.' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'Kafka (Queues)', value: '100+ partitions/priority', bar: 95 },
+            { label: 'FCM/APNs (Push)', value: '6B push/day', bar: 90 },
+            { label: 'SendGrid/SES (Email)', value: '2.5B emails/day', bar: 80 },
+            { label: 'Twilio (SMS)', value: '500M SMS/day', bar: 60 },
+            { label: 'Redis (Preferences)', value: 'Sub-ms preference lookup', bar: 85 },
+            { label: 'Cassandra (Inbox)', value: 'Per-user notification store', bar: 75 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#F59E0B',
+          items: [
+            { label: '10B notifications/day', value: 'Total daily volume', bar: 95 },
+            { label: '115K/sec average', value: 'Notification QPS', bar: 70 },
+            { label: '350K/sec peak', value: 'Peak during events', bar: 90 },
+            { label: '<1 sec urgent', value: 'P0 delivery SLA', bar: 100 },
+            { label: '99.9% delivery', value: 'Delivery success rate', bar: 95 },
+            { label: '4 channels', value: 'Push + Email + SMS + In-App', bar: 50 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Queue + Direct Send', description: 'One message queue with workers sending directly to FCM/SendGrid. No priority handling, no user preferences.', color: '#94a3b8', icon: 'server', capacity: '~10K notifs/day', rps: '1', pros: ['Simple to build and deploy', 'Works for a single channel', 'Easy to debug'], cons: ['No priority handling', 'Single provider = single point of failure', 'No preference management'] },
+        { step: 2, title: 'Multi-Channel + Preferences', description: 'Add email, SMS, in-app channels. User preference service with quiet hours. Template engine for consistent messaging.', color: '#2D8CFF', icon: 'layers', capacity: '~1M notifs/day', rps: '50', pros: ['Multi-channel delivery', 'Users control their preferences', 'Consistent templates'], cons: ['Still single queue (head-of-line blocking)', 'No retry mechanism', 'No analytics'] },
+        { step: 3, title: 'Priority Queues + Retry', description: 'Kafka priority queues (urgent/normal/batch). Exponential backoff retries. Dead letter queue. Provider failover.', color: '#f59e0b', icon: 'zap', capacity: '~100M notifs/day', rps: '5K', pros: ['OTP delivered in <1 second', 'Reliable delivery with retries', 'Provider failover'], cons: ['Queue management complexity', 'Multiple consumer groups to monitor', 'Cost of secondary providers'] },
+        { step: 4, title: 'Global Scale + Analytics', description: 'Geo-distributed workers for low latency. Real-time analytics (delivery/open/click). Batch API for bulk sends. Circuit breaker per provider.', color: '#10b981', icon: 'globe', capacity: '~5B notifs/day', rps: '100K', pros: ['Global low-latency delivery', 'Rich analytics dashboard', 'Handles marketing campaigns'], cons: ['Complex monitoring across regions', 'Email deliverability management', 'SMS costs at scale'] },
+        { step: 5, title: 'ML-Optimized Delivery', description: 'ML models predict optimal send time per user. Smart batching into digests. A/B testing notification content. Fraud detection for notification abuse.', color: '#7c3aed', icon: 'cpu', capacity: '10B+ notifs/day', rps: '350K+', pros: ['Higher open rates via smart timing', 'Reduced notification fatigue', 'Automated content optimization'], cons: ['ML infrastructure overhead', 'Privacy considerations with behavioral data', 'Complex A/B testing framework'] },
+      ],
     },
     {
       id: 'rate-limiter',
@@ -10680,6 +11004,21 @@ const userTime = convertToTimezone(now(), user.timezone);
       color: '#dc2626',
       difficulty: 'Medium',
       description: 'Design a distributed rate limiting service for API protection.',
+      productMeta: {
+        name: 'Distributed Rate Limiter',
+        tagline: 'Sub-millisecond API protection at 1M+ checks/sec',
+        stats: [
+          { label: 'Check Latency', value: '<1ms' },
+          { label: 'Throughput', value: '1M+ checks/s' },
+          { label: 'Algorithms', value: '4 (Token/Sliding/Fixed/Leaky)' },
+          { label: 'Availability', value: '99.99%' },
+        ],
+        scope: {
+          inScope: ['Per-user/IP/API-key rate limiting', 'Multiple algorithms (token bucket, sliding window, fixed window, leaky bucket)', 'Distributed state via Redis', 'Dynamic rule configuration', 'Response headers (remaining, reset)', 'Multi-tier limits (free/pro/enterprise)'],
+          outOfScope: ['DDoS mitigation at network layer', 'Web Application Firewall (WAF)', 'Bot detection and CAPTCHA', 'Usage-based billing metering', 'API analytics dashboard'],
+        },
+        keyChallenge: 'Achieving sub-millisecond rate limit checks across a distributed API gateway fleet with zero race conditions, while supporting dynamic rule updates and graceful degradation when Redis is unavailable.',
+      },
 
       introduction: `A rate limiter is a mechanism that controls the number of requests or actions a user or system can perform within a specific time frame. Think of it as a bouncer managing entry flow to maintain system stability and prevent overload.
 
@@ -10707,6 +11046,21 @@ The key challenge is implementing rate limiting that's fast (sub-millisecond), a
         'Support for 10K+ different rate limit rules',
         'Real-time monitoring and alerting'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1M rate limit checks per second across 100 API gateway nodes. 10M unique users. 10K rate limit rules. Token bucket algorithm with Redis backend.',
+        calculations: [
+          { label: 'Rate Limit Checks/sec', value: '1M+', detail: '100 API gateway nodes x 10K requests/sec per node = 1M checks/sec' },
+          { label: 'Redis Operations/sec', value: '~500K/s', detail: '50% of checks hit local cache (hot keys), 50% go to Redis = 500K Redis ops/sec' },
+          { label: 'Token Bucket Memory', value: '~1 GB', detail: '10M users x ~100 bytes per bucket (key + tokens + timestamp) = 1 GB Redis' },
+          { label: 'Sliding Window Memory', value: '~2.5 GB', detail: '10M users x 5 rules x ~50 bytes per counter = 2.5 GB Redis' },
+          { label: 'With Replication (3x)', value: '~7.5 GB', detail: 'Redis cluster with 3 replicas: 2.5 GB x 3 = 7.5 GB total' },
+          { label: 'Local Cache Size', value: '~500 MB/node', detail: 'Top 50K hot keys cached locally on each gateway node' },
+          { label: 'Rule Storage', value: '~5 MB', detail: '10K rules x 500 bytes per rule = 5 MB (fits in any Redis node)' },
+          { label: 'Lua Script Latency', value: '<1ms', detail: 'Atomic token bucket check-and-decrement via Lua script on Redis single thread' },
+        ]
+      },
 
       dataModel: {
         description: 'Rate limit rules, buckets, and request logs',
@@ -10888,6 +11242,105 @@ return {0, tokens}  -- denied
 - 5 rate limit rules: ~2.5 GB
 - With replication: 3x = 7.5 GB
 - Cost: ~$50/month for Redis cluster`
+        },
+        {
+          question: 'How do we handle multi-dimensional rate limiting?',
+          answer: `Real APIs need limits across multiple dimensions simultaneously.
+
+**Dimensions**:
+- Per-user: 1000 requests/minute for Pro tier
+- Per-IP: 100 requests/minute (catch unauthenticated abuse)
+- Per-endpoint: /api/search limited to 30/min (expensive operation)
+- Global: Total API at 100K/min (protect backend capacity)
+
+**Implementation**:
+Each request checks multiple rate limit keys in a single Redis pipeline:
+1. EVALSHA token_bucket_script user:123:api 1000 60
+2. EVALSHA token_bucket_script ip:1.2.3.4 100 60
+3. EVALSHA token_bucket_script endpoint:/search:user:123 30 60
+4. EVALSHA token_bucket_script global:api 100000 60
+
+All four checks executed in a single Redis PIPELINE roundtrip (~1ms total). Request is allowed only if ALL checks pass. Response headers reflect the most restrictive limit.
+
+**Hierarchical Limits**:
+Enterprise customers may have org-level limits shared across all API keys: org:acme = 50K/min, with per-key sub-limits of 10K/min each.`
+        },
+        {
+          question: 'How do we implement the sliding window counter algorithm?',
+          answer: `Sliding window counter is the best balance of accuracy, memory, and performance.
+
+**Problem with Fixed Window**:
+A user with a 100 req/min limit can send 100 requests at 0:59 and 100 at 1:00 — 200 requests in 2 seconds.
+
+**Sliding Window Counter Formula**:
+Instead of tracking every request timestamp (expensive), use weighted combination of two fixed windows:
+
+count = requests_in_current_window + (requests_in_previous_window x overlap_percentage)
+
+**Example** (at time 1:15, window = 1 minute):
+- Current window (1:00-2:00): 30 requests
+- Previous window (0:00-1:00): 80 requests
+- Time into current window: 15 seconds = 25% through
+- Overlap of previous window: 75%
+- Estimated count: 30 + (80 x 0.75) = 90 requests
+
+**Redis Implementation**:
+Two keys per user per window:
+- rate:user:123:window:1 = 80 (previous)
+- rate:user:123:window:2 = 30 (current)
+Each key has TTL of 2x window size. Increment current window with INCR + EXPIRE.
+
+**Accuracy**: Within 0.003% error of exact sliding window log, at 1/100th the memory cost.`
+        },
+        {
+          question: 'How do we expose rate limit information to API clients?',
+          answer: `Standard HTTP headers communicate rate limit status to clients, enabling them to self-throttle.
+
+**Standard Headers** (RFC 6585 + draft-ietf-httpapi-ratelimit-headers):
+- X-RateLimit-Limit: 1000 (max requests in window)
+- X-RateLimit-Remaining: 742 (requests left)
+- X-RateLimit-Reset: 1619472000 (UTC epoch when window resets)
+- Retry-After: 30 (seconds to wait before retrying, on 429)
+
+**Response on Rate Limit Hit**:
+HTTP 429 Too Many Requests
+{ "error": "rate_limit_exceeded", "message": "Rate limit of 1000 requests per minute exceeded", "retryAfter": 30 }
+
+**Client Best Practices**:
+- Implement exponential backoff on 429 responses
+- Track remaining quota and pre-emptively slow down at 10% remaining
+- Use Retry-After header value, not arbitrary delays
+
+**Multiple Limits**:
+When multiple limits apply (per-user + per-endpoint), return the most restrictive limit in headers. Optionally include X-RateLimit-Policy header describing which rule triggered.`
+        },
+        {
+          question: 'How do we dynamically update rate limit rules without downtime?',
+          answer: `Rate limit rules must be changeable in real-time without restarting any services.
+
+**Architecture**:
+1. Admin updates rule via API: PUT /api/ratelimit/rules/123 { limit: 2000 }
+2. Rule stored in config database (PostgreSQL)
+3. Change event published to Redis Pub/Sub channel: "rules:updated"
+4. All gateway nodes subscribe to channel, receive update within seconds
+5. Gateways update local rule cache
+
+**Rule Propagation**:
+- Local cache TTL: 60 seconds (stale rules acceptable for short period)
+- Redis Pub/Sub provides near-instant propagation
+- On gateway startup: fetch all rules from config DB
+
+**Gradual Rollout**:
+- New rules can be applied to a percentage of traffic first
+- A/B test: 10% of users get new limits, monitor error rates
+- If 429 rate spikes unexpectedly, auto-rollback to previous rule
+
+**Rule Priority**:
+Rules evaluated in order: specific overrides general.
+1. Per-API-key override (highest priority)
+2. Per-endpoint limit
+3. Per-tier limit (free/pro/enterprise)
+4. Global default (lowest priority)`
         }
       ],
 
@@ -11108,6 +11561,152 @@ return {0, tokens}  -- denied
         { name: 'Rate Limit Engine', purpose: 'Execute rate limiting algorithms and maintain counters', components: ['Redis Cluster', 'Lua Rate Limit Scripts', 'Local Cache Limiter', 'Config Service'] },
         { name: 'Monitoring & Rules Layer', purpose: 'Define rate limit policies, monitor usage patterns, and alert on anomalies', components: ['Rules Engine', 'Usage Analytics', 'Alerting Service', 'Admin Dashboard'] },
       ],
+      deepDiveTopics: [
+        {
+          topic: 'Lua Scripts for Atomic Rate Limiting',
+          detail: `Redis Lua scripts execute atomically on a single thread, eliminating race conditions.
+
+**Token Bucket Lua Script**: Read current tokens and last refill time, calculate new tokens based on elapsed time, check if enough tokens available, deduct if allowed. All in one atomic operation — no TOCTOU (time-of-check-time-of-use) bugs.
+
+**Performance**: Lua scripts add ~0.1ms overhead vs raw Redis commands. At 500K ops/sec, this is negligible. Scripts are SHA-cached after first load (EVALSHA), avoiding repeated script transmission.
+
+**Testing**: Unit test Lua scripts with redis-mock. Integration test with real Redis to validate atomicity under concurrent load.`
+        },
+        {
+          topic: 'Local Rate Limiting as First Defense',
+          detail: `Local in-memory rate limiting on each gateway node provides sub-microsecond checks without network calls.
+
+**Implementation**: Each gateway maintains a local token bucket for hot keys (top 50K). Requests check local bucket first. If local bucket allows, request proceeds. Redis check happens asynchronously to sync global state.
+
+**Trade-off**: With N gateway nodes, local limits allow up to N times the intended limit globally. Mitigation: set local limit to global_limit / N with 20% headroom.
+
+**Use Case**: Perfect for DDoS protection where approximate limiting is acceptable. Not suitable for billing-critical limits where exact counts matter.`
+        },
+        {
+          topic: 'Sliding Window Log vs Counter Trade-offs',
+          detail: `**Sliding Window Log**: Store every request timestamp in a Redis sorted set. Exact counting but O(n) memory where n is requests in window. At 1000 req/min per user x 10M users = 10B entries. Impractical at scale.
+
+**Sliding Window Counter**: Two fixed-window counters with weighted interpolation. O(1) memory per user per rule. Accuracy within 0.003% of exact. The clear winner for production systems.
+
+**When to use Log**: Only for very low-volume, high-value operations (password reset attempts, API key creation) where exact counting justifies the memory cost.`
+        },
+        {
+          topic: 'Rate Limiting at the Edge (CDN/WAF)',
+          detail: `First-line rate limiting at CDN/edge protects origin servers from volumetric attacks.
+
+**Cloudflare Rate Limiting**: Configurable per-URL rules, 10K+ rules per zone. Sub-millisecond enforcement at 200+ edge locations globally. Handles DDoS before traffic reaches origin.
+
+**AWS WAF Rate-Based Rules**: Count requests per IP per 5-minute window. Block IPs exceeding threshold. Integrated with CloudFront and ALB.
+
+**Architecture**: Edge rate limiting catches broad abuse (DDoS, scraping). Application-level rate limiting (Redis) handles per-user/per-API-key limits with business logic awareness.`
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'algorithm-comparison',
+          title: 'Rate Limiting Algorithm Comparison',
+          headers: ['Aspect', 'Token Bucket', 'Sliding Window Counter', 'Fixed Window', 'Leaky Bucket'],
+          rows: [
+            ['Burst Handling', 'Allows controlled bursts', 'Smooth, no bursts', '2x burst at boundaries', 'No bursts (constant rate)'],
+            ['Memory per User', '~100 bytes', '~50 bytes', '~20 bytes', '~100 bytes'],
+            ['Accuracy', 'Exact', '~99.997% accurate', 'Boundary problem', 'Exact'],
+            ['Complexity', 'Medium', 'Medium', 'Simple', 'Medium'],
+            ['Redis Operations', '2 (GET + SET)', '2 (INCR + GET)', '1 (INCR)', '2 (GET + SET)'],
+            ['Best For', 'API rate limiting', 'Strict compliance', 'Simple counters', 'Streaming/constant throughput'],
+          ],
+          verdict: 'Token bucket for most APIs (burst-friendly); sliding window counter for strict limits; fixed window only for simple use cases'
+        },
+        {
+          id: 'centralized-vs-local',
+          title: 'Centralized (Redis) vs Local Rate Limiting',
+          headers: ['Aspect', 'Centralized Redis', 'Local In-Memory', 'Hybrid (Recommended)'],
+          rows: [
+            ['Accuracy', 'Exact global count', 'Approximate (N x limit)', 'Near-exact (sync periodically)'],
+            ['Latency', '~1-2ms (network hop)', '<0.01ms', '<0.01ms local, 1ms async sync'],
+            ['Redis Dependency', 'Yes (single point)', 'None', 'Degraded mode without Redis'],
+            ['Consistency', 'Strong', 'Weak', 'Eventual (seconds lag)'],
+            ['Cost', 'Redis cluster required', 'Free (in-process)', 'Redis + local memory'],
+            ['Best For', 'Billing-critical limits', 'DDoS protection', 'Production API rate limiting'],
+          ],
+          verdict: 'Hybrid approach: local check first (sub-microsecond), Redis sync for accuracy, graceful degradation on Redis failure'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'token-bucket-flow',
+          title: 'Token Bucket Rate Limit Check',
+          description: 'Atomic token bucket check using Redis Lua script',
+          steps: [
+            { step: 1, label: 'Request Arrives', detail: 'API gateway extracts rate limit key: user ID, IP address, or API key from the request.' },
+            { step: 2, label: 'Local Cache Check', detail: 'Check local in-memory cache for hot keys. If locally rate-limited, return 429 immediately without Redis call.' },
+            { step: 3, label: 'Redis Lua Script', detail: 'Execute atomic Lua script: read bucket state, calculate token refill based on elapsed time, check if tokens available.' },
+            { step: 4, label: 'Allow or Deny', detail: 'If tokens >= cost: deduct tokens, return ALLOWED with remaining count. If tokens < cost: return DENIED with retry-after.' },
+            { step: 5, label: 'Response Headers', detail: 'Set X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset headers on the response.' },
+            { step: 6, label: 'Log + Monitor', detail: 'Async log the rate limit decision to Kafka for analytics. Alert if denial rate exceeds threshold.' },
+          ]
+        },
+        {
+          id: 'rule-update-flow',
+          title: 'Dynamic Rule Update Propagation',
+          description: 'How rate limit rule changes propagate to all gateway nodes in seconds',
+          steps: [
+            { step: 1, label: 'Admin Updates Rule', detail: 'Admin changes limit via API: PUT /rules/123 { limit: 2000, window: 60 }. Stored in config database.' },
+            { step: 2, label: 'Publish Change Event', detail: 'Config service publishes to Redis Pub/Sub channel "rules:updated" with rule ID and new values.' },
+            { step: 3, label: 'Gateway Receives', detail: 'All 100+ gateway nodes are subscribed to the channel. Each receives the update within milliseconds.' },
+            { step: 4, label: 'Update Local Cache', detail: 'Each gateway updates its local rule cache. New requests immediately use the updated limit.' },
+            { step: 5, label: 'Verify Propagation', detail: 'Config service polls gateways to confirm rule version matches. Alert if any node is stale after 30 seconds.' },
+          ]
+        },
+        {
+          id: 'failover-flow',
+          title: 'Redis Failure Graceful Degradation',
+          description: 'How the rate limiter degrades gracefully when Redis becomes unavailable',
+          steps: [
+            { step: 1, label: 'Redis Health Check', detail: 'Gateway monitors Redis latency. If p99 > 50ms or connection errors > 5% in 10-second window, trigger degradation.' },
+            { step: 2, label: 'Circuit Breaker Opens', detail: 'Stop sending rate limit checks to Redis. Switch to local in-memory rate limiting with conservative defaults.' },
+            { step: 3, label: 'Local Enforcement', detail: 'Each gateway enforces limit/N per key locally (where N = number of gateways). Approximate but functional.' },
+            { step: 4, label: 'Recovery Probe', detail: 'Every 30 seconds, send a test request to Redis. If successful, enter half-open state with 10% traffic.' },
+            { step: 5, label: 'Full Recovery', detail: 'If Redis responds normally for 5 consecutive probes, close circuit breaker and restore centralized rate limiting.' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'Redis Cluster', value: '6 nodes (3 primary + 3 replica)', bar: 95 },
+            { label: 'Lua Scripts', value: 'Atomic check-and-decrement', bar: 90 },
+            { label: 'Local Cache', value: '500 MB/node for hot keys', bar: 70 },
+            { label: 'Pub/Sub', value: 'Real-time rule propagation', bar: 60 },
+            { label: 'CloudWatch', value: 'Monitoring + alerting', bar: 50 },
+            { label: 'Config DB', value: '10K+ rules stored', bar: 40 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#DC2626',
+          items: [
+            { label: '1M+ checks/sec', value: 'Rate limit throughput', bar: 95 },
+            { label: '<1ms latency', value: 'Cached check latency', bar: 100 },
+            { label: '10M users', value: 'Concurrent rate limit keys', bar: 70 },
+            { label: '10K rules', value: 'Active rate limit policies', bar: 40 },
+            { label: '7.5 GB Redis', value: 'Total memory with replication', bar: 30 },
+            { label: '99.99% uptime', value: 'With failover + local fallback', bar: 95 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'In-Process Counter', description: 'Simple in-memory counter per user in the application process. No external dependencies.', color: '#94a3b8', icon: 'server', capacity: '~1K users', rps: '10K', pros: ['Zero latency overhead', 'No external dependencies', 'Simple to implement'], cons: ['Not shared across servers', 'Lost on process restart', 'Each server enforces independently'] },
+        { step: 2, title: 'Single Redis Instance', description: 'Centralized Redis for distributed rate limiting. Lua scripts for atomicity. Fixed window counters.', color: '#2D8CFF', icon: 'layers', capacity: '~100K users', rps: '100K', pros: ['Accurate distributed counting', 'Atomic via Lua scripts', 'Shared across all servers'], cons: ['Single point of failure', 'Network hop adds ~1ms', 'Fixed window boundary problem'] },
+        { step: 3, title: 'Redis Cluster + Token Bucket', description: 'Redis Cluster with 3 primaries and 3 replicas. Token bucket algorithm allows bursts. Local cache for hot keys.', color: '#f59e0b', icon: 'zap', capacity: '~10M users', rps: '500K', pros: ['No single point of failure', 'Burst-friendly rate limiting', 'Sub-ms with local cache'], cons: ['Redis Cluster ops complexity', 'Eventual consistency on failover', 'Local cache adds memory'] },
+        { step: 4, title: 'Multi-Tier + Dynamic Rules', description: 'Edge rate limiting (CDN/WAF) + application-level (Redis). Dynamic rule updates via Pub/Sub. Per-tier limits (free/pro/enterprise).', color: '#10b981', icon: 'globe', capacity: '~100M users', rps: '1M+', pros: ['DDoS protection at edge', 'Dynamic rules without restart', 'Per-customer limit tiers'], cons: ['Two-tier complexity', 'Rule propagation lag', 'Testing across tiers'] },
+        { step: 5, title: 'ML-Adaptive Rate Limiting', description: 'ML models detect anomalous traffic patterns and auto-adjust limits. Predictive scaling during anticipated spikes. Cost-aware limiting for usage-based billing.', color: '#7c3aed', icon: 'cpu', capacity: '1B+ users', rps: '10M+', pros: ['Auto-detects novel attack patterns', 'Predictive capacity management', 'Revenue-aware limiting'], cons: ['ML model training overhead', 'False positives block legitimate traffic', 'Complex observability requirements'] },
+      ],
     },
     {
       id: 'ticketmaster',
@@ -11117,10 +11716,25 @@ return {0, tokens}  -- denied
       color: '#026cdf',
       difficulty: 'Hard',
       description: 'Design a ticket booking system handling high-traffic events with seat selection.',
+      productMeta: {
+        name: 'Ticketmaster / Live Nation',
+        tagline: 'The world\'s largest ticket marketplace',
+        stats: [
+          { label: 'Tickets/Year', value: '500M+' },
+          { label: 'Peak Concurrent', value: '14M users' },
+          { label: 'System Requests', value: '3.5B (peak day)' },
+          { label: 'Events/Year', value: '200K+' },
+        ],
+        scope: {
+          inScope: ['Event browsing and search', 'Interactive seat map with real-time availability', 'Seat hold with TTL (10-15 min checkout window)', 'Virtual waiting room for high-demand events', 'Payment processing with oversell prevention', 'Digital ticket delivery (QR/barcode)'],
+          outOfScope: ['Event creation and venue management', 'Secondary market / resale platform', 'Artist fan club management', 'Dynamic pricing ML model', 'Venue access control hardware'],
+        },
+        keyChallenge: 'Handling 14M+ concurrent users during high-demand on-sales (Taylor Swift generated 3.5B system requests) while guaranteeing zero overselling through seat-level locking with Redis SETNX and 10-minute hold TTLs.',
+      },
 
-      introduction: `Ticketmaster is the world's largest ticket marketplace, selling over 500 million tickets annually. The system must handle extreme traffic spikes (14M users trying to buy Taylor Swift tickets), prevent overselling, and provide fair access during high-demand sales.
+      introduction: `Ticketmaster is the world's largest ticket marketplace, selling over 500 million tickets annually across 200K+ events. The system must handle extreme traffic spikes — the Taylor Swift Eras Tour presale saw 14 million concurrent users generating 3.5 billion system requests, four times any previous peak.
 
-The key challenges include managing seat inventory with strong consistency, handling millions of concurrent users during on-sales, and implementing fair queuing mechanisms.`,
+The key challenges include managing seat inventory with strong consistency (zero overselling), handling millions of concurrent users during on-sales through virtual waiting rooms, implementing fair queuing mechanisms with bot prevention, and processing payments within tight seat-hold windows.`,
 
       functionalRequirements: [
         'Browse events by category, venue, artist',
@@ -11141,6 +11755,21 @@ The key challenges include managing seat inventory with strong consistency, hand
         '99.99% availability during events',
         'Sub-second seat map updates'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '500M tickets sold/year. 200K events/year. Average venue capacity 20K seats. Peak event: 14M concurrent users, 3.5B system requests. Seat hold TTL: 10 minutes.',
+        calculations: [
+          { label: 'Daily Ticket Sales (avg)', value: '~1.4M/day', detail: '500M tickets/year / 365 days = ~1.37M tickets sold per day on average' },
+          { label: 'Peak Concurrent Users', value: '14M', detail: 'Taylor Swift presale: 14M simultaneous users on the platform' },
+          { label: 'Peak System Requests', value: '3.5B/day', detail: '3.5 billion total requests during Taylor Swift Eras Tour on-sale day' },
+          { label: 'Peak QPS', value: '~40K/s', detail: '3.5B requests / 86,400 seconds = ~40K QPS (with bursts to 100K+ during on-sale)' },
+          { label: 'Seat Records (hot event)', value: '~80K', detail: 'Large stadium: 80K seats, each a row in the seats table with status + lock info' },
+          { label: 'Queue State Memory', value: '~1.4 GB', detail: '14M users x ~100 bytes (position, timestamp, status) = ~1.4 GB in Redis' },
+          { label: 'Seat Map Cache', value: '~16 MB/event', detail: '80K seats x 200 bytes per seat (id, section, row, status, price) = 16 MB' },
+          { label: 'Active Holds at Peak', value: '~10K', detail: '~10K users in shopping mode at once, each holding 2-4 seats for 10 minutes' },
+        ]
+      },
 
       dataModel: {
         description: 'Events, venues, seats, and bookings',
@@ -11315,6 +11944,170 @@ queue_positions {
    - Generate snapshots every 500ms
    - Push updates via WebSocket
    - Reduce database reads`
+        },
+        {
+          question: 'How do we implement real-time seat map updates?',
+          answer: `The seat map must reflect availability changes within 500ms so users don't select already-held seats.
+
+**Architecture**:
+1. Seat status changes (HELD, SOLD, RELEASED) publish events to Redis Pub/Sub
+2. WebSocket servers subscribe to event channel
+3. Connected clients receive delta updates (not full seat map)
+4. Client updates local seat map state
+
+**Optimization**:
+- Pre-compute seat map snapshot every 500ms as JSON
+- Cache in CDN with 1-second TTL for initial page load
+- WebSocket deltas for real-time updates after initial load
+- At 14M concurrent users, only ~10K are actively shopping — rest see cached snapshot
+
+**Payload**: Delta update is tiny: { seatId: "A-15", status: "HELD" } = ~50 bytes. Full map: ~16 MB. Delta updates reduce bandwidth by 99.99%.`
+        },
+        {
+          question: 'How does the payment flow work within the hold window?',
+          answer: `The hold window creates a time-boxed transaction that must complete before seats are released.
+
+**Hold + Payment Flow**:
+1. User selects seats -> Redis SETNX creates hold (TTL: 10 minutes)
+2. Client displays countdown timer
+3. User enters payment details (2-5 minutes typically)
+4. Client submits payment
+5. Backend validates: hold still active? (check Redis key exists)
+6. If hold expired: return error, seats already released
+7. If hold active: charge via Stripe PaymentIntent
+8. On payment success: UPDATE seats SET status=SOLD WHERE status=HELD AND holdId=X
+9. On payment failure: Release hold immediately (DEL Redis key)
+
+**Idempotency**: Checkout request includes holdId. Same holdId always returns same result. Prevents double-charge on client retry.
+
+**Edge Case**: Payment takes exactly 10 minutes. The hold expires mid-payment. Backend catches this: payment succeeds but seat update fails (HELD -> AVAILABLE already happened). Immediately refund the charge.
+
+**Stripe Integration**: Use PaymentIntent with confirm: false initially. Confirm only after verifying hold is still valid. This avoids charging for expired holds.`
+        },
+        {
+          question: 'How do we prevent scalper bots from buying all tickets?',
+          answer: `Bots are the #1 threat to fair ticket distribution. Multi-layered defense required.
+
+**Layer 1 — Queue Entry**:
+- CAPTCHA (reCAPTCHA v3) at queue join with risk score
+- Device fingerprinting (canvas, WebGL, screen resolution)
+- Block known automation tools (Selenium, Puppeteer, PhantomJS)
+
+**Layer 2 — Behavioral Analysis**:
+- Click timing patterns (bots have inhuman precision)
+- Mouse movement analysis (bots move in straight lines)
+- Session duration anomalies (bots are too fast)
+
+**Layer 3 — Account Verification**:
+- Verified Fan program: pre-register with identity
+- One queue position per verified identity (SSN/phone)
+- Purchase limits: max 4-6 tickets per account per event
+
+**Layer 4 — Post-Purchase**:
+- Non-transferable tickets (name on ticket must match ID)
+- Mobile-only entry (no printable PDFs that can be resold)
+- Cancel suspicious bulk purchases retroactively
+
+**Effectiveness**: Verified Fan + CAPTCHA + behavioral analysis blocks ~95% of bots. The remaining 5% are sophisticated enough to bypass, but purchase limits contain damage.`
+        },
+        {
+          question: 'How does the best-available seat algorithm work?',
+          answer: `When users don't want to choose specific seats, the system selects the best available.
+
+**Algorithm Goals**:
+- Best view/value for the customer
+- Keep groups together (adjacent seats)
+- Fill sections evenly (avoid leaving single isolated seats)
+- Maximize venue revenue (fill expensive sections first)
+
+**Implementation**:
+1. Rank all available seats by desirability score:
+   score = (section_rank x 0.4) + (row_rank x 0.3) + (center_bonus x 0.2) + (aisle_bonus x 0.1)
+2. Find contiguous blocks of N seats (for group requests)
+3. Among contiguous blocks, pick highest total score
+4. Apply "orphan seat" penalty: never leave a single empty seat between two occupied seats
+
+**Orphan Prevention**: If selecting seats A1-A3 would leave A4 as the only empty seat in the row, include A4 in the suggestion or skip to a different block.
+
+**Performance**: Pre-compute seat rankings per event. Finding best N contiguous seats is O(seats_per_section) with a sliding window — sub-millisecond for a 1000-seat section.`
+        },
+        {
+          question: 'How do we handle event cancellation and mass refunds?',
+          answer: `Event cancellation triggers a mass refund workflow for potentially 80K+ ticket holders.
+
+**Cancellation Flow**:
+1. Event organizer triggers cancellation via admin portal
+2. System marks event status as CANCELLED
+3. Disable all new purchases immediately
+4. Queue all bookings for refund processing
+
+**Batch Refund Processing**:
+- Don't process all 80K refunds simultaneously (overwhelms Stripe)
+- Batch into groups of 1000, process with 5-second intervals
+- Rate: ~200 refunds/sec via Stripe = 80K refunds in ~7 minutes
+- Each refund is idempotent (retry-safe with idempotency key)
+
+**Customer Communication**:
+1. Immediate email: "Event cancelled, refund processing"
+2. Push notification with same message
+3. Status update in booking history
+4. Refund confirmation email when money returned (3-5 business days)
+
+**Partial Cancellation** (rescheduled event):
+- Offer ticket transfer to new date
+- If user declines: process refund
+- Handle price difference if new date has different pricing`
+        },
+        {
+          question: 'How do we shard the database for high-demand events?',
+          answer: `During a high-demand on-sale, a single database cannot handle the read/write load for one event.
+
+**Sharding Strategy**:
+- **Shard by eventId**: All seats for one event on the same shard
+- This ensures seat transactions never cross shards
+- Hot events get dedicated database instances
+
+**Per-Event Isolation**:
+- Normal events: shared shard (many events per database)
+- High-demand events (>100K expected users): dedicated PostgreSQL instance
+- Provisioned 24 hours before on-sale with pre-loaded seat inventory
+
+**Read Scaling**:
+- Seat map reads from Redis cache (not DB)
+- 1-second TTL, updated by DB change stream
+- CDN caches the snapshot for non-logged-in users
+- Only seat hold/purchase operations hit the database
+
+**Connection Pooling**:
+- PgBouncer in front of each shard
+- Max 1000 connections per shard
+- At 10K concurrent shoppers, each executing 1 query/sec = 10K QPS per shard (well within PostgreSQL capacity)
+
+**Cleanup**: Dedicated instance deprovisioned 24 hours after event. Booking data migrated to archive shard.`
+        },
+        {
+          question: 'How do we implement the Verified Fan presale program?',
+          answer: `Verified Fan ensures real fans get access before general on-sale.
+
+**Registration Phase** (weeks before on-sale):
+1. Fans register on Ticketmaster with identity verification
+2. System collects: email, phone, Spotify listening history, past purchases
+3. Fans ranked by "fan score" (concert attendance, streaming hours, merchandise purchases)
+4. Top fans receive presale access codes via email/SMS
+
+**Presale Mechanics**:
+- Unique access code required to enter presale queue
+- Code is single-use and tied to the verified identity
+- Presale typically 24-48 hours before general on-sale
+- Lower traffic: 500K users vs 14M for general sale
+
+**Technical Implementation**:
+- Access codes stored in Redis set: SISMEMBER presale:{eventId} {code}
+- Code consumed on first use: SREM from set
+- Presale inventory is a subset of total seats (e.g., 30% of venue)
+- Remaining 70% released for general on-sale
+
+**Benefits**: Bots cannot register as verified fans (identity required). Genuine fans get first access. Reduced traffic during general on-sale.`
         }
       ],
 
@@ -11550,6 +12343,34 @@ queue_positions {
         { name: 'Payment & Fulfillment Layer', purpose: 'Process payments, issue tickets, and handle refunds', components: ['Payment Gateway', 'Ticket Issuer', 'QR Code Generator', 'Refund Service'] },
         { name: 'Data & Analytics Layer', purpose: 'Store event data, monitor sales velocity, and detect fraud', components: ['Event DB (PostgreSQL)', 'Sales Analytics', 'Fraud Detection', 'Notification Service'] },
       ],
+      deepDiveTopics: [
+        { topic: 'Virtual Waiting Room Architecture', detail: 'The virtual queue absorbs traffic spikes by controlling admission rate. Users get randomized positions (not FCFS to prevent bot advantage). Redis sorted set per event: ZADD for join, ZRANK for position. Admission controller lets N users/sec into shopping (typically 100/sec, max 10K concurrent). WebSocket push for position updates every 10 seconds. SMS/email when turn arrives with 5-minute grace period. Total memory for 14M users: ~1.4 GB Redis.' },
+        { topic: 'Seat-Level Inventory Locking', detail: 'Redis SETNX seat:{eventId}:{seatId} {userId} EX 600 for 10-minute holds. Atomic multi-seat hold via MULTI/EXEC transaction. Auto-release via TTL. Background sweeper every 30 seconds as safety net. DB optimistic lock for final purchase: UPDATE seats SET status=SOLD, version=version+1 WHERE status=HELD AND version=expected.' },
+        { topic: 'Real-Time Seat Map with WebSocket', detail: 'Seat changes publish to Redis Pub/Sub. WebSocket servers forward deltas to connected clients. Delta update: {seatId, status} = ~50 bytes vs 16 MB full map. SVG-based rendering with CSS class per status. At 14M viewers, only ~10K active shoppers get WebSocket; rest see CDN-cached snapshot with 1-second TTL.' },
+        { topic: 'Digital Ticket Security', detail: 'Unique barcode encrypted with AES-256 event-specific key containing ticketId, eventId, seatId, purchaserHash. Rotating barcodes refresh every 30 seconds for high-security events (prevents screenshots). Mobile-only tickets for high-demand events accessible only in authenticated Ticketmaster app.' },
+        { topic: 'Dynamic Pricing Strategy', detail: 'Market-based pricing adjusts based on queue length, sell-through rate, comparable events, and secondary market prices. Prices can increase 2-5x for high-demand sections, always capped by artist/venue maximum. Controversial but reduces scalper profit margins by closing gap between face value and market value.' }
+      ],
+      comparisonTables: [
+        { id: 'locking-strategies', title: 'Seat Locking Strategy Comparison', headers: ['Aspect', 'Pessimistic (SELECT FOR UPDATE)', 'Optimistic (Version Check)', 'Redis SETNX (Recommended)'], rows: [['Lock Duration', 'Entire transaction (10+ sec)', 'Brief (only during UPDATE)', 'TTL-based (10 minutes)'], ['Throughput', 'Low (blocked transactions wait)', 'High (retry on conflict)', 'Very high (Redis single-thread)'], ['Race Condition', 'Impossible (locked rows)', 'Detected at commit time', 'Impossible (atomic SETNX)'], ['Auto-Release', 'On transaction end/crash', 'No lock to release', 'TTL auto-expires'], ['Best For', 'Low-traffic events', 'General admission', 'High-demand seated events']], verdict: 'Redis SETNX with TTL for seat holds, DB optimistic lock for final purchase confirmation' },
+        { id: 'queue-vs-fcfs', title: 'Virtual Queue vs First-Come-First-Served', headers: ['Aspect', 'Virtual Queue', 'First-Come-First-Served'], rows: [['Fairness', 'Random position (prevents gaming)', 'Fastest connection wins'], ['Bot Resistance', 'High (identity verification)', 'Low (bots are faster)'], ['Traffic Pattern', 'Controlled admission rate', 'Thundering herd at on-sale'], ['System Load', 'Predictable (N users/sec)', 'Massive spike then drop-off'], ['User Experience', 'Wait in queue, guaranteed time', 'Instant access or crash'], ['Implementation', 'Complex (queue + WebSocket)', 'Simple (no queue needed)']], verdict: 'Virtual queue essential for events expecting >10x capacity; FCFS acceptable for regular events' },
+        { id: 'seat-map-delivery', title: 'Seat Map Delivery Strategy', headers: ['Aspect', 'CDN Static Snapshot', 'WebSocket Real-Time', 'Hybrid (Recommended)'], rows: [['Latency', '~50ms (edge cache)', '<500ms (delta push)', '~50ms initial + <500ms updates'], ['Freshness', 'Stale (1-5s TTL)', 'Real-time', 'Real-time after initial load'], ['Scale', 'Handles millions', 'Limited to ~10K connections', 'Millions browse + 10K shop live'], ['Bandwidth', '16 MB per load', '~50 bytes per update', '16 MB once + tiny deltas']], verdict: 'CDN for initial load; WebSocket deltas only for users in the shopping experience' }
+      ],
+      flowcharts: [
+        { id: 'on-sale-flow', title: 'High-Demand On-Sale Flow', description: 'Complete flow from user arriving to ticket purchase with virtual queue', steps: [{ step: 1, label: 'Arrive at Event Page', detail: 'User lands on CDN-cached event page with countdown timer.' }, { step: 2, label: 'Queue Join', detail: 'At on-sale time, CAPTCHA verification, then random queue position via Redis ZADD.' }, { step: 3, label: 'Wait in Queue', detail: 'WebSocket shows position updates every 10 seconds. Lightweight CDN-cached queue page.' }, { step: 4, label: 'Admitted to Shopping', detail: 'Position reached, enter shopping. 15-minute timer starts.' }, { step: 5, label: 'Select Seats', detail: 'CDN snapshot + WebSocket deltas. Select specific seats or use Best Available.' }, { step: 6, label: 'Hold Seats', detail: 'Redis SETNX locks seats for 10 minutes. If held: suggest alternatives.' }, { step: 7, label: 'Checkout + Payment', detail: 'Stripe PaymentIntent. On success: SOLD. On failure: release hold.' }] },
+        { id: 'seat-release-flow', title: 'Seat Release and Recovery Flow', description: 'How held seats are released when checkout is abandoned', steps: [{ step: 1, label: 'Hold Created', detail: 'Redis key with 10-minute TTL when user selects seats.' }, { step: 2, label: 'Timer Running', detail: 'Client countdown. 10 minutes to complete payment.' }, { step: 3, label: 'Abandon/Timeout', detail: 'Browser closed or timer expires. Redis TTL auto-deletes hold.' }, { step: 4, label: 'Background Sweep', detail: 'Safety job every 30s: find HELD seats with expired hold_expiry.' }, { step: 5, label: 'Release + Notify', detail: 'Set AVAILABLE. Pub/Sub push. WebSocket updates seat map.' }] },
+        { id: 'payment-hold-flow', title: 'Payment Within Hold Window', description: 'How payment processing works within the 10-minute seat hold', steps: [{ step: 1, label: 'Hold Active', detail: 'Seats held in Redis with 10-min TTL. Client displays countdown.' }, { step: 2, label: 'Payment Details', detail: 'User enters card info. Typically 2-5 minutes.' }, { step: 3, label: 'Verify Hold', detail: 'Backend checks Redis: hold still exists? If expired, return error.' }, { step: 4, label: 'Charge Card', detail: 'Stripe PaymentIntent confirm. If fails: release hold, show error.' }, { step: 5, label: 'Confirm Booking', detail: 'DB UPDATE seats SET status=SOLD. Generate encrypted barcode ticket.' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#2D8CFF', items: [{ label: 'Redis (Seat Locks)', value: 'SETNX with TTL per seat', bar: 95 }, { label: 'PostgreSQL (Bookings)', value: 'Optimistic locking + ACID', bar: 90 }, { label: 'WebSocket (Real-Time)', value: 'Seat map + queue updates', bar: 85 }, { label: 'CDN (Static Assets)', value: '99% of page loads cached', bar: 80 }, { label: 'Stripe (Payments)', value: 'PaymentIntent with holds', bar: 75 }, { label: 'Kafka (Events)', value: 'Booking + analytics stream', bar: 65 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#026CDF', items: [{ label: '500M tickets/yr', value: 'Annual ticket volume', bar: 90 }, { label: '14M concurrent', value: 'Peak users (Taylor Swift)', bar: 100 }, { label: '3.5B requests', value: 'Peak day system load', bar: 95 }, { label: '10K shoppers', value: 'Concurrent in checkout', bar: 40 }, { label: '200K events/yr', value: 'Events managed', bar: 60 }, { label: '<10 min hold', value: 'Seat reservation TTL', bar: 30 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Simple Booking DB', description: 'Single PostgreSQL with seats table. No locking. Race conditions cause double-bookings.', color: '#94a3b8', icon: 'server', capacity: '~1K seats/event', rps: '50', pros: ['Simple to build', 'Works for low-demand events', 'Standard SQL'], cons: ['Double-booking race conditions', 'No queue for high demand', 'Crashes under load'] },
+        { step: 2, title: 'Redis Locks + Hold TTL', description: 'Redis SETNX for seat holds with 10-minute TTL. Optimistic locking in PostgreSQL. Background sweeper.', color: '#2D8CFF', icon: 'layers', capacity: '~50K seats/event', rps: '5K', pros: ['Zero double-bookings', 'Auto-release on timeout', 'Fast seat checks'], cons: ['No queue for spikes', 'Bots can grab seats', 'Single-region'] },
+        { step: 3, title: 'Virtual Queue + Bot Prevention', description: 'Virtual waiting room with random positions. CAPTCHA + fingerprinting. Controlled admission. WebSocket updates.', color: '#f59e0b', icon: 'zap', capacity: '~100K seats, 1M users', rps: '50K', pros: ['Fair access for fans', 'Blocks 95% of bots', 'Controlled load'], cons: ['Queue adds wait time', 'Complex WS infra', 'Verified Fan needed'] },
+        { step: 4, title: 'Dedicated Event Sharding', description: 'Hot events get dedicated DB instances. Per-event Redis clusters. CDN seat maps + WS deltas.', color: '#10b981', icon: 'globe', capacity: '~100K seats, 14M users', rps: '100K+', pros: ['Handles Taylor Swift scale', 'Per-event isolation', 'Global access'], cons: ['Complex provisioning', 'Per-event infra cost', 'War room needed'] },
+        { step: 5, title: 'Dynamic Pricing + ML', description: 'Dynamic pricing from demand signals. ML bot detection. Best-available algorithm. Verified Fan scoring.', color: '#7c3aed', icon: 'cpu', capacity: 'Unlimited events', rps: '500K+', pros: ['Optimized revenue', 'Sophisticated bot detection', 'Personalized experiences'], cons: ['Pricing controversy', 'ML maintenance', 'Complex fairness'] },
+      ],
     },
     {
       id: 'typeahead',
@@ -11559,6 +12380,21 @@ queue_positions {
       color: '#22c55e',
       difficulty: 'Medium',
       description: 'Design a typeahead suggestion system for search boxes.',
+      productMeta: {
+        name: 'Typeahead / Autocomplete',
+        tagline: 'Sub-50ms search suggestions for every keystroke',
+        stats: [
+          { label: 'Latency Target', value: '<50ms' },
+          { label: 'QPS', value: '100K+' },
+          { label: 'Unique Prefixes', value: '100M+' },
+          { label: 'CDN Hit Rate', value: '99%' },
+        ],
+        scope: {
+          inScope: ['Prefix-based search suggestions', 'Popularity-ranked results', 'Trending query detection', 'Personalized suggestions', 'Multi-entity results (queries, products, people)', 'Spell correction for typos'],
+          outOfScope: ['Full search execution', 'Search result ranking', 'Image/video search', 'Voice search', 'Search ads placement'],
+        },
+        keyChallenge: 'Returning 10 ranked suggestions in under 50ms per keystroke using a distributed trie data structure, while updating suggestions within minutes of trending events and personalizing results for 100M+ users.',
+      },
 
       introduction: `Typeahead (autocomplete) suggests search queries as users type, improving UX and helping users find what they want faster. Google, Amazon, and every major search application uses typeahead.
 
@@ -11583,6 +12419,21 @@ The system must return suggestions in under 100ms (ideally <50ms) as users type 
         'High availability (99.99%)',
         'Graceful degradation under load'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '100M+ unique query prefixes. 500M daily searches. Average query length 20 chars with suggestion request per keystroke (after debounce). CDN caches short prefixes.',
+        calculations: [
+          { label: 'Suggestion QPS (avg)', value: '~100K/s', detail: '500M searches/day x avg 3 suggestion requests per search / 86,400 = ~17K/s raw; with debounce and CDN, ~100K/s at service' },
+          { label: 'CDN Hit Rate', value: '~99%', detail: 'Single-char prefixes (26 letters) and 2-char combos (676) all cached at edge with 5-min TTL' },
+          { label: 'Service QPS (after CDN)', value: '~1K/s', detail: '99% CDN hit rate means only 1% of requests reach origin service' },
+          { label: 'Trie Memory (in-memory)', value: '~10 GB', detail: '100M unique prefixes x avg 100 bytes per node (prefix + top-10 suggestions) = 10 GB' },
+          { label: 'Query Log Volume', value: '~50 GB/day', detail: '500M searches x 100 bytes per log entry (query, timestamp, userId, clicked) = 50 GB/day' },
+          { label: 'Trie Rebuild Time', value: '~30 min', detail: 'Process 1 week of query logs (350 GB) on Spark cluster to rebuild full trie' },
+          { label: 'Trending Update Lag', value: '~1-5 min', detail: 'Flink streaming job detects trending queries within 1-5 minute windows' },
+          { label: 'Shard Count', value: '~26', detail: 'Trie sharded by first character (a-z) for horizontal scaling' },
+        ]
+      },
 
       dataModel: {
         description: 'Trie structure with pre-computed top suggestions',
@@ -13701,10 +14552,25 @@ The first 24 hours of swipe data from other users seeing the new profile provide
       color: '#1db954',
       difficulty: 'Hard',
       description: 'Design a music streaming service with playlists and recommendations.',
+      productMeta: {
+        name: 'Spotify',
+        tagline: 'The world\'s largest audio streaming platform',
+        stats: [
+          { label: 'MAU', value: '675M+' },
+          { label: 'Premium Subs', value: '263M' },
+          { label: 'Tracks', value: '100M+' },
+          { label: 'Streams/Month', value: '30B+' },
+        ],
+        scope: {
+          inScope: ['On-demand audio streaming (adaptive bitrate)', 'Playlist creation and management', 'Personalized recommendations (Discover Weekly, Daily Mix)', 'Search (tracks, artists, albums, playlists)', 'Offline download with DRM', 'Cross-device playback (Spotify Connect)'],
+          outOfScope: ['Podcast content creation tools', 'Audiobook licensing/publishing', 'Social features beyond follow/share', 'Artist analytics dashboard', 'Ad serving engine'],
+        },
+        keyChallenge: 'Streaming 100M+ tracks at adaptive bitrates (96-320kbps Ogg Vorbis) to 675M users with <200ms playback start, gapless transitions, and a recommendation engine trained on billions of listening events weekly.',
+      },
 
-      introduction: `Spotify is the world's largest music streaming service with 500M+ users and 100M+ tracks. Users stream music on-demand, create playlists, and discover new music through personalized recommendations.
+      introduction: `Spotify is the world's largest music streaming service with 675M+ monthly active users, 263M premium subscribers, and a catalog of over 100 million tracks. Users stream music on-demand, create playlists, and discover new music through personalized recommendations.
 
-The key challenges are: low-latency audio streaming at scale (11K streams/second), building accurate recommendation systems, handling offline playback with DRM, and managing massive music catalog metadata.`,
+The key challenges are: low-latency audio streaming at scale (11K streams/second), building accurate recommendation systems using collaborative filtering and audio feature analysis, handling offline playback with DRM (Widevine), and managing massive music catalog metadata across a global CDN.`,
 
       functionalRequirements: [
         'Stream audio tracks on demand',
@@ -13728,6 +14594,21 @@ The key challenges are: low-latency audio streaming at scale (11K streams/second
         'Offline mode works without network',
         'Adaptive bitrate based on network conditions'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '675M MAU, 263M premium subscribers. Average user streams 40 minutes/day (~10 tracks). Average track 3.5 minutes at 160kbps (free) or 320kbps (premium). 100M+ track catalog stored in 3 quality tiers.',
+        calculations: [
+          { label: 'Daily Streams', value: '~1B/day', detail: '675M MAU x ~50% DAU x 3 streams/session = ~1 billion streams per day' },
+          { label: 'Concurrent Streams', value: '~11K/s', detail: '1B streams/day / 86,400s = ~11,574 concurrent streams/sec' },
+          { label: 'Audio Storage (catalog)', value: '~2 PB', detail: '100M tracks x 3 qualities x avg 7 MB per file = ~2.1 PB raw audio' },
+          { label: 'Bandwidth (egress)', value: '~700 Gbps', detail: '11K streams/s x 320kbps peak = ~3.5 Gbps; with CDN amplification and pre-buffers ~700 Gbps total' },
+          { label: 'Listening History/Day', value: '~100 GB', detail: '1B streams x ~100 bytes per event (userId, trackId, timestamp, context) = 100 GB/day' },
+          { label: 'Metadata Storage', value: '~50 GB', detail: '100M tracks x 500 bytes metadata (title, artist, album, features) = 50 GB' },
+          { label: 'Playlist Storage', value: '~4 TB', detail: '4B+ playlists x ~1 KB avg (track list + metadata) = ~4 TB' },
+          { label: 'CDN Cache (hot tracks)', value: '~200 TB', detail: 'Top 1% of tracks (1M) x 3 qualities x 7 MB = 21 TB per edge region x ~10 regions' },
+        ]
+      },
 
       dataModel: {
         description: 'Tracks, artists, albums, playlists, and user data',
@@ -13932,6 +14813,155 @@ Returns decryption key (valid for 30 days)
 - Network latency between devices
 - Handoff: Transfer playback to different device
 - State sync: All devices see same state`
+        },
+        {
+          question: 'How does Spotify handle royalty tracking for 1B+ daily streams?',
+          answer: `Every stream must be accurately counted and attributed for royalty payments to labels and artists.
+
+**Stream Counting Rules**:
+- A stream counts only after 30 seconds of playback
+- Skip before 30s = no royalty
+- Repeat plays count (no dedup within reason)
+
+**Data Pipeline**:
+1. Client sends play event to Kafka: { userId, trackId, timestamp, durationMs, context }
+2. Flink streaming job validates: duration >= 30s, user has valid session
+3. Aggregated hourly by track/territory/subscription tier
+4. Batch job generates monthly royalty reports per label
+
+**Scale**: 1B+ events/day flowing through Kafka with 7-day retention. Aggregated into Hadoop/Spark for monthly settlement. Each event ~100 bytes = ~100 GB/day raw event data.
+
+**Audit Trail**: Every stream is immutable in the event log. Labels can dispute counts using the same dataset. Revenue split: ~70% to rights holders, ~30% to Spotify.`
+        },
+        {
+          question: 'How does the search system handle 100M+ tracks?',
+          answer: `**Architecture**:
+Spotify uses Elasticsearch for full-text search across tracks, artists, albums, playlists, and podcasts.
+
+**Index Design**:
+- Separate indices per entity type (tracks, artists, albums, playlists)
+- Track index: ~100M documents x ~500 bytes = ~50 GB
+- Sharded across 20+ nodes for parallel query execution
+
+**Query Processing**:
+1. User types "the we" → client debounces 150ms
+2. Prefix query sent to search service
+3. Elasticsearch multi-match across title, artist, album fields
+4. Results boosted by: popularity score (0-100), recency, user affinity
+5. Return top 10 per entity type in <50ms
+
+**Fuzzy Matching**:
+- Phonetic analysis (Metaphone) for pronunciation-based matching
+- N-gram tokenizer for partial matching ("bea" matches "Beatles")
+- Spell correction via edit distance
+
+**Personalization**:
+- Boost artists/genres the user listens to frequently
+- Boost tracks in user's library
+- Regional popularity weighting (K-pop boosted in Korea)`
+        },
+        {
+          question: 'How does Spotify handle the cold start problem for new users?',
+          answer: `**New User Strategy**:
+When a user has zero listening history, recommendations must still feel relevant.
+
+**Onboarding Flow**:
+1. Ask user to select 3+ favorite artists (seed preferences)
+2. Ask genre preferences (pop, hip-hop, rock, etc.)
+3. Use demographic signals: age, country, language, device type
+
+**Initial Recommendations**:
+- Use selected artists as seeds for collaborative filtering
+- Genre popularity charts for their region
+- "Sounds of [Country]" playlists
+- Editorial curated playlists (Today's Top Hits, RapCaviar)
+
+**Rapid Personalization**:
+- After 10 streams: basic taste profile emerges
+- After 50 streams: collaborative filtering becomes effective
+- After 200 streams: full personalization active
+
+**New Track Cold Start** (different problem):
+- No listening data exists for brand new releases
+- Use audio feature analysis (tempo, energy, key, valence)
+- Place near similar-sounding tracks in embedding space
+- Boost new releases from artists with high follower counts
+- A/B test exposure: show to small user cohorts, measure engagement`
+        },
+        {
+          question: 'How does the audio ingestion pipeline work?',
+          answer: `When a label uploads a new track, it goes through a multi-stage processing pipeline.
+
+**Ingestion Flow**:
+1. Label uploads master audio (WAV/FLAC, 16-24 bit, 44.1-96 kHz) via Spotify for Artists
+2. **Validation**: Check file integrity, duration, metadata completeness
+3. **Audio Analysis**: ML models extract features — tempo (BPM), key, energy, danceability, speechiness, loudness, valence
+4. **Transcoding**: Encode to 3 quality tiers:
+   - 96 kbps Ogg Vorbis (mobile, data saver)
+   - 160 kbps Ogg Vorbis (free tier default)
+   - 320 kbps Ogg Vorbis (premium)
+5. **DRM Wrapping**: Encrypt with Widevine DRM keys
+6. **CDN Distribution**: Upload to S3/GCS origin, pre-warm popular regions
+7. **Index Update**: Add to search index, catalog DB, recommendation graph
+
+**Processing Time**: 5-15 minutes from upload to globally available
+**Storage**: Each track stored in 3 qualities = ~21 MB total (7 MB average per quality)
+**Throughput**: ~100K new tracks/week ingested`
+        },
+        {
+          question: 'How does Spotify ensure gapless playback between tracks?',
+          answer: `Gapless playback means zero silence between consecutive tracks — critical for live albums, classical music, and DJ mixes.
+
+**Pre-buffering Strategy**:
+1. At 70% of current track duration, client requests next track metadata
+2. At 80%, client begins downloading first 10 seconds of next track from CDN
+3. At 95%, audio decoder has both track endings loaded in memory
+4. Crossfade buffer: last 100ms of current + first 100ms of next track
+
+**Implementation**:
+- Client maintains a playback queue with pre-fetched audio chunks
+- Two audio decoders run in parallel during transition
+- Precise timing using audio sample count (not wall clock)
+- Crossfade duration configurable: 0s (gapless), 1-12s (crossfade)
+
+**Challenges**:
+- Network interruption during pre-buffer: fall back to small gap
+- Track quality switch (WiFi to cellular): re-encode boundary
+- Podcast chapters have different handling (no crossfade)
+
+**CDN Optimization**:
+- Next track often from same album = same CDN edge node
+- Pre-fetch hint sent to CDN to warm cache
+- Average pre-buffer latency: 50-200ms per track`
+        },
+        {
+          question: 'How does Spotify scale its recommendation engine across 675M users?',
+          answer: `Spotify's recommendation system blends three approaches, each with different scale characteristics.
+
+**1. Collaborative Filtering (Batch)**:
+- User-track interaction matrix: 675M users x 100M tracks (extremely sparse)
+- Alternating Least Squares (ALS) on Spark cluster
+- Runs weekly on 10,000+ cores, produces 128-dim user/track embeddings
+- Storage: 675M user vectors x 512 bytes = ~345 GB
+
+**2. Content-Based (Near Real-Time)**:
+- Audio feature vectors from CNN analysis of raw audio
+- Genre/mood classification from 4,000+ micro-genres
+- Updated when new tracks are ingested
+- Enables instant recommendations for new releases
+
+**3. Natural Language Processing**:
+- Crawl blogs, reviews, social media for artist/track descriptions
+- Word2Vec embeddings capture cultural context
+- "Summer vibes" or "workout music" mapped to audio features
+
+**Serving Architecture**:
+- Pre-compute Discover Weekly for all active users (Sunday batch job)
+- Daily Mix playlists updated every 24 hours
+- Radio/autoplay: real-time inference using approximate nearest neighbor (ANN) search on embeddings
+- ANN index (Annoy library, built in-house) supports <10ms lookup across 100M vectors
+
+**Scale**: 675M users x 6 Daily Mixes + 1 Discover Weekly = ~4.7 billion personalized playlists refreshed weekly.`
         }
       ],
 
@@ -14097,6 +15127,190 @@ Returns decryption key (valid for 30 days)
         { name: 'Content Delivery Layer', purpose: 'Low-latency audio chunk delivery from geographically distributed edges', components: ['CDN Edge Nodes', 'Origin Shield', 'Bitrate Selector'] },
         { name: 'Application Layer', purpose: 'Playlist management, search, social features, and recommendation serving', components: ['Playlist Service', 'Search Index (Elasticsearch)', 'Recommendation Engine', 'Social Graph'] },
         { name: 'Data Layer', purpose: 'Catalog metadata, user data, and analytics event storage', components: ['Catalog DB (Cassandra)', 'User DB (PostgreSQL)', 'Event Stream (Kafka)', 'Blob Storage (audio files)'] },
+      ],
+      deepDiveTopics: [
+        {
+          topic: 'Adaptive Bitrate Streaming',
+          detail: `Spotify encodes every track in 3 quality tiers: 96kbps (data saver), 160kbps (free default), 320kbps (premium). The client dynamically switches based on network conditions.
+
+**How ABR Works**:
+- Client monitors download speed over a sliding 5-second window
+- If throughput drops below 1.5x the current bitrate, downgrade quality
+- If throughput exceeds 2x a higher tier for 10 seconds, upgrade
+- Buffer target: maintain 30 seconds of audio ahead of playback position
+
+**Codec Choice**: Ogg Vorbis for desktop/mobile (better quality per bit than MP3), AAC for web player. Premium subscribers can access lossless FLAC (24-bit/44.1kHz) since late 2025.`
+        },
+        {
+          topic: 'CDN Strategy and Audio Delivery',
+          detail: `With 11K concurrent streams/sec, CDN is critical for low-latency delivery.
+
+**Tiered Caching**:
+- **Edge nodes** (100+ global PoPs): Cache top 1% tracks (1M tracks = ~21 TB per edge)
+- **Regional origins**: Cache top 10% tracks per region
+- **Central origin (S3/GCS)**: Full catalog (~2 PB)
+
+**Cache Hit Rates**: Top 1% of tracks serve 80% of traffic (Pareto distribution). Edge cache hit rate: ~95%. Regional: ~99%. Only ~1% of requests reach central origin.
+
+**Pre-warming**: New releases from top artists pre-pushed to all edge nodes before release date (midnight local time releases).`
+        },
+        {
+          topic: 'DRM and Content Protection',
+          detail: `Premium content requires Digital Rights Management to prevent piracy.
+
+**Widevine DRM** (Google): Used across Android, Chrome, smart TVs. Three security levels: L1 (hardware TEE), L2 (software), L3 (basic).
+
+**License Flow**:
+1. Client requests license from Spotify license server with device certificate
+2. Server validates: active subscription, device count limit (6 offline devices)
+3. Returns content decryption key (valid for 30 days offline)
+4. Client decrypts audio in secure playback path
+
+**Offline Downloads**: Encrypted files stored locally with license keys. Must go online every 30 days to renew licenses. If subscription lapses, downloaded tracks become unplayable.`
+        },
+        {
+          topic: 'Playlist Infrastructure',
+          detail: `With 4B+ playlists and 675M users, playlists are one of the most write-heavy features.
+
+**Data Model**: Playlist tracks stored in Cassandra, partitioned by playlistId. Each playlist is an ordered list supporting insert-at-position and reorder.
+
+**Collaborative Playlists**: Use snapshot_id (version hash) for optimistic concurrency. Each modification returns a new snapshot_id. Concurrent edits detected by snapshot mismatch.
+
+**Scalability**: Average playlist has ~50 tracks, but editorial playlists like "Today's Top Hits" have millions of followers receiving updates. Fan-out of playlist updates to follower feeds uses the same push/pull hybrid as social feeds.`
+        },
+        {
+          topic: 'Listening Analytics Pipeline',
+          detail: `Every play event feeds into Spotify's analytics for royalties, recommendations, and Spotify Wrapped.
+
+**Pipeline**: Client events -> Kafka (partitioned by userId) -> Flink (stream processing) -> Data Lake (S3 Parquet) -> Spark (batch aggregation) -> BigQuery/Redshift (reporting).
+
+**Key Metrics**: Streams per track, skip rate, completion rate, save rate, playlist add rate. These power the popularity score (0-100) displayed on every track.
+
+**Spotify Wrapped**: Annual personalized summary requires aggregating a full year of listening data for 675M users. Pre-computed in November using massive Spark jobs, results cached and served as static JSON per user.`
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'audio-codec-comparison',
+          title: 'Audio Codec Comparison',
+          headers: ['Aspect', 'Ogg Vorbis', 'AAC', 'FLAC (Lossless)', 'MP3'],
+          rows: [
+            ['Quality at 160kbps', 'Very good (Spotify default)', 'Good (web player)', 'N/A (lossless only)', 'Acceptable'],
+            ['Max Bitrate', '320 kbps', '256 kbps', '~1411 kbps', '320 kbps'],
+            ['File Size (3.5 min)', '~8.4 MB at 320k', '~6.7 MB at 256k', '~37 MB', '~8.4 MB at 320k'],
+            ['Licensing', 'Free / open source', 'Patented (royalty-free)', 'Free / open source', 'Patented'],
+            ['Browser Support', 'Chrome, Firefox', 'All browsers (native)', 'Limited', 'Universal'],
+            ['Spotify Usage', 'Desktop + mobile', 'Web player', 'Premium lossless', 'Not used'],
+          ],
+          verdict: 'Ogg Vorbis offers best quality-per-bit for streaming; AAC for web compatibility; FLAC for audiophiles'
+        },
+        {
+          id: 'recommendation-approaches',
+          title: 'Recommendation Algorithm Comparison',
+          headers: ['Aspect', 'Collaborative Filtering', 'Content-Based', 'NLP-Based'],
+          rows: [
+            ['Input Data', 'User-track interactions', 'Audio features (tempo, energy)', 'Blog/review text analysis'],
+            ['Cold Start', 'Fails for new users', 'Works for new tracks', 'Works for any content'],
+            ['Serendipity', 'High (unexpected discoveries)', 'Low (similar sounds)', 'Medium'],
+            ['Compute Cost', 'Very high (matrix factorization)', 'Medium (CNN inference)', 'Low (pre-computed embeddings)'],
+            ['Update Frequency', 'Weekly (batch)', 'On track ingestion', 'Daily'],
+            ['Best For', 'Discover Weekly', 'Radio / autoplay', 'Mood playlists'],
+          ],
+          verdict: 'Hybrid of all three produces the best results; collaborative filtering is the backbone, content-based handles cold start'
+        },
+        {
+          id: 'streaming-vs-download',
+          title: 'Streaming vs Offline Download',
+          headers: ['Aspect', 'On-Demand Streaming', 'Offline Download'],
+          rows: [
+            ['Latency', '<200ms playback start', 'Instant (local file)'],
+            ['Network Required', 'Yes (adaptive bitrate)', 'No (after download)'],
+            ['Storage', 'None (buffer only)', '~7 MB/track at 320kbps'],
+            ['DRM', 'Session-based license', '30-day offline license'],
+            ['Quality', 'Adaptive (96-320kbps)', 'Fixed at download quality'],
+            ['Catalog Access', 'Full 100M+ tracks', 'Up to 10K tracks per device'],
+          ],
+          verdict: 'Streaming for discovery and casual listening; offline for commutes, flights, and unreliable networks'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'audio-stream-flow',
+          title: 'Audio Streaming Flow',
+          description: 'End-to-end flow from user pressing play to audio reaching speakers',
+          steps: [
+            { step: 1, label: 'Play Request', detail: 'User taps play. Client requests track metadata from Catalog Service (track ID, audio file URLs, DRM license).' },
+            { step: 2, label: 'License Check', detail: 'License server validates active subscription and returns content decryption key for the track.' },
+            { step: 3, label: 'CDN Resolve', detail: 'Client resolves nearest CDN edge node via DNS. Edge node selected based on latency and cache status.' },
+            { step: 4, label: 'Audio Fetch', detail: 'HTTP range request to CDN for first audio chunk. If cache miss, CDN fetches from regional origin or S3.' },
+            { step: 5, label: 'Decode + Play', detail: 'Client decrypts and decodes Ogg Vorbis chunks. Playback starts after 200ms of buffering.' },
+            { step: 6, label: 'Adaptive Quality', detail: 'Client monitors throughput and switches quality tier (96/160/320kbps) based on network conditions.' },
+            { step: 7, label: 'Pre-buffer Next', detail: 'At 70% of current track, pre-fetch next track metadata and first 10 seconds of audio for gapless playback.' },
+          ]
+        },
+        {
+          id: 'discover-weekly-flow',
+          title: 'Discover Weekly Generation Pipeline',
+          description: 'How Spotify generates personalized Discover Weekly playlists for 675M+ users',
+          steps: [
+            { step: 1, label: 'Collect Listening Data', detail: 'Aggregate past 30 days of listening events from Kafka into user taste profiles (genre weights, artist affinity).' },
+            { step: 2, label: 'Collaborative Filtering', detail: 'ALS matrix factorization on Spark cluster finds users with similar listening patterns and their unique tracks.' },
+            { step: 3, label: 'Candidate Generation', detail: 'Produce 300+ candidate tracks per user from similar users listening history, excluding already-heard tracks.' },
+            { step: 4, label: 'Content Filtering', detail: 'Refine candidates using audio features (tempo, energy, valence) to match user preference profile.' },
+            { step: 5, label: 'Diversity Injection', detail: 'Ensure genre diversity: max 3 tracks from same artist, mix at least 4 different genres per playlist.' },
+            { step: 6, label: 'Final Selection', detail: 'Select top 30 tracks ranked by predicted engagement score. Store playlist and publish Monday morning local time.' },
+          ]
+        },
+        {
+          id: 'track-ingestion-flow',
+          title: 'Track Ingestion Pipeline',
+          description: 'Processing flow when a label uploads a new track to the platform',
+          steps: [
+            { step: 1, label: 'Upload', detail: 'Label uploads master audio (WAV/FLAC) plus metadata (title, artist, ISRC code) via Spotify for Artists portal.' },
+            { step: 2, label: 'Validation', detail: 'Verify file integrity (checksum), audio format, duration, and metadata completeness. Reject malformed files.' },
+            { step: 3, label: 'Audio Analysis', detail: 'ML models extract audio features: tempo, key, energy, danceability, speechiness, loudness, valence.' },
+            { step: 4, label: 'Transcoding', detail: 'Encode to 96kbps, 160kbps, 320kbps Ogg Vorbis + FLAC lossless. Apply loudness normalization (-14 LUFS).' },
+            { step: 5, label: 'DRM + CDN Push', detail: 'Encrypt with Widevine DRM, upload to S3 origin, pre-warm CDN edge nodes for anticipated demand.' },
+            { step: 6, label: 'Index Update', detail: 'Add to Elasticsearch search index, Cassandra catalog, and recommendation embedding space. Track goes live.' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'CDN (Global Edge)', value: '95% cache hit rate', bar: 95 },
+            { label: 'Kafka (Events)', value: '1B+ events/day', bar: 90 },
+            { label: 'Cassandra (Catalog)', value: '100M+ tracks', bar: 85 },
+            { label: 'Spark (Recommendations)', value: '10K+ cores weekly', bar: 80 },
+            { label: 'Elasticsearch (Search)', value: '<50ms prefix query', bar: 75 },
+            { label: 'Redis (Session/Cache)', value: '11K concurrent streams', bar: 70 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#1DB954',
+          items: [
+            { label: '675M MAU', value: 'Monthly active users', bar: 95 },
+            { label: '263M premium', value: 'Paying subscribers', bar: 75 },
+            { label: '100M+ tracks', value: 'Audio catalog', bar: 85 },
+            { label: '30B streams/mo', value: 'Monthly plays', bar: 90 },
+            { label: '11K streams/s', value: 'Concurrent streams', bar: 60 },
+            { label: '~2 PB audio', value: 'Total audio storage', bar: 80 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Server + S3', description: 'One API server serving audio files directly from S3. PostgreSQL for metadata. No caching, no recommendations.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build and deploy', 'S3 handles storage durability', 'Easy to debug and monitor'], cons: ['High latency for distant users', 'No adaptive bitrate', 'S3 egress costs are high'] },
+        { step: 2, title: 'CDN + Adaptive Bitrate', description: 'Add CloudFront/Akamai CDN for audio delivery. Transcode tracks to 3 quality tiers. Redis cache for hot metadata.', color: '#2D8CFF', icon: 'layers', capacity: '~1M users', rps: '5K', pros: ['Sub-200ms playback start', 'Adaptive quality prevents buffering', '95% CDN cache hit rate'], cons: ['CDN costs scale with streams', 'No personalization yet', 'Single-region backend'] },
+        { step: 3, title: 'Microservices + Recommendations', description: 'Split into Catalog, Playlist, Search, and Recommendation services. Collaborative filtering on Spark. Kafka event streaming.', color: '#f59e0b', icon: 'zap', capacity: '~50M users', rps: '50K', pros: ['Personalized Discover Weekly', 'Services scale independently', 'Real-time stream counting'], cons: ['Distributed system complexity', 'Recommendation cold start', 'Cross-service data consistency'] },
+        { step: 4, title: 'Global Scale + Spotify Connect', description: 'Multi-region CDN with edge pre-warming. Cross-device playback via Connect protocol. Offline DRM downloads. 100M+ track catalog.', color: '#10b981', icon: 'globe', capacity: '~300M users', rps: '200K', pros: ['Global <200ms latency', 'Seamless device switching', 'Offline mode works everywhere'], cons: ['DRM licensing complexity', 'Multi-region data sync', 'Device limit management'] },
+        { step: 5, title: 'AI-Powered Platform', description: 'Deep learning recommendations (embeddings, transformers). Real-time personalization. Lossless audio tier. Podcast and audiobook integration. DJ AI feature.', color: '#7c3aed', icon: 'cpu', capacity: '675M+ users', rps: '500K+', pros: ['Hyper-personalized experience', 'Multi-format audio platform', 'AI DJ and mood detection'], cons: ['Massive ML infrastructure cost', 'Content moderation at scale', 'Balancing discovery vs familiarity'] },
       ],
     },
     {
@@ -15213,6 +16427,39 @@ If demand > supply by X%:
       difficulty: 'Medium',
       description: 'Design a system to detect and display trending topics in real-time.',
 
+      productMeta: {
+        name: 'Twitter/X Trending Topics',
+        tagline: 'Real-time pulse of global conversations across 500M+ daily tweets',
+        stats: [
+          { label: 'Tweets/Day', value: '500M+' },
+          { label: 'Daily Active Users', value: '556M' },
+          { label: 'Impressions/Day', value: '100B' },
+          { label: 'Trend Regions', value: '100+' },
+        ],
+        scope: {
+          inScope: ['Real-time trending topic detection from tweet stream', 'Location-based trends for 100+ regions', 'Trend velocity and volume tracking', 'Spam and bot filtering', 'Category classification (Sports, Politics, Entertainment)', 'Time-decay ranking to surface fresh trends'],
+          outOfScope: ['Tweet composition or timeline rendering', 'User profile management', 'Ad placement within trends', 'Full-text search of tweets', 'Recommendation engine'],
+        },
+        keyChallenge: 'Processing 500M+ tweets per day in real-time, distinguishing genuinely viral topics from coordinated bot campaigns, and ranking trends by velocity rather than raw volume -- all with sub-5-minute detection latency across 100+ geographic regions.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '556M DAU, 500M tweets/day, average 1.5 hashtags per tweet, 100+ geographic regions, trend windows of 5 minutes.',
+        calculations: [
+          { label: 'Tweet Ingestion Rate', value: '~5,800/s', detail: '500M tweets / 86,400 seconds = ~5,787 tweets/sec average' },
+          { label: 'Peak Tweet Rate', value: '~20K/s', detail: '3.5x peak factor during major events (Super Bowl, elections)' },
+          { label: 'Hashtag Events/sec', value: '~8,700/s', detail: '5,800 tweets/sec x 1.5 hashtags/tweet = 8,700 hashtag events' },
+          { label: 'Unique Hashtags/Hour', value: '~100K', detail: 'Tracked across all regions for trend detection' },
+          { label: 'Count-Min Sketch Memory', value: '~84 MB', detail: '10K x 7 counters x 4 bytes x 3 windows x 100 regions' },
+          { label: 'Trend Computation Interval', value: '5 min', detail: 'Aggregate windows every 5 minutes per region' },
+          { label: 'CDN Cache Hit Rate', value: '~99%', detail: 'Trends change slowly; edge cache with 1-minute TTL' },
+          { label: 'API Read QPS', value: '~50K/s', detail: '556M DAU x ~8 trend views/day / 86,400 seconds' },
+          { label: 'Storage (30d history)', value: '~500 GB', detail: 'Trend snapshots + tweet volume histograms for 100 regions x 30 days' },
+          { label: 'Flink Cluster Size', value: '~200 nodes', detail: '100+ parallel region jobs + aggregation + spam filtering' },
+        ]
+      },
+
       introduction: `Twitter's trending topics feature shows what's being talked about right now across the platform. Unlike simple frequency counting, trending detection requires identifying topics that are *rising* faster than their baseline - a topic with 1M tweets isn't trending if it normally gets 1M tweets.
 
 The core challenge is processing hundreds of millions of tweets per day in real-time while distinguishing true viral content from spam campaigns and coordinated manipulation.`,
@@ -15624,6 +16871,197 @@ Where credibility considers:
         }
       ],
 
+      deepDiveTopics: [
+        {
+          topic: 'Count-Min Sketch Internals and Tuning',
+          detail: `The Count-Min Sketch is the core data structure enabling memory-efficient counting at scale.
+
+**Structure:** A 2D array of **d rows x w columns** with d independent hash functions. For trending, typical configuration: w=10,000, d=7 gives **<0.1% error probability**.
+
+**Memory efficiency:** A single sketch uses only **280 KB** (10K x 7 x 4 bytes). With 3 time windows across 100 regions, total memory is **~84 MB** -- orders of magnitude less than exact counting.
+
+**Windowed counting:** Maintain separate sketches for each 5-minute window. The trend score compares the current window against the previous two. Oldest window is discarded and replaced, creating a **sliding window** effect with tumbling window simplicity.
+
+**Trade-off:** Over-counting is possible (never under-counts). For trending detection, slight over-counting is acceptable since we care about **relative velocity**, not absolute counts.`
+        },
+        {
+          topic: 'Anomaly Detection for Trend Scoring',
+          detail: `Distinguishing "trending" from "popular" requires statistical anomaly detection, not just frequency counting.
+
+**Z-score method:** For each topic, compute z_score = (current_rate - baseline) / std_dev. A z-score > 3.0 indicates the topic is growing **3 standard deviations** above its historical norm.
+
+**Time-of-day baselines:** Sports hashtags spike during game hours, political hashtags during news cycles. Baselines are segmented by **hour-of-day** and **day-of-week** to avoid false positives from predictable patterns.
+
+**Velocity tracking:** Track not just count but **acceleration** -- how fast the count is growing. A topic at 5,000 tweets/min that was at 2,000 tweets/min five minutes ago has acceleration of **2.5x**, which is a strong trending signal even if absolute volume is moderate.
+
+**Time decay:** Apply exponential decay: decayed_score = raw_score x e^(-0.1 x t) where t = hours since first trending. This naturally rotates stale trends off the list.`
+        },
+        {
+          topic: 'Multi-Layer Spam and Bot Filtering',
+          detail: `At 500M tweets/day, even 1% spam can pollute trending results with 5M fake signals.
+
+**Layer 1 -- Inline (< 1ms):** Rate limit per user-hashtag pair (max 5 tweets/min), check against known bot lists (updated hourly), and apply **credibility-weighted counting** where new accounts contribute 0.1x weight vs verified accounts at 1.0x.
+
+**Layer 2 -- Near-real-time (< 1 min):** Detect coordinated behavior using **graph clustering** on co-tweeting patterns. If 50 accounts tweet the same hashtag within 10 seconds from similar IP ranges, flag as coordinated campaign.
+
+**Layer 3 -- Batch (hourly):** Run ML models on tweet text similarity, account creation date clustering, and network topology analysis. Retroactively remove fraudulent trend entries and adjust historical baselines.
+
+**Weighted counting:** Instead of count += 1, use count += credibility_score. This single change eliminates most bot manipulation without blocking any accounts.`
+        },
+        {
+          topic: 'Hierarchical Regional Aggregation',
+          detail: `Trends must be computed at city, country, and global levels simultaneously.
+
+**Architecture:** Each Flink job handles one **geographic partition** (based on tweet geotag or user profile location). City-level counts are aggregated into country-level, which aggregate into global.
+
+**Regional baselines:** A hashtag trending in a single city (e.g., local sports team) should not require global volume. Each region has its own baseline, so **100 tweets in a small city** can trend locally while needing **100,000+ globally**.
+
+**Cross-region deduplication:** The same world event trends in all regions simultaneously. Use **topic clustering** (NLP-based) to identify that #WorldCup, #CopaDelMundo, and #WM2026 are the same story, presenting them as one trend with regional names.
+
+**Latency:** Intra-region aggregation completes in **< 1 minute**. Global aggregation adds **~2 minutes** due to cross-region data transfer.`
+        },
+        {
+          topic: 'Breaking News Fast-Path Detection',
+          detail: `Standard 5-minute windows are too slow for major breaking events that can generate **millions of tweets per minute**.
+
+**Emergency mode trigger:** When any topic exceeds **10x its 1-hour baseline** within a single 1-minute micro-window, activate the fast path. This switches from 5-minute to **30-second** aggregation windows for that topic.
+
+**Burst detection:** Use a **CUSUM (Cumulative Sum)** algorithm that detects sustained increases. Unlike z-score which reacts to single spikes, CUSUM accumulates deviations and triggers when the cumulative sum exceeds a threshold -- catching events that build over 2-3 minutes.
+
+**Human-in-the-loop:** For politically sensitive topics (elections, crises), the fast path can route to a **curation team** that adds context labels ("Election", "Developing Story") before the trend is displayed to all users.
+
+**Example:** During the 2024 Super Bowl, #SuperBowl generated **8 million tweets** in the first hour. The fast path detected it within **45 seconds** of kickoff.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'counting-structures',
+          title: 'Counting Data Structures',
+          headers: ['Aspect', 'Count-Min Sketch', 'Exact HashMap', 'HyperLogLog'],
+          rows: [
+            ['Memory', 'O(w x d) fixed ~280KB', 'O(n) unbounded', 'O(1) ~12KB per counter'],
+            ['Accuracy', 'Over-counts, <0.1% error', 'Exact', 'Approximate unique counts, ~2% error'],
+            ['Speed', 'O(d) per update', 'O(1) amortized', 'O(1)'],
+            ['Use Case', 'Frequency counting', 'Small cardinality', 'Unique user counting'],
+            ['Distributed', 'Merge by adding arrays', 'Requires coordination', 'Merge by union'],
+            ['Best For', 'Hashtag volume tracking', 'Development/testing', 'Unique tweeters per topic'],
+          ],
+          verdict: 'Count-Min Sketch for volume counting, HyperLogLog for unique users -- used together'
+        },
+        {
+          id: 'stream-processing-engines',
+          title: 'Stream Processing: Flink vs Spark Streaming vs Kafka Streams',
+          headers: ['Aspect', 'Apache Flink', 'Spark Streaming', 'Kafka Streams'],
+          rows: [
+            ['Processing Model', 'True streaming (event-at-a-time)', 'Micro-batch (100ms-seconds)', 'Per-record streaming'],
+            ['Latency', '<100ms', '100ms-1s', '<10ms'],
+            ['State Management', 'Built-in with checkpointing', 'External (Redis/HDFS)', 'Local RocksDB'],
+            ['Windowing', 'Rich (tumbling, sliding, session)', 'Tumbling only', 'Tumbling and session'],
+            ['Throughput', 'Millions events/sec', 'Millions events/sec', 'Hundreds of thousands/sec'],
+            ['Best For', 'Complex event processing', 'Batch + stream hybrid', 'Simple transformations'],
+          ],
+          verdict: 'Apache Flink for trending detection due to rich windowing and true streaming'
+        },
+        {
+          id: 'trend-detection-algorithms',
+          title: 'Trend Detection: Z-Score vs CUSUM vs Moving Average',
+          headers: ['Aspect', 'Z-Score', 'CUSUM', 'Moving Average'],
+          rows: [
+            ['Detection Speed', 'Fast (single comparison)', 'Medium (cumulative)', 'Slow (smoothed)'],
+            ['False Positives', 'Moderate (single spikes)', 'Low (sustained shifts)', 'Very low'],
+            ['Sensitivity', 'Adjustable via threshold', 'Adjustable via slack', 'Fixed by window size'],
+            ['Implementation', 'Simple', 'Moderate', 'Simple'],
+            ['Best For', 'Sudden viral topics', 'Gradual trend buildup', 'Baseline computation'],
+          ],
+          verdict: 'Z-Score for primary detection with CUSUM for breaking news fast-path'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'tweet-to-trend-pipeline',
+          title: 'Tweet-to-Trend Detection Pipeline',
+          description: 'Complete flow from raw tweet ingestion to trend publication',
+          steps: [
+            { step: 1, label: 'Tweet Ingested', detail: 'Raw tweet arrives via Kafka, geo-partitioned by user region' },
+            { step: 2, label: 'Spam Pre-filter', detail: 'Check account age, rate limits, known bot list -- assign credibility weight (0.0-1.0)' },
+            { step: 3, label: 'Hashtag Extraction', detail: 'Extract hashtags, @mentions, and NLP-detected phrases from tweet text' },
+            { step: 4, label: 'Count-Min Sketch Update', detail: 'Increment weighted count for each hashtag in per-region sketch' },
+            { step: 5, label: 'Unique User Count', detail: 'Update HyperLogLog counter for unique tweeters per hashtag' },
+            { step: 6, label: 'Window Aggregation', detail: 'Every 5 minutes: compute current rate, fetch baseline, calculate z-score' },
+            { step: 7, label: 'Trend Scoring', detail: 'trend_score = z_score x log(count) x user_diversity -- apply time decay' },
+            { step: 8, label: 'Ranking', detail: 'Sort by trend_score, take top 10 per region, merge into global list' },
+            { step: 9, label: 'Publish', detail: 'Write to Redis sorted sets, invalidate CDN, push to WebSocket clients' },
+          ]
+        },
+        {
+          id: 'breaking-news-fast-path',
+          title: 'Breaking News Fast-Path Detection',
+          description: 'How major events bypass the standard 5-minute window for sub-minute detection',
+          steps: [
+            { step: 1, label: 'Micro-Window Check', detail: 'Every 30 seconds, check if any topic exceeds 10x its 1-hour baseline' },
+            { step: 2, label: 'Burst Detected', detail: 'CUSUM algorithm confirms sustained acceleration, not a single spike' },
+            { step: 3, label: 'Activate Fast Mode', detail: 'Switch topic to 30-second aggregation windows (from 5-minute)' },
+            { step: 4, label: 'Escalate to Curation', detail: 'For sensitive categories, route to human curation team for context labels' },
+            { step: 5, label: 'Priority Publish', detail: 'Bypass standard ranking cycle, publish immediately with "Breaking" badge' },
+            { step: 6, label: 'Normal Mode Resume', detail: 'After velocity drops below 3x baseline for 15 minutes, return to standard pipeline' },
+          ]
+        },
+        {
+          id: 'spam-filtering-flow',
+          title: 'Multi-Layer Spam Filtering',
+          description: 'How bot networks and coordinated campaigns are detected and filtered',
+          steps: [
+            { step: 1, label: 'Inline Check', detail: 'Rate limit, known bot list, account credibility score -- <1ms decision' },
+            { step: 2, label: 'Weight Assignment', detail: 'Credibility 0.0 (spam) to 1.0 (verified) based on account signals' },
+            { step: 3, label: 'Near-RT Analysis', detail: 'Flink job detects co-tweeting clusters within 10-second windows' },
+            { step: 4, label: 'Graph Clustering', detail: 'Identify networks of accounts with similar behavior patterns' },
+            { step: 5, label: 'Batch ML Model', detail: 'Hourly: deep analysis of text similarity, IP ranges, creation dates' },
+            { step: 6, label: 'Retroactive Cleanup', detail: 'Adjust trend scores, remove fraudulent entries, update baselines' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#1da1f2',
+          items: [
+            { label: 'Kafka (Ingestion)', value: '5,800 tweets/s', bar: 60 },
+            { label: 'Flink (Stream Processing)', value: '200 parallel jobs', bar: 85 },
+            { label: 'Count-Min Sketch', value: '84 MB total', bar: 30 },
+            { label: 'Redis (Trend Cache)', value: '100+ regions', bar: 70 },
+            { label: 'CDN (Edge Cache)', value: '99% hit rate', bar: 95 },
+            { label: 'Spark (Batch ML)', value: 'Hourly anti-spam', bar: 40 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '556M DAU', value: 'Daily active users', bar: 100 },
+            { label: '500M tweets/day', value: 'Ingestion volume', bar: 90 },
+            { label: '100B impressions', value: 'Daily ad impressions', bar: 85 },
+            { label: '<5 min latency', value: 'Trend detection', bar: 70 },
+            { label: '100+ regions', value: 'Geographic coverage', bar: 60 },
+            { label: '50K QPS', value: 'Trend API reads', bar: 75 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single Server', description: 'One Flink job counting hashtags in a single region with exact HashMap counting.', color: '#94a3b8', icon: 'server', capacity: '~100K tweets/day', rps: '1', pros: ['Simple to build and test', 'Exact counts', 'No coordination'], cons: ['Cannot scale beyond one machine', 'No regional trends', 'No spam filtering'] },
+        { step: 2, title: 'Probabilistic Counting', description: 'Replace HashMap with Count-Min Sketch and HyperLogLog for memory-efficient counting at scale.', color: '#1da1f2', icon: 'zap', capacity: '~10M tweets/day', rps: '100', pros: ['Constant memory regardless of cardinality', 'Handles high throughput', 'Approximate unique users'], cons: ['Over-counting errors', 'No regional partitioning', 'Still single region'] },
+        { step: 3, title: 'Regional Partitioning', description: 'Geo-partition tweet stream across 100+ Flink jobs, each with independent sketches and baselines.', color: '#f59e0b', icon: 'globe', capacity: '~100M tweets/day', rps: '1K', pros: ['Local trend detection', 'Parallel processing', 'Regional baselines'], cons: ['Cross-region aggregation lag', 'More ops complexity', 'Higher infrastructure cost'] },
+        { step: 4, title: 'Anti-Spam + ML', description: 'Add multi-layer spam filtering with credibility-weighted counting and batch ML models.', color: '#10b981', icon: 'shield', capacity: '~500M tweets/day', rps: '5K', pros: ['Filters bot manipulation', 'Credibility-weighted scores', 'Retroactive cleanup'], cons: ['False positives possible', 'ML model drift', 'Added pipeline latency'] },
+        { step: 5, title: 'Global + Fast-Path', description: 'Hierarchical aggregation (city, country, global) with breaking news fast-path for sub-minute detection.', color: '#7c3aed', icon: 'cpu', capacity: '500M+ tweets/day', rps: '50K', pros: ['Sub-minute breaking news', 'Global + local trends', 'CDN-cached serving'], cons: ['Complex multi-tier aggregation', 'Curation team needed', 'High infrastructure cost'] },
+      ],
+
       // Backward compatibility
       requirements: ['Detect trending hashtags/topics', 'Real-time updates', 'Location-based trends', 'Time-decay ranking', 'Spam filtering'],
       components: ['Stream processor (Kafka/Flink)', 'Count-min sketch', 'Ranking service', 'Cache', 'API servers'],
@@ -15661,6 +17099,39 @@ Where credibility considers:
       color: '#02a4d3',
       difficulty: 'Easy',
       description: 'Design a simple text/code sharing service with expiration.',
+
+      productMeta: {
+        name: 'Pastebin',
+        tagline: 'Share text snippets and code with auto-generated short URLs',
+        stats: [
+          { label: 'Pastes/Day', value: '~1M' },
+          { label: 'Active Pastes', value: '100M+' },
+          { label: 'Read:Write Ratio', value: '10:1' },
+          { label: 'Max Paste Size', value: '10 MB' },
+        ],
+        scope: {
+          inScope: ['Create and retrieve text pastes via short URL', 'Unique short URL generation (Base62)', 'Configurable expiration (TTL)', 'Password-protected private pastes', 'Syntax highlighting for 200+ languages', 'View count analytics per paste'],
+          outOfScope: ['Collaborative editing', 'Version history / diffs', 'User social features', 'Rich media embedding', 'Full-text search across pastes'],
+        },
+        keyChallenge: 'Generating collision-free short URLs at scale while serving a 10:1 read-heavy workload, caching hot pastes at CDN edge, and cleaning up expired content without affecting read latency.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1M new pastes/day, 10M reads/day (10:1 ratio), average paste 10 KB, URL length 7 chars Base62, 75% pastes have expiration.',
+        calculations: [
+          { label: 'Write QPS', value: '~12/s', detail: '1M pastes/day / 86,400 = ~12 writes/sec' },
+          { label: 'Read QPS', value: '~116/s', detail: '10M reads/day / 86,400 = ~116 reads/sec' },
+          { label: 'Peak Read QPS', value: '~350/s', detail: '3x peak factor for viral pastes' },
+          { label: 'Storage/Year', value: '~3.65 TB', detail: '1M/day x 10 KB x 365 = 3.65 TB raw content' },
+          { label: 'Metadata Storage', value: '~36 GB/year', detail: '1M/day x 100 bytes metadata x 365' },
+          { label: 'URL Keyspace', value: '3.5 Trillion', detail: '62^7 = 3.52 trillion unique keys' },
+          { label: 'Keyspace Exhaustion', value: '96K+ years', detail: '3.52T / 365M per year = 9,644 years' },
+          { label: 'CDN Cache Hit Rate', value: '~95%', detail: 'Hot pastes cached at edge, 1-hour TTL' },
+          { label: 'Redis Cache', value: '~10 GB', detail: 'Top 1M hot paste metadata x 10 KB each' },
+          { label: 'S3 Cost/Month', value: '~$85', detail: '3.65 TB x $0.023/GB S3 Standard' },
+        ]
+      },
 
       introduction: `Pastebin is a simple service for sharing text snippets or code with generated short URLs. Despite its simplicity, it demonstrates key system design concepts: unique ID generation, object storage, caching, and TTL-based cleanup.
 
@@ -16015,6 +17486,156 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
         }
       ],
 
+      deepDiveTopics: [
+        {
+          topic: 'Key Generation Strategies',
+          detail: `Generating unique short URLs is the core design challenge for Pastebin.
+
+**Pre-generated key pool (recommended):** A background job generates random 7-character Base62 keys in batches (e.g., 10K at a time) and stores them in an \`unused_keys\` table. On paste creation, an API server atomically claims a key. This eliminates collision checking at write time.
+
+**Counter-based:** Use a distributed counter (ZooKeeper or Redis INCR) and Base62-encode the result. Simple and collision-free, but keys are **predictable** (sequential) and the counter is a single point of failure.
+
+**Hash-based:** SHA-256 the content, take first 7 chars in Base62. Content-addressable (same content = same URL) but requires collision handling. At 1M pastes/day, collision probability is negligible but must still be handled.
+
+**Recommendation:** Pre-generated pool for production, counter-based for MVPs.`
+        },
+        {
+          topic: 'Content Deduplication with SHA-256',
+          detail: `Many pastes contain identical content (popular code snippets, error messages, etc.).
+
+**Approach:** Before uploading to S3, compute SHA-256 of the content. Check if a paste with the same hash already exists. If so, create a new short URL pointing to the **same S3 object** -- saving storage and upload time.
+
+**Impact:** Deduplication can reduce storage by **15-30%** in practice. The hash lookup adds < 1ms (indexed column) and the storage savings compound over years.
+
+**Trade-off:** Deleting a paste requires reference counting. Only remove the S3 object when zero URLs point to it.`
+        },
+        {
+          topic: 'CDN Caching for Immutable Content',
+          detail: `Paste content is immutable once created -- the perfect CDN use case.
+
+**Cache headers:** \`Cache-Control: public, max-age=31536000, immutable\` for paste content. Since URLs map to fixed content, aggressive caching is safe.
+
+**CDN hit rate:** Popular pastes (shared on social media, linked from Stack Overflow) get **99%+ CDN hit rates**. The CDN handles viral traffic without hitting origin.
+
+**Edge cases:** Password-protected pastes are served with \`Cache-Control: private, no-store\`. Expired pastes return 404 with a short TTL so the CDN removes them quickly.
+
+**Cost:** CloudFront or CloudFlare costs are dominated by bandwidth. At 10M reads/day x 10 KB average, that is ~100 GB/day or ~$10/month on CloudFront.`
+        },
+        {
+          topic: 'Expiration and Cleanup Strategies',
+          detail: `75% of pastes have expiration dates, requiring systematic cleanup.
+
+**Three-layer cleanup:**
+1. **Lazy deletion:** On read, check if expired. If so, return 404 and mark for cleanup. Handles the read path immediately.
+2. **S3 Lifecycle Rules:** Tag S3 objects with expiration date. S3 automatically deletes expired objects -- zero custom code.
+3. **Background sweeper:** Hourly job scans metadata table for expired pastes in batches of 10K. Deletes DB rows and releases keys back to the pool.
+
+**Key recycling:** Released keys go back to the \`unused_keys\` pool after a **30-day grace period** (to prevent URL reuse while cached versions exist).`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'storage-options',
+          title: 'Content Storage: S3 vs Database vs Filesystem',
+          headers: ['Aspect', 'S3 (Object Storage)', 'Database (TEXT column)', 'Filesystem'],
+          rows: [
+            ['Max Size', 'Virtually unlimited', '1 GB (PostgreSQL)', 'Disk-limited'],
+            ['Cost', '$0.023/GB/month', '$0.10+/GB (managed DB)', 'Cheapest per GB'],
+            ['CDN Integration', 'Native CloudFront', 'Requires proxy', 'Requires proxy'],
+            ['Scalability', 'Infinite horizontal', 'Vertical + sharding', 'Single server'],
+            ['Durability', '99.999999999% (11 nines)', '99.99% (replication)', 'Depends on RAID'],
+            ['Best For', 'All paste sizes', 'Tiny pastes (<1KB)', 'Dev/testing only'],
+          ],
+          verdict: 'S3 for content, PostgreSQL for metadata -- hybrid approach'
+        },
+        {
+          id: 'key-generation',
+          title: 'Key Generation: Pre-generated Pool vs Counter vs Hash',
+          headers: ['Aspect', 'Pre-generated Pool', 'Counter (Base62)', 'Hash (SHA-256)'],
+          rows: [
+            ['Collision Risk', 'Zero (pre-checked)', 'Zero (sequential)', 'Negligible but possible'],
+            ['Write Latency', 'O(1) claim from pool', 'O(1) increment', 'O(1) + collision check'],
+            ['Predictability', 'Random', 'Sequential (guessable)', 'Content-dependent'],
+            ['Coordination', 'None at write time', 'Single counter needed', 'None'],
+            ['Ops Complexity', 'Background pool refill', 'Counter HA setup', 'Simplest'],
+          ],
+          verdict: 'Pre-generated pool for production, counter for simplicity'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'create-paste-flow',
+          title: 'Create Paste Flow',
+          description: 'Complete flow from paste submission to short URL return',
+          steps: [
+            { step: 1, label: 'Submit Paste', detail: 'Client sends content, syntax, expiration, optional password' },
+            { step: 2, label: 'Rate Limit Check', detail: 'Check IP-based rate limit (10 pastes/min)' },
+            { step: 3, label: 'Content Hash', detail: 'SHA-256 hash for deduplication check' },
+            { step: 4, label: 'Dedup Check', detail: 'If identical content exists, reuse S3 URL; else upload new' },
+            { step: 5, label: 'Claim Short Key', detail: 'Atomically claim from pre-generated key pool' },
+            { step: 6, label: 'Upload to S3', detail: 'Store content with expiration tag and encryption' },
+            { step: 7, label: 'Save Metadata', detail: 'Insert into PostgreSQL: key, S3 URL, hash, expiry' },
+            { step: 8, label: 'Return URL', detail: 'Return short URL to client (e.g., paste.bin/a7Bx3kQ)' },
+          ]
+        },
+        {
+          id: 'read-paste-flow',
+          title: 'Read Paste Flow',
+          description: 'Multi-tier caching for fast paste retrieval',
+          steps: [
+            { step: 1, label: 'Client Request', detail: 'User visits paste.bin/a7Bx3kQ' },
+            { step: 2, label: 'CDN Check', detail: 'CloudFront edge cache -- 95% hit rate for popular pastes' },
+            { step: 3, label: 'Redis Check', detail: 'If CDN miss, check Redis for metadata (is it expired? password?)' },
+            { step: 4, label: 'Auth Check', detail: 'If password-protected, verify password header' },
+            { step: 5, label: 'Expiry Check', detail: 'If expired, return 404 and queue for cleanup' },
+            { step: 6, label: 'Fetch Content', detail: 'Read from S3 (or redirect to S3 pre-signed URL)' },
+            { step: 7, label: 'Increment Views', detail: 'Async: publish view event to Kafka for analytics' },
+            { step: 8, label: 'Return Content', detail: 'Serve with syntax highlighting and cache headers' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#02a4d3',
+          items: [
+            { label: 'CDN (CloudFront)', value: '95% cache hit', bar: 95 },
+            { label: 'Redis (Hot Metadata)', value: '10 GB cache', bar: 50 },
+            { label: 'PostgreSQL (Metadata)', value: '36 GB/year', bar: 30 },
+            { label: 'S3 (Content)', value: '3.65 TB/year', bar: 70 },
+            { label: 'API Servers', value: '350 peak QPS', bar: 25 },
+            { label: 'Background Workers', value: 'Cleanup + keygen', bar: 20 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '100M+ active pastes', value: 'Total content', bar: 100 },
+            { label: '1M new/day', value: 'Write volume', bar: 50 },
+            { label: '10M reads/day', value: 'Read volume', bar: 80 },
+            { label: '3.5T URL keyspace', value: '96K+ years capacity', bar: 40 },
+            { label: '10:1 read ratio', value: 'Read-heavy workload', bar: 70 },
+            { label: '<100ms read', value: 'Target latency', bar: 90 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single Server', description: 'One API server with content in local filesystem and metadata in SQLite.', color: '#94a3b8', icon: 'server', capacity: '~1K pastes/day', rps: '1', pros: ['Simple setup', 'No dependencies', 'Easy debugging'], cons: ['Single point of failure', 'No CDN', 'Disk-limited storage'] },
+        { step: 2, title: 'S3 + Database', description: 'Content to S3, metadata to PostgreSQL, basic CDN for reads.', color: '#02a4d3', icon: 'database', capacity: '~100K pastes/day', rps: '50', pros: ['Durable storage', 'CDN caching', 'Scalable content'], cons: ['No key management', 'No deduplication', 'Basic auth only'] },
+        { step: 3, title: 'Cache + Key Pool', description: 'Redis cache for hot metadata, pre-generated key pool, view count tracking.', color: '#f59e0b', icon: 'zap', capacity: '~1M pastes/day', rps: '350', pros: ['Fast reads from cache', 'No collision at write', 'Analytics support'], cons: ['Redis as dependency', 'Key pool management', 'More ops complexity'] },
+        { step: 4, title: 'Multi-Region', description: 'Cross-region S3 replication, read replicas, CDN edge caching globally.', color: '#10b981', icon: 'globe', capacity: '~10M pastes/day', rps: '5K', pros: ['Global low latency', 'High availability', 'Disaster recovery'], cons: ['Cross-region consistency', 'Higher cost', 'Complex deployment'] },
+        { step: 5, title: 'Enterprise Features', description: 'Abuse detection ML, content scanning, team workspaces, API rate tiers.', color: '#7c3aed', icon: 'shield', capacity: '10M+ pastes/day', rps: '10K+', pros: ['Abuse prevention', 'Compliance ready', 'Revenue generation'], cons: ['ML model maintenance', 'Legal complexity', 'Feature creep risk'] },
+      ],
+
       // Backward compatibility
       requirements: ['Create pastes', 'View pastes', 'Expiration', 'Syntax highlighting', 'Private pastes', 'Analytics'],
       components: ['API servers', 'Object storage (S3)', 'Metadata DB', 'Cache', 'CDN'],
@@ -16051,6 +17672,39 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
       color: '#4285f4',
       difficulty: 'Hard',
       description: 'Design a distributed web crawler for search engine indexing.',
+
+      productMeta: {
+        name: 'Web Crawler (Googlebot)',
+        tagline: 'Crawl and index billions of web pages for search engine freshness',
+        stats: [
+          { label: 'Pages Crawled/Day', value: '~20B' },
+          { label: 'Index Size', value: '400B+ docs' },
+          { label: 'Crawler Workers', value: '10,000+' },
+          { label: 'Bot Traffic Share', value: '25%+ of all' },
+        ],
+        scope: {
+          inScope: ['Discover and fetch web pages at scale', 'URL frontier with priority and politeness', 'robots.txt compliance and crawl-delay', 'Duplicate and near-duplicate detection', 'Incremental re-crawling based on change frequency', 'Link extraction and URL normalization'],
+          outOfScope: ['Page ranking (PageRank)', 'Search query serving', 'Ad indexing', 'Image/video crawling', 'JavaScript rendering'],
+        },
+        keyChallenge: 'Crawling billions of pages per day across millions of domains while respecting per-domain rate limits (politeness), detecting duplicate content via SimHash fingerprinting, and prioritizing high-value pages for freshness.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1B pages/day target, average page 100 KB (HTML), 1 req/sec politeness per domain, 15M+ active domains.',
+        calculations: [
+          { label: 'Crawl Rate', value: '~11,500 pages/s', detail: '1B pages / 86,400 seconds' },
+          { label: 'Workers Needed', value: '~10,000', detail: 'At 1 req/sec/domain with parallelism across domains' },
+          { label: 'Download Bandwidth', value: '~9.2 Gbps', detail: '11,500 pages/s x 100 KB = 1.15 GB/s = 9.2 Gbps' },
+          { label: 'Storage/Day (Raw HTML)', value: '~100 TB', detail: '1B pages x 100 KB average' },
+          { label: 'Storage/Day (Compressed)', value: '~15 TB', detail: '~85% compression ratio on HTML' },
+          { label: 'URL Frontier Size', value: '~10B URLs', detail: 'Active URL queue across all priority levels' },
+          { label: 'Bloom Filter Memory', value: '~10 GB', detail: '10B URLs x 1 byte/URL with 1% false positive rate' },
+          { label: 'DNS Cache', value: '~5 GB', detail: '15M domains x ~350 bytes per cached entry' },
+          { label: 'robots.txt Cache', value: '~15 GB', detail: '15M domains x ~1 KB per robots.txt file' },
+          { label: 'SimHash Index', value: '~75 GB', detail: '10B pages x 8 bytes (64-bit fingerprint)' },
+        ]
+      },
 
       introduction: `A web crawler (spider/bot) systematically browses the web to download pages for search engine indexing. Google crawls billions of pages to keep its search index fresh.
 
@@ -16200,6 +17854,164 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
           topic: 'Scheduling',
           points: ['News: hourly', 'Static: weekly', 'Adaptive based on change rate']
         }
+      ],
+
+      deepDiveTopics: [
+        {
+          topic: 'URL Frontier Architecture',
+          detail: `The URL frontier is the heart of the crawler -- a two-level queue system managing priority and politeness.
+
+**Front queues (priority):** URLs are classified into High (high PageRank, news sites), Medium (regular pages), and Low (new discoveries). A priority selector picks from queues based on configured weights (e.g., 50% High, 35% Medium, 15% Low).
+
+**Back queues (per-domain):** Each domain gets its own queue with a \`nextFetchTime\` timestamp. A URL can only be dequeued when the current time exceeds \`nextFetchTime\`. After each fetch, \`nextFetchTime\` advances by the crawl-delay from robots.txt (default 1 second).
+
+**Selection flow:** Priority selector picks a URL -> routes to the appropriate domain back-queue -> fetcher only pops if \`nextFetchTime\` has passed. This ensures **high-priority pages are fetched first** while **no single domain is overwhelmed**.`
+        },
+        {
+          topic: 'SimHash Near-Duplicate Detection',
+          detail: `The web is full of near-duplicates: syndicated articles, template pages, URL variations. SimHash detects these efficiently.
+
+**How it works:** Convert page content to a set of features (word n-grams). Hash each feature and combine using weighted bit voting to produce a **64-bit fingerprint**. Two pages are near-duplicates if their SimHash fingerprints differ by **<= 3 bits** (Hamming distance).
+
+**At scale:** Store 10B fingerprints (80 GB). Use **bit-partitioning**: split the 64-bit hash into blocks and index by block. Two hashes differing by k bits must match in at least one block, enabling **O(1) lookups** instead of comparing all pairs.
+
+**Impact:** SimHash catches **~20% of crawled pages** as near-duplicates, saving enormous storage and indexing cost.`
+        },
+        {
+          topic: 'Adaptive Re-Crawl Scheduling',
+          detail: `Not all pages change at the same rate. News sites update hourly; corporate pages update monthly.
+
+**Change detection:** On each re-crawl, compare the new content hash to the stored hash. Track the **change frequency** per URL: changes / total re-crawls.
+
+**Scheduling formula:** next_crawl_interval = base_interval / change_frequency. A page that changes 80% of the time gets re-crawled 5x more often than one that changes 10% of the time.
+
+**Categories:** News: every 1-4 hours. Active blogs: daily. Corporate: weekly. Archives: monthly. Dead pages: removed after 3 consecutive 404s.
+
+**Budget allocation:** Allocate crawl budget proportionally: 50% to frequently-changing pages, 30% to important pages (high PageRank), 20% to discovery.`
+        },
+        {
+          topic: 'Crawl Trap Detection and Avoidance',
+          detail: `Malicious or poorly-designed sites can trap crawlers in infinite loops.
+
+**Calendar traps:** Dynamic calendars with infinite date URLs (e.g., /calendar/2025/01, /calendar/2025/02, ...). Detected by URL pattern analysis: if a site generates > 10,000 URLs matching the same regex pattern, cap it.
+
+**Session ID traps:** Each visit generates a new session ID in the URL, creating infinite unique URLs pointing to the same content. Detected by SimHash: all pages have identical fingerprints despite different URLs.
+
+**Mitigations:** Max depth per domain (typically 15 levels), max pages per domain (100K), URL length limit (2048 chars), and a domain blacklist for known trap sites.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'duplicate-detection',
+          title: 'Duplicate Detection: Exact vs Near-Duplicate',
+          headers: ['Aspect', 'SHA-256 (Exact)', 'SimHash (Near)', 'MinHash (Jaccard)'],
+          rows: [
+            ['Detection Type', 'Byte-identical pages', '~3 bit difference', 'Set overlap threshold'],
+            ['Storage per URL', '32 bytes', '8 bytes', '~100 bytes (signatures)'],
+            ['Speed', 'O(1) lookup', 'O(1) with bit partitioning', 'O(k) for k signatures'],
+            ['False Positives', 'Zero', 'Very low', 'Tunable via threshold'],
+            ['Best For', 'Exact mirrors/copies', 'Syndicated/templated content', 'Plagiarism detection'],
+          ],
+          verdict: 'SHA-256 for exact dedup first, SimHash for near-duplicate as second pass'
+        },
+        {
+          id: 'crawl-strategy',
+          title: 'BFS vs DFS vs Priority Crawl',
+          headers: ['Aspect', 'Breadth-First', 'Depth-First', 'Priority-Based'],
+          rows: [
+            ['Discovery Speed', 'Fast (many domains)', 'Slow (one domain deep)', 'Targeted (important first)'],
+            ['Completeness', 'Broad but shallow', 'Deep but narrow', 'Important pages prioritized'],
+            ['Memory', 'High (wide frontier)', 'Low (single path)', 'Medium (priority queue)'],
+            ['Politeness', 'Natural (rotates domains)', 'Violates (hammers one)', 'Configurable per domain'],
+            ['Best For', 'Initial discovery', 'Single-site audit', 'Production search crawling'],
+          ],
+          verdict: 'Priority-based BFS with per-domain politeness for production crawlers'
+        },
+        {
+          id: 'storage-backend',
+          title: 'Raw HTML Storage: HDFS vs S3 vs Cassandra',
+          headers: ['Aspect', 'HDFS', 'S3', 'Cassandra'],
+          rows: [
+            ['Cost', 'Medium (self-managed)', 'Low (pay-per-GB)', 'High (cluster)'],
+            ['Throughput', 'Excellent batch writes', 'Good with multipart', 'Excellent random writes'],
+            ['Query Pattern', 'Batch MapReduce', 'Key-based retrieval', 'Key-based + range scans'],
+            ['Scalability', 'Add datanodes', 'Infinite', 'Add nodes'],
+            ['Best For', 'Batch processing', 'Archive storage', 'Real-time lookups'],
+          ],
+          verdict: 'S3 for raw HTML archival, HDFS for batch processing pipeline'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'crawl-pipeline',
+          title: 'Page Crawl Pipeline',
+          description: 'End-to-end flow from URL selection to content storage',
+          steps: [
+            { step: 1, label: 'URL Selection', detail: 'Priority selector picks URL from frontier front-queue' },
+            { step: 2, label: 'Politeness Check', detail: 'Route to domain back-queue, wait if nextFetchTime not reached' },
+            { step: 3, label: 'robots.txt Check', detail: 'Verify URL is allowed (cache robots.txt per domain)' },
+            { step: 4, label: 'DNS Resolution', detail: 'Resolve domain to IP (async DNS with local cache)' },
+            { step: 5, label: 'HTTP Fetch', detail: 'Download page with timeout (30s), follow redirects (max 5)' },
+            { step: 6, label: 'Duplicate Check', detail: 'SHA-256 exact dedup, then SimHash near-duplicate check' },
+            { step: 7, label: 'Content Parse', detail: 'Extract text, links, metadata from HTML' },
+            { step: 8, label: 'Link Discovery', detail: 'Normalize extracted URLs, add new ones to frontier' },
+            { step: 9, label: 'Store Content', detail: 'Compressed HTML to blob storage, metadata to DB' },
+          ]
+        },
+        {
+          id: 'url-frontier-flow',
+          title: 'URL Frontier Selection',
+          description: 'How the two-level queue prioritizes and rate-limits URL fetching',
+          steps: [
+            { step: 1, label: 'New URL Discovered', detail: 'Link extractor finds new URL in a crawled page' },
+            { step: 2, label: 'Bloom Filter Check', detail: 'Is this URL already known? If yes, skip. If no, add to frontier.' },
+            { step: 3, label: 'Priority Assignment', detail: 'Score based on domain authority, freshness, and page depth' },
+            { step: 4, label: 'Front Queue Insert', detail: 'Place in High/Medium/Low priority queue based on score' },
+            { step: 5, label: 'Domain Routing', detail: 'When selected, route to domain-specific back-queue' },
+            { step: 6, label: 'Politeness Gate', detail: 'Only release to fetcher when nextFetchTime is passed' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#4285f4',
+          items: [
+            { label: 'Fetcher Workers', value: '10,000+ parallel', bar: 90 },
+            { label: 'URL Frontier', value: '10B+ URLs', bar: 85 },
+            { label: 'Bloom Filter', value: '10 GB memory', bar: 40 },
+            { label: 'SimHash Index', value: '75 GB fingerprints', bar: 60 },
+            { label: 'Blob Storage', value: '15 TB/day compressed', bar: 95 },
+            { label: 'DNS Cache', value: '15M domains', bar: 50 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '1B pages/day', value: 'Crawl target', bar: 100 },
+            { label: '400B+ index docs', value: 'Total indexed pages', bar: 95 },
+            { label: '9.2 Gbps', value: 'Download bandwidth', bar: 80 },
+            { label: '15M domains', value: 'Active domains tracked', bar: 70 },
+            { label: '1 req/s/domain', value: 'Politeness constraint', bar: 30 },
+            { label: '20% near-dupes', value: 'Detected and skipped', bar: 50 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single Threaded', description: 'Sequential fetch-parse-store loop with a simple queue.', color: '#94a3b8', icon: 'server', capacity: '~100 pages/min', rps: '1', pros: ['Simple to build', 'Easy to debug', 'No coordination'], cons: ['Extremely slow', 'No politeness', 'No dedup'] },
+        { step: 2, title: 'Multi-Threaded', description: 'Thread pool with domain-partitioned queues and basic robots.txt support.', color: '#4285f4', icon: 'layers', capacity: '~10K pages/hour', rps: '10', pros: ['Parallel fetching', 'robots.txt compliance', 'Domain partitioning'], cons: ['Single machine limit', 'No distributed state', 'Memory-bounded queue'] },
+        { step: 3, title: 'Distributed Fetchers', description: 'Worker fleet partitioned by domain hash with centralized URL frontier.', color: '#f59e0b', icon: 'globe', capacity: '~100M pages/day', rps: '1K', pros: ['Horizontal scaling', 'Fault tolerant', 'Domain isolation'], cons: ['Frontier is bottleneck', 'Network overhead', 'Complex coordination'] },
+        { step: 4, title: 'Smart Scheduling', description: 'Priority-based frontier, adaptive re-crawl, SimHash deduplication, trap detection.', color: '#10b981', icon: 'cpu', capacity: '~1B pages/day', rps: '10K', pros: ['Efficient resource use', 'Fresh important pages', 'Near-duplicate detection'], cons: ['Complex priority tuning', 'SimHash false positives', 'Crawl budget management'] },
+        { step: 5, title: 'Planet-Scale', description: 'Multi-datacenter, DNS prefetching, JavaScript rendering, real-time indexing pipeline.', color: '#7c3aed', icon: 'zap', capacity: '20B+ pages/day', rps: '230K', pros: ['Renders JS pages', 'Real-time freshness', 'Global coverage'], cons: ['Enormous infrastructure', 'JS rendering is expensive', 'Anti-bot circumvention arms race'] },
       ],
 
       requirements: ['Crawl billions of pages', 'Respect robots.txt', 'Politeness (rate limiting per domain)', 'Duplicate detection', 'Link extraction', 'Scheduling'],
@@ -16678,6 +18490,39 @@ Instead:
       difficulty: 'Hard',
       description: 'Design a distributed key-value store with high availability.',
 
+      productMeta: {
+        name: 'Distributed Key-Value Store',
+        tagline: 'Sub-10ms reads at millions of QPS with tunable consistency',
+        stats: [
+          { label: 'Operations/sec', value: '1M+' },
+          { label: 'p99 Latency', value: '<10ms' },
+          { label: 'Data Capacity', value: '100+ TB' },
+          { label: 'Node Count', value: '100s-1000s' },
+        ],
+        scope: {
+          inScope: ['Put/Get/Delete key-value operations', 'Consistent hashing for data partitioning', 'Configurable replication (N, W, R quorum)', 'Tunable consistency (strong to eventual)', 'TTL-based key expiration', 'Failure detection via gossip protocol'],
+          outOfScope: ['Secondary indexes', 'SQL query language', 'Transactions across multiple keys', 'Full-text search', 'Time-series optimizations'],
+        },
+        keyChallenge: 'Distributing data across hundreds of nodes with consistent hashing while providing tunable consistency (W+R>N for strong, W=1/R=1 for eventual), handling network partitions gracefully, and resolving concurrent write conflicts using vector clocks.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1M ops/sec target, average key 100 bytes, average value 1 KB, replication factor N=3, 100 TB total data.',
+        calculations: [
+          { label: 'Write QPS', value: '~300K/s', detail: 'Assuming 30% writes of 1M total ops' },
+          { label: 'Read QPS', value: '~700K/s', detail: '70% reads, served from nearest replica' },
+          { label: 'Storage per Node', value: '~3 TB', detail: '100 TB / 100 nodes x 3 replicas = 3 TB per node' },
+          { label: 'Memory per Node', value: '~64 GB', detail: 'MemTable (write buffer) + Bloom filters + hot data cache' },
+          { label: 'Network per Node', value: '~1 Gbps', detail: 'Replication traffic + client reads/writes + gossip' },
+          { label: 'Gossip Overhead', value: '~100 KB/s/node', detail: 'Heartbeats + membership updates across cluster' },
+          { label: 'Compaction I/O', value: '~500 MB/s cluster', detail: 'SSTable merging across all nodes during compaction' },
+          { label: 'WAL Write Rate', value: '~300 MB/s', detail: '300K writes/s x 1 KB average = 300 MB/s cluster-wide' },
+          { label: 'Bloom Filter Memory', value: '~10 MB/node', detail: '1M keys per SSTable x 10 bits/key x multiple SSTables' },
+          { label: 'Rebalance Data', value: '~1 TB per event', detail: 'Adding/removing a node moves ~1/N of total data' },
+        ]
+      },
+
       introduction: `Distributed key-value stores like DynamoDB, Cassandra, and Redis are the backbone of modern systems. This question tests your understanding of distributed systems fundamentals: partitioning, replication, consistency, and failure handling.
 
 The key insight is the CAP theorem: you can't have perfect Consistency, Availability, and Partition tolerance simultaneously. Most systems choose AP (available during partitions) with tunable consistency.`,
@@ -17063,6 +18908,182 @@ Merkle Tree sync:
         }
       ],
 
+      deepDiveTopics: [
+        {
+          topic: 'LSM-Tree Storage Engine',
+          detail: `The LSM (Log-Structured Merge) tree is the dominant storage engine for write-heavy KV stores.
+
+**Write path:** Write to in-memory **MemTable** (red-black tree or skip list) + append to **Write-Ahead Log** (WAL) for durability. When MemTable reaches ~64 MB, flush to disk as an immutable **SSTable** (Sorted String Table).
+
+**Read path:** Check MemTable first (hot data), then **Bloom filters** for each SSTable on disk. Bloom filter says "definitely not here" or "maybe here" -- eliminates 99% of unnecessary disk reads.
+
+**Compaction:** Background process merges multiple SSTables into fewer, larger ones. **Leveled compaction** (used by LevelDB/RocksDB) limits read amplification by ensuring each level has non-overlapping key ranges. **Size-tiered compaction** (used by Cassandra) is simpler but can spike disk I/O.
+
+**Performance:** Writes are always sequential (append-only), achieving **10x higher write throughput** than B-trees. Reads may require checking multiple SSTables, but Bloom filters keep actual disk reads to 1-2 per query.`
+        },
+        {
+          topic: 'Consistent Hashing Deep Dive',
+          detail: `Consistent hashing is the foundation of data distribution in every modern KV store.
+
+**Hash ring:** Map the key space to a circular ring [0, 2^64). Each node is placed at multiple points on the ring (virtual nodes). A key is assigned to the first node encountered walking clockwise from hash(key).
+
+**Virtual nodes:** Each physical node owns 100-256 virtual nodes. Benefits: **even key distribution** (the law of large numbers), **smooth rebalancing** (adding a node moves ~1/N of keys from each existing node, not all from one), and **heterogeneous hardware** (stronger machines get more virtual nodes).
+
+**Replication:** The key is stored on the primary node plus the next N-1 nodes clockwise on the ring. Rack-awareness ensures replicas are on **different physical racks** to survive rack failures.
+
+**Example:** With 100 nodes and 256 virtual nodes each, the ring has 25,600 positions. Adding one node remaps only **~1%** of keys.`
+        },
+        {
+          topic: 'Vector Clocks for Conflict Resolution',
+          detail: `When two clients write the same key concurrently to different replicas, which write wins?
+
+**Vector clock:** Each replica maintains a version vector: \`{ R1: 3, R2: 2, R3: 2 }\`. On write at R1, increment R1's counter. Compare vectors: if A dominates B in all positions, A is causally after B. If neither dominates, they are **concurrent** -- a conflict.
+
+**Resolution strategies:**
+- **Last-Write-Wins (LWW):** Use timestamps. Simple but can silently lose data. Used by Cassandra.
+- **Return both to client:** Let the application merge (used by DynamoDB/Dynamo for shopping carts).
+- **CRDTs:** Conflict-free replicated data types that auto-merge (counters, sets, registers).
+
+**Read repair:** During a quorum read (R=2), if replicas return different versions, the coordinator sends the latest version to stale replicas, healing the divergence transparently.`
+        },
+        {
+          topic: 'Merkle Trees for Anti-Entropy',
+          detail: `After network partitions or node recovery, replicas may diverge. Merkle trees detect exactly which keys differ.
+
+**Structure:** A binary tree where leaf nodes are hashes of individual key-value pairs, and internal nodes are hashes of their children. Two replicas compare tree roots -- if they match, all data is identical. If not, traverse down to find differing branches.
+
+**Efficiency:** Comparing two replicas with 1M keys requires exchanging only **~20 hashes** (log2(1M) tree levels) instead of comparing all keys. Only the differing keys are transferred.
+
+**When used:** Periodically (e.g., every hour) or on node recovery. Not used for real-time consistency -- that is handled by quorum reads/writes and read repair.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'consistency-models',
+          title: 'Consistency Models: Strong vs Eventual vs Tunable',
+          headers: ['Aspect', 'Strong (W+R>N)', 'Eventual (W=1,R=1)', 'Session'],
+          rows: [
+            ['Latency', 'Higher (wait for quorum)', 'Lowest (single replica)', 'Low (read own writes)'],
+            ['Availability', 'Lower during partitions', 'Highest', 'High'],
+            ['Correctness', 'Always latest value', 'May read stale data', 'Own writes visible'],
+            ['Use Case', 'Financial transactions', 'Caching, analytics', 'User sessions, profiles'],
+            ['Example System', 'Spanner, CockroachDB', 'Cassandra (default)', 'DynamoDB (default)'],
+          ],
+          verdict: 'Tunable consistency with W+R>N for critical paths, eventual for high-throughput reads'
+        },
+        {
+          id: 'storage-engines',
+          title: 'Storage Engines: LSM-Tree vs B-Tree vs In-Memory',
+          headers: ['Aspect', 'LSM-Tree', 'B-Tree', 'In-Memory'],
+          rows: [
+            ['Write Speed', 'Excellent (sequential)', 'Good (random I/O)', 'Fastest (no disk)'],
+            ['Read Speed', 'Good (Bloom filters)', 'Excellent (direct lookup)', 'Fastest (RAM)'],
+            ['Space Efficiency', 'Good (compression)', 'Moderate (fragmentation)', 'Poor (RAM is expensive)'],
+            ['Compaction', 'Required (background I/O)', 'Not needed', 'Not needed'],
+            ['Durability', 'WAL + SSTables', 'Write-through pages', 'AOF + snapshots'],
+            ['Used By', 'Cassandra, RocksDB', 'MySQL, PostgreSQL', 'Redis, Memcached'],
+          ],
+          verdict: 'LSM-Tree for write-heavy KV stores, B-Tree for read-heavy relational, in-memory for cache'
+        },
+        {
+          id: 'replication-models',
+          title: 'Replication: Leader vs Leaderless vs Multi-Leader',
+          headers: ['Aspect', 'Single Leader', 'Leaderless', 'Multi-Leader'],
+          rows: [
+            ['Write Availability', 'Leader must be up', 'Any replica accepts', 'Any leader accepts'],
+            ['Consistency', 'Strong (leader orders)', 'Eventual (quorum)', 'Eventual (conflict resolution)'],
+            ['Conflict Risk', 'None (single writer)', 'Concurrent writes possible', 'Cross-datacenter conflicts'],
+            ['Failover', 'Leader election needed', 'No failover needed', 'Per-datacenter failover'],
+            ['Used By', 'MongoDB, PostgreSQL', 'Cassandra, DynamoDB', 'CouchDB, cross-DC setups'],
+          ],
+          verdict: 'Leaderless for AP-focused KV stores, single-leader when strong ordering is critical'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'write-path',
+          title: 'Write Path (Quorum Write)',
+          description: 'How a PUT request is processed with N=3, W=2',
+          steps: [
+            { step: 1, label: 'Client PUT', detail: 'Client sends PUT(key, value) to any node (coordinator)' },
+            { step: 2, label: 'Hash & Route', detail: 'Coordinator hashes key, identifies 3 replica nodes on the ring' },
+            { step: 3, label: 'Parallel Write', detail: 'Send write request to all 3 replicas simultaneously' },
+            { step: 4, label: 'Local Write', detail: 'Each replica: append to WAL + insert into MemTable' },
+            { step: 5, label: 'Quorum ACK', detail: 'Wait for W=2 ACKs (third replica writes async)' },
+            { step: 6, label: 'Return Success', detail: 'Coordinator returns success + version to client' },
+            { step: 7, label: 'Hinted Handoff', detail: 'If a replica is down, write hint to temporary node for later replay' },
+          ]
+        },
+        {
+          id: 'read-path',
+          title: 'Read Path with Read Repair',
+          description: 'How a GET request handles stale replicas',
+          steps: [
+            { step: 1, label: 'Client GET', detail: 'Client sends GET(key) to coordinator' },
+            { step: 2, label: 'Hash & Route', detail: 'Identify replica nodes from consistent hash ring' },
+            { step: 3, label: 'Parallel Read', detail: 'Query R=2 replicas (or all 3 for digest comparison)' },
+            { step: 4, label: 'Version Compare', detail: 'Compare vector clocks from each replica' },
+            { step: 5, label: 'Return Latest', detail: 'Return the value with highest vector clock to client' },
+            { step: 6, label: 'Read Repair', detail: 'If stale replica detected, async send latest version to it' },
+          ]
+        },
+        {
+          id: 'failure-recovery',
+          title: 'Node Failure and Recovery',
+          description: 'How the cluster detects and heals from a node going down',
+          steps: [
+            { step: 1, label: 'Heartbeat Miss', detail: 'Gossip protocol detects no heartbeat for 5 seconds' },
+            { step: 2, label: 'Mark Suspect', detail: 'Node marked SUSPECT, other nodes gossip this state' },
+            { step: 3, label: 'Confirm Dead', detail: 'Multiple nodes agree -> node marked DEAD' },
+            { step: 4, label: 'Hinted Handoff', detail: 'Writes for dead node are stored as hints on other nodes' },
+            { step: 5, label: 'Node Recovers', detail: 'Node restarts, downloads latest partition map' },
+            { step: 6, label: 'Anti-Entropy', detail: 'Merkle tree comparison detects divergent keys' },
+            { step: 7, label: 'Data Sync', detail: 'Only differing keys transferred from healthy replicas' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#dc382d',
+          items: [
+            { label: 'MemTable (In-Memory)', value: '64 MB per node', bar: 40 },
+            { label: 'WAL (Durability)', value: 'Sequential append', bar: 50 },
+            { label: 'SSTables (Disk)', value: '3 TB per node', bar: 90 },
+            { label: 'Bloom Filters', value: '99% negative lookup', bar: 75 },
+            { label: 'Gossip Protocol', value: '100 KB/s overhead', bar: 20 },
+            { label: 'Consistent Hash Ring', value: '25,600 virtual nodes', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '1M+ ops/sec', value: 'Total throughput', bar: 100 },
+            { label: '<10ms p99', value: 'Read latency', bar: 85 },
+            { label: '100+ TB', value: 'Total data capacity', bar: 90 },
+            { label: 'N=3 replicas', value: 'Data durability', bar: 70 },
+            { label: '100+ nodes', value: 'Cluster size', bar: 75 },
+            { label: '<1ms in-memory', value: 'Cache read latency', bar: 95 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single Node', description: 'In-memory hash map with WAL persistence on one machine.', color: '#94a3b8', icon: 'server', capacity: '~50K ops/s', rps: '50K', pros: ['Simple implementation', 'Strong consistency', 'No coordination'], cons: ['Single point of failure', 'Memory-limited', 'No horizontal scaling'] },
+        { step: 2, title: 'Replicated', description: 'Leader-follower replication with read replicas for scaling reads.', color: '#dc382d', icon: 'layers', capacity: '~200K ops/s', rps: '200K', pros: ['Fault tolerant', 'Read scaling', 'Data durability'], cons: ['Leader bottleneck for writes', 'Failover complexity', 'Replication lag'] },
+        { step: 3, title: 'Partitioned', description: 'Consistent hashing distributes keys across multiple nodes.', color: '#f59e0b', icon: 'database', capacity: '~500K ops/s', rps: '500K', pros: ['Horizontal write scaling', 'Even data distribution', 'Add nodes for capacity'], cons: ['Rebalancing on topology change', 'Cross-partition queries expensive', 'More complex ops'] },
+        { step: 4, title: 'Tunable Consistency', description: 'Quorum-based reads/writes with configurable N/W/R parameters.', color: '#10b981', icon: 'shield', capacity: '~1M ops/s', rps: '1M', pros: ['Flexible consistency', 'High availability', 'Hinted handoff'], cons: ['Conflict resolution needed', 'Quorum latency overhead', 'Vector clock complexity'] },
+        { step: 5, title: 'Global Distribution', description: 'Multi-datacenter with cross-region replication and rack-aware placement.', color: '#7c3aed', icon: 'globe', capacity: '10M+ ops/s', rps: '10M+', pros: ['Global low latency', 'Disaster recovery', 'Rack-aware placement'], cons: ['Cross-region consistency lag', 'Enormous infrastructure cost', 'Complex operations'] },
+      ],
+
       // Backward compatibility
       requirements: ['Put/Get/Delete operations', 'High availability', 'Horizontal scaling', 'Replication', 'Consistency options', 'TTL support'],
       components: ['Coordinator', 'Storage nodes', 'Replication manager', 'Failure detector', 'Consistent hashing ring'],
@@ -17154,6 +19175,39 @@ Merkle Tree sync:
       color: '#17bf63',
       difficulty: 'Easy',
       description: 'Design a distributed unique ID generation service.',
+
+      productMeta: {
+        name: 'Snowflake ID Generator',
+        tagline: 'Generating 4 million time-sorted unique IDs per millisecond with zero coordination',
+        stats: [
+          { label: 'ID Size', value: '64-bit' },
+          { label: 'IDs/ms/machine', value: '4,096' },
+          { label: 'Max Machines', value: '1,024' },
+          { label: 'Epoch Duration', value: '69 years' },
+        ],
+        scope: {
+          inScope: ['Generate globally unique 64-bit IDs', 'Time-sortable IDs (timestamp embedded)', 'No coordination between machines', 'Embedded library or microservice', 'Clock skew detection and handling', 'Machine ID assignment via ZooKeeper'],
+          outOfScope: ['Cryptographic randomness', 'Human-readable IDs', 'Variable-length IDs', 'Centralized counter service', 'UUID generation'],
+        },
+        keyChallenge: 'Generating globally unique, roughly time-ordered 64-bit IDs at 4,096 IDs per millisecond per machine across 1,024 machines with zero inter-machine coordination, while handling NTP clock skew gracefully.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: 'Snowflake 64-bit: 1 sign bit + 41 timestamp bits + 10 machine bits + 12 sequence bits. Custom epoch close to system launch.',
+        calculations: [
+          { label: 'IDs/ms per machine', value: '4,096', detail: '2^12 = 4,096 unique IDs per millisecond per machine' },
+          { label: 'IDs/sec per machine', value: '4.1M', detail: '4,096 x 1,000 = 4,096,000 IDs per second' },
+          { label: 'Max machines', value: '1,024', detail: '2^10 = 1,024 machine/datacenter IDs' },
+          { label: 'Cluster capacity', value: '4B IDs/sec', detail: '1,024 machines x 4.1M = ~4 billion IDs per second' },
+          { label: 'Epoch duration', value: '69.7 years', detail: '2^41 milliseconds = 69.7 years from custom epoch' },
+          { label: 'Generation latency', value: '<0.01ms', detail: 'Pure in-memory bit manipulation, no I/O or network' },
+          { label: 'Memory usage', value: '<1 KB', detail: 'Only stores last_timestamp + sequence + machine_id' },
+          { label: 'Network overhead', value: '0', detail: 'Embedded library generates locally, no RPC' },
+          { label: 'ZooKeeper overhead', value: 'Once at startup', detail: 'Machine ID claimed from ZooKeeper only during boot' },
+          { label: 'Storage per ID', value: '8 bytes', detail: 'Fits in a 64-bit long integer, optimal for DB indexes' },
+        ]
+      },
 
       introduction: `Every tweet, order, and user in a distributed system needs a unique identifier. You can't use auto-incrementing database IDs because that creates a single point of failure and doesn't scale across data centers.
 
@@ -17524,6 +19578,159 @@ No coordination, but:
             'Add random suffix for rate limit bypass protection'
           ]
         }
+      ],
+
+      deepDiveTopics: [
+        {
+          topic: 'Snowflake Bit Layout and Trade-offs',
+          detail: `The 64-bit layout is a careful balance of time range, machine count, and throughput.
+
+**Standard layout:** 1 sign (always 0) + 41 timestamp (69 years) + 10 machine (1,024) + 12 sequence (4,096/ms).
+
+**Alternative layouts:** Instagram uses 41 timestamp + 13 shard + 10 sequence. Discord uses 42 timestamp + 5 worker + 5 process + 12 sequence. Each customizes the bit allocation to their scale profile.
+
+**Custom epoch:** Start from a recent date (e.g., your company founding) rather than Unix epoch to maximize the 69-year window. Twitter uses Nov 4, 2010 as its epoch.
+
+**Key insight:** The timestamp occupying the most significant bits means IDs are **naturally sorted by creation time** in any B-tree index, giving excellent database performance.`
+        },
+        {
+          topic: 'Clock Skew Handling Strategies',
+          detail: `Clock skew is the Achilles heel of timestamp-based ID generation.
+
+**NTP drift:** Server clocks can drift by milliseconds per hour. NTP corrections can jump the clock **backwards**, which would generate duplicate IDs if unchecked.
+
+**Strategy 1 -- Wait:** If clock moves back by < 5ms, simply sleep until time catches up. Adds tiny latency but is safe.
+
+**Strategy 2 -- Reject:** For larger jumps (> 5ms), throw an error and alert. The service is temporarily unavailable but no duplicates are generated.
+
+**Strategy 3 -- Hybrid Logical Clocks (HLC):** Combine physical time with a logical counter. If physical time goes backwards, increment the logical counter instead. Always moves forward. Used by CockroachDB.
+
+**Best practice:** Run NTP with multiple reliable sources, monitor clock offset, and use the wait strategy for small drifts.`
+        },
+        {
+          topic: 'Machine ID Assignment at Scale',
+          detail: `With 1,024 possible machine IDs, assignment must be collision-free.
+
+**ZooKeeper approach:** On startup, create a sequential ephemeral node under /snowflake/machines/. The sequence number becomes the machine ID. Ephemeral nodes auto-delete on crash, freeing the ID. A lease mechanism prevents rapid reuse.
+
+**Datacenter + Machine split:** Split the 10 bits into 5 datacenter bits (32 DCs) + 5 machine bits (32 per DC). This prevents cross-DC collisions even if ZooKeeper is partitioned.
+
+**Kubernetes:** Use StatefulSet ordinal as machine ID. Pod my-generator-42 gets machine_id=42. Stable identity across restarts.
+
+**Cloud auto-scaling:** Pre-allocate ID ranges to auto-scaling groups. Each group claims a range (e.g., 0-99, 100-199) and distributes within.`
+        },
+        {
+          topic: 'Alternatives: UUID v7 and ULID',
+          detail: `Snowflake is not the only option. Newer standards offer different trade-offs.
+
+**UUID v7 (2024 standard):** 128-bit with 48-bit Unix timestamp + 80-bit random. Time-sortable like Snowflake, universally unique without coordination. Trade-off: 16 bytes vs 8 bytes storage per ID.
+
+**ULID:** 128-bit, 48-bit timestamp + 80-bit random, Crockford Base32 encoded. Lexicographically sortable as strings. Good for systems that need string IDs.
+
+**MongoDB ObjectId:** 96-bit, 32-bit timestamp + 40-bit random + 24-bit counter. Built into MongoDB driver.
+
+**When to choose Snowflake:** Internal systems needing compact (8-byte) time-sorted IDs at very high throughput. Choose UUID v7 when cross-system uniqueness matters and 16 bytes is acceptable.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'id-schemes',
+          title: 'ID Generation Schemes Compared',
+          headers: ['Aspect', 'Snowflake', 'UUID v4', 'UUID v7', 'Auto-Increment'],
+          rows: [
+            ['Size', '64-bit (8 bytes)', '128-bit (16 bytes)', '128-bit (16 bytes)', '32/64-bit'],
+            ['Time Sortable', 'Yes', 'No (random)', 'Yes', 'Yes (sequential)'],
+            ['Coordination', 'Machine ID only', 'None', 'None', 'Central counter'],
+            ['Throughput', '4M/s/machine', 'Unlimited', 'Unlimited', 'Limited by DB'],
+            ['Collision Risk', 'Zero (bit space)', 'Negligible (2^122)', 'Negligible (2^80)', 'Zero (sequential)'],
+            ['DB Index Perf', 'Excellent (sorted)', 'Poor (random)', 'Good (sorted)', 'Excellent'],
+          ],
+          verdict: 'Snowflake for internal high-throughput systems, UUID v7 for cross-service compatibility'
+        },
+        {
+          id: 'clock-strategies',
+          title: 'Clock Skew Handling Strategies',
+          headers: ['Aspect', 'Wait (Sleep)', 'Reject (Error)', 'Hybrid Logical Clock'],
+          rows: [
+            ['Availability', 'Brief pause', 'Temporary unavailable', 'Always available'],
+            ['Correctness', 'Guaranteed', 'Guaranteed', 'Guaranteed'],
+            ['Complexity', 'Simple', 'Simple', 'Complex'],
+            ['Max Tolerable Skew', '~5ms', 'Any', 'Any'],
+            ['Used By', 'Twitter Snowflake', 'Most implementations', 'CockroachDB, Spanner'],
+          ],
+          verdict: 'Wait for small drifts, HLC for systems requiring perfect monotonicity'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'id-generation-flow',
+          title: 'Snowflake ID Generation',
+          description: 'Step-by-step flow of generating a single 64-bit ID',
+          steps: [
+            { step: 1, label: 'Get Current Time', detail: 'Read system clock in milliseconds' },
+            { step: 2, label: 'Clock Check', detail: 'Is current_time >= last_timestamp? If backwards, wait or error' },
+            { step: 3, label: 'Same Millisecond?', detail: 'If same ms as last ID, increment sequence counter' },
+            { step: 4, label: 'Sequence Overflow?', detail: 'If sequence hits 4096, wait for next millisecond' },
+            { step: 5, label: 'New Millisecond', detail: 'If new ms, reset sequence to 0' },
+            { step: 6, label: 'Bit Pack', detail: '(timestamp - epoch) << 22 | machine_id << 12 | sequence' },
+            { step: 7, label: 'Return ID', detail: 'Return 64-bit ID to caller (< 0.01ms total)' },
+          ]
+        },
+        {
+          id: 'machine-id-assignment',
+          title: 'Machine ID Assignment via ZooKeeper',
+          description: 'How a new server claims a unique machine ID at startup',
+          steps: [
+            { step: 1, label: 'Server Starts', detail: 'New ID generator instance boots up' },
+            { step: 2, label: 'Connect to ZK', detail: 'Establish session with ZooKeeper cluster' },
+            { step: 3, label: 'Create Node', detail: 'Create sequential ephemeral node /snowflake/machines/id-XXXXXXXX' },
+            { step: 4, label: 'Extract ID', detail: 'Parse sequence number from node name as machine_id' },
+            { step: 5, label: 'Validate Range', detail: 'Ensure machine_id < 1024 (10-bit limit)' },
+            { step: 6, label: 'Start Generating', detail: 'Begin accepting ID generation requests' },
+            { step: 7, label: 'Crash Recovery', detail: 'On crash, ephemeral node auto-deleted; ID released for reuse' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#17bf63',
+          items: [
+            { label: 'Snowflake Library', value: 'Embedded, 0 latency', bar: 100 },
+            { label: 'ZooKeeper', value: 'Machine ID registry', bar: 30 },
+            { label: 'NTP', value: 'Clock synchronization', bar: 25 },
+            { label: 'Monitoring', value: 'Skew + exhaustion alerts', bar: 20 },
+            { label: 'Sequence Counter', value: 'Thread-local atomic', bar: 50 },
+            { label: 'Bit Packing', value: '64-bit assembly', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '4M IDs/s/machine', value: 'Per-instance throughput', bar: 100 },
+            { label: '4B IDs/s cluster', value: '1,024 machines combined', bar: 95 },
+            { label: '<0.01ms latency', value: 'Zero network overhead', bar: 100 },
+            { label: '8 bytes per ID', value: 'Compact storage', bar: 80 },
+            { label: '69.7 years', value: 'Epoch duration', bar: 60 },
+            { label: '1,024 machines', value: 'Max concurrent generators', bar: 50 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Auto-Increment DB', description: 'Single database auto-increment column for sequential IDs.', color: '#94a3b8', icon: 'database', capacity: '~1K IDs/s', rps: '1K', pros: ['Zero collision', 'Sequential ordering', 'Simplest possible'], cons: ['Single point of failure', 'DB bottleneck', 'No distribution'] },
+        { step: 2, title: 'UUID v4', description: 'Random 128-bit UUIDs generated anywhere without coordination.', color: '#17bf63', icon: 'zap', capacity: 'Unlimited', rps: 'Unlimited', pros: ['No coordination', 'No SPOF', 'Universal uniqueness'], cons: ['128 bits (large)', 'Not time-sortable', 'Poor DB index locality'] },
+        { step: 3, title: 'Snowflake', description: '64-bit time-sorted IDs with embedded machine ID and sequence.', color: '#f59e0b', icon: 'hash', capacity: '4M/s/machine', rps: '4M', pros: ['Time-sortable', 'Compact (8 bytes)', 'No per-request coordination'], cons: ['Machine ID assignment needed', 'Clock skew vulnerability', '69-year limit'] },
+        { step: 4, title: 'Multi-DC Snowflake', description: 'Split machine bits into datacenter + machine for cross-region isolation.', color: '#10b981', icon: 'globe', capacity: '4B/s cluster', rps: '4B', pros: ['Cross-DC collision-free', 'Independent per region', 'Survives DC failures'], cons: ['Fewer machines per DC', 'ZooKeeper per DC', 'Epoch coordination'] },
+        { step: 5, title: 'Hybrid (Snowflake + UUID v7)', description: 'Snowflake for internal systems, UUID v7 for external/cross-service IDs.', color: '#7c3aed', icon: 'cpu', capacity: '4B+/s', rps: '4B+', pros: ['Best of both worlds', 'External compatibility', 'Future-proof'], cons: ['Two ID schemes to maintain', 'Mapping layer needed', 'Developer confusion risk'] },
       ],
 
       // Backward compatibility
@@ -21592,6 +23799,39 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
       difficulty: 'Hard',
       description: 'Design a video conferencing platform for real-time communication.',
 
+      productMeta: {
+        name: 'Zoom',
+        tagline: 'Real-time video conferencing for 300M+ daily participants',
+        stats: [
+          { label: 'Daily Participants', value: '300M+' },
+          { label: 'Meeting Minutes/Year', value: '3.3T' },
+          { label: 'Market Share', value: '~55%' },
+          { label: 'Business Customers', value: '470K' },
+        ],
+        scope: {
+          inScope: ['Real-time video/audio with SFU architecture', 'WebRTC signaling and NAT traversal', 'Screen sharing with annotation', 'Cloud recording and transcription', 'Simulcast for adaptive quality', 'Cascaded SFUs for global meetings'],
+          outOfScope: ['Phone system (Zoom Phone)', 'Whiteboard collaboration', 'Email/calendar integration', 'Zoom Apps marketplace', 'Hardware (Zoom Rooms)'],
+        },
+        keyChallenge: 'Delivering sub-150ms latency video to 300M daily participants via SFU architecture, handling the N-squared bandwidth problem with simulcast encoding, and maintaining quality across varying network conditions with adaptive bitrate selection.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '300M daily participants, average meeting 52 minutes with 8 participants, video at 1.5 Mbps (720p) + audio at 50 Kbps.',
+        calculations: [
+          { label: 'Concurrent Meetings', value: '~10M', detail: '300M daily participants across ~12 active hours' },
+          { label: 'Concurrent Streams', value: '~80M', detail: '10M meetings x 8 participants average' },
+          { label: 'Upload Bandwidth per User', value: '~1.5 Mbps', detail: '720p video + audio (simulcast: 3 quality layers)' },
+          { label: 'SFU Servers Needed', value: '~50,000', detail: 'Each SFU handles ~1,600 concurrent streams' },
+          { label: 'Total Bandwidth', value: '~120 Tbps', detail: '80M streams x 1.5 Mbps average' },
+          { label: 'TURN Server Traffic', value: '~15%', detail: '~15% of participants need TURN relay for NAT traversal' },
+          { label: 'Recording Storage/Day', value: '~50 PB', detail: '10M meetings x 52 min x ~100 MB/hr (compressed)' },
+          { label: 'Signaling QPS', value: '~5M/s', detail: 'Join/leave events, ICE candidates, mute/unmute signals' },
+          { label: 'Latency Budget', value: '<150ms', detail: 'Capture(20ms) + Encode(30ms) + Network(50ms) + Decode(30ms) + Render(20ms)' },
+          { label: 'Meeting Registry', value: '~500 GB', detail: 'Active meeting metadata + participant state in Redis' },
+        ]
+      },
+
       introduction: `Video conferencing requires real-time media streaming with < 150ms latency - far lower than typical web applications. The core challenge is handling the N² problem: in a meeting with N participants, each person needs to receive N-1 video streams.
 
 The solution is an SFU (Selective Forwarding Unit) that receives each participant's stream once and forwards it to others, rather than peer-to-peer connections that don't scale.`,
@@ -21986,6 +24226,194 @@ For very large meetings (webinars):
         }
       ],
 
+      deepDiveTopics: [
+        {
+          topic: 'SFU Selective Forwarding and Simulcast',
+          detail: `The SFU is the core innovation that makes large video meetings possible.
+
+**Selective forwarding:** Each participant uploads ONE stream to the SFU. The SFU forwards copies to other participants without decoding or re-encoding, using minimal CPU. This is fundamentally different from an MCU which mixes all streams into one composite.
+
+**Simulcast:** Each sender encodes 3 quality layers simultaneously: High (1080p, 2.5 Mbps), Medium (480p, 500 Kbps), Low (180p, 100 Kbps). The SFU selects which layer to forward based on the recipient's bandwidth and whether the sender is the active speaker or a thumbnail.
+
+**Bandwidth savings:** In a 9-person meeting without simulcast, each person downloads 8 x 2.5 Mbps = 20 Mbps. With simulcast (1 HD active speaker + 7 low thumbnails): 2.5 + 7 x 0.1 = **3.2 Mbps** -- a 6x reduction.`
+        },
+        {
+          topic: 'Cascaded SFU Architecture for Global Meetings',
+          detail: `A single SFU cannot serve a meeting spanning US, Europe, and Asia with <150ms latency.
+
+**Cascaded SFUs:** Deploy regional SFU clusters (US-West, US-East, EU, Asia). Participants connect to the nearest SFU. SFUs relay streams between each other over dedicated backbone links with <50ms inter-SFU latency.
+
+**Tree topology:** For a meeting with participants in 3 regions, one SFU is elected as the "root." Each participant's stream traverses at most 2 SFU hops (local -> root -> remote). This limits latency while avoiding N-squared SFU-to-SFU connections.
+
+**Failover:** If a regional SFU fails, participants reconnect to the next nearest SFU within 2-3 seconds via ICE restart. The meeting continues without interruption for other regions.`
+        },
+        {
+          topic: 'Adaptive Bitrate and Congestion Control',
+          detail: `Network conditions change constantly during a meeting. The system must adapt in real-time.
+
+**Google Congestion Control (GCC):** WebRTC's built-in algorithm estimates available bandwidth by monitoring packet loss and round-trip time. When congestion is detected, the encoder reduces bitrate within 1-2 seconds.
+
+**Simulcast layer switching:** The SFU monitors each recipient's bandwidth. If a recipient's connection degrades, the SFU switches them from the High layer to Medium or Low -- instantly, with no re-negotiation needed. When bandwidth recovers, it switches back.
+
+**FEC (Forward Error Correction):** Add redundant packets so that 5-10% packet loss can be recovered without retransmission. This adds ~10% bandwidth overhead but eliminates visible artifacts (frozen frames, audio glitches).
+
+**Jitter buffer:** Client-side buffer absorbs network jitter (variable packet arrival times). Too small = choppy audio. Too large = added latency. Adaptive jitter buffers auto-tune between 20-200ms based on measured jitter.`
+        },
+        {
+          topic: 'Recording Architecture',
+          detail: `Cloud recording requires a "ghost participant" that captures all streams.
+
+**Recording bot:** A headless client joins the meeting as a participant, receiving all audio/video streams from the SFU. It records the raw RTP packets to a local buffer.
+
+**Composition:** The recording service composites multiple video streams into a single video file using a layout engine (gallery view or active speaker view). This is CPU-intensive -- approximately 1.5x real-time for transcoding.
+
+**Storage:** Raw recordings are stored in S3 during the meeting, then transcoded to MP4 (H.264 + AAC) post-meeting. A 1-hour meeting with 720p produces approximately **500 MB** of compressed video.
+
+**Transcription:** Audio is streamed to a speech-to-text service (Whisper or custom model) for real-time captions and post-meeting transcripts. Accuracy: ~95% for clear English.`
+        },
+        {
+          topic: 'NAT Traversal with STUN/TURN',
+          detail: `~85% of users are behind NAT (Network Address Translation) and cannot receive direct UDP connections.
+
+**STUN (Session Traversal Utilities for NAT):** Helps the client discover its public IP and port. Works for most NATs by exchanging probes with a STUN server. Lightweight -- just a few UDP packets during setup.
+
+**TURN (Traversal Using Relays around NAT):** When STUN fails (symmetric NAT, corporate firewalls), all media is relayed through a TURN server. This works universally but adds latency (~20-50ms) and bandwidth cost (server must forward all media).
+
+**Statistics:** ~85% of connections succeed with STUN only. ~13% need TURN relay. ~2% fail and fall back to TCP/443 tunneling (for firewalls blocking UDP entirely).
+
+**TURN infrastructure:** Zoom operates TURN servers in every major region. Each TURN server can relay ~10 Gbps of media traffic. Total TURN infrastructure: ~15% of total platform bandwidth.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'sfu-vs-mcu',
+          title: 'SFU vs MCU vs P2P',
+          headers: ['Aspect', 'SFU', 'MCU', 'Peer-to-Peer'],
+          rows: [
+            ['Server CPU', 'Low (forward only)', 'Very high (decode+encode)', 'None'],
+            ['Client CPU', 'High (decode N streams)', 'Low (decode 1 stream)', 'High (encode N-1)'],
+            ['Bandwidth', 'N-1 downloads per client', '1 download per client', 'N-1 uploads per client'],
+            ['Quality', 'Original per sender', 'Re-encoded (lower)', 'Original'],
+            ['Max Participants', '~1000', '~100', '~4-6'],
+            ['Best For', 'Most video meetings', 'Low-bandwidth clients', '1:1 calls'],
+          ],
+          verdict: 'SFU for standard meetings, P2P for 1:1 calls, MCU only for legacy low-bandwidth scenarios'
+        },
+        {
+          id: 'codecs',
+          title: 'Video Codecs: VP8 vs VP9 vs H.264 vs AV1',
+          headers: ['Aspect', 'VP8', 'VP9', 'H.264', 'AV1'],
+          rows: [
+            ['Compression', 'Baseline', '30-50% better than VP8', 'Similar to VP8', '30-50% better than VP9'],
+            ['CPU (Encode)', 'Low', 'Medium', 'Low (hardware)', 'Very high'],
+            ['Browser Support', 'Universal', 'Most browsers', 'Universal', 'Growing'],
+            ['Hardware Accel', 'Rare', 'Growing', 'Excellent', 'Emerging'],
+            ['Latency', 'Low', 'Low', 'Low', 'Higher (complexity)'],
+            ['License', 'Royalty-free', 'Royalty-free', 'Requires license', 'Royalty-free'],
+          ],
+          verdict: 'VP8/H.264 for lowest latency, VP9 for bandwidth savings, AV1 for future optimization'
+        },
+        {
+          id: 'transport-protocols',
+          title: 'Media Transport: UDP vs TCP vs QUIC',
+          headers: ['Aspect', 'UDP (Standard)', 'TCP Fallback', 'QUIC (Emerging)'],
+          rows: [
+            ['Latency', 'Lowest (no retransmit)', 'Higher (guaranteed delivery)', 'Low (0-RTT)'],
+            ['Packet Loss', 'Tolerated (FEC)', 'Retransmitted (head-of-line blocking)', 'Per-stream recovery'],
+            ['Firewall Friendly', 'Often blocked', 'Always works (port 443)', 'Usually works (port 443)'],
+            ['Congestion Control', 'WebRTC GCC', 'TCP built-in', 'Customizable'],
+            ['Usage', '~85% of connections', '~2% fallback', 'Experimental'],
+          ],
+          verdict: 'UDP with FEC as primary, TCP/443 as firewall fallback, QUIC as future direction'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'join-meeting-flow',
+          title: 'Join Meeting Flow',
+          description: 'Complete flow from clicking join to seeing video',
+          steps: [
+            { step: 1, label: 'Click Join', detail: 'User enters meeting ID + password' },
+            { step: 2, label: 'API Lookup', detail: 'Meeting service finds which SFU cluster hosts this meeting' },
+            { step: 3, label: 'Geo-Route', detail: 'Select nearest SFU region based on user IP geolocation' },
+            { step: 4, label: 'WebSocket Connect', detail: 'Establish signaling connection to SFU' },
+            { step: 5, label: 'SDP Exchange', detail: 'Negotiate codecs and media capabilities via offer/answer' },
+            { step: 6, label: 'ICE Gathering', detail: 'Discover network paths (STUN), fall back to TURN if needed' },
+            { step: 7, label: 'Media Flow', detail: 'Start sending/receiving audio+video via UDP to SFU' },
+            { step: 8, label: 'Layout Render', detail: 'Decode received streams, display gallery or active speaker view' },
+          ]
+        },
+        {
+          id: 'simulcast-selection',
+          title: 'Simulcast Layer Selection',
+          description: 'How the SFU selects quality layers for each recipient',
+          steps: [
+            { step: 1, label: 'Sender Encodes', detail: 'Client encodes 3 simultaneous layers: 1080p, 480p, 180p' },
+            { step: 2, label: 'Upload to SFU', detail: 'All 3 layers sent to SFU (total ~3 Mbps upload)' },
+            { step: 3, label: 'Bandwidth Estimate', detail: 'SFU monitors each recipient available bandwidth via RTCP' },
+            { step: 4, label: 'Speaker Detection', detail: 'SFU identifies active speaker via audio energy levels' },
+            { step: 5, label: 'Layer Selection', detail: 'Active speaker: High layer. Thumbnails: Low layer. Pinned: Medium.' },
+            { step: 6, label: 'Dynamic Switch', detail: 'If recipient bandwidth drops, instantly switch to lower layer' },
+          ]
+        },
+        {
+          id: 'recording-flow',
+          title: 'Cloud Recording Pipeline',
+          description: 'How meetings are recorded, stored, and made available',
+          steps: [
+            { step: 1, label: 'Start Recording', detail: 'Host clicks record -- notification shown to all participants' },
+            { step: 2, label: 'Bot Joins', detail: 'Headless recording client joins the SFU as a participant' },
+            { step: 3, label: 'Stream Capture', detail: 'Bot receives all audio+video streams from the SFU' },
+            { step: 4, label: 'Buffer to Disk', detail: 'Raw RTP packets buffered to local SSD on recording server' },
+            { step: 5, label: 'Meeting Ends', detail: 'Recording bot disconnects, raw media uploaded to S3' },
+            { step: 6, label: 'Transcode', detail: 'Compose multiple streams into single MP4 (H.264 + AAC)' },
+            { step: 7, label: 'Transcription', detail: 'Audio processed by speech-to-text for searchable transcript' },
+            { step: 8, label: 'Available', detail: 'Host receives notification with download link + transcript' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2d8cff',
+          items: [
+            { label: 'SFU Cluster', value: '50,000+ servers', bar: 95 },
+            { label: 'WebRTC (SRTP)', value: '<150ms latency', bar: 90 },
+            { label: 'Simulcast', value: '3 quality layers', bar: 70 },
+            { label: 'TURN Relays', value: '~15% of traffic', bar: 40 },
+            { label: 'Recording', value: 'S3 + Transcoding', bar: 50 },
+            { label: 'Signaling', value: '5M events/s', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '300M daily participants', value: 'Platform reach', bar: 100 },
+            { label: '3.3T meeting min/year', value: 'Total usage', bar: 95 },
+            { label: '~80M concurrent streams', value: 'Peak media load', bar: 90 },
+            { label: '120 Tbps bandwidth', value: 'Total media throughput', bar: 85 },
+            { label: '~55% market share', value: 'Industry dominance', bar: 80 },
+            { label: '99.999% uptime', value: 'Platform reliability', bar: 100 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Peer-to-Peer', description: 'Direct WebRTC connections between 2 participants with STUN server.', color: '#94a3b8', icon: 'server', capacity: '~4 participants', rps: '10', pros: ['Zero server infrastructure', 'Lowest possible latency', 'Simple implementation'], cons: ['N-squared bandwidth problem', 'No recording possible', 'NAT traversal unreliable'] },
+        { step: 2, title: 'Single SFU', description: 'Central SFU forwards streams, eliminating N-squared problem.', color: '#2d8cff', icon: 'video', capacity: '~50 participants', rps: '1K', pros: ['Scales to dozens of participants', 'Server-side recording', 'Bandwidth efficient'], cons: ['Single region only', 'SFU is single point of failure', 'No simulcast yet'] },
+        { step: 3, title: 'Simulcast + TURN', description: 'Multi-layer encoding with TURN fallback for corporate firewalls.', color: '#f59e0b', icon: 'layers', capacity: '~200 participants', rps: '10K', pros: ['Adaptive quality per recipient', 'Works behind firewalls', 'Active speaker detection'], cons: ['3x upload bandwidth', 'TURN relay costs', 'Complex codec negotiation'] },
+        { step: 4, title: 'Cascaded SFU', description: 'Regional SFU clusters connected via backbone for global meetings.', color: '#10b981', icon: 'globe', capacity: '~1000 participants', rps: '100K', pros: ['Global low latency', 'Regional fault isolation', 'Linear scaling'], cons: ['Inter-SFU relay adds hops', 'Complex topology management', 'Expensive infrastructure'] },
+        { step: 5, title: 'Planet Scale', description: 'AI noise suppression, E2E encryption, virtual backgrounds, breakout rooms.', color: '#7c3aed', icon: 'cpu', capacity: '10M+ concurrent', rps: '5M', pros: ['Full feature parity', 'AI-enhanced quality', 'E2E encryption option'], cons: ['Enormous infrastructure cost', 'ML model deployment at edge', 'Feature complexity'] },
+      ],
+
       // Backward compatibility
       requirements: ['Video/audio calls', 'Screen sharing', 'Chat', 'Recording', 'Virtual backgrounds', 'Up to 1000 participants'],
       components: ['Signaling server', 'Media server (SFU)', 'TURN servers', 'Recording service', 'Chat service'],
@@ -22077,6 +24505,39 @@ For very large meetings (webinars):
       color: '#0a66c2',
       difficulty: 'Hard',
       description: 'Design a professional networking platform with connections and job search.',
+
+      productMeta: {
+        name: 'LinkedIn',
+        tagline: 'Professional graph connecting 1B+ members with jobs and content',
+        stats: [
+          { label: 'Members', value: '1.2B+' },
+          { label: 'Monthly Active Users', value: '310M' },
+          { label: 'Companies', value: '69M+' },
+          { label: 'Revenue/Year', value: '$17.8B' },
+        ],
+        scope: {
+          inScope: ['Professional profiles with work history and skills', 'Connection graph with degree computation (1st/2nd/3rd)', 'Professional content feed', 'Job search and personalized recommendations', 'Messaging between members', 'People and company search'],
+          outOfScope: ['LinkedIn Learning courses', 'Sales Navigator CRM', 'LinkedIn Ads auction', 'Premium subscription billing', 'Event management'],
+        },
+        keyChallenge: 'Storing and traversing a social graph of 1.2B members with 100B+ connection edges, computing 2nd-degree connections in real-time for profile views and recommendations, and personalizing a professional feed for 310M monthly active users.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1.2B members, 310M MAU, 134M DAU, average 500 connections per active member, 100B+ connection edges.',
+        calculations: [
+          { label: 'Graph Edges', value: '100B+', detail: '1.2B members x ~170 avg connections x 2 (bidirectional)' },
+          { label: 'Graph Storage', value: '~2 TB', detail: '100B edges x 20 bytes per edge (IDs + timestamps)' },
+          { label: 'Profile Read QPS', value: '~15K/s', detail: '134M DAU x ~10 profile views/day / 86,400' },
+          { label: '2nd-Degree Computation', value: '<500ms', detail: 'Intersection of adjacency lists (~500 x 500 = 250K comparisons)' },
+          { label: 'Feed QPS', value: '~8K/s', detail: '134M DAU x 5 feed loads/day / 86,400' },
+          { label: 'Job Search QPS', value: '~3K/s', detail: '134M DAU x 2 job searches/day / 86,400' },
+          { label: 'Search Index', value: '~5 TB', detail: '1.2B member profiles + 69M companies + 15M active jobs' },
+          { label: 'Feed Storage', value: '~1 TB/month', detail: '~2M new posts/day x 5 KB avg x 30 days' },
+          { label: 'Message QPS', value: '~5K/s', detail: '134M DAU x 3 messages/day / 86,400' },
+          { label: 'Recommendation Compute', value: '~50 GPU hours/day', detail: 'Job-candidate matching ML model for 310M users' },
+        ]
+      },
 
       introduction: `LinkedIn combines a social graph with professional data to power networking, job matching, and content discovery. With 900M members and 100B+ connections, the graph operations are the core technical challenge.
 
@@ -22521,6 +24982,153 @@ Privacy: Option to view anonymously (hides viewer)
       ],
 
       // Backward compatibility
+      deepDiveTopics: [
+        {
+          topic: 'Social Graph Storage and Traversal',
+          detail: `LinkedIn's graph of 100B+ edges is too large for a single database. The custom graph store uses adjacency list representation.
+
+**Storage:** Each member's connections stored as a sorted list of member IDs. The entire graph is partitioned across ~100 shards by member ID hash. Each shard fits in memory (~20 GB per shard).
+
+**2nd-degree query:** To find mutual connections between members A and B: fetch A's adjacency list (500 IDs) and B's adjacency list (500 IDs), then compute the set intersection. With sorted lists, this is O(n+m) = ~1,000 comparisons in <10ms.
+
+**3rd-degree:** Much more expensive. For "People You May Know," pre-compute top candidates offline using graph algorithms (triangle counting, Jaccard similarity) and cache per member. Refresh daily.`
+        },
+        {
+          topic: 'Job-Candidate Matching with ML',
+          detail: `Matching 15M active jobs to 310M members requires sophisticated ML ranking.
+
+**Feature engineering:** Member features (skills, experience years, industry, location, seniority) and job features (required skills, company size, industry, salary range) are combined into a feature vector.
+
+**Model:** A deep learning model trained on historical successful placements predicts the probability of a member applying AND being hired. Features include: skill overlap score, experience match, location proximity, company connection strength (do they know someone there?).
+
+**Serving:** Pre-compute top 100 job recommendations per active member daily. Cache in a per-member recommendation store. Real-time re-ranking on job search using the same model with the search query as additional context.
+
+**Cold start:** New members get recommendations based on their stated skills and job title. New jobs are boosted in relevance for 48 hours to gather initial interaction signals.`
+        },
+        {
+          topic: 'Professional Feed Ranking',
+          detail: `LinkedIn's feed must balance engagement with professional relevance -- unlike Facebook, memes and clickbait are demoted.
+
+**Content classifier:** An NLP model scores each post on a "professional relevance" scale. Posts about career advice, industry news, and job changes score high. Personal life content and political rants score low.
+
+**Ranking signals:** P(like) x weight_like + P(comment) x weight_comment + P(share) x weight_share + professional_score x weight_professional. Comment weight is highest because LinkedIn values conversation.
+
+**Diversity rules:** No more than 2 consecutive posts from the same author. Mix post types (text, image, article, job change). Ensure industry diversity -- don't show all tech posts to a tech worker.
+
+**Creator-side optimization:** LinkedIn shows posts to a small test audience first (100-500 views), measures engagement, then decides whether to distribute more widely. This is why LinkedIn posts sometimes "go viral" 24 hours after posting.`
+        },
+        {
+          topic: 'Search Across Multiple Entity Types',
+          detail: `LinkedIn search spans members (1.2B), companies (69M), jobs (15M), and posts (billions).
+
+**Federated search:** A single search query is dispatched to multiple specialized indexes: people search (Elasticsearch with member profiles), job search (separate index optimized for skill matching), company search, and content search. Results are merged and re-ranked.
+
+**Personalization signals:** The same query "product manager" returns different results for different searchers. A recruiter sees candidates. A job seeker sees job listings. A networker sees connections. Personalization is applied as a re-ranking layer on top of relevance scores.
+
+**Typeahead:** Pre-computed suggestions based on the searcher's network. "J" might suggest "John Smith" (1st connection) before "Jane Doe" (2nd connection). Network proximity is a strong signal.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'graph-storage',
+          title: 'Graph Storage: Adjacency List vs Graph DB vs Relational',
+          headers: ['Aspect', 'Adjacency List (Custom)', 'Graph DB (Neo4j)', 'Relational (SQL)'],
+          rows: [
+            ['Traversal Speed', 'Excellent (in-memory)', 'Good (indexed)', 'Slow (JOIN-heavy)'],
+            ['2nd-Degree Query', '<10ms', '~50ms', '~500ms+'],
+            ['Storage Efficiency', 'Compact (sorted IDs)', 'Moderate (property graph)', 'High overhead (rows)'],
+            ['Flexibility', 'Limited (custom code)', 'Rich (Cypher queries)', 'Full SQL'],
+            ['Scaling', 'Custom sharding', 'Limited horizontal', 'Sharding complex'],
+            ['Used By', 'LinkedIn, Facebook', 'Startups, medium scale', 'Small social apps'],
+          ],
+          verdict: 'Custom adjacency list for web-scale social graphs, graph DB for rich property queries'
+        },
+        {
+          id: 'feed-models',
+          title: 'Feed: Chronological vs ML-Ranked vs Hybrid',
+          headers: ['Aspect', 'Chronological', 'ML-Ranked', 'Hybrid'],
+          rows: [
+            ['Freshness', 'Always latest', 'May surface old posts', 'Latest with boosting'],
+            ['Engagement', 'Lower (noise)', 'Higher (curated)', 'High'],
+            ['Transparency', 'Predictable', 'Black box', 'Partially transparent'],
+            ['Implementation', 'Simple sort by time', 'ML pipeline needed', 'Time + light ML'],
+            ['User Trust', 'Higher', 'Lower (filter bubble fear)', 'Moderate'],
+          ],
+          verdict: 'ML-ranked with professional content classifier and strong diversity rules'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'connection-request-flow',
+          title: 'Connection Request Flow',
+          description: 'End-to-end flow from sending a connection request to network merge',
+          steps: [
+            { step: 1, label: 'Send Request', detail: 'Member A clicks Connect on Member B profile with optional message' },
+            { step: 2, label: 'Spam Check', detail: 'Rate limit check (100/week), message quality score' },
+            { step: 3, label: 'Notify B', detail: 'Push notification + inbox message to Member B' },
+            { step: 4, label: 'B Accepts', detail: 'Member B clicks Accept in their notifications' },
+            { step: 5, label: 'Graph Update', detail: 'Add bidirectional edge A->B and B->A to graph store' },
+            { step: 6, label: 'Network Merge', detail: 'B\'s 1st-degree connections become A\'s 2nd-degree and vice versa' },
+            { step: 7, label: 'Feed Update', detail: 'A and B now see each other\'s posts in feed' },
+            { step: 8, label: 'PYMK Refresh', detail: 'Trigger re-computation of People You May Know for both' },
+          ]
+        },
+        {
+          id: 'job-recommendation-flow',
+          title: 'Job Recommendation Pipeline',
+          description: 'How personalized job recommendations are generated daily',
+          steps: [
+            { step: 1, label: 'Feature Extraction', detail: 'Extract member skills, experience, location, industry from profile' },
+            { step: 2, label: 'Candidate Generation', detail: 'Retrieve 1000 candidate jobs matching basic criteria (location, seniority)' },
+            { step: 3, label: 'ML Scoring', detail: 'Deep learning model predicts apply + hire probability for each job' },
+            { step: 4, label: 'Social Boost', detail: 'Boost jobs at companies where member has connections' },
+            { step: 5, label: 'Diversity Filter', detail: 'Ensure mix of industries, company sizes, and job levels' },
+            { step: 6, label: 'Cache Top 100', detail: 'Store ranked recommendations in per-member cache (refresh daily)' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#0a66c2',
+          items: [
+            { label: 'Graph Store', value: '100B+ edges in-memory', bar: 95 },
+            { label: 'Espresso (KV Store)', value: 'Profile serving', bar: 80 },
+            { label: 'Elasticsearch', value: '5 TB search index', bar: 70 },
+            { label: 'Kafka', value: 'Event streaming', bar: 60 },
+            { label: 'Samza (Stream)', value: 'Feed processing', bar: 55 },
+            { label: 'ML Platform', value: 'Job matching + feed ranking', bar: 75 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '1.2B members', value: 'Total registered', bar: 100 },
+            { label: '310M MAU', value: 'Monthly active users', bar: 80 },
+            { label: '100B+ edges', value: 'Connection graph', bar: 95 },
+            { label: '69M companies', value: 'Business profiles', bar: 60 },
+            { label: '15M active jobs', value: 'Open positions', bar: 50 },
+            { label: '$17.8B revenue', value: 'Annual revenue', bar: 85 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Basic Profiles', description: 'Simple member profiles with SQL database and basic search.', color: '#94a3b8', icon: 'server', capacity: '~100K members', rps: '100', pros: ['Simple CRUD', 'SQL queries', 'Easy to build'], cons: ['No graph features', 'No recommendations', 'Search is basic'] },
+        { step: 2, title: 'Social Graph', description: 'Connection graph with degree computation and People You May Know.', color: '#0a66c2', icon: 'users', capacity: '~10M members', rps: '5K', pros: ['Network effects', 'Mutual connections', 'PYMK feature'], cons: ['Graph traversal expensive', 'Sharding graph is hard', 'Stale PYMK cache'] },
+        { step: 3, title: 'Feed + Jobs', description: 'Professional content feed with ML ranking and job search with matching.', color: '#f59e0b', icon: 'layers', capacity: '~100M members', rps: '20K', pros: ['Content engagement', 'Job matching ML', 'Revenue from jobs'], cons: ['Feed ranking complexity', 'Content moderation', 'ML model drift'] },
+        { step: 4, title: 'Search + Messaging', description: 'Federated search across entities and real-time messaging (InMail).', color: '#10b981', icon: 'search', capacity: '~500M members', rps: '50K', pros: ['Unified search', 'Real-time messaging', 'Recruiter tools'], cons: ['Search federation complex', 'Spam in messaging', 'Multiple indexes to maintain'] },
+        { step: 5, title: 'Planet Scale', description: 'Global graph with 1B+ members, AI-powered recommendations, and multi-product platform.', color: '#7c3aed', icon: 'globe', capacity: '1.2B+ members', rps: '100K+', pros: ['Full professional platform', 'AI recommendations', 'Global reach'], cons: ['Massive infrastructure', 'Privacy regulation complexity', 'Feature interdependency'] },
+      ],
+
       requirements: ['User profiles', 'Connections (1st/2nd/3rd degree)', 'Feed', 'Jobs', 'Messaging', 'Search', 'Recommendations'],
       components: ['Profile service', 'Graph service', 'Feed service', 'Job service', 'Search (Elasticsearch)', 'Messaging', 'Recommendation engine'],
       keyDecisions: [
@@ -22612,6 +25220,39 @@ Privacy: Option to view anonymously (hides viewer)
       color: '#ef4444',
       difficulty: 'Hard',
       description: 'Design a system that aggregates billions of ad click events in real-time for billing, analytics, and fraud detection.',
+
+      productMeta: {
+        name: 'Ad Click Aggregation',
+        tagline: 'Processing billions of ad clicks daily for billing, analytics, and fraud detection',
+        stats: [
+          { label: 'Clicks/Day', value: '~500M' },
+          { label: 'Impressions/Day', value: '100B+' },
+          { label: 'Processing Latency', value: '<1 min' },
+          { label: 'Billing Accuracy', value: 'Exactly-once' },
+        ],
+        scope: {
+          inScope: ['Real-time click event ingestion and deduplication', 'Multi-window aggregation (1-min, 5-min, hourly, daily)', 'Fraud detection (rule-based + ML)', 'Advertiser billing reconciliation', 'Real-time dashboard for advertisers', 'Late event handling with watermarks'],
+          outOfScope: ['Ad serving and auction system', 'Creative asset management', 'Campaign targeting/bidding', 'Impression tracking', 'Advertiser account management'],
+        },
+        keyChallenge: 'Ensuring exactly-once click processing for billing accuracy while handling 10K+ events/second, detecting click fraud in real-time, and providing sub-minute aggregation latency for advertiser dashboards.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '500M clicks/day, 100B impressions/day, average CTR ~0.5%, 10M active ads, aggregation in 1-min/5-min/hourly windows.',
+        calculations: [
+          { label: 'Click Ingestion Rate', value: '~5,800/s', detail: '500M clicks / 86,400 seconds' },
+          { label: 'Peak Click Rate', value: '~20K/s', detail: '3.5x peak during prime time (evening hours)' },
+          { label: 'Kafka Throughput', value: '~50 MB/s', detail: '5,800 clicks/s x ~500 bytes per event (partitioned by ad_id)' },
+          { label: 'Aggregation Windows', value: '~1.44M', detail: '10M ads x 144 daily windows (1 per 10 min) = 1.44B aggregate rows/day' },
+          { label: 'ClickHouse Storage', value: '~500 GB/month', detail: 'Compressed aggregate rows + raw click archive' },
+          { label: 'Fraud Detection Rate', value: '~3-5%', detail: 'Percentage of clicks filtered as fraudulent' },
+          { label: 'Dedup Bloom Filter', value: '~2 GB', detail: '500M clicks/day x ~4 bytes per entry in sliding window' },
+          { label: 'Dashboard Query Latency', value: '<500ms', detail: 'Pre-aggregated materialized views in ClickHouse' },
+          { label: 'Billing Reconciliation', value: 'Hourly batch', detail: 'Cross-check stream aggregates with batch recount' },
+          { label: 'Late Event Window', value: '5 minutes', detail: 'Flink watermark allows 5 min of late data before closing window' },
+        ]
+      },
 
       introduction: `Ad click aggregation is a critical system at companies like Google, Facebook, and Amazon where advertising revenue depends on accurate click counting. The system must handle billions of events per day, aggregate them in near real-time, and ensure no click is lost or double-counted.
 
@@ -22709,6 +25350,158 @@ aggregated_clicks (OLAP store) {
                                    -> ML Pipeline (async) -> Flag retrospectively`
         }
       ],
+
+      deepDiveTopics: [
+        {
+          topic: 'Exactly-Once Processing with Kafka + Flink',
+          detail: `Billing accuracy demands exactly-once semantics -- no click can be double-counted or lost.
+
+**Kafka at-least-once:** Kafka guarantees each message is delivered at least once. Consumers may see duplicates during rebalancing or failure recovery.
+
+**Flink exactly-once:** Flink uses **checkpointing** (snapshots of operator state to durable storage) combined with **two-phase commit sinks**. On recovery, Flink replays from the last checkpoint, and the sink ensures no duplicate writes.
+
+**Deduplication layer:** Each click has a unique click_id. A **sliding-window Bloom filter** in Redis (24-hour TTL) catches duplicates that slip through Kafka rebalancing. The Bloom filter uses ~2 GB for 500M daily clicks with <1% false positive rate.
+
+**Reconciliation:** A batch job runs hourly, re-counting clicks from Kafka raw logs and comparing with stream aggregates. Discrepancies trigger alerts and automatic adjustment.`
+        },
+        {
+          topic: 'Lambda Architecture for Accuracy',
+          detail: `Combining real-time streaming with batch processing gives both speed and accuracy.
+
+**Speed layer (Flink):** Processes clicks in real-time with sub-minute latency. Provides approximate aggregates for dashboards. Optimized for low latency over perfect accuracy.
+
+**Batch layer (Spark):** Runs hourly/daily over complete click logs in S3. Produces exact aggregates by deduplicating perfectly and applying full ML fraud detection.
+
+**Serving layer (ClickHouse):** Stores both real-time and batch-corrected aggregates. Dashboard queries prefer batch results when available, falling back to streaming for the most recent windows.
+
+**Convergence:** Within 1 hour, batch catches up to streaming. Discrepancies are typically <0.1% -- within acceptable billing tolerance.`
+        },
+        {
+          topic: 'Click Fraud Detection Pipeline',
+          detail: `Click fraud costs advertisers billions annually. Detection operates at two speeds.
+
+**Inline rules (<10ms):** Same user clicking same ad >5 times/minute. Known bot user-agents. Data center IP ranges. Click-through rate anomaly (>10x normal). These are simple, fast, and catch ~70% of fraud.
+
+**Async ML model (<5 min):** Feature extraction on click patterns (timing, device fingerprint, geographic anomalies). A gradient-boosted tree model trained on labeled fraud data. Catches sophisticated fraud like click farms and attribution manipulation.
+
+**Retroactive adjustment:** When ML detects fraud after billing, the system issues automatic credit adjustments to advertisers within 24 hours. All adjustments are logged in the ledger with full audit trail.`
+        },
+        {
+          topic: 'Time-Window Aggregation with Watermarks',
+          detail: `Late-arriving events are inevitable in distributed systems. Watermarks define when to close a window.
+
+**Event time vs processing time:** Clicks are aggregated by event time (when the click happened) not processing time (when the server received it). This ensures consistent aggregates even when events arrive out of order.
+
+**Watermarks:** A watermark at time T means "all events before T have arrived." Flink advances the watermark based on the minimum event time across all Kafka partitions minus an allowed lateness (5 minutes).
+
+**Late events:** Events arriving after the watermark trigger incremental updates to already-emitted aggregates. Events more than 5 minutes late go to a dead letter queue for manual reconciliation.
+
+**Window types:** Tumbling windows (non-overlapping 1-min, 5-min, hourly, daily) for billing. Sliding windows for real-time dashboard smoothing.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'olap-engines',
+          title: 'OLAP Engines: ClickHouse vs Druid vs Pinot',
+          headers: ['Aspect', 'ClickHouse', 'Druid', 'Apache Pinot'],
+          rows: [
+            ['Query Language', 'Full SQL', 'Custom + limited SQL', 'SQL (PQL)'],
+            ['Ingestion', 'Batch + streaming', 'Native streaming', 'Native streaming'],
+            ['Compression', 'Excellent (columnar)', 'Good', 'Good'],
+            ['Real-time', 'Near real-time', 'Real-time', 'Real-time'],
+            ['Operations', 'Simple (single binary)', 'Complex (many components)', 'Moderate'],
+            ['Used By', 'Cloudflare, Uber', 'Airbnb, Netflix', 'LinkedIn, Uber'],
+          ],
+          verdict: 'ClickHouse for SQL familiarity and operational simplicity'
+        },
+        {
+          id: 'processing-models',
+          title: 'Exactly-Once vs At-Least-Once',
+          headers: ['Aspect', 'Exactly-Once (Flink)', 'At-Least-Once + Dedup'],
+          rows: [
+            ['Accuracy', 'Guaranteed by framework', 'Guaranteed by application'],
+            ['Throughput', 'Lower (checkpointing overhead)', 'Higher'],
+            ['Complexity', 'Framework handles it', 'Application-level dedup logic'],
+            ['Recovery Speed', 'Slower (replay from checkpoint)', 'Faster (resume from offset)'],
+            ['Best For', 'Billing pipeline', 'Analytics pipeline'],
+          ],
+          verdict: 'Exactly-once for billing, at-least-once with dedup for analytics'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'click-processing-pipeline',
+          title: 'Click Processing Pipeline',
+          description: 'End-to-end flow from ad click to aggregated billing',
+          steps: [
+            { step: 1, label: 'Click Event', detail: 'User clicks ad -- event sent to click collector (202 Accepted)' },
+            { step: 2, label: 'Kafka Publish', detail: 'Event published to Kafka topic partitioned by ad_id' },
+            { step: 3, label: 'Inline Fraud Filter', detail: 'Rule-based checks: rate limits, bot detection, IP reputation' },
+            { step: 4, label: 'Dedup Check', detail: 'Bloom filter checks click_id uniqueness (24-hour window)' },
+            { step: 5, label: 'Flink Aggregation', detail: 'Windowed count by ad_id + time window (1-min, 5-min, hourly)' },
+            { step: 6, label: 'Write to ClickHouse', detail: 'Aggregated results written to OLAP store for querying' },
+            { step: 7, label: 'Dashboard Serve', detail: 'Advertiser dashboard queries pre-aggregated materialized views' },
+            { step: 8, label: 'Batch Reconciliation', detail: 'Hourly Spark job re-counts from raw logs for billing accuracy' },
+          ]
+        },
+        {
+          id: 'fraud-detection-flow',
+          title: 'Two-Stage Fraud Detection',
+          description: 'How fraudulent clicks are caught inline and asynchronously',
+          steps: [
+            { step: 1, label: 'Click Arrives', detail: 'Raw click event enters the processing pipeline' },
+            { step: 2, label: 'Rule Engine', detail: 'Fast rules: velocity, bot UA, datacenter IP (<10ms)' },
+            { step: 3, label: 'Score Assignment', detail: 'fraud_score 0.0 (clean) to 1.0 (definite fraud)' },
+            { step: 4, label: 'Threshold Filter', detail: 'Score > 0.8: drop. Score 0.5-0.8: flag for review.' },
+            { step: 5, label: 'Clean Stream', detail: 'Passing clicks continue to aggregation pipeline' },
+            { step: 6, label: 'Async ML', detail: 'Flagged + sampled clicks sent to ML model for deep analysis' },
+            { step: 7, label: 'Retroactive Adjustment', detail: 'ML-detected fraud triggers billing credit within 24 hours' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#ef4444',
+          items: [
+            { label: 'Kafka (Ingestion)', value: '50 MB/s throughput', bar: 70 },
+            { label: 'Flink (Streaming)', value: 'Exactly-once processing', bar: 90 },
+            { label: 'ClickHouse (OLAP)', value: '<500ms dashboard queries', bar: 80 },
+            { label: 'Redis (Dedup)', value: '2 GB Bloom filter', bar: 40 },
+            { label: 'Spark (Batch)', value: 'Hourly reconciliation', bar: 50 },
+            { label: 'ML Fraud Model', value: '3-5% fraud detected', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '500M clicks/day', value: 'Ingestion volume', bar: 100 },
+            { label: '100B impressions', value: 'Daily ad delivery', bar: 95 },
+            { label: '<1 min latency', value: 'Aggregation freshness', bar: 85 },
+            { label: 'Exactly-once', value: 'Billing accuracy', bar: 100 },
+            { label: '3-5% fraud rate', value: 'Detected and filtered', bar: 40 },
+            { label: '27K peak TPS', value: 'Black Friday peak', bar: 70 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Database Counters', description: 'Increment a counter in PostgreSQL on each click event.', color: '#94a3b8', icon: 'database', capacity: '~1K clicks/s', rps: '1K', pros: ['Simple implementation', 'ACID guarantees', 'Easy to query'], cons: ['Database bottleneck', 'No streaming', 'No fraud detection'] },
+        { step: 2, title: 'Kafka + Batch', description: 'Log clicks to Kafka, aggregate hourly with Spark batch jobs.', color: '#ef4444', icon: 'layers', capacity: '~10K clicks/s', rps: '10K', pros: ['Durable event log', 'Exact batch counts', 'Scalable ingestion'], cons: ['Hourly latency', 'No real-time dashboard', 'Basic dedup only'] },
+        { step: 3, title: 'Stream Processing', description: 'Flink real-time aggregation with exactly-once semantics and watermarks.', color: '#f59e0b', icon: 'zap', capacity: '~100K clicks/s', rps: '100K', pros: ['Sub-minute latency', 'Exactly-once billing', 'Late event handling'], cons: ['Complex checkpointing', 'Streaming ops harder', 'No ML fraud yet'] },
+        { step: 4, title: 'Lambda Architecture', description: 'Stream + batch layers with ClickHouse OLAP and fraud detection ML.', color: '#10b981', icon: 'shield', capacity: '~500K clicks/s', rps: '500K', pros: ['Accurate billing', 'ML fraud detection', 'Fast dashboards'], cons: ['Two codepaths to maintain', 'ML model training pipeline', 'Higher infrastructure cost'] },
+        { step: 5, title: 'Global Multi-DC', description: 'Multi-datacenter with UTC normalization, global reconciliation, and real-time bidding integration.', color: '#7c3aed', icon: 'globe', capacity: '1M+ clicks/s', rps: '1M+', pros: ['Global coverage', 'Consistent aggregation', 'Real-time bidding signals'], cons: ['Cross-DC consistency', 'Enormous infrastructure', 'Regulatory compliance per region'] },
+      ],
+
+
 
       requirements: ['Real-time click ingestion', 'Multi-window aggregation', 'Fraud detection', 'Billing reconciliation', 'Advertiser dashboard'],
       components: ['Kafka', 'Flink/Spark Streaming', 'Redis (dedup)', 'ClickHouse/Druid (OLAP)', 'ML Fraud Service'],
@@ -22808,6 +25601,39 @@ aggregated_clicks (OLAP store) {
       difficulty: 'Hard',
       description: 'Design a typeahead/autocomplete system that suggests search queries as the user types.',
 
+      productMeta: {
+        name: 'Google Autocomplete',
+        tagline: 'Suggesting completions for 8.5B+ daily searches in under 100ms',
+        stats: [
+          { label: 'Searches/Day', value: '8.5B+' },
+          { label: 'Suggestion Latency', value: '<100ms' },
+          { label: 'Unique Queries', value: '~20%' },
+          { label: 'Trie Nodes', value: '5B+' },
+        ],
+        scope: {
+          inScope: ['Prefix-based query suggestions with top-K ranking', 'Time-decay scoring to favor recent/trending queries', 'Trie data structure with cached top-K at each node', 'Real-time trending query overlay', 'Content filtering for inappropriate suggestions', 'Personalized re-ranking per user'],
+          outOfScope: ['Full search results rendering', 'Search ranking algorithm', 'Spell correction / did-you-mean', 'Voice search', 'Image search suggestions'],
+        },
+        keyChallenge: 'Serving top-K suggestions in under 100ms for every keystroke across 8.5 billion daily searches, using a distributed trie that is periodically rebuilt from query logs while a real-time overlay surfaces trending queries within minutes.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '8.5B searches/day, ~10 keystrokes per search, ~80% trigger autocomplete, 5B unique query strings in trie.',
+        calculations: [
+          { label: 'Suggestion QPS', value: '~800K/s', detail: '8.5B x 10 keystrokes x 0.8 / 86,400' },
+          { label: 'Peak QPS', value: '~2M/s', detail: '2.5x peak during business hours' },
+          { label: 'Trie Memory', value: '~50 GB', detail: '5B nodes x ~10 bytes per node (compressed trie)' },
+          { label: 'Top-K Cache per Node', value: '~100 GB', detail: 'Top-10 suggestions cached at popular prefix nodes' },
+          { label: 'Query Log Volume', value: '~1 TB/day', detail: '8.5B queries x ~120 bytes per log entry' },
+          { label: 'Trie Rebuild Interval', value: '15 minutes', detail: 'Periodic full rebuild from aggregated query frequencies' },
+          { label: 'Trending Overlay Latency', value: '<2 minutes', detail: 'Flink streaming job detects trending queries' },
+          { label: 'Shard Count', value: '~256', detail: 'Trie sharded by first 2 characters of prefix' },
+          { label: 'Personalization Cache', value: '~20 GB', detail: 'Recent search history for active users in Redis' },
+          { label: 'Debounce Window', value: '50-100ms', detail: 'Client-side debounce to reduce server-side QPS' },
+        ]
+      },
+
       introduction: `Autocomplete (typeahead) is a core feature of search engines like Google. As the user types each character, the system must return the top suggestions within milliseconds. The system must handle billions of search queries to learn popular completions and update suggestions as trends change.
 
 The key data structure is a Trie (prefix tree) combined with frequency data. The challenge is serving suggestions with <100ms latency while the underlying data changes continuously.`,
@@ -22896,6 +25722,155 @@ trending_queries (real-time) {
         }
       ],
 
+      deepDiveTopics: [
+        {
+          topic: 'Trie Data Structure with Cached Top-K',
+          detail: `The trie (prefix tree) is the core data structure enabling O(prefix_length) lookups.
+
+**Structure:** Each node represents a character. A path from root to any node represents a prefix. At each **popular** prefix node, cache the top-K most frequent completions (e.g., top 10).
+
+**Lookup:** For prefix "goo", traverse root->'g'->'o'->'o' in 3 steps. Return the cached top-K at that node. No need to search the entire subtree.
+
+**Memory optimization:** Compressed trie (merge single-child chains like "gle" into one node). Only cache top-K at prefixes with >100 queries (skip rare prefixes). Shard by first 2 characters across servers (26x26 = 676 shards).
+
+**Rebuild:** Every 15 minutes, rebuild the trie from aggregated query frequency counts. The old trie serves reads while the new one is built, then atomically swap.`
+        },
+        {
+          topic: 'Real-Time Trending Overlay',
+          detail: `Standard trie rebuilds every 15 minutes, too slow for breaking events.
+
+**Architecture:** A separate Flink streaming job monitors query logs in real-time. When a query's rate exceeds 10x its historical baseline (similar to trending detection), it is added to a **trending overlay** in Redis.
+
+**Serving:** At query time, the system merges results from the static trie and the trending overlay. Trending suggestions get a score boost to appear above static results.
+
+**Lifecycle:** Trending queries are promoted to the main trie at the next rebuild. The overlay is ephemeral -- entries expire after 1 hour if they stop trending.
+
+**Example:** During a breaking news event, the trending overlay surfaces "#breaking" suggestions within 2 minutes, while the trie rebuild would take 15 minutes.`
+        },
+        {
+          topic: 'Personalized Re-Ranking',
+          detail: `Global suggestions work well but personal relevance improves user experience.
+
+**Approach:** Maintain a lightweight per-user history (last 100 queries) in Redis. At query time, re-rank the global top-K by boosting suggestions that match the user's recent search history or known interests.
+
+**Privacy:** User history is stored as anonymized query hashes, not raw text. The system can provide personalization without knowing the actual query content.
+
+**Cache impact:** Personalization reduces cache hit rates (different users see different suggestions). Mitigate by applying personalization as a client-side re-ranking of the global top-K, keeping the server-side cache shared.`
+        },
+        {
+          topic: 'Content Filtering and Safety',
+          detail: `Autocomplete must not suggest offensive, harmful, or legally problematic queries.
+
+**Blocklist:** A curated blocklist of terms that must never appear in suggestions (hate speech, adult content, defamation). Applied as a post-filter on every suggestion response.
+
+**ML classifier:** An async classifier scans new popular queries as they emerge. Queries flagged as potentially harmful are reviewed before being added to the trie.
+
+**Legal compliance:** Autocomplete suggestions can create legal liability (defamation, right to be forgotten). Implement a takedown request workflow for individuals and organizations.`
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'trie-vs-inverted-index',
+          title: 'Trie vs Inverted Index for Autocomplete',
+          headers: ['Aspect', 'Trie (Cached Top-K)', 'Inverted Index', 'ElasticSearch Prefix'],
+          rows: [
+            ['Lookup Speed', 'O(prefix_length) ~microseconds', 'O(log N) ~milliseconds', 'O(log N) ~milliseconds'],
+            ['Memory', 'High (in-memory trie)', 'Moderate (disk-based)', 'Moderate (disk-based)'],
+            ['Update Speed', 'Periodic rebuild (15 min)', 'Real-time indexing', 'Real-time indexing'],
+            ['Ranking', 'Pre-computed at each node', 'Score at query time', 'Score at query time'],
+            ['Infrastructure', 'Custom implementation', 'Standard search engine', 'Managed service'],
+            ['Best For', 'Latency-critical autocomplete', 'Full-text search + suggest', 'Quick prototype'],
+          ],
+          verdict: 'Trie for primary autocomplete, inverted index for long-tail and fuzzy matching'
+        },
+        {
+          id: 'scoring-methods',
+          title: 'Query Scoring: Frequency vs Time-Decay vs Personalized',
+          headers: ['Aspect', 'Raw Frequency', 'Time-Decay', 'Personalized'],
+          rows: [
+            ['Freshness', 'No (stale popular queries)', 'Yes (recent queries boosted)', 'Yes (user-specific)'],
+            ['Accuracy', 'Good for evergreen', 'Good for trending', 'Best for individuals'],
+            ['Cacheability', 'Excellent (global)', 'Good (rebuild every 15 min)', 'Poor (per-user)'],
+            ['Implementation', 'Simple count', 'Exponential decay function', 'ML re-ranking layer'],
+            ['Best For', 'Baseline system', 'Production system', 'Premium users'],
+          ],
+          verdict: 'Time-decay as default with personalized re-ranking overlay'
+        }
+      ],
+
+      flowcharts: [
+        {
+          id: 'suggestion-flow',
+          title: 'Autocomplete Suggestion Flow',
+          description: 'End-to-end from keystroke to displayed suggestions',
+          steps: [
+            { step: 1, label: 'User Types', detail: 'Keystroke in search box (e.g., "goo")' },
+            { step: 2, label: 'Debounce', detail: 'Client waits 50-100ms for more keystrokes before sending' },
+            { step: 3, label: 'API Request', detail: 'GET /api/suggest?prefix=goo&limit=10' },
+            { step: 4, label: 'Trie Lookup', detail: 'Traverse to node "g"->"o"->"o", read cached top-K' },
+            { step: 5, label: 'Trending Merge', detail: 'Merge trie results with Redis trending overlay' },
+            { step: 6, label: 'Personalize', detail: 'Re-rank based on user search history (optional)' },
+            { step: 7, label: 'Content Filter', detail: 'Remove blocked/offensive suggestions' },
+            { step: 8, label: 'Return', detail: 'Send top-10 suggestions to client (<100ms total)' },
+          ]
+        },
+        {
+          id: 'trie-rebuild-flow',
+          title: 'Trie Rebuild Pipeline',
+          description: 'How the trie is periodically rebuilt from aggregated query logs',
+          steps: [
+            { step: 1, label: 'Query Logs', detail: 'Completed searches logged to Kafka (8.5B/day)' },
+            { step: 2, label: 'Aggregate', detail: 'Flink computes query frequency counts with time-decay' },
+            { step: 3, label: 'Filter', detail: 'Remove queries with <5 occurrences (typos, unique queries)' },
+            { step: 4, label: 'Build Trie', detail: 'Construct new trie with top-K cached at each popular node' },
+            { step: 5, label: 'Shard', detail: 'Partition trie by first 2 characters (676 shards)' },
+            { step: 6, label: 'Deploy', detail: 'Distribute shards to serving nodes, atomic swap' },
+          ]
+        }
+      ],
+
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#4285f4',
+          items: [
+            { label: 'Distributed Trie', value: '50 GB in-memory', bar: 85 },
+            { label: 'Redis (Trending)', value: 'Real-time overlay', bar: 40 },
+            { label: 'Kafka (Query Logs)', value: '1 TB/day', bar: 70 },
+            { label: 'Flink (Aggregation)', value: 'Time-decay scoring', bar: 60 },
+            { label: 'Blocklist Filter', value: 'ML + curated', bar: 30 },
+            { label: '256 Trie Shards', value: 'Prefix partitioned', bar: 50 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '8.5B searches/day', value: 'Total search volume', bar: 100 },
+            { label: '800K suggestion QPS', value: 'Autocomplete queries', bar: 90 },
+            { label: '<100ms latency', value: 'End-to-end response', bar: 85 },
+            { label: '5B+ trie nodes', value: 'Query vocabulary', bar: 80 },
+            { label: '15-min refresh', value: 'Trie rebuild interval', bar: 50 },
+            { label: '<2 min trending', value: 'Breaking query surfacing', bar: 60 },
+          ]
+        }
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Database LIKE', description: 'SQL LIKE query on a query_log table for prefix matching.', color: '#94a3b8', icon: 'database', capacity: '~100 QPS', rps: '100', pros: ['No extra infrastructure', 'Simple to implement', 'Full SQL flexibility'], cons: ['Full table scan', 'Very slow at scale', 'No ranking'] },
+        { step: 2, title: 'In-Memory Trie', description: 'Single-server trie with frequency-based top-K at each node.', color: '#4285f4', icon: 'zap', capacity: '~10K QPS', rps: '10K', pros: ['O(prefix) lookups', 'Pre-computed top-K', 'Sub-millisecond latency'], cons: ['Single server limit', 'Stale until rebuild', 'No trending support'] },
+        { step: 3, title: 'Distributed + Trending', description: 'Sharded trie with real-time trending overlay from streaming pipeline.', color: '#f59e0b', icon: 'globe', capacity: '~500K QPS', rps: '500K', pros: ['Horizontal scaling', 'Trending in <2 min', 'Content filtering'], cons: ['Complex rebuild pipeline', 'Shard management', 'Overlay consistency'] },
+        { step: 4, title: 'Personalized', description: 'User-specific re-ranking based on search history and interests.', color: '#10b981', icon: 'users', capacity: '~1M QPS', rps: '1M', pros: ['Better relevance per user', 'Context-aware suggestions', 'Higher search conversion'], cons: ['Reduced cache hit rate', 'Privacy concerns', 'Per-user state management'] },
+        { step: 5, title: 'AI-Powered', description: 'Neural language models for semantic suggestions, spell correction, and multi-language support.', color: '#7c3aed', icon: 'cpu', capacity: '2M+ QPS', rps: '2M+', pros: ['Semantic understanding', 'Handles typos naturally', 'Multi-language'], cons: ['GPU inference cost', 'Model latency', 'Training data requirements'] },
+      ],
+
+
+
       requirements: ['Prefix-based suggestions', 'Popularity ranking', 'Real-time trending', 'Personalization', 'Content filtering'],
       components: ['Trie (distributed, in-memory)', 'Kafka', 'Flink', 'Redis', 'Zookeeper (sharding)'],
       keyDecisions: [
@@ -22934,6 +25909,39 @@ trending_queries (real-time) {
       color: '#ff9900',
       difficulty: 'Hard',
       description: 'Design a large-scale e-commerce platform supporting product catalog, search, cart, checkout, and order management.',
+
+      productMeta: {
+        name: 'Amazon E-Commerce',
+        tagline: 'Serving 12M+ orders daily across 600M products with sub-3-second checkout',
+        stats: [
+          { label: 'Orders/Day', value: '12M+' },
+          { label: 'Products', value: '600M+' },
+          { label: 'Daily Revenue', value: '$1.75B' },
+          { label: 'US Market Share', value: '~40%' },
+        ],
+        scope: {
+          inScope: ['Product catalog with search and filtering', 'Shopping cart with persistent state', 'Checkout with inventory reservation', 'Order management with status tracking', 'Personalized product recommendations', 'Flash sale inventory handling'],
+          outOfScope: ['Fulfillment/warehouse operations', 'Delivery logistics', 'Seller onboarding', 'Advertising platform', 'Prime membership management'],
+        },
+        keyChallenge: 'Processing 12M+ orders daily without overselling during flash sales, maintaining inventory consistency with optimistic locking across distributed services, and completing the checkout saga (reserve, charge, confirm) in under 3 seconds.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '300M DAU, 12M orders/day, 600M products, 100K concurrent users during flash sales.',
+        calculations: [
+          { label: 'Search QPS', value: '~35K/s', detail: '300M DAU x 10 searches/day / 86,400' },
+          { label: 'Order QPS', value: '~139/s', detail: '12M orders / 86,400 (avg), 10x during flash sales' },
+          { label: 'Cart Operations', value: '~50K/s', detail: 'Add/update/remove cart items across all users' },
+          { label: 'Product Catalog', value: '~6 TB', detail: '600M products x ~10 KB metadata each' },
+          { label: 'Search Index', value: '~10 TB', detail: 'Elasticsearch index with facets, descriptions, images' },
+          { label: 'Order Storage', value: '~500 GB/month', detail: '12M orders/day x 30 days x ~1.5 KB per order' },
+          { label: 'Redis Cart Cache', value: '~100 GB', detail: '50M active carts x ~2 KB each' },
+          { label: 'Checkout Latency', value: '<3 seconds', detail: 'Reserve inventory + charge payment + create order' },
+          { label: 'Flash Sale TPS', value: '~10K/item', detail: 'Peak concurrent purchases for a single hot item' },
+          { label: 'Recommendation Compute', value: '~200 GPU hours/day', detail: 'Collaborative filtering for 300M users' },
+        ]
+      },
 
       introduction: `An e-commerce platform like Amazon handles millions of products, concurrent users, and transactions daily. The system must provide fast product search, reliable inventory management, seamless checkout, and real-time order tracking.
 
@@ -23057,6 +26065,34 @@ If version mismatch, retry. If quantity = 0, sold out.
         }
       ],
 
+      deepDiveTopics: [
+        { topic: 'Flash Sale Inventory with Redis Tokens', detail: 'Pre-shard inventory into Redis tokens. Each token = right to purchase 1 unit. Use LPOP (atomic O(1)) instead of database-level locking. For a 10,000-unit flash sale: create 10,000 tokens in a Redis list. Each purchase attempts LPOP -- if the list is empty, sold out. This handles 100K+ TPS per item without database contention.' },
+        { topic: 'Saga Pattern for Distributed Checkout', detail: 'Checkout spans 4 services: Inventory (reserve), Payment (charge), Order (create), Notification (email). Each step has a compensating action. If payment fails after inventory is reserved, the compensating action releases the reservation. An orchestrator service coordinates the saga and handles partial failures. Idempotency keys prevent double-charging on retries.' },
+        { topic: 'Product Search with Elasticsearch', detail: 'Index 600M products with faceted search (brand, price range, rating, category). Use CDC (Change Data Capture) from PostgreSQL to keep the index fresh (<1 minute lag). Custom scoring: relevance x popularity (sales velocity) x promoted placement. Spell correction with did-you-mean suggestions.' },
+        { topic: 'Recommendation Engine', detail: 'Collaborative filtering: "users who bought X also bought Y." Item-based CF uses item-item similarity matrix (precomputed nightly). Real-time signals: current cart contents, browsing session, and recent purchases boost relevant recommendations. The model refreshes daily with 200 GPU hours of training.' }
+      ],
+      comparisonTables: [
+        { id: 'locking-strategies', title: 'Inventory Locking Strategies', headers: ['Aspect', 'Optimistic Locking', 'Pessimistic Locking', 'Redis Token'], rows: [['Contention', 'Retry on conflict', 'Blocks other writers', 'No contention'], ['Throughput', 'Good (normal load)', 'Low (lock waits)', 'Excellent (O(1))'], ['Complexity', 'Simple SQL', 'Simple SQL', 'Requires Redis'], ['Best For', 'Normal traffic', 'Guaranteed consistency', 'Flash sales']], verdict: 'Optimistic for normal, Redis tokens for flash sales' },
+        { id: 'cart-storage', title: 'Cart Storage: Redis vs Database vs Session', headers: ['Aspect', 'Redis', 'Database', 'Browser Session'], rows: [['Speed', 'Sub-ms reads', '5-10ms', 'Instant (client)'], ['Persistence', 'With persistence', 'Durable', 'Lost on clear'], ['Cross-Device', 'Yes (server-side)', 'Yes', 'No'], ['Cost', 'RAM-priced', 'Cheaper storage', 'Free']], verdict: 'Redis for active carts, database for durability' }
+      ],
+      flowcharts: [
+        { id: 'checkout-saga', title: 'Checkout Saga Flow', description: 'Distributed checkout across inventory, payment, and order services', steps: [{ step: 1, label: 'Validate Cart', detail: 'Check all items still available and prices unchanged' }, { step: 2, label: 'Reserve Inventory', detail: 'Decrement available count with optimistic lock (or Redis token)' }, { step: 3, label: 'Process Payment', detail: 'Authorize card via payment processor (Stripe/Adyen)' }, { step: 4, label: 'Create Order', detail: 'Insert order record with CONFIRMED status' }, { step: 5, label: 'Send Confirmation', detail: 'Email + push notification with order details' }, { step: 6, label: 'Compensate on Failure', detail: 'If any step fails: refund payment, release inventory, cancel order' }] },
+        { id: 'search-flow', title: 'Product Search Pipeline', description: 'How a search query becomes ranked product results', steps: [{ step: 1, label: 'Parse Query', detail: 'Spell check, tokenize, identify facet filters' }, { step: 2, label: 'Elasticsearch', detail: 'Full-text search + faceted filtering across 600M products' }, { step: 3, label: 'Relevance Score', detail: 'BM25 text relevance x popularity x promoted placement' }, { step: 4, label: 'Personalize', detail: 'Boost results based on user browsing history and preferences' }, { step: 5, label: 'Return Results', detail: 'Paginated results with facet counts for filter sidebar' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#ff9900', items: [{ label: 'Elasticsearch', value: '600M products indexed', bar: 90 }, { label: 'Redis (Cart + Tokens)', value: '100 GB active carts', bar: 70 }, { label: 'PostgreSQL (Orders)', value: '500 GB/month', bar: 60 }, { label: 'Kafka (Events)', value: 'Order status streaming', bar: 50 }, { label: 'ML Recommendations', value: '200 GPU hours/day', bar: 40 }, { label: 'CDN (Images)', value: 'Product images globally', bar: 80 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '12M orders/day', value: 'Transaction volume', bar: 100 }, { label: '600M products', value: 'Catalog size', bar: 95 }, { label: '$1.75B daily revenue', value: 'GMV', bar: 90 }, { label: '35K search QPS', value: 'Product searches', bar: 80 }, { label: '<3s checkout', value: 'End-to-end latency', bar: 85 }, { label: '~40% US market', value: 'Market dominance', bar: 75 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Monolith', description: 'Single app with catalog, cart, checkout, and inventory in one database.', color: '#94a3b8', icon: 'server', capacity: '~1K orders/day', rps: '10', pros: ['Simple deployment', 'ACID transactions', 'Easy debugging'], cons: ['Single point of failure', 'Cannot scale independently', 'Database bottleneck'] },
+        { step: 2, title: 'Service Split', description: 'Separate catalog, cart, order, and payment services with their own databases.', color: '#ff9900', icon: 'layers', capacity: '~100K orders/day', rps: '1K', pros: ['Independent scaling', 'Team ownership', 'Fault isolation'], cons: ['Distributed transactions', 'Service discovery', 'Network latency'] },
+        { step: 3, title: 'Search + Cache', description: 'Elasticsearch for product search, Redis for carts and hot data caching.', color: '#f59e0b', icon: 'search', capacity: '~1M orders/day', rps: '10K', pros: ['Fast faceted search', 'Sub-ms cart ops', 'High cache hit rate'], cons: ['Index staleness', 'Cache invalidation', 'More moving parts'] },
+        { step: 4, title: 'Flash Sale Ready', description: 'Redis token pre-sharding, Saga-based checkout, event-driven order processing.', color: '#10b981', icon: 'zap', capacity: '~10M orders/day', rps: '100K', pros: ['Handles flash sales', 'Reliable checkout', 'Event-driven analytics'], cons: ['Saga complexity', 'Eventual consistency', 'More infrastructure'] },
+        { step: 5, title: 'AI-Powered', description: 'Personalized recommendations, dynamic pricing, demand forecasting, and fraud detection.', color: '#7c3aed', icon: 'cpu', capacity: '12M+ orders/day', rps: '200K+', pros: ['Higher conversion', 'Dynamic pricing', 'Fraud prevention'], cons: ['ML pipeline complexity', 'Model training cost', 'Regulatory compliance'] },
+      ],
+
+
+
       requirements: ['Product catalog', 'Search', 'Cart', 'Checkout', 'Inventory management', 'Order tracking', 'Recommendations'],
       components: ['Product Service', 'Search (Elasticsearch)', 'Cart Service (Redis)', 'Order Service', 'Payment Service', 'Inventory Service', 'Recommendation Engine'],
       keyDecisions: [
@@ -23096,6 +26132,39 @@ If version mismatch, retry. If quantity = 0, sold out.
       color: '#25d366',
       difficulty: 'Hard',
       description: 'Design a real-time messaging application supporting 1:1 chats, group messaging, read receipts, and end-to-end encryption.',
+
+      productMeta: {
+        name: 'Messaging App',
+        tagline: 'Real-time messaging for billions of users with guaranteed delivery and E2E encryption',
+        stats: [
+          { label: 'Daily Active Users', value: '1B+' },
+          { label: 'Messages/Day', value: '100B+' },
+          { label: 'Concurrent Connections', value: '1B' },
+          { label: 'Delivery Latency', value: '<500ms' },
+        ],
+        scope: {
+          inScope: ['Real-time 1:1 and group messaging via WebSocket', 'Message delivery guarantees (sent/delivered/read)', 'Offline message queuing with store-and-forward', 'End-to-end encryption (Signal Protocol)', 'Media sharing (images, video, documents)', 'Presence and typing indicators'],
+          outOfScope: ['Voice/video calling', 'Status/Stories feature', 'Business API', 'Payment features', 'Sticker marketplace'],
+        },
+        keyChallenge: 'Maintaining 1 billion concurrent WebSocket connections across 10,000+ chat servers, delivering 100B messages/day with at-least-once semantics, and ensuring message ordering within conversations using server-assigned sequence numbers.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1B DAU, 50 messages/user/day, avg message 200 bytes, 256-member max group size, 30-second presence heartbeat.',
+        calculations: [
+          { label: 'Messages/Day', value: '50B', detail: '1B DAU x 50 messages/user = 50B messages' },
+          { label: 'Write QPS', value: '~580K/s', detail: '50B / 86,400 = 578K writes/sec average' },
+          { label: 'Peak Write QPS', value: '~1.5M/s', detail: '2.5x peak during events (New Year, holidays)' },
+          { label: 'Presence QPS', value: '~33M/s', detail: '1B users / 30s heartbeat = 33M heartbeats/sec' },
+          { label: 'Storage/Day (Text)', value: '~10 TB', detail: '50B x 200 bytes = 10 TB text per day' },
+          { label: 'Chat Servers', value: '10,000+', detail: '1B connections / 100K per server' },
+          { label: 'Kafka Partitions', value: '~10,000', detail: 'Cross-server message routing partitioned by recipient' },
+          { label: 'Redis Cluster', value: '~500 nodes', detail: 'Presence state + session mapping + sequence counters' },
+          { label: 'Media Storage/Day', value: '~50 TB', detail: '10% messages with media, avg 10 KB compressed' },
+          { label: 'Bandwidth', value: '~120 Gbps', detail: 'Message delivery + presence + media downloads' },
+        ]
+      },
 
       introduction: `A messaging app like WhatsApp serves billions of messages daily with real-time delivery, end-to-end encryption, and offline message queuing. The system must handle high concurrency, ensure message ordering, and provide reliable delivery even when recipients are offline.
 
@@ -23210,6 +26279,34 @@ messages {
         }
       ],
 
+      deepDiveTopics: [
+        { topic: 'WebSocket Connection Management at Scale', detail: 'Each Linux server handles ~100K concurrent WebSocket connections using epoll. With 1B DAU, you need ~10,000 chat servers. Each connection consumes ~10KB memory (buffers, state). Connection routing uses consistent hashing: Redis maps userId -> serverId for O(1) cross-server message routing. When a server is added/removed, only ~1/N users need reconnection.' },
+        { topic: 'Store-and-Forward Offline Delivery', detail: 'When a recipient is offline, messages are queued in a per-user offline_queue (Cassandra, partitioned by recipientId). On reconnect, the client sends its last_received_sequence_id. The server flushes all queued messages in order. After batch ACK from client, messages are removed from the queue. Queue entries have a 30-day TTL. Push notifications (FCM/APNs) alert offline users.' },
+        { topic: 'End-to-End Encryption (Signal Protocol)', detail: 'The Signal Protocol provides forward secrecy using the Double Ratchet algorithm. Initial key exchange via X3DH using pre-key bundles stored on server. Each message gets a unique encryption key. The server only sees encrypted blobs -- it cannot read message content. Group messaging uses Sender Keys: one symmetric key per group, rotated when members change.' },
+        { topic: 'Message Ordering with Sequence Numbers', detail: 'Each conversation has an atomic counter (Redis INCR on key seq:{conversationId}). Every message gets a server-assigned sequence number. Clients display messages sorted by sequence, never by client timestamp (clocks are unreliable). On reconnect, client provides lastSequenceNum and receives all messages after that number. For groups, the sequence counter is a hot key -- use range pre-allocation to reduce contention.' }
+      ],
+      comparisonTables: [
+        { id: 'message-storage', title: 'Message Storage: Cassandra vs PostgreSQL vs DynamoDB', headers: ['Aspect', 'Cassandra', 'PostgreSQL', 'DynamoDB'], rows: [['Write Speed', 'Excellent (LSM-tree)', 'Good', 'Good'], ['Partition Model', 'By conversationId', 'Sharding needed', 'By partition key'], ['Scaling', 'Linear (add nodes)', 'Vertical + shard', 'Auto-scaling'], ['Cost at Scale', 'Medium (self-managed)', 'Low', 'High (pay per RCU/WCU)'], ['Best For', 'Write-heavy messaging', 'Metadata/profiles', 'Serverless setups']], verdict: 'Cassandra for messages, PostgreSQL for profiles and groups' },
+        { id: 'delivery-semantics', title: 'Delivery: At-Most-Once vs At-Least-Once vs Exactly-Once', headers: ['Aspect', 'At-Most-Once', 'At-Least-Once', 'Exactly-Once'], rows: [['Message Loss', 'Possible', 'Never', 'Never'], ['Duplicates', 'Never', 'Possible', 'Never'], ['Complexity', 'Simplest', 'Moderate (ACK + dedup)', 'Most complex'], ['Use Case', 'Typing indicators', 'Chat messages', 'Payment messages']], verdict: 'At-least-once with client-side dedup for chat messages' }
+      ],
+      flowcharts: [
+        { id: 'send-message', title: 'Send Message Flow', description: 'Complete flow when User A messages User B (both online)', steps: [{ step: 1, label: 'Encrypt', detail: 'Client encrypts message with Signal Protocol' }, { step: 2, label: 'WebSocket Send', detail: 'Encrypted message sent to User A chat server' }, { step: 3, label: 'Assign Sequence', detail: 'Server assigns monotonic sequence number via Redis INCR' }, { step: 4, label: 'ACK Sent', detail: 'Server sends SENT acknowledgment (single tick) to sender' }, { step: 5, label: 'Persist', detail: 'Write to Cassandra (conversationId partition)' }, { step: 6, label: 'Route', detail: 'Lookup User B server in Redis, publish to Kafka' }, { step: 7, label: 'Deliver', detail: 'User B chat server delivers via WebSocket' }, { step: 8, label: 'ACK Delivered', detail: 'User B client sends DELIVERED ACK (double ticks)' }] },
+        { id: 'offline-delivery', title: 'Offline Message Delivery', description: 'How messages reach users who are not currently connected', steps: [{ step: 1, label: 'Check Presence', detail: 'Redis shows User B is OFFLINE' }, { step: 2, label: 'Queue Message', detail: 'Store in offline_queue (Cassandra, 30-day TTL)' }, { step: 3, label: 'Push Notification', detail: 'Send FCM/APNs alert (no content for privacy)' }, { step: 4, label: 'User Opens App', detail: 'User B launches app, establishes WebSocket' }, { step: 5, label: 'Flush Queue', detail: 'Server delivers all queued messages in sequence order' }, { step: 6, label: 'Batch ACK', detail: 'Client ACKs all delivered messages, queue entries removed' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#25d366', items: [{ label: 'Chat Servers', value: '10,000+ (100K conn each)', bar: 95 }, { label: 'Kafka', value: 'Cross-server routing', bar: 80 }, { label: 'Redis', value: 'Presence + sessions + seq', bar: 85 }, { label: 'Cassandra', value: 'Message storage (10 TB/day)', bar: 90 }, { label: 'S3 + CDN', value: 'Media storage', bar: 60 }, { label: 'FCM/APNs', value: 'Push notifications', bar: 40 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '1B DAU', value: 'Daily active users', bar: 100 }, { label: '100B msgs/day', value: 'Message volume', bar: 95 }, { label: '1.5M peak QPS', value: 'Write throughput', bar: 85 }, { label: '33M QPS', value: 'Presence heartbeats', bar: 90 }, { label: '<500ms delivery', value: 'Online message latency', bar: 80 }, { label: '10 TB/day', value: 'Text storage growth', bar: 70 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Server', description: 'One WebSocket server with in-memory message store.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build', 'No coordination', 'Low latency'], cons: ['Single point of failure', 'Memory limited', 'No offline delivery'] },
+        { step: 2, title: 'Persistent Storage', description: 'Add database for message persistence and offline delivery queue.', color: '#25d366', icon: 'database', capacity: '~100K users', rps: '5K', pros: ['Message durability', 'Offline delivery', 'Chat history'], cons: ['Database bottleneck', 'Single region', 'No encryption'] },
+        { step: 3, title: 'Distributed', description: 'Multiple chat servers with Kafka routing and Redis presence.', color: '#f59e0b', icon: 'layers', capacity: '~10M users', rps: '100K', pros: ['Horizontal scaling', 'Cross-server routing', 'Presence tracking'], cons: ['Message ordering complexity', 'Kafka operations', 'Connection management'] },
+        { step: 4, title: 'E2E Encrypted', description: 'Signal Protocol encryption, group messaging, and media sharing pipeline.', color: '#10b981', icon: 'shield', capacity: '~100M users', rps: '500K', pros: ['Privacy guarantee', 'Group messaging', 'Media support'], cons: ['No server-side search', 'Key management', 'Multi-device complexity'] },
+        { step: 5, title: 'Planetary Scale', description: 'Multi-region deployment with cross-region Kafka, presence optimization, and 1B+ concurrent connections.', color: '#7c3aed', icon: 'globe', capacity: '1B+ users', rps: '1.5M+', pros: ['Global low latency', 'Regional fault isolation', 'Presence batching'], cons: ['Cross-region consistency', 'Enormous infrastructure', 'Erlang/BEAM expertise'] },
+      ],
+
+
+
       requirements: ['Real-time messaging', 'Group chats', 'Read receipts', 'Media sharing', 'Offline delivery', 'E2E encryption'],
       components: ['WebSocket Gateway', 'Message Service', 'Presence Service', 'Queue (Kafka)', 'Cassandra (messages)', 'Redis (presence/sessions)', 'Push Notification Service', 'Media Service (S3)'],
       keyDecisions: [
@@ -23248,6 +26345,39 @@ messages {
       color: '#632ca6',
       difficulty: 'Medium',
       description: 'Design a metrics monitoring and alerting system that collects, stores, queries, and alerts on time-series data.',
+
+      productMeta: {
+        name: 'Metrics Monitoring (Datadog/Prometheus)',
+        tagline: 'Ingesting 10M+ data points per second with real-time dashboards and alerting',
+        stats: [
+          { label: 'Data Points/sec', value: '10M+' },
+          { label: 'Unique Time Series', value: '1M+' },
+          { label: 'Query Latency', value: '<1 second' },
+          { label: 'Alert Evaluation', value: '<30 seconds' },
+        ],
+        scope: {
+          inScope: ['Collect metrics from agents on thousands of hosts', 'Time-series storage with compression', 'Dashboard queries with aggregation', 'Alerting with threshold conditions', 'Downsampling for long-term retention', 'Custom metric support from application code'],
+          outOfScope: ['Log aggregation', 'Distributed tracing', 'Synthetic monitoring', 'Error tracking', 'Incident management'],
+        },
+        keyChallenge: 'Ingesting 10M+ data points per second with delta-of-delta + XOR compression (10x savings), supporting flexible dashboard queries across 1M+ unique time series in under 1 second, and evaluating thousands of alert rules every 30 seconds with minimal false positives.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '10,000 hosts, each reporting 100 metrics every 10 seconds, 1M unique time series, 13-month retention.',
+        calculations: [
+          { label: 'Ingestion Rate', value: '10M pts/s', detail: '10K hosts x 100 metrics x 6 reports/min / 60' },
+          { label: 'Raw Storage/Day', value: '~13 TB', detail: '10M pts/s x 16 bytes x 86,400 seconds' },
+          { label: 'Compressed Storage/Day', value: '~1.3 TB', detail: '10x compression with delta-of-delta + XOR' },
+          { label: '13-Month Storage', value: '~120 TB', detail: 'Full-res 7 days + 1-min 30 days + 1-hr 13 months' },
+          { label: 'Dashboard QPS', value: '~500/s', detail: '10K users x 5 dashboard loads/hour / 100 (cached)' },
+          { label: 'Alert Rules', value: '~50K', detail: 'Across all teams and services' },
+          { label: 'Alert Evaluation Rate', value: '~1,700 rules/s', detail: '50K rules / 30s evaluation interval' },
+          { label: 'Kafka Buffer', value: '~5 TB', detail: 'Ingestion buffer with 6-hour retention' },
+          { label: 'Memory (Hot Data)', value: '~500 GB', detail: 'Last 2 hours of all metrics in RAM for fast queries' },
+          { label: 'Cardinality Limit', value: '~10K per metric', detail: 'Max unique tag combinations to prevent explosion' },
+        ]
+      },
 
       introduction: `A metrics monitoring system like Datadog or Prometheus collects time-series data from thousands of services, stores it efficiently, and enables real-time dashboards and alerting. The system must handle millions of data points per second while supporting flexible queries.
 
@@ -23354,6 +26484,34 @@ alert_rules {
         }
       ],
 
+      deepDiveTopics: [
+        { topic: 'Delta-of-Delta + XOR Compression', detail: 'Time-series data has extreme regularity: timestamps arrive at fixed intervals, and consecutive values are similar. Delta-of-delta encoding: raw timestamps 1000, 1010, 1020, 1030 -> deltas 10, 10, 10 -> delta-of-delta 0, 0, 0 (stored in 1-2 bits each). XOR encoding for values: consecutive CPU readings 72.5, 72.6, 72.4 have XORs with many leading zeros, stored in just a few bits. Result: 16 bytes/point raw -> ~1.4 bytes/point compressed (10x savings).' },
+        { topic: 'Alert Evaluation with High Availability', detail: 'Multiple alert evaluators run with leader election (via ZooKeeper). Only the leader sends notifications to prevent duplicate alerts. All evaluators compute independently for consistency checking. If the leader dies, a follower takes over within seconds. Alert state machine: OK -> PENDING (threshold met once) -> FIRING (threshold met for duration) -> RESOLVED (back to normal). Hysteresis prevents flapping: trigger at 90% CPU, resolve at 80%.' },
+        { topic: 'Cardinality Explosion Prevention', detail: 'High-cardinality labels (e.g., user_id as a tag) create millions of unique time series, exhausting memory. Enforce limits: max 10K unique tag combinations per metric name. Auto-aggregate high-cardinality tags. Alert on cardinality growth rate. Example: http.requests{status=200, path=/api/users/123} has unbounded cardinality. Solution: aggregate to http.requests{status=2xx, path=/api/users/*}.' },
+        { topic: 'Multi-Tier Storage Architecture', detail: 'Recent data (last 2 hours) kept in memory for fastest queries. Medium-term (7 days) on local SSD with full resolution. 30-day data downsampled to 1-minute resolution. 13-month data downsampled to 1-hour resolution on object storage (S3). Queries automatically route to the correct tier based on time range. Downsampling preserves min, max, avg, and percentiles -- not just averages.' }
+      ],
+      comparisonTables: [
+        { id: 'tsdb-comparison', title: 'Time-Series Databases', headers: ['Aspect', 'Prometheus', 'InfluxDB', 'TimescaleDB'], rows: [['Model', 'Pull-based', 'Push-based', 'SQL (PostgreSQL)', ], ['Query Language', 'PromQL', 'InfluxQL / Flux', 'SQL + custom', ], ['Clustering', 'Federation only', 'Enterprise only', 'Multi-node', ], ['Compression', 'Gorilla (excellent)', 'Good', 'Good (columnar)', ], ['Best For', 'Kubernetes monitoring', 'IoT / high-cardinality', 'SQL-familiar teams', ]], verdict: 'Prometheus for Kubernetes, custom TSDB for massive scale' },
+        { id: 'push-vs-pull', title: 'Push vs Pull Collection', headers: ['Aspect', 'Pull (Prometheus)', 'Push (Datadog Agent)'], rows: [['Control', 'Central scrape config', 'Agent self-reports'], ['Short-lived Jobs', 'Needs push gateway', 'Native support'], ['Service Discovery', 'Required', 'Not required'], ['Firewall', 'Collector needs access', 'Agent pushes out'], ['Scaling', 'Scraper bottleneck', 'Scales with agents']], verdict: 'Pull for long-lived services, push for ephemeral jobs and firewalled environments' }
+      ],
+      flowcharts: [
+        { id: 'metric-pipeline', title: 'Metric Ingestion Pipeline', description: 'From agent collection to queryable storage', steps: [{ step: 1, label: 'Agent Collects', detail: 'Host agent scrapes /metrics endpoint every 10 seconds' }, { step: 2, label: 'Batch Send', detail: 'Agent batches data points and sends to ingestion endpoint' }, { step: 3, label: 'Kafka Buffer', detail: 'Events buffered in Kafka for reliability (6-hour retention)' }, { step: 4, label: 'Cardinality Check', detail: 'Validate tag cardinality limits before storage' }, { step: 5, label: 'Write to TSDB', detail: 'Compressed write to time-series storage (delta-of-delta + XOR)' }, { step: 6, label: 'Query Ready', detail: 'Data available for dashboard queries within seconds' }] },
+        { id: 'alert-flow', title: 'Alert Evaluation Flow', description: 'How alert rules are evaluated and notifications dispatched', steps: [{ step: 1, label: 'Load Rules', detail: 'Alert manager reads 50K rules from config store' }, { step: 2, label: 'Evaluate (30s)', detail: 'Leader evaluator runs each rule query against TSDB' }, { step: 3, label: 'State Machine', detail: 'OK -> PENDING -> FIRING -> RESOLVED transition' }, { step: 4, label: 'Group Alerts', detail: 'Batch related alerts by service/dependency to prevent storms' }, { step: 5, label: 'Notify', detail: 'Send to configured channels: Slack, PagerDuty, email' }, { step: 6, label: 'Escalate', detail: 'If unacknowledged after 5 min, escalate to next on-call' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#632ca6', items: [{ label: 'Collection Agents', value: '10K+ hosts', bar: 80 }, { label: 'Kafka Buffer', value: '5 TB retention', bar: 50 }, { label: 'Time-Series DB', value: '120 TB (13 months)', bar: 90 }, { label: 'Query Engine', value: '<1s dashboard queries', bar: 75 }, { label: 'Alert Manager', value: '50K rules, 30s eval', bar: 70 }, { label: 'Notification Service', value: 'Slack, PagerDuty, email', bar: 40 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '10M pts/sec', value: 'Ingestion throughput', bar: 100 }, { label: '1M+ time series', value: 'Unique metrics tracked', bar: 85 }, { label: '10x compression', value: 'Delta + XOR encoding', bar: 90 }, { label: '<30s alert eval', value: 'Detection latency', bar: 80 }, { label: '13 months', value: 'Retention with downsampling', bar: 70 }, { label: '~1.4 bytes/point', value: 'Compressed storage', bar: 95 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Log Files', description: 'Metrics written to local log files, grepped for debugging.', color: '#94a3b8', icon: 'server', capacity: '~10 hosts', rps: '100', pros: ['Zero infrastructure', 'Simple to start', 'No dependencies'], cons: ['No aggregation', 'No alerting', 'Manual analysis'] },
+        { step: 2, title: 'StatsD + Graphite', description: 'Push-based counters with Carbon storage and Graphite rendering.', color: '#632ca6', icon: 'activity', capacity: '~100 hosts', rps: '10K', pros: ['Simple push model', 'Basic dashboards', 'Counter aggregation'], cons: ['Limited query language', 'No labels/tags', 'Scaling issues'] },
+        { step: 3, title: 'Prometheus', description: 'Pull-based with PromQL, service discovery, and Alertmanager.', color: '#f59e0b', icon: 'search', capacity: '~1,000 hosts', rps: '500K', pros: ['Rich query language', 'Label-based metrics', 'Native Kubernetes'], cons: ['Single-instance limits', 'No long-term storage', 'Federation complexity'] },
+        { step: 4, title: 'Distributed TSDB', description: 'Custom or managed TSDB with multi-tier storage, compression, and HA alerting.', color: '#10b981', icon: 'database', capacity: '~10,000 hosts', rps: '10M', pros: ['10M points/sec', 'Long-term retention', 'HA alerting'], cons: ['Complex operations', 'Custom query engine', 'Cardinality management'] },
+        { step: 5, title: 'Full Observability', description: 'Unified metrics + traces + logs with AI anomaly detection and auto-remediation.', color: '#7c3aed', icon: 'cpu', capacity: '100K+ hosts', rps: '100M+', pros: ['Correlated signals', 'AI anomaly detection', 'Auto-remediation'], cons: ['Enormous data volume', 'AI false positives', 'Cost management'] },
+      ],
+
+
+
       requirements: ['Metric collection', 'Time-series storage', 'Dashboard queries', 'Alerting', 'Downsampling', 'Notifications'],
       components: ['Collection Agents', 'Kafka (ingestion)', 'Time-Series DB', 'Query Engine', 'Alert Manager', 'Notification Service', 'Dashboard UI'],
       keyDecisions: [
@@ -23390,6 +26548,39 @@ alert_rules {
       color: '#635bff',
       difficulty: 'Hard',
       description: 'Design a payment gateway that processes credit card transactions, handles settlements, and ensures financial consistency.',
+
+      productMeta: {
+        name: 'Payment Gateway (Stripe)',
+        tagline: 'Processing $1.9T in payments annually with 99.999% API success rate',
+        stats: [
+          { label: 'Volume/Year', value: '$1.9T' },
+          { label: 'API Requests/Day', value: '500M+' },
+          { label: 'Peak TPS', value: '27K+' },
+          { label: 'API Success Rate', value: '99.999%' },
+        ],
+        scope: {
+          inScope: ['Credit/debit card payment processing', 'Authorization, capture, and refund flows', 'Idempotent payment requests', 'Multi-currency support', 'PCI-DSS compliance with tokenization', 'Double-entry ledger for financial consistency'],
+          outOfScope: ['Merchant onboarding KYC', 'Tax calculation engine', 'Invoice generation', 'Subscription billing logic', 'Banking-as-a-service'],
+        },
+        keyChallenge: 'Ensuring exactly-once payment processing via idempotency keys, maintaining a balanced double-entry ledger for every transaction, handling the auth/capture/settle lifecycle with card networks, and achieving 99.999% API success rate at 27K+ peak TPS.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '500M API requests/day, ~2M fraud checks/sec, T+2 settlement cycle, multi-currency across 135 currencies.',
+        calculations: [
+          { label: 'API QPS', value: '~5,800/s', detail: '500M requests / 86,400 seconds' },
+          { label: 'Peak QPS (BFCM)', value: '27K+/s', detail: 'Black Friday / Cyber Monday peak' },
+          { label: 'Payment Latency', value: '<2 seconds', detail: 'API -> fraud check -> card network -> response' },
+          { label: 'Fraud ML Inference', value: '2M/s', detail: 'Real-time scoring of every transaction' },
+          { label: 'Ledger Entries/Day', value: '~1B', detail: '500M transactions x 2 entries (debit + credit) each' },
+          { label: 'Idempotency Cache', value: '~50 GB', detail: '500M keys x 100 bytes x 24-hour TTL' },
+          { label: 'Settlement Batches', value: '~100K/day', detail: 'Grouped by acquirer bank and currency' },
+          { label: 'Webhook Deliveries', value: '~500M/day', detail: 'Payment events pushed to merchant webhooks' },
+          { label: 'PCI Tokenization', value: '~5,800/s', detail: 'Every card number tokenized before storage' },
+          { label: 'Audit Log Storage', value: '~2 TB/month', detail: 'Full audit trail of every operation for compliance' },
+        ]
+      },
 
       introduction: `A payment gateway like Stripe processes billions of dollars in transactions, connecting merchants to payment networks (Visa, Mastercard). The system must guarantee that money is never lost, double-charged, or incorrectly routed, even during failures.
 
@@ -23513,6 +26704,34 @@ Every payment creates balanced debit + credit entries:
         }
       ],
 
+      deepDiveTopics: [
+        { topic: 'Idempotency Key Pattern', detail: 'Every payment request includes a client-generated idempotency key (UUID). Before processing, the server checks if this key exists in the database. If yes, return the cached response without reprocessing. If no, insert the key with status=PROCESSING, execute the payment, then update with status=COMPLETE and the response. Edge case: if status=PROCESSING on lookup (server crashed mid-payment), query the card network to determine the outcome before proceeding.' },
+        { topic: 'Double-Entry Ledger', detail: 'Every financial transaction creates balanced debit + credit entries. Authorization: hold on customer account (debit) + receivable for merchant (credit). Capture: move from receivable to merchant available balance. Refund: debit merchant balance + credit customer. The ledger must always balance to zero across all accounts. This is non-negotiable for financial systems -- it ensures no money is created or destroyed by bugs.' },
+        { topic: 'PCI-DSS Compliance and Tokenization', detail: 'Raw card numbers (PAN) must never be stored, logged, or transmitted in plaintext. Tokenization: when a card is first used, generate a random token (e.g., tok_abc123). Store the PAN in a hardened vault (encrypted at rest, HSM-backed keys). All subsequent API calls use the token. The tokenization service is the only system that touches raw card data -- this limits the PCI audit scope dramatically.' },
+        { topic: 'Settlement Lifecycle', detail: 'Authorization: funds held on customer card (7-day hold for Visa, 30-day for Mastercard). Capture: move held funds to gateway. Daily batch settlement: gateway sends captured transactions to acquirer bank. Acquirer settles with card networks (interchange fees deducted). Funds arrive in merchant bank account T+2 (two business days). Refunds reverse this flow but take 5-10 business days to appear on statement.' }
+      ],
+      comparisonTables: [
+        { id: 'auth-capture', title: 'Auth-Only vs Auth+Capture vs Direct Charge', headers: ['Aspect', 'Auth-Only', 'Auth + Capture', 'Direct Charge'], rows: [['Fund Hold', 'Yes (no transfer)', 'Yes then transfer', 'Immediate transfer'], ['Use Case', 'Hotels, car rentals', 'E-commerce (ship later)', 'Digital goods'], ['Refund Complexity', 'Release hold (simple)', 'Full reversal needed', 'Full reversal needed'], ['Settlement', 'No settlement until capture', 'On capture', 'Immediate']], verdict: 'Auth+Capture for e-commerce, Direct Charge for digital goods' },
+        { id: 'consistency-models', title: 'Payment Consistency: Sync vs Async', headers: ['Aspect', 'Synchronous', 'Asynchronous'], rows: [['User Experience', 'Immediate confirmation', 'Processing... please wait'], ['Complexity', 'Simpler error handling', 'Webhook-based status updates'], ['Reliability', 'Fails if downstream slow', 'Tolerates transient failures'], ['Best For', 'Authorization', 'Settlement, reconciliation']], verdict: 'Synchronous for authorization, async for settlement and webhooks' }
+      ],
+      flowcharts: [
+        { id: 'payment-flow', title: 'Payment Authorization Flow', description: 'Complete flow from merchant request to card network approval', steps: [{ step: 1, label: 'Merchant Request', detail: 'POST /api/payments with amount, card token, idempotency key' }, { step: 2, label: 'Idempotency Check', detail: 'Check if key already processed; if so, return cached result' }, { step: 3, label: 'Fraud Scoring', detail: 'ML model scores transaction risk (0-100), block if >80' }, { step: 4, label: 'Detokenize', detail: 'Retrieve raw card data from tokenization vault (PCI scope)' }, { step: 5, label: 'Card Network', detail: 'Send auth request to Visa/Mastercard via acquirer' }, { step: 6, label: 'Issuer Decision', detail: 'Cardholder bank approves/declines, places hold on funds' }, { step: 7, label: 'Ledger Entry', detail: 'Create debit (customer hold) + credit (merchant receivable)' }, { step: 8, label: 'Return Result', detail: 'Return authorized/declined status to merchant' }] },
+        { id: 'settlement-flow', title: 'Daily Settlement Batch', description: 'How captured payments become funds in merchant accounts', steps: [{ step: 1, label: 'Batch Close', detail: 'End-of-day: collect all captured payments since last batch' }, { step: 2, label: 'Net Calculation', detail: 'Subtract refunds, calculate net payout per merchant' }, { step: 3, label: 'Acquirer Submit', detail: 'Submit batch to acquirer bank for settlement' }, { step: 4, label: 'Interchange', detail: 'Card network deducts interchange fees (~2-3%)' }, { step: 5, label: 'Fund Transfer', detail: 'Net amount transferred to merchant bank account (T+2)' }, { step: 6, label: 'Reconciliation', detail: 'Match settled amounts with internal ledger, flag discrepancies' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#635bff', items: [{ label: 'Payment API', value: '27K+ peak TPS', bar: 90 }, { label: 'Fraud ML Model', value: '2M inferences/sec', bar: 85 }, { label: 'Tokenization Vault', value: 'HSM-backed encryption', bar: 70 }, { label: 'Double-Entry Ledger', value: '1B entries/day', bar: 80 }, { label: 'Card Network', value: 'Visa/MC/Amex', bar: 60 }, { label: 'Webhook Dispatcher', value: '500M/day', bar: 50 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '$1.9T/year', value: 'Payment volume', bar: 100 }, { label: '500M API req/day', value: 'Request throughput', bar: 90 }, { label: '99.999% success', value: 'API reliability', bar: 100 }, { label: '<2s processing', value: 'Payment latency', bar: 85 }, { label: '27K peak TPS', value: 'Black Friday peak', bar: 80 }, { label: 'T+2 settlement', value: 'Merchant payout speed', bar: 60 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Processor', description: 'Integrate one card processor (Stripe) via their SDK.', color: '#94a3b8', icon: 'creditCard', capacity: '~100 TPS', rps: '100', pros: ['Fastest time to market', 'PCI handled by processor', 'Simple integration'], cons: ['Vendor lock-in', 'Higher fees', 'Limited control'] },
+        { step: 2, title: 'Multi-Processor', description: 'Support multiple processors with intelligent routing for cost optimization.', color: '#635bff', icon: 'layers', capacity: '~1K TPS', rps: '1K', pros: ['Lower fees via routing', 'Fallback on failures', 'Better global coverage'], cons: ['Routing logic complexity', 'Different APIs', 'More testing needed'] },
+        { step: 3, title: 'Own Ledger', description: 'Double-entry ledger, idempotency service, and webhook dispatcher.', color: '#f59e0b', icon: 'database', capacity: '~10K TPS', rps: '10K', pros: ['Financial audit trail', 'Exactly-once processing', 'Merchant notifications'], cons: ['Ledger complexity', 'Reconciliation needed', 'PCI scope expansion'] },
+        { step: 4, title: 'Fraud + Settlement', description: 'ML fraud detection, batch settlement engine, and multi-currency support.', color: '#10b981', icon: 'shield', capacity: '~27K TPS', rps: '27K', pros: ['Real-time fraud prevention', 'Automated settlement', '135 currencies'], cons: ['ML model maintenance', 'Currency risk', 'Regulatory per country'] },
+        { step: 5, title: 'Direct Network', description: 'Direct card network integration, own acquiring license, and real-time treasury.', color: '#7c3aed', icon: 'globe', capacity: '100K+ TPS', rps: '100K+', pros: ['Lowest possible fees', 'Full control', 'Real-time settlement'], cons: ['PCI Level 1 required', 'Banking license needed', 'Enormous compliance burden'] },
+      ],
+
+
+
       requirements: ['Card payment processing', 'Auth/capture/refund', 'Idempotency', 'Multi-currency', 'Fraud detection', 'Settlement'],
       components: ['API Gateway', 'Payment Processor', 'Card Network Interface', 'Ledger Service', 'Fraud Detection', 'Settlement Engine', 'Webhook Dispatcher'],
       keyDecisions: [
@@ -23550,6 +26769,39 @@ Every payment creates balanced debit + credit entries:
       color: '#d32323',
       difficulty: 'Medium',
       description: 'Design a proximity service that finds nearby businesses and points of interest based on user location.',
+
+      productMeta: {
+        name: 'Proximity Service (Yelp)',
+        tagline: 'Finding nearby businesses from 200M+ locations with sub-200ms geo queries',
+        stats: [
+          { label: 'Businesses', value: '200M+' },
+          { label: 'Query Latency', value: '<200ms' },
+          { label: 'Proximity QPS', value: '100K+' },
+          { label: 'Geohash Precision', value: '~1.2km' },
+        ],
+        scope: {
+          inScope: ['Search businesses within a radius of user location', 'Results sorted by distance and relevance', 'Filter by category, rating, price range', 'Geospatial indexing (Geohash or Quadtree)', 'Business location CRUD with re-indexing', 'Variable search radii (0.5km to 50km)'],
+          outOfScope: ['Business reviews and ratings system', 'Photo and menu management', 'Reservation booking', 'Food delivery', 'Advertising placement'],
+        },
+        keyChallenge: 'Efficiently querying 200M+ businesses by geographic proximity using geohash-based spatial indexing, handling the boundary problem (nearby businesses in adjacent geohash cells), and supporting variable search radii from 500m to 50km.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '200M businesses worldwide, 50M DAU, 10 proximity searches/user/day, geohash precision 6 chars (~1.2km).',
+        calculations: [
+          { label: 'Search QPS', value: '~5,800/s', detail: '50M DAU x 10 searches/day / 86,400' },
+          { label: 'Peak QPS', value: '~15K/s', detail: '~3x peak during lunch/dinner hours' },
+          { label: 'Business Index Size', value: '~40 GB', detail: '200M businesses x 200 bytes (ID, lat, lng, geohash, category)' },
+          { label: 'Geohash Cells (6-char)', value: '~32M', detail: 'Total cells at 6-character precision covering land area' },
+          { label: 'Avg Businesses/Cell', value: '~6', detail: '200M businesses / 32M cells (varies: 0 in ocean, 1000+ in cities)' },
+          { label: 'Query Fan-out', value: '9 cells', detail: 'User cell + 8 neighbors to handle boundary cases' },
+          { label: 'Redis Cache', value: '~5 GB', detail: 'Hot area geohash cells cached for popular cities' },
+          { label: 'Database Size', value: '~100 GB', detail: 'Full business details with PostGIS spatial index' },
+          { label: 'Update Rate', value: '~100/s', detail: 'New business registrations and location changes' },
+          { label: 'Haversine Calculations', value: '~50 per query', detail: 'Exact distance calculation for candidate businesses from 9 cells' },
+        ]
+      },
 
       introduction: `A proximity service powers the "find nearby" feature in apps like Yelp, Google Maps, and Uber. Given a user's location and a search radius, the system must efficiently return relevant nearby places from a database of hundreds of millions of businesses.
 
@@ -23652,6 +26904,33 @@ quadtree_node {
         }
       ],
 
+      deepDiveTopics: [
+        { topic: 'Geohash Encoding and Precision Levels', detail: 'Geohash encodes latitude/longitude into a string. Each additional character increases precision: 4 chars (~20km cell), 5 chars (~5km cell), 6 chars (~1.2km cell), 7 chars (~150m cell). The key property: geographically close locations share a common prefix. This enables efficient prefix queries on standard B-tree indexes: WHERE geohash LIKE \'9q8yy%\' finds all businesses in that ~1.2km cell. However, geohash has boundary issues -- two locations 10m apart can have completely different geohash prefixes if they straddle a cell boundary.' },
+        { topic: 'The Boundary Problem and 9-Cell Query', detail: 'A user near the edge of a geohash cell might be closer to businesses in adjacent cells than to businesses in their own cell. Solution: always query the user\'s cell plus all 8 neighbors (9 cells total). This guarantees no nearby business is missed. The overhead is small -- 9 prefix queries instead of 1. For most radius searches, 9 cells at the right precision level cover the search area completely.' },
+        { topic: 'Adaptive Precision for Variable Radii', detail: 'Search radius varies from 500m to 50km. Use different geohash precision levels: 500m radius -> 7-char precision (150m cells, 9 cells cover ~450m). 5km radius -> 5-char precision (5km cells, 9 cells cover ~15km). 50km radius -> 4-char precision (20km cells, 9 cells cover ~60km). After the geohash filter, apply exact Haversine distance calculation to filter false positives from the rectangular cells.' },
+        { topic: 'Dense vs Sparse Area Handling', detail: 'Manhattan has 10,000+ businesses per 1.2km cell. Rural areas have 0. For dense areas: use finer precision (7-char, 150m cells) and paginate results. For sparse areas: expand to coarser precision (4-char, 20km cells) to find any results. An adaptive approach: start at 6-char, if too many results use 7-char, if too few use 5-char. This gives consistent result counts regardless of location density.' }
+      ],
+      comparisonTables: [
+        { id: 'spatial-indexes', title: 'Spatial Indexing: Geohash vs Quadtree vs S2', headers: ['Aspect', 'Geohash', 'Quadtree', 'S2 Geometry'], rows: [['Storage', 'String in any DB', 'In-memory tree', 'Cell IDs in any DB'], ['Precision', 'Fixed grid cells', 'Adaptive density', 'Uniform spherical cells'], ['Boundary Issues', 'Yes (9-cell query)', 'No (tree traversal)', 'Minimal'], ['Distribution', 'Easy (prefix sharding)', 'Hard (tree partitioning)', 'Easy (cell ID sharding)'], ['Used By', 'Redis GEO, Elasticsearch', 'Uber (in-memory)', 'Google Maps, S2 library']], verdict: 'Geohash for simplicity, S2 for precision at global scale' },
+        { id: 'database-geo', title: 'Geo-Query Database Options', headers: ['Aspect', 'PostGIS', 'Elasticsearch Geo', 'Redis GEO'], rows: [['Query Types', 'Full spatial SQL', 'Radius + bounding box', 'Radius only'], ['Scaling', 'Read replicas', 'Cluster sharding', 'Cluster sharding'], ['Rich Filtering', 'Full SQL + spatial', 'Text + geo + facets', 'Limited'], ['Latency', '5-50ms', '10-100ms', '<5ms'], ['Best For', 'Complex spatial queries', 'Combined text + geo search', 'Simple proximity cache']], verdict: 'PostGIS for primary store, Redis GEO for hot area caching' }
+      ],
+      flowcharts: [
+        { id: 'proximity-search', title: 'Proximity Search Flow', description: 'How a nearby business search is executed', steps: [{ step: 1, label: 'User Request', detail: 'GET /api/nearby?lat=40.74&lng=-73.99&radius=2km&category=restaurant' }, { step: 2, label: 'Compute Geohash', detail: 'Encode user location to geohash at appropriate precision for radius' }, { step: 3, label: 'Find 9 Cells', detail: 'User cell + 8 neighboring cells to handle boundary cases' }, { step: 4, label: 'Cache Check', detail: 'Check Redis for cached results for these geohash prefixes' }, { step: 5, label: 'Database Query', detail: 'If cache miss: PostGIS query with geohash prefix + category filter' }, { step: 6, label: 'Distance Filter', detail: 'Haversine formula to compute exact distance, filter to radius' }, { step: 7, label: 'Rank Results', detail: 'Sort by distance (or relevance = distance x rating x popularity)' }, { step: 8, label: 'Return Page', detail: 'Return top results with distance, rating, and business details' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#d32323', items: [{ label: 'PostGIS', value: '200M businesses indexed', bar: 90 }, { label: 'Redis GEO', value: 'Hot area cache', bar: 60 }, { label: 'Geohash Index', value: 'B-tree on prefix', bar: 75 }, { label: 'CDN', value: 'Business detail pages', bar: 40 }, { label: 'Haversine Calculator', value: '~50 per query', bar: 30 }, { label: 'API Servers', value: '15K peak QPS', bar: 50 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '200M+ businesses', value: 'Global coverage', bar: 100 }, { label: '100K+ QPS', value: 'Proximity queries', bar: 85 }, { label: '<200ms latency', value: 'Search response', bar: 80 }, { label: '9-cell query', value: 'Boundary coverage', bar: 50 }, { label: '~1.2km precision', value: 'Geohash 6-char', bar: 60 }, { label: '0.5-50km radius', value: 'Variable search range', bar: 70 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Brute Force', description: 'Calculate distance to every business in the database.', color: '#94a3b8', icon: 'server', capacity: '~1K businesses', rps: '10', pros: ['No index needed', 'Exact distances', 'Simple SQL'], cons: ['O(N) per query', 'Unusable at scale', 'No filtering'] },
+        { step: 2, title: 'Geohash Index', description: 'Precomputed geohash on each business, B-tree prefix index.', color: '#d32323', icon: 'mapPin', capacity: '~10M businesses', rps: '5K', pros: ['O(1) cell lookup', 'Standard DB index', 'Easy to implement'], cons: ['Boundary issues', 'Fixed grid cells', 'Dense area challenges'] },
+        { step: 3, title: 'PostGIS + Cache', description: 'Full spatial queries with PostGIS, Redis caching for hot areas.', color: '#f59e0b', icon: 'database', capacity: '~100M businesses', rps: '50K', pros: ['Rich spatial queries', 'Cache popular areas', 'Category filtering'], cons: ['PostGIS scaling limits', 'Cache invalidation', 'Complex queries'] },
+        { step: 4, title: 'Elasticsearch Geo', description: 'Combined text search + geo filtering at scale with Elasticsearch.', color: '#10b981', icon: 'search', capacity: '~200M businesses', rps: '100K', pros: ['Text + geo combined', 'Faceted filtering', 'Horizontal scaling'], cons: ['Index staleness', 'Resource intensive', 'Operational complexity'] },
+        { step: 5, title: 'Global S2 + ML', description: 'S2 geometry cells for global uniformity, ML-powered relevance ranking.', color: '#7c3aed', icon: 'globe', capacity: '500M+ businesses', rps: '500K+', pros: ['Uniform global cells', 'ML relevance ranking', 'Personalized results'], cons: ['S2 library complexity', 'ML training pipeline', 'Multi-region infrastructure'] },
+      ],
+
+
+
       requirements: ['Proximity search', 'Geospatial indexing', 'Category filtering', 'Business CRUD', 'Distance sorting'],
       components: ['Geohash Index', 'Business Service', 'Database (PostgreSQL + PostGIS)', 'Cache (Redis)', 'Load Balancer'],
       keyDecisions: [
@@ -23687,6 +26966,39 @@ quadtree_node {
       color: '#10b981',
       difficulty: 'Easy',
       description: 'Design a URL shortening service that creates compact aliases for long URLs and redirects users.',
+
+      productMeta: {
+        name: 'TinyURL / Bitly',
+        tagline: 'Shortening URLs and tracking billions of redirects with sub-50ms latency',
+        stats: [
+          { label: 'Redirects/Day', value: '~1B' },
+          { label: 'New URLs/Day', value: '~10M' },
+          { label: 'Read:Write Ratio', value: '100:1' },
+          { label: 'Redirect Latency', value: '<50ms' },
+        ],
+        scope: {
+          inScope: ['Generate unique short URLs from long URLs', 'Fast redirect (301/302) to original URL', 'Optional custom aliases', 'URL expiration with configurable TTL', 'Click analytics (count, geo, device)'],
+          outOfScope: ['Link-in-bio pages', 'QR code generation', 'Deep linking', 'A/B testing redirects', 'Branded domain management'],
+        },
+        keyChallenge: 'Generating collision-free short codes using counter-based Base62 encoding with ZooKeeper range allocation, serving a 100:1 read-heavy workload with multi-tier caching (app cache, Redis, CDN), and tracking click analytics asynchronously without adding redirect latency.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '10M new URLs/day, 1B redirects/day (100:1 ratio), 7-char Base62 short codes, average URL record 500 bytes.',
+        calculations: [
+          { label: 'Write QPS', value: '~116/s', detail: '10M new URLs / 86,400 seconds' },
+          { label: 'Read QPS', value: '~11,600/s', detail: '1B redirects / 86,400 seconds' },
+          { label: 'Peak Read QPS', value: '~35K/s', detail: '3x peak during business hours' },
+          { label: 'URL Keyspace', value: '3.5 Trillion', detail: '62^7 = 3.52 trillion unique codes' },
+          { label: 'Years to Exhaust', value: '960+', detail: '3.52T / (10M/day x 365) = 964 years' },
+          { label: 'Storage/Year', value: '~1.8 TB', detail: '10M/day x 365 x 500 bytes' },
+          { label: 'Redis Cache', value: '~50 GB', detail: 'Top 100M popular URLs x 500 bytes' },
+          { label: 'Cache Hit Rate', value: '~99%', detail: 'Pareto: 1% of URLs get 99% of redirects' },
+          { label: 'Analytics Events', value: '~11,600/s', detail: 'One Kafka event per redirect for analytics pipeline' },
+          { label: 'ZooKeeper Calls', value: '~1/hour', detail: 'Range allocation: claim 10M IDs per batch' },
+        ]
+      },
 
       introduction: `Tiny URL is one of the most commonly asked system design questions. The simplicity of the product makes it ideal for exploring scalability, collision handling, and database design. The core challenge is generating unique short codes efficiently at scale.
 
@@ -23769,6 +27081,34 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
         }
       ],
 
+      deepDiveTopics: [
+        { topic: 'Counter-Based ID with ZooKeeper Range Allocation', detail: 'Each API server claims a range of IDs from ZooKeeper (e.g., server-1 gets 1-1,000,000). Within its range, the server generates IDs sequentially with zero coordination. When the range is 80% consumed, it pre-fetches the next range. Base62 encode the counter to get the short code. 62^7 = 3.5 trillion unique codes -- enough for 960+ years at 10M/day. No collision checking needed.' },
+        { topic: 'Multi-Tier Caching for Redirects', detail: 'Redirect latency must be <50ms. Three cache tiers: L1 (in-process LRU, ~10K entries, <1ms), L2 (Redis cluster, ~100M entries, <5ms), L3 (database, <20ms). Cache hit distribution follows Pareto: 1% of URLs get 99% of traffic. Overall cache hit rate: ~99.5%. CDN layer on top for geographic distribution. Cache-Control: public, max-age=3600 for most URLs.' },
+        { topic: 'Click Analytics Pipeline', detail: 'Every redirect publishes a click event to Kafka (async, zero impact on redirect latency). The event includes: short_code, timestamp, IP, user_agent, referrer. A Flink job aggregates into time-bucketed counters (hourly, daily). Unique visitors estimated via HyperLogLog (~2% error, 12KB per counter). Geographic data from IP geolocation database (MaxMind). Device/browser parsed from user_agent.' },
+        { topic: 'Abuse Prevention', detail: 'URL shorteners are abused for phishing, malware distribution, and spam. Scan destination URLs against Google Safe Browsing API at creation time. Rate limit: 100 URLs/hour per API key. For flagged URLs, show a warning interstitial page instead of direct redirect. Periodic re-scan of existing URLs since destinations can change (compromised pages). DMCA takedown workflow for copyright violations.' }
+      ],
+      comparisonTables: [
+        { id: 'redirect-types', title: '301 vs 302 Redirect', headers: ['Aspect', '301 Permanent', '302 Temporary'], rows: [['Browser Cache', 'Cached indefinitely', 'Not cached (hits server)'], ['Analytics', 'Cannot track repeat visits', 'Every visit tracked'], ['SEO', 'Passes PageRank', 'Does not pass PageRank'], ['Latency', 'Zero (after first visit)', 'Server round-trip every time'], ['Best For', 'Permanent shortening', 'Analytics-focused links']], verdict: '302 for analytics-enabled links, 301 for pure shortening' },
+        { id: 'storage-options', title: 'Storage: Cassandra vs DynamoDB vs PostgreSQL', headers: ['Aspect', 'Cassandra', 'DynamoDB', 'PostgreSQL'], rows: [['Scaling', 'Horizontal (add nodes)', 'Auto-scaling', 'Vertical + sharding'], ['Read Latency', '<5ms', '<10ms', '<5ms (with index)'], ['Cost', 'Self-managed', 'Pay per request', 'Cheapest at small scale'], ['Consistency', 'Eventual (tunable)', 'Eventually consistent', 'Strong ACID'], ['Best For', 'Massive scale', 'Serverless', 'Moderate scale']], verdict: 'Cassandra for scale, PostgreSQL for simplicity' }
+      ],
+      flowcharts: [
+        { id: 'create-short-url', title: 'Create Short URL Flow', description: 'From long URL submission to short code generation', steps: [{ step: 1, label: 'Submit URL', detail: 'Client sends POST /api/shorten with long URL' }, { step: 2, label: 'Rate Limit', detail: 'Check IP/API key rate limit (100/hour)' }, { step: 3, label: 'URL Validation', detail: 'Validate URL format, check Safe Browsing API' }, { step: 4, label: 'Generate Code', detail: 'Claim next ID from pre-allocated counter range, Base62 encode' }, { step: 5, label: 'Store Mapping', detail: 'Insert short_code -> long_url in database' }, { step: 6, label: 'Return', detail: 'Return short URL to client (e.g., tny.url/a7Bx3kQ)' }] },
+        { id: 'redirect-flow', title: 'URL Redirect Flow', description: 'How a short URL click becomes a redirect in <50ms', steps: [{ step: 1, label: 'Click', detail: 'User clicks short URL or types in browser' }, { step: 2, label: 'L1 Cache', detail: 'Check in-process LRU cache (~10K hot entries)' }, { step: 3, label: 'L2 Cache', detail: 'If L1 miss, check Redis (100M entries, <5ms)' }, { step: 4, label: 'Database', detail: 'If L2 miss, query Cassandra (<20ms)' }, { step: 5, label: 'Expiry Check', detail: 'If URL expired, return 404 with friendly page' }, { step: 6, label: 'Redirect', detail: '302 redirect to long URL (or 301 if permanent)' }, { step: 7, label: 'Log Click', detail: 'Async: publish click event to Kafka for analytics' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#10b981', items: [{ label: 'CDN', value: 'Global edge caching', bar: 90 }, { label: 'Redis (L2 Cache)', value: '100M URLs cached', bar: 80 }, { label: 'Cassandra', value: 'URL mapping store', bar: 70 }, { label: 'ZooKeeper', value: 'Counter range allocation', bar: 30 }, { label: 'Kafka (Analytics)', value: 'Click event streaming', bar: 50 }, { label: 'Safe Browsing API', value: 'Abuse prevention', bar: 25 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '1B redirects/day', value: 'Read throughput', bar: 100 }, { label: '10M new URLs/day', value: 'Write throughput', bar: 60 }, { label: '<50ms redirect', value: 'Response latency', bar: 95 }, { label: '99.5% cache hit', value: 'Cache efficiency', bar: 90 }, { label: '3.5T keyspace', value: '960+ years capacity', bar: 50 }, { label: '100:1 read ratio', value: 'Read-heavy workload', bar: 80 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Server', description: 'Auto-increment database ID with Base62 encoding on one server.', color: '#94a3b8', icon: 'server', capacity: '~1K URLs/day', rps: '1', pros: ['Simplest possible', 'No collisions', 'Easy to debug'], cons: ['Single point of failure', 'No caching', 'No analytics'] },
+        { step: 2, title: 'Cache + CDN', description: 'Add Redis cache and CDN for fast redirects at moderate scale.', color: '#10b981', icon: 'zap', capacity: '~1M URLs/day', rps: '1K', pros: ['Fast redirects', 'CDN distribution', 'Basic analytics'], cons: ['Single DB still', 'No range allocation', 'Cache invalidation'] },
+        { step: 3, title: 'Distributed Counter', description: 'ZooKeeper range allocation, multiple API servers, NoSQL storage.', color: '#f59e0b', icon: 'layers', capacity: '~10M URLs/day', rps: '35K', pros: ['No per-request coordination', 'Horizontal scaling', 'NoSQL durability'], cons: ['ZooKeeper dependency', 'Range management', 'More operational complexity'] },
+        { step: 4, title: 'Analytics Pipeline', description: 'Kafka-based click analytics with Flink aggregation and geo/device tracking.', color: '#3b82f6', icon: 'barChart', capacity: '~100M URLs/day', rps: '100K', pros: ['Full click analytics', 'Geo/device breakdown', 'Real-time dashboards'], cons: ['Kafka operations', 'Storage costs for events', 'Pipeline maintenance'] },
+        { step: 5, title: 'Enterprise', description: 'Custom domains, A/B testing redirects, team workspaces, and abuse ML.', color: '#7c3aed', icon: 'shield', capacity: '1B+ redirects/day', rps: '500K+', pros: ['Revenue generation', 'Branded links', 'ML abuse prevention'], cons: ['DNS management', 'Multi-tenant isolation', 'Feature complexity'] },
+      ],
+
+
+
       requirements: ['URL shortening', '301/302 redirect', 'Custom aliases', 'Expiration', 'Analytics'],
       components: ['API Servers', 'ZooKeeper (ID ranges)', 'Database (NoSQL)', 'Cache (Redis)', 'Analytics Service'],
       keyDecisions: [
@@ -23805,6 +27145,39 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
       color: '#f59e0b',
       difficulty: 'Medium',
       description: 'Design a system to compute and serve top-K rankings in real-time across large datasets.',
+
+      productMeta: {
+        name: 'Top-K Real-time Leaderboard',
+        tagline: 'Maintaining real-time rankings across 100M+ items with sub-50ms queries',
+        stats: [
+          { label: 'Score Updates/sec', value: '50K+' },
+          { label: 'Top-K Query', value: '<50ms' },
+          { label: 'Rank Lookup', value: '<10ms' },
+          { label: 'Items Tracked', value: '100M+' },
+        ],
+        scope: {
+          inScope: ['Real-time score updates and ranking computation', 'Top-K retrieval with configurable K', 'Individual item rank and percentile lookup', 'Time-windowed leaderboards (hourly, daily, weekly)', 'Historical ranking snapshots', 'Multiple leaderboards by category'],
+          outOfScope: ['Game logic or scoring rules', 'User authentication', 'Social features (friends, challenges)', 'Prize/reward distribution', 'Anti-cheat detection'],
+        },
+        keyChallenge: 'Maintaining accurate top-K rankings across 100M+ items with 50K+ score updates per second, using Redis sorted sets for exact O(log N) operations, and supporting time-windowed leaderboards with clean rotation using separate sorted sets per window.',
+      },
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '100M total items, 50K score updates/sec, top-100 queries, 4 time windows (hourly, daily, weekly, all-time).',
+        calculations: [
+          { label: 'Score Update QPS', value: '50K/s', detail: 'Peak during event hours, ~20K average' },
+          { label: 'Top-K Read QPS', value: '~10K/s', detail: 'Dashboard and app queries for rankings' },
+          { label: 'Rank Lookup QPS', value: '~30K/s', detail: 'Individual users checking their own rank' },
+          { label: 'Redis Memory', value: '~3 GB', detail: '100M items x 30 bytes per sorted set entry' },
+          { label: 'Total Redis Memory', value: '~12 GB', detail: '3 GB x 4 time windows (hourly/daily/weekly/alltime)' },
+          { label: 'ZADD Latency', value: '<1ms', detail: 'O(log N) = O(log 100M) = ~27 operations' },
+          { label: 'ZREVRANGE Latency', value: '<5ms', detail: 'O(log N + K) for top-100 retrieval' },
+          { label: 'Snapshot Frequency', value: 'Hourly', detail: 'Dump top-1000 to PostgreSQL for historical analysis' },
+          { label: 'Kafka Buffer', value: '~50 MB/s', detail: '50K events/s x ~1 KB per score event' },
+          { label: 'Window Rotation', value: 'Zero-downtime', detail: 'New Redis key per window, old key expires via TTL' },
+        ]
+      },
 
       introduction: `Top-K leaderboards appear in gaming, social media (trending), e-commerce (best sellers), and analytics (top queries). The challenge is maintaining accurate top-K rankings when the underlying data changes at high velocity.
 
@@ -23913,6 +27286,34 @@ topk:songs:hourly:2024-06-05-14  -- expires after 48 hours
 - Computed on-demand or pre-computed periodically`
         }
       ],
+
+      deepDiveTopics: [
+        { topic: 'Redis Sorted Sets for Exact Ranking', detail: 'Redis sorted sets use a skip list + hash table combination. ZADD is O(log N), ZREVRANGE (top-K) is O(log N + K), and ZREVRANK (individual rank) is O(log N). For 100M items, log2(100M) = ~27 operations per command -- extremely fast. Memory: ~30 bytes per entry (member ID + score + skip list pointers). 100M items = ~3 GB per sorted set. With 4 time windows, total ~12 GB.' },
+        { topic: 'Time-Windowed Leaderboard Rotation', detail: 'Each time window is a separate Redis sorted set key: topk:daily:2026-04-18, topk:weekly:2026-W16. On score update, ZADD to all active window keys atomically (MULTI/EXEC). Set TTL on time-bounded keys (daily expires after 7 days). New window = new empty key, no expensive reset. For combining windows: ZUNIONSTORE merges 7 daily keys into a weekly view.' },
+        { topic: 'Count-Min Sketch for Streaming Top-K', detail: 'When items exceed Redis memory capacity (billions), use Count-Min Sketch for approximate counting. A CMS uses d hash functions x w counters. Space: O(w x d) regardless of unique items. Maintain a min-heap of size K alongside the CMS. On each event: update CMS count, compare with heap minimum, swap if larger. Provides approximate top-K with known error bounds. Trade-off: ~5-10% overcount vs exact but memory-bounded.' },
+        { topic: 'Handling Score Ties', detail: 'When two items have the same score, ranking is ambiguous. Solution: composite score = actual_score x 10^13 + (MAX_TIMESTAMP - timestamp). This makes higher scores rank first, and among ties, earlier achievers rank higher. The score remains a double-precision float with enough precision for both components. Alternative: use a secondary sorted set with timestamp for tie-breaking.' }
+      ],
+      comparisonTables: [
+        { id: 'ranking-structures', title: 'Ranking Data Structures', headers: ['Aspect', 'Redis Sorted Set', 'Min-Heap (Top-K)', 'Count-Min Sketch + Heap'], rows: [['Accuracy', 'Exact', 'Exact (top-K only)', 'Approximate'], ['Memory', 'O(N)', 'O(K)', 'O(w x d) constant'], ['Update', 'O(log N)', 'O(log K)', 'O(d)'], ['Rank Lookup', 'O(log N)', 'Not supported', 'Not supported'], ['Best For', 'Exact ranking <10M items', 'Streaming top-K', 'Billions of items']], verdict: 'Redis for exact ranking, CMS+Heap for massive streaming scale' },
+        { id: 'sync-vs-async', title: 'Score Updates: Synchronous vs Async', headers: ['Aspect', 'Synchronous', 'Async (Kafka buffer)'], rows: [['Latency Impact', 'User sees updated rank immediately', '100ms-1s delay'], ['Throughput', 'Limited by Redis write speed', 'Handles any burst'], ['Consistency', 'Strong (always current)', 'Eventual (slight lag)'], ['Failure Mode', 'Blocks on Redis down', 'Kafka buffers during outage'], ['Best For', 'Gaming (instant feedback)', 'Analytics (high volume)']], verdict: 'Async via Kafka for high-throughput, sync for interactive games' }
+      ],
+      flowcharts: [
+        { id: 'score-update-flow', title: 'Score Update Flow', description: 'How a score event becomes an updated ranking', steps: [{ step: 1, label: 'Score Event', detail: 'POST /api/scores with itemId, category, scoreIncrement' }, { step: 2, label: 'Kafka Publish', detail: 'Event buffered in Kafka for reliability during spikes' }, { step: 3, label: 'Consumer Process', detail: 'Score aggregator consumer reads from Kafka partition' }, { step: 4, label: 'Redis ZADD', detail: 'Atomically update all active time window sorted sets' }, { step: 5, label: 'Rank Available', detail: 'Updated ranking immediately queryable via ZREVRANGE' }] },
+        { id: 'topk-query-flow', title: 'Top-K Query Flow', description: 'How a leaderboard request is served', steps: [{ step: 1, label: 'API Request', detail: 'GET /api/topk/songs?k=100&timeframe=daily' }, { step: 2, label: 'Redis Query', detail: 'ZREVRANGE topk:songs:daily:2026-04-18 0 99 WITHSCORES' }, { step: 3, label: 'Enrich', detail: 'Batch lookup item metadata (names, images) from cache/DB' }, { step: 4, label: 'Return', detail: 'Ranked list with scores and metadata (<50ms total)' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#f59e0b', items: [{ label: 'Redis Sorted Sets', value: '12 GB (4 windows)', bar: 80 }, { label: 'Kafka (Buffer)', value: '50 MB/s throughput', bar: 60 }, { label: 'Score Aggregator', value: '50K updates/sec', bar: 75 }, { label: 'PostgreSQL', value: 'Hourly snapshots', bar: 40 }, { label: 'API Gateway', value: '40K QPS read + write', bar: 70 }, { label: 'CMS (Optional)', value: 'Billions-scale approx', bar: 30 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '100M+ items', value: 'Total tracked entries', bar: 100 }, { label: '50K updates/sec', value: 'Score event throughput', bar: 85 }, { label: '<50ms top-K', value: 'Query response time', bar: 90 }, { label: '<10ms rank lookup', value: 'Individual rank', bar: 95 }, { label: '4 time windows', value: 'Hourly/daily/weekly/all', bar: 50 }, { label: '~12 GB Redis', value: 'Total memory footprint', bar: 40 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'SQL ORDER BY', description: 'Sort all items by score in the database on every query.', color: '#94a3b8', icon: 'database', capacity: '~10K items', rps: '10', pros: ['No extra infrastructure', 'Exact results', 'Simple SQL'], cons: ['Full table scan', 'Slow at scale', 'No real-time updates'] },
+        { step: 2, title: 'Redis Sorted Set', description: 'In-memory sorted set with O(log N) updates and queries.', color: '#f59e0b', icon: 'zap', capacity: '~10M items', rps: '50K', pros: ['Sub-ms operations', 'Exact ranking', 'Built-in rank lookup'], cons: ['Memory-limited', 'Single Redis instance', 'No time windows'] },
+        { step: 3, title: 'Windowed + Kafka', description: 'Per-window sorted sets with Kafka-buffered score events.', color: '#3b82f6', icon: 'layers', capacity: '~100M items', rps: '100K', pros: ['Time-windowed rankings', 'Burst handling', 'Clean rotation'], cons: ['Multiple sorted sets', 'Kafka operations', 'Window transition edge cases'] },
+        { step: 4, title: 'Approximate Scale', description: 'Count-Min Sketch + min-heap for billions of items with bounded error.', color: '#10b981', icon: 'cpu', capacity: '~1B items', rps: '500K', pros: ['Constant memory', 'Massive scale', 'Known error bounds'], cons: ['Approximate only', 'No exact rank lookup', 'Overcount possible'] },
+        { step: 5, title: 'Hybrid + Snapshots', description: 'Exact Redis for top-K, CMS for long-tail, PostgreSQL for historical snapshots.', color: '#7c3aed', icon: 'globe', capacity: '10B+ items', rps: '1M+', pros: ['Best of all approaches', 'Historical analytics', 'Scalable at any size'], cons: ['Multiple systems', 'Reconciliation complexity', 'Higher operational cost'] },
+      ],
+
+
 
       requirements: ['Real-time score updates', 'Top-K retrieval', 'Time-windowed rankings', 'Individual rank lookup', 'Historical snapshots'],
       components: ['Redis (sorted sets)', 'Kafka (score events)', 'Score Aggregator Service', 'PostgreSQL (snapshots)', 'API Gateway'],
