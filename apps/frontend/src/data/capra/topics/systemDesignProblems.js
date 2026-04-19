@@ -1487,127 +1487,443 @@ Quick quality first: 360p available in minutes, 4K later`
       icon: 'messageCircle',
       color: '#25d366',
       difficulty: 'Hard',
-      description: 'Design a real-time messaging application supporting 1-1 chat, group chat, and media sharing.',
+      description: 'Design a real-time messaging application supporting 1-1 chat, group chat, media sharing, and end-to-end encryption at planetary scale.',
 
-      introduction: `WhatsApp is a real-time messaging system handling billions of messages daily. The key challenges are maintaining persistent connections, ensuring message delivery even when users are offline, and implementing end-to-end encryption.
+      introduction: `WhatsApp is the world's most widely used messaging application, connecting over 2 billion monthly active users across 180+ countries. At its peak, the system delivers over 100 billion messages per day with sub-second latency, making it one of the most demanding distributed systems ever built.
 
-Unlike social media feeds, messaging requires strong delivery guarantees - users expect messages to arrive in order and not be lost. This makes the consistency and reliability requirements much stricter.`,
+This is one of the most popular system design interview questions because it tests a wide range of skills: real-time communication (persistent WebSocket connections), delivery guarantees (messages must never be lost, even when users are offline for days), strong ordering (messages within a conversation must appear in the correct sequence), and end-to-end encryption (the server itself cannot read message content).
+
+What makes messaging fundamentally different from other systems like social media feeds or search engines? Feed systems are read-heavy and can tolerate eventual consistency - if a tweet appears 5 seconds late, nobody notices. Messaging is write-heavy and demands strong delivery guarantees. If a message is lost, duplicated, or arrives out of order, the user experience breaks immediately. Users expect the "double check mark" system to be perfectly reliable: one grey check = sent to server, two grey checks = delivered to recipient device, two blue checks = read by recipient.
+
+The scale challenge is immense: 1 billion daily active users maintaining persistent connections, each sending ~50 messages per day, with presence updates (online/last seen) creating an additional 33 million QPS heartbeat load. The system must handle graceful degradation during network partitions, seamless offline-to-online transitions, group messaging fan-out to up to 1,024 members, and media transfers (images, video, documents) - all while maintaining end-to-end encryption using the Signal Protocol.
+
+In this design, we will walk through capacity estimation, the core messaging architecture, how to scale WebSocket connections across thousands of servers, the message delivery pipeline with guaranteed at-least-once semantics, presence tracking at massive scale, group messaging strategies, and media handling.`,
+
+      // ── Back-of-Envelope Estimation ──
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1 Billion DAU, 50 messages/user/day, average message size 200 bytes (encrypted text). 2:1 read-to-write ratio for group chats. Presence heartbeat every 30 seconds.',
+        calculations: [
+          { label: 'Total Messages/Day', value: '50 Billion', detail: '1B DAU x 50 messages/user = 50B messages per day' },
+          { label: 'Write QPS (Average)', value: '~580K/s', detail: '50B messages / 86,400 seconds = 578,703 writes/sec' },
+          { label: 'Write QPS (Peak)', value: '~1.5M/s', detail: '580K x 2.5x peak factor (New Year, events) = 1.45M writes/sec' },
+          { label: 'Presence Heartbeat QPS', value: '~33M/s', detail: '1B online users / 30s heartbeat interval = 33.3M updates/sec' },
+          { label: 'Storage/Day (Text)', value: '~10 TB', detail: '50B messages x 200 bytes = 10 TB of text data per day' },
+          { label: 'Storage/Year (Text)', value: '~3.65 PB', detail: '10 TB/day x 365 days = 3.65 PB per year (text only)' },
+          { label: 'Concurrent Connections', value: '~1 Billion', detail: 'Peak simultaneous WebSocket connections from all DAU' },
+          { label: 'Chat Servers Needed', value: '10,000+', detail: '1B connections / 100K connections per server = 10,000 servers' },
+          { label: 'Media Storage/Day', value: '~50 TB', detail: '10% of messages include media, avg 10KB compressed = 50B x 0.1 x 10KB' },
+          { label: 'Outgoing Bandwidth', value: '~120 Gbps', detail: '580K msgs/s x 200 bytes x read amplification + presence traffic' },
+        ]
+      },
 
       functionalRequirements: [
-        'One-on-one messaging',
-        'Group chat (up to 256 members)',
-        'Media sharing (images, videos, documents)',
-        'Read receipts (sent, delivered, read)',
-        'Online/last seen status',
-        'Typing indicators',
-        'Message history sync across devices'
+        'User registration and authentication via phone number with SMS/OTP verification',
+        'One-on-one text messaging with real-time delivery when both users are online',
+        'Guaranteed message delivery even when the recipient is offline (store-and-forward)',
+        'Message status indicators: single tick (sent to server), double tick (delivered to device), blue ticks (read by recipient)',
+        'User presence: online status, last seen timestamp, and typing indicators',
+        'Persistent chat history retrieval with cursor-based pagination',
+        'Group chat supporting up to 1,024 members with admin controls',
+        'Media sharing: images, videos, documents, and voice messages with thumbnails',
+        'Multi-device support: sync messages across phone, desktop, and web clients',
+        'End-to-end encryption for all message types using the Signal Protocol',
       ],
 
       nonFunctionalRequirements: [
-        'Real-time delivery (<100ms when both online)',
-        'Guaranteed delivery (even if recipient offline)',
-        'End-to-end encryption',
-        'Message ordering within conversation',
-        'Support 2B+ users, 500M DAU',
-        'Handle 100B+ messages/day'
+        'Scale: 2B monthly active users, 1B daily active users, 50B+ messages per day',
+        'Latency: <200ms end-to-end delivery when both users are online, <500ms for group messages',
+        'Availability: 99.99% uptime (less than 52 minutes downtime per year)',
+        'Consistency: Strong ordering within each conversation (no out-of-order messages), eventual consistency for presence/last seen',
+        'Durability: Zero message loss — every message must be delivered at least once',
+        'Throughput: Handle 1.5M peak write QPS and 33M presence heartbeats per second',
+        'Retention: Messages stored indefinitely (or until user deletes), media with configurable TTL',
+        'Security: End-to-end encryption at rest and in transit, forward secrecy with ratcheting keys',
+        'Partition tolerance: Graceful degradation during network splits, messages queued and replayed',
       ],
 
       dataModel: {
-        description: 'Users, conversations, and messages with delivery tracking',
+        description: 'Users, conversations, messages, and delivery tracking — partitioned for write-heavy workloads',
         schema: `users {
   id: bigint PK
-  phoneNumber: varchar(15) unique
-  publicKey: blob (for E2E encryption)
+  phoneNumber: varchar(15) UNIQUE INDEX
+  displayName: varchar(100)
+  profilePicUrl: varchar(500)
+  publicKey: blob (Signal Protocol identity key)
+  preKeyBundle: blob (pre-generated key set for offline key exchange)
   lastSeen: timestamp
-  pushToken: varchar (for notifications)
+  pushToken: varchar (APNs/FCM device token)
+  deviceId: varchar (for multi-device support)
+  createdAt: timestamp
 }
 
 conversations {
   id: bigint PK
   type: enum(DIRECT, GROUP)
-  name: varchar (for groups)
-  participants: bigint[]
+  name: varchar(100) nullable (group name)
+  avatarUrl: varchar(500) nullable
+  createdBy: bigint FK → users.id
+  maxMembers: int default 1024
   createdAt: timestamp
+  updatedAt: timestamp
+}
+
+conversation_members {
+  conversationId: bigint FK → conversations.id
+  userId: bigint FK → users.id
+  role: enum(ADMIN, MEMBER)
+  joinedAt: timestamp
+  mutedUntil: timestamp nullable
+  PRIMARY KEY (conversationId, userId)
 }
 
 messages {
-  id: uuid PK
-  conversationId: bigint FK
-  senderId: bigint FK
-  content: blob (encrypted)
-  mediaUrl: varchar nullable
-  sentAt: timestamp
+  id: uuid PK (client-generated for idempotency)
+  conversationId: bigint PARTITION KEY
+  senderId: bigint FK → users.id
+  sequenceNum: bigint (monotonic per conversation)
+  content: blob (encrypted payload)
+  contentType: enum(TEXT, IMAGE, VIDEO, AUDIO, DOCUMENT)
+  mediaUrl: varchar nullable (S3 presigned URL reference)
+  mediaThumbnail: blob nullable (base64 thumbnail)
+  mediaSize: int nullable (bytes)
+  replyToId: uuid nullable (for threaded replies)
+  sentAt: timestamp (server-assigned)
+  expiresAt: timestamp nullable (disappearing messages)
+  CLUSTERING KEY (sequenceNum DESC)
+}
+
+message_status {
+  messageId: uuid FK → messages.id
+  recipientId: bigint FK → users.id
+  status: enum(SENT, DELIVERED, READ)
   deliveredAt: timestamp nullable
   readAt: timestamp nullable
+  PRIMARY KEY (messageId, recipientId)
+}
+
+offline_queue {
+  recipientId: bigint PARTITION KEY
+  messageId: uuid
+  conversationId: bigint
+  payload: blob (full encrypted message)
+  queuedAt: timestamp
+  expiresAt: timestamp (TTL: 30 days)
+  CLUSTERING KEY (queuedAt ASC)
 }`
       },
 
       apiDesign: {
-        description: 'WebSocket for real-time + REST for offline sync',
+        description: 'WebSocket for real-time bidirectional messaging + REST for sync, media uploads, and account management',
         endpoints: [
           {
             method: 'WS',
             path: '/ws/chat',
-            params: 'authToken in header',
-            response: 'Bidirectional message stream',
-            description: 'Persistent WebSocket connection for real-time messaging. Each device maintains one connection to a chat server. Messages are end-to-end encrypted (Signal Protocol) before transmission. The server routes messages by looking up the recipient\'s connected chat server in a presence service. Handles typing indicators, online status, and delivery receipts over the same connection.'
+            params: 'authToken in header, deviceId in query',
+            response: 'Bidirectional message stream (JSON frames)',
+            description: 'Persistent WebSocket connection for real-time messaging. Each device maintains exactly one long-lived connection to a chat server. All message types flow through this channel: text messages, delivery/read receipts, typing indicators, presence updates, and group events. Messages are end-to-end encrypted client-side using the Signal Protocol before transmission. The server routes messages by looking up the recipient\'s connected chat server in the presence service (Redis). If the recipient is on a different chat server, the message is forwarded via Kafka. The connection supports automatic reconnection with exponential backoff and resumes from the last acknowledged sequence number.'
           },
           {
             method: 'POST',
-            path: '/api/messages',
-            params: 'conversationId, content, mediaUrl?',
-            response: '201 { messageId, sentAt }',
-            description: 'REST fallback for sending messages when WebSocket is unavailable (poor network). The message is encrypted client-side, stored in the recipient\'s message queue, and delivered when they reconnect. Provides at-least-once delivery with client-side deduplication using messageId.'
+            path: '/api/messages/send',
+            params: 'conversationId, content (encrypted blob), contentType, mediaUrl?, replyToId?, clientMessageId (UUID)',
+            response: '201 { messageId, sequenceNum, sentAt }',
+            description: 'REST fallback for sending messages when WebSocket is unavailable (poor connectivity, background sync). The clientMessageId enables idempotent retries - if the server has already processed this ID, it returns the existing message without creating a duplicate. The message is encrypted client-side, assigned a server-side sequence number for ordering, stored in Cassandra, and enqueued for delivery. Provides at-least-once delivery semantics with client-side deduplication.'
           },
           {
             method: 'GET',
             path: '/api/conversations/{id}/messages',
-            params: 'before?, limit=50',
-            response: '200 { messages[], hasMore }',
-            description: 'Fetches message history for a conversation using cursor-based pagination (before=messageId). Used for initial sync when the app opens, scrolling back through chat history, and restoring messages on a new device. Messages are stored per-user (not per-conversation) for efficient sharding.'
+            params: 'before? (sequenceNum cursor), limit=50, after? (for forward pagination)',
+            response: '200 { messages[], hasMore, nextCursor }',
+            description: 'Fetches message history for a conversation using cursor-based pagination on sequence numbers. Used when the app opens (initial sync from last known sequence), scrolling back through chat history, and restoring messages on a new device. Messages are stored partitioned by conversationId in Cassandra, so this query hits a single partition - extremely fast even with millions of messages. Returns encrypted payloads that the client decrypts locally.'
           },
           {
-            method: 'PUT',
-            path: '/api/messages/{id}/read',
-            response: '200 { readAt }',
-            description: 'Marks a message as read and sends a read receipt to the sender via their WebSocket connection. Read receipts are batched (multiple messages marked read at once) to reduce server load. The sender sees blue double-check marks when the recipient reads.'
+            method: 'POST',
+            path: '/api/messages/ack',
+            params: 'receipts: [{ messageId, status: DELIVERED|READ }]',
+            response: '200 { acknowledged: count }',
+            description: 'Batch endpoint for acknowledging message delivery and read status. When a client receives messages, it sends DELIVERED receipts. When the user opens a conversation, it sends READ receipts for all visible messages. Batching reduces server load significantly - instead of one API call per message, the client batches 20-50 receipts in a single request. The server updates message_status, removes from offline_queue, and forwards read receipts to the sender via their WebSocket connection.'
+          },
+          {
+            method: 'POST',
+            path: '/api/media/upload',
+            params: 'conversationId, file (multipart), contentType, encryptionKey (encrypted)',
+            response: '200 { mediaUrl, thumbnailUrl, mediaId }',
+            description: 'Handles media uploads with resumable chunked transfer. The client encrypts the media file locally, then uploads in 256KB chunks with a resumable upload token. If the upload is interrupted, the client can resume from the last successful chunk. Once complete, the server stores the encrypted blob in S3, generates a thumbnail (for images/video), and returns a signed URL. The message referencing this media is sent separately via WebSocket or POST /api/messages/send.'
+          },
+          {
+            method: 'GET',
+            path: '/api/users/{id}/presence',
+            params: 'userIds[] (batch up to 100)',
+            response: '200 { presenceMap: { userId: { online, lastSeen } } }',
+            description: 'Batch presence lookup for contact list. Returns online/offline status and last seen timestamp for up to 100 users in a single request. Presence data is served from Redis (not the database) for sub-millisecond latency. Used when opening the app to populate the contact list, and periodically refreshed. Individual presence changes are pushed via WebSocket for users in active conversations.'
           }
         ]
       },
 
+      // ── Key Questions (Expanded to 10) ──
       keyQuestions: [
         {
-          question: 'How to handle offline message delivery?',
-          answer: `Message Queue Pattern:
+          question: 'How do you handle offline message delivery at scale?',
+          answer: `The store-and-forward pattern is the core of reliable messaging:
 
-1. Sender sends message via WebSocket
-2. Server stores in persistent queue for recipient
-3. If recipient online: deliver immediately via WebSocket
-4. If recipient offline: hold in queue
-5. When recipient connects: flush queued messages
-6. Recipient ACKs receipt → remove from queue
+1. Sender sends an encrypted message via WebSocket to their chat server
+2. Chat server assigns a monotonic sequence number and persists the message to Cassandra
+3. Server sends a SENT acknowledgment (single grey tick) back to sender immediately
+4. Server looks up the recipient in the presence service (Redis hash: userId -> serverId)
+5. If recipient is ONLINE: route the message via Kafka to their chat server, deliver via WebSocket
+6. If recipient is OFFLINE: enqueue the message in the offline_queue table (partitioned by recipientId)
+7. Trigger a push notification via APNs (iOS) or FCM (Android) with a generic "New message" alert
+8. When recipient reconnects: their chat server queries offline_queue, delivers all pending messages in order
+9. Recipient client sends batch DELIVERED ACK -> server removes messages from queue, notifies sender (double grey ticks)
+10. Messages in offline_queue have a 30-day TTL to prevent unbounded storage growth
 
-Use Kafka or similar for reliable message queuing with
-at-least-once delivery semantics.`
+Key insight: Kafka provides the cross-server routing with at-least-once delivery,
+while the offline_queue in Cassandra provides persistence for users offline longer than
+Kafka retention. Client-generated UUIDs enable idempotent deduplication on retry.`
         },
         {
-          question: 'How to scale WebSocket connections?',
-          answer: `Connection Management:
+          question: 'How do you scale WebSocket connections to support 1 billion concurrent users?',
+          answer: `Scaling WebSocket connections is the single biggest infrastructure challenge:
 
-• 500M concurrent connections ÷ 100K per server = 5000 servers
-• Use consistent hashing to route user to specific chat server
-• Store connection mapping: userId → serverId in Redis
-• For cross-server messaging:
-  1. Look up recipient's server
-  2. Route message via internal message bus
+1. Server capacity: Each Linux server can handle ~100K concurrent WebSocket connections (with epoll and tuned file descriptors), so you need ~10,000 chat servers
+2. Connection routing: Use consistent hashing on userId to assign each user to a specific chat server. This is stored in Redis: userId -> {serverId, connectionId, deviceId}
+3. Load balancer: Layer 4 (TCP) load balancer at the gateway level - NOT Layer 7, because WebSocket upgrade needs to be sticky. Use DNS-based routing or dedicated connection routers
+4. Cross-server messaging: When User A (on server-5) messages User B (on server-842), server-5 publishes to Kafka topic partitioned by recipient userId, server-842 consumes and delivers
+5. Reconnection: On disconnect, the client reconnects with exponential backoff. The new connection may land on a different chat server - that is fine because the presence service is updated atomically
+6. Regional deployment: Chat servers deployed across multiple regions (US, EU, Asia, etc.). Users connect to the nearest region. Cross-region messages route through a global Kafka cluster
+7. Health monitoring: Each chat server reports connection count and CPU/memory to a coordinator. The connection router avoids overloaded servers and drains connections gracefully during deploys
+8. Memory optimization: Each connection consumes ~10KB of memory. At 100K connections per server, that is ~1GB per server just for connection state - use lightweight event loops (Erlang/BEAM or Java NIO), not thread-per-connection`
+        },
+        {
+          question: 'How does message routing work between chat servers in different regions?',
+          answer: `Cross-server message routing is the backbone of the distributed chat architecture:
 
-Sticky sessions ensure reconnection goes to same server.`
+1. Every chat server subscribes to a Kafka topic partition based on the userIds it currently serves
+2. When server-A needs to deliver a message to a user on server-B, it publishes to that user's Kafka partition
+3. Server-B consumes the message from Kafka and delivers it via WebSocket to the connected client
+4. If server-B has no active connection for that user (they disconnected), the message goes to the offline queue
+
+For cross-region routing (e.g., US sender to Asia recipient):
+- Each region has its own Kafka cluster for intra-region traffic (low latency)
+- A global relay layer (MirrorMaker or dedicated relay service) bridges messages between regional Kafka clusters
+- The presence service is globally replicated (Redis with cross-region replication) so any server can look up any user's location
+- Latency budget: ~50ms intra-region, ~150-300ms cross-region (depends on physical distance)
+
+Why Kafka? Three key reasons:
+- Persistent log means messages survive server crashes (replay from offset)
+- Partitioning by userId ensures all messages for one user are ordered
+- Consumer groups allow horizontal scaling of chat servers independently`
+        },
+        {
+          question: 'How does the tick/checkmark delivery status system work?',
+          answer: `The tick system requires a careful state machine with server-side tracking:
+
+**Single grey tick (SENT):**
+- Client sends message -> chat server receives it, persists to Cassandra, assigns sequence number
+- Server immediately sends SENT ACK back to sender via WebSocket
+- This only means "server has your message" - not that the recipient received it
+
+**Double grey ticks (DELIVERED):**
+- Recipient's device receives the message via WebSocket (or on reconnect from offline queue)
+- Recipient's client automatically sends a DELIVERED ACK back to the server (no user action needed)
+- Server updates message_status row: status=DELIVERED, deliveredAt=now()
+- Server forwards the DELIVERED receipt to the sender via their WebSocket connection
+- Sender's client updates the UI to show double grey ticks
+
+**Double blue ticks (READ):**
+- Recipient opens the conversation and the message becomes visible on screen
+- Client sends READ ACK to server (batched: all visible messages marked read at once)
+- Server updates message_status: status=READ, readAt=now()
+- Server forwards READ receipt to sender via WebSocket
+- Sender sees blue ticks
+
+**Edge cases handled:**
+- Sender offline when receipt arrives: receipt is queued and delivered on reconnect
+- Group messages: DELIVERED when delivered to ALL members, READ per individual member
+- User has read receipts disabled: server never sends READ status, only DELIVERED
+- Multi-device: DELIVERED means delivered to at least one device`
+        },
+        {
+          question: 'How do you handle group messaging at scale (up to 1,024 members)?',
+          answer: `Group messaging introduces a fan-out challenge that requires careful design:
+
+**Fan-out on Write (small groups, up to ~100 members):**
+- Sender sends one message to the server with the groupId
+- Server assigns a sequence number within the group's conversation
+- Server performs fan-out: creates a delivery task for each of the N group members
+- For online members: route via Kafka to their respective chat servers
+- For offline members: add to each member's offline_queue + push notification
+- Write amplification: 1 message becomes N deliveries, but each delivery is cheap
+
+**Fan-out on Read (large groups, 100-1,024 members):**
+- Sender's message is stored once in the group's message partition in Cassandra
+- Online members receive a lightweight notification: "new message in group X at sequence Y"
+- Each member's client pulls the actual message content when they open the group chat
+- This avoids storing N copies and reduces write load significantly
+
+**Hybrid approach (what WhatsApp actually does):**
+- Messages up to ~256 members: fan-out on write for instant delivery
+- Messages to 256-1,024 members: fan-out on write for online members, lazy pull for offline
+- Delivery receipts in large groups: aggregated (e.g., "delivered to 847/1024 members") rather than individual tracking to prevent receipt explosion
+
+**Encryption in groups:**
+- Sender Keys protocol: sender generates one symmetric key per group, shares it with all members
+- Message encrypted once with the sender key, all members can decrypt
+- When a member leaves, sender key is rotated and redistributed`
+        },
+        {
+          question: 'How do you implement end-to-end encryption so the server cannot read messages?',
+          answer: `WhatsApp uses the Signal Protocol (formerly TextSecure) for end-to-end encryption:
+
+**Key setup (happens once per user pair):**
+1. Each user generates identity keys, signed pre-keys, and one-time pre-keys on device
+2. Pre-key bundles are uploaded to the server during registration
+3. When User A wants to message User B for the first time, A fetches B's pre-key bundle from server
+4. A performs X3DH (Extended Triple Diffie-Hellman) key agreement to derive a shared secret
+5. This shared secret initializes the Double Ratchet algorithm for the session
+
+**Message encryption (every message):**
+1. The Double Ratchet derives a unique encryption key for each message (forward secrecy)
+2. Message is encrypted with AES-256-CBC using the derived key
+3. Even if one message key is compromised, past and future messages remain secure
+4. HMAC-SHA256 provides message authentication (tamper detection)
+
+**Server's role (it never sees plaintext):**
+- Stores and forwards encrypted blobs - it cannot decrypt them
+- Stores public pre-key bundles for key exchange
+- Handles message routing, delivery tracking, and push notifications
+- Metadata (who messaged whom, when) is visible to the server, but not content
+
+**Group encryption:**
+- Uses Sender Keys protocol: sender generates a symmetric chain key per group
+- Sender encrypts message once, all group members can decrypt with the shared sender key
+- Key rotation when members join/leave to maintain forward secrecy
+
+**Challenges:**
+- Multi-device: each device has its own identity key, so messages are encrypted per-device
+- Key verification: QR code or 60-digit number comparison for out-of-band verification
+- Backup encryption: cloud backups must be separately encrypted with a user-provided password`
+        },
+        {
+          question: 'What database would you choose for messages and why?',
+          answer: `The message store is the most critical database decision in the entire system:
+
+**Primary choice: Apache Cassandra (or ScyllaDB for better performance)**
+Why Cassandra wins for messages:
+- Write-optimized: LSM-tree storage engine handles 580K+ writes/sec natively
+- Partition by conversationId: all messages in a chat live on the same node, enabling fast sequential reads
+- Clustering key on sequenceNum DESC: most recent messages are read first (matches UX pattern)
+- Linear horizontal scaling: add nodes to handle more conversations without resharding
+- Tunable consistency: use LOCAL_QUORUM for writes (durability) and LOCAL_ONE for reads (speed)
+- Built-in TTL: disappearing messages handled natively
+
+**Why NOT other databases:**
+- MySQL/PostgreSQL: excellent for user metadata and group settings, but single-node write throughput caps at ~50K/s. Sharding adds enormous complexity
+- MongoDB: decent write performance but lacks Cassandra's partition-aware data model. Hot partitions for popular group chats
+- DynamoDB: viable alternative to Cassandra with similar partition-key model, but vendor lock-in and cost at 580K WPS is significant
+
+**Hybrid approach (recommended):**
+- Cassandra: message content and delivery status (write-heavy, partition by conversationId)
+- MySQL/PostgreSQL: user profiles, conversation metadata, group settings (read-heavy, relational queries)
+- Redis: presence/session state, recent message cache, typing indicators (ephemeral, sub-ms latency)
+- S3: encrypted media files (images, videos, documents) with CDN in front`
+        },
+        {
+          question: 'How do you handle media messages (images, videos, documents)?',
+          answer: `Media handling requires a separate pipeline from text messages:
+
+**Upload flow:**
+1. Client encrypts the media file locally using a random AES-256 key
+2. Client uploads encrypted file via resumable chunked upload (256KB chunks) to the media service
+3. Media service stores encrypted blob in S3 with a unique mediaId
+4. For images/videos: server generates an encrypted thumbnail (client sends the encrypted thumbnail, or server generates from encrypted preview frame)
+5. Client sends a text message via normal messaging flow containing: mediaId, encryption key (encrypted with recipient's public key), thumbnail, file metadata (size, type, duration)
+6. Recipient receives the message, downloads the encrypted media from S3 via CDN, decrypts locally
+
+**Why separate upload from message?**
+- Media upload can take 10+ seconds on slow networks. The text message containing the media reference is tiny and delivers instantly
+- Upload can be retried independently without resending the message
+- Server can rate-limit large uploads without affecting text messaging
+
+**Resumable uploads (critical for mobile networks):**
+- Each upload gets a resumable upload token
+- If upload is interrupted (network switch, app backgrounded), client resumes from last successful chunk
+- Server tracks which chunks have been received and reassembles on completion
+- Upload tokens expire after 24 hours
+
+**Storage optimization:**
+- Media files stored with content-addressable hashing (SHA-256 of encrypted blob)
+- If the same encrypted file is forwarded to multiple chats, it is stored only once
+- Automatic cleanup: media older than configurable TTL (e.g., 90 days for free tier) can be moved to cold storage (S3 Glacier)
+- CDN caching: popular media (forwarded memes, viral videos) served from CDN edge, reducing S3 reads`
+        },
+        {
+          question: 'How do you design the presence system to handle 33 million heartbeats per second?',
+          answer: `Presence (online/offline/last seen) generates more QPS than messaging itself:
+
+**The problem:**
+- 1 billion online users each send a heartbeat every 30 seconds = 33M updates/sec
+- Every user wants to see presence status for their contacts (potentially 500+ contacts)
+- Naive approach: write to database on every heartbeat = instant database meltdown
+
+**Solution: Redis-based presence with pub/sub fan-out**
+
+1. Heartbeat handling:
+   - Client sends heartbeat every 30 seconds via WebSocket (piggybacked on the existing connection, no extra connection)
+   - Chat server updates Redis hash: HSET presence:{userId} status online lastSeen {timestamp} with 60-second TTL
+   - If no heartbeat arrives within 60 seconds, the key expires and the user is considered offline
+
+2. Presence subscription:
+   - When User A opens a chat with User B, the client subscribes to User B's presence channel
+   - Redis pub/sub notifies subscribers when presence changes (online -> offline or vice versa)
+   - Subscription is scoped to active conversations only - not all contacts
+
+3. Optimization for reducing QPS:
+   - Batch heartbeats: chat server aggregates heartbeats from all its connections and updates Redis in bulk (pipeline)
+   - Lazy presence: only track presence for users who have been active in the last 24 hours
+   - Sampling: for the contact list view, poll presence in batches of 100 users every 60 seconds instead of real-time
+   - Bloom filter: quickly check if a user has any online contacts before querying Redis
+
+4. Last seen privacy:
+   - If user has disabled "last seen", the server still tracks it internally (for TTL) but never exposes it via API
+   - Typing indicators use the same WebSocket channel, sent only to active conversation participants, and expire after 5 seconds`
+        },
+        {
+          question: 'How do you ensure message ordering within a conversation?',
+          answer: `Message ordering is a core correctness requirement that cannot be compromised:
+
+**The problem:**
+- Multiple senders in a group chat may send messages concurrently from different regions
+- Network delays mean messages can arrive at the server out of order
+- Client clocks are unreliable (clock skew can be minutes or even hours)
+
+**Solution: Server-assigned monotonic sequence numbers**
+
+1. Each conversation has an atomic counter (maintained in Redis or a coordination service)
+2. When a message arrives at the server, it atomically increments the counter: INCR seq:{conversationId}
+3. The returned sequence number is permanently associated with the message
+4. Messages are stored in Cassandra with sequenceNum as the clustering key (DESC for efficient "latest first" queries)
+5. Clients display messages sorted by sequenceNum, NOT by client timestamp
+
+**Handling concurrent writes:**
+- For 1:1 chats: contention is minimal (only 2 possible senders), Redis INCR handles this trivially
+- For group chats: the sequence counter becomes a hot key. Solutions:
+  a. Shard the counter by conversationId across multiple Redis nodes (consistent hashing)
+  b. Use a batched counter: pre-allocate ranges (e.g., server-5 gets sequence 1000-1099) to reduce contention
+  c. Accept micro-reordering within the same second for very active groups
+
+**Consistency guarantees:**
+- Within a conversation: total ordering via sequence numbers (linearizable)
+- Across conversations: no ordering guarantee needed (each conversation is independent)
+- On reconnection: client provides its last known sequenceNum, server sends all messages after that number
+- Idempotency: client-generated messageId prevents duplicate processing even on retry`
         }
       ],
 
       basicImplementation: {
         title: 'Basic Implementation',
-        description: 'Single chat server handling WebSocket connections and message routing.',
+        description: 'Single chat server handling WebSocket connections and message routing. Suitable for prototyping but cannot scale beyond a single machine.',
         svgTemplate: 'whatsapp',
         architecture: `
 ┌────────┐    ┌──────────────┐    ┌─────────────┐
@@ -1621,16 +1937,18 @@ Sticky sessions ensure reconnection goes to same server.`
               │ (Sessions)  │
               └─────────────┘`,
         problems: [
-          'Single server limits concurrent connections',
-          'No message persistence if server crashes',
-          'Cannot route between users on different servers',
-          'No offline message delivery'
+          'Single server limits concurrent connections to ~100K users maximum',
+          'No message persistence if the server process crashes mid-delivery',
+          'Cannot route messages between users connected to different servers',
+          'No offline message delivery - messages lost if recipient is not connected',
+          'No horizontal scaling path - vertical scaling hits hardware limits quickly',
+          'Single point of failure for the entire messaging service'
         ]
       },
 
       advancedImplementation: {
         title: 'Distributed Chat System',
-        description: 'Multiple chat servers with message broker for cross-server communication and persistent message queue for offline delivery.',
+        description: 'Horizontally scalable architecture with 10,000+ chat servers, cross-server message routing via Kafka, persistent offline queues, and multi-region deployment for global low-latency messaging.',
         svgTemplate: 'whatsappAdvanced',
         architecture: `
 ┌────────┐    ┌──────────────┐    ┌─────────────┐
@@ -1645,110 +1963,323 @@ Sticky sessions ensure reconnection goes to same server.`
              │ (Message  │      │ (Sessions/  │     │ (Cassandra) │
              │   Bus)    │      │  Presence)  │     └─────────────┘
              └───────────┘      └─────────────┘
-                    │
-                    ▼
-             ┌─────────────┐
-             │ Push Service│
+                    │                                ┌─────────────┐
+                    ▼                                │ Media Store │
+             ┌─────────────┐                        │    (S3)     │
+             │ Push Service│                        └─────────────┘
              │  (Offline)  │
              └─────────────┘`,
         keyPoints: [
-          'Consistent hashing routes users to specific chat servers',
-          'Kafka enables cross-server message routing',
-          'Redis stores session mapping (userId → serverId)',
-          'Cassandra for message persistence (write-heavy workload)',
-          'Push notifications via FCM/APNs for offline users',
-          'Message queue holds messages until delivery confirmed'
+          'Consistent hashing routes each user to a specific chat server based on userId, enabling efficient connection lookup',
+          'Kafka serves as the cross-server message bus: when sender and recipient are on different servers, Kafka routes the message reliably',
+          'Redis stores real-time state: session mapping (userId -> serverId), presence status (online/last seen), and typing indicators',
+          'Cassandra handles write-heavy message persistence: partitioned by conversationId with clustering on sequenceNum for fast range queries',
+          'Push notifications via FCM (Android) and APNs (iOS) ensure offline users are alerted, even when WebSocket is disconnected',
+          'Offline queue in Cassandra holds undelivered messages with 30-day TTL, flushed on reconnection with batch delivery',
+          'S3 + CDN for encrypted media storage with resumable chunked uploads and content-addressable deduplication',
+          'Multi-region deployment with regional Kafka clusters bridged by MirrorMaker for cross-region message delivery'
         ],
-        databaseChoice: 'Cassandra - optimized for write-heavy workloads, eventual consistency acceptable',
-        caching: 'Redis for session storage, recent messages cache, presence status'
+        databaseChoice: 'Cassandra for messages (write-heavy, partition by conversationId, clustering by sequenceNum DESC). MySQL for user profiles and group metadata. Redis for ephemeral state (presence, sessions, typing indicators). S3 for encrypted media blobs.',
+        caching: 'Redis for session/presence state (sub-ms lookups), recent messages cache (last 50 messages per active conversation), and rate limiting counters. CDN edge caching for frequently forwarded media.'
       },
 
       createFlow: {
         title: 'Send Message Flow',
         steps: [
-          'Sender types message, client encrypts with recipient\'s public key',
-          'Client sends encrypted message via WebSocket',
-          'Chat server receives message, generates messageId and timestamp',
-          'Store message in Cassandra with status=SENT',
-          'Look up recipient\'s chat server from Redis session store',
-          'If recipient online: Route message via Kafka to their chat server',
-          'If recipient offline: Queue message, trigger push notification',
-          'Recipient\'s chat server delivers to client via WebSocket',
-          'Client ACKs delivery → update status to DELIVERED',
-          'When recipient reads → update status to READ, notify sender'
+          'Sender types message; client generates a unique messageId (UUID v4) for idempotency',
+          'Client encrypts message content using the Double Ratchet session key (Signal Protocol)',
+          'Encrypted message sent via WebSocket to the sender\'s assigned chat server',
+          'Chat server validates the auth token and rate-limits the sender (20 msgs/min per conversation)',
+          'Server assigns a monotonic sequence number: INCR seq:{conversationId} in Redis',
+          'Message persisted to Cassandra: INSERT INTO messages (id, conversationId, sequenceNum, content, sentAt)',
+          'Server sends SENT ACK to sender (single grey tick) immediately after persistence',
+          'Server looks up recipient in presence service: HGET presence:{recipientId} serverId',
+          'If recipient ONLINE: publish message to Kafka partition for recipient\'s chat server',
+          'If recipient OFFLINE: insert into offline_queue + trigger push notification via APNs/FCM',
+          'Recipient\'s chat server consumes from Kafka and delivers via WebSocket',
+          'Recipient client sends DELIVERED ACK -> server updates message_status, notifies sender (double grey ticks)',
+          'When recipient opens conversation and reads -> READ ACK sent, sender sees blue ticks'
         ]
       },
 
       redirectFlow: {
-        title: 'Receive Message Flow',
+        title: 'Receive Message Flow (Reconnection & Sync)',
         steps: [
-          'User opens app, establishes WebSocket connection',
-          'Chat server registers connection in Redis session store',
-          'Server checks message queue for pending messages',
-          'Deliver all queued messages via WebSocket',
-          'Client decrypts messages with private key',
-          'Client sends delivery ACK for each message',
-          'Server updates message status, removes from queue',
-          'Server notifies sender of delivery status'
+          'User opens app or regains connectivity; client initiates WebSocket connection with auth token + deviceId',
+          'Gateway routes connection to a chat server via consistent hashing on userId',
+          'Chat server authenticates token, registers connection in Redis: HSET presence:{userId} serverId {id} status online',
+          'Server queries offline_queue for all pending messages: SELECT * FROM offline_queue WHERE recipientId = ? ORDER BY queuedAt ASC',
+          'Pending messages delivered in chronological order via WebSocket (batched in groups of 50)',
+          'Client decrypts each message using the appropriate Double Ratchet session key',
+          'Client sends batch DELIVERED ACK for all received messages in a single request',
+          'Server atomically: (a) updates message_status to DELIVERED, (b) removes from offline_queue, (c) forwards delivery receipts to each sender',
+          'Server subscribes the user to presence channels for their active conversation partners',
+          'Ongoing messages now flow in real-time via WebSocket for the duration of the session'
         ]
       },
 
       discussionPoints: [
         {
-          topic: 'End-to-End Encryption',
+          topic: 'End-to-End Encryption (Signal Protocol)',
           points: [
-            'Signal Protocol for E2E encryption',
-            'Key exchange during first message',
-            'Server cannot read message content',
-            'Forward secrecy with ratcheting keys'
+            'X3DH (Extended Triple Diffie-Hellman) for initial key agreement between two users who have never communicated',
+            'Double Ratchet algorithm derives unique encryption key per message, providing forward secrecy',
+            'Server stores only encrypted blobs and pre-key bundles - cannot decrypt message content under any circumstances',
+            'Sender Keys protocol for groups: single encryption, all members decrypt with shared sender key',
+            'Key rotation on group membership changes to maintain forward secrecy',
+            'QR code or 60-digit safety number for out-of-band key verification between users'
           ]
         },
         {
-          topic: 'Group Messaging',
+          topic: 'Group Messaging Architecture',
           points: [
-            'Fan-out to all group members',
-            'Sender keys optimization (encrypt once)',
-            'Group size limit (256) for performance',
-            'Admin controls for membership'
+            'Fan-out on write for small groups (<100): server delivers to each member individually for instant delivery',
+            'Hybrid fan-out for large groups (100-1024): write for online members, lazy pull for offline members',
+            'Server-assigned sequence numbers per group ensure total ordering across all participants',
+            'Delivery receipts aggregated for large groups to prevent N^2 receipt explosion',
+            'Admin controls: add/remove members, promote admins, approve join requests, set group description',
+            'Message retention and storage is per-group, not per-member, to avoid N-fold storage amplification'
           ]
         },
         {
-          topic: 'Media Handling',
+          topic: 'Media Handling Pipeline',
           points: [
-            'Encrypt media before upload',
-            'Store in object storage (S3)',
-            'CDN for delivery, signed URLs',
-            'Thumbnail generation for previews'
+            'Client-side encryption of media before upload (AES-256 with random key)',
+            'Resumable chunked uploads (256KB chunks) with upload token for network interruption recovery',
+            'Encrypted blobs stored in S3 with content-addressable hashing for deduplication',
+            'CDN distribution for frequently forwarded media (viral content served from edge)',
+            'Thumbnail generation for images/video previews sent inline with the message',
+            'Automatic lifecycle management: hot storage (S3 Standard) -> cold storage (S3 Glacier) after 90 days'
+          ]
+        },
+        {
+          topic: 'Presence and Typing Indicators',
+          points: [
+            'Redis-based presence with 60-second TTL heartbeats - automatic offline detection on missed heartbeats',
+            'Pub/sub fan-out for presence changes scoped to active conversation participants only',
+            'Typing indicators sent via WebSocket, scoped to current conversation, 5-second auto-expire',
+            'Batch heartbeat aggregation on chat servers reduces Redis write load by 100x',
+            'Privacy controls: users can disable last seen and read receipts independently'
           ]
         }
       ],
 
-      requirements: ['1-1 messaging', 'Group chat (256 members)', 'Media sharing', 'Read receipts', 'Online status', 'End-to-end encryption'],
-      components: ['Chat Servers', 'Kafka (Message Bus)', 'Redis (Sessions)', 'Cassandra', 'Push Service', 'Media Service'],
+      // ── Deep Dive Topics ──
+      deepDiveTopics: [
+        {
+          topic: 'Message Ordering and Consistency Guarantees',
+          detail: `Ordering is the hardest correctness problem in distributed messaging.
+
+**Within a conversation:**
+- Server assigns monotonic sequence numbers via atomic Redis INCR on key seq:{conversationId}
+- Cassandra stores messages with sequenceNum as clustering key (DESC for efficient "latest first" reads)
+- Clients display messages sorted by sequenceNum, never by client timestamp (clocks are unreliable)
+- On reconnection, client provides lastSequenceNum and receives all messages after it
+
+**Conflict resolution:**
+- Two users typing simultaneously in a group: both messages get unique sequence numbers, no conflict
+- Network partition causes message to arrive at two servers: client-generated UUID deduplicates
+- Sequence counter is a hot key for popular groups: pre-allocate ranges per chat server to reduce contention`
+        },
+        {
+          topic: 'Presence System at 33 Million QPS',
+          detail: `Presence generates more load than messaging itself and requires careful optimization.
+
+**Architecture:**
+- Redis cluster with 100+ shards handles all presence state (HSET/HGET with TTL)
+- Each chat server batches heartbeats from its 100K connections and pipelines updates to Redis (reduces 100K individual writes to 1 batch per second)
+- Presence changes propagated via Redis pub/sub to subscribers (only users in active conversations)
+
+**Optimizations that make it feasible:**
+- Lazy presence: only track users active in last 24 hours (reduces working set by 60%)
+- Sampling for contact lists: batch poll 100 users every 60 seconds instead of real-time
+- Bloom filter check before Redis query: skip users with no online contacts
+- Separate "typing" from "presence" - typing indicators are pure WebSocket, never hit Redis`
+        },
+        {
+          topic: 'Hot/Cold Storage Separation',
+          detail: `Message access patterns have extreme recency bias - 95% of reads are for the last 48 hours.
+
+**Hot tier (Cassandra SSD cluster):**
+- Messages from the last 30 days
+- All active offline_queue entries
+- High IOPS SSDs, replicated across 3 availability zones
+- Serves the vast majority of read/write traffic
+
+**Warm tier (Cassandra HDD cluster):**
+- Messages from 30 days to 1 year
+- Lower-cost storage, same schema, accessed only when user scrolls far back in history
+- Read latency is higher (10-50ms vs 1-5ms) but acceptable for historical browsing
+
+**Cold tier (S3 + Glacier):**
+- Messages older than 1 year, exported in compressed encrypted batches
+- Media files older than 90 days automatically transitioned via S3 lifecycle policies
+- Accessed only for legal compliance or user-initiated full history export
+
+**Data movement:** Background job continuously migrates data from hot -> warm -> cold based on message timestamp.`
+        },
+        {
+          topic: 'Group Messaging Fan-out Strategies',
+          detail: `Group messaging creates a classic fan-out problem with different tradeoffs at different scales.
+
+**Fan-out on Write (groups up to ~100 members):**
+- Server delivers the message to every member individually
+- Pros: instant delivery, simple client logic (just receive messages)
+- Cons: write amplification (1 message = 100 deliveries), higher server load
+
+**Fan-out on Read (groups with 100-1,024 members):**
+- Server stores message once in the group partition
+- Sends lightweight "new message" notification to online members
+- Clients pull the actual message when user opens the group
+- Pros: minimal write amplification, efficient storage
+- Cons: slightly higher read latency, client must manage sync state
+
+**WhatsApp hybrid:** Fan-out on write for online members (instant delivery), fan-out on read for offline members (lazy sync on reconnect). Delivery receipts aggregated as "delivered to X of Y members" to prevent O(N^2) receipt traffic in large groups.`
+        },
+        {
+          topic: 'Cross-Region Message Delivery',
+          detail: `With users in 180+ countries, messages frequently cross continental boundaries.
+
+**Regional architecture:**
+- Each major region (US-East, US-West, EU, Asia-Pacific, South America) has its own Kafka cluster and Cassandra ring
+- Users connect to the nearest region via GeoDNS routing
+- Intra-region messages route through the local Kafka cluster (latency: ~50ms)
+
+**Cross-region routing:**
+- When sender and recipient are in different regions, the local Kafka cluster forwards to the remote region's relay topic
+- Kafka MirrorMaker (or custom relay service) asynchronously replicates cross-region topics
+- Cross-region latency: 150-300ms depending on physical distance (acceptable for messaging, unlike real-time video)
+
+**Consistency across regions:**
+- Sequence numbers are assigned in the sender's region and are globally unique (region prefix + counter)
+- If both users in a 1:1 chat are in different regions, one region is designated as the "home" region for that conversation
+- Presence data is replicated across regions with eventual consistency (1-2 second lag is acceptable for online/offline status)`
+        },
+        {
+          topic: 'Resumable Media Uploads',
+          detail: `Mobile networks are unreliable - 30% of media uploads are interrupted at least once.
+
+**Chunked upload protocol:**
+1. Client requests an upload session: POST /api/media/upload/init -> returns uploadToken + chunkSize (256KB)
+2. Client splits encrypted file into chunks and uploads sequentially: PUT /api/media/upload/{token}/chunk/{n}
+3. Server stores each chunk in a temporary staging area (local disk or S3 multipart upload)
+4. If upload is interrupted, client resumes: GET /api/media/upload/{token}/status -> returns lastChunkReceived
+5. Client resumes from chunk lastChunkReceived + 1
+6. On completion, server assembles chunks into final encrypted blob in S3
+
+**Optimizations:**
+- Parallel chunk upload (up to 3 concurrent) on fast networks
+- Adaptive chunk size: larger chunks on WiFi (1MB), smaller on cellular (256KB)
+- Upload tokens expire after 24 hours - client must restart if expired
+- Server validates SHA-256 checksum of each chunk for integrity
+- Content-addressable storage: if the identical encrypted blob already exists in S3, skip storage and return existing URL`
+        }
+      ],
+
+      // ── Algorithm Approaches ──
+      algorithmApproaches: [
+        {
+          name: 'Consistent Hashing for Connection Routing',
+          description: `Route each user to a specific chat server using consistent hashing on userId.
+
+**How it works:**
+- Chat servers are placed on a hash ring at multiple virtual node positions
+- When a user connects, hash(userId) determines which chat server they are assigned to
+- The mapping is stored in Redis: userId -> serverId for O(1) lookup by other servers
+- When a server is added/removed, only ~1/N of users need to be remapped (minimal disruption)
+
+**Example:** With 10,000 chat servers and 256 virtual nodes each, the hash ring has 2.56M positions. Adding one server only remaps ~0.01% of users.`,
+          pros: ['Minimal remapping when servers are added/removed (only 1/N users affected)', 'Even distribution of connections across servers with virtual nodes', 'Simple O(1) lookup for message routing between servers', 'No central coordinator needed - any server can compute the mapping'],
+          cons: ['Hot spots possible if a celebrity user drives disproportionate traffic to one server', 'Virtual nodes add memory overhead for the hash ring (manageable at ~100MB)', 'Server removal causes connection storm as affected users reconnect simultaneously']
+        },
+        {
+          name: 'Fan-out on Write vs Fan-out on Read (Group Messages)',
+          description: `Two opposing strategies for delivering group messages to N members.
+
+**Fan-out on Write:**
+- When a message is sent, the server immediately creates N delivery tasks (one per member)
+- Each member's chat server receives the message and delivers via WebSocket
+- Best for small groups where instant delivery matters
+
+**Fan-out on Read:**
+- Message stored once in the group partition
+- Members are notified "new message available" and pull it when they open the group
+- Best for large groups where write amplification is prohibitive
+
+**Hybrid (recommended):**
+- Fan-out on write for online members (instant delivery)
+- Fan-out on read for offline members (pull on reconnect)
+- Threshold at ~100 members to switch strategies`,
+          pros: ['Fan-out on Write: instant delivery, simple client', 'Fan-out on Read: minimal write amplification, storage-efficient', 'Hybrid combines best of both: fast for online users, efficient for offline'],
+          cons: ['Fan-out on Write: O(N) write amplification per message in large groups', 'Fan-out on Read: higher client complexity, slight delivery delay', 'Hybrid: more complex server logic to manage two codepaths']
+        },
+        {
+          name: 'Message Queue with ACK-based Guaranteed Delivery',
+          description: `Ensure every message is delivered at least once using an acknowledgment protocol.
+
+**How it works:**
+1. Server persists message to Cassandra AND enqueues in offline_queue for recipient
+2. If recipient is online: deliver via WebSocket, wait for client ACK
+3. On ACK received: remove from offline_queue (message confirmed delivered)
+4. If no ACK within 30 seconds: retry delivery (up to 3 times)
+5. If recipient goes offline: message stays in offline_queue with 30-day TTL
+6. On reconnection: flush entire offline_queue to client, wait for batch ACK
+
+**Idempotency:** Client-generated UUID (messageId) ensures that retries do not create duplicate messages. Client maintains a set of recently received messageIds and silently drops duplicates.`,
+          pros: ['Zero message loss: every message is either delivered or persisted for later delivery', 'Automatic retry with exponential backoff handles transient failures', 'Client-side deduplication via UUID prevents duplicate display on retry'],
+          cons: ['At-least-once semantics means the client must handle deduplication logic', 'Offline queue can grow very large for users offline for days (mitigated by 30-day TTL)', 'ACK round-trip adds ~50ms to the delivery pipeline']
+        },
+        {
+          name: 'Double Ratchet Algorithm (Signal Protocol)',
+          description: `Provides end-to-end encryption with forward secrecy and break-in recovery.
+
+**How it works:**
+- Initial key agreement via X3DH (Extended Triple Diffie-Hellman) using pre-key bundles
+- Each message uses a unique encryption key derived from a ratcheting chain
+- The "double ratchet" combines a Diffie-Hellman ratchet (new DH keys per round-trip) with a symmetric-key ratchet (KDF chain for each message)
+- Forward secrecy: compromising the current key does not reveal past messages
+- Break-in recovery: even if current state is compromised, future messages become secure after the next DH ratchet step
+
+**Performance:** Key derivation is fast (~0.1ms per message). The main overhead is the initial X3DH handshake (~5ms) which happens only once per user pair.`,
+          pros: ['Forward secrecy: past messages remain secure even if keys are later compromised', 'Break-in recovery: future messages become secure after next DH exchange', 'Per-message keys: compromise of one message does not affect any other message', 'Proven security model: used by Signal, WhatsApp, and other major messaging apps'],
+          cons: ['Complexity: implementing correctly is extremely difficult (use battle-tested libraries like libsignal)', 'Multi-device support requires encrypting each message N times (once per device)', 'Key management overhead: pre-key bundles must be replenished and distributed', 'Cannot do server-side search or content moderation on encrypted messages']
+        }
+      ],
+
+      requirements: ['Phone-based registration with OTP', '1-to-1 real-time messaging', 'Group chat (up to 1,024 members)', 'Media sharing (images, video, documents)', 'Message status (sent/delivered/read ticks)', 'User presence (online/last seen)', 'End-to-end encryption (Signal Protocol)', 'Offline message delivery', 'Multi-device sync'],
+      components: ['Chat Servers (10,000+)', 'Kafka (Cross-server message bus)', 'Redis (Presence, sessions, sequence counters)', 'Cassandra (Message storage)', 'MySQL (User profiles, group metadata)', 'S3 + CDN (Encrypted media)', 'Push Service (APNs/FCM)', 'Media Service (Upload, thumbnail generation)'],
       keyDecisions: [
-        'WebSocket for real-time bidirectional communication',
-        'Kafka for cross-server message routing',
-        'Message queue with ACK for guaranteed delivery',
-        'Signal Protocol for end-to-end encryption',
-        'Cassandra for write-heavy message storage'
+        'WebSocket for persistent bidirectional real-time communication (not HTTP polling)',
+        'Kafka as the cross-server message routing backbone with partitioning by recipientId',
+        'Store-and-forward with offline_queue + ACK for guaranteed at-least-once delivery',
+        'Server-assigned monotonic sequence numbers for strict message ordering per conversation',
+        'Signal Protocol (Double Ratchet + X3DH) for end-to-end encryption with forward secrecy',
+        'Cassandra partitioned by conversationId for write-heavy message storage (580K+ WPS)',
+        'Consistent hashing to route users to chat servers with minimal remapping on scale events',
+        'Hybrid fan-out (write for online, read for offline) to balance latency vs write amplification in groups'
       ],
       edgeCases: [
-        { scenario: 'Message delivered but recipient phone is off for days', impact: 'Messages queue indefinitely, consuming server storage and delaying delivery receipts', mitigation: 'Store-and-forward with TTL (30 days), push notification on reconnect, batch delivery of queued messages' },
-        { scenario: 'Group message fan-out to 256 members across regions', impact: 'High write amplification and inconsistent delivery order across participants', mitigation: 'Server-side ordering with sequence IDs per group, regional relay servers, async fan-out with delivery tracking' },
-        { scenario: 'End-to-end encryption key exchange during device switch', impact: 'New device cannot decrypt message history, potential security vulnerability during transition', mitigation: 'Signal Protocol with pre-key bundles, re-encrypt session on device registration, optional encrypted backup restore' },
-        { scenario: 'Media upload fails mid-transfer on slow network', impact: 'Partial upload wastes bandwidth, user must restart from beginning', mitigation: 'Resumable chunked uploads with server-side reassembly, client stores upload progress token' },
-        { scenario: 'Clock skew between sender and recipient devices', impact: 'Messages appear out of order in conversation view', mitigation: 'Server-assigned monotonic sequence numbers per conversation, use server timestamp for ordering' },
+        { scenario: 'Recipient phone is off or has no connectivity for days or weeks', impact: 'Offline queue grows unboundedly, consuming server storage. Delivery receipts are delayed indefinitely, leaving sender with single grey tick', mitigation: 'Offline queue with 30-day TTL in Cassandra. Push notification on reconnect. Batch delivery of queued messages (50 at a time) to prevent WebSocket buffer overflow. Alert sender if message is undelivered after 7 days' },
+        { scenario: 'Group message fan-out to 1,024 members spread across 5 regions', impact: 'High write amplification (1 message = 1,024 deliveries). Inconsistent delivery order across participants in different regions. Receipt tracking becomes O(N^2)', mitigation: 'Hybrid fan-out: write for online members, lazy pull for offline. Server-side sequence numbers ensure consistent ordering. Aggregate delivery receipts ("delivered to 847/1024") instead of individual tracking per member' },
+        { scenario: 'End-to-end encryption key exchange during device switch or reinstall', impact: 'New device cannot decrypt historical messages. Security vulnerability window during key transition if old device is compromised', mitigation: 'Signal Protocol pre-key bundles allow key exchange with offline users. New device registration invalidates old sessions. Optional encrypted cloud backup (Google Drive / iCloud) with user-provided password for history restoration' },
+        { scenario: 'Large media upload (500MB video) fails at 80% on a mobile network', impact: 'User loses 400MB of bandwidth and must restart upload from zero. Server has 400MB of orphaned chunks consuming storage', mitigation: 'Resumable chunked uploads with server-side tracking. Upload token allows resume from last successful chunk. Orphan cleanup job deletes incomplete uploads after 24 hours. Adaptive chunk size based on network quality' },
+        { scenario: 'Clock skew between sender and recipient devices (minutes or hours off)', impact: 'Messages appear wildly out of order in the conversation view if client timestamps are used for sorting', mitigation: 'Never use client timestamps for ordering. Server assigns monotonic sequence numbers via atomic Redis INCR per conversation. Client displays messages in sequence order. Client timestamp is stored only as metadata for "sent at" display' },
+        { scenario: 'Chat server crashes while holding 100K active WebSocket connections', impact: '100K users simultaneously disconnected. Message delivery interrupted mid-flight. Presence state becomes stale in Redis', mitigation: 'Clients reconnect with exponential backoff (jitter to prevent thundering herd). In-flight messages already persisted in Cassandra are safe. Presence TTL (60s) auto-expires stale entries. Connection router detects dead server and stops routing new connections to it' },
+        { scenario: 'Kafka consumer lag causes delayed message delivery during traffic spike', impact: 'Users see messages delivered seconds or minutes late despite recipient being online. Delivery order may be inconsistent across consumers', mitigation: 'Monitor consumer lag with alerts at >1 second. Auto-scale consumer groups horizontally. Priority queues for 1:1 messages over group messages. Circuit breaker falls back to direct server-to-server delivery if Kafka lag exceeds threshold' },
       ],
       tradeoffs: [
-        { decision: 'WebSocket vs long polling for message delivery', pros: 'WebSocket gives true real-time with lower overhead; long polling works through restrictive firewalls', cons: 'WebSocket requires persistent connection management; long polling adds latency and wastes connections', recommendation: 'WebSocket as primary with long-polling fallback for restrictive networks' },
-        { decision: 'Store messages on server vs device-only', pros: 'Server storage enables multi-device sync; device-only is more private', cons: 'Server storage increases infrastructure cost and attack surface; device-only loses messages on device loss', recommendation: 'Server-side store-and-forward with TTL, optional encrypted cloud backup for history' },
-        { decision: 'Cassandra vs MySQL for message storage', pros: 'Cassandra handles write-heavy workloads and scales horizontally; MySQL provides strong consistency', cons: 'Cassandra has eventual consistency and no cross-partition transactions; MySQL sharding is complex', recommendation: 'Cassandra partitioned by conversation ID for write scalability, MySQL for user metadata' },
+        { decision: 'WebSocket vs HTTP long polling for real-time message delivery', pros: 'WebSocket provides true bidirectional real-time with minimal overhead (2 bytes framing). Long polling works through corporate firewalls and restrictive proxies that block WebSocket upgrade', cons: 'WebSocket requires persistent connection management across 10,000+ servers and sophisticated load balancing (Layer 4). Long polling wastes server connections and adds 0.5-2s latency per message', recommendation: 'WebSocket as primary transport with automatic fallback to HTTP long polling when WebSocket upgrade fails (detected via handshake timeout)' },
+        { decision: 'Store-and-forward on server vs device-only message storage', pros: 'Server storage enables reliable offline delivery, multi-device sync, and message history on new devices. Device-only storage maximizes privacy and minimizes server infrastructure cost', cons: 'Server storage increases infrastructure cost significantly (3.65 PB/year for text alone) and creates a larger attack surface. Device-only storage means messages are permanently lost if device is lost or destroyed', recommendation: 'Server-side store-and-forward with 30-day TTL for delivery guarantee. Optional end-to-end encrypted cloud backup (to Google Drive or iCloud) for long-term history. Messages deleted from server after confirmed delivery to reduce storage' },
+        { decision: 'Cassandra vs MySQL/PostgreSQL for message storage', pros: 'Cassandra is purpose-built for write-heavy workloads (LSM-tree engine), scales horizontally by adding nodes, and supports partition-aware queries. MySQL provides ACID transactions, joins, and strong consistency for relational data', cons: 'Cassandra lacks cross-partition transactions, has eventual consistency by default, and requires careful data modeling (no joins, no secondary indexes). MySQL sharding is operationally complex and caps single-node write throughput at ~50K/s', recommendation: 'Cassandra for message storage (partition by conversationId, cluster by sequenceNum DESC). MySQL/PostgreSQL for user profiles, group metadata, and conversation settings. Redis for ephemeral state (presence, sessions, counters)' },
+        { decision: 'Fan-out on write vs fan-out on read for group messages', pros: 'Fan-out on write delivers instantly to all online members. Fan-out on read avoids N-fold write amplification in large groups', cons: 'Fan-out on write creates massive write amplification for groups with 1,000 members (1 message = 1,000 writes). Fan-out on read introduces delivery latency and requires complex client-side sync logic', recommendation: 'Hybrid approach: fan-out on write for groups up to 100 members (instant delivery), switch to fan-out on read for groups 100-1,024 members. Use a threshold that can be tuned based on observed latency and server load' },
+        { decision: 'Single global Kafka cluster vs regional Kafka clusters', pros: 'Single global cluster simplifies routing and guarantees total ordering. Regional clusters minimize cross-region latency for intra-region messages (the majority of traffic)', cons: 'Single global cluster has high cross-region latency for all messages and creates a global single point of failure. Regional clusters require cross-region replication (MirrorMaker) adding complexity and eventual consistency', recommendation: 'Regional Kafka clusters with cross-region relay via MirrorMaker. Most messages are intra-region (same-country conversations). Cross-region messages accept 150-300ms additional latency, which is acceptable for messaging' },
       ],
       layeredDesign: [
-        { name: 'Connection & Gateway Layer', purpose: 'Maintain persistent WebSocket connections and route messages to correct chat servers', components: ['WebSocket Gateway', 'Connection Manager', 'Load Balancer'] },
-        { name: 'Message Processing Layer', purpose: 'Handle message routing, encryption handshakes, and delivery guarantees', components: ['Chat Service', 'Message Queue (Kafka)', 'Delivery Tracker', 'Encryption Service'] },
-        { name: 'Storage Layer', purpose: 'Persist messages, media, and user profiles with partition-friendly schemas', components: ['Message Store (Cassandra)', 'Media Storage (S3)', 'User DB (MySQL)'] },
-        { name: 'Push & Notification Layer', purpose: 'Deliver notifications to offline users via platform push services', components: ['Push Service (APNs/FCM)', 'Presence Service', 'Offline Queue'] },
+        { name: 'Connection & Gateway Layer', purpose: 'Maintain 1 billion persistent WebSocket connections and route incoming traffic to the correct chat server. Layer 4 load balancers handle TCP connection routing. The gateway terminates TLS, authenticates tokens, and uses consistent hashing on userId to assign connections to chat servers. Health checks and connection draining ensure zero-downtime deploys.', components: ['WebSocket Gateway (Envoy/HAProxy)', 'L4 Load Balancer', 'Connection Router (Consistent Hash)', 'TLS Termination', 'Auth Token Validator'] },
+        { name: 'Message Processing Layer', purpose: 'Handle message routing between chat servers, delivery guarantees, sequence number assignment, and encryption key exchange. This is the core business logic layer. Messages are persisted to Cassandra, routed via Kafka, and tracked through the full delivery lifecycle (sent -> delivered -> read). The delivery tracker manages offline queues and push notification triggers.', components: ['Chat Service (Message Handler)', 'Kafka (Cross-server Message Bus)', 'Delivery Tracker (ACK Manager)', 'Sequence Number Service (Redis INCR)', 'Key Exchange Service (Pre-key Bundle Store)'] },
+        { name: 'Presence & Real-time Layer', purpose: 'Track online/offline status for 1 billion users with 33M heartbeat QPS. Redis cluster stores presence state with TTL-based expiration. Pub/sub propagates presence changes to subscribers in active conversations. Typing indicators flow through this layer as ephemeral WebSocket events (never persisted).', components: ['Presence Service (Redis Cluster)', 'Heartbeat Aggregator', 'Pub/Sub Fan-out', 'Typing Indicator Handler'] },
+        { name: 'Storage Layer', purpose: 'Persist messages, media, and user data with partition-friendly schemas optimized for the access patterns. Cassandra handles the extreme write throughput for messages. MySQL stores relational data (users, groups, settings). S3 stores encrypted media blobs with CDN for global delivery. Hot/warm/cold tiering based on message age minimizes storage cost.', components: ['Message Store (Cassandra)', 'User & Group DB (MySQL)', 'Media Storage (S3 + CloudFront CDN)', 'Offline Queue (Cassandra with TTL)', 'Backup Service (Encrypted cloud backup)'] },
+        { name: 'Push & Notification Layer', purpose: 'Deliver notifications to offline users via platform-specific push services. When a message cannot be delivered via WebSocket (recipient offline), this layer sends a push notification containing only a generic alert (no message content, for privacy). On reconnect, the actual messages are delivered from the offline queue.', components: ['Push Service (APNs for iOS, FCM for Android)', 'Push Token Registry', 'Notification Rate Limiter', 'Silent Push for Background Sync'] },
       ],
     },
     {
