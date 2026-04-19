@@ -2430,11 +2430,11 @@ Why Cassandra wins for messages:
           title: 'Storage Growth Projection',
           type: 'bar',
           data: [
-            { label: 'Day 1', value: 10 },
-            { label: 'Month', value: 300 },
-            { label: 'Year 1', value: 3650 },
-            { label: 'Year 3', value: 10950 },
-            { label: 'Year 5', value: 18250 },
+            { label: 'Day 1', value: 10, color: '#93c5fd' },
+            { label: 'Month', value: 300, color: '#60a5fa' },
+            { label: 'Year 1', value: 3650, color: '#3b82f6' },
+            { label: 'Year 3', value: 10950, color: '#2563eb' },
+            { label: 'Year 5', value: 18250, color: '#1d4ed8' },
           ],
           unit: 'TB',
           description: 'Message storage scales linearly at 10 TB/day without media'
