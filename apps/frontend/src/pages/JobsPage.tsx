@@ -670,7 +670,7 @@ export default function JobsPage() {
             background: 'transparent',
           }}
         >
-          <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '20px', textAlign: 'center' }}>
+          <div className="w-full lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '20px', textAlign: 'center' }}>
             {/* Main heading — compact */}
             <h1 className="heading-1" style={{
               fontSize: 'clamp(22px, 3vw, 32px)',
@@ -765,7 +765,7 @@ export default function JobsPage() {
 
         {/* ── Job URL Analysis Section ── */}
         <div style={{ background: 'transparent' }}>
-          <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <div className="w-full lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
             {!showUrlInput ? (
               <button
                 onClick={() => setShowUrlInput(true)}
@@ -945,7 +945,7 @@ export default function JobsPage() {
             borderBottom: '1px solid var(--border)',
           }}
         >
-          <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8">
             <div
               className="jobs-pills-scroll"
               style={{
@@ -988,7 +988,7 @@ export default function JobsPage() {
         </div>
 
         {/* ── Advanced Filter Bar ── */}
-        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '12px' }}>
+        <div className="w-full lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '12px' }}>
           {/* Toggle + active pills row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
@@ -1162,7 +1162,7 @@ export default function JobsPage() {
         </div>
 
         {/* ── Job Cards Grid ── */}
-        <div className="w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="w-full lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           {loading ? (
             /* Loading skeleton */
             <div

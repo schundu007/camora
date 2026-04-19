@@ -345,7 +345,7 @@ export default function DownloadPage() {
           top: 0,
         }}
       >
-        <div className="lg:max-w-[65%] mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="lg:max-w-[75%] mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
             <ArrowLeftIcon />
             <span>camora.cariara.com</span>
@@ -360,7 +360,7 @@ export default function DownloadPage() {
          HERO SECTION
          ══════════════════════════════════════════════════ */}
       <section className="relative z-10 pt-20 pb-16 px-6">
-        <div className="lg:max-w-[65%] mx-auto text-center">
+        <div className="lg:max-w-[75%] mx-auto text-center">
           {/* App icon */}
           <FadeInSection>
             <div className="flex justify-center mb-8">
@@ -542,7 +542,7 @@ export default function DownloadPage() {
          PLATFORM CARDS
          ══════════════════════════════════════════════════ */}
       <section className="relative z-10 pb-24 px-6">
-        <div className="lg:max-w-[65%] mx-auto">
+        <div className="lg:max-w-[75%] mx-auto">
           <FadeInSection>
             <h2
               className="text-center text-sm font-semibold uppercase tracking-widest mb-8"
@@ -714,7 +714,7 @@ export default function DownloadPage() {
          FEATURES GRID
          ══════════════════════════════════════════════════ */}
       <section className="relative z-10 pb-24 px-6">
-        <div className="lg:max-w-[65%] mx-auto">
+        <div className="lg:max-w-[75%] mx-auto">
           <FadeInSection>
             <h2
               className="text-center text-2xl sm:text-3xl font-bold mb-3"
@@ -774,7 +774,7 @@ export default function DownloadPage() {
          SYSTEM REQUIREMENTS
          ══════════════════════════════════════════════════ */}
       <section className="relative z-10 pb-24 px-6">
-        <div className="lg:max-w-[65%] mx-auto">
+        <div className="lg:max-w-[75%] mx-auto">
           <FadeInSection>
             <h2
               className="text-center text-2xl sm:text-3xl font-bold mb-12"
@@ -855,7 +855,7 @@ export default function DownloadPage() {
          ══════════════════════════════════════════════════ */}
       <footer className="relative z-10 pb-16 px-6">
         <div
-          className="lg:max-w-[65%] mx-auto pt-8"
+          className="lg:max-w-[75%] mx-auto pt-8"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
         >
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm">
