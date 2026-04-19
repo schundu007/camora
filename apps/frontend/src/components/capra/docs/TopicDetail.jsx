@@ -1743,21 +1743,9 @@ export default function TopicDetail({
                   {topicDetails.productMeta && (
                     <div className="p-5 pb-0">
                       <div className="flex flex-col lg:flex-row gap-5">
-                        {/* Left: product info */}
+                        {/* Left: product stats */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-3">
-                            {getCompanyLogoSrc(selectedTopic) ? (
-                              <CompanyLogo topicId={selectedTopic} size={44} />
-                            ) : (
-                              <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${topicDetails.color}15` }}>
-                                <Icon name={topicDetails.icon} size={24} style={{ color: topicDetails.color }} />
-                              </div>
-                            )}
-                            <div>
-                              <h2 className="text-xl font-bold text-[var(--text-primary)] landing-display">{topicDetails.productMeta.name}</h2>
-                              <p className="text-xs text-[var(--text-muted)] landing-body">{topicDetails.productMeta.tagline}</p>
-                            </div>
-                          </div>
+                          <p className="text-sm text-[var(--text-secondary)] landing-body mb-3">{topicDetails.productMeta.tagline}</p>
                           {/* Stats row */}
                           <div className="flex flex-wrap gap-4 mb-4">
                             {topicDetails.productMeta.stats.map((stat, i) => (
