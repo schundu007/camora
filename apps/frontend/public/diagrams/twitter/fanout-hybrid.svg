@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="500" fill="#fafbfc" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="36" text-anchor="middle" fill="#1e293b" font-size="22" font-weight="700">Fan-out Strategies: Write vs Read vs Hybrid</text>
+  <text x="600" y="56" text-anchor="middle" fill="#64748b" font-size="13">How Twitter delivers tweets to follower timelines at scale</text>
+
+  <!-- ===== LEFT: Fan-out on Write ===== -->
+  <rect x="16" y="75" width="370" height="340" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="16" y="75" width="370" height="40" rx="14 14 0 0" fill="#f97316"/>
+  <text x="201" y="101" text-anchor="middle" fill="white" font-size="14" font-weight="700">Fan-out on Write (Push)</text>
+
+  <!-- Author posts -->
+  <rect x="44" y="132" width="130" height="36" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="109" y="155" text-anchor="middle" fill="#c2410c" font-size="11" font-weight="600">Author posts tweet</text>
+
+  <line x1="109" y1="168" x2="109" y2="188" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+  <!-- Fan-out service -->
+  <rect x="44" y="192" width="130" height="36" rx="8" fill="#f97316" filter="url(#s)"/>
+  <text x="109" y="215" text-anchor="middle" fill="white" font-size="11" font-weight="600">Fan-out Service</text>
+
+  <!-- Push arrows to caches -->
+  <line x1="109" y1="228" x2="60" y2="262" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <line x1="109" y1="228" x2="109" y2="262" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <line x1="109" y1="228" x2="158" y2="262" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- Follower caches -->
+  <rect x="30" y="266" width="56" height="30" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="58" y="285" text-anchor="middle" fill="#c2410c" font-size="9" font-weight="600">Cache A</text>
+  <rect x="92" y="266" width="56" height="30" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="120" y="285" text-anchor="middle" fill="#c2410c" font-size="9" font-weight="600">Cache B</text>
+  <rect x="154" y="266" width="56" height="30" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="182" y="285" text-anchor="middle" fill="#c2410c" font-size="9" font-weight="600">Cache C</text>
+
+  <text x="109" y="316" text-anchor="middle" fill="#64748b" font-size="9">Push to ALL follower caches</text>
+
+  <!-- Pros/Cons -->
+  <rect x="220" y="132" width="148" height="88" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="294" y="152" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="700">PROS</text>
+  <text x="232" y="170" fill="#166534" font-size="9">&#10003; Fast timeline reads (O(1))</text>
+  <text x="232" y="186" fill="#166534" font-size="9">&#10003; Pre-computed timelines</text>
+  <text x="232" y="202" fill="#166534" font-size="9">&#10003; Simple read path</text>
+
+  <rect x="220" y="228" width="148" height="88" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="294" y="248" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="700">CONS</text>
+  <text x="232" y="266" fill="#991b1b" font-size="9">&#10007; Celebrity problem!</text>
+  <text x="232" y="282" fill="#991b1b" font-size="9">&#10007; 50M followers = 50M</text>
+  <text x="240" y="296" fill="#991b1b" font-size="9">writes per tweet</text>
+
+  <!-- Verdict -->
+  <rect x="36" y="336" width="330" height="30" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="201" y="356" text-anchor="middle" fill="#c2410c" font-size="10" font-weight="600">Works for users with &lt; 5K followers</text>
+
+  <!-- Divider -->
+  <line x1="396" y1="85" x2="396" y2="405" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,4"/>
+
+  <!-- ===== CENTER: Hybrid ===== -->
+  <rect x="410" y="75" width="380" height="340" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="410" y="75" width="380" height="40" rx="14 14 0 0" fill="#2563eb"/>
+  <text x="600" y="101" text-anchor="middle" fill="white" font-size="14" font-weight="700">Hybrid (Twitter's Approach)</text>
+
+  <!-- Threshold label -->
+  <rect x="438" y="128" width="334" height="28" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="605" y="147" text-anchor="middle" fill="#1d4ed8" font-size="11" font-weight="700">Threshold: 5,000 followers</text>
+
+  <!-- Left branch: regular users -->
+  <rect x="438" y="172" width="145" height="32" rx="8" fill="#f97316"/>
+  <text x="510" y="193" text-anchor="middle" fill="white" font-size="10" font-weight="600">Regular (&lt;5K)</text>
+
+  <line x1="510" y1="204" x2="510" y2="228" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <text x="510" y="246" text-anchor="middle" fill="#c2410c" font-size="10" font-weight="600">Fan-out on WRITE</text>
+  <text x="510" y="262" text-anchor="middle" fill="#64748b" font-size="9">Push to follower caches</text>
+
+  <line x1="510" y1="272" x2="510" y2="296" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <rect x="454" y="300" width="112" height="28" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="510" y="319" text-anchor="middle" fill="#c2410c" font-size="10" font-weight="600">Redis Caches</text>
+
+  <!-- Right branch: celebrities -->
+  <rect x="619" y="172" width="145" height="32" rx="8" fill="#7c3aed"/>
+  <text x="691" y="193" text-anchor="middle" fill="white" font-size="10" font-weight="600">Celebrity (&#8805;5K)</text>
+
+  <line x1="691" y1="204" x2="691" y2="228" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+
+  <text x="691" y="246" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">Fan-out on READ</text>
+  <text x="691" y="262" text-anchor="middle" fill="#64748b" font-size="9">Fetch at read time</text>
+
+  <line x1="691" y1="272" x2="691" y2="296" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+
+  <rect x="635" y="300" width="112" height="28" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="691" y="319" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">Tweet Store</text>
+
+  <!-- Merge arrows -->
+  <line x1="510" y1="328" x2="565" y2="352" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="691" y1="328" x2="636" y2="352" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Merge box -->
+  <rect x="555" y="352" width="90" height="32" rx="8" fill="#16a34a" filter="url(#s)"/>
+  <text x="600" y="373" text-anchor="middle" fill="white" font-size="10" font-weight="700">MERGE</text>
+
+  <text x="600" y="403" text-anchor="middle" fill="#166534" font-size="10" font-weight="600">Final Timeline</text>
+
+  <!-- Divider -->
+  <line x1="800" y1="85" x2="800" y2="405" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,4"/>
+
+  <!-- ===== RIGHT: Fan-out on Read ===== -->
+  <rect x="814" y="75" width="370" height="340" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="814" y="75" width="370" height="40" rx="14 14 0 0" fill="#7c3aed"/>
+  <text x="999" y="101" text-anchor="middle" fill="white" font-size="14" font-weight="700">Fan-out on Read (Pull)</text>
+
+  <!-- User requests timeline -->
+  <rect x="842" y="132" width="130" height="36" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="907" y="155" text-anchor="middle" fill="#6d28d9" font-size="11" font-weight="600">User opens feed</text>
+
+  <line x1="907" y1="168" x2="907" y2="188" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+  <!-- Timeline service -->
+  <rect x="842" y="192" width="130" height="36" rx="8" fill="#7c3aed" filter="url(#s)"/>
+  <text x="907" y="215" text-anchor="middle" fill="white" font-size="11" font-weight="600">Timeline Service</text>
+
+  <!-- Fetch arrows from followed users -->
+  <line x1="907" y1="228" x2="858" y2="262" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+  <line x1="907" y1="228" x2="907" y2="262" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+  <line x1="907" y1="228" x2="956" y2="262" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+
+  <!-- Tweet stores -->
+  <rect x="828" y="266" width="56" height="30" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="856" y="285" text-anchor="middle" fill="#6d28d9" font-size="9" font-weight="600">User 1</text>
+  <rect x="890" y="266" width="56" height="30" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="918" y="285" text-anchor="middle" fill="#6d28d9" font-size="9" font-weight="600">User 2</text>
+  <rect x="952" y="266" width="56" height="30" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="980" y="285" text-anchor="middle" fill="#6d28d9" font-size="9" font-weight="600">User N</text>
+
+  <text x="907" y="316" text-anchor="middle" fill="#64748b" font-size="9">Fetch from all followed users</text>
+
+  <!-- Pros/Cons -->
+  <rect x="1016" y="132" width="150" height="72" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="1091" y="152" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="700">PROS</text>
+  <text x="1028" y="170" fill="#166534" font-size="9">&#10003; No write amplification</text>
+  <text x="1028" y="186" fill="#166534" font-size="9">&#10003; Writes are instant</text>
+
+  <rect x="1016" y="212" width="150" height="88" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="1091" y="232" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="700">CONS</text>
+  <text x="1028" y="250" fill="#991b1b" font-size="9">&#10007; Slow timeline reads</text>
+  <text x="1028" y="266" fill="#991b1b" font-size="9">&#10007; Must query N users</text>
+  <text x="1028" y="282" fill="#991b1b" font-size="9">&#10007; Merge + sort at read</text>
+
+  <!-- Verdict -->
+  <rect x="834" y="336" width="330" height="30" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="999" y="356" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">Used only for celebrity tweets (&#8805;5K followers)</text>
+
+  <!-- Bottom Formula bar -->
+  <rect x="100" y="435" width="1000" height="46" rx="10" fill="#1e293b" filter="url(#s)"/>
+  <text x="600" y="464" text-anchor="middle" fill="white" font-size="14" font-weight="700" font-style="italic">Timeline(user) = Cache(regular follows) &#8746; Fetch(celebrity follows)</text>
+</svg>

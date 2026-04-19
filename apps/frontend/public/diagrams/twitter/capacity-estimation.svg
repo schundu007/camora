@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="14" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="41" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="16" y="70" width="222" height="360" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="16" y="70" width="222" height="34" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="127" y="93" text-anchor="middle" fill="white" font-size="13" font-weight="700">Traffic Estimates</text>
+
+  <text x="36" y="128" fill="#fbbf24" font-size="13" font-weight="700">200M DAU</text>
+  <text x="127" y="148" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">&#8595;</text>
+
+  <text x="36" y="172" fill="white" font-size="11">Tweets per day:</text>
+  <text x="36" y="192" fill="#fbbf24" font-size="15" font-weight="700">500 Million tweets/day</text>
+  <text x="127" y="212" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">&#8595;</text>
+
+  <text x="36" y="236" fill="white" font-size="11">Write QPS (Average):</text>
+  <text x="36" y="252" fill="rgba(255,255,255,0.7)" font-size="10">500M / 86,400s</text>
+  <text x="36" y="272" fill="#fbbf24" font-size="15" font-weight="800">&#8776; 6,000 writes/sec</text>
+  <text x="127" y="292" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">&#8595;</text>
+
+  <text x="36" y="316" fill="white" font-size="11">Read QPS (600:1 ratio):</text>
+  <text x="36" y="338" fill="#f97316" font-size="16" font-weight="800">&#8776; 3.5M reads/sec</text>
+
+  <text x="36" y="368" fill="white" font-size="11">Peak Write QPS (3&#215;):</text>
+  <text x="36" y="390" fill="#f97316" font-size="14" font-weight="800">&#8776; 18K writes/sec</text>
+
+  <text x="36" y="418" fill="white" font-size="11">Peak Read QPS (3&#215;):</text>
+  <text x="36" y="422" fill="#f97316" font-size="14" font-weight="800"/>
+
+  <!-- Column 2: Fan-out -->
+  <rect x="248" y="70" width="228" height="220" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="248" y="70" width="228" height="34" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="362" y="93" text-anchor="middle" fill="white" font-size="13" font-weight="700">Fan-out Volume</text>
+
+  <text x="268" y="128" fill="#fbbf24" font-size="12" font-weight="700">500M tweets/day</text>
+  <text x="362" y="148" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">&#215;</text>
+
+  <text x="268" y="172" fill="#fbbf24" font-size="12" font-weight="700">200 avg followers</text>
+  <text x="362" y="192" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">&#8595;</text>
+
+  <text x="268" y="216" fill="white" font-size="11">Timeline deliveries/day:</text>
+  <text x="268" y="240" fill="#f97316" font-size="18" font-weight="800">100 Billion/day</text>
+
+  <text x="268" y="270" fill="white" font-size="10">&#8776; 1.16M deliveries/sec avg</text>
+
+  <!-- Column 2b: Connections -->
+  <rect x="248" y="300" width="228" height="130" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="248" y="300" width="228" height="34" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="362" y="323" text-anchor="middle" fill="white" font-size="13" font-weight="700">Snowflake IDs</text>
+
+  <text x="268" y="358" fill="white" font-size="11">64-bit time-ordered IDs</text>
+  <text x="268" y="380" fill="white" font-size="11">Generation rate:</text>
+  <text x="268" y="402" fill="#fbbf24" font-size="14" font-weight="800">4K IDs/ms/machine</text>
+  <text x="268" y="422" fill="rgba(255,255,255,0.7)" font-size="10">No coordination needed</text>
+
+  <!-- Column 3: Storage -->
+  <rect x="486" y="70" width="228" height="360" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="486" y="70" width="228" height="34" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="600" y="93" text-anchor="middle" fill="white" font-size="13" font-weight="700">Storage Estimates</text>
+
+  <text x="506" y="128" fill="white" font-size="11" font-weight="600">Text Storage</text>
+  <text x="506" y="148" fill="white" font-size="10">Avg tweet: 280 chars &#215; 2 bytes</text>
+  <text x="506" y="166" fill="white" font-size="10">+ metadata &#8776; 1 KB/tweet</text>
+  <text x="600" y="184" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#8595;</text>
+  <text x="506" y="204" fill="white" font-size="10">500M &#215; 1KB =</text>
+  <text x="506" y="224" fill="#fbbf24" font-size="15" font-weight="800">500 GB/day (text)</text>
+
+  <line x1="506" y1="240" x2="694" y2="240" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="506" y="264" fill="white" font-size="11" font-weight="600">Media Storage</text>
+  <text x="506" y="284" fill="white" font-size="10">~20% tweets have media</text>
+  <text x="506" y="302" fill="white" font-size="10">Avg media: 300 KB</text>
+  <text x="600" y="320" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#8595;</text>
+  <text x="506" y="340" fill="#fbbf24" font-size="15" font-weight="800">30 TB/day (media)</text>
+
+  <line x1="506" y1="356" x2="694" y2="356" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="506" y="378" fill="white" font-size="11" font-weight="600">Yearly text storage:</text>
+  <text x="506" y="400" fill="#f97316" font-size="16" font-weight="800">&#8776; 180 TB/year</text>
+  <text x="506" y="418" fill="rgba(255,255,255,0.7)" font-size="10">Media: ~11 PB/year (CDN)</text>
+
+  <!-- Column 4: Key Insights -->
+  <rect x="724" y="70" width="460" height="360" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="954" y="98" text-anchor="middle" fill="white" font-size="14" font-weight="700">Key Insights</text>
+  <line x1="744" y1="108" x2="1164" y2="108" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="744" y="138" fill="white" font-size="12" font-weight="600">Read-heavy system (600:1 ratio)</text>
+  <text x="744" y="158" fill="rgba(255,255,255,0.7)" font-size="10">3.5M reads/sec vs 6K writes/sec. Timeline read</text>
+  <text x="744" y="173" fill="rgba(255,255,255,0.7)" font-size="10">optimization is the #1 priority. Caching is essential.</text>
+
+  <text x="744" y="205" fill="white" font-size="12" font-weight="600">Fan-out is the core challenge</text>
+  <text x="744" y="225" fill="rgba(255,255,255,0.7)" font-size="10">100B timeline deliveries/day. A celebrity with 50M followers</text>
+  <text x="744" y="240" fill="rgba(255,255,255,0.7)" font-size="10">tweeting creates massive write amplification. Hybrid fan-out</text>
+  <text x="744" y="255" fill="rgba(255,255,255,0.7)" font-size="10">(write for regular users, read for celebrities) is required.</text>
+
+  <text x="744" y="287" fill="white" font-size="12" font-weight="600">Media dominates storage</text>
+  <text x="744" y="307" fill="rgba(255,255,255,0.7)" font-size="10">30 TB/day media vs 500 GB/day text (60&#215; ratio).</text>
+  <text x="744" y="322" fill="rgba(255,255,255,0.7)" font-size="10">CDN offloads media delivery. Store metadata in DB,</text>
+  <text x="744" y="337" fill="rgba(255,255,255,0.7)" font-size="10">media in object storage (S3).</text>
+
+  <text x="744" y="369" fill="white" font-size="12" font-weight="600">Snowflake IDs solve ordering</text>
+  <text x="744" y="389" fill="rgba(255,255,255,0.7)" font-size="10">64-bit IDs encode timestamp + machine + sequence.</text>
+  <text x="744" y="404" fill="rgba(255,255,255,0.7)" font-size="10">Sortable by time, no coordination across data centers.</text>
+  <text x="744" y="419" fill="rgba(255,255,255,0.7)" font-size="10">4K IDs/ms/machine far exceeds 6K tweets/sec needs.</text>
+</svg>
