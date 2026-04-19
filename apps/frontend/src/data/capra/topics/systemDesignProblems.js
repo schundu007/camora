@@ -2281,6 +2281,201 @@ Why Cassandra wins for messages:
         { name: 'Storage Layer', purpose: 'Persist messages, media, and user data with partition-friendly schemas optimized for the access patterns. Cassandra handles the extreme write throughput for messages. MySQL stores relational data (users, groups, settings). S3 stores encrypted media blobs with CDN for global delivery. Hot/warm/cold tiering based on message age minimizes storage cost.', components: ['Message Store (Cassandra)', 'User & Group DB (MySQL)', 'Media Storage (S3 + CloudFront CDN)', 'Offline Queue (Cassandra with TTL)', 'Backup Service (Encrypted cloud backup)'] },
         { name: 'Push & Notification Layer', purpose: 'Deliver notifications to offline users via platform-specific push services. When a message cannot be delivered via WebSocket (recipient offline), this layer sends a push notification containing only a generic alert (no message content, for privacy). On reconnect, the actual messages are delivered from the offline queue.', components: ['Push Service (APNs for iOS, FCM for Android)', 'Push Token Registry', 'Notification Rate Limiter', 'Silent Push for Background Sync'] },
       ],
+      comparisonTables: [
+        {
+          id: 'websocket-vs-polling',
+          title: 'WebSocket vs Long Polling',
+          headers: ['Aspect', 'WebSocket', 'Long Polling'],
+          rows: [
+            ['Connection', 'Persistent bidirectional', 'Repeated HTTP requests'],
+            ['Latency', '<50ms real-time', '100-500ms polling interval'],
+            ['Server Load', 'One connection per client', 'New connection per poll'],
+            ['Scalability', '100K connections/server', 'Limited by HTTP overhead'],
+            ['Firewall', 'May be blocked', 'Works everywhere'],
+            ['Use Case', 'Primary — real-time chat', 'Fallback — restrictive networks'],
+          ],
+          verdict: 'WebSocket as primary with long-polling fallback'
+        },
+        {
+          id: 'cassandra-vs-mysql',
+          title: 'Cassandra vs MySQL for Messages',
+          headers: ['Aspect', 'Cassandra', 'MySQL'],
+          rows: [
+            ['Write Performance', '★★★★★ Optimized for writes', '★★★ Good with indexes'],
+            ['Read Pattern', 'Partition key lookups', 'Flexible queries'],
+            ['Scaling', 'Horizontal (add nodes)', 'Vertical + complex sharding'],
+            ['Consistency', 'Tunable (eventual default)', 'Strong ACID'],
+            ['Schema', 'Denormalized, wide rows', 'Normalized, joins'],
+            ['Best For', 'Message storage (write-heavy)', 'User metadata (read-heavy)'],
+          ],
+          verdict: 'Cassandra for messages, MySQL for user profiles — hybrid approach'
+        },
+        {
+          id: 'fanout-comparison',
+          title: 'Fan-out on Write vs Read (Group Messages)',
+          headers: ['Aspect', 'Fan-out on Write', 'Fan-out on Read'],
+          rows: [
+            ['When', 'Message sent → copy to all inboxes', 'Member opens chat → fetch from group'],
+            ['Write Cost', 'High (N copies for N members)', 'Low (1 write)'],
+            ['Read Cost', 'Low (read own inbox)', 'High (aggregate on read)'],
+            ['Latency', 'Pre-computed, fast reads', 'Compute on demand, slower'],
+            ['Storage', 'N× message copies', '1× message + index'],
+            ['Best For', 'Small groups (<100)', 'Large channels (1000+)'],
+          ],
+          verdict: 'Fan-out on write for groups ≤256, fan-out on read for broadcast channels'
+        }
+      ],
+      visualCards: [
+        {
+          id: 'message-lifecycle',
+          title: 'Message Lifecycle',
+          items: [
+            { label: '✓ Sent', description: 'Message reaches chat server, stored in queue' },
+            { label: '✓✓ Delivered', description: 'Message pushed to recipient\'s device via WebSocket' },
+            { label: '✓✓ Read', description: 'Recipient opens conversation, blue ticks shown' },
+          ]
+        },
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          items: [
+            { label: 'Gateway', description: 'Erlang/Elixir — 2M connections per server' },
+            { label: 'Message Bus', description: 'Apache Kafka — cross-server routing' },
+            { label: 'Session Cache', description: 'Redis Cluster — userId→serverId mapping' },
+            { label: 'Message DB', description: 'Cassandra — write-optimized, 1.5M QPS' },
+            { label: 'Media', description: 'S3 + CDN — encrypted blob storage' },
+            { label: 'Push', description: 'FCM/APNs — offline notification delivery' },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          items: [
+            { label: '2B+ users', description: 'Monthly active users worldwide' },
+            { label: '100B msgs/day', description: '50 billion sent + received' },
+            { label: '1.5M QPS peak', description: 'Message write throughput' },
+            { label: '33M QPS', description: 'Presence heartbeat load' },
+            { label: '10 TB/day', description: 'New message storage daily' },
+            { label: '10K+ servers', description: 'Chat gateway fleet size' },
+          ]
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'send-message-flow',
+          title: 'Send Message Flow (Both Online)',
+          description: 'Complete flow when User A sends a message to User B and both are online',
+          mermaidCode: `sequenceDiagram
+    participant A as User A (Sender)
+    participant CG1 as Chat Gateway 1
+    participant K as Kafka
+    participant R as Redis Cache
+    participant DB as Cassandra DB
+    participant CG2 as Chat Gateway 2
+    participant B as User B (Recipient)
+
+    A->>CG1: Send encrypted message via WebSocket
+    CG1->>CG1: Generate messageId + server timestamp
+    CG1-->>A: ACK ✓ (Sent)
+    CG1->>R: Lookup: Where is User B connected?
+    R-->>CG1: User B → Chat Gateway 2
+    CG1->>K: Publish message to routing topic
+    CG1->>DB: Persist message (async, status=SENT)
+    K->>CG2: Deliver message to Gateway 2
+    CG2->>B: Push message via WebSocket
+    B-->>CG2: ACK (Delivered)
+    CG2->>K: Publish delivery status
+    K->>CG1: Delivery confirmed
+    CG1-->>A: ✓✓ (Delivered)
+    B->>CG2: Read receipt
+    CG2->>K: Publish read status
+    K->>CG1: Read confirmed
+    CG1-->>A: ✓✓ Blue (Read)`
+        },
+        {
+          id: 'offline-delivery-flow',
+          title: 'Offline Message Delivery',
+          description: 'Flow when recipient is offline — store-and-forward pattern',
+          mermaidCode: `sequenceDiagram
+    participant A as User A (Sender)
+    participant CG1 as Chat Gateway 1
+    participant R as Redis Cache
+    participant Q as Offline Queue
+    participant PS as Push Service
+    participant DB as Cassandra DB
+    participant CG2 as Chat Gateway 2
+    participant B as User B (Offline → Online)
+
+    A->>CG1: Send message via WebSocket
+    CG1-->>A: ACK ✓ (Sent)
+    CG1->>R: Lookup: Where is User B?
+    R-->>CG1: User B is OFFLINE
+    CG1->>Q: Store in offline queue
+    CG1->>DB: Persist message (status=SENT)
+    CG1->>PS: Trigger push notification
+    PS->>B: Push notification (FCM/APNs)
+    Note over B: User opens app later...
+    B->>CG2: Connect via WebSocket
+    CG2->>R: Register: User B → Gateway 2
+    CG2->>Q: Fetch pending messages for User B
+    Q-->>CG2: Deliver queued messages (batch)
+    CG2->>B: Push all pending messages
+    B-->>CG2: ACK each message
+    CG2->>DB: Update status → DELIVERED
+    CG2-->>A: ✓✓ (Delivered) via Gateway 1`
+        },
+        {
+          id: 'group-message-flow',
+          title: 'Group Message Fan-out',
+          description: 'How a message is distributed to all group members',
+          mermaidCode: `sequenceDiagram
+    participant S as Sender
+    participant CG as Chat Gateway
+    participant GS as Group Service
+    participant K as Kafka
+    participant DB as Cassandra
+    participant CG1 as Gateway (Member 1)
+    participant CG2 as Gateway (Member 2)
+    participant CGn as Gateway (Member N)
+
+    S->>CG: Send group message
+    CG->>GS: Get group members list
+    GS-->>CG: [Member1, Member2, ..., MemberN]
+    CG->>DB: Store message once (groupId partition)
+    CG->>K: Publish to group topic
+    par Fan-out to all members
+        K->>CG1: Deliver to Member 1's gateway
+        K->>CG2: Deliver to Member 2's gateway
+        K->>CGn: Deliver to Member N's gateway
+    end
+    CG1-->>S: Member 1 delivered ✓✓
+    CG2-->>S: Member 2 delivered ✓✓
+    Note over CGn: Offline members → queue + push`
+        }
+      ],
+      charts: [
+        {
+          id: 'storage-growth',
+          title: 'Storage Growth Projection',
+          type: 'bar',
+          data: [
+            { label: 'Day 1', value: 10 },
+            { label: 'Month', value: 300 },
+            { label: 'Year 1', value: 3650 },
+            { label: 'Year 3', value: 10950 },
+            { label: 'Year 5', value: 18250 },
+          ],
+          unit: 'TB',
+          description: 'Message storage scales linearly at 10 TB/day without media'
+        }
+      ],
+      evolutionSteps: [
+        { title: 'Single Server', description: 'One chat server, all WebSocket connections, single database. Handles ~10K users.' },
+        { title: 'Horizontal Scaling', description: 'Multiple chat servers behind load balancer. Redis for session mapping. Handles ~1M users.' },
+        { title: 'Message Queue', description: 'Kafka for cross-server routing and guaranteed delivery. Offline message queue. Handles ~100M users.' },
+        { title: 'Global Distribution', description: 'Regional clusters, CDN for media, cross-region Kafka replication. Handles ~1B users.' },
+        { title: 'Optimization', description: 'Erlang gateways (2M conn/server), hot/cold storage, presence batching, sender keys for groups.' },
+      ],
     },
     {
       id: 'instagram',
