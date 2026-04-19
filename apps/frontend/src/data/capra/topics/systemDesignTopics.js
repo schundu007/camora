@@ -3834,201 +3834,668 @@ gRPC (Method-oriented):
 
       keyQuestions: [
         {
-          question: 'REST vs GraphQL vs gRPC - when to use each?',
-          answer: `**REST**:
-- Resource-oriented (nouns, not verbs)
-- HTTP verbs for operations (GET, POST, PUT, DELETE)
-- Stateless, cacheable
-- Best for: Public APIs, simple CRUD, browser clients
+          question: 'What are the core REST API design principles, and how do resource naming, HTTP methods, and status codes work together?',
+          answer: `**REST (Representational State Transfer)** is built on six architectural constraints defined by Roy Fielding in 2000. The three most practical for API design are: **Statelessness** (each request contains all information needed — no server-side sessions), **Uniform Interface** (consistent resource naming and HTTP verb usage), and **Cacheability** (responses explicitly indicate whether they can be cached).
 
-**GraphQL**:
-- Query language for APIs
-- Client specifies exactly what data it needs
-- Single endpoint, flexible queries
-- Best for: Mobile apps (bandwidth), complex data requirements, multiple clients with different needs
+**Resource Naming Best Practices**:
+\`\`\`
+GOOD (nouns, plural, hierarchical):
+  GET  /users                    → List users
+  GET  /users/123                → Get specific user
+  GET  /users/123/orders         → User's orders
+  POST /users/123/orders         → Create order for user
+  GET  /users/123/orders/456     → Specific order
 
-**gRPC**:
-- Remote Procedure Call using Protocol Buffers
-- Binary format (smaller, faster)
-- Strong typing, code generation
-- Bidirectional streaming
-- Best for: Microservices communication, high-performance internal APIs
+BAD (verbs, inconsistent):
+  GET  /getUsers                 → Verb in URL
+  GET  /user/123                 → Singular (inconsistent)
+  POST /createOrder              → Verb, no hierarchy
+  GET  /users/123/getOrders      → Redundant verb
+\`\`\`
+Keep hierarchy to 2 levels max. Use query params for filtering: \`GET /orders?status=pending&sort=-created_at&limit=20\`
 
-**Decision Matrix**:
-| Scenario | Choice |
-|----------|--------|
-| Public API | REST (most familiar) |
-| Mobile app | GraphQL (reduce over-fetching) |
-| Microservices | gRPC (performance) |
-| Real-time | gRPC streaming or WebSocket |
-| Browser SPA | REST or GraphQL |
-| Third-party integrations | REST (universal support) |`
+**HTTP Methods — Semantic Contract**:
+| Method | Purpose | Idempotent | Safe | Body |
+|--------|---------|------------|------|------|
+| GET | Retrieve resource(s) | Yes | Yes | No |
+| POST | Create resource | No | No | Yes |
+| PUT | Replace resource (full) | Yes | No | Yes |
+| PATCH | Update resource (partial) | No* | No | Yes |
+| DELETE | Remove resource | Yes | No | No |
+
+*PATCH can be idempotent if using JSON Merge Patch, but is not guaranteed.
+
+**Status Codes — The Right Code Matters**:
+- **2xx Success**: 200 OK (GET/PUT/PATCH), 201 Created (POST — include Location header), 204 No Content (DELETE)
+- **4xx Client Error**: 400 Bad Request (malformed input), 401 Unauthorized (no/invalid auth), 403 Forbidden (authenticated but not permitted), 404 Not Found, 409 Conflict (duplicate resource), 422 Unprocessable Entity (semantic validation error), 429 Too Many Requests (rate limited)
+- **5xx Server Error**: 500 Internal Server Error (never expose stack traces), 502 Bad Gateway (upstream failure), 503 Service Unavailable (overloaded/maintenance — include Retry-After header)
+
+Stripe uses 402 Payment Required for declined charges — a creative use of a rarely used status code that makes their API self-documenting.`
         },
         {
-          question: 'How do you handle API versioning?',
-          answer: `**URL Versioning** (most common):
-\`\`\`
-GET /api/v1/users
-GET /api/v2/users
-\`\`\`
-- Pros: Clear, cacheable, easy to test
-- Cons: URL pollution, maintaining multiple versions
+          question: 'What are the API versioning strategies, and what are the trade-offs of each?',
+          answer: `There are three primary API versioning strategies. The choice has significant implications for caching, discoverability, client migration, and operational complexity.
 
-**Header Versioning**:
+**1. URL Path Versioning** (most common — used by Stripe, GitHub, Twitter):
 \`\`\`
-GET /api/users
-Accept: application/vnd.api+json;version=1
+GET /api/v1/users/123
+GET /api/v2/users/123
 \`\`\`
-- Pros: Clean URLs
-- Cons: Hidden, harder to test
+- **Pros**: Immediately visible in URL, naturally cache-friendly (CDNs and proxies distinguish versions by URL), easy to test with curl/browser, simple API gateway routing (route /v1/* to service-v1, /v2/* to service-v2)
+- **Cons**: URL proliferation, clients must update URLs for new versions, hard to version a single endpoint independently
+- **Best for**: Public APIs where discoverability and simplicity matter most
 
-**Query Parameter**:
+**2. Header Versioning** (used by Azure, GitHub also supports this):
 \`\`\`
-GET /api/users?version=1
+GET /api/users/123
+Accept: application/vnd.myapi.v2+json
 \`\`\`
-- Pros: Simple
-- Cons: Less RESTful, caching issues
+Or custom header: \`X-API-Version: 2\`
+- **Pros**: Clean URLs (resource identity stays stable), can version individual resources independently, supports content negotiation
+- **Cons**: Hidden from URL inspection — developers cannot simply look at a URL to know the version. Harder to test (need to set headers), caching proxies require special configuration to vary by header
+- **Best for**: Internal APIs with sophisticated clients, APIs where URL stability is critical
 
-**Best Practices**:
-- Start with v1 (never v0)
-- Support at least N-1 versions
-- Deprecation timeline: 6-12 months notice
-- Breaking changes = new version:
-  - Removing fields
-  - Changing field types
-  - Changing semantics
-- Non-breaking (add to existing version):
-  - Adding optional fields
-  - Adding new endpoints`
+**3. Query Parameter Versioning**:
+\`\`\`
+GET /api/users/123?version=2
+\`\`\`
+- **Pros**: Easy to add, optional (can default to latest), visible in URL
+- **Cons**: Less RESTful (version is not a resource attribute), caching systems may not cache different query params correctly, easy to forget
+- **Best for**: Quick prototyping, internal tools, APIs that default to latest version
+
+**Hybrid approach** (production recommendation): Use URL path for major breaking versions (/v1/, /v2/) and headers for minor refinements within a version. This combines discoverability with fine-grained control.
+
+**Versioning Best Practices**:
+- Start with v1 (never v0 — it signals instability)
+- Support at least N-1 versions simultaneously
+- Announce deprecation 6-12 months before sunsetting a version
+- **Breaking changes** that require a new version: removing fields, changing field types, changing response semantics, removing endpoints
+- **Non-breaking** (safe to add within existing version): new optional fields, new endpoints, new query parameters, adding enum values`
         },
         {
-          question: 'How do you implement pagination?',
+          question: 'GraphQL vs REST — when should you use each, and what are the real-world examples?',
+          answer: `**REST** and **GraphQL** solve fundamentally different problems. REST is resource-oriented (you fetch a resource and get a fixed shape), while GraphQL is query-oriented (you describe the exact data shape you need).
+
+**The Over-fetching / Under-fetching Problem**:
+\`\`\`
+REST — 3 requests, extra data:
+  GET /users/123          → { id, name, email, bio, avatar, settings, ... }
+  GET /users/123/orders   → [{ id, total, items, shipping, ... }]
+  GET /orders/456/items   → [{ id, name, price, ... }]
+
+GraphQL — 1 request, exact data:
+  query {
+    user(id: "123") {
+      name
+      orders(first: 5) {
+        total
+        items { name, price }
+      }
+    }
+  }
+\`\`\`
+
+**Real-World Adoption**:
+- **GitHub** offers both REST and GraphQL APIs. Their docs recommend GraphQL for complex relational queries (projects + issues + labels) and REST for bulk data of one type (list all repos). A single GraphQL request can replace 3-4 REST calls when fetching nested data.
+- **Shopify** announced in October 2024 that GraphQL is now their definitive API. They reduced query costs by 75% after performance improvements, and one partner (Fisher Technology) reduced 200,000 REST API calls to 40,000 GraphQL calls. All new Shopify App Store apps must use GraphQL as of April 2025.
+- **Netflix** uses a Federated GraphQL gateway across their microservices, allowing mobile and TV clients to request exactly the data they need for each screen.
+
+**When to use REST**:
+- Public-facing APIs where universal familiarity matters (80%+ of developers know REST)
+- Simple CRUD operations with predictable data shapes
+- Heavy caching requirements (REST responses cache naturally via HTTP headers; GraphQL caching is harder since all requests go to a single POST endpoint)
+- Third-party integrations where simplicity is paramount
+
+**When to use GraphQL**:
+- Mobile applications where bandwidth is constrained (eliminate over-fetching)
+- Multiple client types (web, mobile, TV) needing different data shapes from the same API
+- Complex nested data (e.g., a user's teams, each team's projects, each project's recent activity)
+- Rapidly evolving APIs where adding fields is frequent (no versioning needed — just add fields)
+
+**GraphQL Pitfalls**:
+- **N+1 query problem**: A naive resolver for \`users { orders { items } }\` executes 1 query for users, N queries for orders, M queries for items. Solution: DataLoader batching.
+- **Expensive queries**: A client can request deeply nested data that overwhelms the server. Solution: query depth limiting, query cost analysis, persisted queries.
+- **Caching complexity**: Single-endpoint POST requests don't cache with standard HTTP caching. Solution: CDN-level caching with persisted query IDs (Apollo), or @cacheControl directives.`
+        },
+        {
+          question: 'gRPC vs REST — when should you choose gRPC, and what are the performance differences?',
+          answer: `**gRPC** (Google Remote Procedure Call) uses Protocol Buffers for serialization and HTTP/2 for transport. It is fundamentally different from REST in architecture and performance characteristics.
+
+**Performance Comparison** (real benchmarks):
+| Metric | REST (JSON/HTTP 1.1) | gRPC (Protobuf/HTTP 2) |
+|--------|---------------------|----------------------|
+| Avg latency | ~45ms | ~12ms (3-4x faster) |
+| Payload size | 100 bytes (JSON) | 10-20 bytes (Protobuf, 5-10x smaller) |
+| CPU usage | Baseline | 19% lower |
+| Memory | Baseline | 34% lower |
+| Bandwidth | Baseline | 41% lower |
+
+In certain microservice architectures, gRPC outperforms REST by up to 7x.
+
+**Why gRPC is faster**:
+1. **Binary serialization**: Protobuf encodes data in binary — no field name repetition, no quotes, no braces. A JSON object \`{"user_id": 12345, "name": "Alice"}\` might be 40 bytes; the Protobuf equivalent is ~12 bytes.
+2. **HTTP/2 multiplexing**: Multiple requests share one TCP connection. No head-of-line blocking. Header compression (HPACK) reduces overhead.
+3. **Code generation**: \`.proto\` files generate typed client/server stubs in any language. Zero manual serialization code, compile-time type safety.
+
+**Streaming — gRPC's killer feature**:
+\`\`\`
+Four communication patterns:
+
+Unary:           Client ──req──▶ Server ──res──▶ Client
+Server stream:   Client ──req──▶ Server ══res══▶ Client (continuous)
+Client stream:   Client ══req══▶ Server ──res──▶ Client
+Bidirectional:   Client ══req══▶ Server ══res══▶ Client (both ways)
+\`\`\`
+REST has no native streaming — you need WebSocket or SSE as separate protocols. gRPC streaming is built into the protocol.
+
+**When to use gRPC**:
+- Internal microservice-to-microservice communication (Netflix, Google Cloud, Square)
+- High-throughput, low-latency requirements (real-time trading, gaming backends)
+- Polyglot environments (generate clients in Go, Java, Python, Rust from one .proto file)
+- Streaming use cases (live feeds, sensor data, chat)
+
+**When NOT to use gRPC**:
+- **Browser clients**: gRPC requires HTTP/2 and binary framing. Browsers don't support gRPC natively — you need grpc-web, which adds a proxy layer and loses some features.
+- **Public APIs**: Developers expect JSON and curl-friendly endpoints. Binary Protobuf is not human-readable.
+- **Simple CRUD**: The overhead of maintaining .proto files and code generation is not worth it for basic APIs.
+- **Debugging**: You cannot inspect gRPC traffic with standard HTTP tools. Need grpcurl or specialized tooling.
+
+**Common hybrid pattern**: REST/GraphQL externally (public API, browser), gRPC internally (between microservices). The API Gateway translates: client sends JSON REST request, gateway converts to gRPC call to backend services.`
+        },
+        {
+          question: 'How do you implement API rate limiting and throttling?',
+          answer: `**Why rate limiting matters**: Without it, a single abusive client can exhaust server resources, degrade experience for all users, and rack up massive cloud bills. Every production API implements rate limiting.
+
+**Real-world rate limits** (actual numbers):
+| Service | Limit | Scope |
+|---------|-------|-------|
+| Stripe | 100 req/sec | Per connected account |
+| Stripe | 25 req/sec | Default per endpoint |
+| GitHub REST | 5,000 req/hour | Per authenticated user |
+| GitHub REST | 60 req/hour | Unauthenticated |
+| GitHub GraphQL | 5,000 points/hour | Per authenticated user |
+| Twitter/X | 300 req/15min | Per user (app context) |
+| OpenAI | Varies by tier | Per org, tokens/min + req/min |
+
+**Rate Limit Response Headers** (industry standard):
+\`\`\`
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1620000060
+Retry-After: 30
+\`\`\`
+
+**Implementation layers**:
+1. **CDN/Edge** (Cloudflare, AWS CloudFront): Coarse IP-based limits for DDoS (10K req/min). Blocks malicious traffic before it reaches your servers.
+2. **API Gateway** (Kong, AWS API Gateway): Per-API-key or per-user limits. Handles auth before forwarding. Kong can do 100K rate limit checks/sec with Redis.
+3. **Application layer**: Fine-grained per-endpoint limits. Different limits for GET vs POST, different tiers for free vs pro users.
+4. **Database layer**: Connection pooling limits. PostgreSQL max_connections, Redis maxclients.
+
+**Per-user vs Per-IP vs Per-API-key**:
+- **Per-IP**: Simple but broken behind NAT — thousands of users behind a corporate proxy share one IP. Good only as first-pass DDoS protection.
+- **Per-API-key**: Most common for public APIs. Each key has its own quota. Easy to track, throttle, and bill.
+- **Per-user**: Best for authenticated APIs. Fair regardless of how many devices or IPs a user has.
+- **Composite**: Per-user AND per-IP together. Stripe does this — user-level for billing fairness, IP-level for abuse prevention.`
+        },
+        {
+          question: 'How do you implement pagination, and what is the performance difference between cursor-based and offset-based?',
           answer: `**Offset-based Pagination**:
 \`\`\`
 GET /users?limit=20&offset=40  (page 3)
+
+SQL: SELECT * FROM users ORDER BY id LIMIT 20 OFFSET 40
 
 Response:
 {
   "data": [...],
   "pagination": {
-    "total": 1000,
+    "total": 1000000,
     "limit": 20,
     "offset": 40,
     "hasMore": true
   }
 }
 \`\`\`
-- Pros: Jump to any page, simple
-- Cons: Inconsistent if data changes, slow for large offsets
+
+**The Offset Performance Cliff** — real benchmark data:
+| Page | Offset | Offset Time | Cursor Time | Difference |
+|------|--------|-------------|-------------|------------|
+| 1 | 0 | 10ms | 10ms | Same |
+| 100 | 2000 | 15ms | 10ms | 1.5x |
+| 1000 | 20000 | 200ms | 10ms | 20x |
+| 10000 | 200000 | 1,800ms | 10ms | **177x** |
+
+**Why offset is slow**: \`OFFSET 200000\` forces the database to scan and discard 200,000 rows before returning 20 results. The cost grows linearly with offset value. At page 10,000, you are scanning 200K rows to return 20.
 
 **Cursor-based Pagination** (recommended):
 \`\`\`
-GET /users?limit=20&cursor=abc123
+GET /users?limit=20&cursor=eyJpZCI6MTIzNDV9
+
+SQL: SELECT * FROM users WHERE id > 12345 ORDER BY id LIMIT 20
 
 Response:
 {
   "data": [...],
   "pagination": {
-    "nextCursor": "xyz789",
+    "nextCursor": "eyJpZCI6MTIzNjV9",
     "hasMore": true
   }
 }
 \`\`\`
-- Cursor = encoded position (e.g., last seen ID)
-- Pros: Consistent, efficient (no OFFSET)
-- Cons: Can't jump to page N
 
-**Keyset Pagination** (variant of cursor):
+**Why cursor is O(1)**: The \`WHERE id > 12345\` clause uses the primary key index to jump directly to the right position — no scanning, no discarding. Performance is constant whether you are on page 1 or page 10,000.
+
+**Cursor encoding**: Base64-encode the position (\`btoa(JSON.stringify({id: 12345}))\`) to make cursors opaque. Never expose raw IDs or column values — this prevents clients from constructing arbitrary cursors and lets you change the underlying sort key without breaking clients.
+
+**Data Consistency Advantage**: If a new record is inserted while a user is paginating with offset, subsequent pages may show duplicates or skip records (because offsets shift). Cursors track specific records, not positions, so they are immune to this problem.
+
+**Keyset Pagination** (multi-column cursor):
 \`\`\`sql
-WHERE created_at < '2024-01-01' AND id < 12345
+-- For sorting by created_at DESC, id DESC
+WHERE (created_at, id) < ('2025-01-15T10:00:00Z', 12345)
 ORDER BY created_at DESC, id DESC
 LIMIT 20
 \`\`\`
+Requires a composite index on (created_at, id) for optimal performance.
 
-**Best practice**: Use cursor-based for infinite scroll, offset for admin dashboards`
+**Decision framework**:
+- **Cursor-based**: Infinite scroll, mobile feeds, real-time data, large datasets (>10K records)
+- **Offset-based**: Admin dashboards where "jump to page N" is required, small datasets (<5K records), export/reporting UIs
+- **Keyset**: When sorting by non-unique columns (created_at + id as tiebreaker)`
         },
         {
-          question: 'How do you design error responses?',
-          answer: `**Consistent Error Format**:
+          question: 'How do you compare API authentication methods — OAuth2, JWT, and API keys?',
+          answer: `Each authentication method serves a different trust boundary. Choosing the wrong one creates security vulnerabilities or unnecessary complexity.
+
+**API Keys** — machine-to-machine, simplest:
+\`\`\`
+GET /api/users
+X-API-Key: sk_live_abc123def456
+\`\`\`
+- **How it works**: Client includes a secret key with every request. Server looks up key in database, finds associated permissions/account.
+- **Pros**: Dead simple, no OAuth dance, good for server-to-server (Stripe, SendGrid, Twilio all use API keys)
+- **Cons**: No user context (key represents an account, not a person), hard to rotate without downtime, if leaked the key works until manually revoked
+- **Security**: Always use separate keys for test vs production (Stripe's sk_test_ vs sk_live_ pattern). Never expose in client-side code.
+- **Best for**: Server-to-server integrations, CI/CD pipelines, backend scripts
+
+**JWT (JSON Web Tokens)** — stateless user sessions:
+\`\`\`
+GET /api/users
+Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
+
+Decoded payload:
+{
+  "sub": "user_123",
+  "email": "alice@example.com",
+  "roles": ["user", "admin"],
+  "iat": 1700000000,
+  "exp": 1700000900  // 15 min
+}
+\`\`\`
+- **How it works**: Server creates a signed token containing user claims. Client stores it (usually in httpOnly cookie or memory). Server verifies the signature on each request without a database lookup.
+- **Pros**: Stateless — any server can verify without shared session store. Contains user context. Works across domains/services.
+- **Cons**: Cannot revoke individual tokens until they expire (need a blocklist for immediate revocation). Token size grows with claims. Sensitive data in tokens requires encryption (JWE), not just signing (JWS).
+- **Best for**: SPAs, mobile apps, microservice-to-microservice auth (service tokens), any scenario where stateless verification matters
+
+**OAuth 2.0** — delegated third-party access:
+\`\`\`
+1. User clicks "Login with Google"
+2. Redirect to Google's auth server
+3. User grants permission (scopes: email, profile)
+4. Google redirects back with authorization code
+5. Your server exchanges code for access_token + refresh_token
+6. Use access_token for Google API calls (on user's behalf)
+\`\`\`
+- **How it works**: OAuth is an authorization framework — it lets User A grant App B limited access to Service C without sharing credentials.
+- **Pros**: Users never share passwords with your app, granular scopes (read-only vs read-write), token revocation via provider, widely supported (Google, GitHub, Microsoft)
+- **Cons**: Complex implementation (multiple grant types, PKCE for SPAs, token refresh flow), requires redirect flow (not great for server-to-server)
+- **Best for**: "Login with Google/GitHub" social auth, third-party API access (e.g., posting to Twitter on user's behalf), marketplace apps (Shopify, Slack)
+
+**Decision framework**:
+| Scenario | Method | Reason |
+|----------|--------|--------|
+| Stripe integration (server) | API Key | Simple, server-to-server, account-level |
+| User login in SPA | JWT (via OAuth) | Stateless, contains user claims |
+| "Login with Google" | OAuth 2.0 | Delegated access, no password sharing |
+| Microservice-to-microservice | JWT (service token) | Signed, contains service identity |
+| Webhook verification | HMAC signature | Verify webhook origin, no auth flow |
+
+**Production best practices**: Short-lived access tokens (15 min) + long-lived refresh tokens (30 days). Always HTTPS. Store tokens in httpOnly cookies (not localStorage — XSS vulnerable). Rotate API keys periodically. Include rate limiting per key/user.`
+        },
+        {
+          question: 'What is idempotency in API design, and why is it critical for payment systems?',
+          answer: `**Idempotency** means making the same request multiple times produces the same result as making it once. This is critical because networks are unreliable — clients retry failed requests, and without idempotency, retries can cause duplicate charges, double-created orders, or repeated emails.
+
+**HTTP Methods and Natural Idempotency**:
+\`\`\`
+GET    /users/123         → Always returns same user    (IDEMPOTENT, SAFE)
+PUT    /users/123         → Replaces user with same data (IDEMPOTENT)
+DELETE /users/123         → First call deletes, second returns 404 (IDEMPOTENT)
+PATCH  /users/123         → Partial update, may not be idempotent
+POST   /users             → Creates new user each time  (NOT IDEMPOTENT)
+\`\`\`
+
+**Why POST is dangerous**: If a client sends \`POST /payments\` and the request succeeds but the response is lost (network timeout), the client retries. Without idempotency protection, the server processes the payment again — double charging the customer.
+
+**Idempotency Keys** (Stripe pattern — industry standard):
+\`\`\`
+POST /v1/charges
+Idempotency-Key: req_abc123def456
+Content-Type: application/json
+
+{ "amount": 2000, "currency": "usd", "source": "tok_..." }
+\`\`\`
+
+**Server-side implementation**:
+\`\`\`
+1. Client generates unique key (UUID) per logical operation
+2. Server receives request + idempotency key
+3. Server checks: has this key been seen before?
+   ├─ YES → Return stored response (exact same as first time)
+   └─ NO → Process request, store (key → response) with TTL
+4. TTL: 24-48 hours (Stripe uses 24h)
+\`\`\`
+
+**Storage pattern** (Redis or database):
+\`\`\`
+idempotency_keys table:
+  key: varchar PK
+  request_hash: varchar    -- Verify same request body
+  response_code: int
+  response_body: jsonb
+  created_at: timestamp
+  expires_at: timestamp    -- 24h TTL
+
+On duplicate key:
+  - If request_hash matches → return stored response
+  - If request_hash differs → return 422 (same key, different request = bug)
+  - If original request is still in-progress → return 409 (concurrent retry)
+\`\`\`
+
+**Real-world idempotency requirements**:
+- **Stripe**: Requires Idempotency-Key header for all POST requests. Keys expire after 24 hours. Replays return the original response within that window.
+- **PayPal**: Uses PayPal-Request-Id header for idempotency on payment creation.
+- **Square**: Requires idempotency_key in the request body for payment and order mutations.
+- **AWS**: Many AWS APIs are naturally idempotent (e.g., S3 PUT overwrites, creating a DynamoDB item with same key replaces it).
+
+**Beyond payments** — where idempotency matters:
+- Order creation (prevent duplicate orders)
+- Email/notification sending (prevent duplicate sends)
+- Resource provisioning (prevent duplicate VMs/containers)
+- Any state mutation that has real-world side effects`
+        },
+        {
+          question: 'What is the API gateway pattern, and what problems does it solve?',
+          answer: `An **API gateway** is a single entry point for all client requests that sits between external consumers and internal microservices. It handles cross-cutting concerns so individual services do not have to.
+
+**Without a gateway** — every service reimplements:
+\`\`\`
+Client ──auth──▶ User Service (has own auth, rate limiting, logging)
+Client ──auth──▶ Order Service (has own auth, rate limiting, logging)
+Client ──auth──▶ Payment Service (has own auth, rate limiting, logging)
+Client ──auth──▶ Search Service (has own auth, rate limiting, logging)
+
+Problem: 4 services x 5 concerns = 20 implementations to maintain
+\`\`\`
+
+**With a gateway** — centralized concerns:
+\`\`\`
+Client ──HTTPS──▶ API Gateway ──HTTP──▶ User Service
+                       │          ──gRPC──▶ Order Service
+                       │          ──gRPC──▶ Payment Service
+                       │          ──HTTP──▶ Search Service
+                       │
+              Handles: SSL termination
+                       Authentication / JWT validation
+                       Rate limiting (per user/key)
+                       Request/response transformation
+                       Load balancing
+                       Logging & metrics
+                       CORS headers
+                       API versioning routing
+\`\`\`
+
+**Core gateway responsibilities**:
+1. **Authentication & Authorization**: Validate JWT/API keys once at the edge. Pass user identity to downstream services via headers (X-User-Id, X-User-Roles). Services trust the gateway.
+2. **Rate Limiting**: Centralized per-user/per-key limits. Services behind the gateway do not need their own rate limiting.
+3. **Request Routing**: Route /api/v1/users/* to user-service, /api/v1/orders/* to order-service. Path-based, header-based, or weighted routing for canary deploys.
+4. **Protocol Translation**: Accept REST (JSON) from external clients, convert to gRPC (Protobuf) for internal services. Clients get a familiar REST API; services get gRPC performance.
+5. **Response Aggregation**: Combine data from multiple services into a single response. A mobile app requests /api/dashboard, the gateway calls user-service + order-service + notification-service in parallel and merges results.
+6. **Caching**: Cache frequently requested, rarely changing data at the gateway layer.
+
+**Popular API Gateways**:
+| Gateway | Type | Strengths |
+|---------|------|-----------|
+| Kong | Open source | Plugin ecosystem (200+), Lua extensibility, PostgreSQL/Cassandra backed |
+| AWS API Gateway | Managed | Lambda integration, usage plans, API keys, automatic scaling |
+| Envoy | Open source | L7 proxy, xDS API, gRPC-native, service mesh backbone (Istio) |
+| NGINX Plus | Commercial | Battle-tested performance, Lua scripting, rich ecosystem |
+| Apigee (Google) | Managed | Enterprise features, analytics, monetization, developer portal |
+
+**BFF Pattern** (Backend for Frontend): Instead of one gateway for all clients, create specialized gateways per client type — Web BFF, Mobile BFF, Partner BFF. Each aggregates and shapes data specifically for its client's needs. Used by Netflix (separate gateways for TV, mobile, web).
+
+**Anti-patterns to avoid**:
+- **God gateway**: Putting business logic in the gateway. It should only handle cross-cutting infrastructure concerns.
+- **Single point of failure**: Always deploy gateways as a cluster behind a load balancer. Kong, Envoy, and AWS API Gateway are all horizontally scalable.
+- **Gateway as transformation layer**: Heavy request/response transformation adds latency. Keep transformations lightweight.`
+        },
+        {
+          question: 'How do you design error responses that are actually useful?',
+          answer: `**The Stripe Standard** — arguably the best error response format in the industry:
+\`\`\`json
+{
+  "error": {
+    "type": "card_error",
+    "code": "card_declined",
+    "message": "Your card was declined.",
+    "param": "source",
+    "decline_code": "insufficient_funds",
+    "doc_url": "https://stripe.com/docs/error-codes/card-declined",
+    "request_id": "req_abc123def456"
+  }
+}
+\`\`\`
+
+**Why this works**: Machine-readable code for programmatic handling, human-readable message for display, documentation link for developers, request ID for support debugging, and specific param identifying which field caused the error.
+
+**A production error response format**:
 \`\`\`json
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Invalid input data",
+    "message": "Invalid request parameters",
     "details": [
-      {
-        "field": "email",
-        "message": "Invalid email format"
-      }
+      { "field": "email", "message": "Must be a valid email address", "code": "INVALID_FORMAT" },
+      { "field": "age", "message": "Must be at least 18", "code": "MIN_VALUE", "min": 18 }
     ],
-    "requestId": "req_abc123",
+    "request_id": "req_2f8a91bc",
+    "timestamp": "2025-01-15T10:30:00Z",
     "documentation": "https://api.example.com/docs/errors#VALIDATION_ERROR"
   }
 }
 \`\`\`
 
-**HTTP Status Codes**:
-- 200 OK: Success
-- 201 Created: Resource created
-- 204 No Content: Success, no body (DELETE)
-- 400 Bad Request: Client error (validation)
-- 401 Unauthorized: Missing/invalid auth
-- 403 Forbidden: Authenticated but not allowed
-- 404 Not Found: Resource doesn't exist
-- 409 Conflict: Conflict with current state
-- 422 Unprocessable: Semantic errors
-- 429 Too Many Requests: Rate limited
-- 500 Internal Server Error: Server bug
-- 503 Service Unavailable: Overloaded/maintenance
+**HTTP Status Code Selection** — common mistakes:
+\`\`\`
+WRONG: 200 { "success": false, "error": "Not found" }  → Hiding errors in 200
+WRONG: 500 for invalid user input                        → Client error is not server error
+WRONG: 400 for everything                                → Lazy, loses meaning
 
-**Best Practices**:
-- Always include request ID for debugging
-- Use machine-readable error codes
-- Provide human-readable messages
-- Link to documentation
-- Don't expose internal errors to clients`
+RIGHT:
+  400 → Malformed request (bad JSON, missing required field)
+  401 → No auth token / expired token
+  403 → Valid auth but insufficient permissions
+  404 → Resource genuinely does not exist
+  409 → Conflict (duplicate email, concurrent update)
+  422 → Semantically invalid (email format ok, but email already registered)
+  429 → Rate limited (always include Retry-After header)
+  500 → Unhandled server error (log the stack trace, return generic message)
+  503 → Service temporarily unavailable (maintenance, overloaded — include Retry-After)
+\`\`\`
+
+**Security in error responses**:
+- Never expose stack traces, database errors, or internal service names to clients
+- Use generic messages for auth failures ("Invalid credentials" not "User not found" vs "Wrong password" — the latter leaks which emails are registered)
+- Rate limit error endpoints — attackers use error responses to enumerate valid accounts
+- Include request IDs in all responses (success and error) for debugging without exposing internals`
         },
         {
-          question: 'How do you handle authentication in APIs?',
-          answer: `**API Keys** (simplest):
-\`\`\`
-GET /api/users
-X-API-Key: sk_live_abc123
-\`\`\`
-- Pros: Simple, good for server-to-server
-- Cons: No user context, hard to rotate
+          question: 'How does API documentation work with OpenAPI/Swagger, and why does auto-generation matter?',
+          answer: `**The Documentation Drift Problem**: Manually maintained API docs inevitably diverge from the actual API. A developer changes a response field and forgets to update the docs. Clients build against stale documentation and break.
 
-**JWT (JSON Web Tokens)**:
-\`\`\`
-GET /api/users
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+**OpenAPI Specification (formerly Swagger)** solves this by making the API contract machine-readable:
+\`\`\`yaml
+openapi: 3.1.0
+info:
+  title: User API
+  version: 1.0.0
 
-JWT Payload:
+paths:
+  /api/v1/users:
+    get:
+      summary: List users
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/User' }
+                  pagination:
+                    $ref: '#/components/schemas/CursorPagination'
+        '429':
+          description: Rate limited
+          headers:
+            Retry-After: { schema: { type: integer } }
+\`\`\`
+
+**Two approaches to API-first development**:
+
+1. **Design-first** (recommended for new APIs): Write the OpenAPI spec first, review with stakeholders, then generate server stubs and client SDKs from the spec. The spec IS the source of truth. Used by large organizations (Google, Microsoft Azure).
+
+2. **Code-first** (common in practice): Write the API code, then generate the OpenAPI spec from annotations/decorators. Tools: swagger-jsdoc (Node.js), FastAPI (Python — automatic from type hints), Springdoc (Java).
+
+**What you get from an OpenAPI spec**:
+- **Interactive docs**: Swagger UI or Redoc — developers can try endpoints in the browser
+- **Client SDK generation**: openapi-generator creates typed clients in 40+ languages from one spec
+- **Server stub generation**: Generate route handlers with validation from the spec
+- **Contract testing**: Validate that your API responses match the spec (Prism, Dredd)
+- **Mock servers**: Generate a mock server from the spec for frontend development before the backend is ready
+
+**Best practices for API documentation**:
+- Include working examples for every endpoint (request and response)
+- Document all error responses, not just the happy path
+- Provide authentication/authorization examples with real (test) tokens
+- Maintain a changelog with breaking vs non-breaking changes
+- Offer SDKs in popular languages — Stripe provides official SDKs in Ruby, Python, Node, Go, Java, PHP, .NET
+- Use Postman collections or similar for interactive testing environments`
+        },
+        {
+          question: 'What are the key REST API naming conventions and design patterns you should follow?',
+          answer: `**Resource Naming Conventions** — the most visible part of your API:
+
+\`\`\`
+RULE 1: Use plural nouns for collections
+  /users (not /user)
+  /orders (not /order)
+  /invoices (not /invoice)
+
+RULE 2: Use IDs for specific resources
+  /users/123
+  /orders/abc-def-789
+
+RULE 3: Nest resources to show relationships (max 2 levels)
+  /users/123/orders          → User's orders
+  /users/123/orders/456      → Specific order
+  /orders/456/items           → Order's items
+  BAD: /users/123/orders/456/items/789/reviews  → Too deep
+
+RULE 4: Use query params for filtering, sorting, pagination
+  /orders?status=pending
+  /orders?sort=-created_at (- prefix for descending)
+  /orders?limit=20&cursor=abc123
+  /users?role=admin&created_after=2025-01-01
+
+RULE 5: Use kebab-case for multi-word resources
+  /user-profiles (not /userProfiles or /user_profiles)
+  /order-items (not /orderItems)
+
+RULE 6: Actions that don't fit CRUD — use sub-resources or verbs sparingly
+  POST /orders/123/cancel     → Cancel action (not DELETE — cancel is not delete)
+  POST /users/123/verify      → Trigger verification
+  POST /payments/123/refund   → Process refund
+\`\`\`
+
+**Field Naming in Response Bodies**:
+\`\`\`json
 {
-  "sub": "user_123",
-  "exp": 1700000000,
-  "roles": ["user", "admin"]
+  "id": "usr_abc123",
+  "created_at": "2025-01-15T10:30:00Z",
+  "email_address": "alice@example.com",
+  "is_active": true,
+  "order_count": 42
 }
 \`\`\`
-- Pros: Stateless, contains user info
-- Cons: Can't revoke until expiry
+- Use snake_case consistently (most common for JSON APIs — Stripe, GitHub, Twitter)
+- Or camelCase (common in JavaScript-heavy ecosystems — Firebase, Contentful)
+- NEVER mix conventions within the same API
+- Use ISO 8601 for dates/times, always UTC
+- Prefix IDs with type for clarity: \`usr_\`, \`ord_\`, \`pay_\` (Stripe pattern)
 
-**OAuth 2.0** (for third-party access):
-\`\`\`
-1. User authorizes app
-2. App receives authorization code
-3. App exchanges code for access token
-4. App uses access token for API calls
-\`\`\`
-- Pros: Delegated access, scopes
-- Cons: Complex implementation
+**Envelope vs Direct Response**:
+\`\`\`json
+Envelope (recommended for lists):
+{
+  "data": [{ ... }, { ... }],
+  "pagination": { "next_cursor": "...", "has_more": true },
+  "meta": { "total_count": 1234 }
+}
 
-**Best Practices**:
-- Use HTTPS always
-- Short-lived tokens (15 min) + refresh tokens
-- Include scopes/permissions in token
-- Validate on every request
-- Rate limit by API key/user`
+Direct (ok for single resources):
+{
+  "id": "usr_123",
+  "name": "Alice",
+  "email": "alice@example.com"
+}
+\`\`\`
+The envelope pattern leaves room for metadata without breaking the response shape when you need to add pagination, rate limit info, or deprecation warnings.
+
+**Filtering Best Practices**:
+\`\`\`
+Simple equality:     ?status=active
+Multiple values:     ?status=active,pending (OR)
+Range:               ?created_after=2025-01-01&created_before=2025-02-01
+Search:              ?q=alice (full-text search)
+Field selection:     ?fields=id,name,email (reduce payload, like GraphQL lite)
+Include relations:   ?include=orders,profile (expand nested objects)
+\`\`\`
+
+**HATEOAS** (Hypermedia as the Engine of Application State): Include links in responses to guide clients to related actions:
+\`\`\`json
+{
+  "id": "ord_456",
+  "status": "pending",
+  "links": {
+    "self": "/api/v1/orders/ord_456",
+    "cancel": "/api/v1/orders/ord_456/cancel",
+    "payment": "/api/v1/payments/pay_789",
+    "user": "/api/v1/users/usr_123"
+  }
+}
+\`\`\`
+In practice, few APIs implement full HATEOAS, but including a "self" link and links to related resources is a widely adopted pattern.`
         }
       ],
 
@@ -4902,18 +5369,22 @@ Client-side:  Service A ──────────▶ Service B    (direct)
       title: 'Rate Limiting',
       icon: 'shield',
       color: '#f43f5e',
-      questions: 5,
+      questions: 12,
       description: 'Protect services from abuse and overload.',
-      concepts: ['Token bucket', 'Leaky bucket', 'Fixed window', 'Sliding window', 'Distributed rate limiting'],
+      concepts: ['Token bucket', 'Leaky bucket', 'Fixed window', 'Sliding window', 'Sliding window counter', 'Distributed rate limiting', 'Redis Lua scripts', 'Rate limit headers', 'DDoS protection', 'Adaptive throttling'],
       tips: [
-        'Token bucket allows burst while maintaining average rate',
-        'Sliding window is most accurate but memory-intensive',
-        'Use Redis for distributed rate limiting across servers'
+        'Token bucket allows burst while maintaining average rate — used by AWS API Gateway and Stripe',
+        'Sliding window counter offers the best balance of accuracy and memory for most production APIs',
+        'Use Redis Lua scripts for atomic rate limit checks — MULTI/EXEC cannot express conditional logic',
+        'Always return X-RateLimit-Remaining and Retry-After headers — Stripe, GitHub, and Twitter all do this',
+        'Combine per-IP (DDoS protection) with per-user (fairness) rate limiting at different layers'
       ],
 
-      introduction: `A rate limiter controls the number of requests a user or system can perform within a specific time frame. Think of it as a bouncer managing entry flow to maintain system stability.
+      introduction: `A rate limiter controls the number of requests a user or system can perform within a specific time frame. It is one of the most critical infrastructure components in any production API — without rate limiting, a single abusive client can exhaust server resources, degrade experience for all users, and rack up massive cloud bills. Rate limiters protect against API abuse, mitigate DDoS attacks, ensure fair resource usage across tiers, and control costs in usage-based billing systems.
 
-Rate limiters are critical for: preventing API abuse, mitigating DDoS attacks, ensuring fair resource usage, and controlling costs in usage-based billing. Companies like Stripe, GitHub, and Twitter rely heavily on rate limiting.`,
+The scale of rate limiting in production is enormous. Stripe processes over 1,000 API calls per second per account, with a default per-endpoint limit of 25 requests per second and up to 100 operations per second for Connect platforms. GitHub enforces 5,000 requests per hour for authenticated REST API users (60 per hour for unauthenticated), plus secondary limits of 80 content-generating requests per minute. Twitter/X allows 300 requests per 15-minute window for user-context endpoints. These are not arbitrary numbers — they are carefully tuned based on infrastructure capacity, abuse patterns, and business tier economics.
+
+At the algorithm level, there are five main approaches: token bucket (allows controlled bursts, used by AWS and Stripe), leaky bucket (smooths traffic to a constant rate), fixed window counter (simple but vulnerable to boundary spikes), sliding window log (precise but memory-intensive), and sliding window counter (a hybrid that balances accuracy with O(1) memory). Each has distinct trade-offs in memory usage, precision, burst tolerance, and implementation complexity. In a distributed system with multiple application servers, the critical challenge is maintaining consistent rate limit state — which is why Redis with atomic Lua scripts has become the industry standard. Understanding these algorithms, their trade-offs, and how to implement them at scale is a core system design interview topic.`,
 
       functionalRequirements: [
         'Limit requests per user/IP/API key',

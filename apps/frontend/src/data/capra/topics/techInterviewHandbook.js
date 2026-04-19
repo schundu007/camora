@@ -55,6 +55,40 @@ export const techInterviewTopics = [
       { title: 'Longest Palindromic Substring', difficulty: 'Medium', url: 'https://leetcode.com/problems/longest-palindromic-substring/' },
       { title: 'Encode and Decode Strings', difficulty: 'Medium', url: 'https://leetcode.com/problems/encode-and-decode-strings/', premium: true },
     ],
+    keyQuestions: [
+      {
+        question: 'What are the most common string patterns in coding interviews?',
+        answer: `**1. Sliding Window** (most common): Find longest/shortest substring with some property. Template: expand right pointer, contract left pointer when constraint violated.
+- "Longest Substring Without Repeating Characters" — classic sliding window with hash set
+- "Minimum Window Substring" — sliding window with two frequency maps
+
+**2. Two Pointers**: Palindrome checks, string reversal, partitioning.
+- Move pointers inward from both ends (palindrome check)
+- Move pointers outward from center (counting palindromic substrings)
+
+**3. Frequency Counting**: Anagram detection, character grouping.
+- Use array[26] for lowercase Latin characters (O(1) space, not O(n))
+- Compare frequency maps for anagram validation
+
+**4. Trie/Prefix Tree**: Autocomplete, word search, prefix matching.
+- Build trie from dictionary, query with DFS
+
+**Key Insight**: 80% of string problems reduce to sliding window or frequency counting. Master these two patterns first.`
+      },
+      {
+        question: 'How do you approach palindrome problems?',
+        answer: `**Check if string is palindrome**: Two pointers from both ends, compare characters moving inward. O(n) time, O(1) space.
+
+**Find longest palindromic substring**: Expand around center. For each index i, expand outward checking both odd-length (center at i) and even-length (center between i and i+1) palindromes. O(n^2) time, O(1) space. Manacher's algorithm does it in O(n) but is rarely expected in interviews.
+
+**Count palindromic substrings**: Same expand-around-center approach, counting each valid expansion.
+
+**Palindromic subsequence** (harder): Use DP. dp[i][j] = longest palindromic subsequence in s[i..j]. Recurrence: if s[i]==s[j], dp[i][j] = dp[i+1][j-1] + 2; else max(dp[i+1][j], dp[i][j-1]).
+
+**Common Trap**: Don't forget to handle empty strings, single characters, and strings with all identical characters.`
+      }
+    ],
+
     tips: [
       'If you need to keep a counter of characters, the space required for a counter of a string of Latin characters is O(1) not O(n), because the upper bound is the fixed range of 26 characters.',
       'A neat trick to count characters in a string of unique characters is to use a 26-bit bitmask. To determine if two strings have common characters, perform & on the two bitmasks.',

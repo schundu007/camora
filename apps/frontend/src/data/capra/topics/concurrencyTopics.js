@@ -435,6 +435,18 @@ with ThreadPoolExecutor(max_workers=4) as executor:
     },
     {
       id: 'thread-lifecycle',
+
+      keyQuestions: [
+        { question: 'What are the six thread states in Java?', answer: 'NEW (created, not started), RUNNABLE (eligible to run or running), BLOCKED (waiting for monitor lock), WAITING (waiting indefinitely for another thread), TIMED_WAITING (waiting with timeout), TERMINATED (completed or exception). Understanding these states is critical for diagnosing deadlocks: a thread stuck in BLOCKED is waiting for a lock, while WAITING means it called wait() and needs notify().' },
+        { question: 'What is the difference between BLOCKED and WAITING?', answer: 'BLOCKED means the thread is trying to acquire a lock held by someone else (entering synchronized block). WAITING means the thread voluntarily gave up the lock and is waiting for a signal (Object.wait(), Thread.join()). A blocked thread will resume when the lock is released. A waiting thread needs explicit notification (notify/notifyAll) or join completion.' },
+        { question: 'What is a daemon thread and when do you use it?', answer: 'A daemon thread is a background thread that does not prevent JVM shutdown. When all non-daemon threads finish, the JVM exits even if daemon threads are still running. Use for: background logging, heartbeat monitoring, cache cleanup, garbage collection. Set via setDaemon(true) BEFORE calling start(). Never use daemon threads for critical work that must complete (file writes, transactions).' },
+      ],
+
+      tips: [
+        'Draw the thread state diagram on a whiteboard — it shows you understand the lifecycle deeply',
+        'BLOCKED and WAITING are the two states most relevant to deadlock diagnosis',
+        'Daemon threads are the answer when asked \'how do you handle background tasks that should stop when the app exits\'',
+      ],
       title: 'Thread Lifecycle',
       icon: 'refreshCw',
       color: '#f59e0b',
@@ -456,6 +468,18 @@ In Java, threads have six states defined by Thread.State: NEW, RUNNABLE, BLOCKED
     },
     {
       id: 'fork-join-framework',
+
+      keyQuestions: [
+        { question: 'What is the Fork/Join framework and when do you use it?', answer: 'Fork/Join is a parallel computation framework (Java 7+) for divide-and-conquer tasks. It recursively splits work into subtasks (fork), processes them in parallel using a thread pool, and combines results (join). Best for CPU-bound tasks with recursive structure: merge sort, matrix multiplication, tree traversal. Uses work-stealing for load balancing.' },
+        { question: 'How does work stealing work?', answer: 'Each thread has a local deque of tasks. When a thread finishes its tasks, it steals from the bottom of another thread\'s deque. This balances load without central coordination. The owner pushes/pops from the top (LIFO for locality), while thieves steal from the bottom (FIFO for large tasks). This gives near-linear speedup for balanced workloads.' },
+        { question: 'What is the difference between RecursiveTask and RecursiveAction?', answer: 'RecursiveTask returns a result (like computing a sum), RecursiveAction performs a side effect without returning a value (like sorting in place). Both extend ForkJoinTask. Override compute() to define the recursive decomposition. Use invokeAll() to fork multiple subtasks and wait for all to complete.' },
+      ],
+
+      tips: [
+        'Fork/Join is the answer to \'how would you parallelize a divide-and-conquer algorithm\'',
+        'Work stealing explains why Fork/Join outperforms a simple thread pool for recursive tasks',
+        'Java Streams parallel() uses Fork/Join internally — mention this connection in interviews',
+      ],
       title: 'Fork/Join Framework',
       icon: 'gitBranch',
       color: '#6366f1',
@@ -520,6 +544,18 @@ long sum = pool.invoke(new SumTask(data, 0, data.length));`
     },
     {
       id: 'read-write-locks',
+
+      keyQuestions: [
+        { question: 'What is a ReadWriteLock and when do you use it?', answer: 'A ReadWriteLock allows multiple concurrent readers OR one exclusive writer. Read lock: shared, allows other readers. Write lock: exclusive, blocks all readers and writers. Use when reads vastly outnumber writes (e.g., configuration cache, in-memory dictionary). Provides higher throughput than a mutex for read-heavy workloads.' },
+        { question: 'What is the readers-writers problem?', answer: 'Classic concurrency problem: how to allow concurrent reads while ensuring exclusive writes. Three variants: (1) Readers-preference — readers never wait for other readers, writers may starve. (2) Writers-preference — writers get priority, readers may starve. (3) Fair — FIFO ordering, no starvation. Java ReentrantReadWriteLock supports fair mode.' },
+        { question: 'When should you NOT use a ReadWriteLock?', answer: 'When write frequency is high (lock acquisition overhead exceeds benefit). When critical sections are very short (mutex is simpler and nearly as fast). When you need better scalability — consider StampedLock (Java 8) which supports optimistic reads: try reading without acquiring a lock, validate after. Falls back to read lock if data changed during optimistic read.' },
+      ],
+
+      tips: [
+        'ReadWriteLock is the answer when asked \'how do you optimize a read-heavy cache for concurrency\'',
+        'Always mention StampedLock as the modern Java alternative with optimistic read support',
+        'A common mistake: upgrading a read lock to a write lock causes deadlock in most implementations',
+      ],
       title: 'Read-Write Locks',
       icon: 'bookOpen',
       color: '#ec4899',
@@ -599,6 +635,18 @@ class ThreadSafeCache:
     },
     {
       id: 'condition-variables',
+
+      keyQuestions: [
+        { question: 'What is a condition variable and how does it work?', answer: 'A condition variable allows threads to wait for a specific condition to become true, rather than busy-waiting. Usage pattern: acquire lock → check condition → if false, wait (releases lock atomically and suspends) → when signaled, re-acquire lock and re-check condition. Always use in a while loop (not if) because of spurious wakeups.' },
+        { question: 'Why must you use a while loop instead of an if when waiting on a condition variable?', answer: 'Spurious wakeups: a thread can wake up without being signaled. Also, between being signaled and re-acquiring the lock, another thread may have consumed the resource. The while loop re-checks the condition after every wakeup, ensuring correctness. This is a classic interview trap — using \'if\' is always a bug.' },
+        { question: 'What is the difference between notify() and notifyAll()?', answer: 'notify() wakes one waiting thread (unspecified which one). notifyAll() wakes all waiting threads. Use notifyAll() by default — it is safer. notify() risks missing wakeups if the wrong thread is chosen. The performance difference is negligible because woken threads still compete for the lock. Only use notify() when all waiters are equivalent and exactly one can proceed.' },
+      ],
+
+      tips: [
+        'The while-loop wait pattern is tested in almost every concurrency interview — know it cold',
+        'notifyAll() is almost always correct; notify() is an optimization that is rarely worth the risk',
+        'Condition variables solve the producer-consumer problem elegantly — practice implementing it',
+      ],
       title: 'Condition Variables',
       icon: 'bell',
       color: '#14b8a6',
@@ -667,6 +715,18 @@ for t in threads: t.join()`
     },
     {
       id: 'barriers-latches',
+
+      keyQuestions: [
+        { question: 'What is a CountDownLatch and when do you use it?', answer: 'CountDownLatch is a one-shot synchronization barrier. Initialize with count N. Threads call await() to block until the count reaches zero. Other threads call countDown() to decrement. Once triggered, it cannot be reset. Use for: waiting for N workers to complete initialization, starting N threads simultaneously (count=1, main thread counts down).' },
+        { question: 'What is a CyclicBarrier and how does it differ from CountDownLatch?', answer: 'CyclicBarrier is reusable: N threads call await(), all block until N threads arrive, then all proceed simultaneously. Can be reset and reused for multiple rounds. CountDownLatch is one-shot and can be decremented by any thread. CyclicBarrier requires the same threads to participate. Use CyclicBarrier for iterative parallel algorithms (e.g., parallel simulation steps).' },
+        { question: 'What is a Phaser and when would you use it over CyclicBarrier?', answer: 'Phaser (Java 7+) is a flexible barrier supporting dynamic registration/deregistration of parties. Threads can arrive and advance to the next phase independently. Supports both CyclicBarrier (all must arrive) and CountDownLatch (countdown) semantics. Use when the number of participating threads changes between phases or when you need hierarchical barriers for tiered parallelism.' },
+      ],
+
+      tips: [
+        'CountDownLatch and CyclicBarrier are the two most common barrier types in interviews',
+        'Key difference: CountDownLatch = one-shot countdown, CyclicBarrier = reusable rendezvous',
+        'A real-world analogy: CyclicBarrier is like a group of friends waiting until everyone arrives before entering a restaurant, then repeating for each course',
+      ],
       title: 'Barriers & Latches',
       icon: 'shield',
       color: '#f97316',
@@ -754,6 +814,18 @@ phaser.arriveAndDeregister(); // coordinator deregisters`
     },
     {
       id: 'concurrency-coding-problems',
+
+      keyQuestions: [
+        { question: 'What are the most common concurrency coding problems in interviews?', answer: 'Print in Order (enforce sequential execution across threads), Print FooBar Alternately (alternating thread output), Dining Philosophers (deadlock avoidance), Building H2O (resource coordination with specific ratios), Web Crawler Multithreaded (parallel BFS with visited-set synchronization), and Traffic Light Controlled Intersection (mutex-based signal coordination).' },
+        { question: 'How do you solve the Producer-Consumer problem?', answer: 'Use a bounded buffer with a mutex and two condition variables (or semaphores). Producer: acquire mutex, wait while buffer full, add item, signal \'not empty\', release mutex. Consumer: acquire mutex, wait while buffer empty, remove item, signal \'not full\', release mutex. In Java, use BlockingQueue which encapsulates this pattern. Always use while-loop waits for spurious wakeups.' },
+        { question: 'How do you avoid deadlock in the Dining Philosophers problem?', answer: 'Five philosophers, five forks, each needs two adjacent forks. Deadlock: all grab left fork simultaneously. Solutions: (1) Resource ordering — always grab lower-numbered fork first. (2) Limit concurrency — allow at most 4 philosophers to eat simultaneously (semaphore). (3) Asymmetric — odd philosophers grab left first, even grab right first. Option 1 (resource ordering) is the most general deadlock prevention technique.' },
+      ],
+
+      tips: [
+        'Practice Print in Order and FooBar Alternately — they test semaphore/lock basics',
+        'The resource ordering solution to Dining Philosophers is the go-to deadlock prevention technique',
+        'BlockingQueue in Java and queue.Queue in Python are the practical answers to producer-consumer',
+      ],
       title: 'Concurrency Coding Problems',
       icon: 'terminal',
       color: '#ef4444',
