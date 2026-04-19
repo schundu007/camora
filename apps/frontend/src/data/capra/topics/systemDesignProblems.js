@@ -26628,6 +26628,7 @@ aggregated_clicks (OLAP store) {
       deepDiveTopics: [
         {
           topic: 'Exactly-Once Processing with Kafka + Flink',
+          diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-exactly-once.png',
           detail: `Billing accuracy demands exactly-once semantics -- no click can be double-counted or lost.
 
 **Kafka at-least-once:** Kafka guarantees each message is delivered at least once. Consumers may see duplicates during rebalancing or failure recovery.
@@ -26640,6 +26641,7 @@ aggregated_clicks (OLAP store) {
         },
         {
           topic: 'Lambda Architecture for Accuracy',
+          diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-lambda.png',
           detail: `Combining real-time streaming with batch processing gives both speed and accuracy.
 
 **Speed layer (Flink):** Processes clicks in real-time with sub-minute latency. Provides approximate aggregates for dashboards. Optimized for low latency over perfect accuracy.
@@ -26652,6 +26654,7 @@ aggregated_clicks (OLAP store) {
         },
         {
           topic: 'Click Fraud Detection Pipeline',
+          diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-fraud.png',
           detail: `Click fraud costs advertisers billions annually. Detection operates at two speeds.
 
 **Inline rules (<10ms):** Same user clicking same ad >5 times/minute. Known bot user-agents. Data center IP ranges. Click-through rate anomaly (>10x normal). These are simple, fast, and catch ~70% of fraud.
@@ -26662,6 +26665,7 @@ aggregated_clicks (OLAP store) {
         },
         {
           topic: 'Time-Window Aggregation with Watermarks',
+          diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-windows.png',
           detail: `Late-arriving events are inevitable in distributed systems. Watermarks define when to close a window.
 
 **Event time vs processing time:** Clicks are aggregated by event time (when the click happened) not processing time (when the server received it). This ensures consistent aggregates even when events arrive out of order.
@@ -26709,6 +26713,7 @@ aggregated_clicks (OLAP store) {
           id: 'click-processing-pipeline',
           title: 'Click Processing Pipeline',
           description: 'End-to-end flow from ad click to aggregated billing',
+          src: '/diagrams/ad-click-aggregation/flow-click-pipeline.png',
           steps: [
             { step: 1, label: 'Click Event', detail: 'User clicks ad -- event sent to click collector (202 Accepted)' },
             { step: 2, label: 'Kafka Publish', detail: 'Event published to Kafka topic partitioned by ad_id' },
@@ -26724,6 +26729,7 @@ aggregated_clicks (OLAP store) {
           id: 'fraud-detection-flow',
           title: 'Two-Stage Fraud Detection',
           description: 'How fraudulent clicks are caught inline and asynchronously',
+          src: '/diagrams/ad-click-aggregation/flow-fraud-detection.png',
           steps: [
             { step: 1, label: 'Click Arrives', detail: 'Raw click event enters the processing pipeline' },
             { step: 2, label: 'Rule Engine', detail: 'Fast rules: velocity, bot UA, datacenter IP (<10ms)' },
