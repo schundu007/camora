@@ -5156,7 +5156,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'news-feed-generation',
           title: 'News Feed Generation',
           description: 'How a personalized feed is assembled using the hybrid fan-out approach',
-          src: '/diagrams/instagram/flow-feed-generation.png',
+          src: '/diagrams/instagram/feed-generation-flow.svg',
           steps: [
             { step: 1, label: 'Feed Request', detail: 'Client requests GET /api/feed?cursor=X&limit=20' },
             { step: 2, label: 'Check Cache', detail: 'Look up pre-ranked feed in Redis (5-minute TTL)' },
@@ -6038,8 +6038,8 @@ Changes are pushed through notification service, client then fetches full delta.
       ],
 
       flowcharts: [
-        { id: 'dropbox-file-upload-flow', title: 'File Upload with Dedup', description: 'How a file change is detected, chunked, deduplicated, and synced', steps: [{ step: 1, label: 'File Change Detected', detail: 'Filesystem watcher (inotify/FSEvents) detects modification. Sync engine queued for processing.' }, { step: 2, label: 'Block Chunking', detail: 'Split file into 4MB blocks. Compute SHA-256 hash for each block.' }, { step: 3, label: 'Hash Comparison', detail: 'Send block hashes to server. Server checks which blocks already exist in global block store.' }, { step: 4, label: 'Dedup Check', detail: 'Server returns list of missing blocks. If all blocks exist (exact file dupe), skip to metadata update.' }, { step: 5, label: 'Upload Missing Blocks', detail: 'Upload only missing blocks in parallel (4-8 concurrent). Each block stored with hash as key in S3.' }, { step: 6, label: 'Commit Metadata', detail: 'Send commit with ordered block hash list. Server creates new file version in metadata DB.' }, { step: 7, label: 'Notify Other Devices', detail: 'Notification service pushes change to all user devices via long polling connections.' }] },
-        { id: 'dropbox-sync-flow', title: 'Cross-Device Sync Flow', description: 'How changes propagate from one device to another', steps: [{ step: 1, label: 'Long Poll Response', detail: 'Device B receives notification that changes are available since its last cursor position.' }, { step: 2, label: 'Fetch Change List', detail: 'GET /api/sync/changes?cursor=X returns list of file creates, modifies, deletes since cursor.' }, { step: 3, label: 'Get File Metadata', detail: 'For each changed file, fetch metadata including new block hash list and version number.' }, { step: 4, label: 'Local Block Check', detail: 'Compare new block hashes against local block cache. Identify which blocks are already present.' }, { step: 5, label: 'Download Missing Blocks', detail: 'Download only blocks not in local cache. Assemble file from local + downloaded blocks.' }, { step: 6, label: 'Update Local State', detail: 'Update local SQLite DB with new file metadata. Update cursor position for next sync.' }] },
+        { id: 'dropbox-file-upload-flow', title: 'File Upload with Dedup', description: 'How a file change is detected, chunked, deduplicated, and synced', src: '/diagrams/dropbox/file-sync-flow.svg', steps: [{ step: 1, label: 'File Change Detected', detail: 'Filesystem watcher (inotify/FSEvents) detects modification. Sync engine queued for processing.' }, { step: 2, label: 'Block Chunking', detail: 'Split file into 4MB blocks. Compute SHA-256 hash for each block.' }, { step: 3, label: 'Hash Comparison', detail: 'Send block hashes to server. Server checks which blocks already exist in global block store.' }, { step: 4, label: 'Dedup Check', detail: 'Server returns list of missing blocks. If all blocks exist (exact file dupe), skip to metadata update.' }, { step: 5, label: 'Upload Missing Blocks', detail: 'Upload only missing blocks in parallel (4-8 concurrent). Each block stored with hash as key in S3.' }, { step: 6, label: 'Commit Metadata', detail: 'Send commit with ordered block hash list. Server creates new file version in metadata DB.' }, { step: 7, label: 'Notify Other Devices', detail: 'Notification service pushes change to all user devices via long polling connections.' }] },
+        { id: 'dropbox-sync-flow', title: 'Cross-Device Sync Flow', description: 'How changes propagate from one device to another', src: '/diagrams/dropbox/sharing-flow.svg', steps: [{ step: 1, label: 'Long Poll Response', detail: 'Device B receives notification that changes are available since its last cursor position.' }, { step: 2, label: 'Fetch Change List', detail: 'GET /api/sync/changes?cursor=X returns list of file creates, modifies, deletes since cursor.' }, { step: 3, label: 'Get File Metadata', detail: 'For each changed file, fetch metadata including new block hash list and version number.' }, { step: 4, label: 'Local Block Check', detail: 'Compare new block hashes against local block cache. Identify which blocks are already present.' }, { step: 5, label: 'Download Missing Blocks', detail: 'Download only blocks not in local cache. Assemble file from local + downloaded blocks.' }, { step: 6, label: 'Update Local State', detail: 'Update local SQLite DB with new file metadata. Update cursor position for next sync.' }] },
       ],
 
       visualCards: [
@@ -6975,7 +6975,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           id: 'video-playback-flow',
           title: 'Video Playback Flow',
           description: 'Complete flow from play button press to video streaming on screen',
-          src: '/diagrams/netflix/video-playback-flow.svg',
+          src: '/diagrams/netflix/playback-flow.svg',
           steps: [
             { step: 1, label: 'Play Request', detail: 'Client sends GET /api/playback/{titleId} with profileId and device info' },
             { step: 2, label: 'Entitlement Check', detail: 'Verify subscription active, concurrent stream limit not exceeded, title available in region' },
@@ -6991,7 +6991,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           id: 'content-ingestion-pipeline',
           title: 'Content Ingestion Pipeline',
           description: 'How new content goes from studio master to globally available streaming',
-          src: '/diagrams/netflix/flow-content-ingestion.png',
+          src: '/diagrams/netflix/ingestion-flow.svg',
           steps: [
             { step: 1, label: 'Ingest Master', detail: 'Receive 8K/4K ProRes master from studio, store in S3 origin (~100+ GB per title)' },
             { step: 2, label: 'Shot Analysis', detail: 'Detect scene boundaries, score each shot for spatial/temporal complexity' },
@@ -11224,6 +11224,7 @@ Each priority level has independent auto-scaling based on queue depth. Urgent qu
           id: 'notification-delivery-flow',
           title: 'Notification Delivery Flow',
           description: 'End-to-end flow from notification request to user delivery with preference checks',
+          src: '/diagrams/notification-system/delivery-flow.svg',
           steps: [
             { step: 1, label: 'API Request', detail: 'Internal service sends notification request: userId, templateId, channel, priority, data payload.' },
             { step: 2, label: 'Validation', detail: 'Validate request schema, check template exists, verify userId is valid. Assign unique notificationId.' },
@@ -11251,6 +11252,7 @@ Each priority level has independent auto-scaling based on queue depth. Urgent qu
           id: 'bulk-send-flow',
           title: 'Bulk Notification Send Flow',
           description: 'How a marketing campaign sends notifications to millions of users efficiently',
+          src: '/diagrams/notification-system/preference-flow.svg',
           steps: [
             { step: 1, label: 'Campaign Created', detail: 'Marketing team creates campaign with template, audience segment (e.g., users active in last 30 days), and schedule.' },
             { step: 2, label: 'Audience Resolution', detail: 'Query user database for segment. Batch into chunks of 10K users. Create Kafka messages for each chunk.' },
@@ -11959,6 +11961,7 @@ Rules evaluated in order: specific overrides general.
           id: 'token-bucket-flow',
           title: 'Token Bucket Rate Limit Check',
           description: 'Atomic token bucket check using Redis Lua script',
+          src: '/diagrams/rate-limiter/token-bucket-flow.svg',
           steps: [
             { step: 1, label: 'Request Arrives', detail: 'API gateway extracts rate limit key: user ID, IP address, or API key from the request.' },
             { step: 2, label: 'Local Cache Check', detail: 'Check local in-memory cache for hot keys. If locally rate-limited, return 429 immediately without Redis call.' },
@@ -12679,8 +12682,8 @@ queue_positions {
         { id: 'seat-map-delivery', title: 'Seat Map Delivery Strategy', headers: ['Aspect', 'CDN Static Snapshot', 'WebSocket Real-Time', 'Hybrid (Recommended)'], rows: [['Latency', '~50ms (edge cache)', '<500ms (delta push)', '~50ms initial + <500ms updates'], ['Freshness', 'Stale (1-5s TTL)', 'Real-time', 'Real-time after initial load'], ['Scale', 'Handles millions', 'Limited to ~10K connections', 'Millions browse + 10K shop live'], ['Bandwidth', '16 MB per load', '~50 bytes per update', '16 MB once + tiny deltas']], verdict: 'CDN for initial load; WebSocket deltas only for users in the shopping experience' }
       ],
       flowcharts: [
-        { id: 'on-sale-flow', title: 'High-Demand On-Sale Flow', description: 'Complete flow from user arriving to ticket purchase with virtual queue', steps: [{ step: 1, label: 'Arrive at Event Page', detail: 'User lands on CDN-cached event page with countdown timer.' }, { step: 2, label: 'Queue Join', detail: 'At on-sale time, CAPTCHA verification, then random queue position via Redis ZADD.' }, { step: 3, label: 'Wait in Queue', detail: 'WebSocket shows position updates every 10 seconds. Lightweight CDN-cached queue page.' }, { step: 4, label: 'Admitted to Shopping', detail: 'Position reached, enter shopping. 15-minute timer starts.' }, { step: 5, label: 'Select Seats', detail: 'CDN snapshot + WebSocket deltas. Select specific seats or use Best Available.' }, { step: 6, label: 'Hold Seats', detail: 'Redis SETNX locks seats for 10 minutes. If held: suggest alternatives.' }, { step: 7, label: 'Checkout + Payment', detail: 'Stripe PaymentIntent. On success: SOLD. On failure: release hold.' }] },
-        { id: 'seat-release-flow', title: 'Seat Release and Recovery Flow', description: 'How held seats are released when checkout is abandoned', steps: [{ step: 1, label: 'Hold Created', detail: 'Redis key with 10-minute TTL when user selects seats.' }, { step: 2, label: 'Timer Running', detail: 'Client countdown. 10 minutes to complete payment.' }, { step: 3, label: 'Abandon/Timeout', detail: 'Browser closed or timer expires. Redis TTL auto-deletes hold.' }, { step: 4, label: 'Background Sweep', detail: 'Safety job every 30s: find HELD seats with expired hold_expiry.' }, { step: 5, label: 'Release + Notify', detail: 'Set AVAILABLE. Pub/Sub push. WebSocket updates seat map.' }] },
+        { id: 'on-sale-flow', title: 'High-Demand On-Sale Flow', description: 'Complete flow from user arriving to ticket purchase with virtual queue', src: '/diagrams/ticketmaster/onsale-flow.svg', steps: [{ step: 1, label: 'Arrive at Event Page', detail: 'User lands on CDN-cached event page with countdown timer.' }, { step: 2, label: 'Queue Join', detail: 'At on-sale time, CAPTCHA verification, then random queue position via Redis ZADD.' }, { step: 3, label: 'Wait in Queue', detail: 'WebSocket shows position updates every 10 seconds. Lightweight CDN-cached queue page.' }, { step: 4, label: 'Admitted to Shopping', detail: 'Position reached, enter shopping. 15-minute timer starts.' }, { step: 5, label: 'Select Seats', detail: 'CDN snapshot + WebSocket deltas. Select specific seats or use Best Available.' }, { step: 6, label: 'Hold Seats', detail: 'Redis SETNX locks seats for 10 minutes. If held: suggest alternatives.' }, { step: 7, label: 'Checkout + Payment', detail: 'Stripe PaymentIntent. On success: SOLD. On failure: release hold.' }] },
+        { id: 'seat-release-flow', title: 'Seat Release and Recovery Flow', description: 'How held seats are released when checkout is abandoned', src: '/diagrams/ticketmaster/seat-selection-flow.svg', steps: [{ step: 1, label: 'Hold Created', detail: 'Redis key with 10-minute TTL when user selects seats.' }, { step: 2, label: 'Timer Running', detail: 'Client countdown. 10 minutes to complete payment.' }, { step: 3, label: 'Abandon/Timeout', detail: 'Browser closed or timer expires. Redis TTL auto-deletes hold.' }, { step: 4, label: 'Background Sweep', detail: 'Safety job every 30s: find HELD seats with expired hold_expiry.' }, { step: 5, label: 'Release + Notify', detail: 'Set AVAILABLE. Pub/Sub push. WebSocket updates seat map.' }] },
         { id: 'payment-hold-flow', title: 'Payment Within Hold Window', description: 'How payment processing works within the 10-minute seat hold', steps: [{ step: 1, label: 'Hold Active', detail: 'Seats held in Redis with 10-min TTL. Client displays countdown.' }, { step: 2, label: 'Payment Details', detail: 'User enters card info. Typically 2-5 minutes.' }, { step: 3, label: 'Verify Hold', detail: 'Backend checks Redis: hold still exists? If expired, return error.' }, { step: 4, label: 'Charge Card', detail: 'Stripe PaymentIntent confirm. If fails: release hold, show error.' }, { step: 5, label: 'Confirm Booking', detail: 'DB UPDATE seats SET status=SOLD. Generate encrypted barcode ticket.' }] }
       ],
       visualCards: [
@@ -13172,7 +13175,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
         { id: 'suggestion-types', title: 'Query Suggestions vs Entity Suggestions', headers: ['Aspect', 'Query Suggestions', 'Entity Suggestions', 'Hybrid (Recommended)'], rows: [['Example', '"best restaurants in"', '"McDonald\'s" (restaurant entity)', 'Both in dropdown'], ['Source', 'Search query logs', 'Product/entity database', 'Both sources merged'], ['Ranking', 'By search frequency', 'By entity popularity/relevance', 'Blended score'], ['Deep Link', 'Executes search', 'Goes directly to entity page', 'Mixed behavior'], ['Value', 'Saves typing', 'Saves typing + search step', 'Best user experience']], verdict: 'Hybrid with visual differentiation: query suggestions as plain text, entity suggestions with icons and metadata' }
       ],
       flowcharts: [
-        { id: 'suggestion-flow', title: 'Typeahead Suggestion Flow', description: 'End-to-end flow from keystroke to rendered suggestions', steps: [{ step: 1, label: 'Keystroke', detail: 'User types a character. Client debounces for 150ms after last keystroke.' }, { step: 2, label: 'Local Cache Check', detail: 'Check browser-local LRU cache for this prefix. If hit: render immediately, still fetch for freshness.' }, { step: 3, label: 'CDN Edge', detail: 'Request hits CDN. For 1-3 char prefixes: 99% cache hit. Return cached suggestions in ~50ms.' }, { step: 4, label: 'Trie Service', detail: 'On CDN miss: route to trie shard based on prefix. O(k) lookup returns pre-computed top-10.' }, { step: 5, label: 'Personalization Merge', detail: 'If user authenticated: blend global results with per-user suggestions from Redis (70/30 split).' }, { step: 6, label: 'Content Filter', detail: 'Apply blocklist filter and safe search rules. Remove any offensive or restricted suggestions.' }, { step: 7, label: 'Render Dropdown', detail: 'Client renders suggestions with type indicators (query, entity). Highlight matching prefix in bold.' }] },
+        { id: 'suggestion-flow', title: 'Typeahead Suggestion Flow', description: 'End-to-end flow from keystroke to rendered suggestions', src: '/diagrams/typeahead/suggestion-flow.svg', steps: [{ step: 1, label: 'Keystroke', detail: 'User types a character. Client debounces for 150ms after last keystroke.' }, { step: 2, label: 'Local Cache Check', detail: 'Check browser-local LRU cache for this prefix. If hit: render immediately, still fetch for freshness.' }, { step: 3, label: 'CDN Edge', detail: 'Request hits CDN. For 1-3 char prefixes: 99% cache hit. Return cached suggestions in ~50ms.' }, { step: 4, label: 'Trie Service', detail: 'On CDN miss: route to trie shard based on prefix. O(k) lookup returns pre-computed top-10.' }, { step: 5, label: 'Personalization Merge', detail: 'If user authenticated: blend global results with per-user suggestions from Redis (70/30 split).' }, { step: 6, label: 'Content Filter', detail: 'Apply blocklist filter and safe search rules. Remove any offensive or restricted suggestions.' }, { step: 7, label: 'Render Dropdown', detail: 'Client renders suggestions with type indicators (query, entity). Highlight matching prefix in bold.' }] },
         { id: 'trie-update-flow', title: 'Trie Update Pipeline', description: 'How the suggestion trie is rebuilt from search analytics', steps: [{ step: 1, label: 'Collect Search Logs', detail: 'All search queries logged to Kafka with timestamp, userId, query text, and selected result.' }, { step: 2, label: 'Batch Aggregation', detail: 'Spark job processes 1 week of logs. Count query frequency, compute trending scores, extract entities.' }, { step: 3, label: 'Build New Trie', detail: 'Construct compressed trie with top-10 suggestions per node. Apply blocklist. Total build: ~30 minutes.' }, { step: 4, label: 'Atomic Swap', detail: 'New trie loaded into memory on all shard replicas. Atomic pointer swap ensures zero-downtime update.' }, { step: 5, label: 'CDN Purge', detail: 'Invalidate CDN cache for changed prefixes. Next requests populate CDN with fresh suggestions.' }] }
       ],
       visualCards: [
@@ -17240,6 +17243,7 @@ Constraints:
           id: 'order-lifecycle-flow',
           title: 'Order Lifecycle Flow',
           description: 'Complete flow from customer placing an order to delivery confirmation',
+          src: '/diagrams/doordash/order-flow.svg',
           steps: [
             { step: 1, label: 'Customer Places Order', detail: 'Customer selects items, address, payment method. Order Service validates availability and creates order (status: PLACED)' },
             { step: 2, label: 'Payment Authorization', detail: 'Payment Service places hold on customer card via Stripe/Braintree. Amount includes subtotal + delivery fee + tip' },
@@ -17255,6 +17259,7 @@ Constraints:
           id: 'dispatch-optimization-flow',
           title: 'Dispatch Optimization Flow',
           description: 'How the dispatch engine matches orders to drivers every 30-second cycle',
+          src: '/diagrams/doordash/dispatch-flow.svg',
           steps: [
             { step: 1, label: 'Collect Pending Orders', detail: 'Gather all unassigned orders in the geographic zone. Filter out orders already offered to a Dasher' },
             { step: 2, label: 'Find Available Dashers', detail: 'Query Redis GEORADIUS for Dashers within expanding radius (2mi then 5mi then 10mi). Filter by vehicle type and status' },
@@ -19670,6 +19675,7 @@ When a normal user (<10K followers) posts:
           id: 'feed-generation-flow',
           title: 'Feed Generation Flow',
           description: 'How a personalized feed is assembled for a user request',
+          src: '/diagrams/facebook-newsfeed/feed-flow.svg',
           steps: [
             { step: 1, label: 'Feed Request', detail: 'User opens app or scrolls. Client sends GET /api/feed with cursor for pagination' },
             { step: 2, label: 'Cache Lookup', detail: 'Check Redis for pre-computed feed items. Get top 200 post IDs from feed:{userId} sorted set' },
@@ -19684,6 +19690,7 @@ When a normal user (<10K followers) posts:
           id: 'post-fanout-flow',
           title: 'Post Fan-Out Flow',
           description: 'How a new post is distributed to follower feeds',
+          src: '/diagrams/facebook-newsfeed/post-fanout-flow.svg',
           steps: [
             { step: 1, label: 'Post Created', detail: 'User creates post. Stored in Posts DB (MySQL shard). Published to Kafka topic: posts' },
             { step: 2, label: 'Check Follower Count', detail: 'If followers < 10K: proceed with push fan-out. If > 10K: store as celebrity post (pull only at read time)' },
@@ -20271,6 +20278,7 @@ Merkle Tree sync:
           id: 'write-path',
           title: 'Write Path (Quorum Write)',
           description: 'How a PUT request is processed with N=3, W=2',
+          src: '/diagrams/key-value-store/write-flow.svg',
           steps: [
             { step: 1, label: 'Client PUT', detail: 'Client sends PUT(key, value) to any node (coordinator)' },
             { step: 2, label: 'Hash & Route', detail: 'Coordinator hashes key, identifies 3 replica nodes on the ring' },
@@ -20285,6 +20293,7 @@ Merkle Tree sync:
           id: 'read-path',
           title: 'Read Path with Read Repair',
           description: 'How a GET request handles stale replicas',
+          src: '/diagrams/key-value-store/read-flow.svg',
           steps: [
             { step: 1, label: 'Client GET', detail: 'Client sends GET(key) to coordinator' },
             { step: 2, label: 'Hash & Route', detail: 'Identify replica nodes from consistent hash ring' },
@@ -27069,6 +27078,7 @@ trending_queries (real-time) {
           id: 'suggestion-flow',
           title: 'Autocomplete Suggestion Flow',
           description: 'End-to-end from keystroke to displayed suggestions',
+          src: '/diagrams/typeahead/suggestion-flow.svg',
           steps: [
             { step: 1, label: 'User Types', detail: 'Keystroke in search box (e.g., "goo")' },
             { step: 2, label: 'Debounce', detail: 'Client waits 50-100ms for more keystrokes before sending' },
