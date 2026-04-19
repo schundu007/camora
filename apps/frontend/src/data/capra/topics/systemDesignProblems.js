@@ -11341,6 +11341,27 @@ Rules evaluated in order: specific overrides general.
 2. Per-endpoint limit
 3. Per-tier limit (free/pro/enterprise)
 4. Global default (lowest priority)`
+        },
+        {
+          question: 'How do we implement rate limiting for WebSocket connections?',
+          answer: `WebSocket connections are long-lived, making traditional per-request rate limiting insufficient.
+
+**Connection-Level Limits**:
+- Max concurrent connections per user: 5
+- Max connections per IP: 50
+- Enforced at connection time, not per message
+
+**Message-Level Limits**:
+- Max messages per connection per second: 10
+- Max payload size per message: 64 KB
+- Enforced per message using in-memory counter on the WebSocket server
+
+**Implementation**:
+- Connection counter: Redis INCR ws:user:{id}:conns with TTL
+- Message counter: Local sliding window (no Redis for per-message checks)
+- On limit exceeded: send rate limit error frame, then close connection after 3 violations
+
+**Backpressure**: If client sends faster than server processes, buffer up to 100 messages. Beyond that, drop messages and notify client. This prevents a single malicious client from exhausting server memory.`
         }
       ],
 
@@ -12579,6 +12600,109 @@ Search Logs → Kafka → Flink → Aggregator → Trie Updater
 - Separate "trending" index updated in real-time
 - Merge trending results with static suggestions
 - Higher boost for trending items`
+        },
+        {
+          question: 'How do we handle spell correction in typeahead?',
+          answer: `**Edit Distance (Levenshtein)**:
+- For each prefix, compute edit distance to known queries
+- Edit distance 1: one character insertion, deletion, or substitution
+
+**Practical Approach**:
+1. Build secondary index of common misspellings from search logs
+2. Map misspelling to correct query: "spotfy" -> "spotify"
+3. Use phonetic algorithms (Soundex, Metaphone) for pronunciation matches
+4. BK-tree data structure for efficient edit distance search
+
+**Hybrid Strategy**:
+- First: exact prefix match from trie (0ms)
+- If fewer than 5 results: fuzzy match with edit distance 1 (2ms)
+- If still few results: try edit distance 2 (5ms)
+- Show fuzzy results with "Did you mean: ..." prefix`
+        },
+        {
+          question: 'How do we implement personalized suggestions?',
+          answer: `**Personalization Signals**:
+- User recent searches (last 7 days)
+- Click-through history (which suggestions selected)
+- Category preferences (derived from browse behavior)
+
+**Architecture**:
+- Global trie: shared across all users (pre-computed top-K)
+- Per-user overlay: Redis hash with recent searches and weighted categories
+- Merge: 70% global suggestions + 30% personalized reranking
+
+**Example**:
+User who frequently searches for Python programming:
+- Global: "java" -> Java island, Java coffee, Java programming
+- Personalized: "java" -> Java programming, Java vs Python, Java tutorials
+
+**Privacy**: Personalization tied to authenticated session only. Shared devices see global results. Incognito disables personalization.
+
+**Cold Start**: New users get 100% global results. After 10 searches, personalization gradually increases to 30% weight.`
+        },
+        {
+          question: 'How do we shard the trie for horizontal scaling?',
+          answer: `**Sharding Strategy**: Shard by prefix range (first 1-2 characters):
+- Shard A: prefixes starting with a-b
+- Shard B: prefixes starting with c-d
+- Total: ~13 shard groups for 26 letters
+
+**Load Balancing**:
+Not all prefixes are equally popular. "s" gets 3x more queries than "z".
+- Option 1: Uneven sharding (popular prefixes get dedicated shards)
+- Option 2: Consistent hashing on full prefix (better distribution)
+
+**Replication**:
+Each shard has 3 replicas for availability. Read requests load-balanced across replicas. Writes (trie updates) go to primary, async replicated.
+
+**Hot Prefix Handling**:
+Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (4+ chars) reach the trie service.`
+        },
+        {
+          question: 'How do we handle multi-language typeahead?',
+          answer: `**Language Detection**:
+- User locale setting as primary signal
+- Browser Accept-Language header as fallback
+- Build separate tries per language
+
+**CJK (Chinese/Japanese/Korean) Challenges**:
+- No word boundaries in Chinese/Japanese
+- Pinyin input for Chinese: romanized pronunciation
+- Need separate Pinyin trie mapping to Chinese characters
+- Japanese: handle Hiragana, Katakana, Kanji, Romaji input
+
+**Implementation**:
+- Route to language-specific trie based on locale
+- Support transliteration: "tokyo" matches English and Japanese
+- Bilingual suggestions for multi-language markets
+
+**Index Size**: English trie: ~10 GB. Adding 10 languages: ~50 GB total.`
+        },
+        {
+          question: 'How do we prevent offensive content in suggestions?',
+          answer: `**Content Safety Layers**:
+
+**1. Static Blocklist**: Curated list of offensive terms, slurs, sensitive queries. Post-filter on suggestion output. Updated weekly.
+
+**2. ML Content Classifier**: Binary classifier on candidate suggestions before returning. Catches novel offensive content not on blocklist.
+
+**3. Trending Query Review**: New trending terms queued for human review. Held from suggestions for 30 minutes until approved. Prevents gaming.
+
+**4. Contextual Filtering**: Safe search mode (default for minors). Region-specific filtering for local regulations. Block self-harm, violence, illegal content.`
+        },
+        {
+          question: 'How do we measure and optimize typeahead quality?',
+          answer: `**Key Metrics**:
+
+**Suggestion Selection Rate (SSR)**: % of queries where user clicks a suggestion vs types full query. Target: >50%.
+
+**Mean Reciprocal Rank (MRR)**: Average 1/position of selected suggestion. MRR 0.5 = typically position 2. Target: >0.6.
+
+**Keystroke Savings**: (query_length - prefix_length_at_selection) / query_length. Example: typed "spo", selected "spotify" = 57% savings. Target: >40%.
+
+**Latency P99**: Must be <100ms. Target: P50 <30ms, P99 <50ms.
+
+**A/B Testing**: Test ranking weights, suggestion count, update frequency. Each experiment 1-2 weeks with 5% traffic. Primary metric: SSR.`
         }
       ],
 
@@ -12733,6 +12857,32 @@ Search Logs → Kafka → Flink → Aggregator → Trie Updater
         { name: 'API & Routing Layer', purpose: 'Route prefix queries to correct trie shard with low latency', components: ['API Gateway', 'Shard Router', 'Edge Cache (CDN)'] },
         { name: 'Suggestion Engine Layer', purpose: 'Store and query prefix-to-suggestion mappings with ranking', components: ['Distributed Trie', 'Ranking Service', 'Personalization Engine', 'Content Filter'] },
         { name: 'Data Pipeline Layer', purpose: 'Update suggestion corpus from search analytics and trending signals', components: ['Search Log Collector', 'Batch Trie Builder', 'Trending Aggregator', 'Blocklist Manager'] },
+      ],
+      deepDiveTopics: [
+        { topic: 'Trie Data Structure Deep Dive', detail: 'A trie (prefix tree) provides O(k) lookup where k is prefix length, regardless of total entries. Each node stores a character and links to children. Compressed trie (Patricia/Radix tree) merges single-child chains into one node, reducing memory by 30-50%. At each node, store pre-computed top-10 suggestions to avoid subtree traversal. Total memory for 100M prefixes: ~10 GB with compression.' },
+        { topic: 'CDN Caching Strategy for Suggestions', detail: 'Short prefixes (1-3 chars) are highly cacheable because few unique values exist and they serve most traffic. Cache at CDN edge with 5-minute TTL. Hit rates: 1-char = 99.9%, 2-char = 99%, 3-char = 90%, 4+ char = 50-70%. Pre-warm cache with top 1000 prefixes on trie rebuild. Only long-tail prefixes (4+ chars) reach the origin service.' },
+        { topic: 'Real-Time Trending Integration', detail: 'Search logs flow to Kafka, processed by Flink in 1-minute tumbling windows. When a query velocity exceeds 3x its historical baseline, it is flagged as trending. Trending queries are injected into a separate "hot" index that overlays the static trie. Merge at query time: blend static top-10 with trending entries. The hot index is tiny (<1 MB) and updated every minute.' },
+        { topic: 'Client-Side Optimizations', detail: 'Debounce requests: wait 100-200ms after last keystroke before sending. Cancel in-flight requests when new keystroke arrives (AbortController). Cache recent suggestions locally (LRU cache of last 50 prefixes). Show cached results immediately while fetching new ones (optimistic UI). Prefetch suggestions for common next characters based on current prefix.' }
+      ],
+      comparisonTables: [
+        { id: 'trie-vs-index', title: 'Trie vs Inverted Index for Typeahead', headers: ['Aspect', 'Trie (Prefix Tree)', 'Inverted Index (Elasticsearch)'], rows: [['Prefix Lookup', 'O(k) where k = prefix length', 'Prefix query with wildcard (slower)'], ['Memory', '~10 GB for 100M prefixes', '~50 GB (full search index)'], ['Fuzzy Match', 'Requires separate BK-tree', 'Built-in fuzzy query support'], ['Latency', '<1ms (in-memory)', '5-20ms (network + disk)'], ['Update', 'Rebuild trie (30 min batch)', 'Real-time document updates'], ['Best For', 'Dedicated typeahead service', 'Piggybacking on existing search']], verdict: 'Trie for dedicated <50ms typeahead; inverted index only if leveraging existing search infrastructure' },
+        { id: 'precomputed-vs-ondemand', title: 'Precomputed Top-K vs On-Demand Ranking', headers: ['Aspect', 'Precomputed Top-K', 'On-Demand Ranking'], rows: [['Latency', 'O(1) lookup per node', 'O(n log k) ranking per request'], ['Freshness', 'Stale (hourly updates)', 'Real-time signals included'], ['Memory', 'Higher (store K items per node)', 'Lower (compute on request)'], ['Personalization', 'None (same for all users)', 'Can incorporate user context'], ['Implementation', 'Batch job on Spark', 'Real-time ranking service']], verdict: 'Precomputed for P50 queries (fast + cheap); on-demand overlay for personalized and trending results' },
+        { id: 'suggestion-types', title: 'Query Suggestions vs Entity Suggestions', headers: ['Aspect', 'Query Suggestions', 'Entity Suggestions', 'Hybrid (Recommended)'], rows: [['Example', '"best restaurants in"', '"McDonald\'s" (restaurant entity)', 'Both in dropdown'], ['Source', 'Search query logs', 'Product/entity database', 'Both sources merged'], ['Ranking', 'By search frequency', 'By entity popularity/relevance', 'Blended score'], ['Deep Link', 'Executes search', 'Goes directly to entity page', 'Mixed behavior'], ['Value', 'Saves typing', 'Saves typing + search step', 'Best user experience']], verdict: 'Hybrid with visual differentiation: query suggestions as plain text, entity suggestions with icons and metadata' }
+      ],
+      flowcharts: [
+        { id: 'suggestion-flow', title: 'Typeahead Suggestion Flow', description: 'End-to-end flow from keystroke to rendered suggestions', steps: [{ step: 1, label: 'Keystroke', detail: 'User types a character. Client debounces for 150ms after last keystroke.' }, { step: 2, label: 'Local Cache Check', detail: 'Check browser-local LRU cache for this prefix. If hit: render immediately, still fetch for freshness.' }, { step: 3, label: 'CDN Edge', detail: 'Request hits CDN. For 1-3 char prefixes: 99% cache hit. Return cached suggestions in ~50ms.' }, { step: 4, label: 'Trie Service', detail: 'On CDN miss: route to trie shard based on prefix. O(k) lookup returns pre-computed top-10.' }, { step: 5, label: 'Personalization Merge', detail: 'If user authenticated: blend global results with per-user suggestions from Redis (70/30 split).' }, { step: 6, label: 'Content Filter', detail: 'Apply blocklist filter and safe search rules. Remove any offensive or restricted suggestions.' }, { step: 7, label: 'Render Dropdown', detail: 'Client renders suggestions with type indicators (query, entity). Highlight matching prefix in bold.' }] },
+        { id: 'trie-update-flow', title: 'Trie Update Pipeline', description: 'How the suggestion trie is rebuilt from search analytics', steps: [{ step: 1, label: 'Collect Search Logs', detail: 'All search queries logged to Kafka with timestamp, userId, query text, and selected result.' }, { step: 2, label: 'Batch Aggregation', detail: 'Spark job processes 1 week of logs. Count query frequency, compute trending scores, extract entities.' }, { step: 3, label: 'Build New Trie', detail: 'Construct compressed trie with top-10 suggestions per node. Apply blocklist. Total build: ~30 minutes.' }, { step: 4, label: 'Atomic Swap', detail: 'New trie loaded into memory on all shard replicas. Atomic pointer swap ensures zero-downtime update.' }, { step: 5, label: 'CDN Purge', detail: 'Invalidate CDN cache for changed prefixes. Next requests populate CDN with fresh suggestions.' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#2D8CFF', items: [{ label: 'In-Memory Trie', value: '~10 GB compressed', bar: 95 }, { label: 'CDN Edge Cache', value: '99% hit for short prefixes', bar: 90 }, { label: 'Redis (Personalization)', value: 'Per-user search history', bar: 70 }, { label: 'Flink (Trending)', value: '1-min window detection', bar: 65 }, { label: 'Spark (Rebuild)', value: 'Weekly trie construction', bar: 55 }, { label: 'Kafka (Logs)', value: '500M searches/day', bar: 80 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#22C55E', items: [{ label: '100K+ QPS', value: 'Suggestion requests/sec', bar: 80 }, { label: '<50ms P99', value: 'Target response latency', bar: 100 }, { label: '100M+ prefixes', value: 'Unique prefix entries', bar: 85 }, { label: '500M searches/day', value: 'Daily search volume', bar: 75 }, { label: '99% CDN hits', value: 'Short prefix cache rate', bar: 95 }, { label: '~26 shards', value: 'Trie service shards', bar: 40 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Database LIKE Query', description: 'Simple SQL LIKE prefix% query against a queries table. No caching. High latency (50-200ms).', color: '#94a3b8', icon: 'server', capacity: '~10K queries', rps: '100', pros: ['Simple to implement', 'Uses existing database', 'Easy to update'], cons: ['High latency (50-200ms)', 'Full table scan for prefix', 'No ranking capability'] },
+        { step: 2, title: 'In-Memory Trie', description: 'Trie data structure loaded in application memory. Pre-computed top-K per node. Sub-millisecond lookups.', color: '#2D8CFF', icon: 'layers', capacity: '~1M queries', rps: '10K', pros: ['<1ms lookup latency', 'Memory-efficient with compression', 'Pre-computed rankings'], cons: ['Single server memory limit', 'Batch updates only', 'No personalization'] },
+        { step: 3, title: 'Distributed Trie + CDN', description: 'Trie sharded across multiple servers. CDN caching for short prefixes. Trending overlay updated every minute.', color: '#f59e0b', icon: 'zap', capacity: '~100M queries', rps: '100K', pros: ['Horizontal scaling', '99% CDN hit rate', 'Near-real-time trending'], cons: ['Shard management complexity', 'CDN invalidation lag', 'No personalization yet'] },
+        { step: 4, title: 'Personalized + Multi-Entity', description: 'Per-user suggestion overlay from Redis. Multi-entity results (queries + products + people). Spell correction via BK-tree.', color: '#10b981', icon: 'globe', capacity: '~500M queries', rps: '500K', pros: ['Personalized suggestions', 'Rich entity results', 'Fuzzy matching for typos'], cons: ['Redis memory for user profiles', 'Entity index maintenance', 'Ranking complexity'] },
+        { step: 5, title: 'ML-Ranked + Multilingual', description: 'ML model predicts suggestion engagement. Multi-language tries with transliteration. A/B testing framework for ranking. Content safety classifiers.', color: '#7c3aed', icon: 'cpu', capacity: '1B+ queries', rps: '1M+', pros: ['Optimal suggestion quality', 'Global language support', 'Automated content safety'], cons: ['ML serving infrastructure', 'Multi-language trie memory', 'Complex A/B testing'] },
       ],
     },
     {
@@ -16014,8 +16164,23 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
       color: '#ff3008',
       difficulty: 'Hard',
       description: 'Design a food delivery platform connecting restaurants, customers, and drivers.',
+      productMeta: {
+        name: 'DoorDash / UberEats',
+        tagline: 'Three-sided marketplace for on-demand food delivery',
+        stats: [
+          { label: 'Customers', value: '46M+' },
+          { label: 'Orders/Day', value: '7M+' },
+          { label: 'Dashers', value: '8M+' },
+          { label: 'Restaurants', value: '590K+' },
+        ],
+        scope: {
+          inScope: ['Restaurant discovery and menu browsing', 'Order placement and payment', 'Real-time driver dispatch and matching', 'Live order and driver tracking', 'ETA prediction', 'Driver earnings and incentives'],
+          outOfScope: ['Restaurant POS system internals', 'Food safety and compliance', 'Driver background check system', 'Marketing and promotional engine', 'Grocery/retail delivery specifics'],
+        },
+        keyChallenge: 'Optimizing dispatch across a three-sided marketplace (46M customers, 590K restaurants, 8M dashers) to minimize delivery time while maximizing driver utilization, with ML-based ETA prediction accurate within 5 minutes and real-time GPS tracking for 100K+ concurrent deliveries.',
+      },
 
-      introduction: `DoorDash and UberEats are food delivery platforms connecting restaurants, customers, and delivery drivers. DoorDash processes millions of orders daily with 100K+ concurrent deliveries at peak times.
+      introduction: `DoorDash and UberEats are food delivery platforms connecting restaurants, customers, and delivery drivers. DoorDash processes 7M+ orders daily with 100K+ concurrent deliveries at peak times, serving 46M customers through 590K restaurant partners and 8M dashers.
 
 The key challenges are: optimizing driver dispatch (matching orders to drivers), accurate ETA prediction, real-time order and driver tracking, and handling peak demand (dinner rush, Super Bowl Sunday).`,
 
@@ -16041,6 +16206,21 @@ The key challenges are: optimizing driver dispatch (matching orders to drivers),
         '99.9% availability',
         'Handle surge during peak hours (2-3x normal)'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '46M customers, 7M orders/day, 8M dashers. Average order value $35. Peak hours 5-9 PM = 60% of daily orders in 4 hours. GPS updates every 5 seconds from active drivers.',
+        calculations: [
+          { label: 'Order QPS (avg)', value: '~80/s', detail: '7M orders/day / 86,400 = ~81 orders/sec average' },
+          { label: 'Order QPS (peak)', value: '~250/s', detail: '60% of 7M in 4 hours = 4.2M / 14,400s = ~290/s during dinner rush' },
+          { label: 'Concurrent Deliveries', value: '~100K', detail: 'Average delivery 35 min. 250 orders/sec x 35 min x 60 = ~100K concurrent at peak' },
+          { label: 'GPS Updates/sec', value: '~20K/s', detail: '100K active drivers x 1 update per 5 seconds = 20K location updates/sec' },
+          { label: 'ETA Recalculations/sec', value: '~10K/s', detail: 'Recalculate ETA on each GPS update for active deliveries = ~10K/s' },
+          { label: 'Order Storage/Day', value: '~7 GB', detail: '7M orders x ~1 KB per order (items, addresses, status) = 7 GB/day' },
+          { label: 'Location History/Day', value: '~35 GB', detail: '20K updates/sec x 86,400 x 20 bytes = ~35 GB/day time-series data' },
+          { label: 'Daily GMV', value: '~$245M', detail: '7M orders x $35 average = $245M gross merchandise value per day' },
+        ]
+      },
 
       dataModel: {
         description: 'Orders, restaurants, drivers, and tracking',
@@ -16238,6 +16418,218 @@ If demand > supply by X%:
 - Queue orders if dispatch overwhelmed
 - Limit orders per restaurant
 - Expand delivery radius to find more drivers`
+        },
+        {
+          question: 'How does the three-sided marketplace balance work?',
+          answer: `**Three Stakeholders with Competing Incentives**:
+\`\`\`
+Customer: Wants fast delivery, low fees, accurate ETAs
+Restaurant: Wants high order volume, reasonable commissions, reliable pickups
+Dasher: Wants high earnings, short distances, consistent work
+\`\`\`
+
+**Balancing Mechanisms**:
+- **Dynamic delivery fees**: Higher fees when demand exceeds supply, funding Dasher bonuses
+- **Commission tiers**: 15-30% restaurant commission based on visibility and marketing services
+- **Dasher pay model**: Base pay + tips + peak bonuses + challenge incentives
+- **Priority access**: Restaurants with higher commission get better search placement
+- **Dasher Top Dasher program**: Consistent acceptance rate earns scheduling priority
+
+**Marketplace Health Metrics**:
+\`\`\`
+Supply-demand ratio = Available Dashers / Pending Orders
+  > 1.2: Healthy (reduce incentives)
+  0.8-1.2: Balanced
+  < 0.8: Undersupplied (activate surge + driver incentives)
+\`\`\`
+
+**Flywheel Effect**:
+More customers -> more orders -> more restaurant partners -> more Dashers -> faster delivery -> more customers`
+        },
+        {
+          question: 'How does menu management and kitchen prep time estimation work?',
+          answer: `**Menu Sync Architecture**:
+\`\`\`
+Restaurant POS --> Middleware API --> Menu Service --> Search Index
+                         |                    |
+                    Validate prices      Cache in Redis
+                    Check item photos    (TTL: 5 min)
+\`\`\`
+
+**Real-time Availability**:
+- POS integration (Toast, Square, Olo) pushes item availability changes
+- Restaurant tablet allows manual 86ing (marking items unavailable)
+- Automatic 86 if item causes 3+ cancellations in 1 hour
+
+**Kitchen Prep Time Prediction**:
+\`\`\`
+prep_time = base_prep_time(items)
+          + queue_factor(current_orders_in_kitchen)
+          + complexity_factor(customizations)
+          + historical_adjustment(restaurant, time_of_day)
+\`\`\`
+
+**ML Features for Prep Time**:
+- Historical prep times per item per restaurant
+- Current kitchen load (orders in PREPARING state)
+- Day of week and time of day patterns
+- Special events or holidays
+- Number of unique items in order (more variety = longer)
+
+**Menu Search and Discovery**:
+- Elasticsearch indexes all menu items with cuisine tags
+- Search by dish name, cuisine type, dietary restrictions
+- Personalized recommendations based on order history`
+        },
+        {
+          question: 'How does order tracking work end-to-end?',
+          answer: `**Status Machine**:
+\`\`\`
+PLACED -> CONFIRMED -> PREPARING -> READY -> PICKED_UP -> EN_ROUTE -> DELIVERED
+  |          |           |         |          |           |
+  +--CANCELLED (at any point before PICKED_UP)
+\`\`\`
+
+**Real-time Data Flow**:
+\`\`\`
+Dasher App --> Location Service --> Kafka --> Consumers
+ (GPS/5s)                                      |
+                                    +----------+----------+
+                                    v          v          v
+                              ETA Service  Tracking   Notification
+                                           Service    Service
+                                    |          |
+                              TimescaleDB  WebSocket
+                              (history)    (push to customer)
+\`\`\`
+
+**Customer-Facing Updates**:
+- Map view with Dasher location (interpolated between GPS updates)
+- Step-by-step status: "Your order is being prepared" then "Dasher is heading to restaurant"
+- ETA recalculated on every GPS update
+- Push notifications for major transitions (picked up, arriving)
+
+**Snap-to-Road**:
+- Raw GPS coordinates snapped to road network using OSRM/Google Roads API
+- Client-side interpolation creates smooth animation between 5-second updates
+- Geofencing triggers automatic status updates (within 100m of restaurant = arrived)`
+        },
+        {
+          question: 'How does payment splitting and tip handling work?',
+          answer: `**Payment Flow**:
+\`\`\`
+Order Placed -> Payment Auth (hold) -> Delivery Confirmed -> Capture
+                                         |
+                               +---------+---------+
+                               v                   v
+                         Restaurant Payout    Dasher Payout
+                         (order total -       (base + tip +
+                          commission)          bonuses)
+\`\`\`
+
+**Revenue Split**:
+\`\`\`
+Customer pays: $35 subtotal + $5.99 delivery fee + $3 tip = $43.99
+  Restaurant: $35 - 25% commission = $26.25
+  Dasher: $2.50 base + $3 tip + $1.50 peak bonus = $7.00
+  DoorDash: $8.75 commission + $5.99 delivery fee - $4.00 Dasher base = $10.74
+\`\`\`
+
+**Tip Handling**:
+- Pre-tip at checkout (suggested: 15%, 20%, 25%)
+- Post-delivery tip adjustment window (1 hour)
+- 100% of tips go to Dasher (regulatory requirement)
+- Tips do not affect base pay calculation
+
+**Refund Scenarios**:
+- Missing items: Partial refund + DoorDash credits
+- Wrong order: Full refund, restaurant charged
+- Late delivery (>15 min past ETA): Credit toward next order
+- Fraud detection: ML model flags accounts with >30% refund rate`
+        },
+        {
+          question: 'How does search ranking for restaurant discovery work?',
+          answer: `**Search Ranking Pipeline**:
+\`\`\`
+User Query -> Candidate Retrieval -> Feature Extraction -> ML Ranking -> Results
+                   |                       |                  |
+            Elasticsearch          Real-time features   LambdaMART model
+            (geo + text)           + user preferences    + business rules
+\`\`\`
+
+**Ranking Signals**:
+\`\`\`
+Restaurant Features:
+  - Distance from user
+  - Average rating (4.0+ threshold)
+  - Current prep time estimate
+  - Order success rate (non-cancellation %)
+  - Menu photo quality score
+
+User-Restaurant Features:
+  - Past order history (repeat orders)
+  - Cuisine preference match
+  - Price range preference
+  - Dietary restrictions match (vegan, gluten-free)
+
+Context Features:
+  - Time of day (breakfast vs dinner menus)
+  - Weather (comfort food in rain)
+  - Day of week patterns
+  - Promotional boost factor
+\`\`\`
+
+**Personalization**:
+- Collaborative filtering: "Users who ordered from X also ordered from Y"
+- Reorder suggestions based on frequency and recency
+- New restaurant exploration boost (10% of results are novel)
+
+**A/B Testing**:
+- Ranking model changes tested on 5% traffic segments
+- Primary metric: conversion rate (search to order)
+- Guardrail metrics: restaurant diversity, delivery time`
+        },
+        {
+          question: 'How does the driver matching algorithm optimize for batched orders?',
+          answer: `**Batch Order Optimization**:
+\`\`\`
+Goal: Maximize deliveries/hour while keeping ETA within promise
+
+Constraints:
+  - Max 2 pickups per batch
+  - Max 3 deliveries per batch
+  - Each added stop adds < 5 min to existing orders
+  - Restaurants within 0.5 mile radius
+\`\`\`
+
+**Matching Algorithm (runs every 30 seconds)**:
+\`\`\`
+1. Collect all unassigned orders in zone
+2. Build candidate batches:
+   - Pair orders from same restaurant
+   - Pair orders from nearby restaurants (< 0.5 mi)
+   - Filter: delivery addresses on similar route
+3. Score each batch:
+   batch_score = total_earnings / total_time
+                 - late_penalty(max_eta_violation)
+                 + freshness_bonus(time_since_ready)
+4. Solve assignment (Hungarian algorithm):
+   - Match batches to available Dashers
+   - Minimize total weighted distance
+\`\`\`
+
+**Route Optimization**:
+- TSP solver for optimal pickup/dropoff ordering
+- Real-time traffic data from Google Maps / Mapbox
+- Dynamic rerouting if traffic conditions change
+
+**Communication to Customer**:
+\`\`\`
+"Your Dasher is picking up another order nearby.
+ This adds approximately 5 minutes to your delivery."
+\`\`\`
+- Transparency about batching builds trust
+- Customer can pay extra for "Priority Delivery" (no batching)`
         }
       ],
 
@@ -16416,6 +16808,33 @@ If demand > supply by X%:
         { name: 'Order Orchestration Layer', purpose: 'Manage order lifecycle from placement through delivery completion', components: ['Order Service', 'Payment Service', 'Notification Service', 'ETA Predictor'] },
         { name: 'Dispatch Layer', purpose: 'Match orders to drivers using real-time location and optimization algorithms', components: ['Dispatch Engine', 'Geospatial Index', 'Driver Pool Manager', 'Route Optimizer'] },
         { name: 'Data Layer', purpose: 'Store orders, menus, driver locations, and delivery history', components: ['PostgreSQL (orders/users)', 'Redis (driver locations)', 'Kafka (event stream)', 'S3 (delivery photos)'] },
+      ],
+      deepDiveTopics: [
+        { topic: 'Dispatch Optimization Algorithm', detail: 'The dispatch engine solves a bipartite matching problem: assign N orders to M available drivers to minimize total delivery time. Uses Hungarian algorithm variant with time-boxed optimization (recompute every 30 seconds). Features: driver-to-restaurant distance, estimated route to customer, current direction of travel, vehicle type suitability. Batching evaluated by computing marginal ETA increase per additional order.' },
+        { topic: 'ETA Prediction ML Pipeline', detail: 'ETA model trained on historical delivery data (100M+ past deliveries). Features: restaurant historical prep time by item, current order queue depth, time of day/week, real-time traffic (Google Maps API), weather conditions, driver current speed and location. Model: gradient boosted trees (XGBoost) retrained weekly. Serving: <10ms inference per prediction. Accuracy target: within 5 minutes 85% of the time.' },
+        { topic: 'Real-Time Location Tracking', detail: 'Driver app sends GPS every 5 seconds during active delivery. Location service writes to Redis GEO (for current position) and TimescaleDB (for history). Customer-facing tracking: WebSocket push every 5 seconds with interpolated position for smooth map animation. Road-snapping: align raw GPS coordinates to nearest road segment for cleaner visualization.' },
+        { topic: 'Surge Pricing and Driver Incentives', detail: 'When demand exceeds supply by >50% in a zone, surge pricing activates. Customer sees higher delivery fee (1.5-3x). Driver sees bonus pay incentive. Push notifications sent to offline drivers in the zone. Pricing adjusts every 5 minutes based on real-time supply/demand ratio. Predictive scheduling: guarantee hourly minimum pay to drivers who commit to peak hours in advance.' }
+      ],
+      comparisonTables: [
+        { id: 'push-vs-bid-dispatch', title: 'Push Dispatch vs Driver Bidding', headers: ['Aspect', 'Push-Based (DoorDash)', 'Bidding (Auction)', 'Hybrid'], rows: [['Speed', 'Instant assignment', '30-60 sec bidding window', 'Fast with optional decline'], ['Optimization', 'System-optimal matching', 'Driver-optimal self-selection', 'System-optimal with driver input'], ['Fairness', 'Algorithm determines distribution', 'Popular orders get more bids', 'Balanced by algorithm'], ['ETA Accuracy', 'High (system controls assignment)', 'Variable (driver chooses route)', 'High with driver feedback'], ['Driver Satisfaction', 'Lower (no choice)', 'Higher (autonomy)', 'Moderate (decline option)']], verdict: 'Push-based with decline option (DoorDash model): fast, optimized, with driver having limited rejection rights' },
+        { id: 'single-vs-batch', title: 'Single Order vs Batched Delivery', headers: ['Aspect', 'Single Order', 'Batched (2-3 orders)'], rows: [['Delivery Speed', 'Fastest for customer', '5-10 min slower for 2nd/3rd customer'], ['Driver Earnings', 'Lower per hour', '20-30% higher per hour'], ['Cost per Delivery', 'Higher ($)', '30% lower'], ['Customer Experience', 'Best (dedicated)', 'Acceptable if ETA accurate'], ['Complexity', 'Simple routing', 'TSP-variant optimization']], verdict: 'Batch when restaurants within 0.5 mi and drop-offs on same route with <5 min added delay' },
+        { id: 'tracking-approaches', title: 'Real-Time Tracking Approaches', headers: ['Aspect', 'WebSocket Push', 'HTTP Polling', 'Server-Sent Events'], rows: [['Latency', '<1 sec', '5-10 sec (poll interval)', '<1 sec'], ['Battery Impact', 'Low (server pushes)', 'High (frequent polls)', 'Low (server pushes)'], ['Scale', '100K concurrent connections', 'Unlimited (stateless)', '100K concurrent'], ['Fallback', 'Needs polling fallback', 'Always works', 'Needs polling fallback'], ['Bidirectional', 'Yes', 'No', 'No (server to client only)']], verdict: 'WebSocket for active delivery tracking with HTTP polling fallback for unreliable connections' }
+      ],
+      flowcharts: [
+        { id: 'order-lifecycle', title: 'Order Lifecycle Flow', description: 'Complete order flow from customer placement through delivery completion', steps: [{ step: 1, label: 'Order Placed', detail: 'Customer submits order. Payment authorized. Order enters queue.' }, { step: 2, label: 'Restaurant Confirms', detail: 'Order sent to restaurant tablet. Restaurant confirms and sets prep time estimate.' }, { step: 3, label: 'Driver Dispatched', detail: 'Dispatch engine matches order to optimal driver based on proximity, direction, and rating.' }, { step: 4, label: 'Driver En Route to Restaurant', detail: 'Driver navigates to restaurant. Customer sees driver location on map.' }, { step: 5, label: 'Food Ready + Picked Up', detail: 'Restaurant marks ready. Driver arrives, picks up, confirms items.' }, { step: 6, label: 'Delivery In Progress', detail: 'Driver navigates to customer. Real-time GPS tracking every 5 seconds. ETA recalculated continuously.' }, { step: 7, label: 'Delivered', detail: 'Driver arrives, takes delivery photo. Customer confirms receipt. Rating prompts sent.' }] },
+        { id: 'dispatch-flow', title: 'Driver Dispatch Matching Flow', description: 'How the dispatch engine matches an order to the optimal driver', steps: [{ step: 1, label: 'Order Ready for Dispatch', detail: 'Restaurant confirmed. Estimated prep time known. Trigger dispatch matching.' }, { step: 2, label: 'Find Nearby Drivers', detail: 'Redis GEORADIUS: find 20 available drivers within 5 miles of restaurant.' }, { step: 3, label: 'Score Candidates', detail: 'Score each: distance (50%), direction compatibility (30%), driver rating (20%).' }, { step: 4, label: 'Evaluate Batching', detail: 'Check if order can batch with driver existing delivery (same route, <5 min delay).' }, { step: 5, label: 'Offer to Top Driver', detail: 'Push notification to highest-scored driver. 30-second acceptance window.' }, { step: 6, label: 'Accept or Cascade', detail: 'If accepted: assign. If declined/timeout: offer to next driver. After 3 declines: expand radius.' }] },
+        { id: 'eta-prediction-flow', title: 'ETA Prediction Flow', description: 'How delivery ETA is calculated and continuously updated', steps: [{ step: 1, label: 'Initial ETA', detail: 'At order placement: prep_time + driver_to_restaurant + restaurant_to_customer. Uses ML model.' }, { step: 2, label: 'Restaurant Update', detail: 'Restaurant confirms order: update prep_time estimate based on current kitchen load.' }, { step: 3, label: 'Driver Assigned', detail: 'Recalculate with actual driver location and real-time traffic data.' }, { step: 4, label: 'Continuous Update', detail: 'Every GPS update (5 sec): recalculate remaining delivery time using current position + traffic.' }, { step: 5, label: 'Customer Display', detail: 'Show updated ETA with confidence range. Never increase displayed ETA by more than 5 min at once.' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#2D8CFF', items: [{ label: 'Kafka (Events)', value: 'Order + location streaming', bar: 95 }, { label: 'Redis GEO (Matching)', value: 'Driver location index', bar: 90 }, { label: 'TimescaleDB (GPS)', value: '35 GB/day location history', bar: 85 }, { label: 'PostgreSQL (Orders)', value: 'Transactional data store', bar: 80 }, { label: 'XGBoost (ETA)', value: 'ML prediction model', bar: 75 }, { label: 'WebSocket (Tracking)', value: '100K concurrent connections', bar: 70 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#FF3008', items: [{ label: '7M+ orders/day', value: 'Daily order volume', bar: 90 }, { label: '46M customers', value: 'Active user base', bar: 80 }, { label: '8M dashers', value: 'Delivery driver pool', bar: 75 }, { label: '590K restaurants', value: 'Merchant partners', bar: 70 }, { label: '100K concurrent', value: 'Active deliveries at peak', bar: 85 }, { label: '20K GPS/sec', value: 'Location updates per second', bar: 60 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Manual Dispatch', description: 'Single server with manual driver assignment. Phone-based order relay to restaurants. No real-time tracking.', color: '#94a3b8', icon: 'server', capacity: '~100 orders/day', rps: '1', pros: ['Simple to start', 'Human judgment for edge cases', 'No infrastructure cost'], cons: ['Cannot scale past 100 orders', 'Slow and error-prone', 'No customer visibility'] },
+        { step: 2, title: 'Automated Dispatch + Tracking', description: 'Algorithm-based driver matching. Restaurant tablets for order management. GPS tracking with polling.', color: '#2D8CFF', icon: 'layers', capacity: '~10K orders/day', rps: '50', pros: ['Automated driver assignment', 'Real-time order status', 'Restaurant self-service'], cons: ['Naive dispatch (nearest driver)', 'No ETA prediction', 'Polling-based tracking'] },
+        { step: 3, title: 'ML Dispatch + Real-Time Tracking', description: 'ML-optimized dispatch with batching. ETA prediction model. WebSocket real-time tracking. Kafka event streaming.', color: '#f59e0b', icon: 'zap', capacity: '~500K orders/day', rps: '5K', pros: ['20-30% faster deliveries', 'Accurate ETA predictions', 'Real-time map tracking'], cons: ['ML model training complexity', 'Batching adds customer wait', 'Peak hour capacity'] },
+        { step: 4, title: 'Global Scale + Surge Management', description: 'Multi-city deployment. Predictive demand forecasting. Dynamic surge pricing. Zone-based supply management.', color: '#10b981', icon: 'globe', capacity: '~5M orders/day', rps: '100K', pros: ['Efficient supply-demand balance', 'Predictive driver positioning', 'Multi-city operations'], cons: ['Surge pricing unpopular', 'City-specific regulations', 'Driver incentive complexity'] },
+        { step: 5, title: 'AI-Powered Marketplace', description: 'Deep learning dispatch optimization. Autonomous delivery integration. Personalized restaurant ranking. Real-time fraud detection.', color: '#7c3aed', icon: 'cpu', capacity: '10M+ orders/day', rps: '500K+', pros: ['Optimal marketplace efficiency', 'Predictive everything', 'Multi-modal delivery'], cons: ['Massive ML infrastructure', 'Regulatory complexity', 'Three-sided optimization is NP-hard'] },
       ],
     },
     {
@@ -18050,6 +18469,21 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
       color: '#1877f2',
       difficulty: 'Hard',
       description: 'Design a personalized news feed showing posts from friends and followed pages.',
+      productMeta: {
+        name: 'Facebook News Feed',
+        tagline: 'ML-ranked personalized feed for 2B+ daily users',
+        stats: [
+          { label: 'DAU', value: '2.1B+' },
+          { label: 'Posts/Day', value: '1B+' },
+          { label: 'Photos/Day', value: '~200M' },
+          { label: 'Feed Latency', value: '<200ms' },
+        ],
+        scope: {
+          inScope: ['Personalized feed of posts from friends and pages', 'ML-ranked content selection from 1000+ candidates', 'Hybrid fan-out (push for normal users, pull for celebrities)', 'Real-time feed updates via WebSocket', 'Like, comment, share interactions', 'Stories (24-hour ephemeral)'],
+          outOfScope: ['Content moderation ML models', 'Ad placement and targeting', 'Messenger integration', 'Marketplace features', 'Video-specific infrastructure (Reels)'],
+        },
+        keyChallenge: 'Generating personalized feeds for 2.1B daily active users in <200ms by merging push-based feed caches for normal users with pull-based celebrity post aggregation, ranking 1000+ candidates per request through a two-phase ML pipeline (light ranker + heavy ranker).',
+      },
 
       introduction: `Facebook's News Feed is one of the most complex personalization systems ever built. With 2+ billion daily active users, each with hundreds of friends and followed pages, the system must select and rank the most relevant content from thousands of candidates - in milliseconds.
 
@@ -18074,6 +18508,21 @@ The fundamental challenge is fan-out: when a celebrity with 10M followers posts,
         '99.99% availability',
         'Support users with 5000 friends'
       ],
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '2.1B DAU, 3.07B MAU. Average user has 338 friends. 1B+ posts created per day. 200M photos uploaded daily. Average feed request ranks 1000+ candidates.',
+        calculations: [
+          { label: 'Feed Read QPS', value: '~1.5M/s', detail: '2.1B DAU x ~60 feed loads/day / 86,400 = ~1.46M feed reads/sec' },
+          { label: 'Post Write QPS', value: '~12K/s', detail: '1B posts/day / 86,400 = ~11,574 posts/sec' },
+          { label: 'Fan-out Writes/Day', value: '~100B', detail: '1B posts x avg 100 followers pushed to (normal users) = 100B feed cache writes' },
+          { label: 'Photo Storage/Day', value: '~40 TB', detail: '200M photos x avg 200 KB per photo = 40 TB/day (before compression/thumbnails)' },
+          { label: 'Feed Cache Size', value: '~20 TB', detail: '2.1B active users x ~10 KB cached feed (top 50 posts) = 21 TB in Redis' },
+          { label: 'Ranking Inference/sec', value: '~1.5M', detail: 'One ML inference per feed request, each scoring 1000 candidates' },
+          { label: 'Social Graph Size', value: '~1.5 TB', detail: '2.1B users x avg 338 friends x 2 bytes per edge = ~1.4 TB (bidirectional)' },
+          { label: 'Post Storage/Year', value: '~365 TB', detail: '1B posts/day x ~1 KB per post x 365 days = 365 TB/year (text + metadata)' },
+        ]
+      },
 
       dataModel: {
         description: 'Posts, social graph, and pre-computed feeds',
@@ -18306,6 +18755,162 @@ Instead:
 - Acquaintances: batch every 5 min
 - Pages: low priority, batch hourly
 \`\`\``
+        },
+        {
+          question: 'How does Facebook TAO (social graph) work?',
+          answer: `Facebook built **TAO** (The Associations and Objects) as a distributed graph data store optimized for the social graph.
+
+**Data Model**:
+- Objects: users, posts, photos, comments (nodes)
+- Associations: friendships, likes, comments, follows (edges)
+- Each association is directional with a type and timestamp
+
+**Architecture**:
+- TAO sits between application servers and MySQL shards
+- Provides a graph-aware caching layer
+- Cache hit rate: >99.9% for reads
+
+**Query Patterns**:
+- assoc_get(user:123, FRIEND): Get all friends of user 123
+- assoc_count(post:456, LIKE): Count likes on post 456
+- assoc_range(user:123, FRIEND, 0, 50): Paginate friends
+
+**Scale**: TAO handles billions of reads/sec across thousands of cache servers. The social graph has 2.1B+ nodes and hundreds of billions of edges.`
+        },
+        {
+          question: 'How does the feed cache work in Redis?',
+          answer: `Each active user has a pre-computed feed cache in Redis containing their most recent feed items.
+
+**Cache Structure**:
+- Key: feed:{userId}
+- Value: sorted set of {postId, score, timestamp}
+- Size: ~50 items per user (~10 KB)
+- TTL: 5 minutes for active users, evicted for inactive (7+ days)
+
+**Write Path (Fan-out)**:
+When a normal user (<10K followers) posts:
+1. Get follower list from TAO
+2. For each follower: ZADD feed:{followerId} {score} {postId}
+3. Trim to top 500 items: ZREMRANGEBYRANK
+
+**Read Path**:
+1. Check Redis cache for top 200 post IDs
+2. If cache miss: reconstruct from friends recent posts (expensive ~500ms)
+3. Merge with celebrity posts (pull)
+4. Send merged candidates to ranking service
+
+**Memory**: 2.1B active users x 10 KB = ~21 TB Redis cluster with thousands of shards.`
+        },
+        {
+          question: 'How does content ranking avoid filter bubbles?',
+          answer: `Pure engagement optimization creates echo chambers. Several techniques counteract this.
+
+**Diversity Rules**:
+- Max 2 posts from same creator per feed page
+- At least 1 post from different content category per 5 posts
+- Inject 10-20% content from weaker connections (acquaintances)
+
+**Quality Signals** (beyond engagement):
+- Dwell time: Time spent reading indicates genuine interest
+- Survey responses: Periodic "Was this post worth your time?" surveys
+- Informed engagement: Weight comments higher than likes (higher effort)
+
+**Anti-Clickbait**:
+- Detect clickbait headlines via NLP classifier
+- Penalize posts with high click rate but low dwell time
+- Demote posts from pages with misleading content history
+
+**User Controls**:
+- "See less like this" feedback directly impacts personal model
+- "Favorites" list: always show posts from selected friends
+- Chronological mode toggle: bypass ranking entirely
+
+**Trade-off**: Diversity injection reduces short-term engagement by ~5% but improves long-term retention.`
+        },
+        {
+          question: 'How does privacy enforcement work in the feed pipeline?',
+          answer: `Privacy is the hardest constraint. A "Friends Only" post must never appear in a non-friend feed.
+
+**Privacy Check Points**:
+1. **At fan-out time**: Only push to users matching the audience
+   - PUBLIC: push to all followers
+   - FRIENDS: push only to friends
+   - CUSTOM: check custom audience list
+2. **At read time**: Re-check privacy before rendering
+   - User may have unfriended since fan-out
+   - Post may have been edited to more restrictive audience
+
+**Block List Enforcement**:
+- Blocked user posts filtered at read time (not at fan-out)
+- Use bloom filter for quick negative check: "is this user definitely NOT blocked?"
+- Bloom filter: 99.9% accurate, eliminates most checks
+
+**Performance Impact**: Privacy checks add ~2ms per feed request.
+
+**GDPR Compliance**: Right to deletion requires purging user posts from all feed caches within 72 hours via background scanning job.`
+        },
+        {
+          question: 'How does Facebook handle Stories (24-hour ephemeral content)?',
+          answer: `Stories are 24-hour ephemeral posts displayed in a carousel above the feed.
+
+**Storage**:
+- Cassandra cluster with 24-hour TTL (auto-deleted)
+- Media: photos/videos in S3 with 24-hour expiration policy
+
+**Feed Integration**:
+- Stories tray fetched separately from main feed
+- Ranked by: recency, closeness (close friends first), unseen (unwatched first)
+- Top 5 stories media pre-loaded for instant playback
+
+**Fan-out**: Push-based for all users (24-hour lifetime bounds fan-out cost). Immediate push to all friends story trays on post.
+
+**Scale**: 500M+ daily story users. ~50 friend stories visible per user. Total stories storage: ~10 TB at any moment (constantly expiring).`
+        },
+        {
+          question: 'How does media delivery work for photos and videos in the feed?',
+          answer: `The feed is media-heavy: 200M+ photos uploaded daily, plus videos and links.
+
+**Photo Pipeline**:
+1. Upload to temporary storage
+2. Generate thumbnails: 4 sizes (75px, 320px, 720px, 1080px)
+3. Compress with WebP (30% smaller than JPEG)
+4. Store all sizes in S3 with CDN distribution
+5. Feed renders appropriate size based on device viewport
+
+**Video Strategy**:
+- Autoplay on scroll (muted by default)
+- Adaptive bitrate streaming (HLS): 240p, 480p, 720p, 1080p
+- Pre-buffer: start loading video 2 positions before viewport
+- Separate video CDN from photo CDN
+
+**Lazy Loading**:
+- Feed loads text + low-res placeholders first
+- Full resolution images loaded on scroll
+- Videos load only when within 2 positions of viewport
+
+**CDN Strategy**: Photos: 99%+ cache hit (immutable). Videos: 95% for popular content.`
+        },
+        {
+          question: 'How does the social graph affect feed personalization?',
+          answer: `The social graph is the foundation of feed relevance. Not all friends are equal.
+
+**Closeness Score**: ML model computes closeness between every pair of connected users:
+- Interaction frequency (messages, comments, tags)
+- Profile views
+- Time spent viewing each other content
+- Mutual friends overlap
+- Real-world connections (same school, workplace)
+
+**Score Range**: 0.0 (acquaintance) to 1.0 (close friend/family)
+
+**Feed Impact**:
+- Close friends (>0.7): Posts always included in candidate set, boosted in ranking
+- Regular friends (0.3-0.7): Posts included, ranked normally
+- Acquaintances (<0.3): Posts occasionally included for diversity
+
+**Updates**: Closeness scores recomputed weekly via batch Spark job analyzing 30 days of interaction data. Stored in TAO as association metadata.
+
+**Scale**: 2.1B users x avg 338 friends = ~710B closeness scores to maintain. Stored efficiently as TAO association attributes.`
         }
       ],
 
@@ -18479,6 +19084,34 @@ Instead:
         { name: 'Feed Assembly Layer', purpose: 'Merge pre-computed feed cache with celebrity pulls and apply ML ranking', components: ['Feed Aggregator', 'Celebrity Post Fetcher', 'Ranking Service (ML)', 'Business Rules Engine'] },
         { name: 'Fan-out Layer', purpose: 'Distribute new posts to follower feed caches based on follower count threshold', components: ['Fan-out Workers', 'Kafka Post Stream', 'Follower Graph Lookup', 'Feed Cache Writer'] },
         { name: 'Data Layer', purpose: 'Persist posts, social graph, user features, and feed caches', components: ['Post DB (sharded)', 'Social Graph (TAO)', 'Feed Cache (Redis Cluster)', 'Media Storage (S3 + CDN)', 'ML Feature Store'] },
+      ],
+      deepDiveTopics: [
+        { topic: 'Hybrid Fan-Out Architecture', detail: 'Normal users (<10K followers): fan-out-on-write pushes postId to each follower feed cache in Redis. Celebrities (>10K): fan-out-on-read pulls recent posts at feed assembly time. Threshold at 10K prevents a single post from generating millions of cache writes. Optimization: skip inactive users (no login in 7+ days) during fan-out to save 30% write volume. Priority fan-out: close friends first, acquaintances batched.' },
+        { topic: 'Two-Phase ML Ranking Pipeline', detail: 'Phase 1 (Light Ranker): Simple logistic regression scores all 1000+ candidates in ~0.1ms each. Output: top 200 candidates. Phase 2 (Heavy Ranker): Deep neural network (GBDT + embeddings) scores top 200 in ~1ms each. Total ranking time: ~300ms. Optimized with feature caching: user features precomputed hourly, post features computed at write time, only user-post cross features computed at request time.' },
+        { topic: 'Social Graph (TAO) Architecture', detail: 'TAO is Facebook custom distributed graph store built on MySQL. Objects (nodes) and Associations (edges) as primitives. Two-tier caching: leader cache (consistency) + follower caches (read throughput). Cache hit rate: 99.9%+. Handles billions of reads/sec. Sharded by object ID. Read-after-write consistency within same data center, eventual consistency cross-DC.' },
+        { topic: 'Feed Cache Lifecycle', detail: 'Active users (logged in last 7 days): feed cached in Redis, refreshed on each fan-out event. Inactive users: feed evicted from cache to save memory. Returning users: feed reconstructed on first request (expensive ~500ms cold read). Cache warmup: background job pre-computes feeds for users likely to return (ML prediction based on historical login patterns).' },
+        { topic: 'Real-Time Feed Updates', detail: 'Close friends posts: pushed via WebSocket within seconds. Acquaintance posts: batched every 5 minutes. Page posts: low priority, batched hourly. New post banner: lightweight polling endpoint every 30 seconds returns count of new posts since last load. User clicks banner to refresh feed from cache. WebSocket connection multiplexed with Messenger events to reduce connection count.' }
+      ],
+      comparisonTables: [
+        { id: 'push-vs-pull-fanout', title: 'Fan-out-on-Write vs Fan-out-on-Read', headers: ['Aspect', 'Fan-out-on-Write (Push)', 'Fan-out-on-Read (Pull)', 'Hybrid (Recommended)'], rows: [['Write Cost', 'High (N cache writes per post)', 'None (just store post)', 'Moderate (push for <10K followers)'], ['Read Latency', 'Fast (<10ms from cache)', 'Slow (query friends posts)', 'Fast (cache + merge celebrity pulls)'], ['Celebrity Problem', 'Catastrophic (10M writes)', 'Handled naturally', 'Solved (celebrities pulled)'], ['Staleness', 'None (pushed immediately)', 'None (fresh on read)', 'Minimal (seconds lag for push)'], ['Memory', 'High (cache per user)', 'Low (compute on demand)', 'Moderate (active users only)'], ['Best For', 'Normal users with <10K followers', 'Celebrity posts', '99% of users + celebrity handling']], verdict: 'Hybrid: push for normal users (99% of posts), pull for celebrities (1% of posts but 50%+ of traffic)' },
+        { id: 'ranking-approaches', title: 'Chronological vs ML-Ranked Feed', headers: ['Aspect', 'Chronological', 'ML-Ranked'], rows: [['Transparency', 'Fully predictable', 'Black box (opaque scoring)'], ['Relevance', 'Low (time-sorted noise)', 'High (personalized signal)'], ['Engagement', '30-50% lower engagement', 'Maximized (by design)'], ['Filter Bubbles', 'Low risk', 'High risk (echo chambers)'], ['Implementation', 'Simple (sort by timestamp)', 'Complex (ML pipeline + features)'], ['User Preference', 'Some users prefer', 'Default for most users']], verdict: 'ML-ranked as default with chronological toggle for users who want it; always boost time-sensitive content' },
+        { id: 'feed-storage', title: 'Feed Storage Options', headers: ['Aspect', 'Redis (Feed Cache)', 'Cassandra', 'MySQL (Posts DB)'], rows: [['Read Latency', '<1ms', '2-5ms', '5-10ms'], ['Write Throughput', '100K+/sec per node', '50K+/sec per node', '10K/sec per node'], ['Data Model', 'Sorted set (postId + score)', 'Wide column per user', 'Relational rows'], ['Memory Cost', '$$$$ (all in RAM)', '$$ (disk-based)', '$$ (disk-based)'], ['Best For', 'Hot feed cache (active users)', 'Feed history storage', 'Post and user data']], verdict: 'Redis for active feed cache (5-min TTL), MySQL for persistent posts, Cassandra for feed history/archive' }
+      ],
+      flowcharts: [
+        { id: 'feed-generation-flow', title: 'Feed Generation Flow', description: 'How a personalized feed is assembled for a user request', steps: [{ step: 1, label: 'Feed Request', detail: 'User opens app or scrolls. Client sends GET /api/feed with cursor.' }, { step: 2, label: 'Cache Lookup', detail: 'Check Redis for pre-computed feed items. Get top 200 post IDs from feed:{userId} sorted set.' }, { step: 3, label: 'Celebrity Pull', detail: 'Get list of celebrity/page follows. Query their recent posts directly (last 24 hours).' }, { step: 4, label: 'Merge Candidates', detail: 'Combine cached items + celebrity posts + suggested content. Total: ~1000 candidates.' }, { step: 5, label: 'Light Ranker', detail: 'Logistic regression scores all 1000 candidates. Select top 200. ~100ms total.' }, { step: 6, label: 'Heavy Ranker', detail: 'Neural network scores top 200 with full feature set. Select final top 50. ~200ms total.' }, { step: 7, label: 'Apply Business Rules', detail: 'Enforce diversity (max 2 per creator), recency boost, privacy filter. Return top 20 for first page.' }] },
+        { id: 'post-fanout-flow', title: 'Post Fan-Out Flow', description: 'How a new post is distributed to follower feeds', steps: [{ step: 1, label: 'Post Created', detail: 'User creates post. Stored in Posts DB. Published to Kafka topic: posts.' }, { step: 2, label: 'Check Follower Count', detail: 'If followers < 10K: proceed with push fan-out. If > 10K: store as celebrity post (pull only).' }, { step: 3, label: 'Get Follower List', detail: 'Query TAO for followers. Filter out inactive users (no login in 7+ days) to reduce fan-out volume.' }, { step: 4, label: 'Privacy Filter', detail: 'Apply post audience rules: PUBLIC = all followers, FRIENDS = friend followers only, CUSTOM = check list.' }, { step: 5, label: 'Write to Feed Caches', detail: 'ZADD feed:{followerId} {initialScore} {postId} for each eligible follower. Batch writes for efficiency.' }, { step: 6, label: 'Real-Time Push', detail: 'For close friends currently online: push new post notification via WebSocket immediately.' }] },
+        { id: 'ranking-pipeline-flow', title: 'ML Ranking Pipeline Detail', description: 'Two-phase ranking from 1000 candidates to final feed order', steps: [{ step: 1, label: 'Feature Assembly', detail: 'Gather pre-computed features: user profile, post metadata, user-post affinity scores from feature store.' }, { step: 2, label: 'Light Ranker (1000 candidates)', detail: 'Logistic regression with 50 features. Score: P(engagement). ~0.1ms per candidate. Select top 200.' }, { step: 3, label: 'Heavy Ranker (200 candidates)', detail: 'Deep neural net with 500+ features including embeddings. ~1ms per candidate. Predict P(like), P(comment), P(share), P(dwell>30s).' }, { step: 4, label: 'Score Aggregation', detail: 'Final score = P(like)*w1 + P(comment)*w2 + P(share)*w3 + P(dwell)*w4. Weights tuned via A/B testing.' }, { step: 5, label: 'Business Rules', detail: 'Max 2 per creator. Boost breaking news. Demote clickbait (high click, low dwell). Inject diversity.' }] }
+      ],
+      visualCards: [
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#2D8CFF', items: [{ label: 'Redis (Feed Cache)', value: '~21 TB active feeds', bar: 95 }, { label: 'TAO (Social Graph)', value: '99.9% cache hit rate', bar: 90 }, { label: 'Kafka (Fan-out)', value: '100B+ events/day', bar: 85 }, { label: 'ML Ranking (PyTorch)', value: '1.5M inferences/sec', bar: 80 }, { label: 'MySQL (Posts)', value: 'Sharded by userId', bar: 75 }, { label: 'CDN (Media)', value: '200M photos/day', bar: 70 }] },
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1877F2', items: [{ label: '2.1B DAU', value: 'Daily active users', bar: 100 }, { label: '1B+ posts/day', value: 'Daily content creation', bar: 90 }, { label: '1.5M feeds/sec', value: 'Feed generation QPS', bar: 85 }, { label: '200M photos/day', value: 'Daily photo uploads', bar: 75 }, { label: '<200ms latency', value: 'Feed generation time', bar: 95 }, { label: '100B fan-out/day', value: 'Cache write events', bar: 80 }] }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Chronological Pull', description: 'Simple reverse-chronological feed. Query friends list, fetch their recent posts, sort by time. N+1 query problem.', color: '#94a3b8', icon: 'server', capacity: '~1M users', rps: '1K', pros: ['Simple and transparent', 'No ML complexity', 'Easy to debug'], cons: ['N+1 query problem (slow)', 'No relevance ranking', 'Celebrity posts cause hot spots'] },
+        { step: 2, title: 'Push Fan-Out + Cache', description: 'Fan-out-on-write pushes posts to follower feed caches. Redis sorted sets for pre-computed feeds. Sub-10ms reads.', color: '#2D8CFF', icon: 'layers', capacity: '~100M users', rps: '100K', pros: ['Instant feed reads from cache', 'No N+1 problem', 'Simple read path'], cons: ['Celebrity fan-out explosion', 'Massive write amplification', 'Cache memory expensive'] },
+        { step: 3, title: 'Hybrid Fan-Out + ML Ranking', description: 'Push for normal users, pull for celebrities. Two-phase ML ranking pipeline. TAO for social graph caching.', color: '#f59e0b', icon: 'zap', capacity: '~1B users', rps: '500K', pros: ['Solves celebrity problem', 'Personalized feed ranking', 'Efficient read + write paths'], cons: ['ML training infrastructure', 'Ranking latency budget', 'Feed quality measurement'] },
+        { step: 4, title: 'Global Distribution + Stories', description: 'Geo-distributed feed caches. Stories with 24-hour TTL. WebSocket for real-time updates. Feature store for ML.', color: '#10b981', icon: 'globe', capacity: '~2B users', rps: '1M+', pros: ['Global low-latency feeds', 'Rich ephemeral content', 'Real-time engagement'], cons: ['Cross-region consistency', 'Stories infrastructure cost', 'WebSocket connection scale'] },
+        { step: 5, title: 'AI-Ranked Everything', description: 'Deep learning ranking with 500+ features. Recommended content from non-friends (50% of feed). Integrity classifiers. User control sliders.', color: '#7c3aed', icon: 'cpu', capacity: '3B+ users', rps: '5M+', pros: ['Hyper-personalized experience', 'Content discovery beyond network', 'Automated content safety'], cons: ['Filter bubble concerns', 'Transparency criticism', 'Massive ML serving cost'] },
       ],
     },
     {
