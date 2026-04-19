@@ -2281,6 +2281,12 @@ Why Cassandra wins for messages:
         { name: 'Storage Layer', purpose: 'Persist messages, media, and user data with partition-friendly schemas optimized for the access patterns. Cassandra handles the extreme write throughput for messages. MySQL stores relational data (users, groups, settings). S3 stores encrypted media blobs with CDN for global delivery. Hot/warm/cold tiering based on message age minimizes storage cost.', components: ['Message Store (Cassandra)', 'User & Group DB (MySQL)', 'Media Storage (S3 + CloudFront CDN)', 'Offline Queue (Cassandra with TTL)', 'Backup Service (Encrypted cloud backup)'] },
         { name: 'Push & Notification Layer', purpose: 'Deliver notifications to offline users via platform-specific push services. When a message cannot be delivered via WebSocket (recipient offline), this layer sends a push notification containing only a generic alert (no message content, for privacy). On reconnect, the actual messages are delivered from the offline queue.', components: ['Push Service (APNs for iOS, FCM for Android)', 'Push Token Registry', 'Notification Rate Limiter', 'Silent Push for Background Sync'] },
       ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope essentials vs out-of-scope features for the WhatsApp design interview', src: '/diagrams/whatsapp/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Traffic QPS, presence load, storage growth, connection requirements with step-by-step calculations', src: '/diagrams/whatsapp/capacity-estimation.svg', type: 'estimation' },
+        { id: 'msg-flow', title: 'Message Flow (Both Online)', description: 'Complete end-to-end flow: User A sends a message to User B through chat gateways, Kafka, and Redis', src: '/diagrams/whatsapp/message-flow-online.svg', type: 'flow' },
+        { id: 'ui-mockup', title: 'WhatsApp Chat Interface', description: 'The product we are designing — chat UI with message bubbles, delivery ticks, typing indicator, and presence', src: '/diagrams/whatsapp/whatsapp-ui-mockup.svg', type: 'ui' },
+      ],
       comparisonTables: [
         {
           id: 'websocket-vs-polling',

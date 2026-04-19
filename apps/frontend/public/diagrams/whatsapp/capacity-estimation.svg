@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates (QPS)</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">👥 1 Billion DAU</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Avg user sends</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">50 messages/day</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Total messages per day:</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">50 Billion msgs/day</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Write QPS (Average):</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">50B / (24h × 3600s)</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="16" font-weight="800">≈ 580,000 QPS</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="425" fill="white" font-size="11">Write QPS (Peak 2.5×):</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">≈ 1.5 Million QPS</text>
+
+  <!-- Column 2: Presence -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Presence (Hidden Load)</text>
+
+  <text x="335" y="145" fill="#fbbf24" font-size="13" font-weight="700">🫀 1 Billion users online</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="195" fill="white" font-size="12">Heartbeat every</text>
+  <text x="335" y="215" fill="#fbbf24" font-size="15" font-weight="700">30 seconds</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="268" fill="white" font-size="11">Presence QPS = 1B / 30s</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">≈ 33 Million QPS</text>
+
+  <rect x="325" y="302" width="235" height="22" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="442" y="318" text-anchor="middle" fill="white" font-size="10" font-weight="600">⚠️ Requires specialized handling!</text>
+
+  <!-- Column 3: Storage -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Estimates</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Avg message size: <tspan fill="#fbbf24" font-weight="700">200 bytes</tspan></text>
+  <text x="442" y="430" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+
+  <text x="335" y="450" fill="white" font-size="11">Storage/day: 50B × 200 bytes</text>
+  <text x="335" y="472" fill="#fbbf24" font-size="15" font-weight="800">= 10 TB/day</text>
+
+  <text x="335" y="500" fill="white" font-size="11">Storage/year: 10TB × 365</text>
+  <text x="335" y="520" fill="#f97316" font-size="15" font-weight="800">≈ 3.65 Petabytes/year</text>
+
+  <!-- Column 4: Connections -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Connection Requirements</text>
+
+  <text x="615" y="148" fill="white" font-size="12">The system must handle</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="20" font-weight="800">1 Billion</text>
+  <text x="615" y="198" fill="white" font-size="12">simultaneous persistent</text>
+  <text x="615" y="218" fill="white" font-size="12">WebSocket connections</text>
+  <text x="615" y="238" fill="white" font-size="12">during peak times.</text>
+
+  <text x="735" y="268" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+  <text x="615" y="292" fill="white" font-size="11">At 100K connections per server:</text>
+  <text x="615" y="316" fill="#f97316" font-size="16" font-weight="800">10,000+ chat servers</text>
+
+  <!-- Column 5: Bandwidth -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Bandwidth</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Incoming: 10 TB/day</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">≈ 926 Mb/s incoming</text>
+
+  <text x="615" y="462" fill="white" font-size="11">With media (images/videos):</text>
+  <text x="615" y="484" fill="#f97316" font-size="14" font-weight="700">≈ 50+ Gb/s total</text>
+
+  <text x="615" y="510" fill="rgba(255,255,255,0.6)" font-size="10">CDN offloads 90%+ of media bandwidth</text>
+
+  <!-- Key insight box -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">💡 Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Message QPS is manageable</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">1.5M QPS is high but solvable</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">with horizontal scaling.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">Presence is the hidden killer</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">33M QPS just for heartbeats!</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">Needs Redis Cluster + batching.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Storage grows linearly</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">3.65 PB/year for text alone.</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">Hot/cold storage separation</text>
+  <text x="920" y="323" fill="rgba(255,255,255,0.7)" font-size="10">is essential.</text>
+
+  <text x="920" y="355" fill="white" font-size="11" font-weight="600">Connections drive server cost</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">10K+ servers just for WebSocket.</text>
+  <text x="920" y="388" fill="rgba(255,255,255,0.7)" font-size="10">Erlang/BEAM handles 2M</text>
+  <text x="920" y="403" fill="rgba(255,255,255,0.7)" font-size="10">connections per node.</text>
+
+  <text x="920" y="435" fill="white" font-size="11" font-weight="600">Media dominates bandwidth</text>
+  <text x="920" y="453" fill="rgba(255,255,255,0.7)" font-size="10">Text is 926 Mb/s, but media</text>
+  <text x="920" y="468" fill="rgba(255,255,255,0.7)" font-size="10">pushes to 50+ Gb/s total.</text>
+  <text x="920" y="483" fill="rgba(255,255,255,0.7)" font-size="10">CDN is non-negotiable.</text>
+</svg>

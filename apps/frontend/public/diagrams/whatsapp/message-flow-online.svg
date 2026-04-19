@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="650" fill="#fafbfc" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" fill="#1e293b" font-size="22" font-weight="700">User A sends a message to User B (Both Online)</text>
+  <text x="600" y="62" text-anchor="middle" fill="#64748b" font-size="13">Complete end-to-end message delivery flow through the distributed chat system</text>
+
+  <!-- User A -->
+  <rect x="30" y="180" width="120" height="130" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="180" width="120" height="36" rx="12 12 0 0" fill="#f97316"/>
+  <text x="90" y="204" text-anchor="middle" fill="white" font-size="13" font-weight="700">User A</text>
+  <text x="90" y="233" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="600">Sender</text>
+  <text x="90" y="253" text-anchor="middle" fill="#64748b" font-size="22">📱</text>
+  <text x="90" y="295" text-anchor="middle" fill="#64748b" font-size="10">Mobile App</text>
+
+  <!-- CG1 -->
+  <rect x="230" y="140" width="160" height="160" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="230" y="140" width="160" height="36" rx="12 12 0 0" fill="#2563eb"/>
+  <text x="310" y="164" text-anchor="middle" fill="white" font-size="12" font-weight="700">Chat Gateway 1</text>
+  <text x="310" y="198" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="600">CG1</text>
+  <text x="310" y="218" text-anchor="middle" fill="#64748b" font-size="10">WebSocket Handler</text>
+  <text x="310" y="238" text-anchor="middle" fill="#64748b" font-size="10">Authentication</text>
+  <text x="310" y="258" text-anchor="middle" fill="#64748b" font-size="10">Message Routing</text>
+  <text x="310" y="280" text-anchor="middle" fill="#94a3b8" font-size="9">Erlang/Go</text>
+
+  <!-- Redis Cache -->
+  <rect x="280" y="90" width="120" height="36" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="280" y="90" width="120" height="12" rx="8 8 0 0" fill="#ef4444"/>
+  <text x="340" y="118" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Redis Cache</text>
+
+  <!-- Kafka -->
+  <rect x="500" y="320" width="200" height="80" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="500" y="320" width="200" height="28" rx="12 12 0 0" fill="#f97316"/>
+  <text x="600" y="341" text-anchor="middle" fill="white" font-size="11" font-weight="700">Kafka Message Queue</text>
+  <text x="600" y="370" text-anchor="middle" fill="#64748b" font-size="10">Cross-server routing</text>
+  <text x="600" y="385" text-anchor="middle" fill="#64748b" font-size="10">Guaranteed delivery</text>
+
+  <!-- Cassandra -->
+  <rect x="500" y="440" width="200" height="60" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="500" y="440" width="200" height="24" rx="12 12 0 0" fill="#7c3aed"/>
+  <text x="600" y="458" text-anchor="middle" fill="white" font-size="10" font-weight="700">Cassandra DB</text>
+  <text x="600" y="482" text-anchor="middle" fill="#64748b" font-size="10">Persistent message storage</text>
+
+  <!-- CG2 -->
+  <rect x="810" y="140" width="160" height="160" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="810" y="140" width="160" height="36" rx="12 12 0 0" fill="#2563eb"/>
+  <text x="890" y="164" text-anchor="middle" fill="white" font-size="12" font-weight="700">Chat Gateway 2</text>
+  <text x="890" y="198" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="600">CG2</text>
+  <text x="890" y="218" text-anchor="middle" fill="#64748b" font-size="10">WebSocket Handler</text>
+  <text x="890" y="238" text-anchor="middle" fill="#64748b" font-size="10">Message Delivery</text>
+  <text x="890" y="258" text-anchor="middle" fill="#64748b" font-size="10">ACK Processing</text>
+  <text x="890" y="280" text-anchor="middle" fill="#94a3b8" font-size="9">Erlang/Go</text>
+
+  <!-- User B -->
+  <rect x="1050" y="180" width="120" height="130" rx="12" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1050" y="180" width="120" height="36" rx="12 12 0 0" fill="#16a34a"/>
+  <text x="1110" y="204" text-anchor="middle" fill="white" font-size="13" font-weight="700">User B</text>
+  <text x="1110" y="233" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="600">Recipient</text>
+  <text x="1110" y="253" text-anchor="middle" fill="#64748b" font-size="22">📱</text>
+  <text x="1110" y="295" text-anchor="middle" fill="#64748b" font-size="10">Mobile App</text>
+
+  <!-- FLOW ARROWS WITH LABELS -->
+
+  <!-- 1. Send: A → CG1 -->
+  <line x1="150" y1="230" x2="225" y2="220" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="152" y="200" width="72" height="18" rx="4" fill="#2563eb"/>
+  <text x="188" y="213" text-anchor="middle" fill="white" font-size="9" font-weight="600">① SEND</text>
+
+  <!-- 2. ACK: CG1 → A -->
+  <line x1="228" y1="260" x2="152" y2="270" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowGreen)"/>
+  <rect x="155" y="273" width="75" height="16" rx="4" fill="#16a34a"/>
+  <text x="192" y="284" text-anchor="middle" fill="white" font-size="8" font-weight="600">② ACK ✓ Sent</text>
+
+  <!-- 3. Lookup: CG1 → Redis -->
+  <line x1="310" y1="140" x2="335" y2="128" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="355" y="135" fill="#64748b" font-size="9">③ Lookup User B</text>
+
+  <!-- 4. Route: CG1 → Kafka -->
+  <line x1="360" y1="300" x2="498" y2="340" stroke="#f97316" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="390" y="300" width="100" height="16" rx="4" fill="#f97316"/>
+  <text x="440" y="312" text-anchor="middle" fill="white" font-size="8" font-weight="600">④ Route via Kafka</text>
+
+  <!-- 5. Persist: CG1 → Cassandra (async) -->
+  <line x1="340" y1="300" x2="498" y2="460" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+  <text x="380" y="400" fill="#7c3aed" font-size="9">⑤ Persist (async)</text>
+
+  <!-- 6. Deliver: Kafka → CG2 -->
+  <line x1="700" y1="345" x2="808" y2="280" stroke="#f97316" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="720" y="295" width="80" height="16" rx="4" fill="#f97316"/>
+  <text x="760" y="307" text-anchor="middle" fill="white" font-size="8" font-weight="600">⑥ Deliver</text>
+
+  <!-- 7. Push: CG2 → B -->
+  <line x1="970" y1="220" x2="1048" y2="230" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="980" y="200" width="60" height="18" rx="4" fill="#2563eb"/>
+  <text x="1010" y="213" text-anchor="middle" fill="white" font-size="9" font-weight="600">⑦ PUSH</text>
+
+  <!-- 8. ACK Delivered: B → CG2 → CG1 → A -->
+  <line x1="1048" y1="270" x2="972" y2="280" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowGreen)"/>
+  <line x1="808" y1="290" x2="392" y2="290" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowGreen)"/>
+  <rect x="565" y="270" width="100" height="16" rx="4" fill="#16a34a"/>
+  <text x="615" y="282" text-anchor="middle" fill="white" font-size="8" font-weight="600">⑧ ✓✓ Delivered</text>
+
+  <!-- Legend -->
+  <rect x="30" y="540" width="1140" height="80" rx="12" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="565" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+
+  <rect x="60" y="575" width="12" height="12" rx="2" fill="#2563eb"/>
+  <text x="78" y="586" fill="#475569" font-size="10">① User A sends encrypted message via WebSocket</text>
+
+  <rect x="60" y="595" width="12" height="12" rx="2" fill="#16a34a"/>
+  <text x="78" y="606" fill="#475569" font-size="10">② CG1 sends "Sent ✓" ACK back to User A immediately</text>
+
+  <text x="380" y="586" fill="#475569" font-size="10">③ CG1 queries Redis: "Which gateway has User B?"</text>
+  <text x="380" y="606" fill="#475569" font-size="10">④ CG1 publishes message to Kafka routing topic</text>
+
+  <text x="710" y="586" fill="#475569" font-size="10">⑤ Message persisted to Cassandra (async, non-blocking)</text>
+  <text x="710" y="606" fill="#475569" font-size="10">⑥⑦⑧ Kafka → CG2 → User B → "Delivered ✓✓" back to A</text>
+</svg>
