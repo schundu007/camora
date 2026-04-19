@@ -296,6 +296,8 @@
 .heading-3 { font-size: 16px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
 .text-body { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 .text-small { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.heading-4 { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.5; }
+.text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; }
 
 /* Landing page typography aliases */
 .landing-display { font-family: var(--font-sans); }

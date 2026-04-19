@@ -1488,6 +1488,21 @@ Quick quality first: 360p available in minutes, 4K later`
       color: '#25d366',
       difficulty: 'Hard',
       description: 'Design a real-time messaging application supporting 1-1 chat, group chat, media sharing, and end-to-end encryption at planetary scale.',
+      productMeta: {
+        name: 'WhatsApp',
+        tagline: 'Real-time messaging for 2 billion users across 180+ countries',
+        stats: [
+          { label: 'Monthly Users', value: '2B+' },
+          { label: 'Messages/Day', value: '100B+' },
+          { label: 'Countries', value: '180+' },
+          { label: 'Engineers (at acq.)', value: '~55' },
+        ],
+        scope: {
+          inScope: ['1:1 and group real-time messaging', 'Message delivery guarantees (sent/delivered/read)', 'End-to-end encryption (Signal Protocol)', 'Media sharing (images, video, docs)', 'Presence & typing indicators', 'Offline message delivery & sync'],
+          outOfScope: ['Voice/video calling', 'Payment features', 'Status/Stories', 'WhatsApp Business API', 'Sticker marketplace'],
+        },
+        keyChallenge: 'Delivering 100 billion messages per day with sub-second latency while maintaining end-to-end encryption — the server itself cannot read any message content.',
+      },
 
       introduction: `WhatsApp is the world's most widely used messaging application, connecting over 2 billion monthly active users across 180+ countries. At its peak, the system delivers over 100 billion messages per day with sub-second latency, making it one of the most demanding distributed systems ever built.
 
@@ -2333,36 +2348,31 @@ Why Cassandra wins for messages:
       ],
       visualCards: [
         {
-          id: 'message-lifecycle',
-          title: 'Message Lifecycle',
-          items: [
-            { label: '✓ Sent', description: 'Message reaches chat server, stored in queue' },
-            { label: '✓✓ Delivered', description: 'Message pushed to recipient\'s device via WebSocket' },
-            { label: '✓✓ Read', description: 'Recipient opens conversation, blue ticks shown' },
-          ]
-        },
-        {
           id: 'tech-stack',
           title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
           items: [
-            { label: 'Gateway', description: 'Erlang/Elixir — 2M connections per server' },
-            { label: 'Message Bus', description: 'Apache Kafka — cross-server routing' },
-            { label: 'Session Cache', description: 'Redis Cluster — userId→serverId mapping' },
-            { label: 'Message DB', description: 'Cassandra — write-optimized, 1.5M QPS' },
-            { label: 'Media', description: 'S3 + CDN — encrypted blob storage' },
-            { label: 'Push', description: 'FCM/APNs — offline notification delivery' },
+            { label: 'Gateway (Erlang)', value: '2M conn/server', bar: 95 },
+            { label: 'Kafka (Message Bus)', value: '1.5M QPS', bar: 85 },
+            { label: 'Redis (Sessions)', value: '33M QPS', bar: 100 },
+            { label: 'Cassandra (Messages)', value: '10 TB/day', bar: 75 },
+            { label: 'S3 + CDN (Media)', value: '50 GB/s', bar: 60 },
+            { label: 'FCM/APNs (Push)', value: 'Offline delivery', bar: 40 },
           ]
         },
         {
           id: 'scale-numbers',
           title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
           items: [
-            { label: '2B+ users', description: 'Monthly active users worldwide' },
-            { label: '100B msgs/day', description: '50 billion sent + received' },
-            { label: '1.5M QPS peak', description: 'Message write throughput' },
-            { label: '33M QPS', description: 'Presence heartbeat load' },
-            { label: '10 TB/day', description: 'New message storage daily' },
-            { label: '10K+ servers', description: 'Chat gateway fleet size' },
+            { label: '2B+ MAU', value: 'Monthly active users', bar: 100 },
+            { label: '1B DAU', value: 'Daily active users', bar: 85 },
+            { label: '50B msgs/day', value: 'Messages processed', bar: 90 },
+            { label: '1.5M QPS peak', value: 'Write throughput', bar: 70 },
+            { label: '33M QPS', value: 'Presence heartbeats', bar: 95 },
+            { label: '3.65 PB/year', value: 'Storage growth', bar: 65 },
           ]
         }
       ],
@@ -2370,94 +2380,49 @@ Why Cassandra wins for messages:
         {
           id: 'send-message-flow',
           title: 'Send Message Flow (Both Online)',
-          description: 'Complete flow when User A sends a message to User B and both are online',
-          mermaidCode: `sequenceDiagram
-    participant A as User A (Sender)
-    participant CG1 as Chat Gateway 1
-    participant K as Kafka
-    participant R as Redis Cache
-    participant DB as Cassandra DB
-    participant CG2 as Chat Gateway 2
-    participant B as User B (Recipient)
-
-    A->>CG1: Send encrypted message via WebSocket
-    CG1->>CG1: Generate messageId + server timestamp
-    CG1-->>A: ACK ✓ (Sent)
-    CG1->>R: Lookup: Where is User B connected?
-    R-->>CG1: User B → Chat Gateway 2
-    CG1->>K: Publish message to routing topic
-    CG1->>DB: Persist message (async, status=SENT)
-    K->>CG2: Deliver message to Gateway 2
-    CG2->>B: Push message via WebSocket
-    B-->>CG2: ACK (Delivered)
-    CG2->>K: Publish delivery status
-    K->>CG1: Delivery confirmed
-    CG1-->>A: ✓✓ (Delivered)
-    B->>CG2: Read receipt
-    CG2->>K: Publish read status
-    K->>CG1: Read confirmed
-    CG1-->>A: ✓✓ Blue (Read)`
+          description: 'Complete flow when User A sends a message to User B and both are connected',
+          steps: [
+            { step: 1, label: 'Encrypt & Send', detail: 'Client encrypts with Signal Protocol → WebSocket → Gateway 1' },
+            { step: 2, label: 'Assign ID', detail: 'Gateway generates messageId + server timestamp' },
+            { step: 3, label: 'ACK ✓ Sent', detail: 'Gateway 1 → Sender (single grey tick)' },
+            { step: 4, label: 'Lookup Recipient', detail: 'Redis: userId → serverId mapping' },
+            { step: 5, label: 'Route via Kafka', detail: 'Publish to routing topic (partitioned by recipientId)' },
+            { step: 6, label: 'Persist (async)', detail: 'Cassandra write: conversationId partition, status=SENT' },
+            { step: 7, label: 'Deliver to B', detail: 'Gateway 2 pushes via WebSocket to recipient' },
+            { step: 8, label: 'ACK ✓✓ Delivered', detail: 'Recipient device ACK → double grey ticks' },
+            { step: 9, label: 'Read Receipt', detail: 'Recipient opens chat → ✓✓ blue ticks to sender' },
+          ]
         },
         {
           id: 'offline-delivery-flow',
           title: 'Offline Message Delivery',
-          description: 'Flow when recipient is offline — store-and-forward pattern',
-          mermaidCode: `sequenceDiagram
-    participant A as User A (Sender)
-    participant CG1 as Chat Gateway 1
-    participant R as Redis Cache
-    participant Q as Offline Queue
-    participant PS as Push Service
-    participant DB as Cassandra DB
-    participant CG2 as Chat Gateway 2
-    participant B as User B (Offline → Online)
-
-    A->>CG1: Send message via WebSocket
-    CG1-->>A: ACK ✓ (Sent)
-    CG1->>R: Lookup: Where is User B?
-    R-->>CG1: User B is OFFLINE
-    CG1->>Q: Store in offline queue
-    CG1->>DB: Persist message (status=SENT)
-    CG1->>PS: Trigger push notification
-    PS->>B: Push notification (FCM/APNs)
-    Note over B: User opens app later...
-    B->>CG2: Connect via WebSocket
-    CG2->>R: Register: User B → Gateway 2
-    CG2->>Q: Fetch pending messages for User B
-    Q-->>CG2: Deliver queued messages (batch)
-    CG2->>B: Push all pending messages
-    B-->>CG2: ACK each message
-    CG2->>DB: Update status → DELIVERED
-    CG2-->>A: ✓✓ (Delivered) via Gateway 1`
+          description: 'Store-and-forward pattern when recipient is offline',
+          steps: [
+            { step: 1, label: 'Send Message', detail: 'Client → WebSocket → Gateway 1' },
+            { step: 2, label: 'ACK ✓ Sent', detail: 'Gateway → Sender (single grey tick)' },
+            { step: 3, label: 'Lookup: OFFLINE', detail: 'Redis shows recipient not connected' },
+            { step: 4, label: 'Queue Message', detail: 'Store in offline_queue (Cassandra, 30-day TTL)' },
+            { step: 5, label: 'Persist', detail: 'Write to message store (status=SENT)' },
+            { step: 6, label: 'Push Notification', detail: 'FCM/APNs alert (no message content for privacy)' },
+            { step: 7, label: 'Reconnect', detail: 'User B opens app → new WebSocket → Gateway 2' },
+            { step: 8, label: 'Flush Queue', detail: 'Deliver all pending messages in batch (50 at a time)' },
+            { step: 9, label: 'ACK ✓✓', detail: 'Batch delivery confirmation → update status' },
+          ]
         },
         {
           id: 'group-message-flow',
           title: 'Group Message Fan-out',
-          description: 'How a message is distributed to all group members',
-          mermaidCode: `sequenceDiagram
-    participant S as Sender
-    participant CG as Chat Gateway
-    participant GS as Group Service
-    participant K as Kafka
-    participant DB as Cassandra
-    participant CG1 as Gateway (Member 1)
-    participant CG2 as Gateway (Member 2)
-    participant CGn as Gateway (Member N)
-
-    S->>CG: Send group message
-    CG->>GS: Get group members list
-    GS-->>CG: [Member1, Member2, ..., MemberN]
-    CG->>DB: Store message once (groupId partition)
-    CG->>K: Publish to group topic
-    par Fan-out to all members
-        K->>CG1: Deliver to Member 1's gateway
-        K->>CG2: Deliver to Member 2's gateway
-        K->>CGn: Deliver to Member N's gateway
-    end
-    CG1-->>S: Member 1 delivered ✓✓
-    CG2-->>S: Member 2 delivered ✓✓
-    Note over CGn: Offline members → queue + push`
-        }
+          description: 'How a message is distributed to all group members (hybrid approach)',
+          steps: [
+            { step: 1, label: 'Send to Group', detail: 'Sender → Gateway → Group Service' },
+            { step: 2, label: 'Get Members', detail: 'Group Service returns member list + gateway mapping' },
+            { step: 3, label: 'Store Once', detail: 'Persist message once in group partition (Cassandra)' },
+            { step: 4, label: 'Publish', detail: 'Kafka group topic → fan-out begins' },
+            { step: 5, label: 'Online: Push', detail: 'Deliver via WebSocket to each online member\'s gateway' },
+            { step: 6, label: 'Offline: Queue', detail: 'Enqueue in offline_queue + push notification' },
+            { step: 7, label: 'Aggregate ACKs', detail: 'Track delivery: "delivered to 847/1024 members"' },
+          ]
+        },
       ],
       charts: [
         {
@@ -2476,12 +2441,213 @@ Why Cassandra wins for messages:
         }
       ],
       evolutionSteps: [
-        { title: 'Single Server', description: 'One chat server, all WebSocket connections, single database. Handles ~10K users.' },
-        { title: 'Horizontal Scaling', description: 'Multiple chat servers behind load balancer. Redis for session mapping. Handles ~1M users.' },
-        { title: 'Message Queue', description: 'Kafka for cross-server routing and guaranteed delivery. Offline message queue. Handles ~100M users.' },
-        { title: 'Global Distribution', description: 'Regional clusters, CDN for media, cross-region Kafka replication. Handles ~1B users.' },
-        { title: 'Optimization', description: 'Erlang gateways (2M conn/server), hot/cold storage, presence batching, sender keys for groups.' },
+        { title: 'Single Server', description: 'One chat server, all WebSocket connections, single database. Handles ~10K users.', color: '#94a3b8' },
+        { title: 'Horizontal Scaling', description: 'Multiple chat servers behind load balancer. Redis for session mapping. Handles ~1M users.', color: '#2D8CFF' },
+        { title: 'Message Queue', description: 'Kafka for cross-server routing and guaranteed delivery. Offline message queue. Handles ~100M users.', color: '#f59e0b' },
+        { title: 'Global Distribution', description: 'Regional clusters, CDN for media, cross-region Kafka replication. Handles ~1B users.', color: '#10b981' },
+        { title: 'Optimization', description: 'Erlang gateways (2M conn/server), hot/cold storage, presence batching, sender keys for groups.', color: '#7c3aed' },
       ],
+      interviewFollowups: [
+        {
+          question: 'How do you handle the thundering herd when a chat server crashes with 100K connections?',
+          answer: `When a chat server dies, all 100K clients disconnect simultaneously and attempt to reconnect. Without mitigation, they all hit the load balancer at once, potentially cascading the failure.\n\n**Solution:** Clients use **exponential backoff with jitter**: base delay of 1s, doubled each retry (1s, 2s, 4s, 8s...) up to 30s max, plus a random jitter of 0-50% of the delay. This spreads reconnections over ~30 seconds instead of a single spike.\n\nThe connection router detects the dead server via health checks and stops routing new connections to it. In-flight messages are safe because they were already persisted to Cassandra before the crash. Redis presence entries auto-expire via TTL (60s), so stale "online" status self-heals.`
+        },
+        {
+          question: 'How would you implement disappearing messages?',
+          answer: `Add an \`expiresAt\` timestamp field to the messages table. When a user enables disappearing messages for a conversation, all new messages get \`expiresAt = sentAt + TTL\` (e.g., 24 hours, 7 days).\n\n**Server-side:** Cassandra supports native TTL — messages auto-delete when TTL expires. No cleanup job needed.\n\n**Client-side:** The app checks \`expiresAt\` before rendering each message and removes expired ones from the local SQLite database. A background timer triggers periodic cleanup.\n\n**Edge case:** Screenshots cannot be prevented technically. WhatsApp shows a notification when someone screenshots a "view once" message, but cannot block it.`
+        },
+        {
+          question: 'How do you implement message search with end-to-end encryption?',
+          answer: `Since the server cannot read message content (E2E encrypted), **server-side search is impossible**. All search must happen client-side.\n\n**Implementation:** After decryption, messages are indexed locally using **SQLite FTS5** (Full-Text Search) on the device. The search index is rebuilt incrementally as new messages arrive.\n\n**Trade-off:** Search only works on the current device and is limited to messages that have been synced locally. For multi-device, each device maintains its own search index. There is no way to search messages that have been deleted from the device.`
+        },
+        {
+          question: 'What happens when a user blocks another user?',
+          answer: `A \`blocked_users\` table stores (userId, blockedUserId). When User A blocks User B:\n\n1. **Messages:** Server drops any messages from B → A silently (no error to B, B still sees single grey tick)\n2. **Presence:** A appears as "offline" to B always. B's \`lastSeen\` is hidden from A\n3. **Group chats:** Both can still see messages in shared groups (blocking is 1:1 only)\n4. **No notification:** B is never notified that they've been blocked — messages just never get delivered\n5. **Calls:** All calls from B to A are silently rejected\n\nThe block check happens at the message routing layer before enqueueing, so blocked messages never consume queue storage.`
+        },
+        {
+          question: 'How does multi-device sync work (WhatsApp Web)?',
+          answer: `WhatsApp moved from a **lead device model** (phone must be online) to a **multi-device architecture** in 2021.\n\n**How it works:** Each device has its own Signal Protocol identity key pair. When sending a message, the sender encrypts it N times — once for each of the recipient's registered devices. Each copy uses a different encryption session.\n\n**Sync:** Messages are stored per-device in the offline queue. When a new device is linked, it receives a history sync from the primary device (encrypted backup of recent messages, not from the server).\n\n**Limit:** Maximum 4 linked devices per account. Each device independently maintains WebSocket connections and receives messages directly from the server.`
+        },
+        {
+          question: 'How do you handle message ordering across unreliable networks?',
+          answer: `**Problem:** Network delays can cause messages to arrive at the server out of the order they were sent.\n\n**Solution:** Server-assigned monotonic sequence numbers using **Redis INCR** per conversation. Each message gets \`sequenceNum = INCR(conv:{conversationId})\`. The client displays messages sorted by \`sequenceNum\`, not by client timestamp or arrival order.\n\n**Why not client timestamps?** Device clocks can be wrong by minutes or hours. Two users with different clock settings would see messages in different orders. Server-assigned sequence numbers guarantee a single global order per conversation.\n\n**Concurrent messages:** If two users send at the exact same instant, the Redis INCR serializes them — one gets seq 42, the other gets seq 43. Both see the same order.`
+        },
+      ],
+      tips: [
+        'Lead with the scale insight: presence heartbeats (33M QPS) are 22x more traffic than actual messages (1.5M QPS) — this shows you understand hidden system loads',
+        'Explain the tick system early: ✓ sent to server, ✓✓ delivered to device, blue ✓✓ read — this demonstrates delivery guarantee thinking',
+        'Use the ChatID trick: chatId = min(userA, userB) + "_" + max(userA, userB) — ensures bidirectional lookup always hits the same partition',
+        'Mention Erlang/BEAM: WhatsApp runs on Erlang which handles 2M connections per server — 10-20x more than typical Java/Go servers',
+        'Discuss fan-out threshold: write for groups ≤100 (instant delivery), read for groups >100 (avoid write amplification)',
+        'Address the offline problem first: this is what distinguishes messaging from real-time apps — guaranteed delivery even when users are offline for days',
+        'Mention Signal Protocol by name and explain forward secrecy — shows you understand real-world encryption, not just "we encrypt messages"',
+        'Calculate storage: 50B msgs × 200 bytes = 10 TB/day = 3.65 PB/year for text alone — shows you can do back-of-envelope math',
+        'Discuss server crash recovery: exponential backoff with jitter for reconnection, message safety via pre-persistence to Cassandra',
+        'End with trade-offs: always present WebSocket vs polling, Cassandra vs MySQL, fan-out strategies — interviewers want to see engineering judgment, not just a component list',
+      ],
+      codeExamples: {
+        python: `# Simplified WhatsApp Message Router
+import asyncio
+import json
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class Message:
+    id: str
+    conversation_id: str
+    sender_id: str
+    content: bytes  # encrypted payload
+    sequence_num: int
+    status: str = "SENT"
+
+class ChatGateway:
+    def __init__(self):
+        self.connections = {}  # userId -> WebSocket
+        self.redis = None      # session cache
+        self.kafka = None      # message bus
+
+    async def handle_message(self, sender_ws, raw_data):
+        """Core message routing logic."""
+        data = json.loads(raw_data)
+        recipient_id = data["recipient_id"]
+
+        # 1. Generate server-side sequence number
+        seq = await self.redis.incr(
+            f"conv:{data['conversation_id']}"
+        )
+
+        # 2. Persist to Cassandra (async, non-blocking)
+        msg = Message(
+            id=data["client_msg_id"],  # client UUID for idempotency
+            conversation_id=data["conversation_id"],
+            sender_id=data["sender_id"],
+            content=data["encrypted_content"],
+            sequence_num=seq,
+        )
+        asyncio.create_task(self.persist_message(msg))
+
+        # 3. ACK to sender: ✓ Sent
+        await sender_ws.send(json.dumps({
+            "type": "ack", "msg_id": msg.id,
+            "status": "SENT", "seq": seq
+        }))
+
+        # 4. Route to recipient
+        gateway_id = await self.redis.get(
+            f"session:{recipient_id}"
+        )
+
+        if gateway_id:
+            # Recipient online → route via Kafka
+            await self.kafka.publish(
+                topic=f"gateway-{gateway_id}",
+                value=msg.__dict__
+            )
+        else:
+            # Recipient offline → queue + push
+            await self.enqueue_offline(recipient_id, msg)
+            await self.send_push(recipient_id, msg)
+
+    async def on_reconnect(self, user_id, ws):
+        """Flush offline queue on reconnection."""
+        self.connections[user_id] = ws
+        await self.redis.set(
+            f"session:{user_id}", self.gateway_id
+        )
+
+        # Deliver queued messages in batch
+        pending = await self.get_offline_queue(user_id)
+        for batch in chunks(pending, 50):
+            for msg in batch:
+                await ws.send(json.dumps(msg))
+            # Wait for batch ACK before next batch
+            ack = await ws.recv()
+            await self.clear_queue(user_id, batch)`,
+
+        javascript: `// Simplified WhatsApp Message Router (Node.js)
+const WebSocket = require('ws');
+const Redis = require('ioredis');
+const { Kafka } = require('kafkajs');
+
+class ChatGateway {
+  constructor(gatewayId) {
+    this.gatewayId = gatewayId;
+    this.connections = new Map(); // userId -> ws
+    this.redis = new Redis(process.env.REDIS_URL);
+    this.kafka = new Kafka({ brokers: ['kafka:9092'] });
+  }
+
+  async handleMessage(senderWs, data) {
+    const { recipientId, conversationId,
+            clientMsgId, encryptedContent } = data;
+
+    // 1. Server-assigned sequence number (atomic)
+    const seq = await this.redis.incr(
+      \`conv:\${conversationId}\`
+    );
+
+    // 2. Persist to Cassandra (fire-and-forget)
+    this.persistMessage({
+      id: clientMsgId, // client UUID for idempotency
+      conversationId, senderId: data.senderId,
+      content: encryptedContent,
+      sequenceNum: seq, status: 'SENT',
+    });
+
+    // 3. ACK to sender: ✓ Sent
+    senderWs.send(JSON.stringify({
+      type: 'ack', msgId: clientMsgId,
+      status: 'SENT', seq,
+    }));
+
+    // 4. Route to recipient
+    const gatewayId = await this.redis.get(
+      \`session:\${recipientId}\`
+    );
+
+    if (gatewayId) {
+      // Online → route via Kafka
+      const producer = this.kafka.producer();
+      await producer.send({
+        topic: \`gateway-\${gatewayId}\`,
+        messages: [{
+          key: recipientId,
+          value: JSON.stringify({ id: clientMsgId,
+            conversationId, content: encryptedContent,
+            seq }),
+        }],
+      });
+    } else {
+      // Offline → queue + push notification
+      await this.enqueueOffline(recipientId, {
+        id: clientMsgId, conversationId,
+        content: encryptedContent, seq,
+      });
+      await this.sendPush(recipientId);
+    }
+  }
+
+  async onReconnect(userId, ws) {
+    this.connections.set(userId, ws);
+    await this.redis.set(
+      \`session:\${userId}\`, this.gatewayId
+    );
+
+    // Flush offline queue in batches of 50
+    const pending = await this.getOfflineQueue(userId);
+    for (let i = 0; i < pending.length; i += 50) {
+      const batch = pending.slice(i, i + 50);
+      for (const msg of batch) {
+        ws.send(JSON.stringify(msg));
+      }
+      // Wait for batch ACK
+      await this.waitForAck(ws);
+      await this.clearQueue(userId, batch);
+    }
+  }
+}`,
+      },
     },
     {
       id: 'instagram',
