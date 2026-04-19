@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Autocomplete Suggestion Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Keystroke through CDN cache, trie lookup, frequency ranking, and personalization</text>
+
+  <!-- 1. Keystroke -->
+  <rect x="30" y="115" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="115" width="140" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="100" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Keystroke</text>
+  <text x="100" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Search Bar</text>
+  <text x="100" y="180" text-anchor="middle" fill="#64748b" font-size="9">Debounce 150ms</text>
+  <text x="100" y="197" text-anchor="middle" fill="#64748b" font-size="9">Prefix: "how to..."</text>
+  <text x="100" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Cancel prev request</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="170" y1="175" x2="213" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="176" y="155" width="36" height="16" rx="4" fill="#2563eb"/>
+  <text x="194" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. CDN Cache -->
+  <rect x="223" y="115" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="223" y="115" width="140" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="293" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">CDN Cache</text>
+  <text x="293" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Edge Cache</text>
+  <text x="293" y="180" text-anchor="middle" fill="#64748b" font-size="9">Popular prefixes cached</text>
+  <text x="293" y="197" text-anchor="middle" fill="#64748b" font-size="9">TTL 1 hour</text>
+  <text x="293" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">80% cache hit rate</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="363" y1="175" x2="406" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="369" y="155" width="36" height="16" rx="4" fill="#16a34a"/>
+  <text x="387" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Trie Shard -->
+  <rect x="416" y="115" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="416" y="115" width="140" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="486" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Trie Shard</text>
+  <text x="486" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Prefix Tree</text>
+  <text x="486" y="180" text-anchor="middle" fill="#64748b" font-size="9">Sharded by first 2 chars</text>
+  <text x="486" y="197" text-anchor="middle" fill="#64748b" font-size="9">In-memory trie walk</text>
+  <text x="486" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">O(p) prefix lookup</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="556" y1="175" x2="599" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="562" y="155" width="36" height="16" rx="4" fill="#7c3aed"/>
+  <text x="580" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Top-K by Freq -->
+  <rect x="609" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="609" y="115" width="150" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="684" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Top-K by Frequency</text>
+  <text x="684" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Ranking Engine</text>
+  <text x="684" y="180" text-anchor="middle" fill="#64748b" font-size="9">Pre-computed top-K</text>
+  <text x="684" y="197" text-anchor="middle" fill="#64748b" font-size="9">Heap at trie nodes</text>
+  <text x="684" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Updated hourly</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="759" y1="175" x2="802" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="765" y="155" width="36" height="16" rx="4" fill="#f97316"/>
+  <text x="783" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Personalize -->
+  <rect x="812" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="812" y="115" width="150" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="887" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Personalize</text>
+  <text x="887" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">User Context</text>
+  <text x="887" y="180" text-anchor="middle" fill="#64748b" font-size="9">Search history boost</text>
+  <text x="887" y="197" text-anchor="middle" fill="#64748b" font-size="9">Location + language</text>
+  <text x="887" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Re-rank top results</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="962" y1="175" x2="1005" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="968" y="155" width="36" height="16" rx="4" fill="#ec4899"/>
+  <text x="986" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Return Suggestions -->
+  <rect x="1015" y="115" width="160" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1015" y="115" width="160" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="1095" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Return Suggestions</text>
+  <text x="1095" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Response (5-10 items)</text>
+  <text x="1095" y="180" text-anchor="middle" fill="#64748b" font-size="9">Ranked suggestions</text>
+  <text x="1095" y="197" text-anchor="middle" fill="#64748b" font-size="9">Render dropdown</text>
+  <text x="1095" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">&lt;100ms end-to-end</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. Keystroke debounced at 150ms, cancels previous in-flight request</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. CDN edge cache serves popular prefixes (80% hit rate, 1h TTL)</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Trie shard performs O(p) prefix walk on in-memory data structure</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Pre-computed top-K heap at trie nodes returns highest frequency</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Personalization re-ranks by user history, location, and language</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6. 5-10 ranked suggestions returned in under 100ms end-to-end</text>
+</svg>

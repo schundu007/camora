@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Web Crawler Pipeline Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Seed URLs through politeness-aware fetching, deduplication, and link extraction</text>
+
+  <!-- 1. Seed URLs -->
+  <rect x="5" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="5" y="110" width="115" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="62" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Seed URLs</text>
+  <text x="62" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">URL Registry</text>
+  <text x="62" y="170" text-anchor="middle" fill="#64748b" font-size="8">Initial URL list</text>
+  <text x="62" y="185" text-anchor="middle" fill="#64748b" font-size="8">Domain priority</text>
+  <text x="62" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">Config-driven</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="120" y1="167" x2="148" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="120" y="148" width="28" height="14" rx="4" fill="#f97316"/>
+  <text x="134" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">1</text>
+
+  <!-- 2. Priority Queue -->
+  <rect x="158" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="158" y="110" width="115" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="215" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Priority Queue</text>
+  <text x="215" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">URL Frontier</text>
+  <text x="215" y="170" text-anchor="middle" fill="#64748b" font-size="8">PageRank priority</text>
+  <text x="215" y="185" text-anchor="middle" fill="#64748b" font-size="8">Politeness delay</text>
+  <text x="215" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">Per-host queues</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="273" y1="167" x2="301" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="273" y="148" width="28" height="14" rx="4" fill="#2563eb"/>
+  <text x="287" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">2</text>
+
+  <!-- 3. Fetch -->
+  <rect x="311" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="311" y="110" width="115" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="368" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Fetch</text>
+  <text x="368" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">HTTP Fetcher</text>
+  <text x="368" y="170" text-anchor="middle" fill="#64748b" font-size="8">Check robots.txt</text>
+  <text x="368" y="185" text-anchor="middle" fill="#64748b" font-size="8">Respect Crawl-delay</text>
+  <text x="368" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">Async HTTP client</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="426" y1="167" x2="454" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="426" y="148" width="28" height="14" rx="4" fill="#16a34a"/>
+  <text x="440" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">3</text>
+
+  <!-- 4. Parse HTML -->
+  <rect x="464" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="464" y="110" width="115" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="521" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Parse HTML</text>
+  <text x="521" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">DOM Parser</text>
+  <text x="521" y="170" text-anchor="middle" fill="#64748b" font-size="8">Extract content</text>
+  <text x="521" y="185" text-anchor="middle" fill="#64748b" font-size="8">Title + metadata</text>
+  <text x="521" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">jsoup / lxml</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="579" y1="167" x2="607" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="579" y="148" width="28" height="14" rx="4" fill="#7c3aed"/>
+  <text x="593" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">4</text>
+
+  <!-- 5. Extract Links -->
+  <rect x="617" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="617" y="110" width="115" height="28" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="674" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Extract Links</text>
+  <text x="674" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Link Extractor</text>
+  <text x="674" y="170" text-anchor="middle" fill="#64748b" font-size="8">Resolve relative URLs</text>
+  <text x="674" y="185" text-anchor="middle" fill="#64748b" font-size="8">Normalize canonical</text>
+  <text x="674" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">Filter nofollow</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="732" y1="167" x2="760" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="732" y="148" width="28" height="14" rx="4" fill="#ec4899"/>
+  <text x="746" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">5</text>
+
+  <!-- 6. Dedup (Bloom) -->
+  <rect x="770" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="770" y="110" width="115" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="827" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Dedup (Bloom)</text>
+  <text x="827" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Bloom Filter</text>
+  <text x="827" y="170" text-anchor="middle" fill="#64748b" font-size="8">10B URL capacity</text>
+  <text x="827" y="185" text-anchor="middle" fill="#64748b" font-size="8">1% false positive</text>
+  <text x="827" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">Memory efficient</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="885" y1="167" x2="913" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="885" y="148" width="28" height="14" rx="4" fill="#ef4444"/>
+  <text x="899" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">6</text>
+
+  <!-- 7. Store -->
+  <rect x="923" y="110" width="115" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="923" y="110" width="115" height="28" rx="10 10 0 0" fill="#0891b2"/>
+  <text x="980" y="129" text-anchor="middle" fill="white" font-size="10" font-weight="700">Store</text>
+  <text x="980" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Document Store</text>
+  <text x="980" y="170" text-anchor="middle" fill="#64748b" font-size="8">S3 raw HTML</text>
+  <text x="980" y="185" text-anchor="middle" fill="#64748b" font-size="8">Search index (ES)</text>
+  <text x="980" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">Batch write</text>
+
+  <!-- Arrow 7→8 -->
+  <line x1="1038" y1="167" x2="1066" y2="167" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1038" y="148" width="28" height="14" rx="4" fill="#0891b2"/>
+  <text x="1052" y="159" text-anchor="middle" fill="white" font-size="7" font-weight="600">7</text>
+
+  <!-- 8. Queue New URLs -->
+  <rect x="1076" y="110" width="110" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1076" y="110" width="110" height="28" rx="10 10 0 0" fill="#d97706"/>
+  <text x="1131" y="129" text-anchor="middle" fill="white" font-size="9" font-weight="700">Queue New URLs</text>
+  <text x="1131" y="155" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Re-enqueue</text>
+  <text x="1131" y="170" text-anchor="middle" fill="#64748b" font-size="8">New URLs to frontier</text>
+  <text x="1131" y="185" text-anchor="middle" fill="#64748b" font-size="8">Feedback loop</text>
+  <text x="1131" y="210" text-anchor="middle" fill="#94a3b8" font-size="7">BFS traversal</text>
+
+  <!-- Feedback arrow from Queue back to Priority Queue -->
+  <path d="M 1131 225 L 1131 260 Q 1131 270 1121 270 L 225 270 Q 215 270 215 260 L 215 230" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6,3" fill="none" marker-end="url(#arrow)"/>
+  <text x="670" y="265" text-anchor="middle" fill="#d97706" font-size="9" font-weight="600">Cycle: new URLs re-enter priority queue</text>
+
+  <!-- Legend -->
+  <rect x="30" y="290" width="1140" height="90" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="313" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="323" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="333" fill="#475569" font-size="10">1. Seed URLs initialize the crawl frontier</text>
+  <rect x="60" y="340" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="350" fill="#475569" font-size="10">2. Priority queue orders by PageRank with per-host politeness</text>
+  <rect x="60" y="357" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="76" y="367" fill="#475569" font-size="10">3. Fetcher checks robots.txt, respects Crawl-delay</text>
+  <rect x="60" y="374" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="384" fill="#475569" font-size="10">4. HTML parsed, content and metadata extracted</text>
+
+  <rect x="600" y="323" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="333" fill="#475569" font-size="10">5. Links extracted and normalized from parsed DOM</text>
+  <rect x="600" y="340" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="616" y="350" fill="#475569" font-size="10">6. Bloom filter deduplicates seen URLs in O(1) space</text>
+  <rect x="600" y="357" width="10" height="10" rx="2" fill="#0891b2"/>
+  <text x="616" y="367" fill="#475569" font-size="10">7. Raw HTML stored in S3, content indexed in Elasticsearch</text>
+  <rect x="600" y="374" width="10" height="10" rx="2" fill="#d97706"/>
+  <text x="616" y="384" fill="#475569" font-size="10">8. New URLs re-enqueued to frontier for BFS traversal</text>
+</svg>

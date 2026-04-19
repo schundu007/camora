@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">LinkedIn Feed Post Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Post creation through fan-out, ML ranking, search indexing, and notifications</text>
+
+  <!-- 1. User Posts -->
+  <rect x="15" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="110" width="130" height="30" rx="10 10 0 0" fill="#0A66C2"/>
+  <text x="80" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Posts</text>
+  <text x="80" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Create Post</text>
+  <text x="80" y="175" text-anchor="middle" fill="#64748b" font-size="9">Text + media upload</text>
+  <text x="80" y="192" text-anchor="middle" fill="#64748b" font-size="9">Visibility settings</text>
+  <text x="80" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">POST /posts</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="145" y1="170" x2="178" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="147" y="150" width="30" height="16" rx="4" fill="#0A66C2"/>
+  <text x="162" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Store -->
+  <rect x="188" y="110" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="188" y="110" width="120" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="248" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Store</text>
+  <text x="248" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Posts DB</text>
+  <text x="248" y="175" text-anchor="middle" fill="#64748b" font-size="9">Espresso (KV)</text>
+  <text x="248" y="192" text-anchor="middle" fill="#64748b" font-size="9">Media to CDN</text>
+  <text x="248" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Write-through</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="308" y1="170" x2="341" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="310" y="150" width="30" height="16" rx="4" fill="#2563eb"/>
+  <text x="325" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Kafka -->
+  <rect x="351" y="110" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="351" y="110" width="120" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="411" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Kafka</text>
+  <text x="411" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Event Bus</text>
+  <text x="411" y="175" text-anchor="middle" fill="#64748b" font-size="9">post-created topic</text>
+  <text x="411" y="192" text-anchor="middle" fill="#64748b" font-size="9">Fan-out trigger</text>
+  <text x="411" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Partitioned</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="471" y1="170" x2="504" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="473" y="150" width="30" height="16" rx="4" fill="#f97316"/>
+  <text x="488" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Fan-out -->
+  <rect x="514" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="514" y="110" width="130" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="579" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Fan-out</text>
+  <text x="579" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Feed Service</text>
+  <text x="579" y="175" text-anchor="middle" fill="#64748b" font-size="9">Push to connections</text>
+  <text x="579" y="192" text-anchor="middle" fill="#64748b" font-size="9">Hybrid pull for VIPs</text>
+  <text x="579" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Async fan-out</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="644" y1="170" x2="677" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="646" y="150" width="30" height="16" rx="4" fill="#7c3aed"/>
+  <text x="661" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. ML Rank -->
+  <rect x="687" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="687" y="110" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="752" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">ML Rank Feeds</text>
+  <text x="752" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Relevance Model</text>
+  <text x="752" y="175" text-anchor="middle" fill="#64748b" font-size="9">Engagement scoring</text>
+  <text x="752" y="192" text-anchor="middle" fill="#64748b" font-size="9">Interest graph</text>
+  <text x="752" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Real-time inference</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="817" y1="170" x2="850" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="819" y="150" width="30" height="16" rx="4" fill="#ec4899"/>
+  <text x="834" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Index for Search -->
+  <rect x="860" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="860" y="110" width="140" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="930" y="130" text-anchor="middle" fill="white" font-size="10" font-weight="700">Index for Search</text>
+  <text x="930" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Galene (Search)</text>
+  <text x="930" y="175" text-anchor="middle" fill="#64748b" font-size="9">Full-text index</text>
+  <text x="930" y="192" text-anchor="middle" fill="#64748b" font-size="9">Hashtag + mentions</text>
+  <text x="930" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Near real-time</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="1000" y1="170" x2="1033" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1002" y="150" width="30" height="16" rx="4" fill="#16a34a"/>
+  <text x="1017" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Notify -->
+  <rect x="1043" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1043" y="110" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="1108" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Notify</text>
+  <text x="1108" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Notification Svc</text>
+  <text x="1108" y="175" text-anchor="middle" fill="#64748b" font-size="9">Push + email digest</text>
+  <text x="1108" y="192" text-anchor="middle" fill="#64748b" font-size="9">Mention alerts</text>
+  <text x="1108" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Batched delivery</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#0A66C2"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. User creates post with text, media, and visibility settings</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. Post stored in Espresso KV store, media uploaded to CDN</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Post event published to Kafka for downstream consumers</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Fan-out pushes post IDs to connection feeds (hybrid for VIPs)</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. ML model ranks feed items by engagement and interest graph</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6-7. Indexed in Galene search, notifications sent to mentioned users</text>
+</svg>

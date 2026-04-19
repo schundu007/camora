@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Hotel Booking Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Search through soft hold, payment, and confirmation to host notification</text>
+
+  <!-- 1. Search -->
+  <rect x="10" y="115" width="130" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="10" y="115" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="75" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Search</text>
+  <text x="75" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Search Service</text>
+  <text x="75" y="180" text-anchor="middle" fill="#64748b" font-size="9">Date + location filter</text>
+  <text x="75" y="197" text-anchor="middle" fill="#64748b" font-size="9">Availability check</text>
+  <text x="75" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">Elasticsearch</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="140" y1="172" x2="172" y2="172" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="141" y="152" width="30" height="16" rx="4" fill="#2563eb"/>
+  <text x="156" y="163" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Select Room -->
+  <rect x="182" y="115" width="130" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="182" y="115" width="130" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="247" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Select Room</text>
+  <text x="247" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Room Catalog</text>
+  <text x="247" y="180" text-anchor="middle" fill="#64748b" font-size="9">View room details</text>
+  <text x="247" y="197" text-anchor="middle" fill="#64748b" font-size="9">Dynamic pricing</text>
+  <text x="247" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">Price per night</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="312" y1="172" x2="344" y2="172" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="313" y="152" width="30" height="16" rx="4" fill="#7c3aed"/>
+  <text x="328" y="163" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Soft Hold -->
+  <rect x="354" y="115" width="130" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="354" y="115" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="419" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Soft Hold (TTL)</text>
+  <text x="419" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Reservation Lock</text>
+  <text x="419" y="180" text-anchor="middle" fill="#64748b" font-size="9">10-min TTL lock</text>
+  <text x="419" y="197" text-anchor="middle" fill="#64748b" font-size="9">Prevent oversell</text>
+  <text x="419" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">Redis distributed lock</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="484" y1="172" x2="516" y2="172" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="485" y="152" width="30" height="16" rx="4" fill="#ef4444"/>
+  <text x="500" y="163" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Payment Auth -->
+  <rect x="526" y="115" width="130" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="526" y="115" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="591" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Payment Auth</text>
+  <text x="591" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Stripe / Gateway</text>
+  <text x="591" y="180" text-anchor="middle" fill="#64748b" font-size="9">Card authorization</text>
+  <text x="591" y="197" text-anchor="middle" fill="#64748b" font-size="9">Hold amount</text>
+  <text x="591" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">Idempotency key</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="656" y1="172" x2="688" y2="172" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="657" y="152" width="30" height="16" rx="4" fill="#f97316"/>
+  <text x="672" y="163" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Confirm -->
+  <rect x="698" y="115" width="130" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="698" y="115" width="130" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="763" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Confirm</text>
+  <text x="763" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Booking Service</text>
+  <text x="763" y="180" text-anchor="middle" fill="#64748b" font-size="9">Generate booking ID</text>
+  <text x="763" y="197" text-anchor="middle" fill="#64748b" font-size="9">Capture payment</text>
+  <text x="763" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">ACID transaction</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="828" y1="172" x2="860" y2="172" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="829" y="152" width="30" height="16" rx="4" fill="#16a34a"/>
+  <text x="844" y="163" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Calendar Update -->
+  <rect x="870" y="115" width="140" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="870" y="115" width="140" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="940" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Calendar Update</text>
+  <text x="940" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Availability Mgr</text>
+  <text x="940" y="180" text-anchor="middle" fill="#64748b" font-size="9">Block date range</text>
+  <text x="940" y="197" text-anchor="middle" fill="#64748b" font-size="9">Sync OTA channels</text>
+  <text x="940" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">Channel manager</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="1010" y1="172" x2="1042" y2="172" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1011" y="152" width="30" height="16" rx="4" fill="#ec4899"/>
+  <text x="1026" y="163" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Notify Host -->
+  <rect x="1052" y="115" width="130" height="115" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1052" y="115" width="130" height="30" rx="10 10 0 0" fill="#0891b2"/>
+  <text x="1117" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Notify Host</text>
+  <text x="1117" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Notification Svc</text>
+  <text x="1117" y="180" text-anchor="middle" fill="#64748b" font-size="9">Email + push</text>
+  <text x="1117" y="197" text-anchor="middle" fill="#64748b" font-size="9">Guest confirmation</text>
+  <text x="1117" y="216" text-anchor="middle" fill="#94a3b8" font-size="8">Async via SQS</text>
+
+  <!-- Legend -->
+  <rect x="30" y="275" width="1140" height="105" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="298" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="310" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="320" fill="#475569" font-size="10">1. User searches by date, location, and guest count</text>
+  <rect x="60" y="327" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="337" fill="#475569" font-size="10">2. User selects room with dynamic pricing displayed</text>
+  <rect x="60" y="344" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="354" fill="#475569" font-size="10">3. Soft hold with 10-min TTL prevents double-booking</text>
+  <rect x="60" y="361" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="371" fill="#475569" font-size="10">4. Payment gateway authorizes and holds card amount</text>
+
+  <rect x="600" y="310" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="320" fill="#475569" font-size="10">5. Booking confirmed, payment captured, booking ID generated</text>
+  <rect x="600" y="327" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="337" fill="#475569" font-size="10">6. Calendar updated, availability blocked across all OTA channels</text>
+  <rect x="600" y="344" width="10" height="10" rx="2" fill="#0891b2"/>
+  <text x="616" y="354" fill="#475569" font-size="10">7. Host notified via email + push, guest receives confirmation</text>
+</svg>

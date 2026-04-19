@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">TinyURL Redirect Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Short URL click through CDN, cache, database lookup, 301 redirect, and analytics logging</text>
+
+  <!-- 1. Short URL Click -->
+  <rect x="30" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="115" width="150" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="105" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Short URL Click</text>
+  <text x="105" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">User Browser</text>
+  <text x="105" y="180" text-anchor="middle" fill="#64748b" font-size="9">GET /aBcDeF</text>
+  <text x="105" y="197" text-anchor="middle" fill="#64748b" font-size="9">HTTP request</text>
+  <text x="105" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Referer + User-Agent</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="180" y1="175" x2="225" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="186" y="155" width="36" height="16" rx="4" fill="#2563eb"/>
+  <text x="204" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. CDN -->
+  <rect x="235" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="235" y="115" width="150" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="310" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">CDN Edge</text>
+  <text x="310" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">CloudFront / Akamai</text>
+  <text x="310" y="180" text-anchor="middle" fill="#64748b" font-size="9">Check edge cache</text>
+  <text x="310" y="197" text-anchor="middle" fill="#64748b" font-size="9">TTL 24h for hot URLs</text>
+  <text x="310" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">90% cache hit rate</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="385" y1="175" x2="430" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="391" y="155" width="36" height="16" rx="4" fill="#16a34a"/>
+  <text x="409" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Cache -->
+  <rect x="440" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="440" y="115" width="150" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="515" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Redis Cache</text>
+  <text x="515" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Application Cache</text>
+  <text x="515" y="180" text-anchor="middle" fill="#64748b" font-size="9">key → long URL</text>
+  <text x="515" y="197" text-anchor="middle" fill="#64748b" font-size="9">LRU eviction policy</text>
+  <text x="515" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Sub-ms lookup</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="590" y1="175" x2="635" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="596" y="155" width="36" height="16" rx="4" fill="#ef4444"/>
+  <text x="614" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. DB Lookup -->
+  <rect x="645" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="645" y="115" width="150" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="720" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">DB Lookup</text>
+  <text x="720" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">PostgreSQL</text>
+  <text x="720" y="180" text-anchor="middle" fill="#64748b" font-size="9">Cache miss fallback</text>
+  <text x="720" y="197" text-anchor="middle" fill="#64748b" font-size="9">B-tree index on key</text>
+  <text x="720" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Populate cache after</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="795" y1="175" x2="840" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="801" y="155" width="36" height="16" rx="4" fill="#7c3aed"/>
+  <text x="819" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. 301 Redirect -->
+  <rect x="850" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="850" y="115" width="150" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="925" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">301 Redirect</text>
+  <text x="925" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">HTTP Response</text>
+  <text x="925" y="180" text-anchor="middle" fill="#64748b" font-size="9">Location: long URL</text>
+  <text x="925" y="197" text-anchor="middle" fill="#64748b" font-size="9">Browser follows</text>
+  <text x="925" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">301 vs 302 choice</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="1000" y1="175" x2="1040" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1004" y="155" width="36" height="16" rx="4" fill="#f97316"/>
+  <text x="1022" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Log Analytics -->
+  <rect x="1050" y="115" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1050" y="115" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="1115" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Log Analytics</text>
+  <text x="1115" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Async Pipeline</text>
+  <text x="1115" y="180" text-anchor="middle" fill="#64748b" font-size="9">Click count + geo</text>
+  <text x="1115" y="197" text-anchor="middle" fill="#64748b" font-size="9">Referer tracking</text>
+  <text x="1115" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Kafka → ClickHouse</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. User clicks short URL, browser sends GET request with referer headers</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. CDN edge checks cache for hot URLs (90% hit rate, 24h TTL)</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Redis application cache provides sub-ms key-to-URL lookup</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Cache miss falls through to PostgreSQL B-tree index lookup</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. HTTP 301 redirect with Location header pointing to original URL</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6. Click event logged async via Kafka to ClickHouse for analytics</text>
+</svg>

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Pastebin Create Paste Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">User submission through key generation, storage, caching, to short URL return</text>
+
+  <!-- 1. User Submits -->
+  <rect x="30" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="115" width="150" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="105" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Submits</text>
+  <text x="105" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Web Client</text>
+  <text x="105" y="180" text-anchor="middle" fill="#64748b" font-size="9">Paste content + options</text>
+  <text x="105" y="197" text-anchor="middle" fill="#64748b" font-size="9">Syntax, expiry, privacy</text>
+  <text x="105" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Max 10MB</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="180" y1="175" x2="225" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="186" y="155" width="36" height="16" rx="4" fill="#2563eb"/>
+  <text x="204" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. API -->
+  <rect x="235" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="235" y="115" width="150" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="310" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">API Server</text>
+  <text x="310" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Paste Service</text>
+  <text x="310" y="180" text-anchor="middle" fill="#64748b" font-size="9">Rate limit check</text>
+  <text x="310" y="197" text-anchor="middle" fill="#64748b" font-size="9">Content validation</text>
+  <text x="310" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">POST /api/paste</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="385" y1="175" x2="430" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="391" y="155" width="36" height="16" rx="4" fill="#7c3aed"/>
+  <text x="409" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Generate Key -->
+  <rect x="440" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="440" y="115" width="150" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="515" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Generate Key</text>
+  <text x="515" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">KGS / Base62</text>
+  <text x="515" y="180" text-anchor="middle" fill="#64748b" font-size="9">Pre-generated keys</text>
+  <text x="515" y="197" text-anchor="middle" fill="#64748b" font-size="9">6-char unique slug</text>
+  <text x="515" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">56B combinations</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="590" y1="175" x2="635" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="596" y="155" width="36" height="16" rx="4" fill="#f97316"/>
+  <text x="614" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Store (S3) -->
+  <rect x="645" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="645" y="115" width="150" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="720" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Store Content</text>
+  <text x="720" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">S3 Object Store</text>
+  <text x="720" y="180" text-anchor="middle" fill="#64748b" font-size="9">key → content blob</text>
+  <text x="720" y="197" text-anchor="middle" fill="#64748b" font-size="9">Metadata in Postgres</text>
+  <text x="720" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">TTL for auto-expire</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="795" y1="175" x2="840" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="801" y="155" width="36" height="16" rx="4" fill="#16a34a"/>
+  <text x="819" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Cache (Redis) -->
+  <rect x="850" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="850" y="115" width="150" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="925" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Cache (Redis)</text>
+  <text x="925" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Read-Through Cache</text>
+  <text x="925" y="180" text-anchor="middle" fill="#64748b" font-size="9">Hot pastes cached</text>
+  <text x="925" y="197" text-anchor="middle" fill="#64748b" font-size="9">LRU eviction</text>
+  <text x="925" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Sub-ms reads</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="1000" y1="175" x2="1040" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1004" y="155" width="36" height="16" rx="4" fill="#ef4444"/>
+  <text x="1022" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Return Short URL -->
+  <rect x="1050" y="115" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1050" y="115" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="1115" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Return URL</text>
+  <text x="1115" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Short URL</text>
+  <text x="1115" y="180" text-anchor="middle" fill="#64748b" font-size="9">pb.io/aBcDeF</text>
+  <text x="1115" y="197" text-anchor="middle" fill="#64748b" font-size="9">Copy to clipboard</text>
+  <text x="1115" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">201 Created</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. User submits paste content with syntax, expiry, and privacy options</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. API server validates content and checks rate limits</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Key Generation Service issues a unique 6-char Base62 slug</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Content blob stored in S3, metadata in PostgreSQL with TTL</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Hot paste cached in Redis with LRU eviction for fast reads</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6. Short URL returned to user (e.g., pb.io/aBcDeF)</text>
+</svg>

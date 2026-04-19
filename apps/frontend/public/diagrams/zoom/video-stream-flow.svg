@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Zoom Video Stream Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Camera capture through encoding, encryption, SFU forwarding to participant rendering</text>
+
+  <!-- 1. Camera Capture -->
+  <rect x="15" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="110" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="80" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Camera Capture</text>
+  <text x="80" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Media Device</text>
+  <text x="80" y="175" text-anchor="middle" fill="#64748b" font-size="9">720p / 1080p raw</text>
+  <text x="80" y="192" text-anchor="middle" fill="#64748b" font-size="9">30 fps frame grab</text>
+  <text x="80" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">getUserMedia API</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="145" y1="170" x2="183" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="147" y="150" width="36" height="16" rx="4" fill="#2563eb"/>
+  <text x="165" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Encode H.264 -->
+  <rect x="193" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="193" y="110" width="140" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="263" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Encode (H.264)</text>
+  <text x="263" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Video Encoder</text>
+  <text x="263" y="175" text-anchor="middle" fill="#64748b" font-size="9">HW acceleration</text>
+  <text x="263" y="192" text-anchor="middle" fill="#64748b" font-size="9">Simulcast layers</text>
+  <text x="263" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">180p / 360p / 720p</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="333" y1="170" x2="371" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="335" y="150" width="36" height="16" rx="4" fill="#7c3aed"/>
+  <text x="353" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Encrypt -->
+  <rect x="381" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="381" y="110" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="446" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Encrypt</text>
+  <text x="446" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">AES-256-GCM</text>
+  <text x="446" y="175" text-anchor="middle" fill="#64748b" font-size="9">E2EE per-frame</text>
+  <text x="446" y="192" text-anchor="middle" fill="#64748b" font-size="9">Session key exchange</text>
+  <text x="446" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">SRTP transport</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="511" y1="170" x2="549" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="513" y="150" width="36" height="16" rx="4" fill="#ef4444"/>
+  <text x="531" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. SFU Server -->
+  <rect x="559" y="110" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="559" y="110" width="150" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="634" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">SFU Server</text>
+  <text x="634" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Selective Forward</text>
+  <text x="634" y="175" text-anchor="middle" fill="#64748b" font-size="9">No decode on server</text>
+  <text x="634" y="192" text-anchor="middle" fill="#64748b" font-size="9">Layer selection</text>
+  <text x="634" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">1:N fan-out</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="709" y1="170" x2="747" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="711" y="150" width="36" height="16" rx="4" fill="#f97316"/>
+  <text x="729" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Forward -->
+  <rect x="757" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="757" y="110" width="140" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="827" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Forward</text>
+  <text x="827" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Participant Relay</text>
+  <text x="827" y="175" text-anchor="middle" fill="#64748b" font-size="9">Bandwidth estimation</text>
+  <text x="827" y="192" text-anchor="middle" fill="#64748b" font-size="9">Adaptive layer pick</text>
+  <text x="827" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">NACK retransmit</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="897" y1="170" x2="935" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="899" y="150" width="36" height="16" rx="4" fill="#ec4899"/>
+  <text x="917" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Decode + Render -->
+  <rect x="945" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="945" y="110" width="140" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1015" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Decode + Render</text>
+  <text x="1015" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Participant Client</text>
+  <text x="1015" y="175" text-anchor="middle" fill="#64748b" font-size="9">Decrypt + H.264 decode</text>
+  <text x="1015" y="192" text-anchor="middle" fill="#64748b" font-size="9">Jitter buffer</text>
+  <text x="1015" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">GPU render pipeline</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. Camera captures raw video frames at 30fps (720p/1080p)</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. H.264 encoder produces simulcast layers (180p, 360p, 720p)</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. AES-256-GCM per-frame encryption via SRTP transport</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. SFU selectively forwards without decoding (low CPU)</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Bandwidth-adaptive layer selection per participant</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6. Participants decrypt, decode, and render via GPU pipeline</text>
+</svg>
