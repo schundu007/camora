@@ -1377,6 +1377,44 @@ It is also acceptable as a performance optimization when creating the object is 
       }
     ],
 
+    codeExample: `# Python — Thread-safe Singleton with metaclass
+import threading
+
+class SingletonMeta(type):
+    _instances = {}
+    _lock = threading.Lock()
+
+    def __call__(cls, *args, **kwargs):
+        with cls._lock:
+            if cls not in cls._instances:
+                instance = super().__call__(*args, **kwargs)
+                cls._instances[cls] = instance
+        return cls._instances[cls]
+
+class DatabaseConnection(metaclass=SingletonMeta):
+    def __init__(self):
+        self.connection = self._connect()
+
+    def _connect(self):
+        print("Creating database connection...")
+        return {"host": "localhost", "port": 5432}
+
+# Usage — always returns the same instance
+db1 = DatabaseConnection()
+db2 = DatabaseConnection()
+assert db1 is db2  # True — same object
+
+# Java — Bill Pugh Singleton (recommended)
+# public class Logger {
+#     private Logger() {}
+#     private static class Holder {
+#         static final Logger INSTANCE = new Logger();
+#     }
+#     public static Logger getInstance() {
+#         return Holder.INSTANCE;
+#     }
+# }`,
+
     tips: [
       'Prefer DI container singleton scope over implementing the Singleton pattern manually',
       'If you must implement Singleton, use the Bill Pugh idiom (Java) or module-level instance (Python)',
@@ -1427,6 +1465,50 @@ Real-world examples: GUI frameworks use factory methods to create platform-speci
 Factory Method can be a building block for Abstract Factory: each method in an Abstract Factory is essentially a Factory Method. You might start with Factory Method for simple cases and evolve to Abstract Factory when you need to create related object families. Factory Method is also related to Template Method: the creator class defines a template for an algorithm that calls the factory method at a specific step, and subclasses override the factory method to customize the product.`
       }
     ],
+
+    codeExample: `# Python — Factory Method for notification system
+from abc import ABC, abstractmethod
+
+class Notification(ABC):
+    @abstractmethod
+    def send(self, message: str) -> str:
+        pass
+
+class EmailNotification(Notification):
+    def send(self, message: str) -> str:
+        return f"Email sent: {message}"
+
+class SMSNotification(Notification):
+    def send(self, message: str) -> str:
+        return f"SMS sent: {message}"
+
+class PushNotification(Notification):
+    def send(self, message: str) -> str:
+        return f"Push sent: {message}"
+
+class NotificationFactory(ABC):
+    @abstractmethod
+    def create_notification(self) -> Notification:
+        pass
+
+    def notify(self, message: str) -> str:
+        notification = self.create_notification()
+        return notification.send(message)
+
+class EmailFactory(NotificationFactory):
+    def create_notification(self) -> Notification:
+        return EmailNotification()
+
+class SMSFactory(NotificationFactory):
+    def create_notification(self) -> Notification:
+        return SMSNotification()
+
+# Usage — client code works with factory abstraction
+def send_alert(factory: NotificationFactory, msg: str):
+    return factory.notify(msg)
+
+print(send_alert(EmailFactory(), "Server down!"))
+print(send_alert(SMSFactory(), "Server down!"))`,
 
     tips: [
       'Use Factory Method when the creation logic should vary by subclass, not when you just want a convenience wrapper around a constructor',
@@ -1529,6 +1611,54 @@ Do not use Builder for simple objects with few parameters. A Point(x, y) does no
 The step builder approach uses a chain of interfaces to guide construction, making it impossible to call build() until all required steps are completed. This moves validation from runtime to compile time, which is the safest approach but adds more interface types. In interviews, mention all three approaches and explain the trade-offs.`
       }
     ],
+
+    codeExample: `# Python — Fluent Builder for HTTP request
+class HttpRequest:
+    def __init__(self, builder):
+        self.method = builder._method
+        self.url = builder._url
+        self.headers = dict(builder._headers)
+        self.body = builder._body
+        self.timeout = builder._timeout
+
+    def __repr__(self):
+        return f"{self.method} {self.url} headers={self.headers}"
+
+class HttpRequestBuilder:
+    def __init__(self, method: str, url: str):  # Required params
+        self._method = method
+        self._url = url
+        self._headers = {}
+        self._body = None
+        self._timeout = 30
+
+    def header(self, key: str, value: str) -> 'HttpRequestBuilder':
+        self._headers[key] = value
+        return self  # Enable chaining
+
+    def body(self, data: str) -> 'HttpRequestBuilder':
+        self._body = data
+        return self
+
+    def timeout(self, seconds: int) -> 'HttpRequestBuilder':
+        self._timeout = seconds
+        return self
+
+    def build(self) -> HttpRequest:
+        if not self._url:
+            raise ValueError("URL is required")
+        return HttpRequest(self)
+
+# Usage — fluent chaining
+request = (HttpRequestBuilder("POST", "https://api.example.com/users")
+    .header("Content-Type", "application/json")
+    .header("Authorization", "Bearer token123")
+    .body('{"name": "Alice"}')
+    .timeout(10)
+    .build())
+
+print(request)
+# POST https://api.example.com/users headers={'Content-Type': 'application/json', 'Authorization': 'Bearer token123'}`,
 
     tips: [
       'Use the fluent builder (Bloch style) for objects with many optional parameters',
@@ -2060,6 +2190,55 @@ Reactive programming (RxJS, Reactor, RxJava) extends Observer with operators for
       }
     ],
 
+    codeExample: `# Python — Observer pattern for stock price ticker
+from abc import ABC, abstractmethod
+from typing import List
+
+class Observer(ABC):
+    @abstractmethod
+    def update(self, stock: str, price: float) -> None:
+        pass
+
+class StockTicker:
+    """Subject that notifies observers of price changes."""
+    def __init__(self):
+        self._observers: List[Observer] = []
+        self._prices: dict = {}
+
+    def attach(self, observer: Observer) -> None:
+        self._observers.append(observer)
+
+    def detach(self, observer: Observer) -> None:
+        self._observers.remove(observer)
+
+    def set_price(self, stock: str, price: float) -> None:
+        self._prices[stock] = price
+        self._notify(stock, price)
+
+    def _notify(self, stock: str, price: float) -> None:
+        for observer in self._observers:
+            observer.update(stock, price)
+
+class PriceAlert(Observer):
+    def __init__(self, threshold: float):
+        self.threshold = threshold
+
+    def update(self, stock: str, price: float) -> None:
+        if price > self.threshold:
+            print(f"ALERT: {stock} exceeded {self.threshold} at {price}")
+
+class PriceLogger(Observer):
+    def update(self, stock: str, price: float) -> None:
+        print(f"LOG: {stock} = {price}")
+
+# Usage
+ticker = StockTicker()
+ticker.attach(PriceAlert(150.0))
+ticker.attach(PriceLogger())
+ticker.set_price("AAPL", 155.0)
+# Output: ALERT: AAPL exceeded 150.0 at 155.0
+#         LOG: AAPL = 155.0`,
+
     tips: [
       'Use weak references for observers when possible to prevent memory leaks',
       'Consider async notification for performance-sensitive subjects with many observers',
@@ -2110,6 +2289,70 @@ Strategy is more flexible: you can change the algorithm at runtime and combine s
 This is the Strategy pattern in functional form. The intent is identical: encapsulate interchangeable algorithms and select at runtime. The implementation is lighter because anonymous functions or lambdas eliminate the need for separate classes. For simple, single-method strategies, the functional approach is cleaner. For strategies with multiple methods, state, or complex logic, a full strategy class is still appropriate. In interviews, mentioning both OOP and functional implementations demonstrates versatility.`
       }
     ],
+
+    codeExample: `# Python — Strategy pattern for payment processing
+from abc import ABC, abstractmethod
+
+class PaymentStrategy(ABC):
+    @abstractmethod
+    def pay(self, amount: float) -> str:
+        pass
+
+class CreditCardPayment(PaymentStrategy):
+    def __init__(self, card_number: str):
+        self.card_number = card_number
+
+    def pay(self, amount: float) -> str:
+        return "Charged %.2f to card ending %s" % (amount, self.card_number[-4:])
+
+class PayPalPayment(PaymentStrategy):
+    def __init__(self, email: str):
+        self.email = email
+
+    def pay(self, amount: float) -> str:
+        return "Paid %.2f via PayPal (%s)" % (amount, self.email)
+
+class CryptoPayment(PaymentStrategy):
+    def __init__(self, wallet: str):
+        self.wallet = wallet
+
+    def pay(self, amount: float) -> str:
+        return "Sent %.2f in crypto to %s..." % (amount, self.wallet[:8])
+
+class ShoppingCart:
+    """Context that uses a payment strategy."""
+    def __init__(self):
+        self.items = []
+        self._strategy: PaymentStrategy = None
+
+    def set_payment_strategy(self, strategy: PaymentStrategy):
+        self._strategy = strategy
+
+    def add_item(self, name: str, price: float):
+        self.items.append({"name": name, "price": price})
+
+    def checkout(self) -> str:
+        total = sum(item["price"] for item in self.items)
+        return self._strategy.pay(total)
+
+# Usage — swap strategy at runtime
+cart = ShoppingCart()
+cart.add_item("Laptop", 999.99)
+cart.add_item("Mouse", 29.99)
+
+cart.set_payment_strategy(CreditCardPayment("4111111111111234"))
+print(cart.checkout())  # Charged $1029.98 to card ending 1234
+
+cart.set_payment_strategy(PayPalPayment("user@example.com"))
+print(cart.checkout())  # Paid $1029.98 via PayPal
+
+# Functional approach — same intent, lighter syntax
+strategies = {
+    "credit": lambda amt: "Charged %.2f to card" % amt,
+    "paypal": lambda amt: "PayPal %.2f" % amt,
+    "crypto": lambda amt: "Crypto %.2f" % amt,
+}
+print(strategies["paypal"](1029.98))`,
 
     tips: [
       'Use Strategy when you have multiple algorithms for the same task and want to switch between them',
