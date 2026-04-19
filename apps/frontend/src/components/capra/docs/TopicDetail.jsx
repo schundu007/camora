@@ -500,7 +500,7 @@ export default function TopicDetail({
   const nextTopic = currentIndex >= 0 && currentIndex < (filteredTopics?.length || 0) - 1 ? filteredTopics[currentIndex + 1] : null;
 
   return (
-    <div className="landing-root animate-fade-in">
+    <div className="landing-root animate-fade-in lg:max-w-[75%] mx-auto">
       {/* Topic Header — no duplicate breadcrumb */}
       <div className="rounded-xl p-3 mb-3 border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between mb-2">
