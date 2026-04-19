@@ -2077,6 +2077,7 @@ Why Cassandra wins for messages:
       discussionPoints: [
         {
           topic: 'End-to-End Encryption (Signal Protocol)',
+          diagramSrc: '/diagrams/whatsapp/discuss-e2e-encryption.png',
           points: [
             'X3DH (Extended Triple Diffie-Hellman) for initial key agreement between two users who have never communicated',
             'Double Ratchet algorithm derives unique encryption key per message, providing forward secrecy',
@@ -2088,6 +2089,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Group Messaging Architecture',
+          diagramSrc: '/diagrams/whatsapp/discuss-group-messaging.png',
           points: [
             'Fan-out on write for small groups (<100): server delivers to each member individually for instant delivery',
             'Hybrid fan-out for large groups (100-1024): write for online members, lazy pull for offline members',
@@ -2099,6 +2101,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Media Handling Pipeline',
+          diagramSrc: '/diagrams/whatsapp/discuss-media-pipeline.png',
           points: [
             'Client-side encryption of media before upload (AES-256 with random key)',
             'Resumable chunked uploads (256KB chunks) with upload token for network interruption recovery',
@@ -2110,6 +2113,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Presence and Typing Indicators',
+          diagramSrc: '/diagrams/whatsapp/discuss-presence.png',
           points: [
             'Redis-based presence with 60-second TTL heartbeats - automatic offline detection on missed heartbeats',
             'Pub/sub fan-out for presence changes scoped to active conversation participants only',
@@ -2242,6 +2246,7 @@ Why Cassandra wins for messages:
       algorithmApproaches: [
         {
           name: 'Consistent Hashing for Connection Routing',
+          diagramSrc: '/diagrams/whatsapp/algo-consistent-hashing.png',
           description: `Route each user to a specific chat server using consistent hashing on userId.
 
 **How it works:**
@@ -2256,6 +2261,7 @@ Why Cassandra wins for messages:
         },
         {
           name: 'Fan-out on Write vs Fan-out on Read (Group Messages)',
+          diagramSrc: '/diagrams/whatsapp/algo-fanout.png',
           description: `Two opposing strategies for delivering group messages to N members.
 
 **Fan-out on Write:**
@@ -2277,6 +2283,7 @@ Why Cassandra wins for messages:
         },
         {
           name: 'Message Queue with ACK-based Guaranteed Delivery',
+          diagramSrc: '/diagrams/whatsapp/algo-ack-delivery.png',
           description: `Ensure every message is delivered at least once using an acknowledgment protocol.
 
 **How it works:**
@@ -2293,6 +2300,7 @@ Why Cassandra wins for messages:
         },
         {
           name: 'Double Ratchet Algorithm (Signal Protocol)',
+          diagramSrc: '/diagrams/whatsapp/algo-double-ratchet.png',
           description: `Provides end-to-end encryption with forward secrecy and break-in recovery.
 
 **How it works:**
