@@ -2018,6 +2018,7 @@ Why Cassandra wins for messages:
 
       redirectFlow: {
         title: 'Receive Message Flow (Reconnection & Sync)',
+        diagramSrc: '/diagrams/whatsapp/message-flow-offline.svg',
         steps: [
           'User opens app or regains connectivity; client initiates WebSocket connection with auth token + deviceId',
           'Gateway routes connection to a chat server via consistent hashing on userId',
