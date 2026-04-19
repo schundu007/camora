@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="450" fill="#fafbfc" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="36" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">OT Conflict Resolution Flow</text>
+  <text x="600" y="56" text-anchor="middle" fill="#64748b" font-size="12">Two users edit concurrently at overlapping positions -- server transforms operations to preserve intent</text>
+
+  <!-- User A op -->
+  <rect x="30" y="90" width="150" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="90" width="150" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="105" y="110" text-anchor="middle" fill="white" font-size="11" font-weight="700">User A (Insert)</text>
+  <text x="105" y="138" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">INSERT "X" at pos 5</text>
+  <text x="105" y="155" text-anchor="middle" fill="#64748b" font-size="9">baseRevision = 10</text>
+  <text x="105" y="172" text-anchor="middle" fill="#64748b" font-size="9">Sent to server</text>
+  <text x="105" y="186" text-anchor="middle" fill="#94a3b8" font-size="9">applied locally</text>
+
+  <!-- User B op -->
+  <rect x="30" y="240" width="150" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="240" width="150" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="105" y="260" text-anchor="middle" fill="white" font-size="11" font-weight="700">User B (Delete)</text>
+  <text x="105" y="288" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">DELETE range 3-6</text>
+  <text x="105" y="305" text-anchor="middle" fill="#64748b" font-size="9">baseRevision = 10</text>
+  <text x="105" y="322" text-anchor="middle" fill="#64748b" font-size="9">Concurrent with A</text>
+  <text x="105" y="336" text-anchor="middle" fill="#94a3b8" font-size="9">applied locally</text>
+
+  <!-- Server receives A first -->
+  <rect x="250" y="90" width="160" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="250" y="90" width="160" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="330" y="110" text-anchor="middle" fill="white" font-size="11" font-weight="700">Server: Process A</text>
+  <text x="330" y="138" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">A arrives first</text>
+  <text x="330" y="155" text-anchor="middle" fill="#64748b" font-size="9">No transform needed</text>
+  <text x="330" y="172" text-anchor="middle" fill="#64748b" font-size="9">Apply INSERT at pos 5</text>
+  <text x="330" y="186" text-anchor="middle" fill="#94a3b8" font-size="9">Assign rev 11</text>
+
+  <!-- Server transforms B -->
+  <rect x="250" y="240" width="160" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="250" y="240" width="160" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="330" y="260" text-anchor="middle" fill="white" font-size="11" font-weight="700">Server: Transform B</text>
+  <text x="330" y="288" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">B base=10, head=11</text>
+  <text x="330" y="305" text-anchor="middle" fill="#64748b" font-size="9">Transform B vs A's insert</text>
+  <text x="330" y="322" text-anchor="middle" fill="#64748b" font-size="9">Split: DEL 3-5 + DEL 6-7</text>
+  <text x="330" y="336" text-anchor="middle" fill="#94a3b8" font-size="9">Assign rev 12</text>
+
+  <!-- Broadcast to A -->
+  <rect x="490" y="90" width="160" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="490" y="90" width="160" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="570" y="110" text-anchor="middle" fill="white" font-size="11" font-weight="700">Broadcast to A</text>
+  <text x="570" y="138" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Send transformed B</text>
+  <text x="570" y="155" text-anchor="middle" fill="#64748b" font-size="9">A receives: DEL 3-5, 6-7</text>
+  <text x="570" y="172" text-anchor="middle" fill="#64748b" font-size="9">A's inserted "X" preserved</text>
+  <text x="570" y="186" text-anchor="middle" fill="#94a3b8" font-size="9">within the delete range</text>
+
+  <!-- Broadcast to B -->
+  <rect x="490" y="240" width="160" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="490" y="240" width="160" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="570" y="260" text-anchor="middle" fill="white" font-size="11" font-weight="700">Broadcast to B</text>
+  <text x="570" y="288" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Send original A</text>
+  <text x="570" y="305" text-anchor="middle" fill="#64748b" font-size="9">B receives: INSERT at 5</text>
+  <text x="570" y="322" text-anchor="middle" fill="#64748b" font-size="9">B transforms own pending</text>
+  <text x="570" y="336" text-anchor="middle" fill="#94a3b8" font-size="9">ops against received A</text>
+
+  <!-- User A converged -->
+  <rect x="730" y="90" width="150" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="730" y="90" width="150" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="805" y="110" text-anchor="middle" fill="white" font-size="11" font-weight="700">User A State</text>
+  <text x="805" y="138" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Applied transformed B</text>
+  <text x="805" y="155" text-anchor="middle" fill="#64748b" font-size="9">"X" is preserved</text>
+  <text x="805" y="172" text-anchor="middle" fill="#64748b" font-size="9">Deleted chars removed</text>
+  <text x="805" y="186" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">State = CONVERGED</text>
+
+  <!-- User B converged -->
+  <rect x="730" y="240" width="150" height="105" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="730" y="240" width="150" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="805" y="260" text-anchor="middle" fill="white" font-size="11" font-weight="700">User B State</text>
+  <text x="805" y="288" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Applied A insert</text>
+  <text x="805" y="305" text-anchor="middle" fill="#64748b" font-size="9">"X" appears in doc</text>
+  <text x="805" y="322" text-anchor="middle" fill="#64748b" font-size="9">Own delete applied</text>
+  <text x="805" y="336" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">State = CONVERGED</text>
+
+  <!-- Final check -->
+  <rect x="950" y="155" width="210" height="120" rx="10" fill="#fff" stroke="#16a34a" stroke-width="2" filter="url(#s)"/>
+  <rect x="950" y="155" width="210" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1055" y="175" text-anchor="middle" fill="white" font-size="11" font-weight="700">Identical Documents</text>
+  <text x="1055" y="203" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">OT Convergence Guarantee</text>
+  <text x="1055" y="220" text-anchor="middle" fill="#64748b" font-size="9">User A doc == User B doc</text>
+  <text x="1055" y="237" text-anchor="middle" fill="#64748b" font-size="9">Both see "X" inserted</text>
+  <text x="1055" y="254" text-anchor="middle" fill="#64748b" font-size="9">Both see range deleted</text>
+  <text x="1055" y="268" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">Intent of both ops preserved</text>
+
+  <!-- Arrows -->
+  <line x1="180" y1="140" x2="246" y2="140" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="195" y="123" width="22" height="14" rx="3" fill="#f97316"/>
+  <text x="206" y="133" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <line x1="180" y1="290" x2="246" y2="290" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="195" y="273" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="206" y="283" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <line x1="410" y1="140" x2="486" y2="140" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="433" y="123" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="444" y="133" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <line x1="410" y1="290" x2="486" y2="290" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="433" y="273" width="22" height="14" rx="3" fill="#2563eb"/>
+  <text x="444" y="283" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <line x1="650" y1="140" x2="726" y2="140" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="673" y="123" width="22" height="14" rx="3" fill="#16a34a"/>
+  <text x="684" y="133" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <line x1="650" y1="290" x2="726" y2="290" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="673" y="273" width="22" height="14" rx="3" fill="#16a34a"/>
+  <text x="684" y="283" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <line x1="880" y1="170" x2="946" y2="190" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="880" y1="290" x2="946" y2="260" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Legend -->
+  <rect x="30" y="380" width="1140" height="50" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="400" fill="#1e293b" font-size="11" font-weight="700">Flow:</text>
+  <rect x="95" y="393" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="110" y="402" fill="#475569" font-size="9">1 User A sends INSERT</text>
+  <rect x="240" y="393" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="255" y="402" fill="#475569" font-size="9">2 User B sends DELETE (concurrent)</text>
+  <text x="470" y="402" fill="#475569" font-size="9">3-4 Server transforms B against A, splits delete range around insert</text>
+  <rect x="830" y="393" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="845" y="402" fill="#475569" font-size="9">5 Both receive transformed ops, converge to same state</text>
+</svg>
