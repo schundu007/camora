@@ -2360,14 +2360,34 @@ rides {
       id: 'youtube',
       title: 'YouTube',
       subtitle: 'Video Streaming',
+      productMeta: { name: 'YouTube', tagline: 'Broadcast yourself — 2.7B monthly users watching 1 billion hours of video daily', stats: [{ label: 'Monthly Active Users', value: '2.7B' }, { label: 'Hours Uploaded/Min', value: '500+' }, { label: 'Hours Watched/Day', value: '1B' }, { label: 'Daily Video Views', value: '5B+' }, { label: 'Shorts Daily Views', value: '200B' }, { label: 'Annual Revenue', value: '$36B+' }], scope: { inScope: ['Video upload & resumable chunked transfer', 'Multi-resolution transcoding pipeline', 'Adaptive bitrate streaming (HLS/DASH)', 'Search & recommendations', 'View counting & engagement', 'Creator analytics'], outOfScope: ['Live streaming', 'YouTube Music', 'YouTube TV', 'Content moderation ML', 'Ad serving', 'Premium features'] }, keyChallenge: 'Process 500+ hours of video uploaded every minute into multiple resolutions while serving 1B hours of playback daily across 100+ CDN PoPs' },
       icon: 'video',
       color: '#ef4444',
       difficulty: 'Hard',
       description: 'Design a video sharing platform supporting upload, processing, streaming, and recommendations.',
 
-      introduction: `YouTube is the world's largest video sharing platform, handling over 500 hours of video uploaded every minute and serving 1 billion hours of video watched daily. The system must handle massive-scale video upload, processing, storage, and delivery.
+      introduction: `YouTube is the world's largest video sharing platform, with 2.7 billion monthly active users watching over 1 billion hours of video every day. Creators upload more than 500 hours of new content every minute — that's 720,000 hours per day. The system must handle massive-scale video upload, processing, storage, and delivery.
 
-The key challenges include efficient video transcoding, global content delivery, search and recommendation at scale, and supporting various viewing experiences (mobile, TV, web).`,
+The key challenges include efficient video transcoding, global content delivery, search and recommendation at scale, and supporting various viewing experiences (mobile, TV, web). What makes YouTube uniquely challenging is the asymmetry between reads and writes — for every hour uploaded, thousands of hours are watched, but the upload pipeline itself is compute-intensive (transcoding into 6 resolutions and 3 codecs can take hours of GPU time).
+
+The storage requirements are staggering: with ~720,000 hours uploaded daily and each hour producing ~5 GB across all resolutions, YouTube adds roughly 3.6 petabytes of new video data every day. Yet the real engineering challenge isn't raw storage — it's the CDN. Serving 1 billion hours/day at 5 Mbps average requires ~175 Tbps of peak bandwidth across 100+ global points of presence.
+
+This problem tests your ability to design a multi-stage processing pipeline (upload → transcode → store → deliver), understand CDN architecture, build recommendation systems at massive scale, and handle the long-tail distribution where 99% of videos are rarely watched but must remain accessible.`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: 'Based on YouTube public metrics: 2.7B MAU, 500+ hours uploaded/min, 1B hours watched/day, 5B daily views',
+        calculations: [
+          { label: 'Video Uploads/Day', value: '720,000 hours', detail: '500 hours/min × 60 × 24 = 720,000 hours/day' },
+          { label: 'Raw Upload Storage/Day', value: '~720 TB', detail: '720K hours × ~1 GB/hour raw = 720 TB/day' },
+          { label: 'Transcoded Storage/Day', value: '~3.6 PB', detail: '720 TB × 5 resolutions = 3.6 PB/day' },
+          { label: 'Monthly Storage Growth', value: '~108 PB', detail: '3.6 PB/day × 30 = 108 PB/month' },
+          { label: 'Peak Streaming Bandwidth', value: '~175 Tbps', detail: '1B hrs/day ÷ 86,400s × 5 Mbps × 3x peak' },
+          { label: 'View Count Writes/Sec', value: '~58K', detail: '5B views/day ÷ 86,400s ≈ 58K/sec' },
+          { label: 'Recommendation QPS', value: '~1.4M', detail: '122M DAU × 10 loads/day ÷ 86,400s' },
+          { label: 'Transcoding GPU-Hours/Day', value: '~1.4M', detail: '720K hours × 2x realtime = 1.4M GPU-hours' },
+        ],
+      },
 
       functionalRequirements: [
         'Upload videos (up to 12 hours, 256GB)',
@@ -4768,6 +4788,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'photo-upload-pipeline',
           title: 'Photo Upload Pipeline',
           description: 'Complete flow from client upload to CDN-ready image with multiple resolutions',
+          src: '/diagrams/instagram/photo-upload-flow.svg',
           steps: [
             { step: 1, label: 'Client Upload', detail: 'Client sends photo (avg 2MB) to Upload Service via pre-signed S3 URL' },
             { step: 2, label: 'Store Original', detail: 'Raw image stored in S3 Raw bucket with unique postId key' },
@@ -4831,7 +4852,31 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
         { step: 2, title: 'S3 + CDN + Read Replicas', description: 'Move photos to S3 with CloudFront CDN. Add PostgreSQL read replicas for feed queries. Introduce Redis for session caching.', color: '#2D8CFF', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['CDN offloads image serving', 'Read replicas handle feed queries', 'Photos durably stored in S3'], cons: ['Feed still generated on-demand (slow)', 'No image processing pipeline', 'Celebrity follows create hot queries'] },
         { step: 3, title: 'Feed Pre-computation + Image Pipeline', description: 'Introduce fan-out on write for feed generation. Add async image processing pipeline (resize, WebP, moderate). Shard PostgreSQL by userId.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '200K', pros: ['Feed reads are instant (pre-computed)', 'Multiple image sizes for all devices', 'Database load distributed across shards'], cons: ['Celebrity fan-out is expensive', 'Image processing queue can backlog', 'Sharding adds operational complexity'] },
         { step: 4, title: 'Hybrid Fan-out + ML Ranking', description: 'Switch to hybrid fan-out (push for <10K followers, pull for celebrities). Add ML-based feed ranking. Deploy Cassandra for write-heavy workloads. Multi-tier CDN.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '500K', pros: ['Celebrity problem solved', 'Engagement-optimized feeds', 'Write throughput scales with Cassandra'], cons: ['ML ranking adds latency (~50ms)', 'Two code paths (push + pull) increase complexity', 'Cache invalidation across tiers'] },
-        { step: 5, title: 'Global Scale Optimization', description: 'Multi-region deployment with regional CDN warming. Explore page powered by deep learning recommendations. Stories on dedicated ephemeral storage. Counter sharding for viral posts.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '1M+', pros: ['<50ms image delivery globally', 'ML-powered discovery (Explore)', 'Handles viral content gracefully'], cons: ['Complex ML infrastructure', 'Multi-region consistency challenges', 'Massive storage costs (~104 PB/year)'] },
+        { step: 5, title: 'Global Scale Optimization', description: 'Multi-region deployment with regional CDN warming. Explore page powered by deep learning recommendations. Stories on dedicated ephemeral storage. Counter sharding for viral posts.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '1M+', pros: ['<50ms image delivery globally', 'ML-powered discovery (Explore)', 'Handles viral content gracefully'], cons: ['Complex ML infrastructure', 'Multi-region consistency challenges', 'Massive storage costs (~219 PB/year)'] },
+      ],
+      // ── Static Diagrams ──
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope features vs out-of-scope for the Instagram design interview', src: '/diagrams/instagram/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Upload QPS, feed read QPS, storage growth (600 TB/day), CDN egress, and like throughput calculations', src: '/diagrams/instagram/capacity-estimation.svg', type: 'estimation' },
+        { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/photo-upload-flow.svg', type: 'flow' },
+        { id: 'ui-mockup', title: 'Instagram Feed Interface', description: 'The product we are designing — feed with ranked posts, story tray, like/comment interactions, and explore', src: '/diagrams/instagram/instagram-ui-mockup.svg', type: 'ui' },
+      ],
+      // ── Charts ──
+      charts: [
+        {
+          id: 'storage-growth',
+          title: 'Storage Growth Projection',
+          type: 'bar',
+          data: [
+            { label: 'Day 1', value: 600, color: '#fca5a5' },
+            { label: 'Month', value: 18000, color: '#f87171' },
+            { label: 'Year 1', value: 219000, color: '#ef4444' },
+            { label: 'Year 3', value: 657000, color: '#dc2626' },
+            { label: 'Year 5', value: 1095000, color: '#b91c1c' },
+          ],
+          unit: 'TB',
+          description: 'Photo storage scales at 600 TB/day (all resolutions) — 219 PB/year before replication'
+        }
       ],
     },
     {
@@ -6132,6 +6177,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           id: 'video-playback-flow',
           title: 'Video Playback Flow',
           description: 'Complete flow from play button press to video streaming on screen',
+          src: '/diagrams/netflix/video-playback-flow.svg',
           steps: [
             { step: 1, label: 'Play Request', detail: 'Client sends GET /api/playback/{titleId} with profileId and device info' },
             { step: 2, label: 'Entitlement Check', detail: 'Verify subscription active, concurrent stream limit not exceeded, title available in region' },
@@ -6157,6 +6203,11 @@ Stage 2 -- Ranking (online, at request time, <200ms):
             { step: 7, label: 'CDN Placement', detail: 'ML predicts regional popularity, pre-position on 17,000+ OCAs during off-peak hours' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Video streaming scope and core features', src: '/diagrams/netflix/problem-definition.svg', type: 'overview' },
+        { id: 'capacity', title: 'Capacity Estimation', description: 'Streaming bandwidth, encoding, CDN capacity', src: '/diagrams/netflix/capacity-estimation.svg', type: 'estimation' },
+        { id: 'playback', title: 'Video Playback Flow', description: 'Click Play through DRM, OCA steering, ABR buffering', src: '/diagrams/netflix/video-playback-flow.svg', type: 'flow' },
       ],
       // ── Visual Cards ──
       visualCards: [
