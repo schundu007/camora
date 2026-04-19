@@ -390,6 +390,15 @@ Sliding Window Maximum is a classic hard problem that tests whether you understa
       { name: 'Max Value of Equation', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is a monotonic queue and how does it differ from a monotonic stack?', difficulty: 'Easy', answer: 'A monotonic queue is a deque maintaining elements in monotonic order. Unlike a stack (LIFO), a deque supports removal from both ends — elements expire from the front when they leave the sliding window, while new elements are compared at the back. Solves sliding window min/max in O(n).' },
+      { question: 'How do you find the maximum in every sliding window of size K?', difficulty: 'Medium', answer: 'Use a decreasing deque of indices. For each element: (1) Remove front if outside window. (2) Pop back while back value <= current. (3) Push current. Front always holds window max. Each element enters/leaves deque at most once — O(n) total.' },
+      { question: 'Why is a deque needed instead of a regular queue?', difficulty: 'Easy', answer: 'We remove from both ends: front for expired elements, back for maintaining monotonic order. A regular queue only supports front removal. A deque provides O(1) on both ends.' },
+      { question: 'When should you use a monotonic queue vs a segment tree?', difficulty: 'Hard', answer: 'Monotonic queue for sliding window (fixed size, left to right) — O(n). Segment tree for arbitrary ranges — O(log n) per query. Queue is simpler for sliding window but cannot do arbitrary range queries.' },
+      { question: 'How does monotonic queue handle "Shortest Subarray with Sum >= K" with negatives?', difficulty: 'Hard', answer: 'Build prefix sums. Use increasing deque. For each j, remove front i where prefix[j]-prefix[i] >= K. Remove back where prefix[back] >= prefix[j]. Handles negatives because prefix sums can decrease.' },
+    ],
+
     commonMistakes: [
       'Forgetting to remove elements from the front of the deque when they fall outside the window',
       'Using a regular queue instead of a deque, which prevents efficient back-removal',
@@ -474,6 +483,15 @@ Linked list reversal appears directly in interviews and also serves as a buildin
       { name: 'Reverse Nodes in k-Group', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'How do you reverse a singly linked list iteratively?', difficulty: 'Easy', answer: 'Three pointers: prev (null), curr (head), next. Each step: save next = curr.next, set curr.next = prev, advance prev = curr, curr = next. After loop, prev is new head. O(n) time, O(1) space.' },
+      { question: 'How do you reverse a linked list recursively?', difficulty: 'Easy', answer: 'Base: head is null or head.next is null → return head. Recurse on head.next. Then head.next.next = head, head.next = null. Return recursive result. O(n) time, O(n) stack.' },
+      { question: 'How do you reverse a sublist from position m to n?', difficulty: 'Medium', answer: 'Use dummy node. Walk to m-1. Reverse n-m+1 nodes. Reconnect: before-sublist → new head, old first (now last) → remaining list.' },
+      { question: 'How do you reverse in groups of K?', difficulty: 'Hard', answer: 'Check K nodes remain. Reverse K iteratively. Connect previous tail to new head. Old head connects to recursive result. Fewer than K remaining → keep as-is.' },
+      { question: 'What is the relationship between reversal and stacks?', difficulty: 'Medium', answer: 'Reversing = stack pop order (LIFO). Push all nodes to stack then rebuild, but O(n) space. Iterative pointer manipulation achieves O(1) space.' },
+    ],
+
     commonMistakes: [
       'Losing the reference to the rest of the list by not saving curr.next before flipping the pointer',
       'Forgetting to reconnect the reversed segment to the nodes before and after it in sublist reversal',
@@ -553,6 +571,15 @@ Cycle detection in linked lists is a classic interview question, but the pattern
       { name: 'Middle of the Linked List', difficulty: 'Easy' },
       { name: 'Happy Number', difficulty: 'Easy' },
       { name: 'Linked List Cycle II', difficulty: 'Medium' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is Floyd\'s Tortoise and Hare algorithm?', difficulty: 'Easy', answer: 'Two pointers at different speeds: slow=1 step, fast=2 steps. If cycle exists, they meet. If fast reaches null, no cycle. O(n) time, O(1) space.' },
+      { question: 'Why do fast and slow pointers always meet inside a cycle?', difficulty: 'Medium', answer: 'Once both in cycle, fast closes gap by 1 per step (relative speed=1). They meet within C iterations (cycle length). Math: slow=S, fast=2S, meet when S=kC.' },
+      { question: 'How do you find the cycle start node?', difficulty: 'Medium', answer: 'After meeting, reset one pointer to head. Both move 1 step. They meet at cycle start. Proof: L (head to start) = nC - K (start to meeting), so walking L from both points converges at start.' },
+      { question: 'How do you find the middle of a linked list?', difficulty: 'Easy', answer: 'Both start at head, slow moves 1, fast moves 2. When fast reaches end, slow is at middle. For even length, slow is at start of second half.' },
+      { question: 'How does Happy Number use Floyd\'s cycle detection?', difficulty: 'Medium', answer: 'Digit-square-sum sequence either reaches 1 or cycles. Apply Floyd\'s: if pointers meet at non-1, number is not happy. O(1) space, no hash set needed.' },
     ],
 
     commonMistakes: [
