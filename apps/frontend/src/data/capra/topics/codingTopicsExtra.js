@@ -656,6 +656,15 @@ Many efficient algorithms are based on divide and conquer. Understanding this pa
       { name: 'Maximum Binary Tree', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is the divide and conquer paradigm?', difficulty: 'Easy', answer: 'Break a problem into smaller subproblems of the same type, solve each recursively, then combine results. The three steps are: Divide (split input), Conquer (solve subproblems recursively), Combine (merge solutions). Examples: merge sort, quicksort, binary search. Leads to recurrences solvable by Master Theorem.' },
+      { question: 'What is the Master Theorem and when do you use it?', difficulty: 'Medium', answer: 'The Master Theorem solves recurrences of form T(n) = aT(n/b) + O(n^d). Compare log_b(a) to d: if log_b(a) > d → O(n^log_b(a)), if equal → O(n^d log n), if less → O(n^d). Works for merge sort T(n)=2T(n/2)+O(n) → O(n log n). Does not apply to unequal splits.' },
+      { question: 'How does binary search use divide and conquer?', difficulty: 'Easy', answer: 'Binary search divides the search space in half each step. Compare target to middle element: if equal, found; if less, search left half; if greater, search right half. T(n) = T(n/2) + O(1) → O(log n). Requires sorted input.' },
+      { question: 'When is divide and conquer NOT the right approach?', difficulty: 'Medium', answer: 'When subproblems overlap (use DP instead — e.g., Fibonacci). When the combine step is expensive (merging sorted results is O(n), but some combines are O(n²)). When the problem has no natural recursive structure. When iterative solutions are simpler (e.g., linear scan).' },
+      { question: 'How do you find the closest pair of points using divide and conquer?', difficulty: 'Hard', answer: 'Sort points by x. Divide into left/right halves. Recursively find closest pair in each half (d_left, d_right). Let d = min(d_left, d_right). Check strip of width 2d around dividing line — at most 7 comparisons per point (O(n) strip check). Total: T(n) = 2T(n/2) + O(n) → O(n log n).' },
+    ],
+
     commonMistakes: [
       'Forgetting the base case, leading to infinite recursion',
       'Creating unbalanced splits that degrade to O(n^2) instead of O(n log n)',
@@ -727,6 +736,15 @@ Beyond sorting, the merge step is a powerful technique for counting inversions, 
     commonProblems: [
       { name: 'Sort List', difficulty: 'Medium' },
       { name: 'Reverse Pairs', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'How does merge sort work?', difficulty: 'Easy', answer: 'Recursively split array in half until single elements. Merge pairs of sorted halves by comparing front elements, placing smaller first. Always O(n log n) — split is O(1), merge is O(n), depth is log n. Stable sort. Requires O(n) extra space for merging.' },
+      { question: 'Why is merge sort preferred for linked lists?', difficulty: 'Medium', answer: 'Linked lists have O(1) split (just move pointers) and O(1) merge (pointer manipulation). No extra space needed for merging unlike arrays. Random access penalty of linked lists does not affect merge sort since it only accesses elements sequentially. O(n log n) time, O(log n) stack space.' },
+      { question: 'What is the merge step and why is it O(n)?', difficulty: 'Easy', answer: 'Given two sorted halves, maintain pointers to front of each. Compare, copy smaller to output, advance that pointer. Repeat until both exhausted. Each element is copied exactly once → O(n). The merge step is what makes merge sort stable — equal elements maintain relative order.' },
+      { question: 'How do you count inversions using merge sort?', difficulty: 'Medium', answer: 'An inversion is a pair (i,j) where i < j but arr[i] > arr[j]. During merge, when right element is smaller, it creates inversions with ALL remaining left elements. Count += (left_remaining). This piggybacks on merge sort with no extra cost — O(n log n) total.' },
+      { question: 'What is external merge sort and when is it used?', difficulty: 'Hard', answer: 'When data exceeds RAM. Phase 1: read chunks that fit in memory, sort each, write to disk. Phase 2: K-way merge of sorted chunks using a min-heap of size K. Used by databases for sorting large tables. I/O complexity: O(n/B × log_{M/B}(n/B)) where B=block size, M=memory.' },
     ],
 
     commonMistakes: [
@@ -803,6 +821,15 @@ QuickSort is the most commonly used sorting algorithm in practice due to its exc
       { name: 'Kth Largest Element in an Array', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'How does quicksort work?', difficulty: 'Easy', answer: 'Choose a pivot, partition array so elements < pivot are left, > pivot are right. Recursively sort left and right. Average O(n log n), worst O(n²) with bad pivot. In-place (O(log n) stack space). Unstable. Faster than merge sort in practice due to cache locality.' },
+      { question: 'What is the Lomuto vs Hoare partition scheme?', difficulty: 'Medium', answer: 'Lomuto: single pointer scans left to right, swaps elements < pivot to front. Simple but slower (more swaps). Hoare: two pointers from both ends, swap when they find misplaced elements. Fewer swaps (~3x fewer), but harder to implement correctly. Hoare is preferred in practice.' },
+      { question: 'How does quickselect find the kth smallest element in O(n)?', difficulty: 'Medium', answer: 'Partition around pivot. If pivot index = k, done. If k < pivot index, recurse left. If k > pivot index, recurse right. Only recurse on ONE side → T(n) = T(n/2) + O(n) → O(n) average. Worst case O(n²) with bad pivots. Randomized pivot or median-of-medians gives guaranteed O(n).' },
+      { question: 'What is the median-of-medians algorithm?', difficulty: 'Hard', answer: 'Guarantees O(n) worst-case for quickselect. Divide into groups of 5, find median of each group, recursively find median of medians. Use this as pivot — guarantees at least 30% of elements on each side. O(n) but large constant factor, so randomized quickselect is preferred in practice.' },
+      { question: 'Why is quicksort faster than merge sort in practice?', difficulty: 'Medium', answer: 'Better cache locality (in-place, sequential access). Smaller constant factors. No O(n) extra space. Merge sort has better worst case (always O(n log n)), but quicksort with randomized pivot almost never hits O(n²). Quicksort is the default in most standard library sort implementations.' },
+    ],
+
     commonMistakes: [
       'Using a fixed pivot (e.g., always first or last element), which causes O(n^2) on sorted or nearly-sorted input',
       'Infinite recursion when the partition does not make progress (pivot equals all elements)',
@@ -876,6 +903,15 @@ In interviews, bucket sort appears in problems involving frequency-based orderin
       { name: 'Sort Characters By Frequency', difficulty: 'Medium' },
       { name: 'Top K Frequent Words', difficulty: 'Medium' },
       { name: 'Maximum Gap', difficulty: 'Medium' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'How does bucket sort work and when is it applicable?', difficulty: 'Easy', answer: 'Distribute elements into K buckets based on value range. Sort each bucket (often with insertion sort). Concatenate buckets. O(n + K) when elements are uniformly distributed. Works best when input is uniformly distributed over a known range.' },
+      { question: 'What is counting sort and how does it differ from bucket sort?', difficulty: 'Easy', answer: 'Counting sort is a special case of bucket sort where each bucket holds count of one value. Works only for integers in a known range [0, K]. O(n + K) time and space. Stable. Used as subroutine in radix sort.' },
+      { question: 'How does radix sort work?', difficulty: 'Medium', answer: 'Sort by each digit from least significant to most significant, using a stable sort (counting sort) as subroutine. For d digits with K possible values per digit: O(d × (n + K)). Works for integers, strings, and dates. Example: sort 3-digit numbers → 3 passes of counting sort.' },
+      { question: 'When are non-comparison sorts faster than comparison sorts?', difficulty: 'Medium', answer: 'Comparison sorts have Ω(n log n) lower bound. Non-comparison sorts (counting, radix, bucket) can achieve O(n) when input has limited range or structure. Use when: integers in small range (counting), fixed-length keys (radix), uniform distribution (bucket). Not for arbitrary objects.' },
+      { question: 'How do you sort an array where each element is at most K positions from its sorted position (nearly sorted)?', difficulty: 'Hard', answer: 'Use a min-heap of size K+1. Insert first K+1 elements. For each remaining element: extract min (guaranteed to be in correct position), insert next element. Time: O(n log K). When K << n, this is much faster than O(n log n). This is the \'K-sorted array\' problem.' },
     ],
 
     commonMistakes: [
@@ -972,6 +1008,15 @@ Nearly every tree problem in interviews requires a traversal as its backbone. In
       { name: 'Binary Tree Maximum Path Sum', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What are the three DFS traversal orders and when is each used?', difficulty: 'Easy', answer: 'Inorder (left, root, right): BST gives sorted order. Preorder (root, left, right): serialize/copy tree, expression prefix notation. Postorder (left, right, root): delete tree, evaluate expression trees, calculate heights.' },
+      { question: 'How does BFS (level-order) traversal work?', difficulty: 'Easy', answer: 'Use a queue. Enqueue root. While queue is not empty: dequeue node, process it, enqueue its children. This visits nodes level by level. O(n) time, O(w) space where w is maximum width. Used for shortest path in unweighted graphs, level-order output.' },
+      { question: 'How do you implement iterative inorder traversal?', difficulty: 'Medium', answer: 'Use a stack. Push all left children. Pop top (smallest unvisited), process it, then push all left children of its right child. Alternatively: Morris Traversal uses threaded trees for O(1) space by temporarily modifying tree structure.' },
+      { question: 'What is Morris Traversal and how does it achieve O(1) space?', difficulty: 'Hard', answer: 'Instead of a stack, temporarily thread the tree: make each node\'s inorder predecessor point to it. When visiting a node: if no left child, process and go right. If left child exists, find predecessor. If predecessor\'s right is null, thread it to current node and go left. If predecessor\'s right is current, unthread, process current, go right. O(n) time, O(1) space.' },
+      { question: 'How do you construct a tree from traversal sequences?', difficulty: 'Medium', answer: 'From preorder + inorder: preorder[0] is root. Find root in inorder — left of it is left subtree, right is right subtree. Recurse. Use hash map for O(1) root lookup in inorder. From postorder + inorder: similar but root is last element. Cannot construct from pre+post alone (ambiguous).' },
+    ],
+
     commonMistakes: [
       'Confusing which traversal to use: inorder for BST sorted order, preorder for top-down, postorder for bottom-up',
       'Forgetting the base case (null node) in recursive implementations',
@@ -1057,6 +1102,15 @@ BST problems test your understanding of tree invariants and how to exploit order
       { name: 'Stock Price Fluctuation', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What properties define a Binary Search Tree?', difficulty: 'Easy', answer: 'For every node: all values in left subtree < node value, all values in right subtree > node value. This enables O(h) search, insert, delete where h is height. A balanced BST has h = O(log n). Inorder traversal gives sorted order.' },
+      { question: 'What is the difference between a BST and a balanced BST?', difficulty: 'Easy', answer: 'A plain BST can degenerate to a linked list (h = n) with sorted input. Balanced BSTs (AVL, Red-Black) maintain h = O(log n) via rotations after insert/delete. AVL is stricter (heights differ by at most 1), Red-Black is more relaxed (faster inserts, used in Java TreeMap).' },
+      { question: 'How do you validate if a binary tree is a valid BST?', difficulty: 'Medium', answer: 'Inorder traversal should produce sorted sequence — check prev < current at each step. Alternatively, recursive with bounds: isValid(node, min, max) where each node must be within (min, max). Pass INT_MIN/MAX initially, narrow bounds as you recurse. O(n) time, O(h) space.' },
+      { question: 'How do you find the kth smallest element in a BST?', difficulty: 'Medium', answer: 'Inorder traversal visits nodes in sorted order. Do inorder, counting nodes. When count = k, return that node. O(h + k) time. For repeated queries, augment BST with subtree sizes — then navigate in O(h) per query.' },
+      { question: 'How do you find the LCA of two nodes in a BST?', difficulty: 'Medium', answer: 'Start from root. If both values < root, go left. If both > root, go right. Otherwise, root is the LCA (split point). O(h) time, O(1) space. This is simpler than general binary tree LCA which requires parent pointers or recursive traversal.' },
+    ],
+
     commonMistakes: [
       'Forgetting that BST operations are O(n) in the worst case for unbalanced trees',
       'Not handling the three deletion cases correctly (especially two-children case with inorder successor)',
@@ -1129,6 +1183,14 @@ BST problems test your understanding of tree invariants and how to exploit order
       { name: 'Find Median from Data Stream', difficulty: 'Hard' },
       { name: 'IPO', difficulty: 'Hard' },
       { name: 'Sliding Window Median', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is the two-heaps pattern?', difficulty: 'Easy', answer: 'Use a max-heap for the smaller half and a min-heap for the larger half of a data stream. The median is either the max-heap top, min-heap top, or their average. Balancing: keep sizes within 1 of each other by transferring between heaps. O(log n) per insertion, O(1) median query.' },
+      { question: 'How do you find the median of a data stream?', difficulty: 'Medium', answer: 'Maintain two heaps: maxHeap (lower half) and minHeap (upper half). On insert: if value <= maxHeap.top, add to maxHeap, else add to minHeap. Rebalance if sizes differ by > 1. Median: if sizes equal, average of both tops. If unequal, top of larger heap.' },
+      { question: 'How does two-heaps solve \'Sliding Window Median\'?', difficulty: 'Hard', answer: 'Maintain two heaps plus lazy deletion. When window slides: add new element to correct heap, mark outgoing element for lazy deletion (don\'t actually remove). Only delete from top when needed. Rebalance after each operation. More complex than stream median due to deletion tracking.' },
+      { question: 'When should you use two heaps vs a sorted array?', difficulty: 'Medium', answer: 'Two heaps: O(log n) insert, O(1) median — best for streaming data. Sorted array: O(n) insert (shift elements), O(1) median — only good for static data. If you need arbitrary percentiles (not just median), consider an order-statistics tree instead.' },
     ],
 
     commonMistakes: [
@@ -1206,6 +1268,14 @@ BST problems test your understanding of tree invariants and how to exploit order
       { name: 'K Closest Points to Origin', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'How do you find the top K largest elements?', difficulty: 'Easy', answer: 'Min-heap of size K: iterate through array, push to heap. If heap size > K, pop minimum. After processing all elements, heap contains K largest. O(n log K) time, O(K) space. Better than sorting O(n log n) when K << n.' },
+      { question: 'When should you use a heap vs quickselect for top-K?', difficulty: 'Medium', answer: 'Heap: O(n log K), works with streaming data, doesn\'t modify input. Quickselect: O(n) average, in-place, but modifies input. Use heap for streams or when you need sorted top-K. Use quickselect for one-shot queries on arrays where modification is OK.' },
+      { question: 'How do you find the K most frequent elements?', difficulty: 'Medium', answer: 'Count frequencies with hash map O(n). Then either: (1) min-heap of size K on frequency O(n log K), or (2) bucket sort by frequency O(n) since max frequency <= n. Bucket sort is optimal for this specific problem.' },
+      { question: 'What is a partial sort and how does it relate to top-K?', difficulty: 'Medium', answer: 'Partial sort finds the K largest without fully sorting. std::partial_sort in C++ uses a heap internally. After partial sort, the first K elements are the K largest in sorted order, rest are unsorted. O(n log K) — useful when you need sorted top-K output.' },
+    ],
+
     commonMistakes: [
       'Using a max-heap of size n instead of a min-heap of size k, resulting in O(n log n) instead of O(n log k)',
       'Forgetting to count frequencies first before applying the heap for frequency-based problems',
@@ -1280,6 +1350,14 @@ Merge K Sorted Lists is a frequently asked interview question and the pattern ex
       { name: 'Kth Smallest Element in a Sorted Matrix', difficulty: 'Medium' },
       { name: 'Merge k Sorted Lists', difficulty: 'Hard' },
       { name: 'Smallest Range Covering Elements from K Lists', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is the K-way merge pattern?', difficulty: 'Easy', answer: 'Merge K sorted lists/arrays into one sorted output. Use a min-heap of size K holding the front element of each list. Extract min, add to result, push next element from that list. O(N log K) where N = total elements. Used in merge sort, external sort, and merging sorted streams.' },
+      { question: 'How is K-way merge used in external sorting?', difficulty: 'Medium', answer: 'When data exceeds RAM: sort chunks in memory, write to disk. Then K-way merge the sorted chunks using a min-heap of size K (one element per chunk). Read/write in blocks for I/O efficiency. Databases use this for sorting tables larger than memory.' },
+      { question: 'How do you merge K sorted linked lists?', difficulty: 'Medium', answer: 'Min-heap of K list heads. Extract min, add its next to heap if exists. O(N log K). Alternatively, divide-and-conquer: pair lists, merge pairs, repeat log K times. Both are O(N log K) but divide-and-conquer may be more cache-friendly.' },
+      { question: 'How do you find the kth smallest element across K sorted arrays?', difficulty: 'Hard', answer: 'Binary search on value range [min, max]. For a candidate value V, count how many elements <= V across all K arrays using binary search per array. Total: O(K log N × log(max-min)). Alternative: K-way merge up to kth element — O(k log K).' },
     ],
 
     commonMistakes: [
@@ -1361,6 +1439,15 @@ These problems are favorites at top tech companies because they test both your d
       { name: 'Insert Delete GetRandom O(1)', difficulty: 'Medium' },
       { name: 'Design a Food Rating System', difficulty: 'Medium' },
       { name: 'Maximum Frequency Stack', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What skills does \'design a data structure\' test in interviews?', difficulty: 'Easy', answer: 'Tests ability to combine basic data structures (arrays, hash maps, linked lists, heaps) to achieve specific time complexity guarantees. Also tests API design, edge case handling, and understanding of tradeoffs between operations.' },
+      { question: 'How do you design an LRU Cache?', difficulty: 'Medium', answer: 'Combine a hash map (O(1) lookup by key) with a doubly linked list (O(1) insertion/removal for recency ordering). On get: move node to front of list. On put: add to front, evict from back if over capacity. Hash map stores key → list node pointer.' },
+      { question: 'How do you design a min-stack (stack with O(1) getMin)?', difficulty: 'Easy', answer: 'Use two stacks: main stack and min stack. On push: push to main; push to min only if value <= current min. On pop: pop from main; pop from min if popped value equals min top. getMin: return min stack top. All operations O(1).' },
+      { question: 'How do you design a data structure supporting insert, delete, and getRandom in O(1)?', difficulty: 'Medium', answer: 'Use an array + hash map (value → index). Insert: append to array, store index in map. Delete: swap target with last element, pop last, update map. getRandom: random index into array. All operations O(1) amortized.' },
+      { question: 'How do you design a time-based key-value store?', difficulty: 'Medium', answer: 'Hash map of key → sorted list of (timestamp, value) pairs. Set: append to the key list. Get(key, timestamp): binary search for largest timestamp <= query timestamp. Set is O(1) amortized, Get is O(log n) per key.' },
     ],
 
     commonMistakes: [
@@ -1448,6 +1535,15 @@ Union Find is the go-to data structure for connectivity problems: determining if
       { name: 'Min Cost to Connect All Points', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is Union-Find (Disjoint Set Union) and when do you use it?', difficulty: 'Easy', answer: 'Tracks elements partitioned into disjoint sets. Supports: Find (which set does x belong to?) and Union (merge two sets). Used for connected components, Kruskal MST, cycle detection, and equivalence class problems. Near O(1) amortized per operation with optimizations.' },
+      { question: 'What are path compression and union by rank?', difficulty: 'Medium', answer: 'Path compression: during Find, make every node point directly to root. Flattens tree for future queries. Union by rank: attach shorter tree under taller tree root, keeping height low. Together they achieve O(α(n)) amortized per operation, where α is the inverse Ackermann function (effectively constant).' },
+      { question: 'How do you detect a cycle in an undirected graph using Union-Find?', difficulty: 'Medium', answer: 'For each edge (u,v): if Find(u) == Find(v), adding this edge creates a cycle. Otherwise, Union(u,v). If any edge creates a cycle, graph has a cycle. O(E × α(V)) which is effectively O(E). Simpler than DFS-based cycle detection for undirected graphs.' },
+      { question: 'What is the difference between Union-Find and BFS/DFS for connected components?', difficulty: 'Medium', answer: 'BFS/DFS: one-time O(V+E) traversal, requires adjacency list. Union-Find: processes edges one at a time, O(E × α(V)), supports dynamic edge additions. Use Union-Find when edges arrive incrementally (streaming); use BFS/DFS for static graph queries.' },
+      { question: 'How do you implement Union-Find with weighted edges?', difficulty: 'Hard', answer: 'Augment each node with a weight relative to its parent. During Find with path compression, accumulate weights along the path. During Union, compute the relative weight between roots. Used in problems like \'Evaluate Division\' where edges represent ratios (a/b = 2, b/c = 3 → a/c = 6).' },
+    ],
+
     commonMistakes: [
       'Forgetting path compression, leading to O(n) find operations in the worst case',
       'Not using union by rank, resulting in tall degenerate trees',
@@ -1531,6 +1627,15 @@ Topological sort is essential for dependency resolution: course prerequisites, b
       { name: 'Find Eventual Safe States', difficulty: 'Medium' },
       { name: 'Minimum Height Trees', difficulty: 'Medium' },
       { name: 'Sort Items by Groups Respecting Dependencies', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is topological sort and when is it used?', difficulty: 'Easy', answer: 'A linear ordering of vertices in a DAG where for every edge (u,v), u comes before v. Used for: build system dependencies, course scheduling, task ordering. Only possible on DAGs — if a cycle exists, no topological order exists.' },
+      { question: 'What are the two approaches to topological sort?', difficulty: 'Medium', answer: 'Kahn\'s BFS: maintain in-degree count, process nodes with in-degree 0, decrement neighbors\' in-degrees. DFS-based: run DFS, add node to result AFTER all descendants are processed (post-order), then reverse. Both O(V+E). Kahn\'s detects cycles (if result.length < V).' },
+      { question: 'How do you detect cycles in a directed graph using topological sort?', difficulty: 'Easy', answer: 'Using Kahn\'s: if the result has fewer nodes than the graph, a cycle exists (some nodes never reach in-degree 0). Using DFS: track node states (unvisited, in-progress, visited). If DFS visits an in-progress node, there\'s a back edge → cycle.' },
+      { question: 'How do you find all valid topological orderings?', difficulty: 'Hard', answer: 'Use backtracking: at each step, choose any node with in-degree 0, add to result, reduce neighbors\' in-degrees, recurse. Backtrack by restoring state. This generates all valid orderings but is exponential in the worst case. Useful for understanding dependency flexibility.' },
+      { question: 'How is topological sort used in course scheduling?', difficulty: 'Medium', answer: 'Model courses as nodes, prerequisites as directed edges. Topological sort gives a valid course order. If Kahn\'s BFS result has fewer courses than total, some prerequisites form a cycle (impossible to complete all courses). Can also find minimum semesters using level-by-level BFS.' },
     ],
 
     commonMistakes: [
@@ -1617,6 +1722,15 @@ Shortest path problems appear frequently in interviews, often disguised as netwo
       { name: 'Path with Maximum Probability', difficulty: 'Medium' },
       { name: 'Path With Minimum Effort', difficulty: 'Medium' },
       { name: 'Swim in Rising Water', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What are the main shortest path algorithms and when to use each?', difficulty: 'Easy', answer: 'BFS: unweighted graphs, O(V+E). Dijkstra: non-negative weights, O((V+E) log V). Bellman-Ford: handles negative weights, O(VE). Floyd-Warshall: all-pairs, O(V³). Choose based on: weight types, single vs all-pairs, graph density.' },
+      { question: 'How does Dijkstra\'s algorithm work?', difficulty: 'Medium', answer: 'Min-heap priority queue of (distance, node). Start with source at distance 0. Extract min, relax all neighbors: if current_dist + edge_weight < neighbor_dist, update and push to heap. Greedy: once a node is extracted, its distance is final. O((V+E) log V) with binary heap.' },
+      { question: 'Why doesn\'t Dijkstra work with negative edge weights?', difficulty: 'Medium', answer: 'Dijkstra\'s greedy assumption — once a node is extracted, its distance is final — breaks with negative edges. A node extracted early might later be reachable via a negative edge with shorter total distance. Bellman-Ford handles this by relaxing all edges V-1 times.' },
+      { question: 'How does Bellman-Ford detect negative cycles?', difficulty: 'Medium', answer: 'Run V-1 relaxation passes (sufficient for shortest paths in any graph without negative cycles). Then run one more pass: if any edge can still be relaxed, a negative cycle exists (distances can decrease infinitely). O(VE) time.' },
+      { question: 'How is A* different from Dijkstra?', difficulty: 'Hard', answer: 'A* adds a heuristic h(n) estimating remaining distance to goal. Priority = g(n) + h(n) where g(n) is actual distance from source. If h is admissible (never overestimates), A* finds optimal path while exploring fewer nodes than Dijkstra. Used in pathfinding, games, and GPS navigation.' },
     ],
 
     commonMistakes: [
@@ -1706,6 +1820,15 @@ Knapsack DP appears in many disguises: partition problems (can you split an arra
       { name: 'Perfect Squares', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is the 0/1 Knapsack problem?', difficulty: 'Easy', answer: 'Given items with weights and values and a capacity W, maximize total value without exceeding W. Each item used at most once. DP: dp[i][w] = max(dp[i-1][w], dp[i-1][w-weight[i]] + value[i]). O(nW) time and space. Can optimize to O(W) space using 1D array (iterate W backwards).' },
+      { question: 'What is the difference between 0/1 and unbounded knapsack?', difficulty: 'Easy', answer: '0/1: each item used at most once. Unbounded: items can be reused. 0/1 DP iterates items outer, capacity inner (backwards for 1D). Unbounded iterates capacity inner (forwards) allowing reuse. Both O(nW) but different iteration orders.' },
+      { question: 'How do you identify a knapsack problem in disguise?', difficulty: 'Medium', answer: 'Look for: choosing a subset, maximizing/minimizing a metric, subject to a constraint. Examples: Partition Equal Subset Sum (can we split into two equal halves? → knapsack with target W/2), Target Sum (ways to assign +/- signs), Coin Change (min coins = unbounded knapsack variant).' },
+      { question: 'How do you solve \'Partition Equal Subset Sum\'?', difficulty: 'Medium', answer: 'Equivalent to: can we find a subset summing to totalSum/2? If totalSum is odd, impossible. DP: boolean dp[s] = can we form sum s? For each num, iterate s from target down to num: dp[s] |= dp[s-num]. O(n × sum/2) time, O(sum) space.' },
+      { question: 'What is the space optimization for 0/1 knapsack?', difficulty: 'Medium', answer: 'Use 1D dp[W+1] instead of 2D. Key: iterate capacity BACKWARDS (from W down to weight[i]). This ensures each item is used at most once — forward iteration would allow reuse (unbounded). For unbounded, iterate forwards.' },
+    ],
+
     commonMistakes: [
       'Iterating capacity in the wrong direction for 0/1 knapsack (must go right to left to avoid reusing items)',
       'Confusing 0/1 knapsack with unbounded knapsack and using the wrong iteration order',
@@ -1792,6 +1915,15 @@ String DP is one of the most common DP subcategories in interviews. Problems lik
       { name: 'Word Break', difficulty: 'Medium' },
       { name: 'Wildcard Matching', difficulty: 'Hard' },
       { name: 'Distinct Subsequences', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is the Longest Common Subsequence (LCS) problem?', difficulty: 'Easy', answer: 'Find the longest subsequence present in both strings. dp[i][j] = LCS of s1[0..i-1] and s2[0..j-1]. If s1[i-1] == s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1. Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]). O(mn) time and space.' },
+      { question: 'How do you compute edit distance (Levenshtein distance)?', difficulty: 'Medium', answer: 'dp[i][j] = min operations to convert s1[0..i-1] to s2[0..j-1]. If chars match: dp[i][j] = dp[i-1][j-1]. Else: dp[i][j] = 1 + min(dp[i-1][j] (delete), dp[i][j-1] (insert), dp[i-1][j-1] (replace)). Used in spell checkers, DNA alignment, fuzzy matching.' },
+      { question: 'What is the Longest Palindromic Subsequence?', difficulty: 'Medium', answer: 'LPS of string s = LCS of s and reverse(s). Alternatively, dp[i][j] = LPS of s[i..j]. If s[i]==s[j]: dp[i][j] = dp[i+1][j-1] + 2. Else: dp[i][j] = max(dp[i+1][j], dp[i][j-1]). Iterate by gap length (j-i). O(n²) time and space.' },
+      { question: 'How do you find the number of distinct subsequences?', difficulty: 'Hard', answer: 'dp[i][j] = number of ways to form t[0..j-1] from s[0..i-1]. If s[i-1]==t[j-1]: dp[i][j] = dp[i-1][j-1] + dp[i-1][j] (use or skip current char). Else: dp[i][j] = dp[i-1][j] (skip). Base: dp[i][0] = 1 (empty string is always a subsequence).' },
+      { question: 'What is the key pattern for string DP problems?', difficulty: 'Medium', answer: 'Most use 2D DP where dp[i][j] represents a property of substrings/prefixes. Two main patterns: (1) Two-string problems (LCS, edit distance): dp[i][j] compares prefixes. (2) Single-string problems (palindrome, partitioning): dp[i][j] covers substring s[i..j]. Build bottom-up by gap length.' },
     ],
 
     commonMistakes: [
@@ -1883,6 +2015,15 @@ Grid DP problems are among the most common interview DP questions because they a
       { name: 'Longest Increasing Path in a Matrix', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is grid DP and what problems does it solve?', difficulty: 'Easy', answer: 'DP on a 2D grid where dp[i][j] represents the answer for cell (i,j). Common problems: unique paths, minimum path sum, maximal square, dungeon game. Typically O(mn) time and space, often optimizable to O(n) space since each row only depends on the previous row.' },
+      { question: 'How do you count unique paths in a grid?', difficulty: 'Easy', answer: 'dp[i][j] = dp[i-1][j] + dp[i][j-1] (can only come from above or left). Base: dp[0][j] = dp[i][0] = 1 (only one way to reach first row/column). With obstacles: dp[i][j] = 0 if obstacle. Answer: dp[m-1][n-1]. O(mn) time, O(n) space with 1D optimization.' },
+      { question: 'How do you find the minimum path sum from top-left to bottom-right?', difficulty: 'Easy', answer: 'dp[i][j] = grid[i][j] + min(dp[i-1][j], dp[i][j-1]). Base: dp[0][0] = grid[0][0], first row/column are cumulative sums. Can modify grid in-place for O(1) extra space. Greedy doesn\'t work because locally optimal choices don\'t guarantee globally optimal.' },
+      { question: 'How do you find the maximal square of 1s in a binary matrix?', difficulty: 'Medium', answer: 'dp[i][j] = side length of largest square with bottom-right at (i,j). If grid[i][j] == 1: dp[i][j] = min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) + 1. The min ensures all three adjacent squares exist. Track global max. Answer: max² for area. O(mn) time.' },
+      { question: 'How does the Dungeon Game use reverse grid DP?', difficulty: 'Hard', answer: 'Process from bottom-right to top-left. dp[i][j] = minimum HP needed at (i,j). dp[i][j] = max(1, min(dp[i+1][j], dp[i][j+1]) - dungeon[i][j]). Max with 1 ensures HP never drops below 1. Forward DP doesn\'t work because future rooms affect current HP requirement.' },
+    ],
+
     commonMistakes: [
       'Forgetting to handle obstacles: cells with obstacles should have dp value 0 (for counting) or infinity (for minimum)',
       'Incorrect boundary initialization: first row cells after an obstacle should also be 0 in path counting',
@@ -1968,6 +2109,15 @@ Segment trees appear in hard interview and competitive programming problems wher
       { name: 'Minimum Interval to Include Each Query', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is a segment tree and when is it used?', difficulty: 'Easy', answer: 'A binary tree where each node stores aggregate info (sum, min, max) for a range of the array. Supports range queries and point/range updates in O(log n). Used when both queries and updates are needed on the same array — prefix sums handle queries but not updates.' },
+      { question: 'How does a segment tree support range queries?', difficulty: 'Medium', answer: 'To query range [l,r]: start at root (covers full array). If node range is entirely within [l,r], return stored value. If entirely outside, return identity. If partial overlap, query both children and combine. At most O(log n) nodes visited per query.' },
+      { question: 'What is lazy propagation in segment trees?', difficulty: 'Hard', answer: 'For range updates (e.g., add X to all elements in [l,r]): mark nodes as \'lazy\' instead of updating all leaves immediately. Propagate lazy values to children only when those children are accessed. Enables O(log n) range updates instead of O(n). Essential for range update + range query problems.' },
+      { question: 'What is the difference between a segment tree and a BIT (Fenwick Tree)?', difficulty: 'Medium', answer: 'BIT: simpler, O(log n) point update + prefix query. Segment tree: more flexible, supports any associative operation, range updates with lazy propagation, range min/max. BIT uses 1-indexed array (compact), segment tree uses 2-4× the array size. Use BIT when only prefix sums needed; segment tree for general range operations.' },
+      { question: 'How do you build a segment tree?', difficulty: 'Easy', answer: 'Array-based: tree has size 4n. Build recursively: leaf nodes store array values, internal nodes store aggregate of children. build(node, l, r): if l==r, tree[node] = arr[l]. Else split, build children, tree[node] = combine(left_child, right_child). O(n) build time.' },
+    ],
+
     commonMistakes: [
       'Allocating insufficient space for the tree array (need 4n, not 2n)',
       'Incorrect range splitting: mid = (left + right) / 2, left child covers [left, mid], right child covers [mid+1, right]',
@@ -2044,6 +2194,14 @@ Many interview problems ask you to find missing numbers, duplicate numbers, or c
       { name: 'Find Duplicate Number', difficulty: 'Medium' },
       { name: 'Find Corrupt Pair', difficulty: 'Medium' },
       { name: 'Smallest Missing Positive', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is the cyclic sort pattern?', difficulty: 'Easy', answer: 'For arrays containing elements in range [1,n] or [0,n-1], place each element at its correct index by swapping. After sorting, any index where arr[i] != i+1 identifies a missing or duplicate number. O(n) time, O(1) space. Each element is swapped at most once.' },
+      { question: 'How do you find the missing number using cyclic sort?', difficulty: 'Easy', answer: 'Place each number at index (number-1). After cyclic sort, scan for the first index where arr[i] != i+1 — that position\'s expected value is missing. Handles the range [1,n] in an array of size n-1 or n.' },
+      { question: 'How do you find all duplicates in [1,n] using cyclic sort?', difficulty: 'Medium', answer: 'Try to place each element at its correct index. If the target index already has the correct value and current position is different, current element is a duplicate. Collect all such elements. O(n) time, O(1) space (output excluded).' },
+      { question: 'When should you use cyclic sort vs hash set for missing/duplicate problems?', difficulty: 'Medium', answer: 'Cyclic sort: O(n) time, O(1) space, requires elements in [1,n] range. Hash set: O(n) time, O(n) space, works for any values. Cyclic sort is optimal when the range constraint exists. Hash set is more general but uses extra space.' },
     ],
 
     commonMistakes: [
@@ -2133,6 +2291,15 @@ Grid traversal problems are among the most common medium-difficulty interview qu
       { name: 'Pacific Atlantic Water Flow', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is the island pattern in grid problems?', difficulty: 'Easy', answer: 'Traverse a 2D grid finding connected components (islands). For each unvisited land cell, run DFS/BFS to mark all connected land cells as visited. Count of DFS/BFS calls = number of islands. O(m×n) time, O(m×n) space for visited array.' },
+      { question: 'How do you count the number of islands?', difficulty: 'Easy', answer: 'Iterate through grid. When you find a \'1\' (land), increment count and run DFS/BFS to mark all connected \'1\'s as visited (set to \'0\' or mark in visited array). Each cell is visited at most twice (once in scan, once in DFS). O(m×n).' },
+      { question: 'How do you find the maximum area island?', difficulty: 'Medium', answer: 'Same as counting islands but track area during each DFS/BFS. DFS returns 1 + sum of recursive calls to valid neighbors. Track global maximum across all DFS calls. O(m×n) time.' },
+      { question: 'How do you determine if an island is enclosed (surrounded by water)?', difficulty: 'Medium', answer: 'An island touching the grid boundary is NOT enclosed. Run DFS/BFS from all boundary land cells, mark them. Any remaining land cells are enclosed. Alternatively: during DFS, if you reach a boundary, the island is not enclosed.' },
+      { question: 'How do you count distinct islands (by shape)?', difficulty: 'Hard', answer: 'During DFS, record the relative path (sequence of directions: U/D/L/R and backtrack markers). Normalize the path string. Add to a hash set. The set size = number of distinct shapes. Must handle rotations/reflections if required (canonicalize shape).' },
+    ],
+
     commonMistakes: [
       'Forgetting to mark cells as visited before adding to the queue (BFS), causing duplicate processing and TLE',
       'Stack overflow with DFS on very large grids; consider iterative DFS or BFS for grids up to 10^3 x 10^3',
@@ -2211,6 +2378,14 @@ Palindrome problems are interview favorites because they elegantly demonstrate t
       { name: 'Palindromic Partitioning', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is the Longest Palindromic Subsequence (LPS)?', difficulty: 'Easy', answer: 'The longest subsequence of a string that reads the same forwards and backwards. dp[i][j] = LPS of s[i..j]. If s[i]==s[j]: dp[i][j] = dp[i+1][j-1] + 2. Else: max(dp[i+1][j], dp[i][j-1]). Build by increasing gap. O(n²) time and space.' },
+      { question: 'How is LPS related to LCS?', difficulty: 'Easy', answer: 'LPS(s) = LCS(s, reverse(s)). This reduces the problem to a known algorithm. Both approaches are O(n²) but the LCS reduction is conceptually simpler and reuses existing LCS code.' },
+      { question: 'How do you count palindromic subsequences?', difficulty: 'Medium', answer: 'dp[i][j] = number of palindromic subsequences in s[i..j]. If s[i]==s[j]: dp[i][j] = dp[i+1][j] + dp[i][j-1] + 1. Else: dp[i][j] = dp[i+1][j] + dp[i][j-1] - dp[i+1][j-1]. The subtraction avoids double-counting. Handle modular arithmetic for large counts.' },
+      { question: 'How do you find the minimum insertions to make a string a palindrome?', difficulty: 'Medium', answer: 'Min insertions = n - LPS(s). The LPS characters are already palindromic; the remaining n-LPS characters each need one insertion to form a mirror. Alternatively, dp[i][j] = min insertions for s[i..j]. If s[i]==s[j]: dp[i+1][j-1]. Else: 1 + min(dp[i+1][j], dp[i][j-1]).' },
+    ],
+
     commonMistakes: [
       'Confusing subsequence (non-contiguous) with substring (contiguous) and using the wrong recurrence',
       'Filling the DP table in the wrong order: for interval DP, iterate by increasing length, not by increasing i',
@@ -2285,6 +2460,15 @@ Fibonacci-style DP problems are the gentlest introduction to dynamic programming
       { name: 'Minimum Jumps to End', difficulty: 'Medium' },
       { name: 'House Thief / Robber', difficulty: 'Medium' },
       { name: 'Jump Game with Fee', difficulty: 'Medium' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is the Fibonacci DP pattern?', difficulty: 'Easy', answer: 'Problems where the current state depends on a fixed number of previous states: dp[i] = f(dp[i-1], dp[i-2], ...). Fibonacci is the simplest: dp[i] = dp[i-1] + dp[i-2]. Generalizes to climbing stairs, house robber, decode ways. Key: recognize the recurrence structure.' },
+      { question: 'How does \'Climbing Stairs\' reduce to Fibonacci?', difficulty: 'Easy', answer: 'At step i, you can reach it from step i-1 (1 step) or i-2 (2 steps). So dp[i] = dp[i-1] + dp[i-2] = Fibonacci sequence. Base: dp[1]=1, dp[2]=2. O(n) time, O(1) space with two variables.' },
+      { question: 'How does House Robber use the Fibonacci pattern?', difficulty: 'Medium', answer: 'At each house, choose to rob (get value + dp[i-2]) or skip (dp[i-1]). dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Same structure as Fibonacci but with max instead of sum. O(n) time, O(1) space.' },
+      { question: 'How do you handle circular dependencies (House Robber II)?', difficulty: 'Medium', answer: 'Can\'t rob both first and last house. Solve twice: (1) houses [0, n-2] (skip last). (2) houses [1, n-1] (skip first). Answer = max of both runs. Reduces circular problem to two linear problems.' },
+      { question: 'What is the matrix exponentiation trick for Fibonacci?', difficulty: 'Hard', answer: 'Express Fibonacci as matrix multiplication: [F(n+1), F(n)] = [[1,1],[1,0]]^n × [F(1), F(0)]. Compute matrix power via repeated squaring in O(log n). Used when n is extremely large (10^18) and modular arithmetic is needed.' },
     ],
 
     commonMistakes: [
@@ -2362,6 +2546,14 @@ A category of interview problems requires maintaining a dynamically changing col
       { name: 'Merge Similar Items', difficulty: 'Easy' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What is an ordered set and when do you use it?', difficulty: 'Easy', answer: 'A data structure that maintains elements in sorted order with O(log n) insert, delete, and lookup. Also supports predecessor/successor queries. Implemented as balanced BST (TreeSet in Java, SortedSet in Python via sortedcontainers). Used when you need both fast lookup AND sorted order.' },
+      { question: 'How does an ordered set differ from a hash set?', difficulty: 'Easy', answer: 'Hash set: O(1) average for add/remove/contains, but NO ordering — cannot find next greater, range queries, or min/max. Ordered set: O(log n) for all operations, but supports floor/ceiling, range queries, iteration in sorted order. Choose based on whether ordering matters.' },
+      { question: 'When should you use SortedList (Python) vs heapq?', difficulty: 'Medium', answer: 'SortedList: O(log n) insert, O(log n) removal by value, O(1) access by index, O(log n) bisect. heapq: O(log n) push, O(log n) pop-min, but O(n) removal by value, no random access. Use SortedList when you need arbitrary removal or index access; heapq for simple min/max priority.' },
+      { question: 'How do you solve sliding window problems with an ordered set?', difficulty: 'Hard', answer: 'For \'Longest Subarray with Absolute Diff <= Limit\': use SortedList for the window. On each step: add new element (O(log n)), check if max-min > limit (O(1) via first/last). If violated, remove leftmost element (O(log n)), shrink window. Total: O(n log n) vs O(n) with monotonic deques.' },
+    ],
+
     commonMistakes: [
       'Using a hash set when sorted order is needed, then sorting repeatedly (O(n log n) per operation instead of O(log n))',
       'Forgetting that Python does not have a built-in TreeSet; you need sortedcontainers.SortedList or bisect with a list',
@@ -2436,6 +2628,14 @@ Concurrency questions are increasingly common at top tech companies, especially 
       { name: 'Building H2O', difficulty: 'Medium' },
       { name: 'Dining Philosophers', difficulty: 'Medium' },
       { name: 'Web Crawler Multithreaded', difficulty: 'Medium' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What common concurrency problems appear in coding interviews?', difficulty: 'Easy', answer: 'Print in Order (enforce thread execution sequence), Print FooBar Alternately (alternating thread output), Dining Philosophers (deadlock avoidance), Building H2O (resource coordination), Web Crawler Multithreaded (parallel BFS). Test understanding of locks, semaphores, condition variables.' },
+      { question: 'How do you implement \'Print in Order\' with three threads?', difficulty: 'Easy', answer: 'Use two semaphores (or barriers). Thread 1 runs first(), signals semaphore1. Thread 2 waits on semaphore1, runs second(), signals semaphore2. Thread 3 waits on semaphore2, runs third(). Ensures sequential execution regardless of scheduling order.' },
+      { question: 'What is the producer-consumer problem?', difficulty: 'Medium', answer: 'Producers add items to a bounded buffer, consumers remove them. Use mutex for buffer access + two semaphores: \'empty\' (counts free slots, producer waits when 0) and \'full\' (counts available items, consumer waits when 0). Classic coordination pattern used in thread pools and message queues.' },
+      { question: 'How do you avoid deadlock in the Dining Philosophers problem?', difficulty: 'Hard', answer: 'Five philosophers need two forks each. Deadlock: all grab left fork simultaneously. Solutions: (1) Odd philosophers grab left first, even grab right first. (2) Allow at most 4 philosophers to sit simultaneously. (3) Use a global mutex (reduces concurrency). (4) Resource hierarchy: always grab lower-numbered fork first.' },
     ],
 
     commonMistakes: [
@@ -2517,6 +2717,14 @@ Design-a-data-structure problems are extremely popular in interviews at FAANG co
       { name: 'Insert Delete GetRandom O(1)', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What custom data structures are commonly asked in interviews?', difficulty: 'Easy', answer: 'LRU Cache (HashMap + DoublyLinkedList), LFU Cache (HashMap + FrequencyBuckets), MaxStack (Stack + TreeMap), RandomizedSet (Array + HashMap), Trie (prefix tree), Skip List (probabilistic balanced structure).' },
+      { question: 'How do you implement a Trie (prefix tree)?', difficulty: 'Medium', answer: 'Each node has a map of children (char → TrieNode) and an isEnd flag. Insert: traverse/create nodes for each character. Search: traverse nodes, return node.isEnd. StartsWith: traverse nodes, return true if path exists. O(L) per operation where L = word length.' },
+      { question: 'How do you design a skip list?', difficulty: 'Hard', answer: 'A probabilistic data structure with O(log n) expected search, insert, delete. Multiple layers of linked lists. Bottom layer has all elements. Each element promoted to next layer with probability 1/2. Search starts from top-left, moves right or down. Used in Redis sorted sets and MemTable.' },
+      { question: 'How do you implement a MaxStack supporting pushMax and popMax?', difficulty: 'Hard', answer: 'Stack + TreeMap (sorted multiset). push: add to stack and TreeMap. pop: remove top from stack and TreeMap. top: return stack top. peekMax: TreeMap last key. popMax: find max in TreeMap, remove from TreeMap, lazily mark in stack. O(log n) for max operations.' },
+    ],
+
     commonMistakes: [
       'Not maintaining consistency between the hash map and linked list after insertions/deletions in LRU Cache',
       'Forgetting to handle the edge case of updating an existing key in put() for LRU Cache',
@@ -2596,6 +2804,14 @@ A large class of string and array problems -- including anagram detection, permu
       { name: 'Valid Sudoku', difficulty: 'Medium' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'What does \'knowing what to track\' mean in algorithm design?', difficulty: 'Easy', answer: 'Identify the minimal state needed to make decisions at each step. Instead of tracking everything, distill the problem into key variables. Examples: running max/min, frequency count, balance counter (parentheses), prefix XOR. Reduces brute force O(n²) to O(n) by maintaining just the right information.' },
+      { question: 'How does frequency counting solve \'first unique character\'?', difficulty: 'Easy', answer: 'First pass: count frequency of each character in a hash map. Second pass: return the first character with frequency 1. O(n) time, O(1) space (alphabet is fixed at 26). The insight is tracking counts rather than comparing all pairs.' },
+      { question: 'How does tracking balance solve parentheses problems?', difficulty: 'Medium', answer: 'Maintain a counter: increment on \'(\', decrement on \')\'. If counter goes negative, there is an unmatched \')\'. If counter is not 0 at end, there is an unmatched \'(\'. For minimum removals: track both excess open and excess close counts independently.' },
+      { question: 'How does XOR tracking help find the single non-duplicate element?', difficulty: 'Medium', answer: 'XOR of all elements cancels out pairs (a XOR a = 0). The result is the single unique element. For \'two unique elements\': XOR all to get a XOR b. Find a set bit (differentiating bit). Partition elements by that bit, XOR each group separately to recover a and b.' },
+    ],
+
     commonMistakes: [
       'Comparing entire frequency maps at every step instead of maintaining an incremental matched count',
       'Off-by-one in the sliding window: the window size for anagrams should be exactly len(pattern)',
@@ -2671,6 +2887,14 @@ While Island Traversal problems only need reachability (DFS or BFS both work), M
       { name: 'Shortest Path in Binary Matrix', difficulty: 'Medium' },
       { name: 'Nearest Exit', difficulty: 'Medium' },
       { name: 'Rotting Oranges', difficulty: 'Medium' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'How do you represent a graph as a matrix vs adjacency list?', difficulty: 'Easy', answer: 'Matrix: grid[i][j] = edge weight, O(V²) space. Good for dense graphs. Adjacency list: list of (neighbor, weight) per node, O(V+E) space. Good for sparse graphs (most real-world graphs). Matrix has O(1) edge lookup but wastes space for sparse graphs.' },
+      { question: 'How do you perform BFS/DFS on a grid (implicit graph)?', difficulty: 'Easy', answer: 'Each cell is a node. Neighbors are adjacent cells (4-directional or 8-directional). BFS: use queue, visit cells level by level. DFS: use stack or recursion. Mark visited cells to avoid cycles. Grid BFS finds shortest path in unweighted grids.' },
+      { question: 'How do you find the shortest path in a grid with obstacles?', difficulty: 'Medium', answer: 'BFS from source, skip obstacle cells. BFS guarantees shortest path in unweighted grids. For weighted grids (different movement costs), use Dijkstra with a priority queue. For grids with teleportation or special moves, model as a graph with additional edges.' },
+      { question: 'How do multi-source BFS problems work?', difficulty: 'Medium', answer: 'Start BFS from ALL sources simultaneously (add all to queue initially). Explores outward from all sources in parallel. Each cell records distance to nearest source. Used in: \'01 Matrix\' (distance to nearest 0), \'Rotting Oranges\' (time for all oranges to rot).' },
     ],
 
     commonMistakes: [
@@ -2750,6 +2974,14 @@ Weighted graph shortest path problems are a staple of technical interviews, espe
       { name: 'Swim in Rising Water', difficulty: 'Hard' },
     ],
 
+
+    theoryQuestions: [
+      { question: 'When should you use BFS vs Dijkstra vs Bellman-Ford?', difficulty: 'Easy', answer: 'BFS: unweighted graphs, O(V+E). Dijkstra: weighted with non-negative edges, O((V+E) log V). Bellman-Ford: handles negative weights, O(VE). Use BFS first if weights are uniform, Dijkstra for weighted positive, Bellman-Ford only if negative weights exist.' },
+      { question: 'How does Dijkstra\'s algorithm with a priority queue work?', difficulty: 'Medium', answer: 'Min-heap of (distance, node). Extract min, relax neighbors. If new distance < known distance, update and push to heap. Skip nodes already finalized (or use visited set). Each node extracted once, each edge relaxed once. O((V+E) log V).' },
+      { question: 'What is the 0-1 BFS technique?', difficulty: 'Medium', answer: 'For graphs with edge weights 0 or 1 only. Use a deque: push weight-0 edges to front, weight-1 edges to back. This maintains sorted order without a heap, giving O(V+E) instead of Dijkstra\'s O((V+E) log V). Common in grid problems with free vs cost moves.' },
+      { question: 'How does Floyd-Warshall compute all-pairs shortest paths?', difficulty: 'Hard', answer: 'dp[k][i][j] = shortest path from i to j using only nodes 0..k as intermediates. dp[k][i][j] = min(dp[k-1][i][j], dp[k-1][i][k] + dp[k-1][k][j]). Can optimize to 2D since we only need previous k. O(V³) time, O(V²) space. Detects negative cycles if dp[i][i] < 0.' },
+    ],
+
     commonMistakes: [
       'Using Dijkstra on graphs with negative edge weights, which produces incorrect results',
       'Not handling the stale entry problem in Dijkstra: when you pop a node whose distance is already worse than the known shortest, skip it',
@@ -2826,6 +3058,14 @@ MST problems test your understanding of greedy algorithms and graph structure. W
       { name: 'Connecting Cities With Minimum Cost', difficulty: 'Medium' },
       { name: 'Find Critical Edges in MST', difficulty: 'Hard' },
       { name: 'Optimize Water Distribution', difficulty: 'Hard' },
+    ],
+
+
+    theoryQuestions: [
+      { question: 'What is a Minimum Spanning Tree and when is it needed?', difficulty: 'Easy', answer: 'An MST connects all vertices with minimum total edge weight, using exactly V-1 edges. Used for network design (minimum cable to connect cities), clustering (remove longest MST edges to get K clusters), approximation algorithms for NP-hard problems (e.g., TSP).' },
+      { question: 'How does Kruskal\'s algorithm work?', difficulty: 'Medium', answer: 'Sort edges by weight. Process in order: add edge to MST if it doesn\'t create a cycle (check via Union-Find). Stop when V-1 edges added. O(E log E + E × α(V)) ≈ O(E log E). Best for sparse graphs where E is small relative to V².' },
+      { question: 'How does Prim\'s algorithm work?', difficulty: 'Medium', answer: 'Start from any vertex. Use min-heap of (weight, vertex) for edges crossing the cut. Extract min, add to MST, push all edges from new vertex. Skip already-included vertices. O((V+E) log V) with binary heap. Best for dense graphs.' },
+      { question: 'When should you use Kruskal\'s vs Prim\'s?', difficulty: 'Medium', answer: 'Kruskal\'s: better for sparse graphs (E << V²), uses Union-Find, processes edges globally. Prim\'s: better for dense graphs (E ≈ V²), uses heap, grows MST from a starting vertex. Both produce optimal MST. Kruskal\'s is simpler to implement; Prim\'s integrates better with adjacency lists.' },
     ],
 
     commonMistakes: [
