@@ -92,66 +92,57 @@ function CapacityPlanningGrid({ estimation }) {
           <span className="font-semibold text-[var(--text-secondary)]">Assumptions:</span> {estimation.assumptions}
         </div>
       )}
-      <div className="p-3 flex flex-col lg:flex-row gap-4">
-        {/* Table */}
-        <div className="flex-1 min-w-0">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-[var(--bg-elevated)]/70">
-                <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Value</th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell">Calculation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} className="hover:bg-[var(--bg-elevated)]/30 transition-colors">
-                  <td className="px-3 py-2.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
-                  <td className="px-3 py-2.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)]">{row.value}</td>
-                  <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden lg:table-cell">{row.detail}</td>
+      {(() => {
+        const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6'];
+        const parseNum = (v) => {
+          const s = String(v).replace(/[~,+]/g, '');
+          const m = s.match(/([\d.]+)\s*(B|Billion|M|K|PB|TB|GB|Gbps)?/i);
+          if (!m) return 0;
+          const n = parseFloat(m[1]);
+          const u = (m[2] || '').toLowerCase();
+          if (u === 'b' || u === 'billion') return n * 1e9;
+          if (u === 'm') return n * 1e6;
+          if (u === 'k') return n * 1e3;
+          if (u === 'pb') return n * 1e15;
+          if (u === 'tb') return n * 1e12;
+          if (u === 'gb' || u === 'gbps') return n * 1e9;
+          return n;
+        };
+        const nums = rows.map(r => parseNum(r.value));
+        const maxNum = Math.max(...nums.filter(n => n > 0));
+        return (
+          <div className="p-3">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-[var(--bg-elevated)]/70">
+                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
+                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display w-[100px]">Value</th>
+                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell w-[180px]">Scale</th>
+                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden md:table-cell">Calculation</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Visual chart — shown on lg+ */}
-        <div className="hidden lg:flex flex-col gap-2 w-[280px] flex-shrink-0 p-3 rounded-xl bg-[var(--bg-elevated)]/50 border border-[var(--border)]">
-          <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest landing-mono mb-1">Scale Overview</h4>
-          {(() => {
-            const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6'];
-            const chartRows = rows.slice(0, 8);
-            const parseNum = (v) => {
-              const s = String(v).replace(/[~,+]/g, '');
-              const m = s.match(/([\d.]+)\s*(B|Billion|M|K|PB|TB|GB|Gbps)?/i);
-              if (!m) return 0;
-              const n = parseFloat(m[1]);
-              const u = (m[2] || '').toLowerCase();
-              if (u === 'b' || u === 'billion') return n * 1e9;
-              if (u === 'm') return n * 1e6;
-              if (u === 'k') return n * 1e3;
-              if (u === 'pb') return n * 1e15;
-              if (u === 'tb') return n * 1e12;
-              if (u === 'gb' || u === 'gbps') return n * 1e9;
-              return n;
-            };
-            const nums = chartRows.map(r => parseNum(r.value));
-            const maxNum = Math.max(...nums.filter(n => n > 0));
-            return chartRows.map((row, i) => {
-              const pct = maxNum > 0 ? Math.max(3, (Math.log10(nums[i] + 1) / Math.log10(maxNum + 1)) * 100) : 3;
-              const color = CHART_COLORS[i % CHART_COLORS.length];
-              return (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-[9px] text-[var(--text-muted)] landing-mono w-[90px] flex-shrink-0 truncate text-right" title={row.metric}>{row.metric}</span>
-                  <div className="flex-1 h-4 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}60, ${color})` }} />
-                  </div>
-                  <span className="text-[9px] font-bold text-[var(--text-secondary)] landing-mono w-[60px] flex-shrink-0">{row.value}</span>
-                </div>
-              );
-            });
-          })()}
-        </div>
-      </div>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => {
+                  const pct = maxNum > 0 ? Math.max(4, (Math.log10(nums[i] + 1) / Math.log10(maxNum + 1)) * 100) : 4;
+                  const color = CHART_COLORS[i % CHART_COLORS.length];
+                  return (
+                    <tr key={i} className="hover:bg-[var(--bg-elevated)]/30 transition-colors">
+                      <td className="px-3 py-2.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
+                      <td className="px-3 py-2.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)] whitespace-nowrap">{row.value}</td>
+                      <td className="px-3 py-2.5 border-b border-[var(--border)] hidden lg:table-cell">
+                        <div className="h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}50, ${color})` }} />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden md:table-cell">{row.detail}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
     </div>
   );
 }
