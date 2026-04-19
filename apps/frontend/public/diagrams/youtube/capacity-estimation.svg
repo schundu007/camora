@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCE" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#991b1b"/></linearGradient>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCE)" rx="16"/>
+
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Upload Pipeline -->
+  <rect x="20" y="80" width="280" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)"/>
+  <rect x="20" y="80" width="280" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="160" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">📤 Upload Pipeline</text>
+
+  <text x="45" y="140" fill="#fbbf24" font-size="13" font-weight="700">500 hours uploaded/minute</text>
+  <text x="160" y="162" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="45" y="185" fill="white" font-size="12">Per day:</text>
+  <text x="45" y="205" fill="#fbbf24" font-size="15" font-weight="700">720,000 hours/day</text>
+  <text x="160" y="227" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="45" y="248" fill="white" font-size="12">Raw storage (~1 GB/hour):</text>
+  <text x="45" y="268" fill="#fbbf24" font-size="16" font-weight="800">720 TB/day</text>
+  <text x="160" y="290" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="45" y="310" fill="white" font-size="12">Transcoded (5 resolutions):</text>
+  <text x="45" y="332" fill="#f97316" font-size="18" font-weight="800">3.6 PB/day</text>
+  <text x="160" y="355" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="45" y="378" fill="white" font-size="12">Monthly storage growth:</text>
+  <text x="45" y="400" fill="#f97316" font-size="20" font-weight="800">~108 PB/month</text>
+  <text x="160" y="425" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="45" y="448" fill="white" font-size="11">Transcoding GPU-hours/day:</text>
+  <text x="45" y="470" fill="#fbbf24" font-size="14" font-weight="700">1.4M GPU-hours</text>
+  <text x="45" y="490" fill="rgba(255,255,255,0.5)" font-size="10">720K hrs × 2x realtime = 1.4M GPU-hrs</text>
+
+  <!-- Column 2: Streaming Delivery -->
+  <rect x="320" y="80" width="280" height="340" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)"/>
+  <rect x="320" y="80" width="280" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="460" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">▶️ Streaming Delivery</text>
+
+  <text x="345" y="140" fill="#fbbf24" font-size="13" font-weight="700">1 Billion hours watched/day</text>
+  <text x="460" y="162" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="345" y="185" fill="white" font-size="12">Average concurrent streams:</text>
+  <text x="345" y="205" fill="rgba(255,255,255,0.7)" font-size="10">1B hrs ÷ 24 hrs</text>
+  <text x="345" y="225" fill="#fbbf24" font-size="15" font-weight="700">~41.7M simultaneous</text>
+  <text x="460" y="248" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="345" y="270" fill="white" font-size="12">Average bandwidth (5 Mbps):</text>
+  <text x="345" y="292" fill="#fbbf24" font-size="16" font-weight="800">~58 Tbps average</text>
+  <text x="460" y="315" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="345" y="338" fill="white" font-size="11">Peak bandwidth (3× average):</text>
+  <text x="345" y="360" fill="#f97316" font-size="20" font-weight="800">~175 Tbps peak</text>
+  <text x="345" y="385" fill="rgba(255,255,255,0.5)" font-size="10">Distributed across 100+ CDN PoPs</text>
+
+  <!-- Column 3: Engagement -->
+  <rect x="620" y="80" width="270" height="340" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)"/>
+  <rect x="620" y="80" width="270" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="755" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">👆 Engagement</text>
+
+  <text x="645" y="140" fill="white" font-size="12">Daily video views:</text>
+  <text x="645" y="162" fill="#fbbf24" font-size="16" font-weight="800">5 Billion/day</text>
+  <text x="755" y="185" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="645" y="208" fill="white" font-size="12">View count writes/sec:</text>
+  <text x="645" y="228" fill="rgba(255,255,255,0.7)" font-size="10">5B ÷ 86,400s</text>
+  <text x="645" y="250" fill="#fbbf24" font-size="16" font-weight="800">~58K writes/sec</text>
+  <text x="755" y="275" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="645" y="298" fill="white" font-size="12">Shorts daily views:</text>
+  <text x="645" y="320" fill="#f97316" font-size="18" font-weight="800">200 Billion</text>
+  <text x="645" y="345" fill="white" font-size="11">Shorts view write QPS:</text>
+  <text x="645" y="367" fill="#fbbf24" font-size="14" font-weight="700">~2.3M writes/sec</text>
+
+  <!-- Column 4: Recommendations -->
+  <rect x="910" y="80" width="270" height="340" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)"/>
+  <rect x="910" y="80" width="270" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="1045" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">🤖 Recommendations</text>
+
+  <text x="935" y="140" fill="white" font-size="12">Daily active users:</text>
+  <text x="935" y="162" fill="#fbbf24" font-size="16" font-weight="800">122 Million</text>
+  <text x="1045" y="185" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="935" y="208" fill="white" font-size="12">Avg page loads/user/day:</text>
+  <text x="935" y="228" fill="#fbbf24" font-size="15" font-weight="700">~10 loads</text>
+  <text x="1045" y="250" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="16">↓</text>
+  <text x="935" y="273" fill="white" font-size="12">Recommendation QPS:</text>
+  <text x="935" y="293" fill="rgba(255,255,255,0.7)" font-size="10">122M × 10 ÷ 86,400s</text>
+  <text x="935" y="315" fill="#f97316" font-size="18" font-weight="800">~1.4M QPS</text>
+  <text x="935" y="345" fill="white" font-size="11">Each request: score 1000 videos</text>
+  <text x="935" y="365" fill="white" font-size="11">in &lt;200ms latency budget</text>
+  <text x="935" y="390" fill="rgba(255,255,255,0.5)" font-size="10">Drives 70%+ of all watch time</text>
+
+  <!-- Bottom summary -->
+  <rect x="20" y="500" width="1160" height="36" rx="8" fill="rgba(251,191,36,0.12)" stroke="rgba(251,191,36,0.3)"/>
+  <text x="600" y="523" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="600">Summary: 3.6 PB/day new storage • 175 Tbps peak CDN • 58K view writes/sec • 1.4M rec QPS • 1.4M GPU-hours/day</text>
+</svg>
