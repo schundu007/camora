@@ -1547,55 +1547,53 @@ export default function TopicDetail({
           {/* Comprehensive System Design / LLD Problem Content */}
           {(topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.introduction || topicDetails.concepts) && (
             <>
-              {/* Introduction + Key Concepts — side by side */}
-              {(topicDetails.introduction || (topicDetails.concepts && !topicDetails.introduction)) && (
-                <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.concepts ? '' : 'grid-cols-1'}`}>
-                  {topicDetails.introduction && (
-                    <div id="overview" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
-                      <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
-                        <Icon name="book" size={14} className="text-white" />
-                        <h2 className="text-sm font-bold text-white landing-display">Introduction</h2>
-                      </div>
-                      <div className="p-5">
-                        <div className="text-[var(--text-secondary)] text-[15px] leading-relaxed landing-body">
-                          <FormattedContent content={topicDetails.introduction} color="blue" />
+              {/* 1. Introduction — full width */}
+              {topicDetails.introduction && (
+                <div id="overview" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
+                  <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                    <Icon name="book" size={14} className="text-white" />
+                    <h2 className="text-sm font-bold text-white landing-display">Introduction</h2>
+                  </div>
+                  <div className="p-5">
+                    <div className="text-[var(--text-secondary)] text-[15px] leading-relaxed landing-body">
+                      <FormattedContent content={topicDetails.introduction} color="blue" />
+                    </div>
+                    {/* Key challenge callout */}
+                    {topicDetails.introduction && (
+                      <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Icon name="lightbulb" size={16} className="text-[var(--text-secondary)]" />
                         </div>
-                        {/* Key challenge callout */}
-                        {topicDetails.introduction && (
-                          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
-                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <Icon name="lightbulb" size={16} className="text-[var(--text-secondary)]" />
-                            </div>
-                            <div>
-                              <span className="text-xs font-bold text-[var(--text-primary)] landing-display uppercase tracking-wider">Key Challenge</span>
-                              <p className="text-sm text-[var(--text-primary)]/80 mt-0.5 leading-relaxed landing-body">
-                                {topicDetails.introduction.split('.').filter(s => s.trim().length > 20).slice(-2, -1)[0]?.trim() || topicDetails.introduction.split('.').slice(0, 1)[0]?.trim()}.
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                        <div>
+                          <span className="text-xs font-bold text-[var(--text-primary)] landing-display uppercase tracking-wider">Key Challenge</span>
+                          <p className="text-sm text-[var(--text-primary)]/80 mt-0.5 leading-relaxed landing-body">
+                            {topicDetails.introduction.split('.').filter(s => s.trim().length > 20).slice(-2, -1)[0]?.trim() || topicDetails.introduction.split('.').slice(0, 1)[0]?.trim()}.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {topicDetails.concepts && (
-                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
-                        <Icon name="puzzle" size={14} className="text-white" />
-                        <h2 className="text-sm font-bold text-white landing-display">Key Concepts</h2>
-                      </div>
-                      <div className="p-3 flex flex-wrap gap-1.5">
-                        {topicDetails.concepts.map((concept, i) => (
-                          <span key={i} className="px-2.5 py-1.5 rounded-lg text-xs landing-mono font-medium" style={{ background: `${topicDetails.color}12`, color: topicDetails.color, border: `1px solid ${topicDetails.color}20` }}>
-                            {concept}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* Requirements - Functional & Non-Functional — side-by-side grid */}
+              {/* 2. Key Concepts — separate card below introduction */}
+              {topicDetails.concepts && !topicDetails.concepts[0]?.name && (
+                <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
+                    <Icon name="puzzle" size={14} className="text-white" />
+                    <h2 className="text-sm font-bold text-white landing-display">Key Concepts</h2>
+                  </div>
+                  <div className="p-3 flex flex-wrap gap-1.5">
+                    {topicDetails.concepts.map((concept, i) => (
+                      <span key={i} className="px-2.5 py-1.5 rounded-lg text-xs landing-mono font-medium" style={{ background: `${topicDetails.color}12`, color: topicDetails.color, border: `1px solid ${topicDetails.color}20` }}>
+                        {concept}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Requirements - Functional & Non-Functional — side-by-side grid */}
               {(topicDetails.functionalRequirements || topicDetails.requirements || topicDetails.nonFunctionalRequirements) && (
               <div id="requirements" className={`grid gap-2 scroll-mt-24 ${(topicDetails.functionalRequirements || topicDetails.requirements) && topicDetails.nonFunctionalRequirements ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                 {/* Functional Requirements */}
@@ -1657,127 +1655,149 @@ export default function TopicDetail({
               </div>
               )}
 
-              {/* API Design + Data Model — side by side */}
-              {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
-                <div className="space-y-3 scroll-mt-24">
-                  {/* API Design — educational endpoint cards with params + response */}
-                  {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
-                    <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                      <div className="bg-[var(--accent)] px-4 py-2 flex items-center gap-2">
-                        <Icon name="code" size={14} className="text-white" />
-                        <h3 className="text-sm font-bold text-white landing-display">API Design</h3>
-                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
-                      </div>
-                      {topicDetails.apiDesign.description && (
-                        <div className="px-4 py-2 text-xs text-[var(--text-secondary)] leading-relaxed border-b border-[var(--border)]" style={{ fontFamily: 'var(--font-sans)' }}>
-                          {topicDetails.apiDesign.description}
-                        </div>
-                      )}
-                      <div className="p-3">
-                        <div className="grid grid-cols-1 gap-2.5">
-                          {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
-                            <div key={i} className="rounded-xl border border-[var(--border)] overflow-hidden">
-                              {/* Method + Path header */}
-                              <div className="flex items-center gap-2.5 px-3.5 py-2.5" style={{ background: 'var(--bg-surface)' }}>
-                                <span className={`text-[10px] landing-mono px-2 py-0.5 rounded font-bold uppercase ${
-                                  endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' :
-                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-amber-50 text-amber-700' :
-                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' || endpoint.method === 'PATCH' ? 'bg-purple-50 text-purple-700' :
-                                  'bg-red-50 text-red-600'
-                                }`}>{endpoint.method}</span>
-                                <code className="text-[var(--text-primary)] landing-mono text-[13px] font-semibold">{endpoint.path}</code>
-                              </div>
-                              {/* Body — description, params, response */}
-                              <div className="px-3.5 py-2.5 space-y-2">
-                                {endpoint.description && (
-                                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed" style={{ fontFamily: 'var(--font-sans)' }}>{endpoint.description}</p>
-                                )}
-                                {endpoint.params && (
-                                  <div>
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)] landing-mono">Parameters</span>
-                                    <div className="mt-1 rounded bg-[var(--bg-elevated)] border border-[var(--border)] px-2.5 py-1.5">
-                                      <code className="text-[11px] landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.params}</code>
-                                    </div>
-                                  </div>
-                                )}
-                                {endpoint.response && (
-                                  <div>
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)] landing-mono">Response</span>
-                                    <div className="mt-1 rounded bg-[var(--bg-elevated)] border border-[var(--border)] px-2.5 py-1.5">
-                                      <code className="text-[11px] landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              {/* 4. Back-of-Envelope Estimation / Capacity Planning */}
+              {topicDetails.estimation && (
+                <CapacityPlanningGrid estimation={topicDetails.estimation} />
+              )}
 
-                  {/* Data Model — structured schema with description */}
-                  {topicDetails.dataModel && (
-                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="bg-[var(--accent)] px-4 py-2 flex items-center gap-2">
-                        <Icon name="database" size={14} className="text-white" />
-                        <h3 className="text-sm font-bold text-white landing-display">Data Model</h3>
-                      </div>
-                      {topicDetails.dataModel.description && (
-                        <div className="px-4 py-2 text-xs text-[var(--text-secondary)] leading-relaxed border-b border-[var(--border)]" style={{ fontFamily: 'var(--font-sans)' }}>
-                          {topicDetails.dataModel.description}
-                        </div>
-                      )}
-                      <DataModelSection schema={topicDetails.dataModel.schema} />
+              {/* 5. Cloud Architecture Diagram — full width */}
+              {isSDStyle && topicDetails && (
+                <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="layers" size={14} className="text-white" />
+                      <h3 className="text-sm font-bold text-white landing-display">Architecture Diagram</h3>
                     </div>
-                  )}
+                    <div className="flex items-center gap-2">
+                      {/* Cloud Provider Selector */}
+                      <div className="flex items-center gap-1 mr-2 px-1 py-0.5 rounded-lg bg-[var(--bg-elevated)]">
+                        {[
+                          { id: 'aws', label: 'AWS', color: '#ff9900' },
+                          { id: 'gcp', label: 'GCP', color: '#4285f4' },
+                          { id: 'azure', label: 'Azure', color: '#0078d4' },
+                        ].map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              setDiagramCloudProvider(p.id);
+                              generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, p.id);
+                            }}
+                            className="px-2 py-0.5 text-xs font-medium rounded transition-all landing-mono"
+                            style={{
+                              background: diagramCloudProvider === p.id ? `${p.color}30` : 'transparent',
+                              color: diagramCloudProvider === p.id ? p.color : '#9ca3af',
+                              border: diagramCloudProvider === p.id ? `1px solid ${p.color}50` : '1px solid transparent',
+                            }}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Admin-only: Regenerate controls */}
+                    {isAdmin && (
+                      <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[var(--border)]">
+                        <button
+                          onClick={() => handleAdminRegen('python')}
+                          className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--accent)]/15 hover:text-[var(--accent)] transition-colors border border-[var(--border)]"
+                          title="Regenerate using Python diagrams library"
+                        >
+                          Python
+                        </button>
+                        <button
+                          onClick={() => handleAdminRegen('eraser')}
+                          className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-blue-100 hover:text-blue-700 transition-colors border border-[var(--border)]"
+                          title="Regenerate using Eraser.io API"
+                        >
+                          Eraser
+                        </button>
+                        {adminRegenStatus && (
+                          <span className="text-[10px] font-mono font-bold" style={{ color: adminRegenStatus.includes('done') ? 'var(--success)' : adminRegenStatus.includes('fail') ? 'var(--danger)' : 'var(--text-primary)' }}>{adminRegenStatus}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    {/* Show pre-generated static diagram if available, otherwise fall back to API */}
+                    {(() => {
+                      const staticSrc = `/diagrams/${selectedTopic}/eraser-${diagramCloudProvider}.png`;
+                      return (
+                        <StaticCloudDiagram
+                          topicId={selectedTopic}
+                          provider={diagramCloudProvider}
+                          staticSrc={staticSrc}
+                          diagramData={diagramData}
+                          generatingDiagram={generatingDiagram}
+                          diagramError={diagramError}
+                          onGenerate={() => generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, diagramCloudProvider)}
+                        />
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
 
-              {/* Key Questions — Accordion style */}
-              {topicDetails.keyQuestions && (
-                <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2">
-                    <Icon name="messageSquare" size={14} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Key Questions</h3>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.keyQuestions.length} topics</span>
-                    <button
-                      onClick={() => {
-                        if (sdAllQsExpanded) {
-                          setSdExpandedQs({});
-                        } else {
-                          const all = {};
-                          topicDetails.keyQuestions.forEach((_, i) => { all[i] = true; });
-                          setSdExpandedQs(all);
-                        }
-                        setSdAllQsExpanded(!sdAllQsExpanded);
-                      }}
-                      className="ml-auto text-[11px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
-                    >
-                      {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
-                      <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                    </button>
+              {/* 6. Architecture Layers + Layered Design */}
+              {topicDetails.architectureLayers && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Architecture Layers</h3>
                   </div>
-                  <div className="p-2.5 space-y-1.5">
-                    {topicDetails.keyQuestions.map((q, i) => {
-                      const isOpen = sdExpandedQs[i] || false;
+                  <div className="p-3 space-y-1.5">
+                    {topicDetails.architectureLayers.map((layer, i) => (
+                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
+                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
+                        <div>
+                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
+                          <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
+                            <FormattedContent content={layer.description} color="blue" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {topicDetails.layeredDesign && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Layered Design</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                  </div>
+                  <div className="p-2.5 space-y-0">
+                    {topicDetails.layeredDesign.map((layer, i) => {
+                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#60A5FA', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#2D8CFF'];
+                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
                       return (
-                        <div key={i} className={`rounded-xl overflow-hidden border transition-all ${isOpen ? 'border-[var(--accent)]/20 shadow-sm' : 'border-[var(--border)] hover:border-[var(--border-hover,var(--border))]'}`}>
-                          <button
-                            onClick={() => setSdExpandedQs(prev => ({ ...prev, [i]: !prev[i] }))}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-3 bg-white hover:bg-[var(--bg-elevated)] transition-colors text-left"
-                          >
-                            <span className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0 landing-mono">{i + 1}</span>
-                            <h4 className="text-[var(--text-primary)] font-semibold text-sm flex-1 landing-display leading-snug">{q.question}</h4>
-                            <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                          </button>
-                          {isOpen && (
-                            <div className="px-4 pb-4 pt-1 border-t border-[var(--border)]" style={{ borderLeft: '3px solid #2D8CFF' }}>
-                              <div className="pl-9 text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
-                                <FormattedContent content={q.answer} color="blue" />
-                              </div>
+                        <div key={i} className="relative">
+                          {i > 0 && (
+                            <div className="flex justify-center -my-1 z-10 relative">
+                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             </div>
                           )}
+                          <div className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border)] transition-all overflow-hidden">
+                            <div className="px-4 py-3">
+                              <div className="flex items-center gap-2.5 mb-1.5">
+                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>
+                                  L{i + 1}
+                                </span>
+                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
+                              </div>
+                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
+                              {layer.components && (
+                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
+                                  {layer.components.map((comp, j) => (
+                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>
+                                      {comp}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
@@ -1785,7 +1805,55 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* Basic + Advanced Implementation — Before/After comparison */}
+              {/* 7. API Design + Data Model — side by side */}
+              {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
+                <div className={`grid gap-3 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                  {/* API Design — Stripe-style endpoint cards */}
+                  {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
+                    <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
+                      <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2">
+                        <Icon name="code" size={14} className="text-white" />
+                        <h3 className="text-sm font-bold text-white landing-display">API Design</h3>
+                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
+                      </div>
+                      <div className="p-3">
+                        <div className="grid grid-cols-1 gap-2">
+                          {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
+                            <div key={i} className="rounded-xl p-3.5 border border-[var(--border)] hover:shadow-md hover:border-[var(--border-hover,var(--border))] hover:-translate-y-0.5 transition-all">
+                              <div className="flex items-center gap-2.5 mb-2">
+                                <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
+                                  endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20' :
+                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
+                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
+                                  'bg-red-500/10 text-red-400 border border-red-500/20'
+                                }`}>{endpoint.method}</span>
+                                <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
+                              </div>
+                              {endpoint.description && (
+                                <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed" style={{ fontFamily: "var(--font-sans)" }}>{endpoint.description}</p>
+                              )}
+                              <div className="hidden">
+                              </div>
+                              {endpoint.response && (
+                                <div className="rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-2 overflow-x-auto">
+                                  <code className="text-xs landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Data Model — structured schema presentation */}
+                  {topicDetails.dataModel && (
+                    <DataModelSection schema={topicDetails.dataModel.schema} />
+                  )}
+                </div>
+              )}
+
+              {/* 8. Basic + Advanced Implementation + Algorithm Approaches */}
               {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
                 <div id="architecture" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                   {/* Basic Implementation */}
@@ -1907,158 +1975,31 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* ── Visual Enhancements ── */}
-
-              {/* Static Architecture Diagrams (pre-generated SVGs) */}
-              {topicDetails.staticDiagrams && topicDetails.staticDiagrams.length > 0 && (
-                <StaticDiagramGrid diagrams={topicDetails.staticDiagrams} title="Architecture Diagrams" />
-              )}
-
-              {/* Comparison Cards (side-by-side) */}
-              {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
-                <div className="space-y-2">
-                  {topicDetails.comparisonTables.map((comp) => (
-                    <ComparisonCard key={comp.id} comparison={comp} />
-                  ))}
-                </div>
-              )}
-
-              {/* Cheat Sheet / Quick Reference Cards */}
-              {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {topicDetails.visualCards.map((card) => (
-                    <CheatSheetCard key={card.id} card={card} />
-                  ))}
-                </div>
-              )}
-
-              {/* Flowcharts / Process Diagrams */}
-              {topicDetails.flowcharts && topicDetails.flowcharts.length > 0 && (
-                <div className="grid grid-cols-1 gap-2">
-                  {topicDetails.flowcharts.map((fc) => (
-                    <FlowchartCard key={fc.id} flowchart={fc} />
-                  ))}
-                </div>
-              )}
-
-              {/* Bar/Pie Charts */}
-              {topicDetails.charts && topicDetails.charts.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {topicDetails.charts.map((chart) => (
-                    <ChartCard key={chart.id} chart={chart} />
-                  ))}
-                </div>
-              )}
-
-              {/* Architecture Evolution Timeline */}
-              {topicDetails.evolutionSteps && topicDetails.evolutionSteps.length > 0 && (
-                <EvolutionTimeline steps={topicDetails.evolutionSteps} />
-              )}
-
-              {/* Design Pattern Cards */}
-              {topicDetails.patternCards && topicDetails.patternCards.length > 0 && (
-                <PatternCardGrid patterns={topicDetails.patternCards} title="Key Design Patterns" />
-              )}
-
-              {/* Cloud Architecture Diagram + Tips */}
-              <div className={`grid gap-2 ${isSDStyle ? '' : 'grid-cols-1'}`}>
-                {/* Cloud Architecture Diagram — static pre-generated or API-generated */}
-                {isSDStyle && topicDetails && (
-                  <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-white">
-                    <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-3 py-2 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon name="layers" size={14} className="text-white" />
-                        <h3 className="text-sm font-bold text-white landing-display">Architecture Diagram</h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* Cloud Provider Selector */}
-                        <div className="flex items-center gap-1 mr-2 px-1 py-0.5 rounded-lg bg-[var(--bg-elevated)]">
-                          {[
-                            { id: 'aws', label: 'AWS', color: '#ff9900' },
-                            { id: 'gcp', label: 'GCP', color: '#4285f4' },
-                            { id: 'azure', label: 'Azure', color: '#0078d4' },
-                          ].map(p => (
-                            <button
-                              key={p.id}
-                              onClick={() => {
-                                setDiagramCloudProvider(p.id);
-                                generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, p.id);
-                              }}
-                              className="px-2 py-0.5 text-xs font-medium rounded transition-all landing-mono"
-                              style={{
-                                background: diagramCloudProvider === p.id ? `${p.color}30` : 'transparent',
-                                color: diagramCloudProvider === p.id ? p.color : '#9ca3af',
-                                border: diagramCloudProvider === p.id ? `1px solid ${p.color}50` : '1px solid transparent',
-                              }}
-                            >
-                              {p.label}
-                            </button>
-                          ))}
+              {/* Algorithm Approaches */}
+              {topicDetails.algorithmApproaches && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="zap" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Algorithm Approaches</h3>
+                  </div>
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    {topicDetails.algorithmApproaches.map((app, i) => (
+                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
+                        <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed">
+                          <FormattedContent content={app.description} color="amber" />
+                        </div>
+                        <div className="space-y-0.5">
+                          {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--accent)] font-bold mr-1">+</span>{p}</div>)}
+                          {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--text-muted)] font-bold mr-1">-</span>{c}</div>)}
                         </div>
                       </div>
-                      {/* Admin-only: Regenerate controls */}
-                      {isAdmin && (
-                        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[var(--border)]">
-                          <button
-                            onClick={() => handleAdminRegen('python')}
-                            className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--accent)]/15 hover:text-[var(--accent)] transition-colors border border-[var(--border)]"
-                            title="Regenerate using Python diagrams library"
-                          >
-                            Python
-                          </button>
-                          <button
-                            onClick={() => handleAdminRegen('eraser')}
-                            className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-blue-100 hover:text-blue-700 transition-colors border border-[var(--border)]"
-                            title="Regenerate using Eraser.io API"
-                          >
-                            Eraser
-                          </button>
-                          {adminRegenStatus && (
-                            <span className="text-[10px] font-mono font-bold" style={{ color: adminRegenStatus.includes('done') ? 'var(--success)' : adminRegenStatus.includes('fail') ? 'var(--danger)' : 'var(--text-primary)' }}>{adminRegenStatus}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      {/* Show pre-generated static diagram if available, otherwise fall back to API */}
-                      {(() => {
-                        const staticSrc = `/diagrams/${selectedTopic}/eraser-${diagramCloudProvider}.png`;
-                        return (
-                          <StaticCloudDiagram
-                            topicId={selectedTopic}
-                            provider={diagramCloudProvider}
-                            staticSrc={staticSrc}
-                            diagramData={diagramData}
-                            generatingDiagram={generatingDiagram}
-                            diagramError={diagramError}
-                            onGenerate={() => generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, diagramCloudProvider)}
-                          />
-                        );
-                      })()}
-                    </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Tips */}
-                {topicDetails.tips && (
-                  <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                    <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                      <Icon name="star" size={16} className="text-white" />
-                      <h3 className="text-sm font-bold text-white landing-display">Interview Tips</h3>
-                    </div>
-                    <div className="grid  gap-1 p-3">
-                      {topicDetails.tips.map((tip, i) => (
-                        <div key={i} className="px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-elevated)] transition-colors rounded">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)]">★</span>
-                          <span className="text-[var(--text-muted)] text-sm landing-body">{tip}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Flow Cards - Row Mode */}
+              {/* 9. System Flows (Create + Redirect) + Flowcharts */}
               {(topicDetails.createFlow || topicDetails.redirectFlow) && (
                 <div className="grid grid-cols-1 gap-2">
                   {/* Create Flow */}
@@ -2107,110 +2048,16 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* Discussion Points — Full-width expandable cards */}
-              {topicDetails.discussionPoints && (() => {
-                const TOPIC_COLORS = ['#10b981', '#2D8CFF', '#f59e0b', '#3b82f6', '#ef4444', '#60A5FA', '#14b8a6', '#ec4899'];
-                return (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="messageCircle" size={14} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Discussion Points</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.discussionPoints.length} topics</span>
-                  </div>
-                  <div className="p-2.5 space-y-2">
-                    {topicDetails.discussionPoints.map((point, i) => {
-                      const dotColor = TOPIC_COLORS[i % TOPIC_COLORS.length];
-                      const isExpanded = sdExpandedDPs[i] || false;
-                      const visiblePoints = point.points;
-                      const hasMore = false;
-                      return (
-                        <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border-hover,var(--border))] transition-all overflow-hidden">
-                          <div className="px-4 py-3">
-                            <div className="flex items-center gap-2.5 mb-2.5">
-                              <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${dotColor}15` }}>
-                                <Icon name="messageCircle" size={12} style={{ color: dotColor }} />
-                              </span>
-                              <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display flex-1">{point.topic}</h4>
-                            </div>
-                            <ul className="space-y-1.5 ml-8">
-                              {visiblePoints.map((p, j) => (
-                                <li key={j} className="flex items-start gap-2 text-sm landing-body">
-                                  <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: dotColor }} />
-                                  <span className="text-[var(--text-secondary)] leading-relaxed">{p}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            {hasMore && (
-                              <button
-                                onClick={() => setSdExpandedDPs(prev => ({ ...prev, [i]: !prev[i] }))}
-                                className="ml-8 mt-2 text-[11px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
-                              >
-                                {isExpanded ? 'Show less' : `Show ${point.points.length - 2} more`}
-                                <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                );
-              })()}
-
-              {/* Back-of-Envelope Estimation — AG Grid Table */}
-              {topicDetails.estimation && (
-                <CapacityPlanningGrid estimation={topicDetails.estimation} />
-              )}
-
-              {/* Algorithm Approaches */}
-              {topicDetails.algorithmApproaches && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="zap" size={16} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Algorithm Approaches</h3>
-                  </div>
-                  <div className="p-3 grid grid-cols-1 gap-2">
-                    {topicDetails.algorithmApproaches.map((app, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
-                        <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
-                        <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed">
-                          <FormattedContent content={app.description} color="amber" />
-                        </div>
-                        <div className="space-y-0.5">
-                          {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--accent)] font-bold mr-1">+</span>{p}</div>)}
-                          {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-[var(--text-secondary)] landing-body"><span className="text-[var(--text-muted)] font-bold mr-1">-</span>{c}</div>)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {/* Flowcharts / Process Diagrams */}
+              {topicDetails.flowcharts && topicDetails.flowcharts.length > 0 && (
+                <div className="grid grid-cols-1 gap-2">
+                  {topicDetails.flowcharts.map((fc) => (
+                    <FlowchartCard key={fc.id} flowchart={fc} />
+                  ))}
                 </div>
               )}
 
-              {/* Architecture Layers */}
-              {topicDetails.architectureLayers && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="layers" size={16} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Architecture Layers</h3>
-                  </div>
-                  <div className="p-3 space-y-1.5">
-                    {topicDetails.architectureLayers.map((layer, i) => (
-                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
-                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
-                        <div>
-                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
-                          <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
-                            <FormattedContent content={layer.description} color="blue" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Deep Dive Topics */}
+              {/* 10. Deep Dive Topics + System Components + Key Design Decisions */}
               {topicDetails.deepDiveTopics && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
@@ -2224,194 +2071,6 @@ export default function TopicDetail({
                         <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
                           <FormattedContent content={item.detail} color="blue" />
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Trade-off Decisions */}
-              {topicDetails.tradeoffDecisions && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="gitBranch" size={16} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Trade-off Decisions</h3>
-                  </div>
-                  <div className="p-3 grid grid-cols-1  gap-2">
-                    {topicDetails.tradeoffDecisions.map((d, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
-                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                          <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono">{d.choice}</span>
-                          <span className="text-gray-300">→</span>
-                          <span className="text-xs font-bold text-[var(--accent)] landing-mono">{d.picked}</span>
-                        </div>
-                        <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                          <FormattedContent content={d.reason} color="rose" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Edge Cases — Critical scenarios to address in interviews */}
-              {topicDetails.edgeCases && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="alertTriangle" size={14} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Edge Cases</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.edgeCases.length} cases</span>
-                  </div>
-                  <div className="p-2.5 space-y-2">
-                    {topicDetails.edgeCases.map((ec, i) => (
-                      <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-red-500/30 transition-all overflow-hidden">
-                        <div className="px-4 py-3">
-                          <div className="flex items-center gap-2.5 mb-1.5">
-                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-500/10 border border-red-500/20">
-                              <span className="text-[10px] font-bold text-red-400 landing-mono">{i + 1}</span>
-                            </span>
-                            <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
-                          </div>
-                          <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
-                          <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                            <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Mitigation</span>
-                            <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tradeoffs — Key design decisions and their consequences */}
-              {topicDetails.tradeoffs && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="gitBranch" size={14} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Tradeoffs</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.tradeoffs.length} decisions</span>
-                  </div>
-                  <div className="p-2.5 space-y-2">
-                    {topicDetails.tradeoffs.map((t, i) => (
-                      <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border)] transition-all overflow-hidden">
-                        <div className="px-4 py-3">
-                          <div className="flex items-center gap-2.5 mb-2">
-                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-amber-500/20">
-                              <Icon name="gitBranch" size={12} className="text-[var(--text-secondary)]" />
-                            </span>
-                            <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{t.decision}</h4>
-                          </div>
-                          <div className="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div className="px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                              <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Pros</span>
-                              <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
-                            </div>
-                            <div className="px-3 py-2 rounded-lg bg-gray-50 border border-[var(--border)]">
-                              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Cons</span>
-                              <p className="text-[var(--text-primary)] text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
-                            </div>
-                          </div>
-                          {t.recommendation && (
-                            <div className="ml-8 mt-2 flex items-start gap-1.5">
-                              <Icon name="arrowRight" size={12} className="text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
-                              <span className="text-xs text-[var(--text-primary)] font-medium landing-body">{t.recommendation}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Layered Design — Architectural layer breakdown */}
-              {topicDetails.layeredDesign && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="layers" size={14} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
-                  </div>
-                  <div className="p-2.5 space-y-0">
-                    {topicDetails.layeredDesign.map((layer, i) => {
-                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#60A5FA', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#2D8CFF'];
-                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
-                      return (
-                        <div key={i} className="relative">
-                          {i > 0 && (
-                            <div className="flex justify-center -my-1 z-10 relative">
-                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                            </div>
-                          )}
-                          <div className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border)] transition-all overflow-hidden">
-                            <div className="px-4 py-3">
-                              <div className="flex items-center gap-2.5 mb-1.5">
-                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>
-                                  L{i + 1}
-                                </span>
-                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
-                              </div>
-                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
-                              {layer.components && (
-                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
-                                  {layer.components.map((comp, j) => (
-                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>
-                                      {comp}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Interview Follow-up Questions */}
-              {topicDetails.interviewFollowups && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="helpCircle" size={16} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Common Follow-up Questions</h3>
-                  </div>
-                  <div className="p-3 grid grid-cols-1 gap-2">
-                    {topicDetails.interviewFollowups.map((item, i) => (
-                      <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
-                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(245,158,11,0.04)] border-b border-[rgba(245,158,11,0.2)]">
-                          <span className="text-xs font-bold text-[var(--warning)] landing-mono flex-shrink-0">Q{i + 1}</span>
-                          <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
-                        </div>
-                        <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                          <FormattedContent content={item.answer} color="blue" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Code Implementations (object format with language keys) */}
-              {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="code" size={16} className="text-white" />
-                    <h3 className="text-sm font-bold text-white landing-display">Implementation Code</h3>
-                  </div>
-                  <div className="p-3 grid grid-cols-1 gap-2">
-                    {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
-                      <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
-                        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900">
-                          <div className="flex items-center gap-2">
-                            <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400" /><div className="w-2 h-2 rounded-full bg-amber-400" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]" /></div>
-                            <span className="text-xs font-bold text-[var(--text-muted)] landing-mono uppercase">{lang}</span>
-                          </div>
-                          <button onClick={() => navigator.clipboard.writeText(code)} className="text-xs text-[var(--text-muted)] hover:text-gray-300 px-2 py-0.5 border border-gray-700 rounded hover:border-gray-500 transition-colors landing-mono">Copy</button>
-                        </div>
-                        <pre className="p-3 bg-[#0d1117] overflow-x-auto max-h-80 overflow-y-auto"><code className="text-sm landing-mono text-gray-300 leading-relaxed whitespace-pre">{code}</code></pre>
                       </div>
                     ))}
                   </div>
@@ -2468,6 +2127,309 @@ export default function TopicDetail({
                 </div>
               ) : null}
 
+              {/* 11. Trade-offs + Edge Cases */}
+              {topicDetails.tradeoffDecisions && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="gitBranch" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Trade-off Decisions</h3>
+                  </div>
+                  <div className="p-3 grid grid-cols-1  gap-2">
+                    {topicDetails.tradeoffDecisions.map((d, i) => (
+                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono">{d.choice}</span>
+                          <span className="text-gray-300">→</span>
+                          <span className="text-xs font-bold text-[var(--accent)] landing-mono">{d.picked}</span>
+                        </div>
+                        <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
+                          <FormattedContent content={d.reason} color="rose" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {topicDetails.tradeoffs && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="gitBranch" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Tradeoffs</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.tradeoffs.length} decisions</span>
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    {topicDetails.tradeoffs.map((t, i) => (
+                      <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border)] transition-all overflow-hidden">
+                        <div className="px-4 py-3">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-amber-500/20">
+                              <Icon name="gitBranch" size={12} className="text-[var(--text-secondary)]" />
+                            </span>
+                            <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{t.decision}</h4>
+                          </div>
+                          <div className="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+                              <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Pros</span>
+                              <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
+                            </div>
+                            <div className="px-3 py-2 rounded-lg bg-gray-50 border border-[var(--border)]">
+                              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Cons</span>
+                              <p className="text-[var(--text-primary)] text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
+                            </div>
+                          </div>
+                          {t.recommendation && (
+                            <div className="ml-8 mt-2 flex items-start gap-1.5">
+                              <Icon name="arrowRight" size={12} className="text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
+                              <span className="text-xs text-[var(--text-primary)] font-medium landing-body">{t.recommendation}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {topicDetails.edgeCases && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="alertTriangle" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Edge Cases</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.edgeCases.length} cases</span>
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    {topicDetails.edgeCases.map((ec, i) => (
+                      <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-red-500/30 transition-all overflow-hidden">
+                        <div className="px-4 py-3">
+                          <div className="flex items-center gap-2.5 mb-1.5">
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-500/10 border border-red-500/20">
+                              <span className="text-[10px] font-bold text-red-400 landing-mono">{i + 1}</span>
+                            </span>
+                            <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
+                          </div>
+                          <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
+                          <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+                            <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Mitigation</span>
+                            <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 12. Discussion Points + Interview Follow-ups */}
+              {topicDetails.discussionPoints && (() => {
+                const TOPIC_COLORS = ['#10b981', '#2D8CFF', '#f59e0b', '#3b82f6', '#ef4444', '#60A5FA', '#14b8a6', '#ec4899'];
+                return (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="messageCircle" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Discussion Points</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.discussionPoints.length} topics</span>
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    {topicDetails.discussionPoints.map((point, i) => {
+                      const dotColor = TOPIC_COLORS[i % TOPIC_COLORS.length];
+                      const isExpanded = sdExpandedDPs[i] || false;
+                      const visiblePoints = point.points;
+                      const hasMore = false;
+                      return (
+                        <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border-hover,var(--border))] transition-all overflow-hidden">
+                          <div className="px-4 py-3">
+                            <div className="flex items-center gap-2.5 mb-2.5">
+                              <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${dotColor}15` }}>
+                                <Icon name="messageCircle" size={12} style={{ color: dotColor }} />
+                              </span>
+                              <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display flex-1">{point.topic}</h4>
+                            </div>
+                            <ul className="space-y-1.5 ml-8">
+                              {visiblePoints.map((p, j) => (
+                                <li key={j} className="flex items-start gap-2 text-sm landing-body">
+                                  <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: dotColor }} />
+                                  <span className="text-[var(--text-secondary)] leading-relaxed">{p}</span>
+                                </li>
+                              ))}
+                            </ul>
+                            {hasMore && (
+                              <button
+                                onClick={() => setSdExpandedDPs(prev => ({ ...prev, [i]: !prev[i] }))}
+                                className="ml-8 mt-2 text-[11px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
+                              >
+                                {isExpanded ? 'Show less' : `Show ${point.points.length - 2} more`}
+                                <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                );
+              })()}
+
+              {topicDetails.interviewFollowups && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="helpCircle" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Common Follow-up Questions</h3>
+                  </div>
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    {topicDetails.interviewFollowups.map((item, i) => (
+                      <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(245,158,11,0.04)] border-b border-[rgba(245,158,11,0.2)]">
+                          <span className="text-xs font-bold text-[var(--warning)] landing-mono flex-shrink-0">Q{i + 1}</span>
+                          <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
+                        </div>
+                        <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
+                          <FormattedContent content={item.answer} color="blue" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 13. Visual Assets — reference section */}
+              {/* Static Architecture Diagrams (pre-generated SVGs) */}
+              {topicDetails.staticDiagrams && topicDetails.staticDiagrams.length > 0 && (
+                <StaticDiagramGrid diagrams={topicDetails.staticDiagrams} title="Architecture Diagrams" />
+              )}
+
+              {/* Comparison Cards (side-by-side) */}
+              {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
+                <div className="space-y-2">
+                  {topicDetails.comparisonTables.map((comp) => (
+                    <ComparisonCard key={comp.id} comparison={comp} />
+                  ))}
+                </div>
+              )}
+
+              {/* Cheat Sheet / Quick Reference Cards */}
+              {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {topicDetails.visualCards.map((card) => (
+                    <CheatSheetCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
+
+              {/* Bar/Pie Charts */}
+              {topicDetails.charts && topicDetails.charts.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {topicDetails.charts.map((chart) => (
+                    <ChartCard key={chart.id} chart={chart} />
+                  ))}
+                </div>
+              )}
+
+              {/* Architecture Evolution Timeline */}
+              {topicDetails.evolutionSteps && topicDetails.evolutionSteps.length > 0 && (
+                <EvolutionTimeline steps={topicDetails.evolutionSteps} />
+              )}
+
+              {/* Design Pattern Cards */}
+              {topicDetails.patternCards && topicDetails.patternCards.length > 0 && (
+                <PatternCardGrid patterns={topicDetails.patternCards} title="Key Design Patterns" />
+              )}
+
+              {/* 14. Code Examples */}
+              {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="code" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Implementation Code</h3>
+                  </div>
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
+                      <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900">
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400" /><div className="w-2 h-2 rounded-full bg-amber-400" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]" /></div>
+                            <span className="text-xs font-bold text-[var(--text-muted)] landing-mono uppercase">{lang}</span>
+                          </div>
+                          <button onClick={() => navigator.clipboard.writeText(code)} className="text-xs text-[var(--text-muted)] hover:text-gray-300 px-2 py-0.5 border border-gray-700 rounded hover:border-gray-500 transition-colors landing-mono">Copy</button>
+                        </div>
+                        <pre className="p-3 bg-[#0d1117] overflow-x-auto max-h-80 overflow-y-auto"><code className="text-sm landing-mono text-gray-300 leading-relaxed whitespace-pre">{code}</code></pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 15. Key Questions — Accordion (self-test/review) */}
+              {topicDetails.keyQuestions && (
+                <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
+                  <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2">
+                    <Icon name="messageSquare" size={14} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Key Questions</h3>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.keyQuestions.length} topics</span>
+                    <button
+                      onClick={() => {
+                        if (sdAllQsExpanded) {
+                          setSdExpandedQs({});
+                        } else {
+                          const all = {};
+                          topicDetails.keyQuestions.forEach((_, i) => { all[i] = true; });
+                          setSdExpandedQs(all);
+                        }
+                        setSdAllQsExpanded(!sdAllQsExpanded);
+                      }}
+                      className="ml-auto text-[11px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
+                    >
+                      {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
+                      <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                  </div>
+                  <div className="p-2.5 space-y-1.5">
+                    {topicDetails.keyQuestions.map((q, i) => {
+                      const isOpen = sdExpandedQs[i] || false;
+                      return (
+                        <div key={i} className={`rounded-xl overflow-hidden border transition-all ${isOpen ? 'border-[var(--accent)]/20 shadow-sm' : 'border-[var(--border)] hover:border-[var(--border-hover,var(--border))]'}`}>
+                          <button
+                            onClick={() => setSdExpandedQs(prev => ({ ...prev, [i]: !prev[i] }))}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-3 bg-white hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0 landing-mono">{i + 1}</span>
+                            <h4 className="text-[var(--text-primary)] font-semibold text-sm flex-1 landing-display leading-snug">{q.question}</h4>
+                            <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                          </button>
+                          {isOpen && (
+                            <div className="px-4 pb-4 pt-1 border-t border-[var(--border)]" style={{ borderLeft: '3px solid #2D8CFF' }}>
+                              <div className="pl-9 text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
+                                <FormattedContent content={q.answer} color="blue" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 16. Interview Tips — very last SD card */}
+              {topicDetails.tips && (
+                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="star" size={16} className="text-white" />
+                    <h3 className="text-sm font-bold text-white landing-display">Interview Tips</h3>
+                  </div>
+                  <div className="grid  gap-1 p-3">
+                    {topicDetails.tips.map((tip, i) => (
+                      <div key={i} className="px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-elevated)] transition-colors rounded">
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)]">★</span>
+                        <span className="text-[var(--text-muted)] text-sm landing-body">{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 17. LLD sections */}
               {/* LLD Core Entities */}
               {topicDetails.coreEntities && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
@@ -2609,6 +2571,7 @@ export default function TopicDetail({
                 </div>
               )}
             </>
+
           )}
 
         </div>
