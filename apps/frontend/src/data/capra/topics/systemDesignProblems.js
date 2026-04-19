@@ -2513,7 +2513,14 @@ CDN with 100+ PoPs globally, cache hit ratio >95% for popular content.`
 Optimized with distributed workers: Process in parallel chunks
 Priority queue: Higher priority for popular uploaders
 Quick quality first: 360p available in minutes, 4K later`
-        }
+        },
+        { question: 'How does adaptive bitrate streaming work?', answer: `Each video is encoded into multiple quality levels (360p-4K), split into 2-10 second segments. Client measures bandwidth, selects highest quality that fits, applies hysteresis to avoid oscillation. HLS (M3U8) for Apple, DASH (MPD) for Google — most use both. Key metric: rebuffer rate < 1%.` },
+        { question: 'How does YouTube recommendation work at scale?', answer: `Drives 70%+ of watch time. Stage 1: Candidate generation (millions to 1000) via collaborative filtering + content embeddings. Stage 2: Ranking (1000 to 50) via deep neural net optimized for watch time, not clicks. Features: user history, freshness, creator authority. Cold start: rank by creator history + title similarity.` },
+        { question: 'How do you count 5B views/day accurately?', answer: `58K increments/sec with fraud detection. Views go to Kafka then Flink dedup then batch DB update every 5-10 min. Fraud: rate limit per IP, 30s minimum watch, ML bot detection. Viral videos: shard counter across 100 Redis instances, sum on read.` },
+        { question: 'How does Content ID detect copyright?', answer: `Scans every upload against 100M+ reference files. Extract audio fingerprint (Shazam-like) + visual fingerprint (scene hashes). Actions: Block, Monetize (revenue to rights holder), Track. Processes 500+ hours/min.` },
+        { question: 'How does the multi-tier CDN cache work?', answer: `Tier 1 Edge (100+ PoPs): top 1%, 95% hit rate, SSD. Tier 2 Regional (about 20): top 10%, HDD+SSD. Tier 3 Origin (3-5 DCs): full catalog, hot/cold. Pre-warm viral content, request coalescing, origin shield. Long-tail: 80% of videos are less than 1% views but must start in under 500ms.` },
+        { question: 'How do you design video search at scale?', answer: `Billions of queries against 800M+ videos. Index: title, description, tags, auto-captions, speech-to-text. Ranking: BM25 + neural re-ranking using relevance, engagement, authority, freshness. Autocomplete via trie with popularity weighting.` },
+        { question: 'How do you handle transcoding failures?', answer: `720K hours/day — 0.1% failure = 720 jobs/day. Each resolution independent (1080p fail does not block 360p). 3 retries, different worker on retry, dead-letter queue. Priority tiers: top creators fast-lane, monetized standard, new channels best-effort.` },
       ],
 
       basicImplementation: {
@@ -2702,6 +2709,44 @@ Quick quality first: 360p available in minutes, 4K later`
         { name: 'Delivery & Streaming Layer', purpose: 'Serve video segments globally with adaptive bitrate streaming', components: ['CDN (CloudFront)', 'Origin Shield', 'HLS/DASH Packager'] },
         { name: 'Metadata & Discovery Layer', purpose: 'Store video metadata, power search, and serve recommendations', components: ['Metadata DB (Vitess)', 'Search (Elasticsearch)', 'Recommendation Engine'] },
         { name: 'Analytics Layer', purpose: 'Track view counts, engagement metrics, and creator revenue', components: ['Event Collector', 'Real-time Counter', 'Data Warehouse'] },
+      ],
+
+      deepDiveTopics: [
+        { topic: 'Video Transcoding Pipeline', diagramSrc: '/diagrams/youtube/deep-dive-transcoding.svg', detail: `When a creator uploads a video, it enters a multi-stage transcoding pipeline. The raw video (potentially 4K, 60fps, various codecs) is split into segments and distributed across a GPU worker fleet. Each worker transcodes one segment into one resolution/codec combination. YouTube produces 6 resolutions (360p through 4K) across 3 codecs (H.264 for compatibility, VP9 for Chrome/Android, AV1 for newest devices). Per-title encoding optimizes bitrate per content type — a static slideshow needs far less bitrate than an action movie at the same resolution. The 360p version is prioritized so the video becomes watchable within minutes, while higher resolutions continue processing in the background.` },
+        { topic: 'Adaptive Bitrate Streaming', diagramSrc: '/diagrams/youtube/deep-dive-abr-streaming.svg', detail: `The player downloads a manifest file (HLS M3U8 or DASH MPD) listing all available quality levels and their segment URLs. As the video plays, the client continuously measures download throughput and buffer fill level. A buffer-based ABR algorithm selects the optimal quality: if the buffer is healthy (>15 seconds), try a higher quality; if it is draining (<5 seconds), drop to a lower quality immediately. Hysteresis prevents rapid oscillation — the algorithm requires sustained bandwidth improvement before upgrading quality. Segments are served from the nearest CDN edge, with 95%+ cache hit rates for popular content.` },
+        { topic: 'Two-Stage Recommendation Engine', diagramSrc: '/diagrams/youtube/deep-dive-recommendations.svg', detail: `YouTube recommendations are responsible for over 70% of all watch time. Stage 1 (Candidate Generation) uses a deep neural network to narrow 800M+ videos down to ~1000 candidates per user. It combines collaborative filtering signals (users with similar watch history), content-based features (video embeddings from titles and thumbnails), and contextual signals (time of day, device type). Stage 2 (Ranking) applies a separate neural network that scores each candidate on predicted watch time, not click probability — this critical design choice prevents clickbait from dominating recommendations. The ranking model incorporates hundreds of features including video freshness, creator authority, and user engagement history.` },
+        { topic: 'View Counter Architecture', diagramSrc: '/diagrams/youtube/deep-dive-view-counter.svg', detail: `Counting 5 billion views per day (58K/second) while detecting fraud requires a specialized pipeline. View events from clients are published to Kafka, where a Flink streaming job performs deduplication (same user, same video, within time window), fraud filtering (bot detection ML model, minimum watch time of 30 seconds), and aggregation. Counts are not updated in real-time in the primary database — instead, batch jobs update view counts every 5-10 minutes. For viral videos, the counter is sharded across 100+ Redis instances to avoid hot-key bottlenecks. Public view counts may lag by hours for new videos while fraud checks complete.` },
+        { topic: 'CDN Cache Hierarchy', diagramSrc: '/diagrams/youtube/deep-dive-cdn-hierarchy.svg', detail: `YouTube operates one of the world's largest CDN networks. The architecture uses three tiers: Edge PoPs (100+ locations, embedded in ISPs) cache the top 1% of videos on SSD with 95%+ hit rates. Regional PoPs (~20 locations) cache the top 10% on mixed HDD/SSD. Origin data centers (3-5 globally) store the complete catalog with hot/cold tiering. An origin shield layer sits between regional and origin, collapsing duplicate requests from multiple edge PoPs requesting the same cache miss. For anticipated viral content (music video premieres, major creator uploads), the system pre-warms edge caches before the video goes public.` },
+      ],
+
+      comparisonTables: [
+        { id: 'youtube-video-codecs', title: 'Video Codec Comparison', headers: ['Feature', 'H.264 (AVC)', 'VP9', 'AV1', 'H.265 (HEVC)'], rows: [['Compression Efficiency', 'Baseline', '30-50% better', '50-70% better', '40-50% better'], ['Encoding Speed', 'Fastest', 'Moderate', 'Very slow', 'Slow'], ['Decode Support', 'Universal', 'Chrome/Android/FF', 'Newer devices', 'Apple/hardware'], ['Royalty', 'Licensing required', 'Royalty-free', 'Royalty-free', 'Complex licensing'], ['YouTube Usage', 'Fallback for old devices', 'Default for most', 'Preferred for quality', 'Not used']], verdict: 'YouTube uses VP9 as default, AV1 for quality-sensitive content, H.264 as universal fallback. AV1 saves 30-50% bandwidth vs VP9 but encoding cost is 10x higher.' },
+        { id: 'youtube-streaming-protocols', title: 'Streaming Protocol Comparison', headers: ['Feature', 'HLS', 'DASH', 'WebRTC', 'RTMP'], rows: [['Latency', '6-30 seconds', '3-30 seconds', '<500ms', '1-3 seconds'], ['Adaptive Bitrate', 'Yes', 'Yes', 'Limited', 'No'], ['DRM Support', 'FairPlay', 'Widevine/PlayReady', 'No', 'No'], ['Browser Support', 'Safari native, JS elsewhere', 'JS-based (MSE)', 'Native', 'Flash (deprecated)'], ['Use Case', 'VOD + Live', 'VOD + Live', 'Real-time (WebRTC calls)', 'Ingest only']], verdict: 'YouTube uses HLS+DASH for playback (VOD and live), RTMP/SRT for live stream ingest from broadcasters, and Low-Latency HLS for near-realtime live streaming.' },
+        { id: 'youtube-storage-tiers', title: 'Storage Tier Strategy', headers: ['Tier', 'Technology', 'Access Latency', 'Cost', 'Content'], rows: [['Hot', 'SSD (Edge CDN)', '<10ms', '49664$', 'Top 1% popular videos'], ['Warm', 'HDD (Regional)', '<100ms', '49664', 'Top 10% + recent uploads'], ['Cold', 'Object Store (S3/GCS)', '<500ms', '$', 'All other videos'], ['Archive', 'Tape / Glacier', 'Hours', '¢', 'Deleted videos (retention period)']], verdict: 'The long-tail challenge: 80% of videos are cold but must remain accessible. Tiered storage keeps costs manageable at 100+ PB scale.' },
+      ],
+
+      flowcharts: [
+        { id: 'youtube-upload-flow', title: 'Video Upload Pipeline', description: 'From creator upload to globally available video', steps: [{ step: 1, label: 'Chunked Upload', detail: 'Client splits video into 8MB chunks, uploads with CRC32 checksums. Resume from last chunk on failure.' }, { step: 2, label: 'Chunk Assembly', detail: 'Server assembles chunks in object storage (GCS), verifies integrity, sets status to PROCESSING.' }, { step: 3, label: 'Content ID Scan', detail: 'Audio/visual fingerprinting against 100M+ reference files. Block, monetize, or allow based on rights holder config.' }, { step: 4, label: 'Parallel Transcode', detail: 'GPU workers encode 6 resolutions × 3 codecs in parallel. 360p prioritized for fast availability.' }, { step: 5, label: 'Segment + Package', detail: 'Each resolution split into 4-second segments. Generate HLS manifest (M3U8) and DASH manifest (MPD).' }, { step: 6, label: 'Thumbnail + Metadata', detail: 'Auto-generate thumbnails at key frames. Extract captions via speech-to-text. Index in search.' }, { step: 7, label: 'CDN Distribution', detail: 'Segments pushed to origin storage. Popular content pre-warmed at edge PoPs. Status → READY.' }] },
+        { id: 'youtube-playback-flow', title: 'Video Playback Flow', description: 'From user click to adaptive bitrate playback', steps: [{ step: 1, label: 'Video Page Load', detail: 'Client requests video metadata (title, description, view count) from Vitess database.' }, { step: 2, label: 'Manifest Request', detail: 'Client requests HLS/DASH manifest listing all quality levels and segment URLs from nearest CDN.' }, { step: 3, label: 'Initial Segment', detail: 'Start with low quality (360p) for fast playback start (<200ms). Buffer first 2-3 segments.' }, { step: 4, label: 'Bandwidth Probe', detail: 'Measure download speed of initial segments. ABR algorithm selects optimal quality.' }, { step: 5, label: 'Quality Ramp-up', detail: 'Switch to higher quality at next segment boundary. Buffer 15+ seconds ahead.' }, { step: 6, label: 'Prefetch Next', detail: 'If autoplay enabled, prefetch first segments of next video in recommendation list.' }, { step: 7, label: 'Analytics Events', detail: 'Log view start, 25/50/75/100% completion, quality changes, rebuffers to Kafka for analytics.' }] },
+      ],
+
+      visualCards: [
+        { id: 'youtube-scale-metrics', title: 'YouTube Scale at a Glance', icon: 'video', color: '#ef4444', items: [{ label: 'Hours Uploaded/Min', value: '500+', bar: 90 }, { label: 'Hours Watched/Day', value: '1 Billion', bar: 100 }, { label: 'Daily Video Views', value: '5B+', bar: 95 }, { label: 'Peak CDN Bandwidth', value: '175 Tbps', bar: 85 }, { label: 'Monthly Storage Growth', value: '108 PB', bar: 80 }, { label: 'Recommendation QPS', value: '1.4M', bar: 75 }, { label: 'GPU-Hours/Day', value: '1.4M', bar: 70 }, { label: 'CDN Cache Hit Rate', value: '95%+', bar: 92 }] },
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single Server + File System', description: 'Videos stored as files on local disk. Single MySQL database for metadata. No transcoding — serve original upload.', color: '#ef4444', icon: 'server', capacity: '1K videos', rps: '~10 QPS', pros: ['Simple to build', 'Fast iteration'], cons: ['No adaptive streaming', 'Single point of failure', 'No global reach'] },
+        { step: 2, title: 'Object Storage + CDN', description: 'Move videos to S3/GCS. Add CDN for delivery. Basic transcoding to 3 resolutions. MySQL for metadata.', color: '#f97316', icon: 'cloud', capacity: '100K videos', rps: '~1K QPS', pros: ['Durable storage', 'CDN reduces latency', 'Basic quality selection'], cons: ['No adaptive bitrate', 'Slow transcoding queue', 'Search is basic text match'] },
+        { step: 3, title: 'Transcoding Pipeline + ABR', description: 'Distributed GPU transcoding fleet. HLS/DASH adaptive streaming. Elasticsearch for search. Redis for caching.', color: '#eab308', icon: 'zap', capacity: '10M videos', rps: '~50K QPS', pros: ['Smooth playback on any connection', 'Fast search', 'Parallel transcoding'], cons: ['No personalized recommendations', 'View counting race conditions', 'CDN costs growing fast'] },
+        { step: 4, title: 'ML Recommendations + Global CDN', description: 'Two-stage ML recommendation engine. Multi-tier CDN with 100+ PoPs. Vitess for sharded metadata. Content ID system.', color: '#22c55e', icon: 'globe', capacity: '500M+ videos', rps: '~500K QPS', pros: ['Personalized discovery', 'Global low-latency delivery', 'Copyright protection'], cons: ['ML model complexity', '100+ PB storage costs', 'Recommendation filter bubbles'] },
+        { step: 5, title: 'AI-Native Platform', description: 'AV1 codec for 50% bandwidth savings. Neural video understanding for auto-chapters, search. Shorts infrastructure. Real-time ML personalization.', color: '#8b5cf6', icon: 'brain', capacity: '800M+ videos', rps: '~2M QPS', pros: ['Massive bandwidth savings', 'AI-powered discovery', 'Multi-format (long, shorts, live)'], cons: ['AV1 encoding cost 10x VP9', 'Shorts vs long-form cannibalization', 'Content moderation at scale'] },
+      ],
+
+      staticDiagrams: [
+        { id: 'youtube-problem-definition', title: 'Problem Definition', description: 'YouTube system scope, scale, and key challenges', src: '/diagrams/youtube/problem-definition.svg', type: 'overview' },
+        { id: 'youtube-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for YouTube scale', src: '/diagrams/youtube/capacity-estimation.svg', type: 'estimation' },
+        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', src: '/diagrams/youtube/upload-pipeline.svg', type: 'flow' },
+        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', src: '/diagrams/youtube/streaming-flow.svg', type: 'flow' },
       ],
     },
     {
@@ -4771,7 +4816,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           title: 'Pre-generate Image Sizes vs Resize On-the-Fly',
           headers: ['Aspect', 'Pre-generate at Upload', 'Resize on Request'],
           rows: [
-            ['Storage Cost', 'Higher (~285 TB/day for all sizes)', 'Lower (only original ~200 TB/day)'],
+            ['Storage Cost', 'Higher (~600 TB/day for all sizes)', 'Lower (only original ~200 TB/day)'],
             ['Read Latency', 'Instant (pre-computed)', '+50-200ms per request for resize'],
             ['CPU Cost (Read)', 'Zero (serve static file)', 'High (resize on every cache miss)'],
             ['CPU Cost (Write)', 'One-time processing per upload', 'None at upload'],
@@ -4803,6 +4848,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'news-feed-generation',
           title: 'News Feed Generation',
           description: 'How a personalized feed is assembled using the hybrid fan-out approach',
+          src: '/diagrams/instagram/feed-generation-flow.svg',
           steps: [
             { step: 1, label: 'Feed Request', detail: 'Client requests GET /api/feed?cursor=X&limit=20' },
             { step: 2, label: 'Check Cache', detail: 'Look up pre-ranked feed in Redis (5-minute TTL)' },
@@ -4811,6 +4857,21 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
             { step: 5, label: 'Merge + Deduplicate', detail: 'Combine pushed and pulled posts, remove duplicates by postId' },
             { step: 6, label: 'ML Ranking', detail: 'Score each post by P(engagement): likes, saves, relationship, recency' },
             { step: 7, label: 'Return + Cache', detail: 'Return top 20 posts with cursor, cache ranked feed for 5 minutes' },
+          ]
+        },
+        {
+          id: 'story-lifecycle-flow',
+          title: 'Story Lifecycle (Create to Expire)',
+          description: 'How a story is created, viewed, and auto-deleted after 24 hours',
+          src: '/diagrams/instagram/story-lifecycle-flow.svg',
+          steps: [
+            { step: 1, label: 'Upload Media', detail: 'Same pre-signed S3 URL pipeline as regular posts' },
+            { step: 2, label: 'Create Story', detail: 'Cassandra row with expiresAt = createdAt + 24 hours' },
+            { step: 3, label: 'Redis Index', detail: 'ZADD stories:{userId} {expiresAt} {storyId}' },
+            { step: 4, label: 'Notify Followers', detail: 'Push notification to close friends + story tray update' },
+            { step: 5, label: 'View Story', detail: 'ZRANGEBYSCORE stories:{userId} {now} +INF — fetch active stories' },
+            { step: 6, label: 'Track Views', detail: 'Kafka: story-views topic -> batch write to story_viewers table' },
+            { step: 7, label: 'Auto-Expire', detail: 'Background job: ZREMRANGEBYSCORE + S3 lifecycle delete after 25h' },
           ]
         }
       ],
@@ -4840,8 +4901,8 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
             { label: '500M DAU', value: 'Daily active users', bar: 85 },
             { label: '100M photos/day', value: 'Photo uploads', bar: 75 },
             { label: '500M stories/day', value: 'Ephemeral content', bar: 90 },
-            { label: '285 TB/day', value: 'New image storage', bar: 70 },
-            { label: '~104 PB/year', value: 'Annual photo storage', bar: 95 },
+            { label: '600 TB/day', value: 'New image storage', bar: 70 },
+            { label: '~219 PB/year', value: 'Annual photo storage', bar: 95 },
           ]
         }
       ],
