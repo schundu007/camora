@@ -2516,11 +2516,11 @@ export default function TopicDetail({
                         {topicDetails.basicImplementation.svgTemplate && <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />}
                         {topicDetails.basicImplementation.problems && (
                           <div>
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
+                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
+                            <div className="grid grid-cols-1 gap-0.5">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/15 text-sm landing-body">
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/15 mt-0.5"><svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></span>
+                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
+                                  <span className="text-red-400 mt-px flex-shrink-0">✕</span>
                                   <span className="text-[var(--text-secondary)]">{problem}</span>
                                 </div>
                               ))}
@@ -2541,11 +2541,11 @@ export default function TopicDetail({
                         {topicDetails.advancedImplementation.svgTemplate && <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />}
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-3">
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 landing-display uppercase tracking-wider">Key Points</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
+                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>
+                            <div className="grid grid-cols-1 gap-0.5">
                               {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--accent)]/10/50 border border-[var(--accent)]/20 text-sm landing-body">
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/15 mt-0.5"><svg className="w-2.5 h-2.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>
+                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
+                                  <span className="text-[var(--accent)] mt-px flex-shrink-0">✓</span>
                                   <span className="text-[var(--text-secondary)]">{point}</span>
                                 </div>
                               ))}
