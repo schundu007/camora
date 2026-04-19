@@ -100,6 +100,121 @@ LIMIT 10;
       'Using OFFSET for deep pagination on large tables — this scans and discards rows and is very slow',
     ],
 
+    dataModel: {
+      description: 'Sample schema for practicing fundamental SQL queries',
+      schema: `CREATE TABLE employees (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    email       VARCHAR(255) UNIQUE NOT NULL,
+    department  VARCHAR(50),
+    salary      DECIMAL(10,2),
+    hire_date   DATE,
+    manager_id  INT REFERENCES employees(id)
+);
+
+CREATE TABLE departments (
+    id              SERIAL PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL,
+    location        VARCHAR(100),
+    budget          DECIMAL(12,2)
+);
+
+CREATE TABLE orders (
+    id          SERIAL PRIMARY KEY,
+    customer_id INT NOT NULL,
+    product     VARCHAR(100),
+    amount      DECIMAL(10,2),
+    order_date  DATE,
+    status      VARCHAR(20) DEFAULT 'pending'
+);`,
+      examples: [
+        {
+          table: 'employees',
+          label: 'Sample employee records',
+          json: `{ "id": 1, "name": "Alice Chen", "email": "alice@company.com", "department": "Engineering", "salary": 145000, "hire_date": "2021-03-15", "manager_id": null }
+{ "id": 2, "name": "Bob Smith", "email": "bob@company.com", "department": "Engineering", "salary": 125000, "hire_date": "2022-01-10", "manager_id": 1 }
+{ "id": 3, "name": "Carol Jones", "email": "carol@company.com", "department": "Product", "salary": 135000, "hire_date": "2020-09-01", "manager_id": null }
+{ "id": 4, "name": "Dave Wilson", "email": "dave@company.com", "department": "Engineering", "salary": 110000, "hire_date": "2023-06-20", "manager_id": 1 }`
+        },
+        {
+          table: 'orders',
+          label: 'Sample order records',
+          json: `{ "id": 101, "customer_id": 1, "product": "Laptop", "amount": 1299.99, "order_date": "2024-01-15", "status": "completed" }
+{ "id": 102, "customer_id": 2, "product": "Keyboard", "amount": 89.99, "order_date": "2024-01-16", "status": "completed" }
+{ "id": 103, "customer_id": 1, "product": "Monitor", "amount": 549.99, "order_date": "2024-02-01", "status": "pending" }`
+        }
+      ]
+    },
+
+    keyQuestions: [
+      {
+        question: 'Explain the SQL logical execution order and why it matters',
+        answer: `**Execution Order** (different from written order):
+\`\`\`
+1. FROM / JOIN     — identify source tables
+2. WHERE           — filter individual rows
+3. GROUP BY        — group remaining rows
+4. HAVING          — filter groups
+5. SELECT          — compute output columns
+6. DISTINCT        — remove duplicates
+7. ORDER BY        — sort results
+8. LIMIT / OFFSET  — paginate
+\`\`\`
+
+**Why It Matters**:
+- You can't use a column alias in WHERE (SELECT hasn't run yet): \`WHERE total > 100\` fails if \`total\` is defined in SELECT
+- You CAN use a column alias in ORDER BY (it runs after SELECT)
+- HAVING can reference aggregate functions because it runs after GROUP BY
+- WHERE is more efficient than HAVING for row-level filters because it reduces data before aggregation
+
+**Common Interview Trick**: "Why does this query fail?" — Almost always because the candidate is referencing an alias or aggregate in the wrong clause.`
+      },
+      {
+        question: 'What is the difference between WHERE and HAVING?',
+        answer: `**WHERE**: Filters individual rows BEFORE grouping. Cannot use aggregate functions.
+\`\`\`sql
+-- Filter employees with salary > 100K, then count per department
+SELECT department, COUNT(*) FROM employees
+WHERE salary > 100000
+GROUP BY department;
+\`\`\`
+
+**HAVING**: Filters groups AFTER aggregation. Can use aggregate functions.
+\`\`\`sql
+-- Show only departments with more than 5 employees
+SELECT department, COUNT(*) AS emp_count FROM employees
+GROUP BY department
+HAVING COUNT(*) > 5;
+\`\`\`
+
+**Performance**: WHERE is always preferred when possible because it reduces the number of rows BEFORE the expensive GROUP BY operation. Use HAVING only when you need to filter on aggregated results.
+
+**Interview Tip**: If asked "filter departments with average salary > 100K", you MUST use HAVING because AVG(salary) is an aggregate that requires GROUP BY first.`
+      },
+      {
+        question: 'How do you handle NULL values in SQL?',
+        answer: `**Key Rules**:
+- NULL = NULL is NOT true (it's unknown). Use IS NULL / IS NOT NULL
+- NULL in arithmetic: 5 + NULL = NULL (any operation with NULL produces NULL)
+- NULL in aggregates: COUNT(*) counts all rows; COUNT(col) skips NULLs; SUM/AVG ignore NULLs
+- NULL in comparisons: WHERE col = NULL never matches — use WHERE col IS NULL
+
+**Handling NULLs**:
+\`\`\`sql
+-- COALESCE: return first non-NULL value
+SELECT COALESCE(phone, email, 'No contact') AS contact FROM users;
+
+-- NULLIF: return NULL if values are equal (useful for avoiding division by zero)
+SELECT total / NULLIF(count, 0) AS average FROM stats;
+
+-- IS DISTINCT FROM: NULL-safe equality (PostgreSQL)
+SELECT * FROM t1 WHERE col IS DISTINCT FROM 'value';
+\`\`\`
+
+**Interview Gotcha**: \`NOT IN (subquery)\` behaves unexpectedly with NULLs. If the subquery returns any NULL value, the entire NOT IN returns no rows. Use NOT EXISTS instead.`
+      }
+    ],
+
     tips: [
       'Memorize the logical execution order: FROM -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY -> LIMIT',
       'Use COUNT(DISTINCT col) to count unique values without a subquery',
@@ -192,6 +307,84 @@ WHERE e.salary > m.salary;
       'Not accounting for NULL values in join columns — NULLs never match in standard equality joins',
       'Creating accidental row duplication by joining on non-unique columns without realizing the relationship is one-to-many',
       'Placing filter conditions in ON vs WHERE without understanding the difference in outer joins',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'What is the difference between putting a condition in ON vs WHERE for a LEFT JOIN?',
+        answer: `This is one of the most commonly misunderstood SQL concepts.
+
+**Condition in ON** — applied DURING the join:
+\`\`\`sql
+SELECT e.name, d.department_name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id AND d.location = 'NYC';
+\`\`\`
+Result: ALL employees appear. NYC departments are matched; non-NYC departments show as NULL (the LEFT JOIN preserves left-side rows).
+
+**Condition in WHERE** — applied AFTER the join:
+\`\`\`sql
+SELECT e.name, d.department_name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id
+WHERE d.location = 'NYC';
+\`\`\`
+Result: Only employees in NYC departments appear. The WHERE clause filters out rows where d.location is NULL, effectively converting the LEFT JOIN into an INNER JOIN.
+
+**Rule of Thumb**: For INNER JOINs, it doesn't matter. For OUTER JOINs, put the condition in ON if you want to preserve all left/right rows, and in WHERE if you want to filter the final result.`
+      },
+      {
+        question: 'How do you find records that exist in one table but not another?',
+        answer: `Three approaches, each with different performance characteristics:
+
+**1. LEFT JOIN + IS NULL** (most common in interviews):
+\`\`\`sql
+SELECT c.name FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+WHERE o.id IS NULL;
+\`\`\`
+
+**2. NOT EXISTS** (often fastest):
+\`\`\`sql
+SELECT c.name FROM customers c
+WHERE NOT EXISTS (
+    SELECT 1 FROM orders o WHERE o.customer_id = c.id
+);
+\`\`\`
+
+**3. NOT IN** (simplest but dangerous with NULLs):
+\`\`\`sql
+SELECT c.name FROM customers c
+WHERE c.id NOT IN (SELECT customer_id FROM orders);
+\`\`\`
+
+**Performance**: NOT EXISTS typically performs best because it short-circuits on the first match. NOT IN can be problematic: if the subquery returns ANY NULL, the entire result is empty (a common interview trap). LEFT JOIN + IS NULL is clear and predictable.
+
+**Recommendation**: Use NOT EXISTS for correctness and performance. Mention all three approaches in an interview to show breadth.`
+      },
+      {
+        question: 'What are the three join algorithms and when does the optimizer choose each?',
+        answer: `**1. Nested Loop Join** — O(n × m):
+- For each row in the outer table, scan the inner table for matches
+- Best for: small tables, or when inner table has an index on the join column
+- The optimizer uses this when one table is very small
+
+**2. Hash Join** — O(n + m):
+- Build a hash table from the smaller table, then probe it with the larger table
+- Best for: large unsorted tables with equality joins
+- Requires memory to hold the hash table (can spill to disk)
+
+**3. Merge Join (Sort-Merge)** — O(n log n + m log m):
+- Sort both tables on the join column, then merge like merge sort
+- Best for: large tables that are already sorted or have indexes on the join column
+- Very efficient for equality and range joins on sorted data
+
+**Performance Tips**:
+- Add indexes on join columns to enable nested loop or merge join
+- For large analytical queries, hash joins are typically fastest
+- Use EXPLAIN ANALYZE to see which algorithm the optimizer chose
+- The optimizer usually picks correctly, but you can hint if needed (PostgreSQL: SET enable_hashjoin = off)`
+      }
     ],
 
     tips: [
@@ -412,6 +605,94 @@ WHERE rnk <= 3;
       'Using RANGE instead of ROWS for the frame — RANGE groups equal ORDER BY values, ROWS counts physical rows',
       'Not specifying PARTITION BY when you need per-group calculations (omitting it treats all rows as one partition)',
       'Placing ORDER BY outside the OVER clause, which sorts the final output rather than the window',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'What is the difference between ROW_NUMBER, RANK, and DENSE_RANK?',
+        answer: `Given employees with salaries: 100K, 90K, 90K, 80K:
+
+| Function | Result | Behavior |
+|----------|--------|----------|
+| ROW_NUMBER | 1, 2, 3, 4 | Unique numbers, arbitrary tie-breaking |
+| RANK | 1, 2, 2, 4 | Same rank for ties, gaps after (skips 3) |
+| DENSE_RANK | 1, 2, 2, 3 | Same rank for ties, no gaps |
+
+**When to Use Each**:
+- **ROW_NUMBER**: Deduplication (\`WHERE rn = 1\`), top-N per group, pagination. Most common in interviews.
+- **RANK**: When you need to know the actual position including ties (e.g., "3rd place is skipped because of a tie at 2nd")
+- **DENSE_RANK**: When you need consecutive ranks (e.g., "find the 3rd highest salary" — DENSE_RANK ensures 3rd exists even with ties)
+
+**Interview Classic — Nth Highest Salary**:
+\`\`\`sql
+SELECT DISTINCT salary FROM (
+    SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+    FROM employees
+) ranked
+WHERE rnk = N;
+\`\`\``
+      },
+      {
+        question: 'How do you compute a running total and a 7-day moving average?',
+        answer: `**Running Total** — cumulative sum ordered by date:
+\`\`\`sql
+SELECT date, revenue,
+       SUM(revenue) OVER (ORDER BY date) AS running_total
+FROM daily_sales;
+\`\`\`
+Default frame is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW.
+
+**7-Day Moving Average** — average of current row + 6 preceding rows:
+\`\`\`sql
+SELECT date, revenue,
+       AVG(revenue) OVER (
+           ORDER BY date
+           ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+       ) AS moving_avg_7d
+FROM daily_sales;
+\`\`\`
+
+**Critical Distinction**: ROWS vs RANGE
+- **ROWS**: Counts physical rows. \`ROWS BETWEEN 6 PRECEDING\` means exactly 6 rows before.
+- **RANGE**: Groups by value. \`RANGE BETWEEN INTERVAL '7 DAYS' PRECEDING\` handles gaps in dates correctly.
+
+For financial/analytics interviews, always clarify: "Should the average include exactly 7 calendar days, or exactly 7 data points?" This determines whether you use ROWS or RANGE.`
+      },
+      {
+        question: 'How do you find the top N items per group using window functions?',
+        answer: `**Pattern**: ROW_NUMBER + PARTITION BY + subquery filter
+
+\`\`\`sql
+-- Top 3 highest-paid employees per department
+SELECT * FROM (
+    SELECT name, department, salary,
+           ROW_NUMBER() OVER (
+               PARTITION BY department
+               ORDER BY salary DESC
+           ) AS rn
+    FROM employees
+) ranked
+WHERE rn <= 3;
+\`\`\`
+
+**Why Subquery?**: Window functions execute after WHERE, so you can't filter on \`rn\` directly in the same query level — wrap it in a subquery or CTE.
+
+**Handling Ties**: If you want ALL employees tied at 3rd place (not just one), use DENSE_RANK instead of ROW_NUMBER:
+\`\`\`sql
+-- Include all ties at rank 3
+SELECT * FROM (
+    SELECT name, department, salary,
+           DENSE_RANK() OVER (
+               PARTITION BY department
+               ORDER BY salary DESC
+           ) AS rnk
+    FROM employees
+) ranked
+WHERE rnk <= 3;
+\`\`\`
+
+**Performance Tip**: Adding an index on (department, salary DESC) can significantly speed up the partitioned window operation.`
+      }
     ],
 
     tips: [
