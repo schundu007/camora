@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="500" fill="url(#bg)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="370" y="20" width="460" height="44" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="50" text-anchor="middle" fill="white" font-size="22" font-weight="700">Problem Definition: Designing Instagram</text>
+
+  <!-- Column 1: Users & Core Actions -->
+  <text x="200" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Users &amp; Core Actions</text>
+  <rect x="40" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <!-- User icons -->
+  <circle cx="120" cy="160" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="120" y="166" text-anchor="middle" fill="white" font-size="24">📷</text>
+  <text x="120" y="205" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Creator</text>
+
+  <text x="200" y="166" text-anchor="middle" fill="white" font-size="28">&#x27A1;</text>
+
+  <circle cx="280" cy="160" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="280" y="166" text-anchor="middle" fill="white" font-size="24">👁</text>
+  <text x="280" y="205" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Viewer</text>
+
+  <!-- Core Actions Box -->
+  <rect x="60" y="225" width="280" height="220" rx="12" fill="#f97316" filter="url(#shadow)"/>
+  <text x="200" y="255" text-anchor="middle" fill="white" font-size="15" font-weight="700">Core Actions</text>
+  <line x1="80" y1="267" x2="320" y2="267" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="90" y="295" fill="white" font-size="13">📸  Upload a photo</text>
+  <text x="90" y="325" fill="white" font-size="13">📜  Scroll the news feed</text>
+  <text x="90" y="355" fill="white" font-size="13">👤  Follow / Unfollow users</text>
+  <text x="90" y="385" fill="white" font-size="13">&#x2764;  Like &amp; Comment on posts</text>
+  <text x="90" y="415" fill="white" font-size="13">🔍  Search &amp; Explore</text>
+
+  <!-- Column 2: In Scope -->
+  <text x="600" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">In Scope: Essentials</text>
+  <rect x="440" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="440" y="125" width="320" height="340" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <text x="470" y="160" fill="white" font-size="13" font-weight="600">📸  Photo upload &amp; storage</text>
+  <text x="490" y="180" fill="rgba(255,255,255,0.7)" font-size="11">(Multiple resolutions, CDN delivery)</text>
+  <text x="470" y="210" fill="white" font-size="13" font-weight="600">📜  News feed generation</text>
+  <text x="490" y="230" fill="rgba(255,255,255,0.7)" font-size="11">(Push + Pull hybrid model)</text>
+  <text x="470" y="260" fill="white" font-size="13" font-weight="600">👤  Follow / Unfollow system</text>
+  <text x="490" y="280" fill="rgba(255,255,255,0.7)" font-size="11">(Social graph management)</text>
+  <text x="470" y="310" fill="white" font-size="13" font-weight="600">&#x2764;  Likes &amp; Comments</text>
+  <text x="490" y="330" fill="rgba(255,255,255,0.7)" font-size="11">(Real-time counters)</text>
+  <text x="470" y="360" fill="white" font-size="13" font-weight="600">&#x23F3;  Stories (24-hour ephemeral)</text>
+  <text x="470" y="390" fill="white" font-size="13" font-weight="600">🔍  Search &amp; Explore page</text>
+  <text x="490" y="410" fill="rgba(255,255,255,0.7)" font-size="11">(User, hashtag, location search)</text>
+  <text x="470" y="440" fill="white" font-size="13" font-weight="600">🔔  Push notifications</text>
+
+  <!-- Column 3: Out of Scope -->
+  <text x="1000" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Out of Scope / Future</text>
+  <rect x="840" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="840" y="125" width="320" height="310" rx="12" fill="rgba(245,158,11,0.25)" stroke="rgba(245,158,11,0.5)" stroke-width="1"/>
+
+  <text x="870" y="160" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Reels / Short-form video ML</text>
+  <text x="870" y="195" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Instagram Shopping / Checkout</text>
+  <text x="870" y="230" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Direct Messages (DMs)</text>
+  <text x="870" y="265" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  IGTV / Long-form video</text>
+  <text x="870" y="300" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Ad bidding &amp; targeting</text>
+  <text x="870" y="335" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  AR Filters / Effects</text>
+  <text x="870" y="370" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Creator monetization</text>
+  <text x="870" y="405" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Content moderation ML</text>
+
+  <!-- Bottom: Focus statement -->
+  <text x="600" y="480" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12">Focus on photo sharing + feed infrastructure first &#x2192; extend to video, commerce, ML later</text>
+</svg>

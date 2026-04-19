@@ -849,6 +849,115 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
         { name: 'Cache Layer', purpose: 'Hot URL lookup cache for sub-millisecond redirects', components: ['Redis Cluster', 'Local LRU Cache', 'Cache Warmer'] },
         { name: 'Storage Layer', purpose: 'Persistent URL mapping and analytics data', components: ['NoSQL Store (DynamoDB)', 'Analytics DB', 'Blob Storage (QR codes)'] },
       ],
+      comparisonTables: [
+        {
+          id: 'base62-vs-md5-vs-uuid',
+          title: 'Base62 vs MD5 vs UUID for Short Code Generation',
+          headers: ['Aspect', 'Base62 Counter', 'MD5 Hash + Truncation', 'UUID (Random)'],
+          rows: [
+            ['Length', '7 chars (fixed)', '7 chars (truncated from 21+)', '22 chars (Base64) or 36 (hex)'],
+            ['Collisions', 'Zero (sequential)', 'Possible (~1/62^7 per pair)', 'Extremely rare (128-bit)'],
+            ['Coordination', 'Requires counter (ZooKeeper)', 'None (stateless)', 'None (stateless)'],
+            ['Predictability', 'Sequential — guessable', 'Deterministic per URL', 'Random — non-guessable'],
+            ['Deduplication', 'Different code per request', 'Same URL = same code', 'Different code per request'],
+            ['Performance', 'O(1) encode', 'O(1) hash + encode', 'O(1) generate'],
+          ],
+          verdict: 'Base62 counter for guaranteed uniqueness; MD5 if dedup matters; UUID too long for short URLs'
+        },
+        {
+          id: 'sql-vs-nosql-url',
+          title: 'SQL vs NoSQL for URL Storage',
+          headers: ['Aspect', 'SQL (PostgreSQL)', 'NoSQL (Cassandra/DynamoDB)'],
+          rows: [
+            ['Data Model', 'Relational, normalized', 'Key-value, denormalized'],
+            ['Write Throughput', '~50K/s per node', '100K+/s per node, linear scaling'],
+            ['Read Pattern', 'Flexible queries, JOINs', 'Partition key lookups only'],
+            ['Scaling', 'Vertical + complex sharding', 'Horizontal (add nodes)'],
+            ['Consistency', 'Strong ACID', 'Tunable (eventual default)'],
+            ['Best For', 'Analytics queries, custom aliases', 'High-volume URL mappings'],
+          ],
+          verdict: 'NoSQL for URL mappings (simple key-value at scale), SQL for analytics and user data'
+        },
+        {
+          id: '301-vs-302-redirect',
+          title: '301 vs 302 Redirect',
+          headers: ['Aspect', '301 Permanent', '302 Temporary'],
+          rows: [
+            ['Browser Caching', 'Cached indefinitely', 'Re-requests every time'],
+            ['Server Load', 'Low (cached by browser)', 'High (every click hits server)'],
+            ['Analytics', 'Cannot track cached visits', 'Full click tracking'],
+            ['SEO', 'Passes link juice to target', 'Link juice stays with short URL'],
+            ['Target URL Change', 'Cached 301 serves old URL', 'Instantly reflects new target'],
+            ['Use Case', 'Static links, SEO', 'Tracked links, dynamic targets'],
+          ],
+          verdict: '302 for analytics-focused products (Bitly), 301 for pure shortening (TinyURL)'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'shorten-url-flow',
+          title: 'Shorten URL Flow',
+          description: 'Complete flow from user submitting a long URL to receiving the short code',
+          steps: [
+            { step: 1, label: 'Client Request', detail: 'POST /api/v1/shorten with long_url, optional custom_alias and expire_at' },
+            { step: 2, label: 'Rate Limit Check', detail: 'API gateway checks token bucket: 100 shortens/hour per user or IP' },
+            { step: 3, label: 'URL Validation', detail: 'Validate URL format, check against malware/phishing blacklists (Safe Browsing API)' },
+            { step: 4, label: 'Dedup Check', detail: 'Optional: check if long_url already has a short code (inverted index lookup)' },
+            { step: 5, label: 'Generate Short Code', detail: 'Get next ID from ZooKeeper-allocated range, Base62 encode to 7-char code' },
+            { step: 6, label: 'Store Mapping', detail: 'Write to NoSQL: short_code to long_url with metadata (userId, createdAt, expiresAt)' },
+            { step: 7, label: 'Cache Populate', detail: 'SET Redis key short:{code} to long_url with TTL of 30 days' },
+          ]
+        },
+        {
+          id: 'redirect-url-flow',
+          title: 'Redirect URL Flow',
+          description: 'How a short URL request is resolved and redirected to the original URL',
+          steps: [
+            { step: 1, label: 'Client Request', detail: 'GET /{short_code} — browser or app follows the short link' },
+            { step: 2, label: 'CDN Check', detail: 'CloudFront/Cloudflare checks edge cache — serves 80% of requests in <50ms' },
+            { step: 3, label: 'Cache Lookup', detail: 'Redis GET short:{code} — cache hit serves result in <1ms' },
+            { step: 4, label: 'DB Fallback', detail: 'On cache miss: query NoSQL by short_code partition key — 5-10ms' },
+            { step: 5, label: 'Redirect Response', detail: '301/302 redirect with Location header to the original long URL. Return 404 if expired or not found.' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'ZooKeeper (ID Gen)', value: '1M IDs/range', bar: 80 },
+            { label: 'Redis (Cache)', value: '170 GB / 20K QPS', bar: 95 },
+            { label: 'Cassandra (Store)', value: '15 TB / 5 years', bar: 70 },
+            { label: 'Kafka (Analytics)', value: '20K events/sec', bar: 85 },
+            { label: 'CloudFront (CDN)', value: '80% traffic offload', bar: 90 },
+            { label: 'ClickHouse (Analytics)', value: 'Batch aggregation', bar: 50 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '500M URLs/month', value: 'New URLs shortened', bar: 70 },
+            { label: '200 writes/sec', value: 'Shorten QPS', bar: 30 },
+            { label: '20K reads/sec', value: 'Redirect QPS', bar: 95 },
+            { label: '100:1 ratio', value: 'Read-to-write', bar: 100 },
+            { label: '15 TB (5yr)', value: 'Total storage', bar: 60 },
+            { label: '170 GB cache', value: 'Hot URL cache size', bar: 45 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Server', description: 'One web server with a local database and in-memory counter for Base62 encoding.', color: '#94a3b8', icon: 'server', capacity: '~1K URLs/day', rps: '10', pros: ['Simple to build and deploy', 'No distributed systems complexity', 'Easy to debug'], cons: ['Single point of failure', 'Database bottleneck under load', 'No fault tolerance'] },
+        { step: 2, title: 'Cache + Replicas', description: 'Add Redis cache for hot URLs and read replicas for the database. Cache-aside pattern with LRU eviction.', color: '#2D8CFF', icon: 'layers', capacity: '~10M URLs', rps: '5K', pros: ['Sub-ms redirect latency for cached URLs', 'Read replicas handle redirect traffic', 'Database write load stays low'], cons: ['Cache invalidation complexity', 'Read replicas have replication lag', 'Still single-region'] },
+        { step: 3, title: 'Distributed ID Generation', description: 'ZooKeeper allocates ID ranges to multiple app servers. Database sharded by short_code using consistent hashing.', color: '#f59e0b', icon: 'zap', capacity: '~1B URLs', rps: '50K', pros: ['Zero collision ID generation', 'Horizontal write scaling', 'No per-request coordination'], cons: ['ZooKeeper ops complexity', 'Shard rebalancing during growth', 'Cross-shard queries limited'] },
+        { step: 4, title: 'Global CDN', description: 'CloudFront/Cloudflare caches redirect responses at edge locations worldwide. 80% of traffic never reaches origin.', color: '#10b981', icon: 'globe', capacity: '~30B URLs', rps: '200K+', pros: ['Sub-50ms redirects globally', '80% traffic offloaded to CDN', 'Regional fault isolation'], cons: ['Cache invalidation across edge nodes', 'Higher infrastructure cost', '301 redirects cached in browsers too'] },
+        { step: 5, title: 'Analytics + Optimization', description: 'Kafka async analytics pipeline, ClickHouse for dashboards, bloom filters for cache optimization, multi-region active-active deployment.', color: '#7c3aed', icon: 'cpu', capacity: '30B+ URLs', rps: '500K+', pros: ['Full click analytics without redirect latency', 'Cost-efficient storage tiering', 'Active-active multi-region'], cons: ['Complex data pipeline to maintain', 'Analytics lag of 5-10 minutes', 'Multi-region consistency challenges'] },
+      ],
     },
     {
       id: 'twitter',
@@ -858,6 +967,21 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
       color: '#3b82f6',
       difficulty: 'Hard',
       description: 'Design a social media platform where users post short messages, follow others, and view personalized timelines.',
+      productMeta: {
+        name: 'Twitter / X',
+        tagline: 'Real-time global conversation platform',
+        stats: [
+          { label: 'MAU', value: '500M' },
+          { label: 'Tweets/Day', value: '500M' },
+          { label: 'Read:Write', value: '600:1' },
+          { label: 'Timeline QPS', value: '3.5M' },
+        ],
+        scope: {
+          inScope: ['Post tweets (280 chars)', 'Home timeline (ranked feed)', 'Follow/unfollow users', 'Like and retweet', 'Search tweets', 'User profiles'],
+          outOfScope: ['Direct messages', 'Spaces (audio rooms)', 'Twitter Blue/Premium', 'Ad targeting system', 'Content moderation ML'],
+        },
+        keyChallenge: 'Delivering personalized timelines to 200M daily active users at 3.5M reads/sec while handling the celebrity fan-out problem where a single tweet from a user with 100M followers must be visible to all of them within seconds.',
+      },
 
       introduction: `Twitter is a classic system design question that tests your understanding of feed generation, fan-out strategies, and handling viral content. The key challenge is delivering personalized timelines to hundreds of millions of users with low latency.
 
@@ -880,6 +1004,22 @@ The most interesting aspect is the fan-out problem: when a user tweets, how do y
         'Scale to 500M+ daily active users',
         'Handle viral tweets (celebrity problem)'
       ],
+
+      // ── Back-of-Envelope Estimation ──
+      // Sources: Twitter engineering blog, ByteByteGo, Grokking SDI
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '500M MAU, 200M DAU. Each user posts ~2.5 tweets/day on average. 600:1 read-to-write ratio. Average tweet ~1KB (text + metadata). 30% of tweets include media (~200KB average).',
+        calculations: [
+          { label: 'Tweet Write QPS', value: '~6K/s', detail: '500M tweets/day / 86,400 seconds = ~5,787 writes/sec' },
+          { label: 'Timeline Read QPS', value: '~3.5M/s', detail: '6K writes/s x 600:1 read-to-write ratio = 3.5M timeline reads/sec' },
+          { label: 'Tweet Storage/Day', value: '~500 GB', detail: '500M tweets x 1KB per tweet = 500 GB/day (text + metadata)' },
+          { label: 'Tweet Storage/Year', value: '~180 TB', detail: '500 GB/day x 365 days = 182.5 TB/year (text only)' },
+          { label: 'Media Storage/Day', value: '~30 TB', detail: '150M media tweets/day x 200KB average = 30 TB/day' },
+          { label: 'Outgoing Bandwidth', value: '~3.5 GB/s', detail: '3.5M reads/s x 1KB avg tweet = 3.5 GB/s egress (text only)' },
+          { label: 'Fan-out Writes/Day', value: '~150 Billion', detail: '500M tweets x avg 300 followers = 150B timeline cache writes/day (push model)' },
+        ]
+      },
 
       dataModel: {
         description: 'Core tables for users, tweets, and relationships',
@@ -948,34 +1088,270 @@ follows {
 
       keyQuestions: [
         {
-          question: 'How to handle the fan-out problem?',
-          answer: `Three approaches:
+          question: 'What is the fan-out problem and how does the hybrid approach solve it?',
+          answer: `The fan-out problem is the core challenge: when a user tweets, how do you deliver it to all their followers?
 
-1. Fan-out on Write (Push Model):
-   • When user tweets, push to all followers' timelines
-   • Good for users with few followers
-   • Problem: Celebrity with 10M followers = 10M writes per tweet
+**1. Fan-out on Write (Push Model):**
+• When user tweets, push tweetId to every follower's timeline cache (Redis sorted set)
+• Pros: Timeline reads are O(1) — just fetch pre-computed cache
+• Cons: Celebrity with 100M followers = 100M cache writes per tweet. At 6K tweets/sec globally, this is unsustainable
 
-2. Fan-out on Read (Pull Model):
-   • Timeline generated on request by fetching from followed users
-   • Good for celebrities
-   • Problem: Slow for users following many people
+**2. Fan-out on Read (Pull Model):**
+• Timeline generated on request: fetch recent tweets from all followed users, merge and rank
+• Pros: No write amplification — one write regardless of follower count
+• Cons: If user follows 500 people, timeline read requires 500 queries + merge + sort = high latency
 
-3. Hybrid Approach (Twitter's solution):
-   • Fan-out on write for users with < 10K followers
-   • Fan-out on read for celebrities
-   • Best of both worlds`
+**3. Hybrid Approach (what Twitter actually does):**
+• Fan-out on write for users with < 10K followers (~99.9% of users)
+• Fan-out on read for celebrities (> 10K followers)
+• Timeline read: merge pre-computed cache + real-time pull from followed celebrities
+• This limits write amplification while keeping reads fast for the majority
+
+**The math:** 500M tweets/day, ~99.9% from non-celebrities with avg 300 followers = ~150B cache writes/day (manageable). The 0.1% celebrity tweets are pulled on demand.`
         },
         {
-          question: 'How to generate Snowflake IDs?',
-          answer: `64-bit unique IDs that are:
-• Sortable by time (first 41 bits = timestamp)
-• Globally unique without coordination
-• Generated at 10K+ IDs/second per machine
+          question: 'How does the celebrity problem work and what is the threshold?',
+          answer: `The celebrity problem is the specific failure mode of pure fan-out on write:
 
-Structure:
-| 41 bits timestamp | 10 bits machine ID | 12 bits sequence |
-= 69 years × 1024 machines × 4096 IDs/ms`
+**The problem:**
+• A user with 100M followers posts a tweet
+• Fan-out on write = 100M Redis ZADD operations per tweet
+• At ~100K writes/sec per Redis node, this takes 1,000 seconds (16+ minutes)
+• During this time, some followers see the tweet and others do not — inconsistent experience
+• If the celebrity tweets 5 times in an hour, the fan-out queue grows unboundedly
+
+**The threshold (configurable):**
+• Twitter uses approximately 10K followers as the boundary
+• Below 10K: fan-out on write (push to all followers' caches)
+• Above 10K: fan-out on read (stored in a celebrity tweet cache, pulled at read time)
+• This threshold can be tuned based on infrastructure capacity
+
+**Why 10K?**
+• 10K writes per tweet is fast — takes <1 second to fan out
+• 500M daily tweets x 0.1% from celebrities = only 500K celebrity tweets/day
+• Each timeline read merges ~5-20 celebrity tweet lists (most users follow few celebrities)
+• The merge is cheap: fetch sorted lists, merge-sort, take top 20 — O(C log C) where C is celebrity count`
+        },
+        {
+          question: 'How does timeline ranking work beyond chronological order?',
+          answer: `Modern Twitter uses ML-ranked timelines, not pure chronological:
+
+**Ranking signals (features for the ML model):**
+• Engagement prediction: P(like), P(retweet), P(reply), P(click)
+• Author relationship: how often you interact with this person
+• Content relevance: topic similarity to your interests
+• Recency: exponential time decay (newer tweets score higher)
+• Social proof: how many people in your network engaged with this tweet
+• Media: tweets with images/video get engagement boost
+
+**Timeline assembly pipeline:**
+1. Candidate generation: pull ~500 candidate tweets from timeline cache + celebrity pull + trending
+2. Feature extraction: compute features for each candidate (pre-computed + real-time)
+3. Scoring: ML model (gradient-boosted trees or neural net) scores each candidate
+4. Ranking: sort by score, deduplicate, remove blocked/muted content
+5. Return top 20 with cursor for pagination
+
+**Latency budget:** Total < 200ms
+• Cache fetch: 10ms
+• Feature extraction: 50ms
+• ML scoring: 50ms
+• Final ranking + hydration: 50ms
+
+**Cache invalidation:** When engagement counts change significantly (tweet goes viral), invalidate and re-rank on next request.`
+        },
+        {
+          question: 'How do Snowflake IDs work and why are they critical for Twitter?',
+          answer: `Snowflake is Twitter's custom distributed ID generator, producing 64-bit IDs that are:
+• Time-sortable: IDs generated later are numerically larger
+• Globally unique: no coordination needed across data centers
+• High throughput: 4,096 IDs per millisecond per machine
+
+**64-bit structure:**
+| 1 bit unused | 41 bits timestamp | 10 bits machine ID | 12 bits sequence |
+
+**Breakdown:**
+• 41 bits timestamp: milliseconds since custom epoch (Twitter epoch: 2010-11-04) = ~69 years of IDs
+• 10 bits machine ID: 1,024 unique machines across data centers
+• 12 bits sequence: 4,096 unique IDs per millisecond per machine
+
+**Why not UUID?**
+• UUIDs are 128-bit (16 bytes) — Snowflake is 64-bit (8 bytes) = 50% less storage
+• UUIDs are not time-sortable — cannot use as clustering key for efficient range scans
+• UUID index fragmentation in B-trees — random insertion causes poor cache locality
+• Snowflake IDs enable efficient cursor-based pagination: "fetch tweets with ID > cursor"
+
+**Clock skew handling:**
+• If system clock moves backward, the generator waits until the clock catches up
+• NTP synchronization across machines keeps clocks aligned within ~10ms
+• Machine ID prevents collision even with identical timestamps`
+        },
+        {
+          question: 'How does tweet search work and what is Earlybird?',
+          answer: `Twitter built a custom search engine called Earlybird (now part of their search infrastructure):
+
+**Architecture:**
+1. Tweet ingestion: new tweets flow through Kafka to the search indexing pipeline
+2. Near-real-time indexing: tweets are searchable within ~10 seconds of creation
+3. Inverted index: each term maps to a list of tweet IDs (posting list)
+4. Sharded by time: recent tweets on fast SSD nodes, older tweets on larger HDD nodes
+
+**Search query flow:**
+1. User submits search query (e.g., "#SystemDesign interview")
+2. Query parser: tokenize, handle hashtags, mentions, phrases, operators (from:, since:)
+3. Scatter query to all index shards in parallel
+4. Each shard returns top-K results ranked by relevance + recency + engagement
+5. Merge results across shards, re-rank globally, return top results
+
+**Ranking factors:**
+• Text relevance (BM25 score)
+• Recency (time decay — exponential, tweets older than 7 days score much lower)
+• Engagement (likes, retweets, replies)
+• Author authority (verified status, follower count)
+• Personalization (your past interactions with similar content)
+
+**Scale:** ~500M tweets/day indexed, serving millions of search queries per second.
+Twitter moved from Lucene-based Earlybird to a custom engine for better control over real-time indexing latency.`
+        },
+        {
+          question: 'How does Twitter detect trending topics in real-time?',
+          answer: `Trends detection requires identifying hashtags/topics that are spiking unusually fast:
+
+**Pipeline:**
+1. Stream processor (Kafka + Flink/Heron) consumes all tweets in real-time
+2. Extract features: hashtags, keywords, named entities from each tweet
+3. Count occurrences using Count-Min Sketch (probabilistic data structure — O(1) update, fixed memory)
+4. Compare current count to baseline (rolling average over past 24-48 hours)
+5. Spike detection: if current_count / baseline > threshold (e.g., 5x), mark as trending
+6. Apply time decay: older spikes fade, newer ones rise
+
+**Why Count-Min Sketch?**
+• Fixed memory regardless of vocabulary size (e.g., 10MB for millions of terms)
+• O(1) update and query time
+• Approximate counts with bounded error — acceptable for trending detection
+• Alternative: exact counting with Redis INCR, but memory grows linearly with vocabulary
+
+**Geographic segmentation:**
+• Separate trending lists per country/city
+• A topic trending in Japan may not be trending globally
+• GeoDNS routes users to regional trending service
+
+**Anti-gaming:**
+• Detect coordinated bot activity (same content from many accounts created recently)
+• Velocity check: if 90% of tweets come from accounts < 30 days old, flag as suspicious
+• Human review for sensitive topics before promotion to trending page`
+        },
+        {
+          question: 'What caching architecture does the timeline service use?',
+          answer: `The timeline cache is the most performance-critical component in the entire system:
+
+**Data structure: Redis Sorted Sets**
+• Each user has a sorted set: timeline:{userId}
+• Members are tweet IDs, scores are Snowflake IDs (which encode timestamps)
+• ZADD timeline:{userId} {snowflakeId} {tweetId} — O(log N) insert
+• ZREVRANGE timeline:{userId} 0 19 — O(log N + 20) for top 20 tweets
+
+**Cache sizing:**
+• 200M DAU x 800 tweets per timeline x 8 bytes per entry = ~1.28 TB
+• Redis cluster: 50-100 nodes with 16-32 GB each
+• Only active users have cached timelines — inactive users' caches expire after 7 days
+
+**Cache population:**
+• Fan-out service writes to cache on each tweet from non-celebrities
+• Cache miss on timeline read: regenerate from DB (fetch recent tweets from followed users)
+• Cache warm-up: when a user logs in after being away, pre-fetch and cache their timeline
+
+**Eviction:**
+• Each sorted set is capped at 800 entries (ZREMRANGEBYRANK to trim)
+• LRU eviction at the Redis level for inactive users
+• TTL of 7 days on timeline keys for users who stop logging in
+
+**Multi-tier caching:**
+• L1: Application-level local cache (Guava/Caffeine) — 100 most recent timelines per server
+• L2: Redis cluster — all active user timelines
+• L3: Database — full tweet history for cache misses`
+        },
+        {
+          question: 'How does tweet deletion propagate through the system?',
+          answer: `Tweet deletion is surprisingly complex in a distributed system with caches and fan-out:
+
+**Propagation steps:**
+1. User deletes tweet via DELETE /api/tweets/{id}
+2. Tweet marked as deleted in primary DB (soft delete: deleted_at = now())
+3. Remove from author's profile cache
+4. Fan-out deletion: for non-celebrity tweets, remove tweetId from all followers' timeline caches
+   • This requires the same fan-out path as creation — O(N) cache operations for N followers
+5. Remove from search index (Elasticsearch delete by ID)
+6. Invalidate CDN-cached tweet embeds (oEmbed)
+7. Remove from trending/analytics pipelines
+
+**The challenge:**
+• Deletion fan-out can be slower than creation fan-out (lower priority queue)
+• During the propagation window (seconds to minutes), some users still see the deleted tweet
+• Embedded tweets on external websites may show cached versions
+• Retweets of the deleted tweet show "This tweet has been deleted"
+
+**Consistency trade-off:**
+• Eventual consistency is acceptable — users understand "deleting" takes a moment
+• Hard delete from DB happens after 30 days (for compliance, abuse investigations)
+• Media files deleted from S3 after the hard delete window
+
+**Edge case:** If a celebrity with 100M followers deletes a tweet that was fan-out on read (not in caches), deletion is instant — just mark the tweet as deleted in the DB, and timeline reads will filter it out.`
+        },
+        {
+          question: 'How do you handle media in tweets (images, video)?',
+          answer: `Media handling is a separate pipeline from text tweets to avoid blocking:
+
+**Upload flow:**
+1. Client uploads media first via POST /api/media/upload (before tweeting)
+2. Media service stores in S3, transcodes video to multiple resolutions (1080p, 720p, 480p)
+3. Returns mediaId to the client
+4. Client creates tweet referencing mediaIds — POST /api/tweets with mediaIds[]
+5. Tweet stored with mediaUrl references, not the actual media bytes
+
+**CDN strategy:**
+• All media served through CDN (CloudFront/Akamai) — never from origin S3
+• Images: WebP format with responsive sizes (thumbnail 150px, small 680px, large 1200px)
+• Videos: HLS adaptive bitrate streaming with multiple quality levels
+• CDN cache TTL: 30 days for media (content-addressable — never changes)
+
+**Timeline performance:**
+• Only thumbnails loaded initially (lazy loading for full images)
+• Video auto-play with sound off (first 3 seconds pre-buffered)
+• Blurhash placeholders shown while images load
+
+**Storage:**
+• 150M media tweets/day x 200KB average = 30 TB/day
+• S3 lifecycle: Standard (30 days) -> S3-IA (1 year) -> Glacier (archive)
+• Content-addressable dedup: identical images shared across retweets stored once`
+        },
+        {
+          question: 'How do you implement rate limiting at Twitter scale?',
+          answer: `Rate limiting protects the system at 3.5M+ QPS and prevents abuse:
+
+**Multi-layer rate limiting:**
+
+**1. API Gateway (per-user, per-endpoint):**
+• Token bucket algorithm: each user gets N tokens per time window
+• Limits: tweet creation (300/3hr), timeline reads (900/15min), search (450/15min)
+• Implemented at the API gateway (Envoy/Kong) — before requests reach application servers
+• Uses Redis for distributed counter: INCR ratelimit:{userId}:{endpoint}:{window}
+
+**2. Fan-out rate limiting (per-account):**
+• Celebrity accounts with high follower counts: limit fan-out to 1 tweet/10 seconds
+• Prevents a single celebrity from overwhelming the fan-out queue
+• Backpressure via Kafka consumer lag monitoring
+
+**3. IP-level rate limiting (anti-DDoS):**
+• Sliding window counter at the edge (CDN/WAF level)
+• Block IPs exceeding 1000 requests/minute
+• CAPTCHA challenge for suspicious patterns
+
+**4. Content-based rate limiting:**
+• Detect and throttle duplicate content (same text from multiple accounts = spam)
+• New accounts (< 30 days) have stricter limits (50 tweets/day vs 300)
+• Accounts with spam flags: rate limited to 10 tweets/day
+
+**Response:** Return 429 Too Many Requests with Retry-After header and X-Rate-Limit-Remaining header so clients can self-throttle.`
         }
       ],
 
@@ -4179,6 +4555,37 @@ Personalization touches:
       color: '#ff9900',
       difficulty: 'Hard',
       description: 'Design an e-commerce platform handling millions of products, orders, and payments.',
+      productMeta: {
+        name: 'Amazon',
+        tagline: 'E-commerce for 310M+ active customers',
+        stats: [
+          { label: 'Active Users', value: '310M+' },
+          { label: 'Products', value: '12M+' },
+          { label: 'Orders/Day', value: '1.6M' },
+          { label: 'Peak TPS', value: '100K' },
+        ],
+        scope: {
+          inScope: ['Product catalog browsing and search', 'Shopping cart management', 'Checkout and payment processing', 'Inventory management with race condition handling', 'Order fulfillment pipeline', 'Product recommendations'],
+          outOfScope: ['AWS cloud platform', 'Alexa voice integration', 'Amazon Prime Video', 'Warehouse robotics / physical logistics', 'Seller onboarding portal'],
+        },
+        keyChallenge: 'Processing 100K+ transactions per second during Prime Day while guaranteeing zero overselling through distributed inventory locks across hundreds of warehouses.',
+      },
+
+      // ── Back-of-Envelope Estimation ──
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '310M active customers, 1.6M orders/day average, 12M+ products, average order has 3 items. Prime Day peak is 10x normal. Average product page is 500KB. Search query rate 5x order rate.',
+        calculations: [
+          { label: 'Order QPS (Average)', value: '~18/s', detail: '1.6M orders / 86,400 seconds = 18.5 orders/sec average' },
+          { label: 'Order QPS (Prime Day Peak)', value: '~100K/s', detail: '10x daily volume compressed into 48 hours with 5x burst factor' },
+          { label: 'Search QPS', value: '~100K/s', detail: '~8.5B product searches/day / 86,400 = ~100K searches/sec' },
+          { label: 'Product Catalog Storage', value: '~6 TB', detail: '12M products x 500KB average (images, descriptions, attributes) = 6 TB' },
+          { label: 'Order Data/Year', value: '~2 TB', detail: '1.6M orders/day x 365 x 3.5KB avg order record = ~2 TB/year' },
+          { label: 'Search Index Size', value: '~500 GB', detail: '12M products x ~40KB indexed fields per product' },
+          { label: 'Cart Operations QPS', value: '~50K/s', detail: '5x search-to-cart conversion, high during promotions' },
+          { label: 'Outgoing Bandwidth', value: '~200 Gbps', detail: '100K pages/sec x 500KB avg page size at peak' },
+        ]
+      },
 
       introduction: `Amazon is the world's largest e-commerce platform, selling 350+ million products and processing millions of orders daily. The system must handle enormous catalog sizes, high-throughput transactions, real-time inventory management, and complex fulfillment operations.
 

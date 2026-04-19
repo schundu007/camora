@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="14" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="41" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="70" width="220" height="360" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="70" width="220" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="130" y="94" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="40" y="130" fill="#fbbf24" font-size="13" font-weight="700">&#x1F4DD; 500M URLs/month</text>
+  <text x="130" y="155" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="40" y="180" fill="white" font-size="11">Write QPS (Average):</text>
+  <text x="40" y="198" fill="rgba(255,255,255,0.7)" font-size="10">500M / (30d &#xD7; 86400s)</text>
+  <text x="40" y="220" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 200 writes/sec</text>
+  <text x="130" y="242" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="40" y="268" fill="white" font-size="11">Read:Write ratio</text>
+  <text x="40" y="288" fill="#fbbf24" font-size="15" font-weight="700">100 : 1</text>
+  <text x="130" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="40" y="335" fill="white" font-size="11">Read QPS (Average):</text>
+  <text x="40" y="355" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 20,000 reads/sec</text>
+
+  <text x="40" y="385" fill="white" font-size="11">Peak QPS (3&#xD7;):</text>
+  <text x="40" y="408" fill="#f97316" font-size="16" font-weight="800">&#x2248; 60,000 reads/sec</text>
+
+  <!-- Column 2: Storage -->
+  <rect x="255" y="70" width="220" height="360" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="255" y="70" width="220" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="365" y="94" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Estimates</text>
+
+  <text x="275" y="130" fill="white" font-size="11">Each URL record:</text>
+  <text x="275" y="150" fill="#fbbf24" font-size="13" font-weight="700">&#x2248; 500 bytes</text>
+  <text x="275" y="170" fill="rgba(255,255,255,0.6)" font-size="9">(short code + long URL + metadata)</text>
+  <text x="365" y="192" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="275" y="218" fill="white" font-size="11">URLs per year:</text>
+  <text x="275" y="238" fill="rgba(255,255,255,0.7)" font-size="10">500M &#xD7; 12 months</text>
+  <text x="275" y="260" fill="#fbbf24" font-size="15" font-weight="800">= 6 Billion/year</text>
+  <text x="365" y="282" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="275" y="308" fill="white" font-size="11">Storage for 5 years:</text>
+  <text x="275" y="328" fill="rgba(255,255,255,0.7)" font-size="10">30B URLs &#xD7; 500 bytes</text>
+  <text x="275" y="352" fill="#fbbf24" font-size="18" font-weight="800">= 15 TB</text>
+
+  <text x="275" y="385" fill="white" font-size="11">Unique codes needed:</text>
+  <text x="275" y="408" fill="#f97316" font-size="14" font-weight="800">30 Billion (7-char Base62)</text>
+  <text x="275" y="424" fill="rgba(255,255,255,0.6)" font-size="9">62&#x2077; = 3.5 Trillion &#x2192; plenty of room</text>
+
+  <!-- Column 3: Bandwidth -->
+  <rect x="490" y="70" width="220" height="195" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="490" y="70" width="220" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="600" y="94" text-anchor="middle" fill="white" font-size="14" font-weight="700">Bandwidth</text>
+
+  <text x="510" y="130" fill="white" font-size="11">Read bandwidth:</text>
+  <text x="510" y="150" fill="rgba(255,255,255,0.7)" font-size="10">20K req/s &#xD7; 500 bytes</text>
+  <text x="510" y="172" fill="#fbbf24" font-size="15" font-weight="800">&#x2248; 10 MB/s reads</text>
+
+  <text x="510" y="202" fill="white" font-size="11">Write bandwidth:</text>
+  <text x="510" y="222" fill="rgba(255,255,255,0.7)" font-size="10">200 req/s &#xD7; 500 bytes</text>
+  <text x="510" y="244" fill="#fbbf24" font-size="15" font-weight="800">&#x2248; 100 KB/s writes</text>
+
+  <!-- Column 4: Cache -->
+  <rect x="490" y="280" width="220" height="150" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="490" y="280" width="220" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="600" y="304" text-anchor="middle" fill="white" font-size="14" font-weight="700">Cache (Redis)</text>
+
+  <text x="510" y="340" fill="white" font-size="11">Hot URLs (80/20 rule):</text>
+  <text x="510" y="360" fill="#fbbf24" font-size="13" font-weight="700">20% of URLs = 80% traffic</text>
+
+  <text x="510" y="390" fill="white" font-size="11">Daily cache size:</text>
+  <text x="510" y="410" fill="rgba(255,255,255,0.7)" font-size="10">20K req/s &#xD7; 86400s &#xD7; 500B &#xD7; 20%</text>
+  <text x="510" y="425" fill="#f97316" font-size="15" font-weight="800">&#x2248; 170 GB</text>
+
+  <!-- Column 5: Key Insights -->
+  <rect x="725" y="70" width="455" height="360" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="952" y="98" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="745" y1="110" x2="1160" y2="110" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="745" y="140" fill="white" font-size="12" font-weight="600">Read-heavy system (100:1 ratio)</text>
+  <text x="745" y="160" fill="rgba(255,255,255,0.7)" font-size="10">Reads dominate at 20K QPS. Optimize for</text>
+  <text x="745" y="175" fill="rgba(255,255,255,0.7)" font-size="10">fast lookups with caching + CDN.</text>
+
+  <text x="745" y="210" fill="white" font-size="12" font-weight="600">Storage is manageable</text>
+  <text x="745" y="230" fill="rgba(255,255,255,0.7)" font-size="10">15 TB for 5 years fits on a single</text>
+  <text x="745" y="245" fill="rgba(255,255,255,0.7)" font-size="10">database cluster. No sharding needed initially.</text>
+
+  <text x="745" y="280" fill="white" font-size="12" font-weight="600">Cache is the performance key</text>
+  <text x="745" y="300" fill="rgba(255,255,255,0.7)" font-size="10">170 GB fits in a Redis cluster easily.</text>
+  <text x="745" y="315" fill="rgba(255,255,255,0.7)" font-size="10">Cache hit ratio of 90%+ expected.</text>
+
+  <text x="745" y="350" fill="white" font-size="12" font-weight="600">Base62 with 7 characters is sufficient</text>
+  <text x="745" y="370" fill="rgba(255,255,255,0.7)" font-size="10">3.5 trillion possible codes vs 30 billion</text>
+  <text x="745" y="385" fill="rgba(255,255,255,0.7)" font-size="10">needed = 0.85% utilization. No collision risk.</text>
+
+  <text x="745" y="418" fill="white" font-size="12" font-weight="600">Bandwidth is trivially low</text>
+  <text x="745" y="435" fill="rgba(255,255,255,0.7)" font-size="10">10 MB/s total &#x2014; not a bottleneck at all.</text>
+</svg>

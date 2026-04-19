@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="500" fill="url(#bg)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="340" y="18" width="520" height="44" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="48" text-anchor="middle" fill="white" font-size="22" font-weight="700">Problem Definition: URL Shortener</text>
+
+  <!-- Column 1: Users & Core Actions -->
+  <text x="200" y="96" text-anchor="middle" fill="white" font-size="16" font-weight="700">Users &amp; Core Actions</text>
+  <rect x="40" y="104" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <!-- User icon -->
+  <circle cx="200" cy="158" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="200" y="164" text-anchor="middle" fill="white" font-size="24">&#x1F517;</text>
+  <text x="200" y="202" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Link Creator / Visitor</text>
+
+  <!-- Core Actions Box -->
+  <rect x="55" y="225" width="290" height="210" rx="12" fill="#f97316" filter="url(#shadow)"/>
+  <text x="200" y="255" text-anchor="middle" fill="white" font-size="15" font-weight="700">Core Actions</text>
+  <line x1="75" y1="267" x2="325" y2="267" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="85" y="295" fill="white" font-size="13">&#x2702;&#xFE0F;  Shorten a long URL</text>
+  <text x="85" y="325" fill="white" font-size="13">&#x1F4E4;  Share the short link</text>
+  <text x="85" y="355" fill="white" font-size="13">&#x1F517;  Click short URL &#x2192; redirect</text>
+  <text x="85" y="385" fill="white" font-size="13">&#x1F4CA;  View click analytics</text>
+  <text x="85" y="415" fill="white" font-size="13">&#x23F3;  Set link expiration</text>
+
+  <!-- Column 2: In Scope -->
+  <text x="600" y="96" text-anchor="middle" fill="white" font-size="16" font-weight="700">In Scope: Essentials</text>
+  <rect x="440" y="104" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="440" y="120" width="320" height="330" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <text x="470" y="158" fill="white" font-size="13" font-weight="600">&#x2702;&#xFE0F;  URL shortening (long &#x2192; short)</text>
+  <text x="490" y="178" fill="rgba(255,255,255,0.7)" font-size="11">Generate unique Base62 code</text>
+
+  <text x="470" y="210" fill="white" font-size="13" font-weight="600">&#x21A9;&#xFE0F;  Redirection (301/302)</text>
+  <text x="490" y="230" fill="rgba(255,255,255,0.7)" font-size="11">Short URL &#x2192; original URL</text>
+
+  <text x="470" y="262" fill="white" font-size="13" font-weight="600">&#x1F3F7;&#xFE0F;  Custom aliases</text>
+  <text x="490" y="282" fill="rgba(255,255,255,0.7)" font-size="11">User-chosen short codes</text>
+
+  <text x="470" y="314" fill="white" font-size="13" font-weight="600">&#x1F4CA;  Basic analytics</text>
+  <text x="490" y="334" fill="rgba(255,255,255,0.7)" font-size="11">Click count, referrer, country</text>
+
+  <text x="470" y="366" fill="white" font-size="13" font-weight="600">&#x23F3;  Link expiration</text>
+  <text x="490" y="386" fill="rgba(255,255,255,0.7)" font-size="11">TTL-based auto-expiry</text>
+
+  <text x="470" y="418" fill="white" font-size="13" font-weight="600">&#x1F680;  High availability &amp; low latency</text>
+  <text x="490" y="438" fill="rgba(255,255,255,0.7)" font-size="11">Sub-100ms redirect response</text>
+
+  <!-- Column 3: Out of Scope -->
+  <text x="1000" y="96" text-anchor="middle" fill="white" font-size="16" font-weight="700">Out of Scope / Future</text>
+  <rect x="840" y="104" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="840" y="120" width="320" height="330" rx="12" fill="rgba(245,158,11,0.25)" stroke="rgba(245,158,11,0.5)" stroke-width="1"/>
+
+  <text x="870" y="158" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  User authentication / accounts</text>
+  <text x="870" y="193" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  QR code generation</text>
+  <text x="870" y="228" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Link-in-bio pages</text>
+  <text x="870" y="263" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Detailed analytics dashboards</text>
+  <text x="870" y="298" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  A/B testing / split URLs</text>
+  <text x="870" y="333" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Link preview customization</text>
+  <text x="870" y="368" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Team/workspace management</text>
+  <text x="870" y="403" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  API rate limiting per user</text>
+
+  <!-- Bottom: Focus note -->
+  <text x="600" y="480" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12">Focus on core shortening + redirect infrastructure first &#x2192; extend to analytics &amp; user features later</text>
+</svg>
