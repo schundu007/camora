@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgLP" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient>
+    <marker id="arrW" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="white"/></marker>
+    <marker id="arrY" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#fbbf24"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgLP)" rx="16"/>
+  <text x="600" y="35" text-anchor="middle" fill="white" font-size="20" font-weight="800">Location Update Pipeline — 10M+ GPS Updates/sec</text>
+
+  <!-- Driver App -->
+  <rect x="30" y="80" width="140" height="80" rx="12" fill="#22c55e" stroke="white" stroke-width="2"/>
+  <text x="100" y="112" text-anchor="middle" fill="white" font-size="13" font-weight="800">Driver App</text>
+  <text x="100" y="132" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">GPS every 3-4s</text>
+  <text x="100" y="148" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">lat, lng, heading, speed</text>
+
+  <line x1="170" y1="120" x2="220" y2="120" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrY)"/>
+
+  <!-- Load Balancer -->
+  <rect x="225" y="85" width="130" height="70" rx="12" fill="#3b82f6" stroke="white" stroke-width="1.5"/>
+  <text x="290" y="115" text-anchor="middle" fill="white" font-size="12" font-weight="700">Load Balancer</text>
+  <text x="290" y="133" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">Hash by Cell ID</text>
+
+  <line x1="355" y1="120" x2="405" y2="120" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrY)"/>
+
+  <!-- Location Service -->
+  <rect x="410" y="70" width="160" height="100" rx="12" fill="#8b5cf6" stroke="white" stroke-width="2"/>
+  <text x="490" y="100" text-anchor="middle" fill="white" font-size="13" font-weight="800">Location Service</text>
+  <text x="490" y="120" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">Validate + Snap-to-Road</text>
+  <text x="490" y="138" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">Detect GPS spoofing</text>
+  <text x="490" y="156" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">Critical Path ↓</text>
+
+  <!-- Split: Redis (critical) and Kafka (async) -->
+  <!-- Redis path -->
+  <line x1="490" y1="170" x2="490" y2="210" stroke="#ef4444" stroke-width="2.5" marker-end="url(#arrW)"/>
+  <rect x="410" y="215" width="160" height="65" rx="12" fill="#ef4444" stroke="white" stroke-width="2"/>
+  <text x="490" y="242" text-anchor="middle" fill="white" font-size="14" font-weight="800">Redis Geo</text>
+  <text x="490" y="262" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">GEOADD → O(log N)</text>
+
+  <text x="392" y="198" fill="#ef4444" font-size="10" font-weight="700">HOT PATH</text>
+
+  <!-- Arrow from Redis to Matching -->
+  <line x1="490" y1="280" x2="490" y2="320" stroke="white" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <rect x="410" y="325" width="160" height="50" rx="10" fill="#ec4899"/>
+  <text x="490" y="355" text-anchor="middle" fill="white" font-size="12" font-weight="700">Matching Engine</text>
+  <text x="490" y="308" fill="rgba(255,255,255,0.5)" font-size="9">GEORADIUS queries</text>
+
+  <!-- Kafka path (async) -->
+  <line x1="570" y1="120" x2="660" y2="120" stroke="#f97316" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrW)"/>
+  <rect x="665" y="80" width="150" height="80" rx="12" fill="#f97316" stroke="white" stroke-width="2"/>
+  <text x="740" y="110" text-anchor="middle" fill="white" font-size="13" font-weight="800">Kafka</text>
+  <text x="740" y="130" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">location-updates topic</text>
+  <text x="740" y="148" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Async (non-blocking)</text>
+
+  <!-- Kafka consumers -->
+  <!-- Consumer 1: Rider Tracking -->
+  <line x1="815" y1="95" x2="880" y2="95" stroke="white" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <rect x="885" y="70" width="170" height="50" rx="10" fill="#6366f1"/>
+  <text x="970" y="92" text-anchor="middle" fill="white" font-size="11" font-weight="700">WS Broadcaster</text>
+  <text x="970" y="108" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Push to rider every 2s</text>
+
+  <!-- Consumer 2: ETA -->
+  <line x1="815" y1="120" x2="880" y2="170" stroke="white" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <rect x="885" y="145" width="170" height="50" rx="10" fill="#14b8a6"/>
+  <text x="970" y="167" text-anchor="middle" fill="white" font-size="11" font-weight="700">ETA Service</text>
+  <text x="970" y="183" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Recalculate every 30s</text>
+
+  <!-- Consumer 3: Analytics -->
+  <line x1="815" y1="145" x2="880" y2="245" stroke="white" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <rect x="885" y="220" width="170" height="50" rx="10" fill="#a855f7"/>
+  <text x="970" y="242" text-anchor="middle" fill="white" font-size="11" font-weight="700">Traffic Analytics</text>
+  <text x="970" y="258" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Speed per road segment</text>
+
+  <!-- Consumer 4: Surge -->
+  <line x1="815" y1="155" x2="880" y2="320" stroke="white" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <rect x="885" y="295" width="170" height="50" rx="10" fill="#eab308"/>
+  <text x="970" y="317" text-anchor="middle" fill="white" font-size="11" font-weight="700">Surge Pricing</text>
+  <text x="970" y="333" text-anchor="middle" fill="rgba(0,0,0,0.5)" font-size="9">Supply/demand per cell</text>
+
+  <!-- Storage sink -->
+  <line x1="815" y1="155" x2="880" y2="395" stroke="white" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <rect x="885" y="370" width="170" height="50" rx="10" fill="#64748b"/>
+  <text x="970" y="392" text-anchor="middle" fill="white" font-size="11" font-weight="700">Cold Storage (S3)</text>
+  <text x="970" y="408" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">2.8 TB/day archival</text>
+
+  <!-- Labels -->
+  <rect x="30" y="390" width="530" height="45" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+  <text x="50" y="410" fill="#ef4444" font-size="11" font-weight="700">Critical Path:</text>
+  <text x="138" y="410" fill="rgba(255,255,255,0.7)" font-size="11">Driver → LB → Location Svc → Redis GEOADD (~5ms p99)</text>
+  <text x="50" y="427" fill="#f97316" font-size="11" font-weight="700">Async Path:</text>
+  <text x="130" y="427" fill="rgba(255,255,255,0.7)" font-size="11">Location Svc → Kafka → WS/ETA/Analytics/Surge (50-500ms)</text>
+</svg>

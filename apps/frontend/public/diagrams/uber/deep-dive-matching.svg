@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgM" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient>
+    <marker id="aM" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="white"/></marker>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bgM)" rx="16"/>
+  <text x="600" y="35" text-anchor="middle" fill="white" font-size="20" font-weight="800">Matching Optimization &amp; Batch Dispatch</text>
+
+  <!-- Greedy Mode -->
+  <rect x="30" y="65" width="360" height="330" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(34,197,94,0.4)"/>
+  <rect x="30" y="65" width="360" height="35" rx="12 12 0 0" fill="rgba(34,197,94,0.15)"/>
+  <text x="210" y="88" text-anchor="middle" fill="#4ade80" font-size="14" font-weight="700">Greedy Mode (Low Demand)</text>
+
+  <text x="50" y="125" fill="white" font-size="12" font-weight="600">1. Single ride request arrives</text>
+  <text x="50" y="148" fill="rgba(255,255,255,0.7)" font-size="11">2. GEORADIUS 1km → 3km → 5km</text>
+  <text x="50" y="171" fill="rgba(255,255,255,0.7)" font-size="11">3. Filter: available + vehicle type</text>
+  <text x="50" y="194" fill="rgba(255,255,255,0.7)" font-size="11">4. Score = w1/dist + w2×rating</text>
+  <text x="50" y="217" fill="rgba(255,255,255,0.7)" font-size="11">5. Dispatch to top candidate</text>
+  <text x="50" y="240" fill="rgba(255,255,255,0.7)" font-size="11">6. 15s accept timer</text>
+
+  <rect x="50" y="260" width="160" height="30" rx="6" fill="rgba(34,197,94,0.15)"/>
+  <text x="130" y="280" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Latency: &lt;50ms</text>
+
+  <rect x="220" y="260" width="150" height="30" rx="6" fill="rgba(234,179,8,0.15)"/>
+  <text x="295" y="280" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Optimality: Local</text>
+
+  <text x="50" y="320" fill="rgba(255,255,255,0.5)" font-size="10">Good enough when supply > demand.</text>
+  <text x="50" y="338" fill="rgba(255,255,255,0.5)" font-size="10">O(n) per request where n = nearby drivers.</text>
+  <text x="50" y="356" fill="rgba(255,255,255,0.5)" font-size="10">Heading-aware: prefer drivers</text>
+  <text x="50" y="374" fill="rgba(255,255,255,0.5)" font-size="10">already driving toward pickup.</text>
+
+  <!-- Batch Mode -->
+  <rect x="420" y="65" width="360" height="330" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(236,72,153,0.4)"/>
+  <rect x="420" y="65" width="360" height="35" rx="12 12 0 0" fill="rgba(236,72,153,0.15)"/>
+  <text x="600" y="88" text-anchor="middle" fill="#f472b6" font-size="14" font-weight="700">Batch Mode (Peak Hours)</text>
+
+  <text x="440" y="125" fill="white" font-size="12" font-weight="600">1. Accumulate requests for 2 seconds</text>
+  <text x="440" y="148" fill="rgba(255,255,255,0.7)" font-size="11">2. Build bipartite graph: riders ↔ drivers</text>
+  <text x="440" y="171" fill="rgba(255,255,255,0.7)" font-size="11">3. Edge weight = pickup ETA + wait penalty</text>
+  <text x="440" y="194" fill="rgba(255,255,255,0.7)" font-size="11">4. Hungarian algorithm → min-cost matching</text>
+  <text x="440" y="217" fill="rgba(255,255,255,0.7)" font-size="11">5. Dispatch all matches simultaneously</text>
+
+  <rect x="440" y="245" width="160" height="30" rx="6" fill="rgba(236,72,153,0.15)"/>
+  <text x="520" y="265" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700">Latency: ~100ms</text>
+
+  <rect x="610" y="245" width="150" height="30" rx="6" fill="rgba(34,197,94,0.15)"/>
+  <text x="685" y="265" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Optimality: Global</text>
+
+  <text x="440" y="305" fill="rgba(255,255,255,0.5)" font-size="10">20-30% improvement in avg wait time</text>
+  <text x="440" y="323" fill="rgba(255,255,255,0.5)" font-size="10">over greedy. O(n³) but n is bounded by</text>
+  <text x="440" y="341" fill="rgba(255,255,255,0.5)" font-size="10">2-second window (~50-200 requests).</text>
+  <text x="440" y="359" fill="rgba(255,255,255,0.5)" font-size="10">Only used when demand > supply.</text>
+
+  <!-- Pool Mode -->
+  <rect x="810" y="65" width="360" height="330" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(251,191,36,0.4)"/>
+  <rect x="810" y="65" width="360" height="35" rx="12 12 0 0" fill="rgba(251,191,36,0.15)"/>
+  <text x="990" y="88" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="700">Pool Mode (Shared Rides)</text>
+
+  <text x="830" y="125" fill="white" font-size="12" font-weight="600">Vehicle Routing Problem (VRP)</text>
+  <text x="830" y="148" fill="rgba(255,255,255,0.7)" font-size="11">1. Active ride with existing passengers</text>
+  <text x="830" y="171" fill="rgba(255,255,255,0.7)" font-size="11">2. New rider requests pool ride</text>
+  <text x="830" y="194" fill="rgba(255,255,255,0.7)" font-size="11">3. Check: can new pickup/dropoff</text>
+  <text x="830" y="214" fill="rgba(255,255,255,0.7)" font-size="11">   fit without 25% detour?</text>
+  <text x="830" y="237" fill="rgba(255,255,255,0.7)" font-size="11">4. If yes: insert into route, notify all</text>
+
+  <rect x="830" y="260" width="160" height="30" rx="6" fill="rgba(251,191,36,0.15)"/>
+  <text x="910" y="280" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Constraint: 25% detour</text>
+
+  <rect x="1000" y="260" width="150" height="30" rx="6" fill="rgba(34,197,94,0.15)"/>
+  <text x="1075" y="280" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Revenue: +60%/trip</text>
+
+  <text x="830" y="318" fill="rgba(255,255,255,0.5)" font-size="10">Greedy nearest-insertion heuristic</text>
+  <text x="830" y="336" fill="rgba(255,255,255,0.5)" font-size="10">for real-time performance (&lt;200ms).</text>
+  <text x="830" y="354" fill="rgba(255,255,255,0.5)" font-size="10">Max 3 riders per vehicle.</text>
+  <text x="830" y="372" fill="rgba(255,255,255,0.5)" font-size="10">Dynamic re-optimization on cancellation.</text>
+</svg>

@@ -1413,6 +1413,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       discussionPoints: [
         {
           topic: 'Search Architecture',
+          diagramSrc: '/diagrams/twitter/discuss-search.png',
           points: [
             'Elasticsearch cluster for full-text search',
             'Index tweets asynchronously via Kafka',
@@ -1422,6 +1423,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         },
         {
           topic: 'Trending Topics',
+          diagramSrc: '/diagrams/twitter/discuss-trending.png',
           points: [
             'Stream processing (Kafka + Flink) for real-time counts',
             'Count-min sketch for approximate hashtag counting',
@@ -1431,6 +1433,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         },
         {
           topic: 'Media Storage',
+          diagramSrc: '/diagrams/twitter/discuss-media.png',
           points: [
             'Store images/videos in object storage (S3)',
             'CDN for global delivery',
@@ -1471,6 +1474,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       deepDiveTopics: [
         {
           topic: 'Hybrid Fan-out Strategy',
+          diagramSrc: '/diagrams/twitter/deep-dive-fanout.png',
           detail: `The hybrid fan-out is Twitter's most important architectural decision, combining push and pull models:
 
 **Fan-out on Write (push) for regular users (<10K followers):**
@@ -1493,6 +1497,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         },
         {
           topic: 'Earlybird Search Engine',
+          diagramSrc: '/diagrams/twitter/deep-dive-earlybird.png',
           detail: `Twitter's custom real-time search engine, designed for the unique requirements of tweet search:
 
 **Why not just Elasticsearch?**
@@ -1520,6 +1525,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         },
         {
           topic: 'Snowflake ID Generation',
+          diagramSrc: '/diagrams/twitter/deep-dive-snowflake.png',
           detail: `Snowflake is Twitter's globally distributed unique ID generator, now open-sourced and widely adopted:
 
 **Why custom IDs?**
@@ -1548,6 +1554,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         },
         {
           topic: 'Timeline Ranking ML Pipeline',
+          diagramSrc: '/diagrams/twitter/deep-dive-ranking.png',
           detail: `Twitter's timeline evolved from pure reverse-chronological to ML-ranked in 2016:
 
 **Candidate generation (500 candidates):**
@@ -1572,6 +1579,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         },
         {
           topic: 'Trends Detection with Stream Processing',
+          diagramSrc: '/diagrams/twitter/deep-dive-trends.png',
           detail: `Trending topics must be detected within minutes of a spike — classic stream processing problem:
 
 **Pipeline architecture:**
@@ -1646,6 +1654,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'post-tweet-flow',
           title: 'Post Tweet Flow',
           description: 'Complete flow from tweet creation through fan-out to follower timelines',
+          src: '/diagrams/twitter/post-tweet-flow.svg',
           steps: [
             { step: 1, label: 'Client Request', detail: 'POST /api/tweets with content (280 chars), mediaIds[], replyToId' },
             { step: 2, label: 'Validation', detail: 'Content length check, spam detection ML model, rate limit (300 tweets/3hr)' },
@@ -1661,6 +1670,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'read-timeline-flow',
           title: 'Read Timeline Flow',
           description: 'How a personalized home timeline is assembled from multiple sources',
+          src: '/diagrams/twitter/fanout-hybrid.svg',
           steps: [
             { step: 1, label: 'Client Request', detail: 'GET /api/timeline with cursor (Snowflake ID) and limit=20' },
             { step: 2, label: 'Fetch Pre-computed', detail: 'ZREVRANGEBYSCORE timeline:{userId} from Redis — pre-computed from fan-out' },
@@ -1683,6 +1693,12 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
             { step: 5, label: 'Return Results', detail: 'Return top results with highlighted matches, engagement counts, and cursor' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope: Users, core actions, in-scope vs out-of-scope features', src: '/diagrams/twitter/problem-definition.svg', type: 'overview' },
+        { id: 'capacity', title: 'Capacity Estimation', description: 'Traffic QPS, fan-out volume, storage, Snowflake IDs', src: '/diagrams/twitter/capacity-estimation.svg', type: 'estimation' },
+        { id: 'fanout', title: 'Hybrid Fan-out Strategy', description: 'Fan-out on write vs read vs hybrid — Twitter\'s approach with 5K follower threshold', src: '/diagrams/twitter/fanout-hybrid.svg', type: 'flow' },
+        { id: 'post-flow', title: 'Post Tweet Flow', description: 'End-to-end flow from tweet creation through Kafka to fan-out, search indexing, and notifications', src: '/diagrams/twitter/post-tweet-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -2187,6 +2203,148 @@ rides {
         { name: 'Matching & Dispatch Layer', purpose: 'Match riders with optimal nearby drivers using real-time location data', components: ['Matching Engine', 'Surge Pricing Service', 'ETA Calculator'] },
         { name: 'Location & Geospatial Layer', purpose: 'Index and query driver positions with sub-second freshness', components: ['Redis Geospatial Index', 'S2/Geohash Partitioner', 'Location Stream Processor'] },
         { name: 'Data & Analytics Layer', purpose: 'Persist ride data, process payments, and power demand forecasting', components: ['Ride Store (PostgreSQL)', 'Payment Service', 'Kafka Event Bus', 'ML Demand Predictor'] },
+      ],
+
+      deepDiveTopics: [
+        {
+          topic: 'Cell-Based Geospatial Architecture',
+          diagramSrc: '/diagrams/uber/deep-dive-cell-architecture.svg',
+          detail: `Uber divides each city into S2 geometry cells (roughly 1 km²). Each cell is managed by a dedicated cell service that maintains an in-memory spatial index of active drivers. When a ride request arrives, the gateway identifies the cell containing the pickup location and routes the request to that cell's matching service. For boundary cases, the system queries adjacent cells to ensure drivers just across a cell boundary aren't missed. This architecture enables horizontal scaling — adding more cells as a city grows — and isolates failures to individual geographic areas rather than affecting the entire city.`,
+        },
+        {
+          topic: 'Real-Time Location Ingestion Pipeline',
+          diagramSrc: '/diagrams/uber/deep-dive-location-pipeline.svg',
+          detail: `10M+ active drivers send GPS updates every 3-4 seconds, generating 3.3M writes/second at average load and 10M+ at peak. The location ingestion pipeline uses a multi-tier approach: updates first hit a load balancer that routes by driver's cell ID, then write to Redis (GEOADD) for the hot spatial index used by matching. Simultaneously, updates are published to Kafka for downstream consumers — the analytics pipeline (Spark/Flink), the ETA recalculation service, and the rider tracking WebSocket broadcaster. Only the Redis write is on the critical path; Kafka consumption is asynchronous, ensuring location updates don't slow down even if analytics is backed up.`,
+        },
+        {
+          topic: 'Surge Pricing Engine',
+          diagramSrc: '/diagrams/uber/deep-dive-surge-pricing.svg',
+          detail: `The surge pricing engine runs as a continuous computation over supply/demand signals. Every 60 seconds, it computes a surge multiplier for each cell: (ride_requests_last_5min / available_drivers). A smoothing function prevents oscillation — surge ramps up quickly (30-second response) but decays slowly (5-minute cooldown) to avoid gaming. The multiplier is written to Redis and served to clients via the pricing API. Critically, the surge multiplier is locked at booking time so the rider's quoted price is guaranteed. Geographic smoothing ensures neighboring cells don't have wildly different multipliers, and regulatory caps per city are enforced as hard limits.`,
+        },
+        {
+          topic: 'ETA Prediction with Live Traffic',
+          diagramSrc: '/diagrams/uber/deep-dive-eta-prediction.svg',
+          detail: `ETA prediction combines a pre-computed road graph with real-time traffic overlays. The base routing uses Contraction Hierarchies on the city's road network for sub-millisecond path computation. Real-time traffic multipliers are computed from the aggregate speed of active drivers on each road segment — if 50 drivers on a highway average 25 mph instead of the usual 60 mph, that segment's travel time is adjusted 2.4x. An ML model (gradient boosted trees) further refines the ETA using features like time of day, weather, and local events. The system maintains per-city models because traffic patterns in Mumbai differ fundamentally from those in San Francisco.`,
+        },
+        {
+          topic: 'Matching Optimization & Batch Dispatch',
+          diagramSrc: '/diagrams/uber/deep-dive-matching.svg',
+          detail: `During low-demand periods, Uber uses greedy matching — each ride request is independently matched to the nearest available driver. But during peak hours, batch matching significantly improves outcomes. The system accumulates ride requests over a 2-second window, then models the problem as a bipartite graph where edges are weighted by pickup ETA. The Hungarian algorithm finds the minimum-cost perfect matching, reducing average wait times by 20-30% compared to greedy assignment. For UberPool, the system solves an online variant of the Vehicle Routing Problem, dynamically inserting new pickups/dropoffs into existing routes while respecting a 25% detour constraint for existing passengers.`,
+        },
+      ],
+
+      comparisonTables: [
+        {
+          id: 'uber-spatial-indexing',
+          title: 'Spatial Indexing Approaches',
+          headers: ['Feature', 'Geohash', 'QuadTree', 'S2 Geometry', 'H3 (Uber)'],
+          rows: [
+            ['Cell Shape', 'Rectangle', 'Square', 'Square (on sphere)', 'Hexagon'],
+            ['Uniform Area', 'No (varies by latitude)', 'No (adaptive)', 'Yes', 'Approximately yes'],
+            ['Edge Handling', 'Poor (boundary artifacts)', 'Good', 'Good', 'Excellent (no corners)'],
+            ['Hierarchical', 'Yes (prefix-based)', 'Yes (tree levels)', 'Yes (30 levels)', 'Yes (16 resolutions)'],
+            ['DB Compatibility', 'Excellent (string index)', 'Custom (in-memory)', 'Moderate (library needed)', 'Moderate (library needed)'],
+            ['Used By', 'Redis, Elasticsearch', 'Custom implementations', 'Google Maps, Foursquare', 'Uber, DoorDash'],
+          ],
+          verdict: 'H3 hexagonal cells are Uber\'s choice for ride matching due to uniform distances from center to edge. S2 is used for server-side geospatial queries. Geohash is simplest for prototyping.',
+        },
+        {
+          id: 'uber-realtime-transport',
+          title: 'Real-Time Communication Protocols',
+          headers: ['Feature', 'WebSocket', 'Server-Sent Events', 'Long Polling', 'gRPC Streaming'],
+          rows: [
+            ['Direction', 'Bidirectional', 'Server → Client', 'Client → Server (simulated)', 'Bidirectional'],
+            ['Connection', 'Persistent TCP', 'Persistent HTTP', 'Repeated HTTP', 'Persistent HTTP/2'],
+            ['Latency', '<50ms', '<50ms', '~1-30s', '<50ms'],
+            ['Firewall Friendly', 'Moderate', 'Good (HTTP)', 'Excellent (HTTP)', 'Moderate'],
+            ['Mobile Battery', 'Higher drain', 'Moderate', 'Lower (intermittent)', 'Higher drain'],
+            ['Best For', 'Active ride tracking', 'One-way push updates', 'Idle state polling', 'Service-to-service'],
+          ],
+          verdict: 'Use WebSocket for active ride tracking (bidirectional location + status updates). Long polling for idle driver location. gRPC streaming for inter-service communication.',
+        },
+        {
+          id: 'uber-matching-algorithms',
+          title: 'Matching Algorithm Comparison',
+          headers: ['Feature', 'Greedy Nearest', 'Hungarian Algorithm', 'Auction-Based', 'RL-Based'],
+          rows: [
+            ['Optimality', 'Local optimal', 'Global optimal', 'Near-optimal', 'Learned optimal'],
+            ['Latency', '<10ms', '~100ms', '~50ms', '~200ms'],
+            ['Complexity', 'O(n)', 'O(n³)', 'O(n²)', 'O(n × model)'],
+            ['Handles Pool/Shared', 'No', 'Limited', 'Yes', 'Yes'],
+            ['Adaptability', 'None', 'None', 'Moderate', 'High (learns patterns)'],
+            ['Production Use', 'Low demand periods', 'Peak batching', 'UberPool', 'Experimental'],
+          ],
+          verdict: 'Greedy for low-demand simplicity, Hungarian for peak-hour batch optimization, auction-based for shared ride insertion.',
+        },
+      ],
+
+      flowcharts: [
+        {
+          id: 'uber-ride-request-flow',
+          title: 'Ride Request Flow',
+          description: 'End-to-end flow from rider opening the app to driver arrival',
+          steps: [
+            { step: 1, label: 'Rider Opens App', detail: 'Client sends GPS location to API gateway, receives nearby driver count and surge multiplier for the pickup cell' },
+            { step: 2, label: 'Enter Destination', detail: 'Client sends pickup + dropoff coordinates, server calculates ETA and upfront fare estimate using routing + surge' },
+            { step: 3, label: 'Confirm Ride', detail: 'Pre-authorize payment, lock surge multiplier, create ride record with status REQUESTED in PostgreSQL' },
+            { step: 4, label: 'Find Drivers', detail: 'Matching service queries Redis GEORADIUS for available drivers within 5km of pickup, filters by vehicle type and rating' },
+            { step: 5, label: 'Score & Rank', detail: 'Score candidates by distance, heading, rating, acceptance rate. Select top candidate for dispatch' },
+            { step: 6, label: 'Dispatch to Driver', detail: 'Send push notification to selected driver with ride details and 15-second acceptance countdown' },
+            { step: 7, label: 'Driver Accepts', detail: 'Driver accepts → ride status changes to MATCHED, rider notified with driver info and ETA. If declined → try next driver' },
+            { step: 8, label: 'En Route to Pickup', detail: 'Both apps establish WebSocket connection. Driver location streamed to rider every 2 seconds. ETA continuously recalculated' },
+            { step: 9, label: 'Arrival & Pickup', detail: 'Driver arrives → status ARRIVING. Rider confirms pickup (or PIN verification). Status → IN_PROGRESS. Fare metering starts' },
+            { step: 10, label: 'Ride Complete', detail: 'Arrive at destination → calculate final fare from GPS trace, charge payment, prompt ratings, update ride status to COMPLETED' },
+          ],
+        },
+        {
+          id: 'uber-location-update-flow',
+          title: 'Driver Location Update Pipeline',
+          description: 'How 10M+ GPS updates per second flow through the system',
+          steps: [
+            { step: 1, label: 'GPS Capture', detail: 'Driver app captures GPS coordinates every 3-4 seconds with heading, speed, and accuracy' },
+            { step: 2, label: 'Batch & Send', detail: 'Client batches 2-3 updates and sends via lightweight UDP-like protocol to reduce overhead' },
+            { step: 3, label: 'Load Balancer', detail: 'Route to location service shard based on driver\'s cell ID (consistent hashing)' },
+            { step: 4, label: 'Redis GEOADD', detail: 'Update driver position in Redis geospatial index — O(log N) per update, critical path for matching' },
+            { step: 5, label: 'Kafka Publish', detail: 'Async publish location event to Kafka topic for downstream consumers (analytics, ETA, tracking)' },
+            { step: 6, label: 'Rider Broadcast', detail: 'If driver is on active ride, WebSocket broadcaster pushes location to rider\'s connected client' },
+            { step: 7, label: 'ETA Refresh', detail: 'ETA service consumes Kafka stream, recalculates arrival time every 30 seconds during active rides' },
+            { step: 8, label: 'Analytics Sink', detail: 'Flink/Spark job aggregates location data into traffic speed per road segment for real-time traffic model' },
+          ],
+        },
+      ],
+
+      visualCards: [
+        {
+          id: 'uber-scale-metrics',
+          title: 'Uber Scale at a Glance',
+          icon: 'zap',
+          color: '#8b5cf6',
+          items: [
+            { label: 'Trips per Day', value: '42M', bar: 95 },
+            { label: 'Location Updates/sec', value: '3.3M avg', bar: 80 },
+            { label: 'Peak Location QPS', value: '10M+', bar: 100 },
+            { label: 'WebSocket Connections', value: '20M', bar: 75 },
+            { label: 'Match Latency Target', value: '<30 sec', bar: 60 },
+            { label: 'ETA Accuracy', value: '95% within 2 min', bar: 85 },
+            { label: 'Cities Served', value: '15,000+', bar: 90 },
+            { label: 'Location Data/Day', value: '2.8 TB', bar: 70 },
+          ],
+        },
+      ],
+
+      evolutionSteps: [
+        { step: 1, title: 'Single-Server MVP', description: 'Monolithic Node.js app with PostgreSQL + PostGIS. All matching, pricing, and tracking in one process.', color: '#ef4444', icon: 'server', capacity: '100 rides/day', rps: '~1 QPS', pros: ['Fast to build', 'Easy to debug'], cons: ['Cannot scale beyond one city', 'PostGIS queries slow at 1K+ drivers'] },
+        { step: 2, title: 'Service Decomposition', description: 'Split into Matching, Location, Payment, and Notification services. Redis replaces PostGIS for real-time queries.', color: '#f97316', icon: 'layers', capacity: '50K rides/day', rps: '~100 QPS', pros: ['Independent scaling per service', 'Redis GEORADIUS handles 100K drivers'], cons: ['Single Redis instance is SPOF', 'No surge pricing yet'] },
+        { step: 3, title: 'Cell-Based Architecture', description: 'Divide cities into S2 cells with dedicated services per cell. Kafka for async location event processing.', color: '#eab308', icon: 'grid', capacity: '5M rides/day', rps: '~10K QPS', pros: ['Horizontal scaling per cell', 'Fault isolation per geography'], cons: ['Cross-cell matching complexity', 'Cell rebalancing during growth'] },
+        { step: 4, title: 'Global Multi-Region', description: 'Deploy in 5+ regions with per-region data sovereignty. ML-based ETA, batch matching, demand prediction.', color: '#22c55e', icon: 'globe', capacity: '42M rides/day', rps: '~500K QPS', pros: ['<30s match globally', 'ML-optimized matching and pricing'], cons: ['Operational complexity of 15K cities', 'Regulatory compliance per jurisdiction'] },
+        { step: 5, title: 'AI-Native Platform', description: 'Reinforcement learning for matching, autonomous vehicle integration, real-time traffic prediction from driver fleet.', color: '#8b5cf6', icon: 'brain', capacity: '100M+ rides/day', rps: '~2M QPS', pros: ['Optimal matching via RL', 'Predictive supply positioning'], cons: ['ML model drift monitoring', 'AV safety certification'] },
+      ],
+
+      staticDiagrams: [
+        { id: 'uber-problem-definition', title: 'Problem Definition', description: 'Uber system scope, scale, and key challenges', src: '/diagrams/uber/problem-definition.svg', type: 'overview' },
+        { id: 'uber-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for Uber scale', src: '/diagrams/uber/capacity-estimation.svg', type: 'estimation' },
+        { id: 'uber-ride-request', title: 'Ride Request Flow', description: 'End-to-end flow from request to driver match', src: '/diagrams/uber/ride-request-flow.svg', type: 'flow' },
+        { id: 'uber-location-pipeline', title: 'Location Update Pipeline', description: 'How GPS updates flow through Redis, Kafka, and analytics', src: '/diagrams/uber/location-pipeline.svg', type: 'flow' },
       ],
     },
     {
@@ -3756,18 +3914,18 @@ class ChatGateway {
       description: 'Design a photo-sharing social network with feeds, stories, and social features.',
       productMeta: {
         name: 'Instagram',
-        tagline: 'Photo and video sharing for 2 billion users',
+        tagline: 'Photo and video sharing social network for 2 billion users',
         stats: [
-          { label: 'MAU', value: '2B' },
-          { label: 'Photos/Day', value: '100M' },
-          { label: 'Stories/Day', value: '500M' },
-          { label: 'Storage/Day', value: '285 TB' },
+          { label: 'Monthly Users', value: '2B+' },
+          { label: 'Photos/Day', value: '100M+' },
+          { label: 'Stories/Day', value: '500M+' },
+          { label: 'Likes/Day', value: '4.2B+' },
         ],
         scope: {
-          inScope: ['Upload photos/videos', 'News feed (ranked)', 'Follow/unfollow', 'Like and comment', 'Stories (24h ephemeral)', 'Search and Explore'],
-          outOfScope: ['Reels recommendation engine', 'Instagram Shopping', 'Direct messages', 'IGTV long-form video', 'Ad bidding system'],
+          inScope: ['Photo/video upload + feed', 'Follow/unfollow system', 'News feed generation', 'Stories (24hr ephemeral)', 'Like/comment/share', 'Search and explore'],
+          outOfScope: ['Direct messaging (separate system)', 'Reels recommendation engine', 'Shopping/marketplace', 'Ads platform', 'Live streaming'],
         },
-        keyChallenge: 'Generating personalized feeds for 500M daily active users with a 100:1 read-to-write ratio, while processing 100M photo uploads per day through a multi-resolution pipeline and delivering them via CDN at 230 GB/s egress.',
+        keyChallenge: 'Generating personalized feeds for 2 billion users where each post must be ranked, filtered, and delivered in under 200ms — while handling 100M+ photo uploads per day.',
       },
 
       introduction: `Instagram is a photo and video sharing social network with over 2 billion monthly active users and 500 million daily active users. The system handles 100 million photo uploads per day, 500 million stories per day, and generates personalized feeds for half a billion users — making it one of the most read-heavy and media-intensive systems ever built.
@@ -3783,18 +3941,20 @@ In this design, we will walk through capacity estimation, the photo upload and p
       // ── Back-of-Envelope Estimation ──
       estimation: {
         title: 'Capacity Planning',
-        assumptions: '2B MAU, 500M DAU, 100M photos/day, 500M stories/day. Average photo 2MB original. Each photo resized to 4 versions (150px thumb, 320px, 640px, 1080px). 100:1 read-to-write ratio.',
+        assumptions: '2B MAU, 500M DAU, 100M photos/day, 500M stories/day. Average photo 2MB original. Each photo resized to 3 additional sizes (thumbnail, medium, full). 100:1 read-to-write ratio. 4.2B likes/day.',
         calculations: [
           { label: 'Photo Upload QPS', value: '~1,200/s', detail: '100M photos/day / 86,400 seconds = 1,157 uploads/sec' },
           { label: 'Peak Upload QPS', value: '~3,000/s', detail: '1,200 x 2.5x peak factor (holidays, events) = 3,000 uploads/sec' },
           { label: 'Feed Read QPS', value: '500K-1M/s', detail: '500M DAU x ~100 feed views/day / 86,400s = ~580K, with burst to 1M' },
           { label: 'Read:Write Ratio', value: '100:1', detail: 'Each photo viewed ~100 times across feeds, explore, profile visits' },
-          { label: 'Storage/Day (Photos)', value: '~285 TB', detail: '100M photos x 2MB original + 3 resized versions (~850KB avg) = ~285 TB/day' },
-          { label: 'Storage/Year (Photos)', value: '~104 PB', detail: '285 TB/day x 365 days = 104 PB/year (before replication)' },
-          { label: 'Storage w/ Replication', value: '~300 PB/year', detail: '104 PB x 3x replication factor = ~312 PB/year' },
+          { label: 'Storage/Day (All Sizes)', value: '~600 TB', detail: '100M photos x 2MB avg x 3 sizes generated (thumbnail + medium + full) = 600 TB/day' },
+          { label: 'Storage/Year (Photos)', value: '~219 PB', detail: '600 TB/day x 365 days = 219 PB/year (before replication)' },
+          { label: 'Storage w/ Replication', value: '~657 PB/year', detail: '219 PB x 3x replication factor = ~657 PB/year' },
           { label: 'CDN Egress Bandwidth', value: '~230 GB/s', detail: 'Feed reads x avg image payload (~500KB) = ~230 GB/s sustained egress' },
           { label: 'CDN Cache Hit Rate', value: '95%', detail: '95% of image requests served from CDN edge, only 5% reach origin S3' },
           { label: 'Stories Storage/Day', value: '~50 TB', detail: '500M stories x 100KB avg (compressed image/short video) = 50 TB/day, auto-deleted after 24h' },
+          { label: 'Likes QPS', value: '~48,600/s', detail: '4.2B likes/day / 86,400 seconds = ~48,600 like writes/sec' },
+          { label: 'Social Graph Size', value: '~400B edges', detail: '2B users x avg 200 follows = 400B follow relationships' },
         ]
       },
 
@@ -5067,45 +5227,45 @@ Changes are pushed through notification service, client then fetches full delta.
       description: 'Design a subscription video streaming service with personalized recommendations.',
       productMeta: {
         name: 'Netflix',
-        tagline: 'Streaming entertainment for 230M+ subscribers worldwide',
+        tagline: 'Video streaming platform serving 260M+ subscribers in 190 countries',
         stats: [
-          { label: 'Subscribers', value: '230M+' },
-          { label: 'Titles', value: '17K+' },
-          { label: 'Hours/Day', value: '100M' },
-          { label: 'Internet Traffic', value: '~15%' },
+          { label: 'Subscribers', value: '260M+' },
+          { label: 'Hours Streamed/Day', value: '500M+' },
+          { label: 'Countries', value: '190' },
+          { label: 'Content Library', value: '17K+ titles' },
         ],
         scope: {
-          inScope: ['Video streaming (adaptive bitrate)', 'Content catalog and search', 'Recommendation engine', 'User profiles and preferences', 'Video encoding pipeline', 'CDN (Open Connect)'],
-          outOfScope: ['Content licensing/acquisition', 'Ad-supported tier details', 'Payment/billing system', 'Content production tools', 'A/B testing framework'],
+          inScope: ['Video upload + transcoding pipeline', 'Content delivery via CDN (Open Connect)', 'Personalized recommendation engine', 'Adaptive bitrate streaming', 'User profiles and watch history', 'Search and discovery'],
+          outOfScope: ['Content licensing/DRM details', 'Payment/billing system', 'Content creation tools', 'Social features', 'Live streaming/sports'],
         },
-        keyChallenge: 'Streaming 100 million hours of video daily to 8M+ concurrent viewers across 190 countries, while encoding each title into 1,200+ versions and serving 15% of global internet traffic through a custom CDN of 17,000+ servers.',
+        keyChallenge: 'Delivering 500M+ hours of video per day with zero buffering across 190 countries, while personalizing content for 260M users using a recommendation engine that drives 80% of content watched.',
       },
 
-      introduction: `Netflix is the world's leading streaming entertainment service with over 230 million paid subscribers in 190+ countries. The system streams 100 million hours of content daily, accounting for approximately 15% of all global downstream internet traffic. Each title in Netflix's 17,000+ catalog is encoded into over 1,200 versions (combinations of bitrate, resolution, codec, and audio tracks), stored across a custom CDN of 17,000+ servers deployed at 6,000+ locations worldwide.
+      introduction: `Netflix is the world's dominant streaming entertainment platform, serving over 260 million paid subscribers across 190 countries. At peak hours, over 100 million people are simultaneously streaming content, consuming more than 500 million hours of video per day. Netflix accounts for approximately 15% of all downstream internet bandwidth globally. Each title in Netflix's 17,000+ catalog is encoded into over 1,200 versions (combinations of bitrate, resolution, codec, and audio tracks), stored across a custom CDN of 17,000+ servers deployed at 6,000+ locations worldwide.
 
 This is one of the most comprehensive system design interview questions because it tests every layer of distributed systems: video encoding pipelines (each title produces 1,200+ versions), adaptive bitrate streaming (DASH/HLS with real-time quality switching), custom CDN architecture (Open Connect with 95% cache hit rate), recommendation engines (collaborative + content-based filtering with personalized artwork), and chaos engineering (the famous Simian Army that tests failure resilience in production).
 
 What makes Netflix fundamentally different from other streaming services? The separation of control plane and data plane. All business logic (browsing, recommendations, user management, playback decisions) runs on AWS. All video byte delivery happens through Open Connect, Netflix's own CDN placed directly at ISPs. This architectural split means Netflix can innovate rapidly on the software side (AWS microservices) while optimizing the hardware side (custom storage appliances at ISPs) independently.
 
-The scale numbers: 230M+ subscribers generating 8M+ concurrent streams at peak, ~400 Gbps from origin to CDN during overnight fills, ~100 PB of encoded video content, and the recommendation engine that drives 80% of content discovery. Each piece of content goes through a pipeline that can take days: 8K/4K master ingest, per-shot encoding analysis, multi-codec transcoding, quality verification, DRM encryption, and predictive placement across 17,000+ CDN nodes.
+The scale numbers: 260M+ subscribers generating ~100M concurrent streams at peak, ~500 Tbps aggregate bandwidth, ~100 PB of encoded video content, and the recommendation engine that drives 80% of content discovery. Each piece of content goes through a pipeline that can take days: 8K/4K master ingest, per-shot encoding analysis, multi-codec transcoding, quality verification, DRM encryption, and predictive placement across 17,000+ CDN nodes.
 
 In this design, we will walk through capacity estimation, adaptive bitrate streaming, the video encoding pipeline, Open Connect CDN architecture, the recommendation engine, microservices design, and chaos engineering.`,
 
       // ── Back-of-Envelope Estimation ──
       estimation: {
         title: 'Capacity Planning',
-        assumptions: '230M subscribers, 8M peak concurrent streams, 17K+ titles, 100M hours watched/day. Each title encoded into 1,200+ versions. Open Connect CDN with 17,000+ servers.',
+        assumptions: '260M subscribers, ~100M concurrent viewers at peak, average session 2 hours, average bitrate 5 Mbps. 17,000+ titles each encoded in 1,200+ variants. Open Connect serves 95%+ of traffic.',
         calculations: [
-          { label: 'Peak Concurrent Streams', value: '~8M', detail: '230M subscribers, ~3.5% concurrent during peak evening hours = ~8M streams' },
-          { label: 'Streaming Bandwidth', value: '~40 Tbps', detail: '8M streams x avg 5 Mbps per stream = 40 Tbps peak aggregate bandwidth' },
-          { label: 'API QPS (Browse/Search)', value: '~100K/s', detail: '230M subscribers, 30% DAU, ~10 API calls per session = ~100K browse/search QPS' },
-          { label: 'Watch Progress Writes', value: '~270K/s', detail: '8M concurrent streams x position update every 30 seconds = 267K writes/sec' },
-          { label: 'Encoded Content Storage', value: '~100 PB', detail: '17K titles x avg 1,200 encoded versions x avg 5 GB per version = ~100 PB' },
-          { label: 'Encoding Versions/Title', value: '1,200+', detail: 'Multiple resolutions x codecs x bitrates x audio tracks = 1,200+ files per title' },
-          { label: 'CDN Fill Bandwidth', value: '~400 Gbps', detail: 'Origin to CDN transfer during overnight off-peak filling window' },
-          { label: 'CDN Cache Hit Rate', value: '95%+', detail: '95% of video bytes served from ISP-local Open Connect Appliances' },
-          { label: 'CDN Servers', value: '17,000+', detail: 'Open Connect Appliances deployed at 6,000+ ISP and IXP locations globally' },
-          { label: 'Internet Traffic Share', value: '~15%', detail: 'Netflix accounts for approximately 15% of all global downstream internet traffic' },
+          { label: 'Total Hours Streamed/Day', value: '500M+', detail: '260M subscribers x ~2 hrs avg daily viewing = 500M+ hours per day' },
+          { label: 'Peak Concurrent Streams', value: '~100M', detail: '260M subscribers, ~40% daily active, peak hour = ~100M simultaneous streams' },
+          { label: 'Peak Bandwidth (Total)', value: '~500 Tbps', detail: '100M streams x 5 Mbps avg = 500 Tbps aggregate bandwidth' },
+          { label: 'Internet Traffic Share', value: '~15%', detail: 'Netflix accounts for 15-20% of all downstream internet bandwidth in North America' },
+          { label: 'Total Video Storage', value: '100+ PB', detail: '17,000 titles x 1,200 encoded variants x ~5 GB avg per variant = 100+ petabytes' },
+          { label: 'Encoding Variants/Title', value: '1,200+', detail: '~10 resolutions x ~4 codecs x ~30 bitrate levels = 1,200+ files per title' },
+          { label: 'CDN Servers', value: '18,000+', detail: 'Open Connect Appliances deployed at 6,000+ ISP locations in 190 countries' },
+          { label: 'CDN Cache Hit Rate', value: '95%+', detail: '95% of bytes served from ISP-embedded OCAs, 4% from IXPs, ~1% from origin (S3)' },
+          { label: 'API QPS (Control Plane)', value: '~2M/s', detail: 'Browse, search, playback initiation, progress updates across 100M active users' },
+          { label: 'Recommendation Compute', value: '~Hourly', detail: 'Batch ML pipeline runs hourly for all 260M subscribers, real-time re-ranking on request' },
         ]
       },
 
@@ -5655,35 +5815,41 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         ]
       },
 
-      playbackFlow: {
+      createFlow: {
         title: 'Video Playback Flow',
+        diagramSrc: '/diagrams/netflix/playback-flow.svg',
         steps: [
-          'Client requests playback for content ID',
-          'Playback service checks entitlement (subscription valid?)',
-          'Get license for DRM-protected content',
-          'Receive manifest URL pointing to optimal edge server',
-          'Client downloads manifest (HLS/DASH) with quality options',
-          'Start buffering segments, beginning with lower quality',
-          'Measure bandwidth, upgrade quality as buffer fills',
-          'Continuous quality adaptation based on network conditions',
-          'Report playback events to analytics (start, buffer, quality changes)',
-          'Save watch position every 30 seconds for continue watching'
+          'User selects a title; client sends GET /api/playback/{id}/manifest with profileId and deviceType',
+          'Zuul API Gateway authenticates the JWT token and routes to the Playback Service',
+          'Playback Service checks subscription entitlement: is the plan active and within concurrent stream limits?',
+          'Session Service registers a new active session: SADD session:{accountId} {deviceId} with 2-min TTL heartbeat',
+          'Playback Service queries the Steering Service: which Open Connect node should serve this user?',
+          'Steering Service selects the optimal OCA based on: client IP geolocation, ISP peering data, OCA health metrics, current load',
+          'Playback Service generates a DRM license (Widevine/FairPlay/PlayReady) tied to the device and session',
+          'Client receives manifest URL pointing to the selected OCA + DRM license + resume position from watch_history',
+          'Client downloads the DASH/HLS manifest from the OCA listing all quality levels and segment URLs',
+          'Client begins downloading video segments starting at a lower quality (720p) to fill the buffer quickly (<3s to first frame)',
+          'ABR algorithm monitors buffer level and TCP throughput, upgrading quality as buffer fills above 30 seconds',
+          'Every 30 seconds: client sends progress update to control plane (POST /api/watch/progress) for cross-device resume',
+          'If the OCA becomes unhealthy mid-stream: steering service redirects to an alternate OCA at the next segment boundary'
         ]
       },
 
-      contentFlow: {
-        title: 'Content Ingestion Flow',
+      redirectFlow: {
+        title: 'Content Ingestion + Transcoding Pipeline',
+        diagramSrc: '/diagrams/netflix/transcoding-pipeline.svg',
         steps: [
-          'Receive master content from studio (8K/4K source)',
-          'Encoding pipeline: Generate 10+ quality levels',
-          'Encode multiple codecs: H.264, H.265, VP9, AV1',
-          'Quality assurance: Automated testing + human review',
-          'Encrypt with DRM (Widevine, PlayReady, FairPlay)',
-          'Upload to origin storage (S3)',
-          'Predictive placement: ML determines regional popularity',
-          'Pre-position on relevant Open Connect Appliances',
-          'Content becomes available for streaming',
-          'Monitor initial performance, adjust placement if needed'
+          'Studio uploads master source file (8K/4K ProRes, 50-100 GB per hour of content) to the ingest service',
+          'Ingest service validates the file (format, resolution, audio channels) and stores the master in S3 origin',
+          'Shot Detection Service analyzes the video and splits it into individual shots/scenes at scene boundaries',
+          'Per-Shot Encoding: each shot is independently encoded at every quality/codec/bitrate combination in parallel on EC2 cluster',
+          'VMAF Quality Analysis: automated perceptual quality scoring (0-100) for each encoded variant; re-encode variants below threshold',
+          'DRM Encryption: each encoded variant is encrypted with Widevine, PlayReady, and FairPlay keys using CENC (Common Encryption)',
+          'Manifest Generation: DASH (.mpd) and HLS (.m3u8) manifests are created listing all available quality levels and segment URLs',
+          'Subtitle/Audio Processing: 30+ subtitle languages are timed and packaged; 30+ dubbed audio tracks are synced and encoded',
+          'Content Placement Service: ML model predicts regional popularity and generates a fill schedule for OCAs',
+          'Off-peak Fill: during 2-6 AM local time, encoded content is pushed from origin to ISP OCAs and IXP OCAs based on predicted demand',
+          'Release: content becomes available for streaming; content catalog service updates metadata and triggers recommendation re-computation'
         ]
       },
 
@@ -6005,12 +6171,12 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           icon: 'trendingUp',
           color: '#10B981',
           items: [
-            { label: '230M+ subscribers', value: 'Paid memberships', bar: 100 },
-            { label: '100M hours/day', value: 'Content watched', bar: 95 },
-            { label: '~15% internet', value: 'Global downstream traffic', bar: 90 },
-            { label: '8M concurrent', value: 'Peak simultaneous streams', bar: 75 },
-            { label: '1,200+ versions', value: 'Per title encoded', bar: 70 },
-            { label: '~100 PB', value: 'Encoded content storage', bar: 85 },
+            { label: '260M+ subscribers', value: 'Paid memberships', bar: 100 },
+            { label: '500M+ hrs/day', value: 'Video hours streamed', bar: 95 },
+            { label: '~100M concurrent', value: 'Peak simultaneous streams', bar: 90 },
+            { label: '~500 Tbps peak', value: 'Aggregate bandwidth', bar: 85 },
+            { label: '100+ PB storage', value: 'Encoded video assets', bar: 80 },
+            { label: '~15% of internet', value: 'Global downstream traffic', bar: 70 },
           ]
         }
       ],
@@ -6189,63 +6355,319 @@ cart {
 
       keyQuestions: [
         {
-          question: 'How do we prevent overselling during flash sales?',
-          answer: `Multiple strategies combined:
+          question: 'How do you design the product catalog to handle 12M+ products with diverse attributes?',
+          answer: `The product catalog is the foundation of the entire platform and must handle extreme heterogeneity:
 
-1. Inventory Reservation:
-   - Reserve inventory when added to cart (soft hold)
-   - TTL on reservation (15 min) - auto-release if not purchased
-   - Confirm reservation during checkout
+**Schema-per-category approach:**
+- Products have wildly different attributes: a laptop has RAM and CPU, a shirt has size and color
+- Use a base products table with common fields (ASIN, title, price, sellerId, images)
+- Store category-specific attributes in a JSONB column for flexibility
+- DynamoDB is ideal: schemaless, handles diverse product structures natively
+- Each product identified by ASIN (Amazon Standard Identification Number) — a unique 10-character alphanumeric ID
 
-2. Optimistic Locking:
-   - Version number on inventory record
-   - UPDATE ... WHERE quantity >= requested AND version = expected
-   - Retry with backoff if version mismatch
+**Read optimization:**
+- Product detail pages are read-heavy (100:1 read-to-write ratio)
+- Cache hot products in Redis with 5-minute TTL (top 1% of products = 50% of traffic)
+- Use CDN for product images with aggressive caching (images rarely change)
+- Denormalize seller info, review summary, and pricing into the product record to avoid joins
 
-3. Distributed Locks (for hot products):
-   - Redis lock per productId
-   - Short TTL to prevent deadlocks
-   - Queue requests during flash sales
-
-4. Pre-allocated inventory:
-   - For Prime Day: Pre-allocate inventory pools
-   - Partition by region/warehouse`
+**Write path (seller updates):**
+- Seller Portal writes to DynamoDB, triggers Change Data Capture (CDC) via DynamoDB Streams
+- CDC events update Elasticsearch index, invalidate Redis cache, and update recommendation features
+- Bulk imports from sellers are rate-limited and processed asynchronously via SQS queue
+- Price changes propagate to search index within seconds via near-real-time CDC pipeline`
         },
         {
-          question: 'How does checkout work with multiple services?',
-          answer: `Saga pattern for distributed transaction:
+          question: 'How does the shopping cart work at scale across devices and sessions?',
+          answer: `The cart is deceptively complex — it must persist across devices, handle inventory changes, and support high write throughput:
 
-1. Cart Service: Validate cart, lock prices
-2. Inventory Service: Reserve inventory (compensation: release)
-3. Payment Service: Charge card (compensation: refund)
-4. Order Service: Create order record
-5. Notification Service: Send confirmation
-6. Fulfillment: Queue for warehouse
+**Storage choice: DynamoDB**
+- Key: userId (partition key), items stored as a list in a single item
+- Single-digit millisecond reads and writes at any scale
+- Global Tables for multi-region replication (cart accessible from any region)
+- TTL on cart items: auto-expire abandoned carts after 90 days
 
-If any step fails, run compensation actions in reverse.
-Use event-driven choreography or orchestrator (Step Functions).
+**Cart does NOT reserve inventory:**
+- Reserving inventory at cart-add time would lock stock for millions of browsing users
+- Instead, inventory is checked at checkout time (optimistic approach)
+- If an item goes out of stock between cart-add and checkout, show a warning and suggest alternatives
+- Price at add time is stored as a snapshot but recalculated at checkout (prices change frequently)
 
-Idempotency keys prevent duplicate charges on retry.`
+**Merge strategy for anonymous and authenticated users:**
+- Anonymous users get a session-based cart (stored with sessionId as key)
+- On login, merge session cart with persisted cart: keep higher quantity for duplicates
+- Conflict resolution: authenticated cart wins for items in both, session cart items are appended
+
+**High-throughput during sales:**
+- Cart service is stateless, scales horizontally behind ALB
+- DynamoDB auto-scales provisioned capacity based on traffic patterns
+- Pre-scale capacity 2 hours before known events (Prime Day, Black Friday)
+- Rate limit cart operations per user: 60 add/remove operations per minute`
         },
         {
-          question: 'How do we search 350M products fast?',
-          answer: `Elasticsearch cluster with optimizations:
+          question: 'How does the checkout flow work across multiple distributed services?',
+          answer: `Checkout is a distributed transaction spanning 5+ services — the Saga pattern with an orchestrator is essential:
 
-Index Design:
-- Sharded by category (better relevance)
-- Separate indices for different product types
-- Denormalized data (no JOINs needed)
+**Orchestrator-based Saga (AWS Step Functions):**
 
-Query Optimization:
-- Multi-level caching: Query cache, field data cache
-- Use filters (cached) before scoring
-- Pre-computed facets for common categories
+1. **Validate Cart** — Cart Service confirms all items still exist, recalculates prices
+   - Compensation: None (read-only step)
+2. **Reserve Inventory** — Inventory Service atomically decrements available stock
+   - Compensation: Release reserved inventory
+3. **Authorize Payment** — Payment Service places a hold on the customer card (no capture yet)
+   - Compensation: Void the authorization
+4. **Create Order** — Order Service creates order record with PENDING status
+   - Compensation: Cancel order, mark as FAILED
+5. **Capture Payment** — Payment Service captures the authorized amount
+   - Compensation: Refund the captured amount
+6. **Trigger Fulfillment** — Publish order.confirmed event to Kafka
+   - Compensation: Cancel fulfillment, return inventory to warehouse
 
-ML-Enhanced:
-- Learning-to-rank for result ordering
-- Personalized ranking based on user history
-- Query understanding: "iPhone 15 case" → brand:Apple AND category:cases`
-        }
+**Why orchestrator over choreography?**
+- Orchestrator (Step Functions) maintains a state machine with clear visibility into each step
+- Failed steps trigger compensations in reverse order automatically
+- Dead letter queue catches permanently failed sagas for manual review
+- Full audit trail of every state transition for compliance
+
+**Idempotency is critical:**
+- Every step uses an idempotency key derived from the checkout session ID
+- If the network fails mid-saga, the client retries with the same session ID
+- Each service checks its idempotency store before processing (Redis with 24hr TTL)
+- This prevents double charges, double inventory reservations, and duplicate orders`
+        },
+        {
+          question: 'How do you handle inventory management and prevent race conditions during flash sales?',
+          answer: `Inventory consistency is the hardest problem in e-commerce — overselling destroys customer trust:
+
+**Multi-strategy approach based on demand level:**
+
+1. **Normal traffic — Optimistic Locking:**
+   - Inventory table has a version column
+   - UPDATE inventory SET quantity = quantity - 1, version = version + 1 WHERE productId = ? AND warehouseId = ? AND quantity >= 1 AND version = ?
+   - If version mismatch (concurrent update), retry with backoff (up to 3 retries)
+   - Works well when contention is low (99% of products)
+
+2. **High-demand items — Redis Atomic Decrement:**
+   - Pre-load inventory count into Redis: SET inv:{productId} 100
+   - Atomic decrement: result = DECR inv:{productId}
+   - If result < 0: item sold out, INCR to restore, return error
+   - Redis handles 100K+ DECR operations per second on a single key
+   - Async sync back to database every 5 seconds
+
+3. **Flash sales (Prime Day) — Pre-allocated Pools:**
+   - Partition total inventory into regional pools before the sale
+   - Each region has its own Redis counter: inv:{productId}:{region}
+   - Eliminates cross-region contention entirely
+   - If one region sells out, overflow requests route to nearest region with stock
+   - Reconciliation job rebalances pools every 60 seconds
+
+**Reservation with TTL:**
+- Inventory reserved at checkout start, released if checkout not completed within 15 minutes
+- Redis EXPIRE on reservation key provides automatic cleanup
+- Prevents the "holding stock hostage" problem where users start checkout but never finish`
+        },
+        {
+          question: 'How do you ensure payment idempotency and prevent double charges?',
+          answer: `Double-charging a customer is one of the worst possible bugs — idempotency must be built into every layer:
+
+**Client-side idempotency key generation:**
+- Frontend generates a UUID v4 for each checkout attempt: X-Idempotency-Key header
+- Same key sent on retries (network timeout, 5xx errors)
+- Different key for genuinely new purchase attempts
+
+**Server-side idempotency enforcement:**
+1. Payment service receives request with idempotency key
+2. Check Redis: EXISTS idempotency:{key}
+3. If exists: return the cached response (same status, same payment ID) — no processing
+4. If not exists: SET idempotency:{key} "processing" EX 86400 (24hr TTL)
+5. Process the payment, store result: SET idempotency:{key} {response_json} EX 86400
+6. Return response to client
+
+**Database-level protection:**
+- Unique constraint on (orderId, paymentAttemptId) in the payments table
+- Even if Redis fails, the database rejects duplicate inserts
+- Optimistic locking on order.paymentStatus prevents concurrent capture attempts
+
+**Authorization vs Capture separation:**
+- Authorization (hold) at checkout: funds reserved on the customer card
+- Capture (charge) at fulfillment: actual money transfer when item ships
+- If fulfillment fails, void the authorization (no charge to customer)
+- Auth hold expires after 7 days (card network rules) — capture must happen before expiry
+
+**Reconciliation as safety net:**
+- Nightly job compares payment gateway records with internal ledger
+- Flags discrepancies: authorized but never captured, captured but no order record
+- Auto-resolves simple cases (void stale authorizations), escalates complex ones to ops team`
+        },
+        {
+          question: 'How do you build search and filtering across 12M+ products in under 200ms?',
+          answer: `Product search is the primary discovery mechanism — it must be fast, relevant, and handle complex queries:
+
+**Elasticsearch cluster architecture:**
+- 12M products indexed across 20+ shards (partitioned by category for relevance)
+- 3 replicas per shard for availability and read throughput
+- Separate indices for different product verticals (electronics, books, clothing)
+- Each index has custom analyzers for product-specific tokenization
+
+**Query processing pipeline:**
+1. **Query understanding:** "iPhone 15 case red" parsed to brand:Apple, category:phone-cases, color:red
+2. **Spell correction:** "samgsung" corrected to "samsung" (using query log frequency + edit distance)
+3. **Synonym expansion:** "laptop" also matches "notebook computer"
+4. **Filter-then-score:** Apply category, price range, Prime eligibility as filters FIRST (cached, fast), then score remaining docs
+5. **BM25 + custom ranking:** BM25 for text relevance, boosted by sales velocity, review rating, and freshness
+6. **Learning-to-rank:** ML model reranks top 1000 results using 200+ features (click-through rate, conversion rate, return rate)
+7. **Personalization:** Boost results based on user purchase history and browsing behavior
+
+**Faceted search (sidebar filters):**
+- Aggregations computed alongside search results: brand counts, price range histogram, rating distribution
+- Pre-computed facets for top categories cached in Redis (updated every 15 minutes)
+- Dynamic facets based on search context: searching "laptop" shows RAM and screen size facets
+
+**Performance optimizations:**
+- Query result cache: 60% hit rate for popular queries (Redis, 5-minute TTL)
+- Warm cache before Prime Day with predicted popular queries
+- Timeout at 200ms: if query exceeds budget, return partial results with "more results available" flag
+- Async index updates via DynamoDB Streams CDC — search index is eventually consistent (lag < 5 seconds)`
+        },
+        {
+          question: 'How does the recommendation engine work at Amazon scale?',
+          answer: `Amazon credits recommendations with driving 35% of revenue — it is a core infrastructure concern, not a nice-to-have:
+
+**Collaborative filtering (primary approach):**
+- Item-to-item collaborative filtering: find items frequently purchased together
+- Build item similarity matrix from purchase history
+- Pre-computed offline in batch (Spark/EMR), stored in DynamoDB for real-time lookup
+- Update daily with incremental computation on new purchases
+
+**Content-based filtering (cold start):**
+- For new products with no purchase history, use product attributes for similarity
+- TF-IDF on product descriptions, category matching, brand affinity
+- Gradually blend with collaborative filtering as purchase data accumulates
+
+**Real-time personalization:**
+- User recent browsing session feeds into a real-time scoring model
+- Features: items viewed in last 30 minutes, cart contents, search queries
+- Lightweight ML model (logistic regression or small neural net) scores candidate items
+- Served from a low-latency feature store (Redis + DynamoDB)
+
+**Multiple recommendation surfaces:**
+- "Frequently bought together" — item-item co-purchase matrix
+- "Customers who viewed this also viewed" — item-item co-view matrix
+- "Recommended for you" (homepage) — user-item collaborative filtering + content
+- "Inspired by your browsing history" — real-time session-based scoring
+
+**A/B testing infrastructure:**
+- Every recommendation algorithm change is A/B tested on 1-5% of traffic
+- Primary metric: revenue per session, secondary: click-through rate, add-to-cart rate
+- Experimentation platform runs 1000+ concurrent A/B tests across Amazon`
+        },
+        {
+          question: 'How do you design the order fulfillment pipeline from checkout to delivery?',
+          answer: `Order fulfillment is a multi-stage event-driven pipeline connecting digital systems to physical warehouses:
+
+**Event-driven architecture (Kafka):**
+- order.confirmed event triggers the entire fulfillment chain
+- Each stage publishes events consumed by downstream services
+- Loose coupling: adding a new fulfillment center requires zero code changes
+
+**Pipeline stages:**
+1. **Order Routing** — Determine which warehouse fulfills the order
+   - Factors: inventory availability, distance to customer, shipping cost, warehouse load
+   - Algorithm: weighted scoring across all factors, select optimal warehouse
+   - Split orders across warehouses if no single one has all items
+
+2. **Pick and Pack** — Warehouse Management System (WMS) integration
+   - Generate pick list for warehouse workers (optimize walking path)
+   - Barcode scan verification at pack station
+   - Weight check: packed weight must match expected weight (fraud prevention)
+
+3. **Ship Label Generation** — Carrier integration (UPS, FedEx, USPS, Amazon Logistics)
+   - Select carrier based on delivery speed, cost, and destination
+   - Generate shipping label with tracking number
+   - Publish shipment.created event with carrier and tracking info
+
+4. **Tracking Updates** — Real-time status from carrier APIs
+   - Poll carrier tracking APIs every 15 minutes (or receive webhook updates)
+   - Status transitions: PICKED, PACKED, SHIPPED, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED
+   - Push notifications to customer at each status change
+
+5. **Delivery Confirmation** — Carrier confirms delivery
+   - Photo proof of delivery stored in S3
+   - delivery.confirmed event triggers review request email (after 3-day delay)
+   - Start return window timer (30 days for most items)
+
+**Handling failures:**
+- If warehouse cannot fulfill (damaged inventory): reroute to next-nearest warehouse
+- If carrier loses package: auto-initiate replacement after 7 days with no tracking update
+- If customer refuses delivery: trigger return flow, re-inventory item at nearest warehouse`
+        },
+        {
+          question: 'How do you handle Prime Day traffic spikes (10-100x normal load)?',
+          answer: `Prime Day is Amazon biggest engineering challenge — 10x or more normal traffic compressed into 48 hours:
+
+**Pre-scaling (weeks before):**
+- Capacity planning: analyze previous Prime Day traffic patterns, add 50% buffer
+- Pre-provision EC2 instances, DynamoDB capacity, ElastiCache nodes
+- Pre-warm CDN caches with product images and static assets
+- Load test the full checkout flow at 2x expected peak
+
+**Traffic management during the event:**
+- Virtual waiting room for flash deals: queue customers, release in batches
+- Rate limiting per customer: max 10 add-to-cart per second, max 3 checkout attempts per minute
+- Graceful degradation tiers:
+  - Tier 1 (normal): Full experience — recommendations, reviews, personalization
+  - Tier 2 (high load): Disable recommendations, serve cached reviews
+  - Tier 3 (critical): Static product pages from CDN, checkout only for items already in cart
+  - Tier 4 (emergency): Serve high traffic page, queue all requests
+
+**Inventory pre-allocation:**
+- Partition deal inventory by region before the sale starts
+- Each region has its own Redis counter — no cross-region contention
+- Popular deals get dedicated Redis clusters (isolated from other traffic)
+- When a deal sells out, remove from listing within 2 seconds (CDC to Elasticsearch)
+
+**Database protection:**
+- Read replicas handle 95% of product page reads
+- Write traffic (orders, inventory) routed to primary with connection pooling
+- Circuit breaker on non-critical services (recommendations, analytics, wishlists)
+- If payment gateway latency exceeds 3 seconds, queue orders for async processing
+
+**Post-event:**
+- Downscale infrastructure over 6 hours (not instantly — handle stragglers)
+- Reconciliation job: verify all inventory counts match across Redis and database
+- Analyze performance: identify bottlenecks for next year preparation`
+        },
+        {
+          question: 'How do you choose between SQL and DynamoDB for different parts of the system?',
+          answer: `Amazon architecture uses a polyglot persistence strategy — different databases for different access patterns:
+
+**DynamoDB (NoSQL) — for high-throughput, key-value access:**
+- Product catalog: Partition key = ASIN, schemaless attributes
+  - Why: 12M+ products with wildly different schemas, single-digit ms reads at any scale
+- Shopping cart: Partition key = userId, cart items as a list attribute
+  - Why: High write throughput, no complex queries, global replication via Global Tables
+- Session store: Partition key = sessionId, TTL for auto-expiry
+  - Why: Simple key-value access pattern, auto-scaling, no joins needed
+
+**PostgreSQL (SQL) — for complex queries and strong consistency:**
+- Orders: Requires ACID transactions (order + order_items in one transaction)
+  - Why: Must guarantee order creation is atomic, support complex queries (order history, filtering by status)
+- Inventory: Requires strong consistency with optimistic locking
+  - Why: UPDATE with WHERE version = ? needs row-level locking, financial accuracy critical
+- User accounts: Relational data with joins (user, addresses, payment methods, order history)
+  - Why: Complex queries for customer service tools, strong consistency for account operations
+
+**Elasticsearch — for full-text search:**
+- Product search index: Denormalized product data for fast retrieval
+  - Why: BM25 ranking, faceted filtering, spell correction — none of this exists in DynamoDB or PostgreSQL
+  - Fed by CDC from DynamoDB Streams (product updates) and PostgreSQL WAL (inventory/pricing changes)
+
+**Redis — for ephemeral high-speed data:**
+- Inventory counters (flash sales), query result cache, rate limiting, session cache
+  - Why: Sub-millisecond latency, atomic operations (DECR for inventory), TTL for auto-cleanup
+
+**Key principle:** Each service owns its database. The Product Service uses DynamoDB, the Order Service uses PostgreSQL, the Search Service uses Elasticsearch. Data flows between them via events (Kafka/CDC), not shared databases.`
+        },
       ],
 
       basicImplementation: {
@@ -6436,6 +6858,103 @@ ML-Enhanced:
         { name: 'Transaction & Payment Layer', purpose: 'Handle payment processing, inventory reservation, and order fulfillment', components: ['Payment Gateway', 'Inventory Service', 'Fulfillment Orchestrator', 'Refund Service'] },
         { name: 'Data & Analytics Layer', purpose: 'Store product catalog, user behavior, and power recommendations', components: ['Product DB (DynamoDB)', 'User Store (PostgreSQL)', 'Event Bus (Kafka)', 'Recommendation Engine'] },
       ],
+      comparisonTables: [
+        {
+          id: 'sql-vs-dynamodb',
+          title: 'SQL (PostgreSQL) vs DynamoDB',
+          headers: ['Aspect', 'PostgreSQL', 'DynamoDB'],
+          rows: [
+            ['Data Model', 'Relational (tables, joins)', 'Key-value / document'],
+            ['Consistency', 'Strong ACID transactions', 'Eventual (strong optional per-item)'],
+            ['Scaling', 'Vertical + manual sharding', 'Automatic horizontal (partitions)'],
+            ['Query Flexibility', 'Rich SQL, joins, aggregations', 'Partition + sort key queries only'],
+            ['Write Throughput', '~50K writes/sec (single node)', 'Millions writes/sec (auto-scaled)'],
+            ['Best For', 'Orders, inventory (ACID needed)', 'Product catalog, cart (high throughput)'],
+          ],
+          verdict: 'Polyglot: PostgreSQL for orders/inventory (ACID), DynamoDB for catalog/cart (scale)'
+        },
+        {
+          id: 'sync-vs-async-order',
+          title: 'Synchronous vs Async Order Processing',
+          headers: ['Aspect', 'Synchronous', 'Asynchronous (Event-Driven)'],
+          rows: [
+            ['User Experience', 'Instant confirmation', 'Confirmation after processing'],
+            ['Coupling', 'Tight — all services in call chain', 'Loose — services consume events'],
+            ['Failure Handling', 'Cascading failures possible', 'Retry with dead letter queue'],
+            ['Throughput', 'Limited by slowest service', 'Buffered by message queue'],
+            ['Complexity', 'Simple request-response', 'Saga pattern + compensation logic'],
+            ['Best For', 'Payment authorization (must be sync)', 'Fulfillment, notifications, analytics'],
+          ],
+          verdict: 'Hybrid: sync for payment capture, async (Kafka) for everything post-checkout'
+        },
+      ],
+      flowcharts: [
+        {
+          id: 'checkout-flow',
+          title: 'Checkout Flow (Saga Pattern)',
+          description: 'End-to-end checkout from cart to order confirmation with compensation actions',
+          steps: [
+            { step: 1, label: 'Validate Cart', detail: 'Confirm items exist, recalculate prices against current catalog' },
+            { step: 2, label: 'Reserve Inventory', detail: 'Atomic decrement via Redis DECR or optimistic lock in PostgreSQL' },
+            { step: 3, label: 'Authorize Payment', detail: 'Place hold on card (no capture yet) via payment gateway' },
+            { step: 4, label: 'Create Order', detail: 'Insert order + order_items in single PostgreSQL transaction' },
+            { step: 5, label: 'Capture Payment', detail: 'Charge the authorized amount, generate receipt' },
+            { step: 6, label: 'Clear Cart', detail: 'Remove purchased items from DynamoDB cart' },
+            { step: 7, label: 'Publish Events', detail: 'Kafka: order.confirmed triggers fulfillment, notification, analytics' },
+            { step: 8, label: 'Confirm to User', detail: 'Return orderId + estimated delivery date to frontend' },
+          ]
+        },
+        {
+          id: 'search-product-flow',
+          title: 'Search Product Flow',
+          description: 'How a search query is processed from user input to ranked results',
+          steps: [
+            { step: 1, label: 'Parse Query', detail: 'Tokenize, detect entities: "iPhone 15 case red" -> brand + category + color' },
+            { step: 2, label: 'Spell Check', detail: 'Edit distance + query log frequency: "samgsung" -> "samsung"' },
+            { step: 3, label: 'Check Cache', detail: 'Redis query cache: 60% hit rate for popular queries' },
+            { step: 4, label: 'Fan-out to Shards', detail: 'Parallel query across 20+ Elasticsearch shards by category' },
+            { step: 5, label: 'ML Re-rank', detail: 'Learning-to-rank model scores top 1K results with 200+ features' },
+            { step: 6, label: 'Return Results', detail: 'Merge, deduplicate, add facets, cache result, respond in <200ms' },
+          ]
+        },
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#ff9900',
+          items: [
+            { label: 'DynamoDB (Catalog)', value: '12M+ products', bar: 90 },
+            { label: 'Elasticsearch (Search)', value: '<200ms queries', bar: 85 },
+            { label: 'Redis (Inventory)', value: '100K DECR/s', bar: 95 },
+            { label: 'PostgreSQL (Orders)', value: 'ACID transactions', bar: 70 },
+            { label: 'Kafka (Events)', value: 'Async pipeline', bar: 75 },
+            { label: 'S3 + CDN (Media)', value: 'Product images', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '310M+ customers', value: 'Active accounts', bar: 100 },
+            { label: '12M+ products', value: 'In catalog', bar: 85 },
+            { label: '1.6M orders/day', value: 'Average throughput', bar: 70 },
+            { label: '100K TPS peak', value: 'Prime Day burst', bar: 95 },
+            { label: '<200ms search', value: 'P99 latency', bar: 80 },
+            { label: '6 TB catalog', value: 'Product data', bar: 55 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Monolith', description: 'Single application server with one relational database handling all e-commerce functions.', color: '#94a3b8', icon: 'server', capacity: '~10K products', rps: '100', pros: ['Simple to build and deploy', 'Single database for consistency', 'Easy debugging'], cons: ['Cannot scale services independently', 'Database becomes bottleneck', 'Full-table scans for search'] },
+        { step: 2, title: 'Service Split', description: 'Decompose into microservices (Product, Cart, Order, Payment) with dedicated databases per service.', color: '#2D8CFF', icon: 'layers', capacity: '~1M products', rps: '5K', pros: ['Independent scaling per domain', 'Technology choice per service', 'Fault isolation'], cons: ['Distributed transaction complexity', 'Service discovery needed', 'Network latency between services'] },
+        { step: 3, title: 'Search + Cache', description: 'Elasticsearch for product search, Redis for cart and inventory caching, CDN for static assets.', color: '#f59e0b', icon: 'zap', capacity: '~10M products', rps: '50K', pros: ['Sub-200ms search results', 'Cart reads in <1ms', 'CDN offloads 80% of static traffic'], cons: ['Cache invalidation complexity', 'Elasticsearch index lag', 'More infrastructure to manage'] },
+        { step: 4, title: 'Event-Driven', description: 'Kafka for async order processing, Saga orchestrator for checkout, CDC for cross-service data sync.', color: '#10b981', icon: 'globe', capacity: '~100M products', rps: '100K', pros: ['Handles Prime Day traffic spikes', 'Loose coupling between services', 'Reliable async processing'], cons: ['Eventual consistency complexity', 'Kafka operational overhead', 'Debugging distributed sagas'] },
+        { step: 5, title: 'Global Scale', description: 'Multi-region deployment, DynamoDB Global Tables, regional inventory pools, ML-powered recommendations.', color: '#7c3aed', icon: 'cpu', capacity: '350M+ products', rps: '100K+', pros: ['Low latency globally', 'Regional fault isolation', 'AI-powered personalization'], cons: ['Cross-region consistency challenges', 'Complex deployment orchestration', 'High infrastructure cost'] },
+      ],
     },
     {
       id: 'google-docs',
@@ -6445,6 +6964,37 @@ ML-Enhanced:
       color: '#4285f4',
       difficulty: 'Hard',
       description: 'Design a real-time collaborative document editing system with conflict resolution.',
+      productMeta: {
+        name: 'Google Docs',
+        tagline: 'Real-time collaborative document editing for 1B+ users',
+        stats: [
+          { label: 'Users', value: '1B+' },
+          { label: 'Concurrent Editors', value: 'Millions' },
+          { label: 'Latency Target', value: '<100ms' },
+          { label: 'Docs Created/Day', value: 'Millions' },
+        ],
+        scope: {
+          inScope: ['Real-time collaborative text editing', 'Conflict resolution (OT/CRDT)', 'Cursor and selection synchronization', 'Version history and restore', 'Offline editing with sync', 'Permission-based sharing (view/comment/edit)'],
+          outOfScope: ['Spreadsheets and presentations', 'Add-ons and extensions marketplace', 'Template gallery', 'PDF export and printing', 'Grammar and style suggestions'],
+        },
+        keyChallenge: 'Maintaining document consistency when millions of users perform concurrent edits — the server must transform every operation against all other in-flight operations in under 100ms.',
+      },
+
+      // ── Back-of-Envelope Estimation ──
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '1B+ users, 5% daily active (50M DAU), average 3 documents open per session, 10 operations per minute per active editor, average document size 50KB.',
+        calculations: [
+          { label: 'Active WebSocket Connections', value: '~50M', detail: '50M DAU with persistent connections during active editing sessions' },
+          { label: 'Operation QPS (Average)', value: '~500K/s', detail: '3M concurrent editors x 10 ops/min / 60 = ~500K operations per second' },
+          { label: 'Operation QPS (Peak)', value: '~2M/s', detail: '500K x 4x peak factor during business hours (9am-5pm across timezones)' },
+          { label: 'Document Storage', value: '~500 PB', detail: '10B+ total documents x 50KB avg = 500 PB (including version history)' },
+          { label: 'Operation Log/Day', value: '~4 TB', detail: '500K ops/s x 86,400s x 100 bytes per op = ~4 TB per day' },
+          { label: 'Snapshot Storage/Day', value: '~500 GB', detail: 'Periodic snapshots for 10M actively edited documents' },
+          { label: 'WebSocket Servers', value: '~5,000', detail: '50M connections / 10K connections per server' },
+          { label: 'Bandwidth', value: '~50 Gbps', detail: '500K ops/s x 100 bytes x broadcast amplification factor' },
+        ]
+      },
 
       introduction: `Google Docs is a real-time collaborative document editing system where multiple users can simultaneously edit the same document. The system must handle concurrent edits, resolve conflicts automatically, and ensure all users see a consistent document state.
 
@@ -6563,67 +7113,360 @@ presence {
 
       keyQuestions: [
         {
-          question: 'How does Operational Transformation work?',
-          answer: `OT transforms concurrent operations to maintain consistency.
+          question: 'How does Operational Transformation (OT) work and why does Google use it?',
+          answer: `OT is the algorithm that makes real-time collaborative editing possible — it transforms concurrent operations so all clients converge to the same document state:
 
-Example:
-- User A inserts "X" at position 5
-- User B inserts "Y" at position 3
-- Both started from same document state
+**The core problem:**
+- User A inserts "X" at position 5, User B inserts "Y" at position 3
+- Both started from the same document state (revision 10)
+- Without transformation, applying both operations produces different results depending on order
 
-Without transformation:
-- A applies A's op, then B's op → result differs
-- B applies B's op, then A's op → different result
+**How OT resolves this:**
+1. Both operations arrive at the server with baseRevision: 10
+2. Server processes A first (arbitrary but deterministic choice), assigns revision 11
+3. When processing B (also based on rev 10), server transforms B against A:
+   - B inserted at position 3, A inserted at position 5 (after B's position)
+   - B's position stays 3 (A's insert does not affect positions before it)
+4. Server transforms A against B for sending to A's client:
+   - A inserted at 5, B inserted at 3 (before A's position)
+   - A's position becomes 5+1=6 (shifted right by B's insert)
+5. Both clients apply the transformed operations and converge to identical state
 
-With transformation:
-- When A receives B's op, transform it:
-  B's op was at position 3, A inserted before at 5
-  So B's op position stays 3
-- When B receives A's op, transform it:
-  A's op was at position 5, B inserted at 3
-  So A's op position becomes 5+1=6
+**Transform function types:**
+- INSERT vs INSERT: Adjust position based on which comes first
+- INSERT vs DELETE: If delete range includes insert position, split the delete
+- DELETE vs DELETE: Handle overlapping ranges, merge if adjacent
+- FORMAT vs INSERT/DELETE: Adjust format range boundaries
 
-Result: Both converge to same document state.`
+**Why Google chose OT over CRDT:**
+- OT produces more intuitive merge results for text editing
+- Operations are compact (type + position + content) vs CRDT's larger data structures
+- Central server provides a single source of truth for operation ordering
+- Google has 15+ years of battle-tested OT implementation (originally in Google Wave)`
         },
         {
-          question: 'OT vs CRDT - which to use?',
-          answer: `Operational Transformation (Google Docs approach):
-+ Proven at scale (Google uses it)
-+ Compact operations
-- Complex implementation (quadratic transform)
-- Requires central server for ordering
+          question: 'What are the tradeoffs between OT and CRDT for conflict resolution?',
+          answer: `This is one of the most important architectural decisions in collaborative editing — each approach has fundamental tradeoffs:
 
-CRDT (Figma, Notion use variants):
-+ No central coordination needed
-+ Mathematically guaranteed convergence
-+ Better for P2P scenarios
-- Larger data structures
-- Can have "surprising" merge results
+**Operational Transformation (OT):**
+- Requires a central server to establish a canonical operation order
+- Operations are small and bandwidth-efficient (just the delta)
+- Transform complexity is O(N^2) in the worst case (N concurrent operations)
+- Proven at massive scale: Google Docs, Google Sheets
+- Server assigns sequential revision numbers — total ordering is straightforward
+- Composition optimization: batch multiple operations into one for efficiency
 
-For Google Docs clone: OT with central server
-For offline-first/P2P: CRDT`
+**CRDT (Conflict-free Replicated Data Types):**
+- No central coordinator needed — operations commute by construction
+- Convergence is mathematically guaranteed regardless of operation order
+- Each character gets a unique ID (fractional index or tree position)
+- Higher memory overhead: ~2-5x more metadata per character than OT
+- Better for peer-to-peer and offline-heavy scenarios
+- Used by Figma (for canvas objects), Notion (hybrid), and Yjs (open-source library)
+
+**When to choose which:**
+- OT: Centralized SaaS product with reliable server connectivity (Google Docs model)
+- CRDT: Peer-to-peer collaboration, offline-first apps, or when you need decentralized sync
+- Hybrid: Some systems use OT for the server-client protocol but CRDT-like structures internally
+
+**Practical considerations:**
+- OT is harder to implement correctly (many subtle edge cases in transform functions)
+- CRDT garbage collection is complex (tombstones for deleted characters accumulate)
+- For a system design interview: recommend OT with central server for simplicity and proven track record`
         },
         {
-          question: 'How do we handle offline editing?',
-          answer: `1. Store operations locally when offline:
-   - Queue all operations in IndexedDB
-   - Apply locally for instant feedback
+          question: 'How do you handle conflict resolution when multiple users edit the same paragraph?',
+          answer: `Conflict resolution is the core correctness challenge — even with OT, there are subtle scenarios:
 
-2. On reconnect:
-   - Send all queued operations to server
-   - Server transforms against operations that happened while offline
-   - Receive transformed operations from others
-   - Apply to local document
+**Server-side conflict resolution flow:**
+1. Server maintains a linear revision history: rev 1, rev 2, rev 3, ...
+2. Each client sends operations with their last-known baseRevision
+3. If baseRevision equals current server revision: apply directly, assign next revision
+4. If baseRevision is behind (client missed some operations): transform the incoming operation against all operations between baseRevision and current revision
+5. After transformation, apply the result and broadcast to all clients
 
-3. Conflict resolution:
-   - OT/CRDT ensures convergence
-   - User may see content "jump" as remote changes apply
-   - Never lose user's work
+**Client-side handling:**
+1. Client applies operations locally immediately (optimistic UI)
+2. Sends operation to server, keeps it in a "pending" buffer
+3. When server acknowledges, remove from pending buffer
+4. When receiving remote operations, transform pending operations against received ones
+5. Apply transformed remote operation to local document
 
-4. Version vector:
-   - Track which operations each client has seen
-   - Sync only missing operations`
-        }
+**The three states of a client operation:**
+- **Synchronized:** No pending operations, client matches server state exactly
+- **Awaiting ACK:** One operation sent to server, waiting for confirmation
+- **Awaiting ACK with buffer:** Additional operations queued while waiting for ACK
+
+**Character-level interleaving prevention:**
+- When two users type in the same location, OT ensures one user's text appears before the other
+- Tie-breaking: use userId comparison (deterministic) to decide which insert goes first
+- Result: User A's text appears contiguously, then User B's — no interleaving`
+        },
+        {
+          question: 'How do you synchronize cursor positions and selections across all editors?',
+          answer: `Cursor synchronization is the visual feedback that makes collaboration feel real-time:
+
+**Presence protocol (via WebSocket):**
+- Each client sends cursor updates: { userId, cursorPosition, selectionStart, selectionEnd }
+- Updates are throttled to every 50ms (20 updates/second max) to prevent flooding
+- Each collaborator is assigned a unique color (from a predefined palette)
+
+**Position tracking challenge:**
+- Cursor positions are character indices, which change when other users insert or delete text
+- When a remote operation inserts 5 characters before your cursor: your cursor must shift right by 5
+- Solution: Transform cursor positions using the same OT transform functions as text operations
+
+**Optimization for documents with many editors:**
+- Only show cursors for editors who are within the current viewport
+- Group distant editors into a count badge: "3 others editing below"
+- Reduce cursor update frequency for editors far from the viewport (every 500ms instead of 50ms)
+- Typing indicator: show "User A is typing..." when receiving rapid operations from a user
+
+**Presence heartbeat:**
+- Clients send heartbeat every 30 seconds via WebSocket
+- Server removes stale cursors after 60 seconds of no heartbeat
+- Color is recycled when a user disconnects (assigned to next joiner)
+- "X users viewing" badge for users with document open but not actively editing
+
+**Implementation detail:**
+- Cursor positions stored in Redis with TTL (ephemeral, not persisted to database)
+- On document load, server sends current presence state with all active cursors
+- Cursor updates are broadcast via WebSocket but NOT stored in the operation log (they are ephemeral)`
+        },
+        {
+          question: 'How does offline editing work and how do you sync when reconnecting?',
+          answer: `Offline editing is critical for mobile users and unreliable networks — users must never lose work:
+
+**Offline operation buffering:**
+1. Client detects disconnection (WebSocket close event or heartbeat timeout)
+2. All new operations are queued in IndexedDB (persistent local storage)
+3. Operations applied locally immediately — the user sees their edits in real-time
+4. Document state diverges from server state while offline
+
+**Reconnection sync protocol:**
+1. Client reconnects via WebSocket, sends last known revision number (e.g., rev 42)
+2. Server sends all operations from rev 42 to current (e.g., rev 78) — 36 missed operations
+3. Client transforms its buffered offline operations against each of the 36 server operations sequentially
+4. Client applies the 36 server operations (transformed against its offline ops) to its local document
+5. Client sends its transformed offline operations to the server
+6. Server validates, assigns new revision numbers, broadcasts to other clients
+
+**Edge cases handled:**
+- Very long offline period (hours): Large batch of operations to transform. Client may show a "syncing" indicator during the process
+- Conflicting offline edits (two users edited same paragraph offline): OT resolves deterministically — both converge, though the result may surprise one user
+- Structural conflicts (one user deleted a section, another edited it): Deleted content is restored with edits applied, or edits are discarded with notification to the user
+
+**Data durability:**
+- IndexedDB stores both the current document snapshot and the operation queue
+- Even if the browser crashes, offline changes are recoverable on next open
+- Periodic local snapshots (every 60 seconds) reduce the number of operations to replay`
+        },
+        {
+          question: 'How do you design the permission model for sharing and access control?',
+          answer: `Permissions are critical for enterprise adoption and must be enforced at every layer:
+
+**Permission levels (hierarchical):**
+1. **Owner** — Full control: delete document, transfer ownership, manage all permissions
+2. **Editor** — Can edit content, add comments, and see version history
+3. **Commenter** — Can view content and add comments/suggestions, but cannot edit
+4. **Viewer** — Read-only access, can see content but not modify or comment
+
+**Sharing mechanisms:**
+- Direct share: Grant permission to a specific email/Google account
+- Link sharing: Generate a shareable URL with configurable access level
+- Domain restriction: Limit link access to a specific organization domain
+- Public: Anyone with the link can access (used for published documents)
+
+**Real-time permission enforcement:**
+- Permissions checked at WebSocket connection time and on every operation
+- If permission is revoked while a user is connected: server sends PERMISSION_REVOKED event, client switches to read-only mode instantly
+- Editor-to-viewer downgrade: client disables the editing UI, shows notification
+- Permission changes are broadcast to all connected clients via WebSocket
+
+**Server-side enforcement:**
+- Every operation includes the userId — server verifies permission before applying
+- Viewers receive operations (to see real-time updates) but cannot send operations
+- Commenters can only send COMMENT operations, not INSERT/DELETE/FORMAT
+
+**Enterprise features:**
+- Audit log: Track who accessed/edited the document and when
+- Expiring access: Share link valid for 7 days, then auto-revoke
+- Watermarking: Viewer sees their email embedded in the document (leaker identification)`
+        },
+        {
+          question: 'How do you implement version history and allow restoring previous versions?',
+          answer: `Version history is essential for trust — users need to know they can always undo mistakes:
+
+**Operation log as the source of truth:**
+- Every operation is appended to an immutable log: (documentId, revision, userId, operation, timestamp)
+- Stored in Cassandra (append-only, partition by documentId, cluster by revision)
+- The operation log enables replaying the entire document history from scratch
+
+**Periodic snapshots for performance:**
+- Full document snapshot saved every 100 operations or every 5 minutes (whichever comes first)
+- Stored in GCS/S3 as compressed blobs
+- To reconstruct document at revision N: load nearest snapshot before N, replay operations from snapshot to N
+- Without snapshots, loading version history for a document with 1M operations would require replaying all 1M — impractical
+
+**Version grouping for the UI:**
+- Users do not want to see every keystroke — group operations into meaningful revisions
+- Grouping heuristic: operations by the same user within 30 seconds of each other form one revision
+- Each grouped revision shows: author, timestamp, and a diff summary ("Added 3 paragraphs, deleted 1")
+- Named versions: users can manually name a version ("Final Draft", "v2 after feedback")
+
+**Restore mechanism:**
+- Restore creates a NEW revision (does not delete history) that sets the document to the target state
+- This is implemented as a large INSERT operation that replaces all content
+- The restore operation goes through OT like any other — concurrent editors see the restore happen
+- All active editors receive the restored content via their WebSocket connections
+
+**Storage optimization:**
+- Keep full operation log for 30 days (hot storage)
+- After 30 days: keep only snapshots (one per hour) + diff summaries
+- After 1 year: keep daily snapshots only (cold storage)`
+        },
+        {
+          question: 'How does the real-time sync protocol work over WebSocket?',
+          answer: `The sync protocol is the heart of the collaboration system — it must be reliable, ordered, and efficient:
+
+**Connection establishment:**
+1. Client opens document: HTTP GET /api/doc/{id} returns latest snapshot + current revision number
+2. Client establishes WebSocket connection: /ws/doc/{id}/collaborate
+3. Server authenticates, checks permissions, adds client to the document's collaboration session
+4. Server sends current presence state (all active cursors and their positions)
+5. Client is now ready to send/receive operations from the current revision forward
+
+**Operation protocol (client to server):**
+- Client sends: { type: 'operation', baseRevision: 42, ops: [{insert: 'hello', position: 15}] }
+- Server validates permission, transforms if needed, assigns revision 43
+- Server responds with ACK: { type: 'ack', revision: 43 }
+- Client moves to synchronized state
+
+**Operation broadcast (server to client):**
+- Server sends to all other clients: { type: 'operation', userId: 'abc', revision: 43, ops: [...] }
+- Each receiving client transforms their pending operations against this received operation
+- Client applies the transformed operation to their local document
+
+**Heartbeat and connection health:**
+- Client sends ping every 30 seconds, server responds with pong
+- If no pong received within 10 seconds: client assumes disconnect, buffers operations locally
+- Server removes disconnected client from presence after 60 seconds
+
+**Batching optimization:**
+- Fast typists generate 5-10 operations per second (one per keystroke)
+- Client batches operations: collect for 50ms, compose into single operation, send as one
+- This reduces WebSocket traffic by 5-10x and server transform load proportionally
+
+**Reconnection:**
+- Client reconnects with last acknowledged revision number
+- Server sends all operations since that revision (catch-up)
+- Client transforms and applies, then sends any buffered offline operations`
+        },
+        {
+          question: 'How do you store documents and what database choices make sense?',
+          answer: `Document storage has three distinct concerns with different access patterns:
+
+**1. Operation Log — Cassandra (or Cloud Spanner)**
+- Append-only writes: 500K+ operations per second globally
+- Partition by documentId, cluster by revision number (ascending)
+- Each operation is small (~100 bytes): type, position, content, userId, timestamp
+- Read pattern: range scan from revision X to current (for catch-up and history)
+- Why Cassandra: write-optimized LSM-tree, linear scaling, partition-aware queries
+
+**2. Document Snapshots — GCS/S3 (Object Storage)**
+- Periodic full snapshots of document content (every 100 ops or 5 minutes)
+- Snapshot is a complete document state: content + formatting + metadata
+- Compressed with gzip (~70% reduction for text documents)
+- Read pattern: load latest snapshot when opening a document (infrequent, latency-tolerant)
+- Why object storage: cheap, durable, no query requirements
+
+**3. Document Metadata — Cloud Spanner (or PostgreSQL)**
+- Relational data: ownership, sharing permissions, collaborator list, document settings
+- Strong consistency required (permission changes must be immediately enforced)
+- Queries: "list my documents", "find shared with me", "recently edited"
+- Why Spanner/PostgreSQL: ACID transactions, rich queries, foreign key relationships
+
+**Active document state — In-memory (on collaboration server)**
+- Currently open documents are loaded into memory on the collaboration server
+- The in-memory state includes: current content, pending operations buffer, connected clients
+- Sticky sessions via consistent hashing ensure all clients for one document hit the same server
+- On server failure: new server loads latest snapshot + replays operation log from Cassandra
+
+**Why not a single database?**
+- Operations require extreme write throughput (Cassandra)
+- Snapshots are large blobs best stored in object storage
+- Metadata needs relational queries and strong consistency (Spanner)
+- Trying to force all three patterns into one database creates bottlenecks`
+        },
+        {
+          question: 'How do you handle collaboration awareness and rich presence features?',
+          answer: `Collaboration awareness goes beyond just showing cursors — it creates the feeling of working together:
+
+**Active collaborator list:**
+- When a user opens a document, they are added to the active collaborator list
+- The list is displayed in the document header: avatars of all current viewers/editors
+- Clicking an avatar scrolls to that user's cursor position
+- Badge shows count when more than 5 collaborators: "User A, B, C, +12 others"
+
+**Cursor and selection rendering:**
+- Each collaborator gets a unique color (consistent across sessions via hash of userId)
+- Cursor: colored vertical bar with the user's name label above it
+- Selection: colored highlight showing the selected text range
+- Transform cursor/selection positions when remote operations change the document
+
+**Typing indicators:**
+- When a user types rapidly (>2 operations per second), show "User A is typing..." near their cursor
+- Auto-expires after 3 seconds of inactivity
+- Useful for coordination: see that someone is actively editing a paragraph before you start editing it
+
+**Follow mode:**
+- Click "Follow User A" to have your viewport automatically scroll to follow their cursor
+- Useful for presentations and code reviews
+- Disengages automatically when you start editing
+
+**Comment and suggestion threads:**
+- Anchored to specific text ranges (tracked like cursor positions, transformed on edits)
+- Real-time updates: new comments appear instantly for all collaborators
+- Suggestion mode: proposed edits shown as colored diffs, can be accepted/rejected by editors
+- Notification: @mentions trigger email/push notifications to tagged users
+
+**Activity feed:**
+- Side panel showing recent activity: "User A edited paragraph 3", "User B added a comment"
+- Useful for catching up on changes made while you were away`
+        },
+        {
+          question: 'How do you scale WebSocket servers for millions of concurrent editing sessions?',
+          answer: `Scaling real-time collaboration requires careful architecture around WebSocket connection management:
+
+**Sticky sessions per document:**
+- All clients editing the same document must connect to the SAME collaboration server
+- This is critical because the OT engine maintains in-memory state for each document
+- Route using consistent hashing: hash(documentId) -> serverId
+- WebSocket gateway (Envoy/HAProxy) applies the routing rule at connection time
+
+**Server capacity planning:**
+- Each server handles ~10K concurrent WebSocket connections
+- Each active document session consumes ~1MB of memory (document state + operation buffer + client list)
+- A server with 32GB RAM can handle ~10K documents and ~10K connections
+- 5,000 servers for 50M concurrent connections
+
+**Document session lifecycle:**
+- When first client opens a document: server loads latest snapshot from GCS, replays recent ops from Cassandra
+- Document stays in memory while any client is connected (hot state)
+- When last client disconnects: flush final snapshot to GCS, evict from memory after 5 minutes (grace period for reconnection)
+- If the collaboration server crashes: clients reconnect to a new server, which reloads from snapshot + op log
+
+**Horizontal scaling strategy:**
+- Add/remove servers dynamically based on connection count
+- Consistent hashing with virtual nodes minimizes document migration when scaling
+- During rebalancing: old server keeps document hot, new server loads from storage, clients seamlessly redirect
+
+**Multi-region deployment:**
+- Users connect to the nearest region for low-latency presence/cursor updates
+- Operations are replicated to the "home region" of the document for OT processing
+- Cross-region latency (100-200ms) is acceptable for text operations but noticeable for cursor sync
+- Optimization: apply operations locally first (optimistic), confirm with home region asynchronously`
+        },
       ],
 
       basicImplementation: {
@@ -6840,6 +7683,102 @@ For offline-first/P2P: CRDT`
         { name: 'Document Storage Layer', purpose: 'Persist document state, operation history, and version snapshots', components: ['Document Store', 'Operation Log', 'Snapshot Service', 'Blob Storage (images)'] },
         { name: 'Access & Sharing Layer', purpose: 'Manage document permissions, sharing links, and team workspaces', components: ['Permission Service', 'Sharing API', 'Comment Service', 'Notification Service'] },
       ],
+      comparisonTables: [
+        {
+          id: 'ot-vs-crdt',
+          title: 'Operational Transformation vs CRDT',
+          headers: ['Aspect', 'OT', 'CRDT'],
+          rows: [
+            ['Coordination', 'Requires central server', 'No central coordinator needed'],
+            ['Convergence', 'Guaranteed with correct transforms', 'Mathematically guaranteed'],
+            ['Operation Size', 'Compact (type + position + content)', 'Larger (unique IDs per character)'],
+            ['Memory Overhead', 'Low', 'High (2-5x metadata per character)'],
+            ['Offline Support', 'Transform on reconnect', 'Native — operations commute'],
+            ['Used By', 'Google Docs, Google Sheets', 'Figma, Yjs, Automerge'],
+          ],
+          verdict: 'OT for centralized SaaS (Google Docs model), CRDT for peer-to-peer or offline-first'
+        },
+        {
+          id: 'websocket-vs-sse',
+          title: 'WebSocket vs Server-Sent Events (SSE)',
+          headers: ['Aspect', 'WebSocket', 'SSE'],
+          rows: [
+            ['Direction', 'Bidirectional', 'Server-to-client only'],
+            ['Latency', '<50ms round-trip', '<50ms receive, separate POST for send'],
+            ['Protocol', 'Upgrade from HTTP, custom framing', 'Standard HTTP streaming'],
+            ['Proxy Support', 'May be blocked by some proxies', 'Works with all HTTP proxies'],
+            ['Multiplexing', 'One connection per document', 'Multiplexed via HTTP/2'],
+            ['Best For', 'Real-time collab (bidirectional)', 'Read-heavy dashboards, notifications'],
+          ],
+          verdict: 'WebSocket for collaborative editing — bidirectional requirement makes it essential'
+        },
+      ],
+      flowcharts: [
+        {
+          id: 'edit-character-flow',
+          title: 'Edit Character Flow (OT)',
+          description: 'What happens when a user types a single character in a collaborative document',
+          steps: [
+            { step: 1, label: 'User Types', detail: 'Keystroke captured by editor, INSERT operation created with position and character' },
+            { step: 2, label: 'Apply Locally', detail: 'Operation applied to local document immediately (optimistic UI)' },
+            { step: 3, label: 'Send to Server', detail: 'Operation sent via WebSocket with baseRevision number' },
+            { step: 4, label: 'Server Transform', detail: 'If baseRevision behind: transform against all missed operations' },
+            { step: 5, label: 'Assign Revision', detail: 'Server assigns next revision number, persists to operation log' },
+            { step: 6, label: 'Broadcast', detail: 'Transformed operation sent to all other connected clients' },
+            { step: 7, label: 'Remote Apply', detail: 'Each client transforms pending ops against received op, applies to document' },
+          ]
+        },
+        {
+          id: 'conflict-resolution-flow',
+          title: 'Conflict Resolution Flow',
+          description: 'How the server resolves concurrent edits from two users at overlapping positions',
+          steps: [
+            { step: 1, label: 'Concurrent Edits', detail: 'User A inserts at pos 5, User B deletes at pos 3-6 (both at rev 10)' },
+            { step: 2, label: 'Server Receives A', detail: 'Process A first: insert at pos 5, assign rev 11' },
+            { step: 3, label: 'Transform B vs A', detail: 'B delete range 3-6 must account for A insert at 5: split into two deletes' },
+            { step: 4, label: 'Apply Transformed B', detail: 'Delete 3-5 (before insert) + delete 6-7 (after insert), assign rev 12' },
+            { step: 5, label: 'Broadcast to A', detail: 'Send transformed B to User A: A inserts text is preserved within the delete' },
+            { step: 6, label: 'Convergence', detail: 'Both clients arrive at identical document state after applying transformed ops' },
+          ]
+        },
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#4285f4',
+          items: [
+            { label: 'OT Engine (C++)', value: 'Sub-ms transforms', bar: 95 },
+            { label: 'WebSocket Gateway', value: '50M connections', bar: 90 },
+            { label: 'Cassandra (Op Log)', value: '500K ops/s', bar: 85 },
+            { label: 'GCS (Snapshots)', value: '500 PB stored', bar: 70 },
+            { label: 'Spanner (Metadata)', value: 'Global consistency', bar: 75 },
+            { label: 'Redis (Presence)', value: 'Cursor sync', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '1B+ users', value: 'Google Workspace users', bar: 100 },
+            { label: 'Millions concurrent', value: 'Active editors', bar: 85 },
+            { label: '500K ops/s', value: 'Operation throughput', bar: 90 },
+            { label: '<100ms latency', value: 'Edit propagation', bar: 95 },
+            { label: '10B+ documents', value: 'Total stored', bar: 80 },
+            { label: '4 TB ops/day', value: 'Operation log growth', bar: 65 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Save & Refresh', description: 'Simple document editor with manual save. No collaboration — last save wins.', color: '#94a3b8', icon: 'server', capacity: '~1K documents', rps: '10', pros: ['Simple to build', 'No conflict resolution needed', 'Standard CRUD'], cons: ['Data loss from concurrent edits', 'No real-time collaboration', 'Manual save required'] },
+        { step: 2, title: 'Polling Sync', description: 'Client polls server every few seconds for changes. Basic collaboration with visible lag.', color: '#2D8CFF', icon: 'layers', capacity: '~100K documents', rps: '1K', pros: ['Basic collaboration works', 'Simple HTTP polling', 'No WebSocket needed'], cons: ['1-5 second lag between edits', 'High server load from polling', 'Merge conflicts possible'] },
+        { step: 3, title: 'OT + WebSocket', description: 'Operational Transformation engine with persistent WebSocket connections for real-time editing.', color: '#f59e0b', icon: 'zap', capacity: '~10M documents', rps: '100K', pros: ['True real-time collaboration', 'Automatic conflict resolution', 'Sub-100ms latency'], cons: ['OT implementation complexity', 'Sticky sessions required', 'Single-region limitation'] },
+        { step: 4, title: 'Global Scale', description: 'Multi-region deployment, Cassandra operation log, periodic snapshots, offline editing support.', color: '#10b981', icon: 'globe', capacity: '~1B documents', rps: '500K', pros: ['Global low-latency access', 'Offline editing works', 'Version history at scale'], cons: ['Cross-region OT complexity', 'Snapshot management overhead', 'Higher infrastructure cost'] },
+        { step: 5, title: 'Enterprise', description: 'Advanced permissions, audit logging, compliance features, real-time commenting and suggestions.', color: '#7c3aed', icon: 'cpu', capacity: '10B+ documents', rps: '2M+', pros: ['Enterprise-grade security', 'Rich collaboration features', 'Compliance-ready'], cons: ['Permission model complexity', 'Feature interaction edge cases', 'Cost of global infrastructure'] },
+      ],
     },
     {
       id: 'payment-system',
@@ -6849,6 +7788,37 @@ For offline-first/P2P: CRDT`
       color: '#635bff',
       difficulty: 'Hard',
       description: 'Design a payment processing system handling cards, transfers, and refunds.',
+      productMeta: {
+        name: 'Payment System',
+        tagline: 'Processing billions in transactions with exactly-once guarantees',
+        stats: [
+          { label: 'Volume', value: '$1T+/yr' },
+          { label: 'Peak TPS', value: '65K' },
+          { label: 'Availability', value: '99.9999%' },
+          { label: 'Auth Latency', value: '<1s' },
+        ],
+        scope: {
+          inScope: ['Card payment authorization and capture', 'Idempotent payment processing', 'Double-entry bookkeeping ledger', 'Refund and chargeback handling', 'Real-time fraud detection', 'Webhook delivery for payment events'],
+          outOfScope: ['Cryptocurrency payments', 'Buy Now Pay Later (BNPL)', 'Physical POS terminal hardware', 'Banking license and compliance certification', 'Tax calculation engine'],
+        },
+        keyChallenge: 'Achieving exactly-once payment processing with idempotency keys while maintaining a double-entry ledger that balances to the penny across billions of transactions.',
+      },
+
+      // ── Back-of-Envelope Estimation ──
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: 'Stripe processes $1T+/year. Visa network peak: 65K TPS. Authorization latency target: <1 second. Average transaction: $50. Webhook delivery: 3 attempts per event.',
+        calculations: [
+          { label: 'Transaction QPS (Average)', value: '~10K/s', detail: '$1T / $50 avg / 365 days / 86,400 sec = ~6,300 TPS, rounded up for growth' },
+          { label: 'Transaction QPS (Peak)', value: '~65K/s', detail: 'Black Friday/Cyber Monday peak matches Visa network capacity' },
+          { label: 'Ledger Entries/Day', value: '~1.7B', detail: '10K TPS x 86,400s x 2 entries per transaction (debit + credit) = 1.7B entries/day' },
+          { label: 'Ledger Storage/Year', value: '~60 TB', detail: '1.7B entries/day x 365 x 100 bytes per entry = ~62 TB/year' },
+          { label: 'Webhook Delivery QPS', value: '~30K/s', detail: '10K transactions/s x 3 webhook attempts avg = 30K webhook deliveries/s' },
+          { label: 'Idempotency Store Size', value: '~50 GB', detail: '10K TPS x 86,400s x 24hr TTL x 60 bytes per key = ~50 GB in Redis' },
+          { label: 'Fraud Scoring QPS', value: '~10K/s', detail: 'Every transaction scored in real-time before authorization' },
+          { label: 'Card Vault Operations', value: '~20K/s', detail: 'Tokenization + detokenization for each transaction' },
+        ]
+      },
 
       introduction: `Payment systems like Stripe and PayPal handle trillions of dollars in transactions annually. They must be extremely reliable, secure, and compliant with financial regulations. The system processes card payments, handles refunds, detects fraud, and maintains accurate financial records.
 
@@ -6971,68 +7941,363 @@ refunds {
 
       keyQuestions: [
         {
-          question: 'How do we ensure exactly-once payment processing?',
-          answer: `Idempotency keys are essential:
+          question: 'How do you achieve exactly-once payment processing with idempotency keys?',
+          answer: `Exactly-once processing is the single most important guarantee in a payment system — double charges destroy trust:
 
-1. Client generates unique key per payment attempt
-2. Server stores key → result mapping
-3. On retry with same key, return cached result
+**Client-side idempotency key generation:**
+- Client generates a UUID v4 for each payment attempt and sends it as X-Idempotency-Key header
+- On network timeout or 5xx error, the client retries with THE SAME key
+- For a genuinely new payment attempt (user clicks "Pay" again), generate a NEW key
 
-Implementation:
-- Store in Redis with TTL (24 hours)
-- Check idempotency key BEFORE processing
-- Use database transaction to ensure atomic check-and-process
-- Return cached result for duplicate requests
+**Server-side idempotency enforcement (3-layer protection):**
 
-Additionally:
-- Unique constraints on payment IDs
-- Optimistic locking on balance updates
-- Saga pattern with compensating transactions`
+1. **Redis fast path (sub-millisecond):**
+   - On request: GET idempotency:{key} from Redis
+   - If found: return cached response immediately (no processing)
+   - If not found: SET idempotency:{key} "processing" EX 86400 (24hr TTL, NX flag for atomicity)
+   - If SET fails (another thread processing same key): wait 100ms, retry GET
+
+2. **Database constraint (safety net):**
+   - Unique constraint on (merchantId, idempotencyKey) in the payments table
+   - Even if Redis fails, the database INSERT rejects duplicates
+   - This is the last line of defense against double charges
+
+3. **State machine protection:**
+   - Payment status transitions: CREATED -> AUTHORIZED -> CAPTURED -> SETTLED
+   - Each transition is guarded: cannot capture an already-captured payment
+   - Optimistic locking with version numbers prevents concurrent state changes
+
+**After successful processing:**
+- Store the full response in Redis: SET idempotency:{key} {response_json} EX 86400
+- Any retry with the same key returns this cached response
+- Response includes the same paymentId, status, and amount — client cannot distinguish from original
+
+**Edge case — processing crash:**
+- If server crashes between "SET processing" and actual processing: key is locked for 24hrs
+- Solution: use a shorter processing lock (60 seconds) with a separate completed lock (24 hours)
+- Reconciliation job detects "stuck in processing" keys and cleans up after 5 minutes`
         },
         {
-          question: 'How does double-entry bookkeeping work?',
-          answer: `Every transaction creates balanced entries:
+          question: 'How does double-entry bookkeeping work in a payment ledger?',
+          answer: `Double-entry bookkeeping is the industry standard for financial systems — every movement of money creates exactly two entries that balance:
 
-Example: Customer pays $100
-1. DEBIT  Stripe_Balance  $100 (asset increases)
-2. CREDIT Customer_Payable $100 (liability increases)
+**The fundamental invariant:**
+Sum of all DEBIT entries = Sum of all CREDIT entries (always, with zero exceptions)
 
-When merchant is paid out:
-3. DEBIT  Merchant_Payable $97 (liability decreases)
-4. CREDIT Stripe_Balance   $97 (asset decreases)
-5. CREDIT Revenue          $3  (Stripe's fee)
+**Account types:**
+- ASSET accounts: Money the platform holds (Stripe balance, bank accounts)
+- LIABILITY accounts: Money owed to others (merchant payables, customer refunds pending)
+- REVENUE accounts: Platform earnings (processing fees)
+- EXPENSE accounts: Platform costs (interchange fees to card networks)
 
-Invariant: Sum of all debits = Sum of all credits
+**Example: Customer pays $100, merchant receives $97, Stripe keeps $3 fee:**
 
-Benefits:
-- Self-auditing: Imbalance indicates bug
-- Clear money flow visibility
-- Required for financial compliance`
+Step 1 — Payment captured:
+  DEBIT  stripe_clearing_account  $100 (asset increases — we received money)
+  CREDIT customer_payable         $100 (liability increases — we owe this to merchant)
+
+Step 2 — Merchant payout:
+  DEBIT  customer_payable          $97 (liability decreases — debt partially settled)
+  CREDIT stripe_bank_account       $97 (asset decreases — money left our bank)
+  DEBIT  customer_payable           $3 (remaining liability cleared)
+  CREDIT platform_revenue           $3 (revenue recognized — Stripe fee)
+
+**Why this matters:**
+- Self-auditing: If total debits != total credits, there is a bug. Period. Run this check every minute
+- Compliance: Financial auditors require double-entry for SOX, PCI, and banking regulations
+- Debugging: Every dollar can be traced from source to destination through the ledger chain
+- Reconciliation: Match internal ledger against bank statements and card network reports daily
+
+**Implementation:**
+- Ledger entries are IMMUTABLE — never update or delete, only append new entries
+- Each entry references a transactionId linking the debit and credit pair
+- Use PostgreSQL with serializable isolation for ledger writes (consistency over throughput)
+- Running balance maintained on each account for fast balance lookups`
         },
         {
-          question: 'How do we handle PCI-DSS compliance?',
-          answer: `Cardholder Data Environment (CDE) isolation:
+          question: 'How does the authorize-capture-settle flow work end to end?',
+          answer: `The three-phase payment flow separates the promise to pay from the actual money movement:
 
-1. Card data never touches main systems
-   - Tokenization at point of entry
-   - PCI vault stores actual card numbers
-   - Application uses tokens (pm_xxx)
+**Phase 1 — Authorization (instant, <1 second):**
+- Merchant creates PaymentIntent with amount, currency, and payment method token
+- Payment service detokenizes card via the PCI vault (HSM-backed)
+- Sends authorization request to the card network (Visa/Mastercard/Amex)
+- Card network forwards to the issuing bank, which checks: sufficient funds? fraud? limits?
+- Issuing bank responds: APPROVED or DECLINED (within 500ms)
+- If approved: funds are "held" on the cardholder account (not transferred yet)
+- Authorization hold expires after 7 days (card network rules)
 
-2. Network segmentation
-   - CDE in isolated VPC
-   - Strict firewall rules
-   - Separate authentication
+**Phase 2 — Capture (merchant-initiated, async):**
+- Merchant calls POST /v1/payment_intents/{id}/capture when ready to fulfill
+- Common pattern: authorize at checkout, capture at ship time (e-commerce)
+- Partial capture supported: authorize $100, capture only $75 (remaining $25 released)
+- Creates ledger entries: DEBIT clearing account, CREDIT merchant payable
 
-3. Client-side tokenization
-   - Stripe.js collects card data
-   - Sends directly to Stripe (not merchant server)
-   - Merchant receives token only
+**Phase 3 — Settlement (batch, T+2):**
+- Card network settles in batches: all captures from today are settled 2 business days later
+- Settlement means actual money transfer from issuing bank to acquiring bank to Stripe
+- Stripe credits the merchant balance after settlement
+- Merchant can then initiate a payout to their bank account
 
-4. Key management
-   - HSM (Hardware Security Module) for encryption
-   - Regular key rotation
-   - Audit logging of all access`
-        }
+**Why separate authorize and capture?**
+- E-commerce: Only charge when the item actually ships (avoid charging for out-of-stock)
+- Hotels/car rental: Authorize estimated amount, capture actual amount at checkout
+- Subscription trials: Authorize $0.00 to verify the card is valid without charging
+- Marketplace: Authorize buyer's card, capture only when seller confirms fulfillment`
+        },
+        {
+          question: 'How do you implement real-time fraud detection without adding latency?',
+          answer: `Fraud detection must score every transaction in <100ms to stay within the 1-second authorization budget:
+
+**Real-time scoring pipeline:**
+1. Transaction arrives at fraud service (parallel to authorization, not sequential)
+2. Feature extraction (<10ms): pull 200+ features from the transaction and user history
+3. ML model inference (<20ms): gradient boosted tree model scores fraud probability (0.0 to 1.0)
+4. Rule engine (<5ms): hard rules override ML (e.g., blocked countries, velocity limits)
+5. Decision (<1ms): ALLOW (score < 0.3), CHALLENGE (0.3-0.7), BLOCK (> 0.7)
+
+**Key fraud signals (features):**
+- Velocity: 5 transactions from same card in 2 minutes (normal for subscriptions, suspicious for e-commerce)
+- Geolocation: Card billing address in US, IP address from Nigeria
+- Device fingerprint: Browser/device not seen before for this customer
+- Amount pattern: Transaction 10x higher than customer average
+- Merchant risk: New merchant with no history, high-risk category (digital goods)
+- Network signals: Card number flagged by other merchants in the Stripe network
+
+**Challenge flow (3D Secure):**
+- Medium-risk transactions trigger 3D Secure (3DS) authentication
+- Customer redirected to issuing bank for additional verification (OTP, biometric)
+- Shifts fraud liability from merchant to issuing bank
+- Adds 10-30 seconds to checkout but reduces chargebacks by 70%
+
+**ML model training:**
+- Trained on historical chargeback data (supervised learning)
+- Retrained weekly with new fraud patterns
+- A/B tested: new model scores alongside production model, compare precision/recall
+- False positive rate target: <1% (blocking legitimate transactions loses revenue)
+
+**Async enrichment:**
+- Some signals take too long for real-time: IP reputation lookup, address verification
+- Run these async; if they flag fraud after authorization: alert merchant, suggest manual review`
+        },
+        {
+          question: 'How do you achieve PCI-DSS compliance and isolate cardholder data?',
+          answer: `PCI-DSS Level 1 compliance is mandatory for processing card payments — it requires a Cardholder Data Environment (CDE) isolated from all other systems:
+
+**Client-side tokenization (reduces PCI scope):**
+- Stripe.js (frontend SDK) collects card number, expiry, and CVC directly
+- Card data is sent directly from browser to Stripe PCI environment (never touches merchant server)
+- Stripe returns a token (pm_xxx) that the merchant uses for all subsequent operations
+- Result: Merchant server never sees raw card data and is exempt from most PCI requirements
+
+**PCI vault architecture:**
+- Card numbers stored in an HSM-backed vault (Hardware Security Module)
+- HSMs are tamper-resistant physical devices that perform encryption/decryption
+- Card numbers encrypted at rest with AES-256, keys managed exclusively by HSMs
+- Only the token service can request decryption, and only for active payment processing
+
+**Network isolation:**
+- CDE runs in a dedicated VPC with no internet access
+- Communication only via internal APIs through a strict API gateway
+- All traffic encrypted with mutual TLS (mTLS)
+- Separate authentication system — CDE credentials are distinct from main platform
+
+**Access controls:**
+- No developer has access to production card data
+- Debugging uses tokenized/masked data: **** **** **** 4242
+- Audit log records every access to the CDE (who, when, what)
+- Quarterly penetration testing by approved scanning vendor (ASV)
+- Annual on-site audit by QSA (Qualified Security Assessor)
+
+**Key rotation:**
+- Encryption keys rotated every 90 days
+- Old keys retained for decrypting existing data, new keys used for new encryptions
+- HSM generates keys internally — keys never exist in plaintext outside the HSM`
+        },
+        {
+          question: 'How do you build a reliable webhook delivery system for payment events?',
+          answer: `Webhooks notify merchants of payment events (payment.succeeded, refund.created) — reliability is critical because merchants depend on them for fulfillment:
+
+**Webhook delivery pipeline:**
+1. Payment event occurs (e.g., payment captured successfully)
+2. Event persisted to events table with unique eventId (immutable, append-only)
+3. Event published to Kafka topic: payment.events
+4. Webhook worker consumes from Kafka, looks up merchant webhook URL
+5. POST to merchant URL with event payload + Stripe-Signature header (HMAC-SHA256)
+6. Merchant responds with 2xx = success, anything else = retry
+
+**Retry policy with exponential backoff:**
+- Attempt 1: immediate
+- Attempt 2: 5 minutes later
+- Attempt 3: 30 minutes later
+- Attempt 4: 2 hours later
+- Attempt 5: 8 hours later
+- After 5 failures: mark webhook as failing, alert merchant via email, continue retrying for 72 hours
+- After 72 hours: disable webhook endpoint, require merchant to manually re-enable
+
+**Signature verification (prevent spoofing):**
+- Stripe-Signature header contains: timestamp + HMAC-SHA256(timestamp + payload, webhook_secret)
+- Merchant verifies: recompute HMAC with their webhook secret, compare with header
+- Timestamp prevents replay attacks: reject events older than 5 minutes
+
+**Ordering and idempotency:**
+- Events may arrive out of order (retry of event 1 arrives after event 2)
+- Each event has a monotonic eventId — merchant should check if already processed
+- Merchant response is idempotent: processing the same event twice produces the same result
+
+**Monitoring:**
+- Dashboard shows webhook delivery rate, failure rate, and average latency per merchant
+- Alert if a merchant endpoint has >50% failure rate for 1 hour
+- Automatic circuit breaker: stop sending to consistently failing endpoints to protect webhook infrastructure`
+        },
+        {
+          question: 'How do you handle reconciliation between your ledger and external systems?',
+          answer: `Reconciliation ensures the internal ledger matches reality — bank statements, card network reports, and merchant balances:
+
+**Three-way reconciliation (daily):**
+1. **Internal ledger** — All debit/credit entries from the double-entry bookkeeping system
+2. **Card network settlement reports** — Daily batch files from Visa/Mastercard showing settled transactions
+3. **Bank statements** — Actual money movements in/out of Stripe bank accounts
+
+**Automated reconciliation pipeline:**
+1. Settlement files arrive from card networks at T+2 (2 business days after capture)
+2. Match each settlement line item to an internal ledger entry by transaction reference
+3. Verify amounts match (within acceptable tolerance for currency rounding: 1 cent)
+4. Flag mismatches as exceptions for manual review
+
+**Common mismatch types:**
+- **Timing differences:** Transaction captured on Day 1, settled on Day 3 — legitimate, auto-resolve
+- **Partial capture:** Authorized $100, captured $75 — verify remaining $25 was released
+- **Chargeback:** Bank reversed $50 — verify internal ledger has a corresponding reversal entry
+- **Currency conversion:** FX rate at capture vs settlement may differ slightly — within tolerance
+
+**Reconciliation for merchant balances:**
+- Sum of all ledger entries for a merchant account = current balance
+- Compare with the balance stored in the accounts table
+- Any discrepancy triggers immediate investigation (possible bug in ledger logic)
+
+**Automation rate target: 99.5%**
+- 99.5% of transactions reconcile automatically with no human intervention
+- 0.5% flagged as exceptions, resolved by the finance operations team within 24 hours
+- Monthly: run full balance verification across all accounts (sum of ledger = sum of balances)`
+        },
+        {
+          question: 'How do you handle refunds and chargebacks in the ledger?',
+          answer: `Refunds and chargebacks require precise reversal entries in the ledger — money must flow back correctly:
+
+**Refund flow (merchant-initiated):**
+1. Merchant calls POST /v1/refunds with paymentId and amount (full or partial)
+2. Validate: amount <= original captured amount, payment status = CAPTURED
+3. Create refund record with idempotency check (prevent duplicate refunds)
+4. Send reversal to card network (refund authorization)
+5. Create ledger entries (reverse of original):
+   DEBIT  customer_payable    $100 (liability increases — we owe customer)
+   CREDIT stripe_clearing      $100 (asset decreases — money leaving)
+6. Card network processes refund (5-10 business days to reach customer)
+7. Update refund status: PENDING -> SUCCEEDED
+8. Send webhook: refund.succeeded to merchant
+
+**Partial refund handling:**
+- Original payment: $100, refund: $30
+- Ledger entries reverse only $30
+- Remaining $70 stays in merchant payable
+- Multiple partial refunds allowed up to original amount
+
+**Chargeback flow (customer-initiated via their bank):**
+1. Customer disputes charge with their issuing bank
+2. Card network notifies Stripe: chargeback received for transaction X
+3. Immediately debit merchant balance by the disputed amount + chargeback fee ($15)
+4. Create ledger entries reflecting the provisional debit
+5. Notify merchant via webhook: charge.dispute.created
+6. Merchant has 7-14 days to submit evidence (receipts, shipping proof, communication logs)
+7. Card network reviews evidence, rules in favor of merchant or customer
+8. If merchant wins: reverse the debit, refund the chargeback fee
+9. If merchant loses: debit becomes permanent
+
+**Chargeback prevention:**
+- Fraud scoring reduces fraudulent transactions (fewer chargebacks)
+- Clear billing descriptors: customer sees "ACME STORE" not "STRIPE*123" on their statement
+- Proactive refunds: if fraud is detected after capture, refund before customer files chargeback
+- Win rate for well-documented disputes: 20-30%`
+        },
+        {
+          question: 'How do you implement distributed transactions using the Saga pattern for payments?',
+          answer: `Payment processing spans multiple services that must coordinate reliably — the Saga pattern replaces traditional distributed transactions:
+
+**Why not two-phase commit (2PC)?**
+- 2PC requires all participants to hold locks until the coordinator commits
+- If the coordinator crashes, all participants are stuck holding locks indefinitely
+- Cross-service 2PC is fragile and creates tight coupling
+- Card network APIs do not support 2PC — they are request/response only
+
+**Saga pattern with orchestrator:**
+- A central orchestrator (state machine) manages the payment flow step by step
+- Each step has a forward action and a compensation (rollback) action
+- If any step fails, the orchestrator runs compensations in reverse order
+
+**Payment saga steps:**
+1. **Create PaymentIntent** — Record intent in database
+   - Compensation: Mark as CANCELLED
+2. **Score Fraud** — ML model scores risk
+   - Compensation: None (read-only)
+3. **Authorize Card** — Card network holds funds
+   - Compensation: Void authorization
+4. **Create Ledger Entries** — Double-entry bookkeeping records
+   - Compensation: Create reversal entries
+5. **Capture Funds** — Card network transfers money
+   - Compensation: Issue refund
+6. **Send Webhook** — Notify merchant of success
+   - Compensation: Send failure webhook
+
+**State machine implementation:**
+- Each PaymentIntent has a status field tracking its position in the saga
+- Status transitions are atomic (single database UPDATE with optimistic locking)
+- Orchestrator polls for in-progress sagas that have been stuck for >5 minutes (crash recovery)
+- Dead letter queue for permanently failed sagas requiring manual intervention
+
+**Saga vs 2PC comparison:**
+- Saga: Eventually consistent, higher availability, works across external APIs
+- 2PC: Strongly consistent, lower availability, requires all participants to support protocol
+- For payments: Saga is the industry standard because card networks are external`
+        },
+        {
+          question: 'How do you design recurring billing and subscription management?',
+          answer: `Recurring billing adds a time dimension to payments — the system must reliably charge customers on a schedule without manual intervention:
+
+**Subscription lifecycle state machine:**
+- TRIALING: Free trial period, card authorized but not charged (dollar-zero auth to verify card validity)
+- ACTIVE: Regular billing cycle, charges processed automatically
+- PAST_DUE: Payment failed, retrying with smart retry logic
+- CANCELED: Customer or merchant canceled, no further charges
+- PAUSED: Temporarily suspended, resume without re-entering payment details
+
+**Billing engine (cron-based with distributed locking):**
+1. Daily job scans for subscriptions due for billing (next_billing_date <= today)
+2. Distributed lock per subscription prevents double-billing across multiple workers
+3. Create PaymentIntent with the subscription amount and stored payment method
+4. If payment succeeds: advance next_billing_date, send receipt
+5. If payment fails: enter smart retry flow
+
+**Smart retry logic (Stripe Billing approach):**
+- Attempt 1: Immediately on billing date
+- Attempt 2: 3 days later (card may have been temporarily declined)
+- Attempt 3: 5 days after attempt 2 (end of grace period)
+- Between retries: send dunning emails (Update your payment method)
+- After final failure: cancel subscription, send cancellation notice
+- Success rate: approx 15% of initially-failed payments recover through smart retry
+
+**Proration for plan changes:**
+- Customer upgrades mid-cycle from ten dollars per month to twenty dollars per month with 15 days remaining
+- Proration: credit unused portion on old plan, charge proportional amount on new plan
+- Net charge: difference applied immediately or on next billing date
+- Downgrade: credit applied to next invoice (no immediate refund)
+
+**Invoice generation:**
+- Each billing cycle generates an immutable invoice record
+- Invoice includes: line items, tax calculations, discounts, proration adjustments
+- Invoices stored permanently for financial compliance and customer access
+- PDF generation for download via merchant dashboard`
+        },
       ],
 
       basicImplementation: {
@@ -7262,6 +8527,117 @@ Benefits:
         { name: 'Ledger & Accounting Layer', purpose: 'Maintain double-entry bookkeeping and settlement records', components: ['Double-Entry Ledger', 'Settlement Engine', 'Reconciliation Service', 'Currency Converter'] },
         { name: 'Compliance & Security Layer', purpose: 'Ensure PCI-DSS compliance, tokenize card data, and manage encryption', components: ['Card Tokenizer', 'HSM (Hardware Security Module)', 'Audit Logger', 'PCI Boundary'] },
       ],
+      comparisonTables: [
+        {
+          id: 'saga-vs-2pc',
+          title: 'Saga Pattern vs Two-Phase Commit (2PC)',
+          headers: ['Aspect', 'Saga Pattern', '2PC'],
+          rows: [
+            ['Consistency', 'Eventual (compensating transactions)', 'Strong (distributed lock)'],
+            ['Availability', 'High (no global lock)', 'Lower (coordinator failure blocks all)'],
+            ['External APIs', 'Works with any API', 'Requires all participants to support protocol'],
+            ['Complexity', 'Compensation logic per step', 'Coordinator + participant protocol'],
+            ['Failure Recovery', 'Run compensations in reverse', 'Timeout and rollback all'],
+            ['Used By', 'Stripe, PayPal, most payment systems', 'Traditional banking (internal only)'],
+          ],
+          verdict: 'Saga for payment systems — card networks are external APIs that do not support 2PC'
+        },
+        {
+          id: 'event-sourcing-vs-crud',
+          title: 'Event Sourcing vs CRUD for Ledger',
+          headers: ['Aspect', 'Event Sourcing', 'CRUD'],
+          rows: [
+            ['Data Model', 'Append-only event log', 'Mutable rows with UPDATE/DELETE'],
+            ['Audit Trail', 'Complete history by design', 'Requires separate audit table'],
+            ['Debugging', 'Replay events to reproduce state', 'Lost history after UPDATE'],
+            ['Storage', 'Higher (all events retained)', 'Lower (only current state)'],
+            ['Query Pattern', 'Rebuild state from events', 'Direct SELECT on current state'],
+            ['Best For', 'Ledger (immutable financial records)', 'User profiles, settings'],
+          ],
+          verdict: 'Event sourcing for the payment ledger (immutability required), CRUD for merchant accounts'
+        },
+        {
+          id: 'sql-vs-nosql-ledger',
+          title: 'SQL vs NoSQL for Payment Ledger',
+          headers: ['Aspect', 'SQL (PostgreSQL)', 'NoSQL (DynamoDB/Cassandra)'],
+          rows: [
+            ['Transactions', 'ACID with serializable isolation', 'Limited (single-item or none)'],
+            ['Consistency', 'Strong (critical for money)', 'Eventual (risky for ledger)'],
+            ['Throughput', '~50K TPS per node', 'Millions TPS (partitioned)'],
+            ['Querying', 'Complex aggregations, JOINs', 'Key-value lookups only'],
+            ['Audit', 'Triggers, constraints, FK integrity', 'Application-level enforcement'],
+            ['Best For', 'Ledger entries (ACID required)', 'Event logs, webhook delivery tracking'],
+          ],
+          verdict: 'SQL for the ledger (ACID non-negotiable for money), NoSQL for high-throughput event logs'
+        },
+      ],
+      flowcharts: [
+        {
+          id: 'payment-auth-flow',
+          title: 'Payment Authorization Flow',
+          description: 'End-to-end flow from customer checkout to card authorization',
+          steps: [
+            { step: 1, label: 'Tokenize Card', detail: 'Stripe.js collects card data, sends directly to PCI vault, returns pm_xxx token' },
+            { step: 2, label: 'Create PaymentIntent', detail: 'Merchant server calls API with token, amount, currency, idempotency key' },
+            { step: 3, label: 'Check Idempotency', detail: 'Redis lookup: if key exists, return cached result immediately' },
+            { step: 4, label: 'Score Fraud', detail: 'ML model scores transaction risk in <100ms using 200+ features' },
+            { step: 5, label: 'Detokenize Card', detail: 'Token service retrieves encrypted card from HSM-backed vault' },
+            { step: 6, label: 'Authorize via Network', detail: 'Send auth request to Visa/MC/Amex, issuing bank approves/declines' },
+            { step: 7, label: 'Create Ledger Entries', detail: 'Double-entry: DEBIT clearing, CREDIT merchant payable' },
+            { step: 8, label: 'Return + Webhook', detail: 'Return result to merchant, publish payment.authorized webhook' },
+          ]
+        },
+        {
+          id: 'refund-flow',
+          title: 'Refund Processing Flow',
+          description: 'How a merchant-initiated refund flows through the system',
+          steps: [
+            { step: 1, label: 'Merchant Request', detail: 'POST /v1/refunds with paymentId, amount, reason, idempotency key' },
+            { step: 2, label: 'Validate', detail: 'Check: amount <= captured amount, payment status = CAPTURED, not already fully refunded' },
+            { step: 3, label: 'Debit Merchant', detail: 'Debit merchant balance by refund amount, create ledger reversal entries' },
+            { step: 4, label: 'Send to Network', detail: 'Submit refund to card network (Visa/MC), receive reference number' },
+            { step: 5, label: 'Update Status', detail: 'Refund status: PENDING (network processing, 5-10 business days)' },
+            { step: 6, label: 'Webhook', detail: 'Send refund.created webhook to merchant, customer receives funds in 5-10 days' },
+          ]
+        },
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#635bff',
+          items: [
+            { label: 'PostgreSQL (Ledger)', value: 'ACID transactions', bar: 95 },
+            { label: 'Redis (Idempotency)', value: '10K lookups/s', bar: 85 },
+            { label: 'HSM (Card Vault)', value: 'AES-256 encryption', bar: 90 },
+            { label: 'Kafka (Events)', value: 'Webhook pipeline', bar: 75 },
+            { label: 'ML Fraud (GBM)', value: '<100ms scoring', bar: 80 },
+            { label: 'Card Networks', value: 'Visa/MC/Amex', bar: 70 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '$1T+/year', value: 'Transaction volume', bar: 100 },
+            { label: '65K peak TPS', value: 'Black Friday peak', bar: 95 },
+            { label: '99.9999% uptime', value: '<30s downtime/year', bar: 100 },
+            { label: '<1s auth latency', value: 'Card authorization', bar: 90 },
+            { label: '1.7B entries/day', value: 'Ledger writes', bar: 80 },
+            { label: '60 TB/year', value: 'Ledger storage', bar: 65 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Direct Integration', description: 'Single server calling card network API directly with card data stored in main database.', color: '#94a3b8', icon: 'server', capacity: '~100 TPS', rps: '100', pros: ['Simple to build', 'Single database', 'Fast to market'], cons: ['PCI violation (card data in main DB)', 'No idempotency (double charges)', 'No fraud detection'] },
+        { step: 2, title: 'Tokenization', description: 'PCI-compliant card vault with tokenization. Separate Cardholder Data Environment.', color: '#2D8CFF', icon: 'layers', capacity: '~1K TPS', rps: '1K', pros: ['PCI compliant', 'Card data isolated', 'Tokens reduce risk'], cons: ['Vault adds latency', 'HSM cost', 'Still no fraud detection'] },
+        { step: 3, title: 'Ledger + Idempotency', description: 'Double-entry bookkeeping ledger, idempotency keys for exactly-once processing, Saga pattern.', color: '#f59e0b', icon: 'zap', capacity: '~10K TPS', rps: '10K', pros: ['Exactly-once processing', 'Auditable ledger', 'Distributed transaction handling'], cons: ['Saga complexity', 'Reconciliation overhead', 'Ledger storage growth'] },
+        { step: 4, title: 'Fraud + Multi-Network', description: 'Real-time ML fraud scoring, multi-network routing (Visa/MC/Amex), webhook delivery system.', color: '#10b981', icon: 'globe', capacity: '~50K TPS', rps: '50K', pros: ['Fraud prevention', 'Optimal network routing', 'Reliable merchant notifications'], cons: ['ML model maintenance', 'Multi-network complexity', 'Webhook reliability engineering'] },
+        { step: 5, title: 'Global Platform', description: 'Multi-region deployment, multi-currency with FX, regulatory compliance across jurisdictions.', color: '#7c3aed', icon: 'cpu', capacity: '65K+ TPS', rps: '65K+', pros: ['Global availability', 'Local acquiring reduces fees', 'Full regulatory compliance'], cons: ['Jurisdictional complexity', 'FX risk management', 'Massive infrastructure cost'] },
+      ],
     },
     {
       id: 'search-engine',
@@ -7271,6 +8647,37 @@ Benefits:
       color: '#4285f4',
       difficulty: 'Hard',
       description: 'Design a web search engine with crawling, indexing, and ranking.',
+      productMeta: {
+        name: 'Search Engine',
+        tagline: 'Indexing the web and serving 8.5 billion queries daily',
+        stats: [
+          { label: 'Queries/Day', value: '8.5B' },
+          { label: 'Index Size', value: '100+ PB' },
+          { label: 'Pages Indexed', value: '100B+' },
+          { label: 'Latency', value: '<200ms' },
+        ],
+        scope: {
+          inScope: ['Web page crawling and content extraction', 'Inverted index construction and maintenance', 'Query parsing with spell correction and expansion', 'Multi-stage ranking (BM25 + PageRank + ML)', 'Autocomplete and search suggestions', 'Distributed index serving with caching'],
+          outOfScope: ['Image and video search (separate system)', 'Google Ads bidding platform', 'Knowledge Graph and featured snippets', 'Google Maps integration', 'Voice search and Google Assistant'],
+        },
+        keyChallenge: 'Serving 100K+ queries per second with <200ms latency by searching a 100+ petabyte distributed index across thousands of servers, while keeping the index fresh with 20 billion page crawls per day.',
+      },
+
+      // ── Back-of-Envelope Estimation ──
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '8.5B queries/day, 100B+ pages indexed, average query touches 1000 index shards in parallel, 20B pages crawled per day, average page size 500KB, index is ~1% of raw content.',
+        calculations: [
+          { label: 'Query QPS (Average)', value: '~100K/s', detail: '8.5B queries / 86,400 seconds = ~98K QPS' },
+          { label: 'Query QPS (Peak)', value: '~300K/s', detail: '100K x 3x peak factor during business hours and major events' },
+          { label: 'Index Size', value: '100+ PB', detail: '100B pages x ~1MB compressed index entry avg = 100+ PB distributed' },
+          { label: 'Crawl Bandwidth', value: '~120 Gbps', detail: '20B pages/day x 500KB avg / 86,400 sec = ~115 Gbps inbound' },
+          { label: 'Cache Hit Rate', value: '~60%', detail: 'Top 20% of queries = 80% of traffic, cached in memory' },
+          { label: 'Index Servers', value: '10,000+', detail: '100 PB / 10 TB per server = 10,000 servers for the index alone' },
+          { label: 'Crawl Workers', value: '~50,000', detail: '20B pages/day at 5 pages/sec per worker = ~46K workers' },
+          { label: 'Daily Fresh Pages', value: '~20B', detail: 'Pages recrawled daily for freshness (news: minutes, popular: daily, long-tail: weekly)' },
+        ]
+      },
 
       introduction: `Google processes over 8.5 billion searches per day, making it the most used service on the internet. A web search engine must crawl billions of pages, build efficient indexes, and rank results by relevance in under 200ms.
 
@@ -7338,106 +8745,375 @@ url_frontier {
 
       keyQuestions: [
         {
-          question: 'How does the inverted index work?',
-          answer: `**Inverted Index Structure**:
-- Forward index: doc_id → [words]
-- Inverted index: word → [doc_ids + positions]
+          question: 'How does the inverted index work and why is it the core data structure?',
+          answer: `The inverted index is the single most important data structure in search — it enables sub-second lookups across 100 billion pages:
 
-**Example**:
-"cat" → [(doc1, pos:[5,23]), (doc7, pos:[1]), (doc99, pos:[45,67,89])]
+**Structure:**
+- Forward index: doc_id maps to [list of words] — useful for building, not for querying
+- Inverted index: word maps to [list of (doc_id, frequency, positions)] — this is what serves queries
+- Each entry in the posting list includes: document ID, term frequency, character positions, and field weights (title vs body)
 
-**Query Processing**:
-1. Parse query: "black cat" → ["black", "cat"]
-2. Lookup posting lists for each term
-3. Intersect lists (docs containing both)
-4. Score by TF-IDF, proximity, PageRank
-5. Return top K results
+**Example:**
+"distributed" maps to [(doc42, freq:3, pos:[15,89,201], title_boost:2.0), (doc1337, freq:1, pos:[45], title_boost:0)]
 
-**Optimizations**:
-- Skip lists for fast intersection
-- Compression (variable-byte encoding)
-- Tiered index: hot (memory), warm (SSD), cold (disk)`
+**Query processing with the inverted index:**
+1. Parse query: "distributed systems" becomes ["distributed", "systems"]
+2. Retrieve posting list for "distributed" (say 50K documents)
+3. Retrieve posting list for "systems" (say 80K documents)
+4. Intersect lists: find documents containing BOTH terms (~5K docs)
+5. Score by BM25 (term frequency, document length normalization) + PageRank + proximity bonus
+6. Return top 10 results
+
+**Critical optimizations:**
+- Skip lists: jump forward in posting lists during intersection (O(n+m) instead of naive O(n*m))
+- Variable-byte encoding: compress doc IDs using delta encoding (reduce posting list size by 70%)
+- Tiered index: top 1% of pages in memory (hot), next 10% on SSD (warm), rest on disk (cold)
+- Block-max WAND algorithm: skip entire blocks of documents that cannot beat the current top-K score
+- Field-level indexing: separate posting lists for title, URL, anchor text (title matches weighted 10x higher)`
         },
         {
-          question: 'How does PageRank work?',
-          answer: `**Core Idea**: Pages linked by many important pages are important.
+          question: 'How does PageRank work and how is it computed at web scale?',
+          answer: `PageRank models the web as a graph and computes importance based on link structure — it remains a key ranking signal:
 
-**Algorithm**:
-PR(A) = (1-d)/N + d × Σ(PR(Ti)/C(Ti))
-- d = damping factor (0.85)
-- Ti = pages linking to A
-- C(Ti) = outbound links from Ti
+**Core intuition:**
+- A page is important if many important pages link to it
+- Each page distributes its rank equally across all outbound links
+- A "random surfer" follows links randomly, with 15% chance of jumping to any page
 
-**Implementation**:
-1. Build web graph from crawled links
-2. Initialize all pages with equal rank (1/N)
-3. Iterate until convergence:
-   - Each page distributes rank to outbound links
-   - Add random jump factor (1-d)/N
-4. Typically converges in 50-100 iterations
+**Mathematical formulation:**
+PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
+- d = damping factor (0.85) — probability of following a link vs random jump
+- N = total number of pages
+- Ti = pages that link to page A
+- C(Ti) = number of outbound links from page Ti
 
-**Scale**: MapReduce over billions of pages
-- Map: Emit (target, partial_rank) for each link
-- Reduce: Sum partial ranks, apply formula`
+**Computation at scale (100B+ pages):**
+1. Build the web graph from crawl data: extract all (source_url, target_url) pairs
+2. Initialize all pages with equal rank: 1/N
+3. Iterative computation using MapReduce/Spark:
+   - Map phase: each page emits (target_page, rank_contribution) for each outbound link
+   - Reduce phase: sum all contributions for each page, apply formula
+4. Repeat for 50-100 iterations until convergence (rank changes < epsilon)
+5. Store final PageRank scores indexed by doc_id for fast lookup during ranking
+
+**Practical considerations:**
+- Dangling pages (no outbound links): redistribute their rank evenly across all pages
+- Spider traps (pages linking only to each other): the damping factor (random jump) prevents infinite loops
+- PageRank manipulation (link farms): detect unnatural link patterns, penalize participating pages
+- Computation frequency: recomputed weekly (full web graph), incremental updates for new/changed pages
+
+**Modern usage:**
+- PageRank alone is no longer sufficient — it is one of 200+ signals in the ML ranking model
+- But it remains a powerful prior: a page with high PageRank starts with a significant relevance boost`
         },
         {
-          question: 'How do we handle 100K queries/second?',
-          answer: `**Multi-tier Architecture**:
-1. **DNS load balancing**: Route to nearest datacenter
-2. **CDN caching**: Cache popular queries (20% of queries = 80% of traffic)
-3. **Index sharding**: Partition by document ID or term
-4. **Parallel query**: Query all shards simultaneously, merge results
+          question: 'How do you design the web crawler architecture to crawl 20 billion pages per day?',
+          answer: `The web crawler is the input pipeline — it discovers, fetches, and feeds pages to the indexer at massive scale:
 
-**Index Partitioning**:
-- **Document partitioning**: Each shard has full index for subset of docs
-- **Term partitioning**: Each shard has all docs for subset of terms
-- Google uses document partitioning (better load balance)
+**Distributed crawler architecture:**
+- 50,000+ crawler worker machines distributed across multiple datacenters
+- Each worker fetches ~5 pages per second (limited by network and politeness rules)
+- 50K workers x 5 pages/sec x 86,400 sec = ~21.6B pages/day
 
-**Caching Layers**:
-- Query cache: Exact match (60% hit rate)
-- Result cache: Top results for common queries
-- Posting list cache: Hot terms in memory`
+**URL Frontier (priority queue):**
+- Maintains the queue of URLs to crawl, prioritized by importance and freshness
+- Priority score = PageRank x freshness_need x change_frequency
+- News sites: recrawl every 5-15 minutes (highest priority)
+- Popular sites (top 1M): recrawl daily
+- Long-tail sites: recrawl weekly or monthly
+- Frontier is sharded across machines by domain hash for parallel processing
+
+**Politeness and rate limiting:**
+- Respect robots.txt: parse and cache directives per domain
+- Rate limit per domain: max 1 request per second per domain (prevent overloading target servers)
+- Distributed rate limiting: all workers for the same domain coordinate via shared state
+- User-Agent string identifies Googlebot so site operators can allow/block
+
+**Deduplication:**
+- URL normalization: strip tracking params, resolve redirects, canonicalize
+- Content deduplication: compute SimHash (locality-sensitive hash) of page content
+- If SimHash matches an already-indexed page: skip indexing (saves compute and storage)
+- ~30% of crawled pages are duplicates or near-duplicates
+
+**Crawl pipeline:**
+1. URL Frontier dequeues highest-priority URL
+2. DNS resolution (cached locally, TTL respected)
+3. HTTP fetch with timeout (30 seconds max, handle redirects up to 5 hops)
+4. Extract content: HTML parsing, strip boilerplate (nav, ads, footer)
+5. Extract links: discover new URLs, add to frontier if not seen before
+6. Send extracted content to indexing pipeline via Kafka
+7. Update last_crawled timestamp and schedule next crawl`
         },
         {
-          question: 'How do we keep the index fresh?',
-          answer: `**Crawl Prioritization**:
-- News sites: Every few minutes
-- Popular sites: Daily
-- Long-tail: Weekly/monthly
-- Priority = PageRank × freshness_need × change_frequency
+          question: 'How does query parsing and understanding work?',
+          answer: `Query understanding transforms raw user input into a structured search intent — it is critical for result quality:
 
-**Incremental Updates**:
-1. Crawler detects changed pages (Last-Modified, ETag)
-2. Parser extracts new content
-3. Indexer updates posting lists
-4. Real-time serving picks up changes
+**Query processing pipeline (runs in <20ms):**
 
-**Freshness vs Completeness**:
-- Dedicated "fresh index" for breaking news
-- Merge with main index periodically
-- Query both and blend results`
+1. **Tokenization:** Split query into terms, handle special characters
+   - "machine learning" becomes ["machine", "learning"]
+   - Quoted phrases preserved: "machine learning" treated as exact phrase match
+
+2. **Spelling correction (<5ms):**
+   - Edit distance (Levenshtein): "machien learninh" corrected to "machine learning"
+   - N-gram model: probability of correction given context
+   - Query log mining: if 90% of users who searched "pytorch lightening" clicked results for "pytorch lightning", suggest the correction
+   - "Did you mean?" shown when correction confidence > 0.8
+
+3. **Query expansion:**
+   - Synonyms: "car" expanded to "car OR automobile OR vehicle"
+   - Stemming: "running" matches "run", "runs", "runner"
+   - Acronyms: "NYC" expanded to "New York City"
+   - Expansion is weighted: original term boosted 2x over synonyms
+
+4. **Intent detection:**
+   - Navigational: "facebook login" — user wants a specific page (boost exact URL match)
+   - Informational: "how does photosynthesis work" — user wants explanatory content
+   - Transactional: "buy iPhone 15 pro" — user wants to purchase (show shopping results)
+   - Local: "pizza near me" — trigger location-based results
+
+5. **Entity recognition:**
+   - "Apple stock price" — entity: Apple Inc. (not the fruit), intent: finance widget
+   - "Taylor Swift age" — entity: person, intent: knowledge panel
+   - Entity linking to Knowledge Graph for rich result formatting
+
+**Personalization layer:**
+- User in San Francisco searching "weather" gets SF weather without specifying location
+- User who frequently searches for Python programming gets code results for "python" (not snake)
+- Personalization is a light boost (10-20%), not a complete reranking — avoid filter bubbles`
         },
         {
-          question: 'How does query understanding work?',
-          answer: `**Query Processing Pipeline**:
-1. **Tokenization**: Split query into terms
-2. **Spelling correction**: "pyhton" → "python"
-3. **Query expansion**: "car" → "car OR automobile"
-4. **Intent detection**: "weather" → show weather widget
-5. **Entity recognition**: "Apple stock" → finance results
+          question: 'How does the multi-stage ranking pipeline work?',
+          answer: `Ranking determines result quality — it uses a funnel approach to balance quality with latency:
 
-**Spelling Correction**:
-- Edit distance (Levenshtein)
-- N-gram overlap
-- Query logs: "Did you mean?" click-through data
+**Stage 1 — Initial Retrieval (BM25 + PageRank): ~10,000 candidates in <50ms**
+- Query the inverted index across all shards in parallel
+- Score each document using BM25 (term frequency, inverse document frequency, document length normalization)
+- Boost by pre-computed PageRank score
+- Each shard returns its top-K results, aggregator merges and deduplicates
+- This stage is FAST because BM25 uses pre-computed statistics from the index
 
-**Ranking Features**:
-- Query-document match (TF-IDF, BM25)
-- PageRank
-- Freshness
-- User engagement (click-through rate)
-- Personalization (search history, location)`
-        }
+**Stage 2 — ML Re-ranking: ~1,000 candidates in <100ms**
+- Feed 10K candidates into a machine learning model (gradient boosted trees or neural ranker)
+- 200+ features per document:
+  - Text relevance: BM25 score, phrase match, title match
+  - Authority: PageRank, domain authority, backlink quality
+  - Freshness: page age, last update time, content change rate
+  - User engagement: click-through rate, dwell time, bounce rate (from historical logs)
+  - Content quality: readability score, content length, presence of structured data
+- Model trained on human-labeled relevance judgments + click-through data
+- Output: re-ranked list of 1K documents
+
+**Stage 3 — Personalization + Blending: ~100 final results in <20ms**
+- Apply user personalization: search history, location, language preference
+- Blend in special results: news carousel, image pack, knowledge panel, shopping results
+- Insert ads at designated positions (clearly labeled)
+- Diversify results: avoid showing 10 results from the same domain
+- Generate snippets: extract the most relevant passage from each document for the result page
+
+**Latency budget:**
+- Total: <200ms from query to response
+- Query parsing: <20ms
+- Index retrieval: <50ms (parallel across shards)
+- ML ranking: <100ms
+- Snippet generation + response assembly: <30ms`
+        },
+        {
+          question: 'How does spell correction and autocomplete work at scale?',
+          answer: `Spell correction and autocomplete are critical for user experience — over 10% of queries contain typos:
+
+**Spell correction approaches:**
+
+1. **Edit distance (Levenshtein):**
+   - Compute minimum edits (insert, delete, replace) to transform misspelling into a dictionary word
+   - "distributd" is edit distance 1 from "distributed" (missing 'e')
+   - Expensive for large dictionaries: use BK-tree or SymSpell for fast lookup
+
+2. **N-gram model:**
+   - Break words into character n-grams: "distributed" becomes ["dis", "ist", "str", "tri", ...]
+   - Find candidate corrections with high n-gram overlap
+   - Rank by language model probability: P("distributed systems") >> P("distributd systems")
+
+3. **Query log mining (most powerful):**
+   - Millions of users have typed the same misspelling before
+   - Track: query -> clicked result -> reformulated query
+   - If 95% of "pytorch lightening" searches reformulate to "pytorch lightning": high-confidence correction
+   - This captures domain-specific corrections that dictionaries miss
+
+**Autocomplete (search suggestions):**
+- Pre-computed from popular query logs: top 10 suggestions for each prefix
+- Stored in a distributed trie (prefix tree) sharded by first 2 characters
+- Trie replicated to all datacenters for <50ms latency
+- Updated hourly from query log stream (trending queries surface quickly)
+- Personalized: blend global popular queries with user's own search history
+- Filtering: remove offensive, dangerous, or legally problematic suggestions
+
+**Scale considerations:**
+- Autocomplete must respond in <50ms (faster than user typing speed)
+- Trie for English alone: ~500M unique query prefixes
+- Global replication: trie is ~50GB, replicated to every datacenter
+- Real-time trending: Kafka stream of queries, Flink aggregation, update trie in minutes`
+        },
+        {
+          question: 'How do you design the distributed indexing pipeline?',
+          answer: `The indexing pipeline transforms raw crawled pages into searchable index shards — it runs continuously:
+
+**Pipeline stages (Kafka + MapReduce/Dataflow):**
+
+1. **Content Extraction:**
+   - Parse HTML, extract visible text (strip scripts, CSS, ads, navigation)
+   - Extract metadata: title, meta description, Open Graph tags, structured data (JSON-LD)
+   - Detect language using character n-gram models
+   - Identify main content vs boilerplate using DOM analysis
+
+2. **Tokenization and Analysis:**
+   - Language-specific tokenization (English: whitespace + stemming, Chinese: word segmentation)
+   - Remove stop words for indexing (but keep for phrase matching)
+   - Compute term frequencies and document length for BM25
+
+3. **Link Graph Update:**
+   - Extract all outbound links from the page
+   - Update the web graph used for PageRank computation
+   - Compute anchor text signals (text used in links pointing to a page)
+
+4. **Index Building:**
+   - Create posting list entries: (term -> doc_id, frequency, positions)
+   - Compress posting lists with variable-byte encoding
+   - Build skip lists for fast intersection during query time
+   - Merge new entries with existing index segments (LSM-tree style)
+
+5. **Index Distribution:**
+   - New index segments pushed to serving nodes
+   - Hot swap: serving node loads new segment while still serving old one
+   - Atomic switch: queries start using new segment once fully loaded
+   - Old segment retained for rollback (TTL: 24 hours)
+
+**Document-partitioned sharding:**
+- 100B pages distributed across ~10,000 index shards
+- Each shard contains the full inverted index for ~10M pages
+- Query hits ALL shards in parallel (scatter-gather)
+- Each shard returns top-K results, aggregator merges
+- 3x replication per shard for availability and read throughput`
+        },
+        {
+          question: 'How do you implement caching strategy for search queries?',
+          answer: `Caching is essential for handling 100K+ QPS — without it, the index servers would be overwhelmed:
+
+**Multi-layer caching architecture:**
+
+1. **Query result cache (Redis/Memcached):**
+   - Cache key: normalized query string + location + language
+   - Cache value: serialized search results (top 100 results with snippets)
+   - Hit rate: ~60% (power law distribution: 20% of queries = 80% of traffic)
+   - TTL: 5 minutes for general queries, 1 minute for time-sensitive queries
+   - Invalidation: time-based only (re-compute when TTL expires)
+
+2. **Posting list cache (in-memory on index servers):**
+   - Hot terms (top 10K most queried terms) kept in memory
+   - Cache the decompressed posting lists for instant access
+   - Hit rate: ~80% of term lookups served from memory
+   - Eviction: LRU with frequency-based priority
+
+3. **Autocomplete cache (edge CDN):**
+   - Popular query prefixes cached at CDN edge locations globally
+   - <10ms response time for cached prefixes
+   - Updated hourly from the autocomplete trie
+
+4. **DNS-level cache:**
+   - Client browsers cache DNS resolution for google.com
+   - CDN edge resolves to nearest datacenter
+
+**Cache warming strategy:**
+- Before deploying new index: pre-warm caches with top 100K queries
+- On new index server startup: proactively execute popular queries to fill posting list cache
+- After cache flush (maintenance): gradual traffic ramp-up over 10 minutes to rebuild cache
+
+**When NOT to cache:**
+- Rare queries (long tail): not worth cache space, serve directly from index
+- Time-sensitive queries (breaking news, stock prices): very short TTL or bypass cache
+- Personalized queries: cache the base results, apply personalization layer on top
+
+**Cache sizing:**
+- Query result cache: ~500GB across Redis cluster (10M cached queries x 50KB avg)
+- Posting list cache: ~1TB per index server in RAM (hot terms)
+- Total caching infrastructure: ~20TB across the serving fleet`
+        },
+        {
+          question: 'How do you balance freshness vs relevance in search results?',
+          answer: `Freshness and relevance are often in tension — a brand new page may be timely but unverified, while an old authoritative page may be outdated:
+
+**Tiered freshness strategy:**
+
+1. **Real-time tier (minutes):**
+   - Breaking news, live events, trending topics
+   - Dedicated "fresh index" built from real-time crawl of news sources
+   - Pages indexed within minutes of publication
+   - Lower quality bar (PageRank threshold relaxed) because freshness matters more
+   - Blended into main results with a freshness boost
+
+2. **Near-real-time tier (hours):**
+   - Popular sites with frequent updates (Reddit, Wikipedia, Stack Overflow)
+   - Incremental index updates every 1-4 hours via change detection
+   - Change detection: compare content hash with last indexed version
+   - Only re-index pages that actually changed (saves 70% of processing)
+
+3. **Batch tier (daily to weekly):**
+   - The long tail of the web (billions of pages that rarely change)
+   - Full re-crawl on a schedule based on change frequency prediction
+   - ML model predicts: "this page changes every 3 days on average"
+   - Schedule next crawl accordingly to optimize freshness within crawl budget
+
+**Query-time freshness signals:**
+- QDF (Query Deserves Freshness): detect queries about recent events
+  - Spike in query volume for a term signals that fresh results are needed
+  - Example: "election results" during election week gets massive freshness boost
+  - "history of elections" does not get freshness boost (informational, not time-sensitive)
+- Freshness boost in ranking: multiply relevance score by decay function of page age
+  - For QDF queries: strong decay (old pages penalized heavily)
+  - For evergreen queries: weak or no decay (old authoritative pages fine)
+
+**Freshness verification:**
+- Fresh does not mean good: a brand new spam page should not rank highly
+- Combine freshness with quality signals: PageRank, domain authority, content quality
+- New pages from established domains (nytimes.com) get more freshness trust than unknown domains`
+        },
+        {
+          question: 'How does the inverted index handle multi-word and phrase queries?',
+          answer: `Phrase queries ("exact match phrases") and proximity scoring require more than simple term intersection:
+
+**Phrase matching with positional index:**
+- Standard inverted index stores: term -> [(doc_id, frequency)]
+- Positional index adds character positions: term -> [(doc_id, frequency, positions:[5, 23, 89])]
+- For phrase query "distributed systems":
+  1. Find posting list for "distributed": docs where it appears + positions
+  2. Find posting list for "systems": docs where it appears + positions
+  3. Intersect posting lists (docs containing both)
+  4. For each common doc: check if "systems" appears at position "distributed_pos + 1"
+  5. Only docs with adjacent positions are phrase matches
+
+**Proximity scoring (near-phrase matching):**
+- Even when not an exact phrase, words appearing close together are more relevant
+- "distributed systems design" matches docs where all three words appear within 10 words of each other
+- Proximity score: 1 / (min_span_length) — tighter span gets higher score
+- BM25 does not capture proximity; it is an additional ranking signal
+
+**Skip list optimization for phrase queries:**
+- Positional posting lists can be very long (common words appear millions of times)
+- Skip lists allow jumping forward: if "distributed" at position 100 in doc42, skip to find "systems" near position 101
+- Block-level position index: positions stored in blocks of 128, skip entire blocks that cannot contain a match
+
+**Stop words in phrases:**
+- Stop words ("the", "a", "of") are normally removed from the index to save space
+- But phrase queries need them: "to be or not to be" requires stop words
+- Solution: keep a separate positional index for stop words, used only for phrase queries
+- Alternative: store stop word positions as gaps in the regular positional index
+
+**Compound queries:**
+- "distributed systems" AND python — phrase match on first two terms, regular match on third
+- "distributed systems" OR "cloud computing" — union of two phrase matches
+- Query parser converts user input into a boolean expression of terms and phrases
+- Execution plan optimized: start with the most selective (rarest) term to minimize work`
+        },
       ],
 
       basicImplementation: {
@@ -7611,6 +9287,104 @@ PR(A) = (1-d)/N + d × Σ(PR(Ti)/C(Ti))
         { name: 'Indexing Layer', purpose: 'Parse documents, build inverted index, and compute link graph metrics', components: ['Document Parser', 'Inverted Index Builder', 'PageRank Calculator', 'Index Shards'] },
         { name: 'Query Serving Layer', purpose: 'Parse queries, retrieve candidates, rank results, and serve with low latency', components: ['Query Parser', 'Index Server', 'Ranking Engine', 'Snippet Generator'] },
         { name: 'Quality & Freshness Layer', purpose: 'Maintain index freshness, fight spam, and personalize results', components: ['Real-time Index Updater', 'Spam Detector', 'Personalization Service', 'A/B Testing'] },
+      ],
+      comparisonTables: [
+        {
+          id: 'bm25-vs-neural',
+          title: 'BM25 vs Neural Ranking',
+          headers: ['Aspect', 'BM25 (Traditional)', 'Neural Ranking (BERT/Transformers)'],
+          rows: [
+            ['Speed', 'Sub-ms per document (pre-computed)', '1-10ms per document (inference)'],
+            ['Relevance', 'Good for exact term matches', 'Understands semantic meaning'],
+            ['Training Data', 'None (statistical formula)', 'Millions of labeled query-doc pairs'],
+            ['Interpretability', 'Fully interpretable (TF-IDF math)', 'Black box (attention weights)'],
+            ['Vocabulary Gap', 'Misses synonyms without expansion', 'Handles synonyms naturally'],
+            ['Best For', 'Stage 1: fast candidate retrieval (10K)', 'Stage 2: precise re-ranking (1K)'],
+          ],
+          verdict: 'BM25 for fast initial retrieval, neural model for precise re-ranking — use both in pipeline'
+        },
+        {
+          id: 'doc-vs-term-partition',
+          title: 'Document vs Term Partitioning',
+          headers: ['Aspect', 'Document Partitioning', 'Term Partitioning'],
+          rows: [
+            ['What Each Shard Holds', 'Full index for a subset of documents', 'All documents for a subset of terms'],
+            ['Query Pattern', 'Scatter-gather: query ALL shards', 'Query only shards with query terms'],
+            ['Update Cost', 'Low: update single shard per document', 'High: update multiple shards per document'],
+            ['Load Balance', 'Even (documents distributed randomly)', 'Uneven (popular terms create hot shards)'],
+            ['Index Updates', 'Easy: add doc to one shard', 'Hard: update posting lists across shards'],
+            ['Used By', 'Google, Bing (preferred for web search)', 'Some specialized search systems'],
+          ],
+          verdict: 'Document partitioning for web search — easier updates from continuous crawling'
+        },
+      ],
+      flowcharts: [
+        {
+          id: 'web-crawl-pipeline',
+          title: 'Web Crawl Pipeline',
+          description: 'How a URL is discovered, fetched, parsed, and added to the search index',
+          steps: [
+            { step: 1, label: 'URL Discovery', detail: 'New URLs extracted from crawled pages or submitted via sitemap/API' },
+            { step: 2, label: 'Priority Queue', detail: 'URL Frontier assigns priority: PageRank x freshness x change_frequency' },
+            { step: 3, label: 'Politeness Check', detail: 'Rate limiter ensures max 1 req/sec per domain, respect robots.txt' },
+            { step: 4, label: 'Fetch Page', detail: 'HTTP GET with 30s timeout, follow up to 5 redirects, handle errors' },
+            { step: 5, label: 'Parse Content', detail: 'Extract text, title, links, metadata; strip boilerplate (ads, nav)' },
+            { step: 6, label: 'Dedup Check', detail: 'SimHash comparison: skip indexing if near-duplicate of existing page' },
+            { step: 7, label: 'Index Update', detail: 'Build posting list entries, push to index shards, update web graph' },
+          ]
+        },
+        {
+          id: 'query-processing-flow',
+          title: 'Query Processing Flow',
+          description: 'End-to-end flow from user keystroke to search results page',
+          steps: [
+            { step: 1, label: 'Receive Query', detail: 'User submits query, routed to nearest datacenter via GeoDNS' },
+            { step: 2, label: 'Parse & Tokenize', detail: 'Split into terms, detect phrases, identify entities' },
+            { step: 3, label: 'Spell Correct', detail: 'Edit distance + query log mining: fix typos, suggest corrections' },
+            { step: 4, label: 'Check Cache', detail: 'Redis query cache: 60% hit rate, return cached results if fresh' },
+            { step: 5, label: 'Expand Query', detail: 'Add synonyms, stemming, related terms with lower boost weight' },
+            { step: 6, label: 'Fan-out to Shards', detail: 'Parallel query across 10K+ index shards, each returns top-K' },
+            { step: 7, label: 'ML Re-rank', detail: 'Neural ranking model scores 1K candidates with 200+ features' },
+            { step: 8, label: 'Assemble Results', detail: 'Generate snippets, blend special results, insert ads, cache, return in <200ms' },
+          ]
+        },
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#4285f4',
+          items: [
+            { label: 'Inverted Index', value: '100+ PB distributed', bar: 95 },
+            { label: 'Crawl Workers', value: '50K+ machines', bar: 90 },
+            { label: 'Query Cache (Redis)', value: '60% hit rate', bar: 75 },
+            { label: 'ML Ranker (BERT)', value: '200+ features', bar: 85 },
+            { label: 'MapReduce (PageRank)', value: '100B+ page graph', bar: 80 },
+            { label: 'CDN (Autocomplete)', value: '<50ms globally', bar: 70 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '8.5B queries/day', value: 'Search volume', bar: 100 },
+            { label: '100K+ QPS', value: 'Peak query rate', bar: 95 },
+            { label: '100B+ pages', value: 'Indexed web pages', bar: 90 },
+            { label: '<200ms latency', value: 'End-to-end P99', bar: 85 },
+            { label: '20B crawls/day', value: 'Pages fetched', bar: 80 },
+            { label: '10K+ index servers', value: 'Serving fleet', bar: 75 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Machine', description: 'One server with a local inverted index and basic keyword matching.', color: '#94a3b8', icon: 'server', capacity: '~1M pages', rps: '10', pros: ['Simple to build', 'Easy to debug', 'No network overhead'], cons: ['Cannot index beyond one disk', 'No redundancy', 'Slow for large indexes'] },
+        { step: 2, title: 'Distributed Index', description: 'Index sharded across multiple servers with parallel query execution and result merging.', color: '#2D8CFF', icon: 'layers', capacity: '~1B pages', rps: '10K', pros: ['Horizontal scaling', 'Parallel query execution', 'Redundancy via replication'], cons: ['Network overhead for scatter-gather', 'Shard management complexity', 'No ML ranking yet'] },
+        { step: 3, title: 'ML Ranking + Cache', description: 'Multi-stage ranking pipeline (BM25 then ML), query result caching, and distributed crawling.', color: '#f59e0b', icon: 'zap', capacity: '~10B pages', rps: '50K', pros: ['Much better result quality', '60% cache hit rate', 'Automated crawl prioritization'], cons: ['ML model training pipeline needed', 'Cache invalidation complexity', 'Higher compute cost'] },
+        { step: 4, title: 'Global Scale', description: 'Multi-datacenter deployment, tiered index (hot/warm/cold), real-time freshness pipeline.', color: '#10b981', icon: 'globe', capacity: '~100B pages', rps: '100K', pros: ['Low latency globally', 'Breaking news in minutes', 'Regional fault isolation'], cons: ['Cross-region index sync', 'Enormous infrastructure cost', 'Complex deployment'] },
+        { step: 5, title: 'Semantic Search', description: 'Neural ranking models (BERT), query intent understanding, personalization, and knowledge graph integration.', color: '#7c3aed', icon: 'cpu', capacity: '100B+ pages', rps: '300K+', pros: ['Understands meaning, not just keywords', 'Rich result types', 'Personalized experience'], cons: ['GPU inference cost', 'Training data requirements', 'Bias and fairness concerns'] },
       ],
     },
     {
