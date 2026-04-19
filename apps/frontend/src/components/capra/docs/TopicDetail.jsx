@@ -263,7 +263,7 @@ function DataModelSection({ schema }) {
           )}
         </button>
       </div>
-      <div className="overflow-x-auto bg-[var(--bg-elevated)] max-h-96 overflow-y-auto">
+      <div className="overflow-x-auto bg-[var(--bg-elevated)]">
         <table className="w-full">
           <tbody>
             {schemaLines.map((line, i) => (
@@ -1659,7 +1659,7 @@ export default function TopicDetail({
 
               {/* API Design + Data Model — side by side */}
               {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
-                <div className={`grid gap-2 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? '' : 'grid-cols-1'}`}>
+                <div className={`grid gap-3 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                   {/* API Design — Stripe-style endpoint cards */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
                     <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
@@ -1680,6 +1680,11 @@ export default function TopicDetail({
                                   'bg-red-500/10 text-red-400 border border-red-500/20'
                                 }`}>{endpoint.method}</span>
                                 <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
+                              </div>
+                              {endpoint.description && (
+                                <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed" style={{ fontFamily: "var(--font-sans)" }}>{endpoint.description}</p>
+                              )}
+                              <div className="hidden">
                               </div>
                               {endpoint.response && (
                                 <div className="rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-2 overflow-x-auto">
@@ -2087,8 +2092,8 @@ export default function TopicDetail({
                     {topicDetails.discussionPoints.map((point, i) => {
                       const dotColor = TOPIC_COLORS[i % TOPIC_COLORS.length];
                       const isExpanded = sdExpandedDPs[i] || false;
-                      const visiblePoints = isExpanded ? point.points : point.points.slice(0, 2);
-                      const hasMore = point.points.length > 2;
+                      const visiblePoints = point.points;
+                      const hasMore = false;
                       return (
                         <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border-hover,var(--border))] transition-all overflow-hidden">
                           <div className="px-4 py-3">
