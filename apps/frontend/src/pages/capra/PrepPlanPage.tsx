@@ -147,7 +147,7 @@ export default function PrepPlanPage() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <div className="pt-20 pb-12 px-4 lg:max-w-[65%] mx-auto">
+        <div className="pt-20 pb-12 px-4 lg:max-w-[75%] mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-6 bg-[var(--bg-elevated)] rounded w-64" />
             <div className="h-4 bg-[var(--bg-elevated)] rounded w-40" />
@@ -162,7 +162,7 @@ export default function PrepPlanPage() {
   if (error) {
     return (
       <div className="min-h-screen">
-        <div className="pt-20 pb-12 px-4 lg:max-w-[65%] mx-auto text-center">
+        <div className="pt-20 pb-12 px-4 lg:max-w-[75%] mx-auto text-center">
           <p className="text-sm text-red-500 mt-8">{error}</p>
           <Link to="/capra/prepare" className="text-sm text-[var(--accent)] hover:underline mt-4 inline-block">
             Back to dashboard
@@ -175,7 +175,7 @@ export default function PrepPlanPage() {
   if (!data) {
     return (
       <div className="min-h-screen">
-        <div className="pt-20 pb-12 px-4 lg:max-w-[65%] mx-auto text-center">
+        <div className="pt-20 pb-12 px-4 lg:max-w-[75%] mx-auto text-center">
           <div className="mt-16">
             <p className="text-[var(--text-secondary)] text-sm">No prep plan set up yet.</p>
             <Link
@@ -201,7 +201,7 @@ export default function PrepPlanPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 pt-20 pb-12 px-4">
-        <div className="lg:max-w-[65%] mx-auto">
+        <div className="lg:max-w-[75%] mx-auto">
           {/* Header */}
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>

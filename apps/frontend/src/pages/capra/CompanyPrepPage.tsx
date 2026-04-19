@@ -413,7 +413,7 @@ export default function CompanyPrepPage() {
         <div>
           {/* Header */}
           <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-            <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8 py-10">
               <div className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                 <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
                 <span>/</span>
@@ -440,7 +440,7 @@ export default function CompanyPrepPage() {
           </div>
 
           {/* Content */}
-          <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {genericSections.map((section) => (
                 <div key={section.title} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
@@ -538,7 +538,7 @@ export default function CompanyPrepPage() {
 
       {/* ═══════════════════════ Main Content ═══════════════════════ */}
       <main>
-        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Breadcrumb ── */}
           <div style={{ padding: '16px 0 0' }}>
