@@ -2070,13 +2070,18 @@ export default function TopicDetail({
 
               {/* 6. System Flows + Flowcharts — show right after architecture */}
               {(topicDetails.createFlow || topicDetails.redirectFlow) && (
-                <div id="flows" className="grid grid-cols-1 lg:grid-cols-2 gap-2 scroll-mt-24">
+                <div id="flows" className="space-y-3 scroll-mt-24">
                   {topicDetails.createFlow && (
                     <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
                       <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                         <Icon name="arrowRight" size={16} className="text-white" />
                         <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.createFlow.title}</h3>
                       </div>
+                      {topicDetails.createFlow.diagramSrc && (
+                        <div className="p-3 border-b border-[var(--border)]">
+                          <img src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} className="w-full rounded-lg" style={{ maxHeight: '450px', objectFit: 'contain' }} loading="lazy" />
+                        </div>
+                      )}
                       <div className="p-3">
                         <ol className="grid grid-cols-1 gap-1">
                           {topicDetails.createFlow.steps.map((step, i) => (
@@ -2095,6 +2100,11 @@ export default function TopicDetail({
                         <Icon name="arrowLeft" size={16} className="text-white" />
                         <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.redirectFlow.title}</h3>
                       </div>
+                      {topicDetails.redirectFlow.diagramSrc && (
+                        <div className="p-3 border-b border-[var(--border)]">
+                          <img src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} className="w-full rounded-lg" style={{ maxHeight: '450px', objectFit: 'contain' }} loading="lazy" />
+                        </div>
+                      )}
                       <div className="p-3">
                         <ol className="grid grid-cols-1 gap-1">
                           {topicDetails.redirectFlow.steps.map((step, i) => (
