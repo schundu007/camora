@@ -8790,7 +8790,7 @@ Cold (S3):   30+ days -- archive, very cheap, slow retrieval
       title: 'Consistent Hashing',
       icon: 'refreshCw',
       color: '#f59e0b',
-      questions: 8,
+      questions: 11,
       description: 'Ring-based hashing for distributed data distribution with minimal disruption.',
       concepts: ['Hash Ring', 'Virtual Nodes (Vnodes)', 'Token Assignment', 'Data Partitioning', 'Rebalancing', 'Replication on the Ring', 'Weighted Distribution', 'Hotspot Mitigation'],
       tips: [
@@ -23539,6 +23539,132 @@ MVCC (Multi-Version Concurrency Control):
   Good: Both lock row 1 first, then row 2
 
 **Interview tip**: Mention optimistic locking for web APIs (ETags) and pessimistic locking for banking systems. Explain that most modern web applications use optimistic locking because conflict rates are typically < 1%.`
+        },
+        {
+          question: 'How does the Saga pattern replace distributed ACID transactions in microservices?',
+          answer: `The **Saga pattern** decomposes a distributed transaction into local ACID transactions per service. If any step fails, compensating transactions undo previous steps.
+
+**Why not 2PC?** Coordinator is SPOF, participants hold locks while waiting, any participant down blocks everything.
+
+**Saga for e-commerce order**:
+
+  Forward: T1 Create order -> T2 Charge payment -> T3 Reserve stock -> T4 Ship -> T5 Confirm
+  Compensations (reverse): C4 Cancel ship, C3 Release stock, C2 Refund, C1 Cancel order
+  If T3 fails: Execute C2, C1
+
+**Orchestration**: Central coordinator manages saga state machine. Clear control flow, easy monitoring.
+**Choreography**: Services react to events. No coordinator, loose coupling. Harder to trace.
+
+**Saga design rules**:
+1. Compensations must be idempotent
+2. Compensations must always eventually succeed
+3. Forward order, compensate in reverse
+4. Identify pivot transaction (non-compensable step, place last)
+
+**Interview tip**: Explain why 2PC is problematic, then present Saga with compensation.`
+        },
+        {
+          question: 'What are compensation transactions and how do you design them correctly?',
+          answer: `**Compensating transactions** undo previously completed steps. They are semantic inverses, not database rollbacks.
+
+**Compensation vs Rollback**:
+  Rollback: DELETE the row (as if never existed)
+  Compensation: INSERT a refund record (both charge and refund in history)
+
+**Design per operation**:
+
+  Forward             | Compensation
+  --------------------|---------------------------
+  Create order        | Cancel order
+  Charge payment      | Issue refund
+  Reserve inventory   | Release inventory
+  Ship package        | CANNOT UNDO (pivot transaction)
+
+**Pivot transactions** cannot be undone. Place these LAST in the saga.
+
+**Design rules**:
+1. **Idempotent**: Running twice produces same result
+2. **Retryable**: Must eventually succeed (retry with backoff)
+3. **Semantic**: Create new records, preserve audit trail
+
+**Handling failures**: Retry with exponential backoff, dead letter queue for manual resolution, reconciliation jobs.
+
+**Interview tip**: Compensations are semantic inverses, must be idempotent, and must always succeed.`
+        },
+        {
+          question: 'What are the eventual consistency patterns used in BASE systems?',
+          answer: `BASE systems use several convergence patterns:
+
+**Read Repair**: On read, detect stale replicas and update them.
+**Anti-Entropy**: Background Merkle tree comparison of all replicas. O(log N) to find differences.
+**Hinted Handoff**: Temporary storage for writes to unavailable replicas.
+**CRDTs**: Merge without conflicts. G-Counter, OR-Set, LWW-Register.
+**Vector Clocks**: Detect concurrent writes, return both for app resolution.
+**Gossip Protocol**: State dissemination in O(log N) rounds.
+**Event Sourcing + CQRS**: Immutable events, rebuild state by replay.
+**Change Data Capture**: Database changes -> Kafka -> downstream consumers.
+
+**Convergence timeline**:
+
+  Pattern           | Time          | Use Case
+  ------------------|---------------|-------------------
+  Read repair       | On next read  | Popular keys
+  Hinted handoff    | On recovery   | Short outages
+  Anti-entropy      | Hours         | All keys
+  Gossip            | Seconds       | Cluster state
+  CDC               | Seconds       | Cross-service sync
+  CRDTs             | Immediate     | Counters, sets
+
+**Interview tip**: Mention at least three convergence mechanisms for a BASE system.`
+        },
+        {
+          question: 'How do you choose between ACID and BASE for different parts of the same system?',
+          answer: `The choice is per-data-type and per-operation, not global.
+
+**Decision framework**:
+
+  Question                        | ACID           | BASE
+  --------------------------------|----------------|------------------
+  Can data be temporarily wrong?  | No             | Yes
+  Financial impact?               | Yes -> ACID    | No -> BASE OK
+  Write throughput > 10K/sec?     | Hard with ACID | Easy with BASE
+
+**Per-operation mapping (e-commerce)**:
+
+  Operation            | Model | Database      | Why
+  ---------------------|-------|---------------|------------------
+  Place order          | ACID  | PostgreSQL    | Atomic writes
+  Process payment      | ACID  | PostgreSQL    | Cannot lose money
+  Update cart          | BASE  | Redis         | Ephemeral, fast
+  Search products      | BASE  | Elasticsearch | Index lag OK
+  Track page views     | BASE  | Kafka -> OLAP | Approximate OK
+
+**The CQRS hybrid**: ACID writes to PostgreSQL, publish events to Kafka, BASE read models in Cassandra/Elasticsearch/Redis.
+
+**Interview tip**: Map each operation to its consistency requirement and database choice.`
+        },
+        {
+          question: 'What is write-ahead logging (WAL) and how does it enable ACID durability?',
+          answer: `**WAL rule**: Write the log record to disk BEFORE modifying the data page.
+
+  Without WAL: crash between memory update and disk write = lost commit
+  With WAL: crash after log write -> replay log to recover
+
+**WAL structure**: [LSN | TxnID | Type | Page/Offset | Old->New data]
+  Sequential, append-only. Each record enables redo OR undo.
+
+**Crash recovery (ARIES)**:
+  1. ANALYSIS: Find in-flight transactions at crash
+  2. REDO: Replay all changes
+  3. UNDO: Roll back uncommitted transactions
+
+**Why WAL is fast**: Sequential writes (100-200 MB/s), group commit (batch 100 txns into one fsync), lazy data page flushing via checkpoints.
+
+**WAL for replication**: Primary streams WAL to standby. Kafka topics ARE append-only logs (WAL for distributed systems).
+
+**Databases**: PostgreSQL (WAL, synchronous_commit), MySQL (Redo log, innodb_flush_log_at_trx_commit), MongoDB (Journal, writeConcern: j:true).
+
+**Interview tip**: WAL is the mechanism behind ACID durability, replication, and point-in-time recovery.`
         }
       ],
 
