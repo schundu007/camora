@@ -5852,8 +5852,10 @@ user_history {
       apiDesign: {
         description: 'Autocomplete suggestion endpoint',
         endpoints: [
-          { method: 'GET', path: '/api/suggest', params: 'prefix, limit=10, userId?', response: '{ suggestions: [{ text, type, score }] }' },
-          { method: 'POST', path: '/api/suggest/feedback', params: '{ prefix, selectedSuggestion }', response: '{ success }' }
+          { method: 'GET', path: '/api/suggest', params: 'prefix, limit=10, userId?', response: '{ suggestions: [{ text, type, score }] }',
+            description: 'Returns search suggestions for a prefix as the user types. Uses a distributed trie stored in Redis, updated hourly from search query logs. Suggestions are ranked by frequency, recency, and personalization (user\'s past searches). The trie is sharded by first 2 characters for horizontal scaling. Target latency: <30ms to feel instant. Results include suggestion type (query, entity, URL) for rich display.' },
+          { method: 'POST', path: '/api/suggest/feedback', params: '{ prefix, selectedSuggestion }', response: '{ success }',
+            description: 'Records which suggestion the user selected after typing a prefix. This feedback loop improves suggestion ranking — frequently selected suggestions are promoted. Data is aggregated in a Kafka pipeline and used to rebuild the suggestion trie hourly. Also detects trending queries by monitoring sudden spikes in selection frequency.' }
         ]
       },
 
@@ -6207,10 +6209,14 @@ user_presence {
       apiDesign: {
         description: 'REST API for CRUD, WebSocket for real-time',
         endpoints: [
-          { method: 'POST', path: '/api/messages', params: '{ channelId, content, threadId?, attachments[] }', response: '{ message }' },
-          { method: 'GET', path: '/api/channels/:id/messages', params: 'before, after, limit', response: '{ messages[], hasMore }' },
-          { method: 'GET', path: '/api/search', params: 'q, channelIds[], from, to', response: '{ messages[], total }' },
-          { method: 'WS', path: '/ws/realtime', params: 'token', response: 'MESSAGE_NEW, TYPING, PRESENCE, REACTION events' }
+          { method: 'POST', path: '/api/messages', params: '{ channelId, content, threadId?, attachments[] }', response: '{ message }',
+            description: 'Sends a message to a channel or thread. The message is persisted to the database, indexed in Elasticsearch for search, and broadcast to all online channel members via their WebSocket connections. Supports rich text (Markdown), file attachments (uploaded separately to S3), and thread replies. Message delivery is at-least-once with client-side deduplication using a client-generated nonce.' },
+          { method: 'GET', path: '/api/channels/:id/messages', params: 'before, after, limit', response: '{ messages[], hasMore }',
+            description: 'Fetches message history for a channel using cursor-based pagination (before/after a message ID). Messages are stored in a time-series partitioned table (by channel + month) for efficient range queries. Supports both backward scrolling (before) and forward loading (after) for jumping to a specific message. Includes thread reply counts and reaction summaries inline.' },
+          { method: 'GET', path: '/api/search', params: 'q, channelIds[], from, to', response: '{ messages[], total }',
+            description: 'Searches across tracks, artists, albums, and playlists simultaneously. Uses Elasticsearch with different analyzers per entity type. Track search matches on title, artist name, album, and lyrics. Supports multi-language queries with language detection. Results are grouped by type and ranked by popularity, release date, and user\'s listening history.' },
+          { method: 'WS', path: '/ws/realtime', params: 'token', response: 'MESSAGE_NEW, TYPING, PRESENCE, REACTION events',
+            description: 'Persistent WebSocket connection for real-time events. Multiplexes multiple event types over a single connection: MESSAGE_NEW (new messages), TYPING (typing indicators with 3-second debounce), PRESENCE (online/away/offline status), and REACTION (emoji reactions). The connection is authenticated via token and subscribes to events for all channels the user has joined. Server-side fan-out uses Redis pub/sub across WebSocket server instances.' }
         ]
       },
 
@@ -6573,10 +6579,14 @@ user_actions {
         description: 'Search, business details, and review endpoints',
         endpoints: [
           { method: 'GET', path: '/api/search', params: 'q, lat, lng, radius, category, price, rating, sortBy', response: '{ businesses[], total, facets }' },
-          { method: 'GET', path: '/api/businesses/:id', params: '-', response: '{ business, recentReviews[], photos[] }' },
-          { method: 'POST', path: '/api/reviews', params: '{ businessId, rating, text, photos[] }', response: '{ reviewId }' },
-          { method: 'GET', path: '/api/businesses/:id/reviews', params: 'sortBy, page', response: '{ reviews[], total }' },
-          { method: 'POST', path: '/api/checkin', params: '{ businessId }', response: '{ success }' }
+          { method: 'GET', path: '/api/businesses/:id', params: '-', response: '{ business, recentReviews[], photos[] }',
+            description: 'Returns full business details including hours, photos, attributes (WiFi, parking, outdoor seating), and the most recent/helpful reviews. Review data is denormalized into the business document for fast reads. Photos are served from CDN. The response includes the user\'s check-in history and whether they\'ve bookmarked this business.' },
+          { method: 'POST', path: '/api/reviews', params: '{ businessId, rating, text, photos[] }', response: '{ reviewId }',
+            description: 'Submits a review with rating (1-5 stars), text, and optional photos. Reviews go through a moderation pipeline: spam detection (ML model trained on flagged reviews), profanity filter, and fake review detection (analyzing reviewer behavior patterns). Approved reviews update the business\'s aggregate rating asynchronously. The reviewer cannot edit their rating after 30 days.' },
+          { method: 'GET', path: '/api/businesses/:id/reviews', params: 'sortBy, page', response: '{ reviews[], total }',
+            description: 'Returns paginated reviews for a business with multiple sort options: most recent, highest rated, lowest rated, and Yelp sort (default — combines recency, usefulness votes, and reviewer credibility). Each review includes the reviewer\'s profile, review count, photo count, and friend connections for trust signals.' },
+          { method: 'POST', path: '/api/checkin', params: '{ businessId }', response: '{ success }',
+            description: 'Records that a user is currently at a business. Check-ins are used for recommendations (businesses you visit frequently appear in \'My Places\'), social features (friends see your check-ins), and business analytics. Check-ins within 30 minutes of the same business are deduplicated. Businesses with many check-ins get a boost in search ranking.' }
         ]
       },
 
@@ -6965,31 +6975,36 @@ recommendation_queue {
             method: 'POST',
             path: '/api/swipe',
             params: '{ targetId, action: LIKE|PASS|SUPERLIKE }',
-            response: '{ match: boolean, matchId?: bigint }'
+            response: '{ match: boolean, matchId?: bigint }',
+            description: 'Records a swipe action (LIKE, PASS, or SUPERLIKE) and checks for a mutual match. Uses Redis to check if the target user has already liked the current user — if so, a match is created instantly. Match creation triggers push notifications to both users and opens a chat channel. Swipe rate is limited to prevent bot behavior. SUPERLIKE notifications are sent immediately to the target user.'
           },
           {
             method: 'GET',
             path: '/api/matches',
             params: '?cursor=',
-            response: '{ matches: [{id, user, lastMessage, matchedAt}] }'
+            response: '{ matches: [{id, user, lastMessage, matchedAt}] }',
+            description: 'Returns the user\'s match list with cursor-based pagination, sorted by most recent interaction. Each match includes the matched user\'s profile preview, last message, unread count, and match timestamp. Matches where neither user has messaged after 14 days are deprioritized. The response is served from a Redis sorted set for fast reads.'
           },
           {
             method: 'WS',
             path: '/ws/chat/{matchId}',
             params: 'auth token',
-            response: 'Bidirectional messages'
+            response: 'Bidirectional messages',
+            description: 'WebSocket connection for real-time messaging within a match. Supports text messages, GIF sharing (via Giphy API), and read receipts. Messages are stored in a per-match partition in Cassandra. If the WebSocket disconnects, messages are queued and delivered on reconnection. Users can only message after mutual matching — the server validates the match exists on every message.'
           },
           {
             method: 'PATCH',
             path: '/api/profile',
             params: '{ photos, bio, preferences }',
-            response: '{ updated: true }'
+            response: '{ updated: true }',
+            description: 'Updates the user\'s profile including photos (up to 9, reorderable), bio text (500 char limit), and match preferences (age range, distance, gender). Photo uploads go through a content moderation pipeline (NSFW detection via ML). Profile changes trigger re-indexing in the recommendation engine. Preference changes affect which profiles appear in future recommendation stacks.'
           },
           {
             method: 'POST',
             path: '/api/location',
             params: '{ lat, lng }',
-            response: '{ geohash }'
+            response: '{ geohash }',
+            description: 'Updates the user\'s GPS location for distance-based matching. Location is stored in a geospatial index (Redis GEO or PostGIS) for efficient radius queries. Location updates are throttled to every 15 minutes to save battery. The \'Passport\' feature (paid) allows setting a different location for matching in other cities.'
           }
         ]
       },
@@ -7400,12 +7415,17 @@ listening_history {
       apiDesign: {
         description: 'Streaming, search, and playlist management',
         endpoints: [
-          { method: 'GET', path: '/api/tracks/:id/stream', params: 'quality', response: 'audio/ogg stream with range support' },
+          { method: 'GET', path: '/api/tracks/:id/stream', params: 'quality', response: 'audio/ogg stream with range support',
+            description: 'Streams an audio track using HTTP range requests for seeking support. Audio is encoded in Ogg Vorbis (free tier: 160kbps, Premium: 320kbps) and served from edge CDN nodes. The client prefetches the next track in the queue for gapless playback. DRM (Widevine) protects content for premium-only tracks. Stream events are logged for royalty calculations (30 seconds = 1 play count).' },
           { method: 'GET', path: '/api/search', params: 'q, type, limit', response: '{ tracks[], artists[], albums[], playlists[] }' },
-          { method: 'GET', path: '/api/recommendations', params: 'seedTracks[], seedArtists[]', response: '{ tracks[] }' },
-          { method: 'POST', path: '/api/playlists', params: '{ name, description }', response: '{ playlist }' },
-          { method: 'POST', path: '/api/playlists/:id/tracks', params: '{ trackIds[], position }', response: '{ snapshot_id }' },
-          { method: 'GET', path: '/api/me/player', params: '-', response: '{ currentTrack, progress, device }' }
+          { method: 'GET', path: '/api/recommendations', params: 'seedTracks[], seedArtists[]', response: '{ tracks[] }',
+            description: 'Generates personalized track recommendations using a hybrid approach: collaborative filtering (users with similar taste), content-based analysis (audio features: tempo, energy, danceability extracted via ML), and editorial curation. Seed tracks/artists define the starting point. Used for Discover Weekly, Daily Mix, and Radio playlists. The model is retrained weekly on billions of listening events.' },
+          { method: 'POST', path: '/api/playlists', params: '{ name, description }', response: '{ playlist }',
+            description: 'Creates a new playlist owned by the user. Playlists can be public (discoverable via search), private, or collaborative (multiple users can add tracks). Each playlist maintains a snapshot_id that changes on every modification, enabling optimistic concurrency control. Playlist metadata (name, description, cover art) is indexed in Elasticsearch for discoverability.' },
+          { method: 'POST', path: '/api/playlists/:id/tracks', params: '{ trackIds[], position }', response: '{ snapshot_id }',
+            description: 'Adds tracks to a playlist at a specific position. Returns a new snapshot_id that the client must include in subsequent modifications to prevent concurrent edit conflicts. Tracks are stored as an ordered list in a Cassandra partition. Adding a track to a collaborative playlist sends real-time notifications to other collaborators. Duplicate track detection is optional (configurable per playlist).' },
+          { method: 'GET', path: '/api/me/player', params: '-', response: '{ currentTrack, progress, device }',
+            description: 'Returns the current playback state including the playing track, progress in milliseconds, active device, and shuffle/repeat mode. Used for the Now Playing bar and Spotify Connect (controlling playback across devices). Playback state is stored in Redis with a 30-second TTL, refreshed by the active client. Spotify Connect uses this endpoint to sync state across phone, desktop, smart speakers, and car.' }
         ]
       },
 
@@ -8238,11 +8258,16 @@ driver_locations {
       apiDesign: {
         description: 'Restaurant discovery, ordering, and tracking',
         endpoints: [
-          { method: 'GET', path: '/api/restaurants', params: 'lat, lng, radius, cuisine, sortBy', response: '{ restaurants[], eta[] }' },
-          { method: 'GET', path: '/api/restaurants/:id/menu', params: '-', response: '{ categories[], items[] }' },
-          { method: 'POST', path: '/api/orders', params: '{ restaurantId, items[], address, tip }', response: '{ orderId, estimatedDelivery }' },
-          { method: 'GET', path: '/api/orders/:id', params: '-', response: '{ order, driverLocation, eta }' },
-          { method: 'WS', path: '/ws/track/:orderId', params: '-', response: 'LOCATION_UPDATE, STATUS_CHANGE events' }
+          { method: 'GET', path: '/api/restaurants', params: 'lat, lng, radius, cuisine, sortBy', response: '{ restaurants[], eta[] }',
+            description: 'Returns nearby restaurants based on the user\'s location. Combines geospatial filtering (restaurants within delivery radius) with personalized ranking based on order history, cuisine preferences, and current promotions. ETA for each restaurant is estimated using historical prep times, current order volume, and available Dasher (driver) supply in the area. Results include real-time status (accepting orders, busy, closed).' },
+          { method: 'GET', path: '/api/restaurants/:id/menu', params: '-', response: '{ categories[], items[] }',
+            description: 'Returns the full menu organized by categories (Appetizers, Entrees, Drinks, etc.) with item photos, descriptions, prices, and modifiers (size, add-ons, special instructions). Prices may vary by delivery platform vs in-store. Unavailable items are marked in real-time based on the restaurant\'s POS integration. Popular items are highlighted based on order frequency.' },
+          { method: 'POST', path: '/api/orders', params: '{ restaurantId, items[], address, tip }', response: '{ orderId, estimatedDelivery }',
+            description: 'Creates a new delivery order. Validates item availability with the restaurant\'s POS system, calculates subtotal with tax and delivery fee, applies promotional discounts, and initiates payment authorization. The order enters a queue and is dispatched to the restaurant\'s tablet. A Dasher (driver) is assigned using a matching algorithm that considers proximity, current deliveries, and estimated route efficiency.' },
+          { method: 'GET', path: '/api/orders/:id', params: '-', response: '{ order, driverLocation, eta }',
+            description: 'Returns the current order status with real-time Dasher location and ETA. Status flow: PLACED → CONFIRMED_BY_RESTAURANT → BEING_PREPARED → READY_FOR_PICKUP → DASHER_ASSIGNED → PICKED_UP → EN_ROUTE → DELIVERED. ETA is dynamically recalculated using the Dasher\'s live GPS position and current traffic conditions. Includes Dasher profile (name, photo, rating) once assigned.' },
+          { method: 'WS', path: '/ws/track/:orderId', params: '-', response: 'LOCATION_UPDATE, STATUS_CHANGE events',
+            description: 'WebSocket connection for real-time order tracking. Pushes LOCATION_UPDATE events (Dasher GPS every 5 seconds during delivery), STATUS_CHANGE events (each status transition), and ETA_UPDATE events (recalculated ETA). The map UI interpolates between GPS updates for smooth animation. Falls back to polling GET /api/orders/:id every 10 seconds if WebSocket unavailable.' }
         ]
       },
 
