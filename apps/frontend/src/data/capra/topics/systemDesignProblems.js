@@ -2473,6 +2473,184 @@ rides {
           description: 'Peak demand occurs 6-9 PM (4.8M rides), requiring 3x average matching capacity. Morning rush 6-9 AM creates the second peak. Late night demand drops but surge pricing is highest due to limited supply.'
         },
       ],
+
+      codeExamples: {
+        python: `import hashlib
+import time
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple
+import math
+
+@dataclass
+class Location:
+    lat: float
+    lng: float
+
+@dataclass
+class Driver:
+    id: int
+    location: Location
+    cell_id: str
+    is_available: bool = True
+    rating: float = 4.8
+    heading: float = 0.0  # degrees, 0 = north
+
+@dataclass
+class RideRequest:
+    id: int
+    rider_id: int
+    pickup: Location
+    dropoff: Location
+    vehicle_type: str = "standard"
+
+class GeospatialIndex:
+    """Simplified H3-style hexagonal cell index for driver lookup."""
+
+    def __init__(self, redis_client):
+        self.redis = redis_client
+
+    def update_driver_location(self, driver: Driver):
+        """GEOADD driver position — called 3.3M times/sec at scale."""
+        self.redis.geoadd(
+            "driver_locations",
+            driver.location.lng, driver.location.lat,
+            str(driver.id)
+        )
+
+    def find_nearby(self, location: Location, radius_km: float = 5
+                    ) -> List[Tuple[int, float]]:
+        """GEORADIUS query — returns (driver_id, distance_km) sorted."""
+        results = self.redis.georadius(
+            "driver_locations",
+            location.lng, location.lat,
+            radius_km, unit="km",
+            withcoord=True, withdist=True, sort="ASC", count=50
+        )
+        return [(int(r[0]), float(r[1])) for r in results]
+
+
+class MatchingEngine:
+    """Uber-style matching with greedy and batch modes."""
+
+    def __init__(self, geo_index: GeospatialIndex):
+        self.geo = geo_index
+
+    def greedy_match(self, request: RideRequest) -> Optional[int]:
+        """Nearest available driver. O(n), < 50ms. Used when supply > demand."""
+        nearby = self.geo.find_nearby(request.pickup, radius_km=5)
+        for driver_id, distance in nearby:
+            if self._is_available(driver_id):
+                self._reserve(driver_id, request.id)
+                return driver_id
+        return None
+
+    def batch_match(self, requests: List[RideRequest],
+                    drivers: List[Driver]) -> dict:
+        """Hungarian algorithm for optimal assignment during peak.
+        Minimizes total pickup ETA. 20-30% better than greedy."""
+        from scipy.optimize import linear_sum_assignment
+        import numpy as np
+
+        n, m = len(requests), len(drivers)
+        cost = np.full((n, m), 1e9)
+
+        for i, req in enumerate(requests):
+            for j, drv in enumerate(drivers):
+                if drv.is_available:
+                    cost[i][j] = self._haversine_km(
+                        drv.location, req.pickup
+                    )
+
+        row_idx, col_idx = linear_sum_assignment(cost)
+        return {
+            requests[i].id: drivers[j].id
+            for i, j in zip(row_idx, col_idx)
+            if cost[i][j] < 1e9
+        }
+
+    @staticmethod
+    def _haversine_km(a: Location, b: Location) -> float:
+        R = 6371
+        dlat = math.radians(b.lat - a.lat)
+        dlng = math.radians(b.lng - a.lng)
+        x = (math.sin(dlat / 2) ** 2 +
+             math.cos(math.radians(a.lat)) *
+             math.cos(math.radians(b.lat)) *
+             math.sin(dlng / 2) ** 2)
+        return R * 2 * math.atan2(math.sqrt(x), math.sqrt(1 - x))
+
+    def _is_available(self, driver_id: int) -> bool:
+        return True  # In production: check Redis hash
+
+    def _reserve(self, driver_id: int, ride_id: int):
+        pass  # In production: atomic Redis MULTI/EXEC`,
+        javascript: `const Redis = require('ioredis');
+
+class UberMatchingEngine {
+  constructor(redisUrl) {
+    this.redis = new Redis(redisUrl);
+    this.BATCH_WINDOW_MS = 2000;
+    this.MAX_RADIUS_KM = 5;
+  }
+
+  /** GEORADIUS query for nearby available drivers, sorted by distance. */
+  async findNearbyDrivers(lat, lng, radiusKm = 5) {
+    const raw = await this.redis.call(
+      'GEORADIUS', 'driver_locations', lng, lat,
+      radiusKm, 'km', 'WITHCOORD', 'WITHDIST', 'ASC', 'COUNT', '50'
+    );
+    const drivers = [];
+    for (let i = 0; i < raw.length; i += 3) {
+      const id = parseInt(raw[i]);
+      const dist = parseFloat(raw[i + 1]);
+      const available = await this.redis.hget(\`driver:\${id}\`, 'available');
+      if (available === '1') drivers.push({ id, dist });
+    }
+    return drivers;
+  }
+
+  /** Greedy match: nearest available driver. Used when supply > demand. */
+  async greedyMatch(request) {
+    const drivers = await this.findNearbyDrivers(
+      request.pickupLat, request.pickupLng
+    );
+    if (!drivers.length) return null;
+
+    const driver = drivers[0];
+    await this.reserveDriver(driver.id, request.id);
+    return driver;
+  }
+
+  /** Reserve driver atomically via Redis transaction. */
+  async reserveDriver(driverId, rideId) {
+    const pipeline = this.redis.pipeline();
+    pipeline.hset(\`driver:\${driverId}\`, 'available', '0');
+    pipeline.hset(\`ride:\${rideId}\`, 'driverId', driverId);
+    pipeline.hset(\`ride:\${rideId}\`, 'status', 'MATCHED');
+    pipeline.hset(\`ride:\${rideId}\`, 'matchedAt', Date.now());
+    // Notify driver via push
+    pipeline.publish('driver_dispatch', JSON.stringify({
+      type: 'RIDE_OFFER',
+      driverId,
+      rideId,
+      acceptDeadline: Date.now() + 15000,
+    }));
+    await pipeline.exec();
+  }
+
+  /** Haversine distance in km (simplified ETA proxy). */
+  haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+}`
+      },
     },
     {
       id: 'youtube',
