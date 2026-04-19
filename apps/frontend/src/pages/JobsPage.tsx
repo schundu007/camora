@@ -602,7 +602,7 @@ export default function JobsPage() {
       setTotal(data.total || 0);
       setOffset(fetched.length);
       setHasMore(fetched.length < (data.total || 0));
-      if (data.last_updated) setLastUpdated(data.last_updated);
+      setLastUpdated(data.last_updated || new Date().toISOString());
     } catch (err: any) {
       setError(err.message || 'Failed to load jobs');
       setJobs([]);
@@ -714,7 +714,7 @@ export default function JobsPage() {
                     fontSize: '15px',
                     color: 'var(--text-primary)',
                     background: 'transparent',
-                    border: '1px solid var(--border)',
+                    border: 'none',
                     outline: 'none',
                     padding: '12px 0',
                   }}
@@ -756,8 +756,8 @@ export default function JobsPage() {
               <span style={{ color: 'var(--border)' }}>|</span>
               <span>
                 {lastUpdated
-                  ? `Updated ${new Date(lastUpdated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`
-                  : 'Updated daily'}
+                  ? `Updated ${new Date(lastUpdated).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}`
+                  : `Updated ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`}
               </span>
             </div>
           </div>
