@@ -1468,6 +1468,260 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         { name: 'Data Processing Layer', purpose: 'Handle search indexing, trending computation, and analytics', components: ['Kafka Streams', 'Elasticsearch', 'Trending Aggregator'] },
         { name: 'Storage Layer', purpose: 'Persist tweets, user profiles, social graph, and media assets', components: ['Tweet Store (Cassandra)', 'Social Graph DB', 'Media CDN', 'Blob Storage'] },
       ],
+      deepDiveTopics: [
+        {
+          topic: 'Hybrid Fan-out Strategy',
+          detail: `The hybrid fan-out is Twitter's most important architectural decision, combining push and pull models:
+
+**Fan-out on Write (push) for regular users (<10K followers):**
+- When a user tweets, the fan-out service enqueues a task per follower
+- Each task: ZADD timeline:{followerId} {snowflakeId} {tweetId} in Redis
+- Workers process fan-out queue at ~500K writes/sec across the cluster
+- Timeline is pre-computed: read is a simple ZREVRANGE — O(log N + K) for K tweets
+
+**Fan-out on Read (pull) for celebrities (>10K followers):**
+- Celebrity tweets stored in a dedicated cache: celebrity_tweets:{userId}
+- On timeline read: fetch user's pre-computed timeline + fetch recent tweets from followed celebrities
+- Merge the two lists, sort by Snowflake ID, return top K results
+- Celebrity tweet lists are small (last 200 tweets each) and heavily cached
+
+**Fan-out service architecture:**
+- Kafka topic partitioned by authorId for fan-out tasks
+- Consumer groups with 1,000+ workers process tasks in parallel
+- Backpressure: if consumer lag > 5 seconds, shed load on non-essential fan-outs (e.g., inactive users)
+- Priority queue: tweets from accounts you interact with frequently fan out first`
+        },
+        {
+          topic: 'Earlybird Search Engine',
+          detail: `Twitter's custom real-time search engine, designed for the unique requirements of tweet search:
+
+**Why not just Elasticsearch?**
+- Tweets are extremely time-sensitive: 90% of search value is in the last 7 days
+- Need to index 500M new tweets/day with <10 second latency to searchability
+- Standard Lucene segment merging creates unpredictable latency spikes
+
+**Earlybird architecture:**
+- In-memory inverted index for recent tweets (last 7 days) on SSD-backed servers
+- Segments organized by time: newest segment always in RAM, older segments on SSD
+- Each segment is immutable once full — no merge overhead
+- Sharded by time range across server tiers: real-time (0-24hr), recent (1-7d), archive (7d+)
+
+**Query execution:**
+1. Parse query: tokenize, expand hashtags, handle operators (from:, since:, until:)
+2. Scatter to all shards in the appropriate time tier
+3. Each shard scores documents: BM25 text score x recency decay x engagement boost
+4. Gather and merge results, re-rank globally with personalization
+5. Return top results with highlighted matching terms
+
+**Optimizations:**
+- Posting lists stored in Snowflake ID order for efficient cursor-based iteration
+- Skip lists for fast intersection of posting lists
+- Early termination: stop scanning once enough high-quality results found`
+        },
+        {
+          topic: 'Snowflake ID Generation',
+          detail: `Snowflake is Twitter's globally distributed unique ID generator, now open-sourced and widely adopted:
+
+**Why custom IDs?**
+- Auto-increment requires a single source of truth (coordination bottleneck)
+- UUIDs are 128-bit, not time-sortable, and fragment B-tree indexes
+- Need: globally unique, time-sortable, 64-bit, high throughput, no coordination
+
+**64-bit layout:**
+- Bit 0: always 0 (sign bit, keeps IDs positive in signed long)
+- Bits 1-41: timestamp in milliseconds since epoch (69.7 years from custom epoch)
+- Bits 42-51: machine/worker ID (1,024 unique workers)
+- Bits 52-63: sequence number (4,096 per millisecond per worker)
+
+**Throughput:** 4,096 IDs/ms x 1,000ms x 1,024 workers = 4.19 billion IDs/second globally
+
+**Deployment:**
+- Each data center has a pool of Snowflake workers
+- Worker ID assigned via ZooKeeper lease to prevent duplicates
+- Application servers call local Snowflake service via Thrift RPC (sub-ms latency)
+- If clock drifts backward (NTP correction), worker blocks until clock catches up
+
+**Impact on database performance:**
+- Snowflake IDs are monotonically increasing within a worker — optimal for B-tree insert (always append to end)
+- Time-sortable: SELECT * FROM tweets WHERE id > :cursor ORDER BY id DESC — uses index efficiently
+- 8 bytes vs 16 bytes (UUID) saves 50% on primary key storage and index memory`
+        },
+        {
+          topic: 'Timeline Ranking ML Pipeline',
+          detail: `Twitter's timeline evolved from pure reverse-chronological to ML-ranked in 2016:
+
+**Candidate generation (500 candidates):**
+- Source 1: Pre-computed timeline from Redis (fan-out cache) — ~200 candidates
+- Source 2: Celebrity tweets pulled in real-time — ~50 candidates
+- Source 3: "In case you missed it" — high-engagement tweets from last 48 hours — ~100 candidates
+- Source 4: Trending/recommended tweets outside your follow graph — ~150 candidates
+
+**Feature extraction (per candidate):**
+- Author features: follower count, verification status, your past interaction frequency
+- Tweet features: age, media type, engagement counts (likes, retweets, replies)
+- User features: topics of interest, active hours, device type, location
+- Social features: how many of your follows engaged with this tweet
+
+**Scoring model:**
+- Gradient-boosted decision trees (LightGBM) predicting P(engage)
+- Engagement = weighted sum of P(like) x 1 + P(retweet) x 2 + P(reply) x 3 + P(click) x 0.5
+- Model retrained daily on latest engagement data
+- A/B testing framework validates model changes before full rollout
+
+**Serving latency:** Feature extraction (50ms) + model inference (30ms) + post-processing (20ms) = ~100ms total`
+        },
+        {
+          topic: 'Trends Detection with Stream Processing',
+          detail: `Trending topics must be detected within minutes of a spike — classic stream processing problem:
+
+**Pipeline architecture:**
+1. All tweets flow into Kafka topic tweets-stream (500M/day = ~6K/sec)
+2. Flink/Heron stream processor extracts tokens: hashtags, mentions, keywords, named entities
+3. Each token fed into a Count-Min Sketch (CMS) with 5-minute tumbling windows
+4. Background comparator compares current 5-min window against 24-hour moving average
+5. If current_count > 5x baseline AND absolute count > 1,000, flag as trending candidate
+6. Apply geographic filtering: compute per-country trends using GeoIP of tweet author
+7. Anti-spam filter removes candidates driven primarily by bot accounts
+
+**Count-Min Sketch sizing:**
+- Width: 10,000 counters, Depth: 7 hash functions
+- Memory: ~280KB per sketch — tracks millions of unique tokens
+- Error rate: < 0.01% overcounting (acceptable for trending detection)
+
+**Time decay:**
+- Trending score = spike_magnitude x time_decay_factor
+- time_decay = e^(-lambda x age_in_hours), lambda = 0.5
+- A trend from 2 hours ago scores 37% of its peak; from 4 hours ago, 13%
+- This ensures trending page always shows fresh content
+
+**Output:** Top 10 trending topics per region, updated every 5 minutes, served from a dedicated Redis cache`
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'fanout-write-vs-read-vs-hybrid',
+          title: 'Fan-out on Write vs Read vs Hybrid',
+          headers: ['Aspect', 'Fan-out on Write', 'Fan-out on Read', 'Hybrid (Twitter)'],
+          rows: [
+            ['When', 'On tweet creation', 'On timeline request', 'Write for <10K followers, read for celebrities'],
+            ['Write Cost', 'O(N followers) per tweet', 'O(1) per tweet', 'O(N) for most, O(1) for celebrities'],
+            ['Read Cost', 'O(1) cache lookup', 'O(F followees) merge', 'O(1) + O(C celebrities) merge'],
+            ['Read Latency', '<10ms (pre-computed)', '100-500ms (compute on read)', '<50ms (cache + small merge)'],
+            ['Celebrity Support', 'Fails at 100M followers', 'Handles any follower count', 'Best of both'],
+            ['Storage', 'N x tweetId per tweet', '1 x tweet stored once', 'Cache for regulars, 1x for celebrities'],
+          ],
+          verdict: 'Hybrid: fan-out on write for 99.9% of users, fan-out on read for top 0.1% celebrities'
+        },
+        {
+          id: 'sql-vs-manhattan',
+          title: 'SQL vs Manhattan (NoSQL) for Tweet Storage',
+          headers: ['Aspect', 'MySQL (Sharded)', 'Manhattan (Twitter NoSQL)'],
+          rows: [
+            ['Write Performance', '~50K WPS per shard', '500K+ WPS per cluster'],
+            ['Scaling', 'Manual shard management', 'Auto-rebalancing across nodes'],
+            ['Query Model', 'Full SQL, JOINs', 'Key-value + secondary indexes'],
+            ['Consistency', 'Strong per-shard ACID', 'Tunable (eventual to strong)'],
+            ['Social Graph', 'Adjacency list with JOINs', 'Requires separate graph store'],
+            ['Used For', 'User profiles, follow graph', 'Tweet storage, timeline data'],
+          ],
+          verdict: 'Twitter uses both: MySQL for relational data, Manhattan for high-throughput tweet storage'
+        },
+        {
+          id: 'redis-vs-memcached-timeline',
+          title: 'Redis vs Memcached for Timeline Cache',
+          headers: ['Aspect', 'Redis', 'Memcached'],
+          rows: [
+            ['Data Structures', 'Sorted sets, lists, hashes', 'Simple key-value only'],
+            ['Timeline Ops', 'ZADD/ZRANGE (log N)', 'GET/SET entire list (O(N))'],
+            ['Persistence', 'RDB/AOF snapshots', 'None (pure cache)'],
+            ['Memory Efficiency', 'Higher overhead per key', 'More memory-efficient'],
+            ['Cluster Mode', 'Redis Cluster (auto-shard)', 'Client-side consistent hashing'],
+            ['Best For', 'Timeline cache (sorted set ops)', 'Tweet content cache (simple KV)'],
+          ],
+          verdict: 'Redis for timeline caches (sorted set operations), Memcached for tweet content caching'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'post-tweet-flow',
+          title: 'Post Tweet Flow',
+          description: 'Complete flow from tweet creation through fan-out to follower timelines',
+          steps: [
+            { step: 1, label: 'Client Request', detail: 'POST /api/tweets with content (280 chars), mediaIds[], replyToId' },
+            { step: 2, label: 'Validation', detail: 'Content length check, spam detection ML model, rate limit (300 tweets/3hr)' },
+            { step: 3, label: 'Generate Snowflake ID', detail: 'Local Snowflake worker assigns 64-bit time-sortable unique ID' },
+            { step: 4, label: 'Persist Tweet', detail: 'Write to Tweet DB (sharded by userId) with Snowflake ID as primary key' },
+            { step: 5, label: 'Check Follower Count', detail: 'Lookup follower count to determine fan-out strategy (< or > 10K threshold)' },
+            { step: 6, label: 'Fan-out (Push)', detail: 'If <10K followers: enqueue Kafka task to ZADD tweetId to all followers timeline caches' },
+            { step: 7, label: 'Celebrity Cache', detail: 'If >=10K followers: store in celebrity_tweets:{userId} cache only (no fan-out)' },
+            { step: 8, label: 'Index + Notify', detail: 'Async: index in Elasticsearch for search, update trending counters, send push notifications' },
+          ]
+        },
+        {
+          id: 'read-timeline-flow',
+          title: 'Read Timeline Flow',
+          description: 'How a personalized home timeline is assembled from multiple sources',
+          steps: [
+            { step: 1, label: 'Client Request', detail: 'GET /api/timeline with cursor (Snowflake ID) and limit=20' },
+            { step: 2, label: 'Fetch Pre-computed', detail: 'ZREVRANGEBYSCORE timeline:{userId} from Redis — pre-computed from fan-out' },
+            { step: 3, label: 'Fetch Celebrity Tweets', detail: 'Get list of celebrities user follows, query celebrity_tweets:{celeb} for each' },
+            { step: 4, label: 'Merge + Sort', detail: 'Merge pre-computed timeline with celebrity tweets, sort by Snowflake ID' },
+            { step: 5, label: 'ML Ranking', detail: 'Score candidates with engagement prediction model, re-rank by predicted value' },
+            { step: 6, label: 'Hydrate', detail: 'Batch-fetch full tweet objects (content, media URLs, engagement counts) from Tweet DB/cache' },
+            { step: 7, label: 'Return Response', detail: 'Return top 20 tweets with nextCursor for infinite scroll pagination' },
+          ]
+        },
+        {
+          id: 'search-flow',
+          title: 'Tweet Search Flow',
+          description: 'How a search query is processed through the Earlybird search engine',
+          steps: [
+            { step: 1, label: 'Query Parse', detail: 'Tokenize query, handle hashtags/mentions/operators (from:, since:, until:)' },
+            { step: 2, label: 'Scatter to Shards', detail: 'Send query to all Earlybird index shards in parallel (time-range partitioned)' },
+            { step: 3, label: 'Per-Shard Search', detail: 'Each shard scores matching tweets: BM25 x recency decay x engagement boost' },
+            { step: 4, label: 'Gather + Re-rank', detail: 'Merge results from all shards, apply personalization, deduplicate' },
+            { step: 5, label: 'Return Results', detail: 'Return top results with highlighted matches, engagement counts, and cursor' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'Snowflake (ID Gen)', value: '4B IDs/sec capacity', bar: 80 },
+            { label: 'Redis (Timeline Cache)', value: '1.28 TB / 3.5M QPS', bar: 100 },
+            { label: 'Manhattan (Tweets)', value: '500K WPS', bar: 85 },
+            { label: 'Kafka (Fan-out Bus)', value: '150B tasks/day', bar: 90 },
+            { label: 'Earlybird (Search)', value: '500M tweets/day indexed', bar: 75 },
+            { label: 'Flink (Trending)', value: 'Real-time stream processing', bar: 60 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '500M MAU', value: 'Monthly active users', bar: 85 },
+            { label: '200M DAU', value: 'Daily active users', bar: 70 },
+            { label: '500M tweets/day', value: 'Tweet volume', bar: 80 },
+            { label: '6K writes/sec', value: 'Tweet creation QPS', bar: 30 },
+            { label: '3.5M reads/sec', value: 'Timeline read QPS', bar: 100 },
+            { label: '180 TB/year', value: 'Tweet storage growth', bar: 65 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single MySQL', description: 'Monolithic Ruby on Rails app with a single MySQL database. Fan-out implemented as N INSERT queries per tweet.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build (startup speed)', 'Strong consistency (ACID)', 'Easy to debug'], cons: ['Database is the bottleneck', 'Fan-out blocks on write', 'Cannot scale horizontally'] },
+        { step: 2, title: 'Redis Timeline Cache', description: 'Add Redis sorted sets for pre-computed timelines. Fan-out writes to cache instead of DB queries on read.', color: '#2D8CFF', icon: 'layers', capacity: '~10M users', rps: '50K', pros: ['O(1) timeline reads from cache', 'Massive read latency improvement', 'Database load reduced 100x'], cons: ['Fan-out on write for all users', 'Celebrity problem emerges', 'Cache warming on cold start'] },
+        { step: 3, title: 'Hybrid Fan-out + Kafka', description: 'Hybrid fan-out strategy with celebrity threshold. Kafka decouples tweet creation from fan-out processing.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '500K', pros: ['Celebrity problem solved', 'Async fan-out via Kafka', 'Horizontal scaling of workers'], cons: ['Complex merge logic on read', 'Kafka ops overhead', 'Fan-out lag during spikes'] },
+        { step: 4, title: 'ML-Ranked Timeline', description: 'Machine learning model ranks timeline candidates by predicted engagement. Multiple candidate sources beyond follow graph.', color: '#10b981', icon: 'globe', capacity: '~300M users', rps: '2M', pros: ['Higher user engagement', 'Personalized experience', 'Content discovery beyond follows'], cons: ['ML model training pipeline needed', 'Feature store infrastructure', 'Latency budget for inference'] },
+        { step: 5, title: 'Global Scale', description: 'Multi-region deployment with regional data centers, Snowflake IDs, Earlybird search, real-time trending via Flink, and CDN for media.', color: '#7c3aed', icon: 'cpu', capacity: '500M+ users', rps: '3.5M+', pros: ['Global low-latency access', 'Real-time search and trends', 'Handles any viral event'], cons: ['Enormous infrastructure cost', 'Complex cross-region consistency', 'Thousands of microservices to maintain'] },
+      ],
+
     },
     {
       id: 'uber',
@@ -1478,9 +1732,46 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       difficulty: 'Hard',
       description: 'Design a ride-sharing platform that matches riders with nearby drivers in real-time.',
 
-      introduction: `Uber is a location-based service that matches riders with nearby drivers in real-time. The key challenges are efficient geospatial queries (finding nearby drivers), handling millions of location updates per second, and calculating accurate ETAs.
+      productMeta: {
+        name: 'Uber',
+        tagline: 'Move the way you want — ride-hailing for 202M monthly users across 15,000+ cities',
+        stats: [
+          { label: 'Monthly Active Users', value: '202M' },
+          { label: 'Trips Per Day', value: '42M' },
+          { label: 'Active Drivers', value: '10M+' },
+          { label: 'Countries', value: '70+' },
+          { label: 'Cities', value: '15,000+' },
+          { label: 'Annual Revenue', value: '$52B' },
+        ],
+        scope: {
+          inScope: ['Rider-driver matching', 'Real-time location tracking', 'ETA calculation', 'Surge pricing', 'Fare estimation & payment', 'Ride history & ratings'],
+          outOfScope: ['Uber Eats / delivery', 'Driver onboarding & background checks', 'Autonomous vehicles', 'Freight logistics', 'Financial services'],
+        },
+        keyChallenge: 'Match riders with nearby drivers in <30 seconds while processing 10M+ GPS updates per second across 15,000 cities',
+      },
 
-This problem tests your understanding of geospatial indexing, real-time systems, and handling geographic distribution of load.`,
+      introduction: `Uber is a location-based service that matches riders with nearby drivers in real-time. With 202 million monthly active users completing 42 million trips per day across 15,000+ cities in 70+ countries, Uber operates one of the most demanding real-time systems on the planet. The key challenges are efficient geospatial queries (finding nearby drivers), handling millions of location updates per second, and calculating accurate ETAs.
+
+This problem tests your understanding of geospatial indexing, real-time systems, and handling geographic distribution of load. Unlike most system design problems that focus primarily on storage and retrieval, Uber's architecture is dominated by the spatial dimension — every core operation (matching, pricing, routing, ETA) depends on knowing where things are right now, not where they were five minutes ago.
+
+What makes this problem particularly interesting in interviews is the tension between global scale and local optimization. Uber serves 15,000+ cities, but ride matching is inherently local — a driver in Manhattan cannot pick up a rider in Brooklyn Heights without crossing a bridge. This locality enables cell-based sharding strategies that wouldn't work for globally-connected social graphs.
+
+The system must handle extreme variance in load: New Year's Eve in Times Square might see 100x normal demand in a single cell, while rural areas might have one ride per hour. Surge pricing, demand prediction, and dynamic driver repositioning all work together to balance this supply-demand equation in real-time.`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: 'Based on Uber\'s public metrics: 202M MAU, 42M daily trips, 10M active drivers, peak hours see 3-5x average load',
+        calculations: [
+          { label: 'Daily Trips', value: '42 Million', detail: '202M MAU × ~20% daily active × ~1 trip/user = ~42M trips/day' },
+          { label: 'Location Updates/Sec', value: '3.3 Million', detail: '10M active drivers × location update every 3 seconds = 3.3M updates/sec' },
+          { label: 'Peak Location QPS', value: '10M+', detail: '3.3M avg × 3x peak multiplier ≈ 10M location writes/sec at peak' },
+          { label: 'Match Requests/Sec', value: '~500', detail: '42M trips/day ÷ 86,400 sec ≈ 486 match requests/sec (avg)' },
+          { label: 'Peak Match QPS', value: '~2,500', detail: '500 avg × 5x peak (NYE, rush hour) ≈ 2,500 matches/sec' },
+          { label: 'Ride Storage/Day', value: '~42 GB', detail: '42M rides × ~1KB metadata = 42 GB/day, 15 TB/year' },
+          { label: 'Location Data/Day', value: '~2.8 TB', detail: '3.3M updates/sec × 86,400 sec × 100 bytes = 2.8 TB/day' },
+          { label: 'WebSocket Connections', value: '~20M', detail: '10M drivers + ~10M active riders = 20M concurrent WebSocket connections' },
+        ],
+      },
 
       functionalRequirements: [
         'Riders can request rides with pickup/dropoff locations',
@@ -2082,6 +2373,7 @@ Quick quality first: 360p available in minutes, 4K later`
           outOfScope: ['Voice/video calling', 'Payment features', 'Status/Stories', 'WhatsApp Business API', 'Sticker marketplace'],
         },
         keyChallenge: 'Delivering 100 billion messages per day with sub-second latency while maintaining end-to-end encryption — the server itself cannot read any message content.',
+        screenshotUrl: '/diagrams/whatsapp/whatsapp-ui-mockup.svg',
       },
 
       introduction: `WhatsApp is the world's most widely used messaging application, connecting over **2 billion** monthly active users across **180+ countries**. At its peak, the system delivers over **100 billion messages per day** with sub-second latency, making it one of the most demanding distributed systems ever built.
@@ -3955,6 +4247,255 @@ The threshold between push and pull (10K followers) is tunable based on system l
         { name: 'Feed & Social Layer', purpose: 'Assemble personalized feeds, manage social graph, and handle interactions', components: ['Feed Service', 'Social Graph DB', 'Like/Comment Service', 'Story Service'] },
         { name: 'Content Delivery Layer', purpose: 'Serve images and videos globally with minimal latency', components: ['Multi-CDN Router', 'Edge Cache', 'Media Proxy'] },
         { name: 'Storage Layer', purpose: 'Persist user data, media assets, and social interactions', components: ['User DB (PostgreSQL)', 'Media Store (S3)', 'Feed Cache (Redis)', 'Analytics Store'] },
+      ],
+      // ── Deep Dive Topics ──
+      deepDiveTopics: [
+        {
+          topic: 'Image Processing Pipeline (Resize, Transcode, Moderate)',
+          detail: `The image processing pipeline is the most critical background system at Instagram -- every one of the 100M daily uploads must pass through it.
+
+**Pipeline architecture:**
+- Kafka-based queue with 3 consumer groups: resize, transcode, moderate (run in parallel)
+- Resize group: generates 4 JPEG sizes + 4 WebP sizes = 8 output files per image
+- Transcode group: handles video uploads (H.264 + HLS segmentation for adaptive playback)
+- Moderate group: runs CNN classification model on GPU workers
+
+**Throughput math:**
+- 100M images/day = 1,157 images/sec
+- Each image produces 8 resized versions: 9,260 file writes/sec to S3
+- Processing time per image: ~800ms (resize) + ~100ms (moderation) = ~1 second total
+- With 60% utilization: need ~2,000 worker cores for resize, ~200 GPU workers for moderation
+
+**Failure handling:**
+- Dead letter queue for images that fail processing 3 times
+- Fallback: serve original resolution until processing completes
+- Circuit breaker: if processing queue depth > 1M, stop accepting non-priority uploads temporarily`
+        },
+        {
+          topic: 'CDN Multi-Tier Caching Strategy',
+          detail: `CDN caching is the single most important optimization at Instagram -- without it, S3 would need to handle 500K-1M image requests per second.
+
+**Three-tier cache hierarchy:**
+1. L1 -- Edge PoPs: 95% hit rate, <50ms latency, hundreds of locations
+2. L2 -- Regional Origin Shield: 4% of requests, <100ms latency, 10-20 locations
+3. L3 -- Origin S3: 1% of requests, 100-300ms latency, 3 regions
+
+**Cache invalidation (rare for Instagram):**
+- Photos are immutable once published -- never need invalidation
+- Profile picture changes: new URL generated, old one naturally expires from cache
+- Post deletion: CDN entry expires naturally (TTL 30 days), URL returns 404 from origin
+
+**Cache key design:**
+- Format: /{postId}/{width}_{height}.{format}?v={version}
+- Predictable keys enable pre-warming without database lookups
+- Version query param allows forced refresh after reprocessing
+
+**CDN cost optimization:**
+- WebP saves ~30% bandwidth vs JPEG (negotiate via Accept header)
+- Lazy loading: client only requests images visible in viewport
+- Progressive JPEG: renders low-quality preview immediately, sharpens as data arrives
+- Old content (>1 year): only cached at regional tier, not edge (reduces edge storage)`
+        },
+        {
+          topic: 'Hybrid Fan-out for Feed Generation',
+          detail: `The feed system is the core of Instagram experience -- getting it wrong means slow feeds or wasted compute.
+
+**The celebrity problem:**
+- A user with 100M followers posts once. Fan-out on write = 100M Redis inserts.
+- At 10us per insert, that is 1,000 seconds (16+ minutes) to propagate one post.
+- Meanwhile, followers are refreshing feeds and not seeing the new post.
+
+**Hybrid solution:**
+- Follower count < 10K: fan-out on write (push to all follower feed caches immediately)
+- Follower count >= 10K: fan-out on read (pull at feed read time)
+- The 10K threshold means ~99% of users use push (most users have <10K followers)
+- Only ~1% of users (celebrities/brands) use pull, but they generate ~30% of feed content
+
+**Feed assembly at read time:**
+1. ZREVRANGE user:{userId}:feed 0 19 -- get top 20 posts from pre-computed cache
+2. For each followed celebrity: GET celebrity:{celebId}:recent -- last 50 posts
+3. Merge and deduplicate by postId
+4. ML ranking pass: score by P(engagement) using user features + post features
+5. Cache the ranked feed with 5-minute TTL
+
+**Feed cache memory budget:**
+- 500M DAU x ~500 postIds per feed cache x 8 bytes per postId = ~2 TB
+- Redis cluster with 50+ shards handles this with room for sessions, stories, counters`
+        },
+        {
+          topic: 'Stories Ephemeral Storage Architecture',
+          detail: `Stories handle 500M uploads per day with automatic 24-hour deletion -- a fundamentally different storage pattern than permanent posts.
+
+**Why Stories need separate infrastructure:**
+- Write-once, read-many (within 24h), then delete -- permanent storage is wasteful
+- Story media is typically smaller (compressed image or short video clip)
+- Story ordering is strictly chronological (no ranking needed)
+- View tracking is per-story, not per-post (different data model)
+
+**Redis sorted set model:**
+- Key: user:{userId}:stories
+- Score: expiresAt timestamp (createdAt + 24 hours)
+- Value: storyId
+- Query active stories: ZRANGEBYSCORE user:{userId}:stories NOW() +INF
+- Cleanup expired: ZREMRANGEBYSCORE user:{userId}:stories 0 NOW() (runs every 5 minutes)
+
+**S3 lifecycle for story media:**
+- Upload to S3 with object tags: { type: 'story', expiresAt: timestamp }
+- S3 lifecycle rule: delete objects with type=story older than 48 hours
+- 48h instead of 24h: grace period for users saving to highlights
+
+**Story tray optimization:**
+- The top-of-feed story tray checks story status for ~500 followed accounts
+- Naive: 500 Redis queries per feed load. Optimized: batch pipeline of 500 ZCARD commands
+- Further optimization: maintain a separate set user:{userId}:activeStoryUsers with TTL
+- This set is updated when followed users post/expire stories, so the tray query is O(1)`
+        },
+        {
+          topic: 'Explore Page ML Recommendations',
+          detail: `The Explore page drives content discovery for 200M+ daily visitors, surfacing posts from accounts users do not follow.
+
+**Two-phase recommendation pipeline:**
+
+Phase 1 -- Offline candidate generation (runs every 4-6 hours):
+- User embedding model: maps each user to a 128-dimensional vector based on interaction history
+- Post embedding model: maps each post to a 128-dimensional vector based on visual features + text + engagement
+- Approximate Nearest Neighbor (ANN) index: FAISS or ScaNN for sub-millisecond similarity search
+- For each user: find top 10K candidate posts from the embedding space
+- Store candidates in a feature store (Redis or DynamoDB) keyed by userId
+
+Phase 2 -- Online ranking (runs at request time, <100ms budget):
+- Load user candidates from feature store
+- ML ranking model (gradient boosted trees or neural network) scores each candidate
+- Features: post freshness, engagement velocity, visual quality score, content type match, diversity penalty
+- Top 50 posts selected, diversified to avoid showing too many posts of same type
+- Results cached per user with 15-minute TTL
+
+**Cold start for new users:**
+- No interaction history = no user embedding
+- Fall back to: global trending, interest onboarding selections, demographic-based defaults
+- Rapidly build user profile from first 10-20 interactions (likes, scrolls, time spent)
+
+**Feedback loop:**
+- Track impressions, clicks, likes, saves, time spent on each Explore post
+- Retrain models daily with fresh engagement data
+- A/B test ranking model variants continuously`
+        }
+      ],
+      // ── Comparison Tables ──
+      comparisonTables: [
+        {
+          id: 'fanout-write-vs-read-vs-hybrid',
+          title: 'Fan-out on Write vs Read vs Hybrid',
+          headers: ['Aspect', 'Fan-out on Write', 'Fan-out on Read', 'Hybrid (Instagram)'],
+          rows: [
+            ['When', 'Post created -> push to all followers', 'Feed requested -> pull from followees', 'Push for <10K followers, pull for celebrities'],
+            ['Write Cost', 'High (N copies for N followers)', 'Low (1 write)', 'Moderate (push only to subset)'],
+            ['Read Cost', 'Low (pre-computed feed)', 'High (merge on demand)', 'Low for most users, moderate for celebrity followers'],
+            ['Latency', 'Instant feed reads', 'Slower feed assembly', '<500ms for 99% of users'],
+            ['Storage', 'N x postId per follower feed', '1 post + index', '~2 TB Redis for 500M DAU'],
+            ['Celebrity Impact', 'Catastrophic (100M writes)', 'No impact', 'Handled via read path'],
+          ],
+          verdict: 'Hybrid fan-out: push for 99% of users (fast reads), pull for top 1% celebrities (avoids write storms)'
+        },
+        {
+          id: 'sql-vs-cassandra-instagram',
+          title: 'PostgreSQL vs Cassandra for Instagram Data',
+          headers: ['Aspect', 'PostgreSQL', 'Cassandra'],
+          rows: [
+            ['Best For', 'User profiles, social graph, post metadata', 'Feed cache, engagement events, story views'],
+            ['Write Throughput', '~50K WPS (sharded)', '~200K WPS (native)'],
+            ['Read Pattern', 'Complex queries, joins, transactions', 'Partition key lookups, range scans'],
+            ['Consistency', 'Strong ACID', 'Tunable (eventual default)'],
+            ['Scaling', 'Vertical + Citus/Vitess sharding', 'Horizontal (add nodes)'],
+            ['Instagram Use', 'Primary data store since day one', 'Added for write-heavy workloads at scale'],
+          ],
+          verdict: 'PostgreSQL for relational data (users, follows), Cassandra for event streams (feeds, likes, views)'
+        },
+        {
+          id: 'pregenerate-vs-resize-on-fly',
+          title: 'Pre-generate Image Sizes vs Resize On-the-Fly',
+          headers: ['Aspect', 'Pre-generate at Upload', 'Resize on Request'],
+          rows: [
+            ['Storage Cost', 'Higher (~285 TB/day for all sizes)', 'Lower (only original ~200 TB/day)'],
+            ['Read Latency', 'Instant (pre-computed)', '+50-200ms per request for resize'],
+            ['CPU Cost (Read)', 'Zero (serve static file)', 'High (resize on every cache miss)'],
+            ['CPU Cost (Write)', 'One-time processing per upload', 'None at upload'],
+            ['CDN Compatibility', 'Excellent (static files, long TTL)', 'Requires compute at edge or origin'],
+            ['Best When', 'Read:write ratio > 10:1 (Instagram = 100:1)', 'Read:write ratio < 5:1 or many sizes needed'],
+          ],
+          verdict: 'Pre-generate for Instagram -- 100:1 read:write ratio means each image is viewed hundreds of times'
+        }
+      ],
+      // ─��� Flowcharts ──
+      flowcharts: [
+        {
+          id: 'photo-upload-pipeline',
+          title: 'Photo Upload Pipeline',
+          description: 'Complete flow from client upload to CDN-ready image with multiple resolutions',
+          steps: [
+            { step: 1, label: 'Client Upload', detail: 'Client sends photo (avg 2MB) to Upload Service via pre-signed S3 URL' },
+            { step: 2, label: 'Store Original', detail: 'Raw image stored in S3 Raw bucket with unique postId key' },
+            { step: 3, label: 'Queue Processing', detail: 'Publish message to Kafka Image Processing Queue with S3 key + metadata' },
+            { step: 4, label: 'Resize (4 sizes)', detail: 'Worker generates 150px thumb, 320px, 640px, 1080px in JPEG + WebP' },
+            { step: 5, label: 'Content Moderate', detail: 'GPU worker runs CNN model: auto-approve, flag, or auto-reject' },
+            { step: 6, label: 'Store Processed', detail: 'Upload 8 versions to S3 Processed bucket with predictable keys' },
+            { step: 7, label: 'Warm CDN Cache', detail: 'Push 640px version to edge PoPs in poster region' },
+            { step: 8, label: 'Update DB + Notify', detail: 'Mark post as ready, trigger feed fan-out, notify tagged users' },
+          ]
+        },
+        {
+          id: 'news-feed-generation',
+          title: 'News Feed Generation',
+          description: 'How a personalized feed is assembled using the hybrid fan-out approach',
+          steps: [
+            { step: 1, label: 'Feed Request', detail: 'Client requests GET /api/feed?cursor=X&limit=20' },
+            { step: 2, label: 'Check Cache', detail: 'Look up pre-ranked feed in Redis (5-minute TTL)' },
+            { step: 3, label: 'Get Pushed Posts', detail: 'ZREVRANGE user:{id}:feed -- pre-computed from fan-out on write' },
+            { step: 4, label: 'Pull Celebrity Posts', detail: 'Fetch recent posts from followed celebrity accounts (fan-out on read)' },
+            { step: 5, label: 'Merge + Deduplicate', detail: 'Combine pushed and pulled posts, remove duplicates by postId' },
+            { step: 6, label: 'ML Ranking', detail: 'Score each post by P(engagement): likes, saves, relationship, recency' },
+            { step: 7, label: 'Return + Cache', detail: 'Return top 20 posts with cursor, cache ranked feed for 5 minutes' },
+          ]
+        }
+      ],
+      // ── Visual Cards ──
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#e4405f',
+          items: [
+            { label: 'PostgreSQL (Users)', value: '500K read QPS', bar: 80 },
+            { label: 'Cassandra (Feeds)', value: '200K write QPS', bar: 70 },
+            { label: 'Redis (Cache)', value: '1M+ QPS', bar: 95 },
+            { label: 'S3 + CDN (Media)', value: '230 GB/s egress', bar: 90 },
+            { label: 'Kafka (Events)', value: '1.2K uploads/s', bar: 50 },
+            { label: 'Elasticsearch (Search)', value: 'Full-text + geo', bar: 40 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '2B MAU', value: 'Monthly active users', bar: 100 },
+            { label: '500M DAU', value: 'Daily active users', bar: 85 },
+            { label: '100M photos/day', value: 'Photo uploads', bar: 75 },
+            { label: '500M stories/day', value: 'Ephemeral content', bar: 90 },
+            { label: '285 TB/day', value: 'New image storage', bar: 70 },
+            { label: '~104 PB/year', value: 'Annual photo storage', bar: 95 },
+          ]
+        }
+      ],
+      // ── Evolution Steps ──
+      evolutionSteps: [
+        { step: 1, title: 'Single Server', description: 'One Django server with PostgreSQL. All photos stored on local disk. Feed generated by querying followed users posts at read time.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build and deploy', 'Single database, no sharding', 'Easy to debug'], cons: ['Feed query is O(N) per followed user', 'Local disk limits photo storage', 'Single point of failure'] },
+        { step: 2, title: 'S3 + CDN + Read Replicas', description: 'Move photos to S3 with CloudFront CDN. Add PostgreSQL read replicas for feed queries. Introduce Redis for session caching.', color: '#2D8CFF', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['CDN offloads image serving', 'Read replicas handle feed queries', 'Photos durably stored in S3'], cons: ['Feed still generated on-demand (slow)', 'No image processing pipeline', 'Celebrity follows create hot queries'] },
+        { step: 3, title: 'Feed Pre-computation + Image Pipeline', description: 'Introduce fan-out on write for feed generation. Add async image processing pipeline (resize, WebP, moderate). Shard PostgreSQL by userId.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '200K', pros: ['Feed reads are instant (pre-computed)', 'Multiple image sizes for all devices', 'Database load distributed across shards'], cons: ['Celebrity fan-out is expensive', 'Image processing queue can backlog', 'Sharding adds operational complexity'] },
+        { step: 4, title: 'Hybrid Fan-out + ML Ranking', description: 'Switch to hybrid fan-out (push for <10K followers, pull for celebrities). Add ML-based feed ranking. Deploy Cassandra for write-heavy workloads. Multi-tier CDN.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '500K', pros: ['Celebrity problem solved', 'Engagement-optimized feeds', 'Write throughput scales with Cassandra'], cons: ['ML ranking adds latency (~50ms)', 'Two code paths (push + pull) increase complexity', 'Cache invalidation across tiers'] },
+        { step: 5, title: 'Global Scale Optimization', description: 'Multi-region deployment with regional CDN warming. Explore page powered by deep learning recommendations. Stories on dedicated ephemeral storage. Counter sharding for viral posts.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '1M+', pros: ['<50ms image delivery globally', 'ML-powered discovery (Explore)', 'Handles viral content gracefully'], cons: ['Complex ML infrastructure', 'Multi-region consistency challenges', 'Massive storage costs (~104 PB/year)'] },
       ],
     },
     {
