@@ -1853,37 +1853,43 @@ feed_cache {
             method: 'POST',
             path: '/api/media/upload',
             params: '{ type: IMAGE|VIDEO, data }',
-            response: '{ mediaId, uploadUrl }'
+            response: '{ mediaId, uploadUrl }',
+            description: 'Uploads media to object storage (S3). Returns a pre-signed upload URL for direct client-to-S3 upload. After upload, a background worker generates multiple resolutions (150px thumbnail, 320px, 640px, 1080px) and stores them in the CDN. Video uploads trigger transcoding to H.264 with HLS segments for adaptive playback.'
           },
           {
             method: 'POST',
             path: '/api/post',
             params: '{ mediaIds[], caption, location, tags[] }',
-            response: '{ postId, createdAt }'
+            response: '{ postId, createdAt }',
+            description: 'Creates a new post and triggers the feed fan-out pipeline. For users with fewer than 10K followers, the post ID is pushed to each follower\'s pre-computed feed cache in Redis. For celebrity accounts (10K+ followers), the post is only pulled at feed read time. Tagged users receive push notifications. The post is also indexed in Elasticsearch for hashtag and explore search.'
           },
           {
             method: 'GET',
             path: '/api/feed',
             params: '?cursor=&limit=20',
-            response: '{ posts[], nextCursor }'
+            response: '{ posts[], nextCursor }',
+            description: 'Returns the personalized feed using cursor-based pagination. Reads from the user\'s pre-computed feed cache (Redis sorted set by post timestamp). For celebrity followers, merges cached feed with recent posts from followed celebrities at read time (hybrid fan-out). Feed ranking uses engagement signals (likes, comments, saves, view time) to reorder beyond chronological. The cursor is a post ID for stable pagination.'
           },
           {
             method: 'GET',
             path: '/api/stories',
             params: '',
-            response: '{ stories[] grouped by user }'
+            response: '{ stories[] grouped by user }',
+            description: 'Returns active stories from followed users, grouped by user and sorted by recency. Stories are stored in Redis sorted sets with expiry timestamp as score. Only stories where expiresAt > now are returned. The tray order prioritizes unseen stories and close friends. Story view counts are incremented asynchronously via a Kafka consumer.'
           },
           {
             method: 'POST',
             path: '/api/story',
             params: '{ mediaId }',
-            response: '{ storyId, expiresAt }'
+            response: '{ storyId, expiresAt }',
+            description: 'Creates a story with a 24-hour TTL. The story is stored with createdAt and expiresAt (createdAt + 24 hours). Media is processed for optimal mobile playback. Close friends list filtering is applied at read time. A background TTL job cleans up expired stories and their associated media from object storage.'
           },
           {
             method: 'POST',
             path: '/api/follow/{userId}',
             params: '{}',
-            response: '{ status: FOLLOWING|PENDING }'
+            response: '{ status: FOLLOWING|PENDING }',
+            description: 'Sends a follow request. For public accounts, immediately establishes the follow relationship and backfills the follower\'s feed with the followee\'s recent posts. For private accounts, creates a pending request that the account owner must approve. Updates follower/following counters asynchronously. Mutual follow detection triggers "close friends" suggestion.'
           }
         ]
       },
@@ -2237,37 +2243,43 @@ sync_cursors {
             method: 'GET',
             path: '/api/files/{id}/metadata',
             params: '',
-            response: '{ id, name, size, contentHash, blockHashes[], version }'
+            response: '{ id, name, size, contentHash, blockHashes[], version }',
+            description: 'Returns file metadata without downloading the actual content. The blockHashes array lists SHA-256 hashes for each 4MB block of the file. The client uses these hashes to determine which blocks it already has locally (content-addressable storage). Version number enables optimistic concurrency control for conflict detection.'
           },
           {
             method: 'POST',
             path: '/api/files/upload/init',
             params: '{ path, size, contentHash }',
-            response: '{ uploadId, missingBlockHashes[] }'
+            response: '{ uploadId, missingBlockHashes[] }',
+            description: 'Initializes a file upload by comparing the client\'s block hashes against the server\'s block store. Returns only the hashes of blocks the server doesn\'t already have (deduplication). If the file is identical to an existing file, missingBlockHashes is empty and no data transfer is needed. This is how Dropbox achieves cross-user deduplication — common files like OS updates are stored only once.'
           },
           {
             method: 'PUT',
             path: '/api/blocks/{hash}',
             params: 'binary block data',
-            response: '{ stored: true }'
+            response: '{ stored: true }',
+            description: 'Uploads a single 4MB block identified by its SHA-256 hash. Blocks are stored in a content-addressable object store (S3). The server verifies the hash matches the uploaded data to ensure integrity. Blocks are immutable — once stored, they are never modified, only referenced by file metadata. This enables efficient deduplication and versioning.'
           },
           {
             method: 'POST',
             path: '/api/files/upload/complete',
             params: '{ uploadId, blockHashes[] }',
-            response: '{ fileId, version }'
+            response: '{ fileId, version }',
+            description: 'Finalizes the upload by assembling the file from its block hashes. Creates a new file version in the metadata database, linking the ordered list of block hashes to the file. Triggers sync notifications to all other devices via long polling or WebSocket. The old version is retained for version history (30 days for free, unlimited for paid).'
           },
           {
             method: 'GET',
             path: '/api/sync/changes',
             params: '?cursor=',
-            response: '{ changes[], newCursor, hasMore }'
+            response: '{ changes[], newCursor, hasMore }',
+            description: 'Long-polling endpoint for real-time sync. The client sends its last known cursor (position in the change stream) and the server holds the connection open until new changes arrive or a timeout (90 seconds). Returns file creates, modifications, deletes, and renames since the cursor. Each device maintains its own cursor. This avoids continuous polling while providing near-instant sync.'
           },
           {
             method: 'POST',
             path: '/api/share',
             params: '{ fileId, email, permission }',
-            response: '{ shareId, shareLink }'
+            response: '{ shareId, shareLink }',
+            description: 'Shares a file or folder with another user by email. Permission levels: VIEW (read-only), EDIT (read-write), OWNER (full control including reshare). Can optionally generate a public share link with optional password and expiry. Shared files appear in the recipient\'s root folder. Access control is checked on every file operation.'
           }
         ]
       },
@@ -2627,37 +2639,43 @@ watch_history {
             method: 'GET',
             path: '/api/browse/home',
             params: '?profileId=',
-            response: '{ rows: [{ title, items[] }] }'
+            response: '{ rows: [{ title, items[] }] }',
+            description: 'Returns the personalized home page organized into rows ("Trending Now", "Continue Watching", "Because You Watched X"). Each row is generated by a separate recommendation algorithm. Results are pre-computed by the recommendation pipeline (runs hourly) and cached per profile. Rows are ranked by predicted engagement using A/B tested models.'
           },
           {
             method: 'GET',
             path: '/api/content/{id}',
             params: '',
-            response: '{ content, episodes[], similar[] }'
+            response: '{ content, episodes[], similar[] }',
+            description: 'Returns content metadata, episode list (for series), and similar titles. Metadata includes synopsis, cast, ratings, maturity level, and available audio/subtitle languages. Similar titles are computed using collaborative filtering and content embeddings. Results are cached with a 1-hour TTL since metadata changes infrequently.'
           },
           {
             method: 'GET',
             path: '/api/playback/{contentId}',
             params: '?profileId=',
-            response: '{ manifestUrl, subtitles[], audioTracks[], position }'
+            response: '{ manifestUrl, subtitles[], audioTracks[], position }',
+            description: 'Initiates playback by returning a DRM-protected streaming manifest (DASH/HLS). The manifest URL points to the nearest Open Connect CDN appliance. Position is the last known playback position for resume. The server selects the optimal CDN node using the client\'s IP, ISP peering data, and current server load. DRM license (Widevine/FairPlay/PlayReady) is negotiated separately.'
           },
           {
             method: 'POST',
             path: '/api/watch/progress',
             params: '{ contentId, position, duration }',
-            response: '{ saved: true }'
+            response: '{ saved: true }',
+            description: 'Reports playback position every 30 seconds for cross-device resume. Written to Cassandra (high write throughput, eventually consistent across regions). Also feeds the viewing analytics pipeline via Kafka — used for recommendations, content ranking, and creator royalty calculations. The completed flag triggers "Next Episode" autoplay logic.'
           },
           {
             method: 'GET',
             path: '/api/search',
             params: '?q=&profileId=',
-            response: '{ results[], suggestions[] }'
+            response: '{ results[], suggestions[] }',
+            description: 'Full-text search across titles, actors, directors, genres, and descriptions using Elasticsearch. Results are personalized per profile — the same query returns different rankings based on viewing history. Autocomplete suggestions are pre-computed for popular queries. Supports fuzzy matching for typo tolerance and multi-language search.'
           },
           {
             method: 'GET',
             path: '/api/download/{contentId}',
             params: '?quality=',
-            response: '{ downloadUrl, expiresAt, license }'
+            response: '{ downloadUrl, expiresAt, license }',
+            description: 'Returns a time-limited download URL for offline viewing. The download is DRM-encrypted with a license that expires after 48 hours of first playback or 7 days from download (whichever comes first). Quality selection is based on device storage and screen resolution. Downloads count against the account\'s concurrent download limit (per plan tier).'
           }
         ]
       },
@@ -3046,37 +3064,43 @@ cart {
             method: 'GET',
             path: '/api/search',
             params: '?q=&category=&brand=&minPrice=&maxPrice=&page=',
-            response: '{ products[], facets, totalCount }'
+            response: '{ products[], facets, totalCount }',
+            description: 'Full-text product search across 350M+ products using Elasticsearch. Supports faceted filtering by category, brand, price range, rating, and Prime eligibility. Results are ranked by relevance (BM25), sales velocity, reviews, and sponsored placement. Facets (brand counts, price ranges) are computed using aggregations. Pagination uses offset-based approach with a cap at 10,000 results.'
           },
           {
             method: 'GET',
             path: '/api/products/{asin}',
             params: '',
-            response: '{ product, reviews[], similar[], alsoViewed[] }'
+            response: '{ product, reviews[], similar[], alsoViewed[] }',
+            description: 'Returns the full product detail page data identified by ASIN (Amazon Standard Identification Number). Includes real-time inventory status from the inventory service, pricing with Buy Box winner selection, review summary with sentiment analysis, and "Customers who viewed this also viewed" recommendations. Price and availability may vary by region and are computed at request time.'
           },
           {
             method: 'POST',
             path: '/api/cart/add',
             params: '{ productId, quantity }',
-            response: '{ cart, subtotal }'
+            response: '{ cart, subtotal }',
+            description: 'Adds a product to the user\'s shopping cart. Cart is stored in DynamoDB for high availability across regions. Does NOT reserve inventory — stock is checked only at checkout. Cart items include a snapshot of the price at add time but the actual charged price is recalculated at checkout. Cart persists across sessions and devices.'
           },
           {
             method: 'POST',
             path: '/api/checkout/start',
             params: '{ cartId }',
-            response: '{ checkoutSessionId, summary, deliveryOptions[] }'
+            response: '{ checkoutSessionId, summary, deliveryOptions[] }',
+            description: 'Initiates checkout by validating inventory availability for all cart items, calculating shipping costs based on delivery address and fulfillment center proximity, applying coupons/promotions, and computing tax. Creates a checkout session with a 30-minute TTL. Delivery options include same-day, next-day, standard, and pickup based on the user\'s location and Prime status.'
           },
           {
             method: 'POST',
             path: '/api/checkout/complete',
             params: '{ sessionId, paymentMethod, shippingOption }',
-            response: '{ orderId, estimatedDelivery }'
+            response: '{ orderId, estimatedDelivery }',
+            description: 'Completes the purchase within a distributed transaction. Charges the payment method, decrements inventory (using optimistic locking with version numbers to prevent overselling), creates the order record, and triggers the fulfillment pipeline. If any step fails, the entire transaction is rolled back using the Saga pattern. Sends order confirmation email and push notification.'
           },
           {
             method: 'GET',
             path: '/api/orders/{id}',
             params: '',
-            response: '{ order, items[], tracking }'
+            response: '{ order, items[], tracking }',
+            description: 'Returns order details with real-time tracking information. Tracking status is updated by the logistics system via event-driven architecture (SQS/SNS). Status transitions: CONFIRMED → PICKING → PACKED → SHIPPED → OUT_FOR_DELIVERY → DELIVERED. Each status update includes timestamp and location. Returns are initiated through a separate /api/returns endpoint.'
           }
         ]
       },
@@ -3414,37 +3438,43 @@ presence {
             method: 'WS',
             path: '/ws/doc/{id}/collaborate',
             params: 'authToken in header',
-            response: 'Bidirectional: send operations, receive operations + presence'
+            response: 'Bidirectional: send operations, receive operations + presence',
+            description: 'Persistent WebSocket connection for real-time collaborative editing. Sends local edit operations (insert, delete, format) to the server and receives transformed operations from other collaborators. Also transmits cursor position and selection range for presence awareness. The server maintains one collaboration session per document with all connected users.'
           },
           {
             method: 'OPERATION',
             path: '(via WebSocket)',
             params: '{ type, position, content, baseRevision }',
-            response: '{ ack, serverRevision, transformedOps[] }'
+            response: '{ ack, serverRevision, transformedOps[] }',
+            description: 'Each edit is sent as an operation with a base revision number (the last server revision the client has seen). The server applies Operational Transformation (OT) to resolve conflicts — if two users type at the same position simultaneously, the server transforms one operation relative to the other so both converge to the same document state. The server increments the revision number and broadcasts the transformed operation to all other collaborators.'
           },
           {
             method: 'GET',
             path: '/api/doc/{id}',
             params: '',
-            response: '{ document, content, revision, collaborators[] }'
+            response: '{ document, content, revision, collaborators[] }',
+            description: 'Returns the current document snapshot including full content, current revision number, and list of active collaborators with their cursor positions. Used when first opening a document. The client then establishes a WebSocket connection and receives incremental updates from the current revision forward.'
           },
           {
             method: 'GET',
             path: '/api/doc/{id}/history',
             params: '?since=&limit=',
-            response: '{ revisions[], hasMore }'
+            response: '{ revisions[], hasMore }',
+            description: 'Returns the revision history of a document. Each revision includes the author, timestamp, and a summary of changes. Google Docs stores every keystroke as an operation, but groups them into meaningful revisions (sentences, paragraphs) for the history UI. Users can preview any revision and see who made each change.'
           },
           {
             method: 'POST',
             path: '/api/doc/{id}/share',
             params: '{ email, permission }',
-            response: '{ shareLink }'
+            response: '{ shareLink }',
+            description: 'Shares the document with a user by email. Permission levels: Viewer (read-only), Commenter (can add comments), Editor (full edit access), Owner (can delete and manage sharing). Can also generate a shareable link with domain-restricted or public access. Changes to sharing permissions take effect immediately for connected collaborators.'
           },
           {
             method: 'POST',
             path: '/api/doc/{id}/restore',
             params: '{ revision }',
-            response: '{ newRevision }'
+            response: '{ newRevision }',
+            description: 'Restores the document to a previous revision. This creates a new revision (does not delete history) by replaying the document state at the target revision. All connected collaborators receive the restored content via their WebSocket connections. The restore operation is itself an operation that goes through OT to resolve with any concurrent edits.'
           }
         ]
       },
