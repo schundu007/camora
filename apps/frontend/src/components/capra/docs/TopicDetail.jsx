@@ -294,6 +294,7 @@ function DataModelSection({ schema }) {
  */
 function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
   const [imgError, setImgError] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => { setImgError(false); }, [topicId, provider]);
 
@@ -311,14 +312,24 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      {/* Simple image — like Medium/docs sites. Scrolls with page, full width. */}
-      <div className="rounded-lg overflow-hidden" style={{ background: 'white', border: '1px solid var(--border)' }}>
+      {/* Constrained preview — click to expand (like Medium/GFG) */}
+      <div className="rounded-lg overflow-hidden cursor-pointer relative" style={{ background: 'white', border: '1px solid var(--border)', maxHeight: expanded ? 'none' : '500px' }} onClick={() => setExpanded(!expanded)}>
         <img
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', maxWidth: '700px', height: 'auto', display: 'block', margin: '0 auto' }}
           onError={() => setImgError(true)}
         />
+        {!expanded && (
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(transparent, white)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to expand ↓</span>
+          </div>
+        )}
+        {expanded && (
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to collapse ↑</span>
+          </div>
+        )}
       </div>
       <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
         <span>{provider.toUpperCase()} Architecture</span>
@@ -1133,7 +1144,7 @@ export default function TopicDetail({
                   const insightMatch = intro.match(/\*\*Key Insight[:\s]*\*\*\s*(.+?)(?:\n|$)/i) || intro.match(/Key Insight:\s*(.+?)(?:\n|$)/i);
                   if (!insightMatch) return null;
                   return (
-                    <div className="mt-4 flex items-start gap-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] p-3">
+                    <div className="mt-4 flex items-start gap-3 rounded-lg bg-gray-50 border border-gray-200 p-3">
                       <Icon name="lightbulb" size={16} className="text-[var(--text-secondary)] flex-shrink-0 mt-0.5" />
                       <div>
                         <div className="text-xs font-bold text-[var(--text-primary)] landing-display mb-0.5">Key Insight</div>
@@ -1175,7 +1186,7 @@ export default function TopicDetail({
                 <div className="rounded-xl overflow-hidden bg-white border border-[var(--border)] shadow-sm flex">
                   <div className="w-1 bg-[var(--accent)] flex-shrink-0" />
                   <div className="p-3 flex items-start gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                       <Icon name="clock" size={16} className="text-[var(--accent)]" />
                     </div>
                     <div>
@@ -1189,7 +1200,7 @@ export default function TopicDetail({
                 <div className="rounded-xl overflow-hidden bg-white border border-[var(--border)] shadow-sm flex">
                   <div className="w-1 bg-[var(--accent)] flex-shrink-0" />
                   <div className="p-3 flex items-start gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                       <Icon name="layers" size={16} className="text-[var(--text-secondary)]" />
                     </div>
                     <div>
@@ -1214,7 +1225,7 @@ export default function TopicDetail({
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.whenToUse.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-[var(--border)] hover:shadow-md hover:border-[var(--border)] transition-all landing-body">
+                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-all landing-body">
                       <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="check" size={10} className="text-[var(--accent)]" />
                       </span>
@@ -1327,7 +1338,7 @@ export default function TopicDetail({
                     <Link
                       key={i}
                       to={href}
-                      className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-[var(--accent)]/10/60 ${i % 2 === 0 ? 'bg-white' : 'bg-[var(--bg-elevated)]/40'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[#f0f0f0]' : ''}`}
+                      className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-[var(--accent)]/10/60 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[#f0f0f0]' : ''}`}
                     >
                       <span className="text-xs text-[var(--text-muted)] landing-mono">{i + 1}</span>
                       <span className="text-sm text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors landing-body pr-2">{problemName}</span>
@@ -1396,8 +1407,8 @@ export default function TopicDetail({
                           </svg>
                         </button>
                         {isExpanded && q.answer && (
-                          <div className="px-3 pb-3 pt-1 border-t border-[var(--border)] bg-[var(--bg-elevated)]/50">
-                            <div className="pl-8 text-[var(--text-secondary)] text-sm leading-relaxed bg-white p-3 rounded-lg border border-[var(--border)] landing-body">
+                          <div className="px-3 pb-3 pt-1 border-t border-[var(--border)]">
+                            <div className="pl-8 text-[var(--text-secondary)] text-sm leading-relaxed p-3 landing-body">
                               {q.answer}
                             </div>
                           </div>
@@ -1423,7 +1434,7 @@ export default function TopicDetail({
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.tips.map((tip, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-white border border-[var(--border)] hover:shadow-md hover:border-[var(--border)] transition-all">
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-gray-50 transition-all">
                       <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="check" size={10} className="text-[var(--accent)]" />
                       </span>
@@ -1444,8 +1455,8 @@ export default function TopicDetail({
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.interviewTips.map((tip, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-[var(--bg-elevated)]/40 border border-amber-100 hover:shadow-md hover:border-[var(--border)] transition-all">
-                      <span className="w-5 h-5 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-amber-50/50 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="lightbulb" size={10} className="text-[var(--text-secondary)]" />
                       </span>
                       <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{tip}</span>
@@ -1574,8 +1585,8 @@ export default function TopicDetail({
                         </div>
                         {/* Key challenge callout */}
                         {topicDetails.introduction && (
-                          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-[var(--bg-elevated)]/70 border border-[var(--border)]/60">
-                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                               <Icon name="lightbulb" size={16} className="text-[var(--text-secondary)]" />
                             </div>
                             <div>
@@ -1647,9 +1658,9 @@ export default function TopicDetail({
                           // Extract metric-like values from the requirement text (e.g., "<3s", "99.9%", "1M")
                           const metricMatch = req.match(/([<>~]?\d+\.?\d*\s*(?:ms|s|%|M|K|GB|TB|MB|req\/s|QPS|RPS|rpm|tps)?)/i);
                           return (
-                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent bg-[var(--bg-elevated)] hover:border-[var(--border)] hover:bg-[var(--bg-elevated)]/40 hover:shadow-sm transition-all cursor-default">
+                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-all cursor-default">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] text-[var(--text-secondary)] mt-0.5">
+                                <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-gray-100 text-[var(--text-secondary)] mt-0.5">
                                   <Icon name="zap" size={10} className="text-[var(--text-secondary)]" />
                                 </span>
                                 <span className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed flex-1">{req}</span>
@@ -2150,7 +2161,7 @@ export default function TopicDetail({
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.algorithmApproaches.map((app, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]">
+                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
                         <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
                         <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed">
                           <FormattedContent content={app.description} color="amber" />
@@ -2174,7 +2185,7 @@ export default function TopicDetail({
                   </div>
                   <div className="p-3 space-y-1.5">
                     {topicDetails.architectureLayers.map((layer, i) => (
-                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
                         <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
                         <div>
                           <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
@@ -2217,7 +2228,7 @@ export default function TopicDetail({
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.tradeoffDecisions.map((d, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
                         <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                           <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono">{d.choice}</span>
                           <span className="text-gray-300">→</span>
@@ -2285,7 +2296,7 @@ export default function TopicDetail({
                               <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Pros</span>
                               <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
                             </div>
-                            <div className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                            <div className="px-3 py-2 rounded-lg bg-gray-50 border border-[var(--border)]">
                               <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Cons</span>
                               <p className="text-[var(--text-primary)] text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
                             </div>
@@ -2429,7 +2440,7 @@ export default function TopicDetail({
                       <div className="p-3">
                         <div className="flex flex-nowrap gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
                           {topicDetails.keyDecisions.map((decision, i) => (
-                            <div key={i} className="flex-shrink-0 w-56 p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--accent)]/20 hover:shadow-sm transition-all">
+                            <div key={i} className="flex-shrink-0 w-56 p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/20 hover:shadow-sm transition-all">
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-[var(--accent)]/100 text-white landing-mono">
                                   {i + 1}
@@ -2456,7 +2467,7 @@ export default function TopicDetail({
                   <div className="p-3">
                     <div className="grid grid-cols-1 gap-2">
                     {topicDetails.coreEntities.map((entity, i) => (
-                      <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <div key={i} className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)]">
                         <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold whitespace-nowrap">{entity.name}</code>
                         <span className="text-[var(--text-muted)] text-sm landing-body">{entity.description}</span>
                       </div>
@@ -2476,8 +2487,8 @@ export default function TopicDetail({
                   <div className="p-4">
                     <ul className="grid grid-cols-1 gap-1">
                       {topicDetails.designPatterns.map((pattern, i) => (
-                        <li key={i} className="flex items-start gap-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
-                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-[var(--bg-elevated)] text-[var(--text-primary)] mt-0.5">✦</span>
+                        <li key={i} className="flex items-start gap-2 rounded hover:bg-gray-50 transition-colors">
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-gray-100 text-[var(--text-primary)] mt-0.5">✦</span>
                           <span className="text-[var(--text-muted)] text-sm landing-body">{pattern}</span>
                         </li>
                       ))}
@@ -2517,7 +2528,7 @@ export default function TopicDetail({
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.concepts.map((concept, i) => (
-                      <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <div key={i} className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)]">
                         <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold whitespace-nowrap">{concept.name}</code>
                         <span className="text-[var(--text-muted)] text-sm landing-body">{concept.description}</span>
                       </div>
@@ -2535,7 +2546,7 @@ export default function TopicDetail({
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.primitives.map((prim, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <div key={i} className="p-3 rounded-lg border border-[var(--border)]">
                         <div className="flex items-center gap-2 mb-1">
                           <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold">{prim.name}</code>
                           {prim.example && <code className="text-[var(--text-muted)] text-sm landing-mono">{prim.example}</code>}
@@ -2556,7 +2567,7 @@ export default function TopicDetail({
                   </div>
                   <div className="grid  gap-2 p-3">
                     {topicDetails.problems.map((problem, i) => (
-                      <div key={i} className="p-4 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <div key={i} className="p-4 rounded-lg border border-[var(--border)]">
                         <h4 className="text-[var(--text-primary)] font-semibold text-sm mb-2 landing-display">{problem.name}</h4>
                         <p className="text-[var(--text-muted)] text-sm mb-2 landing-body">{problem.description}</p>
                         <div className="flex items-start gap-2">
@@ -2571,7 +2582,7 @@ export default function TopicDetail({
 
               {/* Concurrency Data Structures */}
               {topicDetails.structures && (
-                <div className="rounded-lg overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]">
+                <div className="rounded-lg overflow-hidden bg-white border border-[var(--border)]">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="database" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Concurrent Data Structures</h3>
@@ -2620,8 +2631,8 @@ export default function TopicDetail({
                       )}
                       {/* Key insight callout */}
                       {topicDetails.introduction && (
-                        <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-[var(--bg-elevated)]/70 border border-[var(--border)]/60">
-                          <div className="w-8 h-8 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <Icon name="lightbulb" size={16} className="text-[var(--text-secondary)]" />
                           </div>
                           <div>
@@ -2676,7 +2687,7 @@ export default function TopicDetail({
                       {/* Question header — clickable to expand/collapse */}
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
-                        className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                        className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
                       >
                         <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0" style={{ background: topicDetails.color }}>
                           {index + 1}
