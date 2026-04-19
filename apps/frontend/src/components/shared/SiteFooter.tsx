@@ -5,11 +5,11 @@ import { NAV_LINKS } from '../../lib/constants';
 export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
   const isLight = variant === 'light';
   const bg = isLight
-    ? '#FFFFFF'
+    ? '#E8F1FC'
     : '#0B1120';
   const textColor = isLight ? '#0F172A' : '#FFFFFF';
   const textMuted = isLight ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.85)';
-  const borderColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)';
+  const borderColor = isLight ? '#C4D9F2' : 'rgba(255,255,255,0.12)';
 
   return (
     <footer className="px-4 sm:px-6 mt-auto" style={{ height: 48, width: '100%', background: bg, borderTop: `1px solid ${borderColor}`, fontFamily: "var(--font-sans)" }}>
