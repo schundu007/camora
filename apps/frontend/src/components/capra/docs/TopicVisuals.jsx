@@ -430,24 +430,50 @@ export function StaticDiagramGrid({ diagrams, title = 'Architecture Diagrams' })
 }
 
 // ── FlowchartCard ───────────────────────────────────────────────────────────
-// Shows a flowchart with inline step summary + optional static diagram image
+// Shows diagram image as primary visual, with step summary as collapsible detail
 export function FlowchartCard({ flowchart }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
+  const hasDiagram = flowchart.src && !imgError;
 
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="gitBranch" size={14} className="text-[var(--accent)]" />
-        <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{flowchart.title}</h3>
+        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display flex-1">{flowchart.title}</h3>
+        {flowchart.steps && hasDiagram && (
+          <button
+            onClick={() => setShowSteps(!showSteps)}
+            className="text-[10px] landing-mono font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--accent)]/5"
+          >
+            {showSteps ? 'Hide steps' : 'Show steps'}
+          </button>
+        )}
       </div>
       {flowchart.description && (
         <p className="px-3 pt-2 text-xs text-[var(--text-muted)] landing-body">{flowchart.description}</p>
       )}
       <div className="p-3">
-        {/* Inline step visualization (always shown) */}
-        {flowchart.steps && (
-          <div className="flex flex-wrap items-center gap-1 mb-3">
+        {/* Diagram image — primary visual */}
+        {hasDiagram && (
+          <div>
+            {!imgLoaded && (
+              <div className="w-full h-48 bg-[var(--bg-elevated)] rounded-lg animate-pulse" />
+            )}
+            <img
+              src={flowchart.src}
+              alt={flowchart.title}
+              className={`w-full rounded-lg border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              loading="lazy"
+            />
+          </div>
+        )}
+        {/* Step boxes — shown as fallback (no diagram) or when toggled open */}
+        {flowchart.steps && (!hasDiagram || showSteps) && (
+          <div className={`flex flex-wrap items-center gap-1 ${hasDiagram ? 'mt-3 pt-3 border-t border-[var(--border)]' : ''}`}>
             {flowchart.steps.map((s, i) => (
               <div key={i} className="flex items-center gap-1">
                 <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
@@ -462,22 +488,6 @@ export function FlowchartCard({ flowchart }) {
                 )}
               </div>
             ))}
-          </div>
-        )}
-        {/* Static flowchart image */}
-        {flowchart.src && !imgError && (
-          <div>
-            {!imgLoaded && !imgError && (
-              <div className="w-full h-32 bg-[var(--bg-elevated)] rounded-lg animate-pulse" />
-            )}
-            <img
-              src={flowchart.src}
-              alt={flowchart.title}
-              className={`w-full rounded-lg border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
-              loading="lazy"
-            />
           </div>
         )}
       </div>
