@@ -3092,7 +3092,7 @@ Why Cassandra wins for messages:
         },
         {
           question: 'How would you implement disappearing messages?',
-          answer: `Add an \`expiresAt\` timestamp field to the messages table. When a user enables disappearing messages for a conversation, all new messages get \`expiresAt = sentAt + TTL\` (e.g., 24 hours, 7 days).\n\n**Server-side:** Cassandra supports native TTL — messages auto-delete when TTL expires. No cleanup job needed.\n\n**Client-side:** The app checks \`expiresAt\` before rendering each message and removes expired ones from the local SQLite database. A background timer triggers periodic cleanup.\n\n**Edge case:** Screenshots cannot be prevented technically. WhatsApp shows a notification when someone screenshots a "view once" message, but cannot block it.`
+          answer: `Add an \`expiresAt\` timestamp field to the messages table. When a user enables disappearing messages for a conversation, all new messages get \`expiresAt = sentAt + TTL\` (e.g., **24 hours**, **7 days**).\n\n**Server-side:** **Cassandra** supports **native TTL** — messages auto-delete when TTL expires. No cleanup job needed.\n\n**Client-side:** The app checks \`expiresAt\` before rendering each message and removes expired ones from the local **SQLite** database. A background timer triggers periodic cleanup.\n\n**Edge case:** Screenshots cannot be prevented technically. WhatsApp shows a notification when someone screenshots a "view once" message, but cannot block it.`
         },
         {
           question: 'How do you implement message search with end-to-end encryption?',
@@ -3104,7 +3104,7 @@ Why Cassandra wins for messages:
         },
         {
           question: 'How does multi-device sync work (WhatsApp Web)?',
-          answer: `WhatsApp moved from a **lead device model** (phone must be online) to a **multi-device architecture** in 2021.\n\n**How it works:** Each device has its own Signal Protocol identity key pair. When sending a message, the sender encrypts it N times — once for each of the recipient's registered devices. Each copy uses a different encryption session.\n\n**Sync:** Messages are stored per-device in the offline queue. When a new device is linked, it receives a history sync from the primary device (encrypted backup of recent messages, not from the server).\n\n**Limit:** Maximum 4 linked devices per account. Each device independently maintains WebSocket connections and receives messages directly from the server.`
+          answer: `WhatsApp moved from a **lead device model** (phone must be online) to a **multi-device architecture** in 2021.\n\n**How it works:** Each device has its own **Signal Protocol** identity key pair. When sending a message, the sender encrypts it **N times** — once for each of the recipient's registered devices. Each copy uses a different encryption session.\n\n**Sync:** Messages are stored per-device in the **offline queue**. When a new device is linked, it receives a history sync from the primary device (encrypted backup of recent messages, not from the server).\n\n**Limit:** Maximum **4 linked devices** per account. Each device independently maintains **WebSocket** connections and receives messages directly from the server.`
         },
         {
           question: 'How do you handle message ordering across unreliable networks?',
