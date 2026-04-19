@@ -1947,7 +1947,7 @@ rides {
 
 2. In-memory spatial index:
    • Keep recent locations in Redis with geospatial commands
-   • GEOADD, GEORADIUS for nearby queries
+   • GEOADD, GEOSEARCH for nearby queries
 
 3. Separate hot/warm/cold storage:
    • Hot: Last 5 min in Redis (for matching)
@@ -2008,7 +2008,7 @@ rides {
           answer: `The matching engine minimizes total wait time across all pending requests.
 
 **Single-request Matching**:
-1. Query Redis GEORADIUS for drivers within expanding radius (1km → 3km → 5km)
+1. Query Redis GEOSEARCH for drivers within expanding radius (1km → 3km → 5km)
 2. Filter by: availability, vehicle type, rating threshold, acceptance rate
 3. Score each candidate: score = w1/distance + w2×rating + w3×acceptance_rate
 4. Send to top-ranked driver, wait 15s for acceptance; if declined, try next
@@ -2118,7 +2118,7 @@ rides {
         keyPoints: [
           'Divide city into S2 cells (roughly 1km²)',
           'Each cell service manages drivers in that area',
-          'Redis GEOADD/GEORADIUS for O(log N + M) nearby queries',
+          'Redis GEOADD/GEOSEARCH for O(log N) nearby queries',
           'Kafka streams location updates to analytics',
           'Gateway routes requests to appropriate cell',
           'Cross-cell matching when driver moves between cells'
@@ -2134,7 +2134,7 @@ rides {
           'Rider opens app, sends pickup and dropoff locations',
           'Gateway determines cell containing pickup location',
           'Route request to that cell\'s matching service',
-          'Matching service queries Redis GEORADIUS for drivers within 5km',
+          'Matching service queries Redis GEOSEARCH for drivers within 5km',
           'Filter by availability, rating, vehicle type',
           'Select best match (closest, highest rating)',
           'Send ride request to selected driver via push notification',
@@ -2215,7 +2215,7 @@ rides {
       components: ['Cell Services', 'Redis (Geospatial)', 'Kafka', 'Matching Service', 'ETA Service', 'Payment Service'],
       keyDecisions: [
         'S2/Geohash cells for geographic sharding',
-        'Redis GEORADIUS for O(log N) nearby driver queries',
+        'Redis GEOSEARCH for O(log N) nearby driver queries',
         'WebSocket for real-time location streaming',
         'Kafka for location event processing',
         'Cell-based architecture for horizontal scaling'
@@ -2323,7 +2323,7 @@ rides {
             { step: 1, label: 'Rider Opens App', detail: 'Client sends GPS location to API gateway, receives nearby driver count and surge multiplier for the pickup cell' },
             { step: 2, label: 'Enter Destination', detail: 'Client sends pickup + dropoff coordinates, server calculates ETA and upfront fare estimate using routing + surge' },
             { step: 3, label: 'Confirm Ride', detail: 'Pre-authorize payment, lock surge multiplier, create ride record with status REQUESTED in PostgreSQL' },
-            { step: 4, label: 'Find Drivers', detail: 'Matching service queries Redis GEORADIUS for available drivers within 5km of pickup, filters by vehicle type and rating' },
+            { step: 4, label: 'Find Drivers', detail: 'Matching service queries Redis GEOSEARCH for available drivers within 5km of pickup, filters by vehicle type and rating' },
             { step: 5, label: 'Score & Rank', detail: 'Score candidates by distance, heading, rating, acceptance rate. Select top candidate for dispatch' },
             { step: 6, label: 'Dispatch to Driver', detail: 'Send push notification to selected driver with ride details and 15-second acceptance countdown' },
             { step: 7, label: 'Driver Accepts', detail: 'Driver accepts → ride status changes to MATCHED, rider notified with driver info and ETA. If declined → try next driver' },
@@ -2371,7 +2371,7 @@ rides {
 
       evolutionSteps: [
         { step: 1, title: 'Single-Server MVP', description: 'Monolithic Node.js app with PostgreSQL + PostGIS. All matching, pricing, and tracking in one process.', color: '#ef4444', icon: 'server', capacity: '100 rides/day', rps: '~1 QPS', pros: ['Fast to build', 'Easy to debug'], cons: ['Cannot scale beyond one city', 'PostGIS queries slow at 1K+ drivers'] },
-        { step: 2, title: 'Service Decomposition', description: 'Split into Matching, Location, Payment, and Notification services. Redis replaces PostGIS for real-time queries.', color: '#f97316', icon: 'layers', capacity: '50K rides/day', rps: '~100 QPS', pros: ['Independent scaling per service', 'Redis GEORADIUS handles 100K drivers'], cons: ['Single Redis instance is SPOF', 'No surge pricing yet'] },
+        { step: 2, title: 'Service Decomposition', description: 'Split into Matching, Location, Payment, and Notification services. Redis replaces PostGIS for real-time queries.', color: '#f97316', icon: 'layers', capacity: '50K rides/day', rps: '~100 QPS', pros: ['Independent scaling per service', 'Redis GEOSEARCH handles 100K drivers'], cons: ['Single Redis instance is SPOF', 'No surge pricing yet'] },
         { step: 3, title: 'Cell-Based Architecture', description: 'Divide cities into S2 cells with dedicated services per cell. Kafka for async location event processing.', color: '#eab308', icon: 'grid', capacity: '5M rides/day', rps: '~10K QPS', pros: ['Horizontal scaling per cell', 'Fault isolation per geography'], cons: ['Cross-cell matching complexity', 'Cell rebalancing during growth'] },
         { step: 4, title: 'Global Multi-Region', description: 'Deploy in 5+ regions with per-region data sovereignty. ML-based ETA, batch matching, demand prediction.', color: '#22c55e', icon: 'globe', capacity: '42M rides/day', rps: '~500K QPS', pros: ['<30s match globally', 'ML-optimized matching and pricing'], cons: ['Operational complexity of 15K cities', 'Regulatory compliance per jurisdiction'] },
         { step: 5, title: 'AI-Native Platform', description: 'Reinforcement learning for matching, autonomous vehicle integration, real-time traffic prediction from driver fleet.', color: '#8b5cf6', icon: 'brain', capacity: '100M+ rides/day', rps: '~2M QPS', pros: ['Optimal matching via RL', 'Predictive supply positioning'], cons: ['ML model drift monitoring', 'AV safety certification'] },
@@ -2519,8 +2519,8 @@ class GeospatialIndex:
 
     def find_nearby(self, location: Location, radius_km: float = 5
                     ) -> List[Tuple[int, float]]:
-        """GEORADIUS query — returns (driver_id, distance_km) sorted."""
-        results = self.redis.georadius(
+        """GEOSEARCH query — returns (driver_id, distance_km) sorted."""
+        results = self.redis.geosearch(
             "driver_locations",
             location.lng, location.lat,
             radius_km, unit="km",
@@ -2593,10 +2593,10 @@ class UberMatchingEngine {
     this.MAX_RADIUS_KM = 5;
   }
 
-  /** GEORADIUS query for nearby available drivers, sorted by distance. */
+  /** GEOSEARCH query for nearby available drivers, sorted by distance. */
   async findNearbyDrivers(lat, lng, radiusKm = 5) {
     const raw = await this.redis.call(
-      'GEORADIUS', 'driver_locations', lng, lat,
+      'GEOSEARCH', 'driver_locations', lng, lat,
       radiusKm, 'km', 'WITHCOORD', 'WITHDIST', 'ASC', 'COUNT', '50'
     );
     const drivers = [];
