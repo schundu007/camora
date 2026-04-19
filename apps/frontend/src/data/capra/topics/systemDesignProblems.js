@@ -7741,36 +7741,42 @@ reviews {
           {
             method: 'GET',
             path: '/api/search',
+            description: 'Search listings by location, dates, guest count, and filters. Uses Elasticsearch for geo-distance queries and filters results against the availability calendar. Returns paginated listings sorted by relevance score.',
             params: '?location=&lat=&lng=&checkin=&checkout=&guests=&priceMin=&priceMax=&amenities=',
             response: '{ listings[], pagination, facets }'
           },
           {
             method: 'GET',
             path: '/api/listings/{id}',
+            description: 'Fetch full listing details including host profile, aggregated reviews, and availability calendar for the next 3 months. Used when a guest clicks on a search result to view the property page.',
             params: '',
             response: '{ listing, host, reviews[], availability }'
           },
           {
             method: 'GET',
             path: '/api/listings/{id}/calendar',
+            description: 'Retrieve the availability calendar for a specific listing. Returns each date with its booking status (available, blocked, booked) and any custom pricing overrides set by the host.',
             params: '?month=',
             response: '{ dates: [{date, status, price}] }'
           },
           {
             method: 'POST',
             path: '/api/bookings',
+            description: 'Create a new booking. For Instant Book listings, dates are held for 10 minutes while payment processes. For Request to Book, the host must approve before payment is charged. Uses optimistic locking to prevent double-bookings.',
             params: '{ listingId, checkin, checkout, guests, message }',
             response: '{ bookingId, status, paymentIntent }'
           },
           {
             method: 'PATCH',
             path: '/api/host/listings/{id}/calendar',
+            description: 'Host endpoint to update calendar availability. Can block dates, set custom pricing per date, or change minimum stay requirements. Changes are propagated to the search index asynchronously.',
             params: '{ dates[], status, price }',
             response: '{ updated: true }'
           },
           {
             method: 'POST',
             path: '/api/reviews',
+            description: 'Submit a review after a completed stay. Both guest and host can leave reviews. Reviews are only published after both parties submit (or after 14 days), preventing retaliatory reviews.',
             params: '{ bookingId, rating, content }',
             response: '{ reviewId }'
           }
