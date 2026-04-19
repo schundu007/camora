@@ -737,154 +737,444 @@ NoSQL Graph:
 
       keyQuestions: [
         {
-          question: 'When should I use SQL vs NoSQL?',
+          question: 'When should I use SQL vs NoSQL? What is the decision framework?',
           answer: `**Use SQL (Relational) when**:
-- Need ACID transactions (banking, e-commerce orders)
-- Complex queries with JOINs
-- Data has clear relationships
-- Need strong consistency
-- Schema is well-defined
+- Need ACID transactions — Stripe processes all payments through PostgreSQL because a partial transfer is unacceptable
+- Complex queries with JOINs — Reddit's content feed requires joining posts, votes, comments, and user data
+- Data has clear, stable relationships — e-commerce with orders, line items, inventory, payments
+- Need strong consistency — financial systems, booking systems where double-selling is catastrophic
+- Regulatory compliance requires audit trails — healthcare (HIPAA), finance (SOX)
 
 **Use NoSQL when**:
-- Need horizontal scaling
-- Flexible/evolving schema
-- High write throughput
-- Simple access patterns (key lookup)
-- Geographic distribution
+- Need horizontal write scaling beyond a single node — Cassandra handles 10K-100K+ writes/sec per node
+- Schema evolves rapidly — early-stage product with weekly schema changes
+- Simple access patterns dominate — session storage (Redis), user profiles by ID (DynamoDB)
+- Geographic distribution with low-latency writes — multi-region apps where each region writes locally
+- Data is naturally denormalized — IoT sensor readings, event logs, content management
 
-**Common Patterns**:
-- User data: SQL (transactions, relationships)
-- Session storage: Redis (fast, ephemeral)
-- Analytics/logs: Cassandra (high write throughput)
-- Product catalog: MongoDB (flexible schema)
-- Social graph: Neo4j (relationship queries)
+**Decision framework — ask these questions in order**:
+1. Do I need multi-record transactions? Yes -> SQL
+2. Is my write volume > 50K/sec sustained? Yes -> Consider NoSQL or NewSQL
+3. Are my queries complex (JOINs, aggregations, window functions)? Yes -> SQL
+4. Is my schema changing weekly? Yes -> Document DB
+5. Is my data a graph with deep traversals? Yes -> Graph DB
+6. Default: PostgreSQL — it handles 80% of use cases well
 
-**Polyglot persistence**: Use multiple databases for different needs`
+**Polyglot persistence in practice**: Uber uses PostgreSQL for trip data, Redis for geospatial caching, Cassandra for driver location history, and Elasticsearch for search.`
         },
         {
-          question: 'How does database sharding work?',
-          answer: `**Sharding**: Horizontal partitioning of data across multiple databases
+          question: 'Explain ACID vs BASE properties with real-world examples',
+          answer: `**ACID** — guarantees for relational databases:
 
-**Sharding Strategies**:
+**Atomicity**: All or nothing. Stripe transferring $100: debit sender AND credit receiver must both succeed or both roll back. PostgreSQL uses WAL (write-ahead log) to guarantee this — every change is logged before applied.
 
-1. **Hash-based sharding**:
-   \`shard = hash(user_id) % num_shards\`
-   - Even distribution
-   - Hard to add/remove shards
-   - Use consistent hashing to minimize reshuffling
+**Consistency**: Valid state to valid state. A bank account balance cannot go negative if a CHECK constraint exists. Foreign keys ensure an order cannot reference a nonexistent user.
 
-2. **Range-based sharding**:
-   \`shard = user_id / shard_size\`
-   - Supports range queries
-   - Can have hot spots (new users on one shard)
+**Isolation**: Concurrent transactions appear serial. Two users booking the last concert ticket simultaneously — only one succeeds. Isolation levels (weakest to strongest):
+  - Read Uncommitted: See dirty reads (almost never used)
+  - Read Committed: PostgreSQL default — only see committed data
+  - Repeatable Read: MySQL InnoDB default — snapshot at transaction start
+  - Serializable: Full isolation, ~10-30% throughput penalty
 
-3. **Directory-based sharding**:
-   \`lookup_service.get_shard(user_id)\`
-   - Most flexible
-   - Lookup adds latency
+**Durability**: Committed data survives crashes. PostgreSQL fsync's WAL to disk before acknowledging commit. Even if the server loses power 1ms after commit, the data is safe.
 
-**Challenges**:
-- Cross-shard queries are expensive
-- Transactions across shards are complex
-- Rebalancing data is difficult
-- JOINs don't work across shards
+**BASE** — the NoSQL alternative:
+- **Basically Available**: System always responds, even if data is stale (Cassandra returns data even during partition)
+- **Soft state**: Data may change without input due to eventual consistency (DynamoDB replicas converging)
+- **Eventually consistent**: Given enough time with no new writes, all replicas converge to the same value
 
-**Best practice**: Shard by the entity you query most (usually user_id)`
+**The real trade-off**: ACID costs performance (locks, synchronous writes, coordination). BASE trades consistency for availability and throughput. Most production systems use ACID for money/inventory and BASE for feeds/analytics — rarely one or the other exclusively.`
         },
         {
-          question: 'What is database replication?',
-          answer: `**Replication**: Keeping copies of data on multiple machines
+          question: 'How do database indexes work? Compare B-tree, LSM-tree, and hash indexes.',
+          answer: `**B-tree (actually B+ tree in most databases)**: The workhorse of relational databases.
+- Self-balancing tree where all data lives in leaf nodes, connected as a linked list
+- O(log n) for reads, writes, and range scans — a 1 billion row table needs only ~30 levels
+- Read-optimized: data is updated in place on disk pages (typically 4-16 KB)
+- Write cost: each INSERT/UPDATE requires finding the page, modifying it, and writing it back
+- **Performance**: PostgreSQL B-tree index scan on 100M rows: ~1-5ms for point lookups
+- Used by: PostgreSQL, MySQL InnoDB, Oracle, SQL Server — virtually all OLTP databases
 
-**Primary-Replica (Master-Slave)**:
+**LSM-tree (Log-Structured Merge-tree)**: Built for write-heavy workloads.
+- Writes go to an in-memory buffer (memtable), then flush to sorted immutable files (SSTables) on disk
+- Background compaction merges SSTables to reclaim space and maintain read performance
+- Write-optimized: sequential I/O only — 1.5-2x higher write throughput than B-tree in benchmarks
+- Read cost: may need to check multiple SSTables (bloom filters help skip irrelevant ones)
+- **Trade-off**: 10-30x write amplification during compaction; reads are 1.5-3x slower than B-tree
+- Used by: Cassandra, RocksDB, LevelDB, HBase, ScyllaDB
+
+**Hash index**: Simplest and fastest for exact matches.
+- O(1) lookups via hash function — Redis achieves sub-millisecond reads
+- Cannot support range queries, ORDER BY, or partial matches
+- Used for: in-memory caches, hash joins, PostgreSQL hash indexes (rare in practice)
+
+**Practical rule**: Use B-tree (default) unless you have a write-heavy workload (>50K writes/sec) where LSM-tree shines, or pure key-value lookups where hash indexes win.`
+        },
+        {
+          question: 'What are the main database sharding strategies and their trade-offs?',
+          answer: `**Sharding**: Horizontal partitioning of data across multiple database instances. The nuclear option for scaling — powerful but operationally complex.
+
+**1. Hash-based sharding** (most common):
+\`shard = hash(user_id) % num_shards\`
+- Even data distribution, prevents hotspots
+- Problem: adding a shard reshuffles ~(1/n) of all data
+- Solution: **Consistent hashing** — only ~1/n keys move when adding a node. Used by DynamoDB, Cassandra, and Discord
+- Trade-off: range queries become scatter-gather operations across all shards
+
+**2. Range-based sharding**:
+\`shard_1: user_id 1-1M, shard_2: 1M-2M, ...\`
+- Efficient range queries within a shard (e.g., "all orders from January")
+- Problem: hotspots — time-based ranges concentrate writes on the newest shard
+- Used by: Google Bigtable, HBase, TiKV
+- Best for: time-series data where old partitions become read-only
+
+**3. Geographic sharding**:
+\`shard = region(user.country)\`
+- Data lives physically close to users — sub-50ms latency
+- Reduces cross-region traffic and helps with GDPR/data residency compliance
+- Used by: CockroachDB (geo-partitioned), Spanner (regional placement)
+- Trade-off: uneven shard sizes (US shard much larger than Iceland shard)
+
+**4. Directory-based sharding**:
+\`lookup_service.get_shard(entity_id)\`
+- Maximum flexibility — can move individual tenants between shards
+- Trade-off: directory is a single point of failure and adds a network hop per query
+- Used by: multi-tenant SaaS platforms (Salesforce, Shopify)
+
+**Key challenges**: Cross-shard JOINs are expensive (require scatter-gather). Distributed transactions need 2PC or Saga patterns. Rebalancing requires online data migration. Always shard by the entity you query most — usually user_id or tenant_id.`
+        },
+        {
+          question: 'Compare replication topologies: leader-follower, leader-leader, and quorum',
+          answer: `**Leader-Follower (Primary-Replica)**: The default for most databases.
+- All writes go to one leader; replicas receive changes via replication log (WAL shipping, binlog)
+- **Sync replication**: Leader waits for replica ACK — zero data loss but higher write latency (~2-5ms overhead)
+- **Async replication**: Leader returns immediately — lower latency but replicas may lag 10-100ms under load
+- Failover: Promote a replica to leader (automatic via Patroni/orchestrator, or manual)
+- Used by: PostgreSQL (streaming replication), MySQL (binlog), MongoDB (replica sets)
+- **Limitation**: Write throughput capped by single leader. Read scaling is linear with replica count.
+
+**Leader-Leader (Multi-Master)**: For geo-distributed writes.
+- Multiple nodes accept writes simultaneously — lower write latency for distributed users
+- **Critical challenge**: Write conflicts. Two users update the same row on different leaders simultaneously.
+- Conflict resolution: Last-write-wins (LWW), custom merge functions, or CRDTs
+- Used by: MySQL Group Replication, CockroachDB (technically leaderless per-range), Cassandra
+- **When to use**: Only when users in multiple regions need <50ms write latency. The complexity cost is high.
+
+**Quorum-based (Leaderless)**: Dynamo-style databases.
+- No fixed leader — any node can accept reads and writes
+- **Formula**: W + R > N guarantees overlap between write and read sets
+- Common configs: N=3, W=2, R=2 (strong consistency) or N=3, W=1, R=1 (high availability, eventual consistency)
+- Used by: DynamoDB, Cassandra, Riak — tunable per-query consistency
+- **Trade-off**: Hinted handoff and read repair add background load. Anti-entropy (Merkle trees) needed for consistency.
+
+**Selection guide**: Start with leader-follower (simplest, well-understood). Move to quorum for high availability without single point of failure. Use leader-leader only for multi-region low-latency writes with a solid conflict resolution strategy.`
+        },
+        {
+          question: 'Why does connection pooling matter? Compare PgBouncer and ProxySQL.',
+          answer: `**The problem**: PostgreSQL forks a new OS process for every client connection. Each process consumes 10-20 MB of RAM plus CPU overhead. A typical PostgreSQL instance maxes out at 200-500 connections before performance degrades. But a modern microservices architecture with 50 pods, each opening 20 connections, needs 1,000 connections — impossible without pooling.
+
+**Connection pooling** maintains a cache of reusable database connections. Instead of 1,000 application connections mapping to 1,000 database processes, a pool of 50-100 backend connections is shared across all clients.
+
+**PgBouncer** (PostgreSQL):
+- Written in C, extremely lightweight (~2 MB memory footprint)
+- Three pooling modes: session (1:1), transaction (shared between transactions), statement (shared between statements)
+- Transaction mode is the sweet spot — 3.4-7x throughput improvement in benchmarks
+- Connection establishment drops from ~50ms to <1ms (reusing existing connections)
+- Used by: GitLab, Supabase, virtually every production PostgreSQL deployment
+- Limitation: Some PostgreSQL features (prepared statements, LISTEN/NOTIFY) break in transaction mode
+
+**ProxySQL** (MySQL):
+- Full SQL-aware proxy with query routing, caching, and connection multiplexing
+- Can route reads to replicas and writes to the primary automatically
+- Built-in query caching layer — can serve repeated queries without hitting MySQL
+- More feature-rich than PgBouncer but higher resource consumption
+
+**Real impact**: Without PgBouncer, a Django app serving 5,000 req/sec might exhaust PostgreSQL's 200 connections and return 500 errors. With PgBouncer in transaction mode, the same load uses ~30 backend connections with 7x lower latency. Connection pooling is not optional in production — it is as essential as a load balancer.`
+        },
+        {
+          question: 'How do you perform zero-downtime database migrations at scale?',
+          answer: `**The problem**: Running \`ALTER TABLE ADD COLUMN\` on a 500M-row table locks it for hours, causing downtime for every query. At scale, schema changes must be invisible to users.
+
+**Strategy 1: Online Schema Change tools**
+- **gh-ost** (GitHub): Creates a ghost table with the new schema, copies data in small chunks while tailing the binlog for live changes, then atomically swaps table names. No triggers, minimal replication impact. A 500M-row migration takes ~4.5 hours with conservative throttling.
+- **pt-online-schema-change** (Percona): Similar approach but uses triggers instead of binlog tailing. Broader compatibility with older MySQL versions and foreign keys.
+- Both tools throttle automatically when they detect replication lag or high CPU.
+
+**Strategy 2: Expand-Contract pattern** (for any database)
+1. **Expand**: Add the new column (nullable or with default) — this is fast in PostgreSQL 11+ (metadata-only for defaults)
+2. **Migrate**: Backfill data in batches of 1,000-10,000 rows with \`UPDATE ... WHERE id BETWEEN ? AND ?\`
+3. **Dual-write**: Application writes to both old and new columns simultaneously
+4. **Switch**: Application reads from new column, stops writing to old column
+5. **Contract**: Drop the old column once verified
+
+**Strategy 3: Double-write with shadow table**
+- Create new table with target schema
+- Application writes to both old and new tables
+- Background job backfills historical data
+- Atomic cutover via application config flag (not database rename)
+
+**PostgreSQL-specific wins**: Since v11, \`ADD COLUMN ... DEFAULT x\` is metadata-only (instant). \`CREATE INDEX CONCURRENTLY\` builds indexes without blocking writes. These make PostgreSQL significantly easier to migrate than MySQL for many operations.
+
+**Key principle**: Never run a migration that takes a lock longer than a few seconds. If it would, decompose it into non-blocking steps.`
+        },
+        {
+          question: 'Read replicas vs caching: which should I use for read-heavy workloads?',
+          answer: `Both scale reads, but they solve different problems and work best together.
+
+**Read replicas** (PostgreSQL streaming replica, MySQL read replica, RDS Read Replica):
+- Full copy of the database — can run any query, including complex JOINs and aggregations
+- Data freshness: typically 10-100ms replication lag under normal load
+- Scaling: add replicas linearly — 5 replicas = ~5x read throughput
+- Cost: each replica requires the same storage as the primary (full copy of data)
+- Best for: reporting dashboards, analytics queries, search that needs fresh data
+- Limitation: does not reduce latency — still hits disk for queries
+
+**Caching** (Redis, Memcached):
+- Stores computed results or hot data in memory — sub-millisecond reads
+- Hit rate of 90-99% means 90-99% of reads never touch the database
+- Cost: only stores hot data (typically 1-10% of total dataset)
+- Best for: user profiles, session data, API responses, leaderboards, rate limiting
+- Limitation: cache invalidation complexity, TTL management, cold start problem
+
+**When to use each**:
+- Latency-sensitive reads (< 5ms required) -> Cache in Redis
+- Complex analytical queries on fresh data -> Read replica
+- Frequently repeated identical queries -> Cache
+- Full-text search or aggregation pipelines -> Read replica + Elasticsearch
+- Read:write ratio > 100:1 with simple access patterns -> Cache first
+
+**Combined architecture** (what most companies do):
+Application -> Redis cache (90% hit rate) -> Read replica (9% of remaining) -> Primary (1% writes)
+This reduces primary database load by ~99%. Instagram uses this exact pattern — Redis caches user profiles and feed data, PostgreSQL replicas handle feed generation queries, and the primary handles writes only.
+
+**Rule of thumb**: Start with caching for the hottest 10% of data. Add read replicas when you need complex queries or when your dataset is too large to cache cost-effectively.`
+        },
+        {
+          question: 'When should you use time-series databases like TimescaleDB or InfluxDB?',
+          answer: `**Time-series data** has a timestamp as the primary dimension, is append-mostly (rarely updated), and queries focus on time ranges and aggregations. General-purpose databases struggle with the volume and query patterns.
+
+**When time-series databases win**:
+- IoT sensor data: 100K+ devices sending metrics every second = millions of writes/sec
+- Infrastructure monitoring: CPU, memory, network metrics from thousands of servers (Datadog, Grafana)
+- Financial tick data: Stock prices arriving at microsecond granularity
+- Application analytics: Page views, click events, user sessions over time
+- Energy/utilities: Smart meter readings at 15-second intervals across millions of meters
+
+**TimescaleDB** (PostgreSQL extension):
+- Full SQL support — JOIN time-series data with relational tables in one query
+- Automatic partitioning by time (hypertables) — transparent to the application
+- Compression: 90-95% storage reduction on older data
+- Continuous aggregates: pre-computed rollups that update automatically
+- Best for: teams already using PostgreSQL, mixed workloads (OLTP + time-series), complex analytical queries
+- Performance: outperforms InfluxDB on queries with moderate-to-high cardinality (100+ devices x 10+ metrics)
+
+**InfluxDB** (purpose-built):
+- Custom storage engine optimized for time-series ingestion
+- v3.0 (2025): complete rewrite in Rust with SQL as primary query language (replacing Flux)
+- Line protocol for ultra-fast ingestion — purpose-built for metrics pipelines
+- Best for: pure monitoring/observability workloads, low-cardinality metrics
+- Performance: faster ingestion than TimescaleDB for simple, low-cardinality workloads
+
+**When NOT to use time-series DBs**:
+- Data needs frequent updates or deletes (these are append-optimized)
+- You need complex JOINs across many entity types (use PostgreSQL)
+- Your time-series volume is < 10K writes/sec (PostgreSQL with a timestamp index handles this fine)
+
+**Selection rule**: If you are already on PostgreSQL and need time-series, add TimescaleDB extension. If you are building a greenfield monitoring platform with millions of metrics/sec, consider InfluxDB. For everything in between, TimescaleDB's SQL compatibility usually wins.`
+        },
+        {
+          question: 'What is NewSQL? Compare CockroachDB, TiDB, and Google Spanner.',
+          answer: `**NewSQL** = SQL semantics (ACID transactions, relational model, SQL queries) + NoSQL scalability (horizontal scaling, distributed architecture, automatic sharding). The promise: you never have to choose between consistency and scale.
+
+**Google Spanner** — the pioneer:
+- Globally distributed with **TrueTime** (GPS + atomic clocks) for consistent cross-region transactions
+- External consistency: the strongest consistency guarantee of any distributed database
+- Fully managed on Google Cloud — zero operational overhead
+- Used by: Google Ads, Google Play, and 5+ billion-user Google services
+- Limitation: vendor lock-in (Google Cloud only), expensive at scale (~3x the cost of self-managed alternatives)
+
+**CockroachDB** — the multi-cloud alternative:
+- PostgreSQL-compatible wire protocol — most PostgreSQL drivers and ORMs work unchanged
+- Geo-partitioning: pin data to specific regions for compliance (GDPR) or latency
+- Automatic sharding and rebalancing — no manual shard management
+- Serializable isolation by default (strongest level)
+- Performance: ~35K TPS in benchmarks, single-digit ms reads, ~10-20ms cross-region writes
+- Used by: DoorDash (order management), Bose (IoT), Netflix (some services)
+
+**TiDB** — the HTAP hybrid:
+- MySQL-compatible — drop-in replacement for many MySQL workloads
+- Separates compute (TiDB) from storage (TiKV for OLTP, TiFlash for OLAP)
+- **HTAP**: Run analytical queries on the same data without ETL pipelines
+- Performance: ~40K TPS for write-heavy workloads (slightly ahead of CockroachDB)
+- Used by: PingCAP customers including financial institutions and e-commerce platforms
+
+**When to choose NewSQL**:
+- You need SQL + horizontal scaling and cannot shard manually
+- Multi-region deployment with strong consistency requirements
+- Replacing a manually-sharded MySQL/PostgreSQL cluster
+
+**When NOT to choose NewSQL**:
+- Single-region, single-node PostgreSQL handles your load (< 50K TPS, < 1 TB) — NewSQL adds unnecessary complexity
+- You need ultra-low latency (< 1ms) — distributed consensus adds overhead
+- Tight budget: operational costs for self-hosted NewSQL clusters are significant
+
+**Bottom line**: NewSQL eliminates the need for manual sharding and custom distributed transaction logic. If your PostgreSQL instance is hitting scaling limits and you need to stay relational, NewSQL is the natural next step.`
+        },
+        {
+          question: 'How does database replication work? Explain sync vs async and failover.',
+          answer: `**Replication**: Keeping identical copies of data on multiple machines for read scaling, high availability, and disaster recovery.
+
+**Primary-Replica (Leader-Follower)** — the most common pattern:
 \`\`\`
         Writes
           │
-    ┌─────▼─────┐
-    │  Primary  │
+    ┌─────▼────��┐
+    │  Primary   │
     └─────┬─────┘
-          │ Replication
+          │ WAL / Binlog stream
     ┌─────┴─────┐
     ▼           ▼
 ┌───────┐  ┌───────┐
 │Replica│  │Replica│
-└───────┘  └───────┘
+└──────���┘  └───────┘
    Reads     Reads
 \`\`\`
 
-**Sync vs Async replication**:
-- Synchronous: Wait for replica ACK (strong consistency, higher latency)
-- Asynchronous: Don't wait (eventual consistency, lower latency)
+**Synchronous replication**:
+- Primary waits for at least one replica to confirm the write before returning success
+- **Guarantee**: Zero data loss (RPO = 0) — if the primary dies, the replica has every committed transaction
+- **Cost**: 2-5ms additional write latency per transaction (network round-trip to replica)
+- Used by: PostgreSQL synchronous_commit, MySQL semi-sync replication
+- Best for: Financial systems, payment processing, anything where losing a single transaction is unacceptable
 
-**Multi-Primary (Master-Master)**:
-- Write to any node
-- Conflict resolution needed
-- Used for geographic distribution
+**Asynchronous replication**:
+- Primary returns success immediately, streams changes to replicas in the background
+- **Risk**: Replica lag of 10-100ms under normal load, potentially seconds during spikes
+- **Benefit**: No write latency penalty, primary throughput unaffected by slow replicas
+- Used by: Default in PostgreSQL, MySQL, MongoDB
+- Best for: Read scaling, analytics replicas, cross-region disaster recovery
 
-**Replication Lag**: Delay between primary write and replica update
-- Can cause stale reads
-- Solutions: Read-your-writes consistency, causal consistency`
+**Failover strategies**:
+- **Automatic** (Patroni, orchestrator, RDS Multi-AZ): Detects primary failure via heartbeat, promotes replica in 15-30 seconds. Risk: false positives on network blips can cause split-brain.
+- **Manual**: DBA verifies failure, promotes replica. Slower (minutes) but no false-positive risk.
+- **Key metric**: RTO (Recovery Time Objective) = time until service resumes. RPO (Recovery Point Objective) = maximum acceptable data loss.
+
+**Replication lag solutions**:
+- Read-your-writes: After a write, read from primary for that user's session (sticky routing)
+- Causal consistency: Track logical timestamps to ensure reads reflect prior writes
+- Synchronous replica for critical reads: Route specific queries to a sync replica`
         },
         {
-          question: 'How do database indexes work?',
-          answer: `**Index**: Data structure for fast lookups (like a book index)
+          question: 'How do you design a database schema for a real system? Walk through an example.',
+          answer: `**Example: E-commerce platform** (like a simplified Shopify)
 
-**B-Tree Index** (most common):
-- Balanced tree structure
-- O(log n) lookups, inserts, deletes
-- Good for range queries
-- Used by: PostgreSQL, MySQL, most SQL databases
+**Step 1 — Identify entities and relationships**:
+- Users have many Orders. Orders have many OrderItems. Products have many Variants. Variants belong to Products.
+- This is a classic relational model — SQL is the clear choice.
 
-**Hash Index**:
-- O(1) exact match lookups
-- No range queries
-- Used for equality comparisons
+**Step 2 — Normalize for OLTP (3NF)**:
+\`\`\`
+users (id PK, email UNIQUE, name, created_at)
+products (id PK, title, description, created_at)
+variants (id PK, product_id FK, sku UNIQUE, price, inventory_count)
+orders (id PK, user_id FK, status, total, created_at)
+order_items (id PK, order_id FK, variant_id FK, quantity, unit_price)
+\`\`\`
 
-**Composite Index**:
-\`CREATE INDEX idx ON orders(user_id, created_at)\`
-- Leftmost prefix rule: Can use for (user_id) or (user_id, created_at)
-- Order matters!
+**Step 3 — Add indexes based on query patterns**:
+- \`users(email)\` — login lookup
+- \`orders(user_id, created_at DESC)\` — "my recent orders" page
+- \`variants(product_id)\` — product detail page
+- \`order_items(order_id)\` — order detail page
+- \`variants(sku)\` — warehouse/fulfillment lookups
 
-**Trade-offs**:
-- Indexes speed up reads
-- Indexes slow down writes (must update index)
-- Indexes use storage space
-- Too many indexes hurt write performance
+**Step 4 — Denormalize for read-heavy paths**:
+- Store \`user_name\` in orders table to avoid JOIN on the orders list page
+- Store \`product_title\` in order_items for order confirmation emails
+- Materialize \`order_count\` and \`total_spent\` on the users table for the admin dashboard
 
-**Best practices**:
-- Index columns in WHERE clauses
-- Index foreign keys
-- Analyze query patterns before adding indexes
-- Use EXPLAIN to verify index usage`
+**Step 5 — Plan for scale**:
+- Shard by \`user_id\` — all of a user's orders land on the same shard (no cross-shard JOINs for "my orders")
+- Product catalog stays unsharded (read-heavy, cacheable, fits on one node)
+- Inventory updates use \`SELECT ... FOR UPDATE\` to prevent overselling (pessimistic locking)
+
+**Step 6 — Add complementary datastores**:
+- Redis: Session storage, shopping cart (ephemeral), rate limiting
+- Elasticsearch: Product search with faceted filtering
+- S3 + CDN: Product images
+
+**Key interview insight**: Start normalized, denormalize with purpose based on measured query patterns, and always justify every index and denormalization with a specific access pattern.`
         },
         {
-          question: 'Explain ACID properties',
-          answer: `**ACID**: Properties that guarantee database transaction reliability
+          question: 'What are the isolation levels in databases and when do they matter?',
+          answer: `**Isolation levels** control how concurrent transactions see each other's changes. Choosing wrong costs you either correctness or performance.
 
-**Atomicity**: All or nothing
-- Transaction either fully completes or fully rolls back
-- No partial updates
+**Read Uncommitted** (weakest):
+- Can see uncommitted changes from other transactions (dirty reads)
+- Almost never used in practice — only for approximate analytics where speed matters more than accuracy
+- No real-world database defaults to this
 
-**Consistency**: Valid state to valid state
-- Database constraints are maintained
-- Foreign keys, unique constraints respected
+**Read Committed** (PostgreSQL default):
+- Only sees data committed before each statement (not the transaction start)
+- Prevents dirty reads but allows **non-repeatable reads**: re-reading a row may return different values
+- Suitable for: Most OLTP workloads — web apps, APIs, CRUD operations
+- PostgreSQL uses MVCC (Multi-Version Concurrency Control) — readers never block writers
 
-**Isolation**: Concurrent transactions don't interfere
-- Isolation levels (from weakest to strongest):
-  - Read Uncommitted: See uncommitted changes
-  - Read Committed: Only see committed changes
-  - Repeatable Read: Same query returns same results
-  - Serializable: Full isolation (slowest)
+**Repeatable Read** (MySQL InnoDB default):
+- Snapshot at transaction start — all reads see the same consistent state throughout
+- Prevents non-repeatable reads but allows **phantom reads**: new rows matching a query can appear
+- PostgreSQL's Repeatable Read actually prevents phantoms too (snapshot isolation via MVCC)
+- Suitable for: Reports that must see consistent data, batch processing
 
-**Durability**: Committed data survives crashes
-- Write-ahead logging (WAL)
-- Data written to disk before commit returns
+**Serializable** (strongest):
+- Transactions execute as if they ran one-at-a-time, even though they run concurrently
+- Prevents all anomalies including write skew (two transactions reading the same data and making conflicting writes)
+- **Performance cost**: 10-30% throughput reduction due to predicate locking or serialization conflict detection
+- PostgreSQL SSI (Serializable Snapshot Isolation) detects conflicts and aborts one transaction — no blocking
+- Suitable for: Double-booking prevention, financial reconciliation, inventory management
 
-**BASE** (NoSQL alternative):
-- Basically Available
-- Soft state
-- Eventual consistency`
+**Practical advice**:
+- Default to Read Committed for 90% of operations
+- Use Serializable for critical business logic (booking the last seat, transferring money)
+- Never drop below Read Committed in production
+- In interviews: mention MVCC and explain that PostgreSQL's approach (optimistic, MVCC-based) differs from MySQL's (pessimistic locking at higher levels)`
+        },
+        {
+          question: 'How do you choose between DynamoDB, Cassandra, and MongoDB for NoSQL workloads?',
+          answer: `Three very different NoSQL databases — each optimized for distinct access patterns.
+
+**DynamoDB** (AWS managed, key-value + document):
+- Predictable single-digit ms latency regardless of data size (1 GB or 1 PB)
+- Auto-scales from 0 to 151M requests/sec (Prime Day 2025 peak)
+- Pricing: pay per read/write capacity unit or on-demand — can get expensive at high sustained throughput
+- Best for: Serverless architectures on AWS, session storage, shopping carts, gaming leaderboards
+- Limitation: 400 KB max item size, limited query flexibility (partition key + sort key only), expensive full-table scans
+
+**Cassandra** (distributed wide-column):
+- Append-only write path: 10K-100K+ writes/sec per node with consistent latency
+- Linearly scalable: double the nodes, double the throughput (no master bottleneck)
+- Tunable consistency per query (ONE, QUORUM, ALL)
+- Best for: Write-heavy workloads (IoT sensors, event logging), time-series data, messaging systems
+- Used by: Apple (160K+ nodes, 100+ PB), Netflix (streaming activity), Discord (message storage history)
+- Limitation: No JOINs, no ad-hoc queries — you must model data around your exact query patterns
+
+**MongoDB** (document database):
+- Flexible JSON-like documents with rich query language including aggregation pipeline
+- Supports secondary indexes, text search, geospatial queries, and transactions (since v4.0)
+- Best for: Content management, product catalogs, user profiles, rapid prototyping
+- Used by: MongoDB Atlas serves 47K+ customers including Forbes, Toyota, Vodafone
+- Limitation: Memory-mapped storage can be inefficient for write-heavy workloads; sharding adds operational complexity
+
+**Decision matrix**:
+- Pure key-value with predictable latency on AWS? -> **DynamoDB**
+- Write-heavy (>50K writes/sec) with simple queries? -> **Cassandra**
+- Flexible queries on semi-structured data with evolving schema? -> **MongoDB**
+- Need transactions + horizontal scaling? -> Consider **PostgreSQL** or **NewSQL** instead
+- Operating on AWS and want zero ops? -> **DynamoDB**
+- Need multi-cloud or on-prem? -> **Cassandra** or **MongoDB**`
         }
       ],
+
 
       basicImplementation: {
         title: 'Single Database Architecture',
@@ -1162,199 +1452,898 @@ TTL Strategies:
 
       keyQuestions: [
         {
-          question: 'What are the main caching strategies?',
-          answer: `**Cache-Aside (Lazy Loading)** - Most common
+          question: 'What are the main caching strategies and when should you use each?',
+          answer: `**Cache-Aside (Lazy Loading)** — Most common, used by 90%+ of applications
 \`\`\`
-Read:
-1. Check cache
-2. If miss, read from DB
-3. Store in cache
-4. Return data
+Read: App checks cache → miss → read DB → store in cache → return
+Write: App writes to DB → invalidate cache (delete key)
+\`\`\`
+- **Pros**: Only caches data actually requested, resilient to cache failure (app falls back to DB)
+- **Cons**: First request always slow (cold miss), window of stale data between DB write and cache invalidation
+- **When to use**: Read-heavy workloads, can tolerate brief staleness. Default choice for most systems.
+- **Real-world**: Facebook's Memcached layer uses cache-aside for social graph data. Most Redis deployments use this pattern.
 
-Write:
-1. Write to DB
-2. Invalidate cache (or let it expire)
+**Write-Through** — Cache and DB always in sync
 \`\`\`
-- Pros: Only caches data that's requested
-- Cons: Cache miss = slow request, stale data possible
+Write: App writes to cache → cache synchronously writes to DB → return
+Read: App reads from cache (always fresh)
+\`\`\`
+- **Pros**: Cache is always consistent with DB, no stale reads ever
+- **Cons**: Write latency increased (two sequential writes), caches data that may never be read
+- **When to use**: Data read frequently right after writes, strong consistency required
+- **Real-world**: DynamoDB Accelerator (DAX) uses write-through. Session stores where you need immediate read-after-write.
 
-**Write-Through**
+**Write-Behind (Write-Back)** — Async DB writes for maximum throughput
 \`\`\`
-Write:
-1. Write to cache
-2. Cache writes to DB (synchronous)
+Write: App writes to cache → return immediately → cache async-flushes to DB (batched)
+Read: App reads from cache
 \`\`\`
-- Pros: Cache always consistent with DB
-- Cons: Write latency increased
+- **Pros**: Fastest writes (no DB latency in write path), natural batching reduces DB write load
+- **Cons**: Data loss risk if cache node fails before flush, complex failure handling
+- **When to use**: High write throughput, can tolerate small data loss window
+- **Real-world**: Gaming leaderboards, analytics event counters, IoT sensor data aggregation
 
-**Write-Behind (Write-Back)**
+**Read-Through** — Cache manages DB interaction
 \`\`\`
-Write:
-1. Write to cache
-2. Cache writes to DB (async, batched)
+Read: App calls cache → cache checks internally → on miss, cache fetches from DB → returns to app
+Write: App writes directly to DB → cache may or may not be invalidated
 \`\`\`
-- Pros: Fast writes, batching efficiency
-- Cons: Data loss risk if cache fails
+- **Pros**: Simplifies application code (cache handles fetch logic), consistent read path
+- **Cons**: Cache layer needs DB access and fetch logic, tighter coupling
+- **When to use**: When you want to abstract DB reads behind a cache interface
+- **Real-world**: Hibernate second-level cache, NCache read-through provider
 
-**Read-Through**
+**Refresh-Ahead** — Proactive reloading before expiry
 \`\`\`
-Read:
-1. Check cache
-2. Cache fetches from DB on miss
-3. Cache returns data
+Background: Monitor keys approaching TTL → proactively reload from DB before expiry
+Read: App reads from cache (always hits, data always fresh)
 \`\`\`
-- Pros: Simplified app logic
-- Cons: Cache needs DB access`
+- **Pros**: Eliminates cache misses for popular items, always fresh data
+- **Cons**: Wastes resources refreshing data nobody may request, prediction complexity
+- **When to use**: Hot data with predictable access patterns, latency-sensitive reads
+- **Real-world**: CDN edge nodes pre-warming popular content before TTL expires`
         },
         {
           question: 'How do you handle cache invalidation?',
-          answer: `**Cache Invalidation Strategies**:
+          answer: `Cache invalidation is considered one of the hardest problems in computer science. The core challenge: how do you ensure cached data stays fresh without losing the performance benefit? There are five primary strategies, and production systems typically combine multiple approaches.
 
-1. **TTL-based expiration**:
-   - Set expiry time on all cached items
-   - Simple but may serve stale data until TTL
+**1. TTL-Based Expiration** — Simplest and most widely used
+- Every cached item gets an expiration time; when time is up, item is considered stale
+- On next access after expiry, fresh data is fetched from the source
+\`\`\`
+cache.set("user:123", userData, TTL=300)  // Expires in 5 minutes
+\`\`\`
+- **Pros**: Dead simple, self-healing (stale data always eventually expires), no coordination needed
+- **Cons**: Serves stale data up to the full TTL window, choosing the right TTL is an art
+- **Used by**: Nearly every cache deployment as a baseline safety net
 
-2. **Event-driven invalidation**:
-   - Delete cache when data changes
-   - Requires knowing all affected cache keys
-   \`\`\`
-   on_user_update(user_id):
-     cache.delete(f"user:{user_id}")
-     cache.delete(f"feed:{user_id}")
-   \`\`\`
+**2. Event-Driven (Active) Invalidation** — Immediate freshness
+- When data changes in the DB, explicitly delete or update the affected cache keys
+- Requires knowing which cache keys are affected by a given data change
+\`\`\`
+on_user_update(user_id):
+  cache.delete(f"user:{user_id}:profile")
+  cache.delete(f"user:{user_id}:feed")
+  cache.delete(f"team:{user.team_id}:members")
+\`\`\`
+- **Pros**: Near-instant freshness, minimal stale window
+- **Cons**: Must track all cache keys affected by each write (mapping can be complex), missed events mean stale data
+- **Used by**: E-commerce platforms for price/inventory updates, social media for post edits
 
-3. **Version-based invalidation**:
-   - Include version in cache key
-   - Increment version to invalidate
-   \`user:{userId}:v{version}\`
+**3. Version-Based Invalidation** — Side-step the deletion problem
+- Include a version number in the cache key; increment to invalidate
+\`\`\`
+cache.set("user:123:v7", data)  // Version 7
+// On update: increment version → app now reads "user:123:v8" → cache miss → fetch fresh
+\`\`\`
+- **Pros**: No explicit deletion needed, old versions naturally expire via TTL
+- **Cons**: Extra version tracking, orphaned old versions consume memory until TTL
+- **Used by**: CDN cache-busting (file hashes in URLs), API response versioning
 
-4. **Tag-based invalidation**:
-   - Tag related cache entries
-   - Delete all entries with a tag
-   \`\`\`
-   cache.set("product:123", data, tags=["catalog"])
-   cache.delete_by_tag("catalog")  # Clear all catalog
-   \`\`\`
+**4. Tag-Based Invalidation** — Group invalidation
+- Tag related cache entries, then delete all entries with a specific tag at once
+\`\`\`
+cache.set("product:123", data, tags=["catalog", "electronics"])
+cache.set("product:456", data, tags=["catalog", "clothing"])
+cache.delete_by_tag("catalog")  // Clears both products
+\`\`\`
+- **Pros**: Efficient bulk invalidation, clean abstraction for related data
+- **Cons**: Tag-tracking overhead, not natively supported by Redis (need custom implementation)
+- **Used by**: CMS platforms clearing all pages when a template changes
 
-**Best practice**: Combine TTL (safety net) with event-driven (freshness)`
+**5. Pub/Sub Invalidation** — Distributed coordination
+- When a service updates data, it publishes an invalidation event to a message bus
+- All cache nodes subscribe and invalidate their local copies
+\`\`\`
+// Service A updates user
+db.update(user)
+redis.publish("cache:invalidate", "user:123")
+
+// All app instances subscribe
+redis.subscribe("cache:invalidate", (key) => localCache.delete(key))
+\`\`\`
+- **Pros**: Scales to many cache nodes, decouples writer from cache topology
+- **Cons**: Event delivery is not guaranteed (at-most-once with Redis pub/sub), added infrastructure
+- **Used by**: Microservices architectures where multiple services cache overlapping data
+
+**Best practice in production**: Layer TTL as a safety net (catch anything missed) + event-driven invalidation for immediate freshness on writes. This two-layer defense ensures data is never stale for longer than the TTL even if an invalidation event is lost.`
         },
         {
-          question: 'What is cache stampede and how to prevent it?',
-          answer: `**Cache Stampede (Thundering Herd)**:
-Many requests hit database simultaneously when:
-- Popular cached item expires
-- Cache server restarts
-- Cold cache on deployment
+          question: 'Compare cache eviction policies: LRU vs LFU vs FIFO vs Random',
+          answer: `When a cache is full and a new item needs to be stored, the eviction policy determines which existing item to remove. The choice of policy directly impacts cache hit rate and therefore system performance.
 
+**LRU (Least Recently Used)** — Best general-purpose policy
+- Evicts the item that has not been accessed for the longest time
+- Based on temporal locality: recently accessed items are likely to be accessed again
+- Implementation: doubly-linked list + hash map, O(1) get/put
 \`\`\`
-                     Cache Miss!
-Request 1 ───┐
-Request 2 ───┼───▶ Database ◀─── OVERLOADED!
-Request 3 ───┤
-   ...       │
-Request 100 ─┘
+Access pattern: A B C D A B E (cache size = 4)
+Cache state:   [A] [A,B] [A,B,C] [A,B,C,D] [B,C,D,A] [C,D,A,B] [D,A,B,E]
+Evicted:        -    -      -       -          -          -         C
 \`\`\`
+- **Best for**: General web workloads with temporal locality (most recently viewed items are likely viewed again)
+- **Weakness**: Scan pollution — a one-time bulk scan can evict frequently used items (e.g., a batch job iterating through all users)
+- **Used by**: Redis default (approximated LRU), Memcached, most HTTP caches
 
-**Prevention Strategies**:
+**LFU (Least Frequently Used)** — Popularity-aware
+- Evicts the item with the lowest access count over its lifetime
+- Based on frequency: popular items should stay cached even if not accessed in the last few seconds
+- Implementation: frequency buckets + hash map, often with aging/decay to prevent frequency accumulation
+- **Best for**: Skewed workloads where a small set of items is extremely popular (e.g., top 100 products get 80% of traffic)
+- **Weakness**: Slow to adapt — an item that was popular yesterday but irrelevant today retains a high count. Solved with time-decay LFU (Redis 4.0+ implements this as \`allkeys-lfu\`).
+- **Used by**: Redis 4.0+ (optional), CDN edge caches for popular content
 
-1. **Locking (Mutex)**:
-   - First request acquires lock and fetches
-   - Others wait or return stale data
-   \`\`\`python
-   if not cache.get(key):
-     if cache.acquire_lock(key):
-       data = db.fetch()
-       cache.set(key, data)
-       cache.release_lock(key)
-     else:
-       wait_or_return_stale()
-   \`\`\`
+**FIFO (First In First Out)** — Simplest possible
+- Evicts the oldest item by insertion time, regardless of access patterns
+- Implementation: simple queue, O(1) enqueue/dequeue
+- **Best for**: Time-series data where newer entries are inherently more valuable, or when implementation simplicity matters more than hit rate
+- **Weakness**: Completely ignores access frequency and recency — a frequently accessed item inserted early gets evicted before a never-accessed recent item
+- **Used by**: Rarely used alone in production caches; sometimes used for time-based data expiry
 
-2. **Early expiration (Probabilistic)**:
-   - Refresh before actual expiry
-   - Random refresh within window
-   \`ttl_remaining < random(0, buffer_time)\`
+**Random Replacement** — Surprisingly competitive
+- Randomly selects an item to evict with no tracking overhead
+- Implementation: trivial — no metadata tracking needed
+- **Best for**: Uniform access patterns where all items are equally likely to be accessed, or as a fallback when metadata tracking is too expensive
+- **Weakness**: Unpredictable — may evict the hottest item in the cache
+- **Research note**: Dan Luu's analysis showed random eviction with 2-choices (evict the less recently used of 2 random candidates) approaches LRU performance with much lower overhead
 
-3. **Background refresh**:
-   - Async worker refreshes before expiry
-   - Never serve miss, always return (possibly stale) data
+**SLRU (Segmented LRU)** — Best of both worlds
+- Two segments: probation (new entries) and protected (proven popular entries)
+- New items enter probation; on second access, promoted to protected
+- Eviction happens from probation first, protecting frequently accessed items
+- **Best for**: Mixed workloads with both temporal and frequency patterns
+- **Used by**: Caffeine cache (JVM), some CDN implementations
 
-4. **Request coalescing**:
-   - Multiple requests for same key share one DB call`
+**Choosing the right policy**:
+| Workload Pattern | Best Policy | Why |
+|-----------------|-------------|-----|
+| General web traffic | LRU | Recent = likely needed again |
+| Popular items (power law) | LFU | Frequency is the strongest signal |
+| Time-series data | FIFO/TTL | Newer data is more valuable |
+| Unknown/uniform access | Random 2-choice | Low overhead, good enough |
+| Mixed workload | SLRU | Balances recency and frequency |`
         },
         {
-          question: 'Redis vs Memcached - when to use each?',
-          answer: `**Redis** - Feature-rich:
-- Data structures: Strings, lists, sets, hashes, sorted sets
-- Persistence: RDB snapshots, AOF logs
-- Replication: Primary-replica, Redis Cluster
-- Pub/Sub: Real-time messaging
-- Lua scripting: Atomic operations
-- Use for: Sessions, leaderboards, rate limiting, pub/sub
+          question: 'Redis vs Memcached — detailed comparison and when to use each?',
+          answer: `Redis and Memcached are the two dominant in-memory caching systems. While Redis has become the default choice for most teams, Memcached still has specific advantages. Here is a detailed comparison.
 
-**Memcached** - Simple and fast:
-- Only strings (key-value)
-- No persistence (pure cache)
-- Multi-threaded (better multi-core usage)
-- Simpler protocol (slightly lower latency)
-- Use for: Simple caching, when you need only strings
+**Architecture**:
+- **Redis**: Single-threaded event loop for commands (Redis 6+ added I/O multi-threading for network I/O, but command execution is still single-threaded per shard). This simplifies atomicity — every command is inherently atomic.
+- **Memcached**: Multi-threaded from the ground up, designed to saturate multiple CPU cores on a single machine. A single Memcached instance can utilize all available cores, making it excellent for vertical scaling.
+
+**Data Structures**:
+- **Redis**: Strings, Hashes, Lists, Sets, Sorted Sets, Bitmaps, HyperLogLogs, Streams, Geospatial indexes. This enables complex operations like leaderboards (ZADD/ZRANGE), rate limiting (INCR + EXPIRE), and pub/sub messaging — all without application-level logic.
+- **Memcached**: Strings only (key-value blobs up to 1MB default, configurable to 128MB). Any complex structure must be serialized/deserialized by the application.
+
+**Persistence and Durability**:
+- **Redis**: RDB snapshots (point-in-time) and AOF (append-only file logging every write). Enables cache warm-up after restart — your cache does not start cold. Can also serve as a primary datastore for non-critical data.
+- **Memcached**: Pure in-memory, no persistence. Restart = empty cache = cold start = potential stampede.
+
+**Clustering and Scaling**:
+- **Redis**: Native Redis Cluster with automatic sharding across 16,384 hash slots, built-in replication (primary-replica), and automatic failover via Redis Sentinel. Scales to hundreds of nodes.
+- **Memcached**: No native clustering. Client-side consistent hashing distributes keys, but there is no replication or automatic failover. Third-party proxies like mcrouter (Facebook) add these features.
+
+**Licensing (important since 2024)**:
+- **Redis**: Redis 8.0+ is licensed under AGPLv3 (copyleft). Redis OSS 7.2 was the last fully permissive (BSD) version. Many organizations now evaluate Valkey (Linux Foundation fork) as a drop-in replacement.
+- **Memcached**: BSD license, fully open source with no licensing concerns.
+
+**Performance Benchmarks**:
+- Both achieve 100K-200K+ ops/sec per node for simple GET/SET operations
+- Memcached is marginally faster (~10-15%) for pure key-value GET/SET due to multi-threading and simpler protocol
+- Redis with pipelining closes the gap and wins for complex operations (sorted sets, Lua scripts)
+- Network latency (typically 0.1-0.5ms) dominates over the microsecond-level difference between the two
 
 **Decision Matrix**:
-| Feature | Redis | Memcached |
-|---------|-------|-----------|
-| Data types | Many | Strings only |
-| Persistence | Yes | No |
-| Replication | Yes | No |
-| Clustering | Yes | Client-side |
-| Memory efficiency | Good | Better |
-| Multi-threaded | No* | Yes |
+| Dimension | Redis | Memcached |
+|-----------|-------|-----------|
+| Data types | Strings, Hashes, Lists, Sets, Sorted Sets, Streams | Strings only |
+| Persistence | RDB + AOF | None |
+| Replication | Native primary-replica | None (client-side) |
+| Clustering | Redis Cluster (16K hash slots) | Client-side consistent hashing |
+| Multi-threaded | I/O threads (Redis 6+), single command thread | Fully multi-threaded |
+| Memory overhead | Higher (data structure metadata) | Lower (slab allocator, minimal overhead) |
+| Max item size | 512MB | 1MB default (configurable) |
+| Pub/Sub | Built-in | Not available |
+| Scripting | Lua scripts (atomic) | Not available |
+| License | AGPLv3 (8.0+) | BSD |
 
-*Redis 6+ has I/O threading
+**When to choose Redis**: Default choice. Use when you need rich data structures, persistence, replication, pub/sub, Lua scripting, or any feature beyond simple key-value.
+**When to choose Memcached**: Simple key-value caching at extreme scale where multi-threading matters, when you want the simplest possible cache with no persistence overhead, or when AGPLv3 licensing is a concern.
+**Real-world**: Facebook runs the largest Memcached deployment (trillions of requests/day) because of its simplicity at their scale. Twitter migrated from Memcached to Redis (via Pelikan) for richer data structure support. Most startups and mid-size companies default to Redis.`
+        },
+        {
+          question: 'What is cache stampede (thundering herd) and how do you prevent it?',
+          answer: `Cache stampede (also called thundering herd) is one of the most dangerous failure modes in cached systems. It occurs when many concurrent requests try to rebuild the same cache entry simultaneously, overwhelming the database.
 
-**Recommendation**: Default to Redis unless you need Memcached's specific advantages`
+**How it happens**:
+A popular cached item (e.g., a product page viewed 10,000 times/second) expires. The next request finds the cache empty and queries the database to regenerate it. But before that slow database query completes (say 200ms), thousands of other requests arrive, also find the cache empty, and each fires its own database query. Result: the database receives thousands of identical queries simultaneously and may crash.
+
+\`\`\`
+Timeline of a stampede:
+t=0:    Hot key expires (TTL reached)
+t=1ms:  Request A → cache miss → starts DB query
+t=2ms:  Request B → cache miss → starts DB query
+t=3ms:  Request C → cache miss → starts DB query
+  ...
+t=50ms: Requests D-Z → all cache miss → all start DB queries
+t=200ms: Request A gets DB result → writes to cache
+t=201ms: Requests B-Z also get DB results → redundant writes
+Result: 26 identical DB queries instead of 1
+\`\`\`
+
+**Prevention Strategy 1: Distributed Locking (Mutex)** — Most common solution
+Only one request fetches from DB; others wait or return stale data.
+\`\`\`python
+def get_with_lock(key):
+    value = cache.get(key)
+    if value is not None:
+        return value
+
+    # Try to acquire lock (Redis SETNX with short TTL)
+    lock_key = f"lock:{key}"
+    if cache.set(lock_key, "1", nx=True, ex=10):  # 10s lock TTL
+        try:
+            value = db.query(key)           # Only this request hits DB
+            cache.set(key, value, ex=300)   # Repopulate cache
+            return value
+        finally:
+            cache.delete(lock_key)          # Release lock
+    else:
+        # Another request is rebuilding — wait briefly or return stale
+        time.sleep(0.05)                     # Wait 50ms
+        return cache.get(key) or get_with_lock(key)  # Retry
+\`\`\`
+- **Pros**: Simple, effective, prevents all redundant DB queries
+- **Cons**: Waiting requests add latency, lock holder failure requires TTL-based recovery
+
+**Prevention Strategy 2: Probabilistic Early Expiration (XFetch)** — Academic gold standard
+Refresh the cache before it actually expires, probabilistically. As TTL approaches, each request has an increasing probability of triggering a background refresh.
+\`\`\`
+actual_ttl = 300 seconds
+buffer = 30 seconds
+on each read:
+  if ttl_remaining < buffer * random():
+    // This request triggers early refresh (async)
+    async_refresh(key)
+  return cached_value  // Always return current value
+\`\`\`
+- **Pros**: No locks, no waiting, cache is refreshed before expiry so stampede never occurs
+- **Cons**: Slightly stale data during refresh window, requires careful tuning of buffer
+
+**Prevention Strategy 3: Background Refresh Worker** — Production favorite at scale
+A dedicated background process monitors popular keys and proactively refreshes them before they expire. The application only ever reads from cache and never triggers a DB query on miss.
+- **Pros**: Application code stays simple, zero miss latency, predictable DB load
+- **Cons**: Extra infrastructure (worker process), must predict which keys to refresh
+- **Used by**: Netflix EVCache, Amazon's internal caching infrastructure
+
+**Prevention Strategy 4: Request Coalescing (Singleflight)** — Best for application-level dedup
+Multiple concurrent requests for the same key share a single DB call. Go's \`singleflight\` package is the canonical implementation.
+\`\`\`
+// Go singleflight pattern
+result, err, shared := group.Do(cacheKey, func() (interface{}, error) {
+    return db.Query(key)  // Only executes once per key, even with 1000 callers
+})
+// All 1000 callers receive the same result
+\`\`\`
+- **Pros**: Zero redundant DB queries, no external infrastructure needed
+- **Cons**: Only works within a single application instance (need distributed lock for multi-instance)
+
+**Prevention Strategy 5: Stale-While-Revalidate** — Never serve a miss
+Keep a slightly stale copy of data even after TTL expires. Serve the stale copy to all requests while exactly one request refreshes the data in the background.
+- **Pros**: Zero-latency reads even during refresh, simple to reason about
+- **Cons**: Serves stale data during refresh window
+- **Used by**: HTTP Cache-Control header (\`stale-while-revalidate\`), Cloudflare, Fastly CDN
+
+**Which to choose**: Locking for most applications. Request coalescing if you are using Go or can implement it in your language. Background refresh for ultra-high-traffic keys at scale. Probabilistic early expiration for the most elegant, research-backed solution.`
         },
         {
           question: 'How do you design a distributed cache?',
-          answer: `**Distributed Caching Architecture**:
+          answer: `A distributed cache spreads data across multiple nodes to achieve horizontal scalability, fault tolerance, and high throughput beyond what a single machine can provide.
 
 \`\`\`
            ┌──────────────────────────────────────────┐
            │            Cache Cluster                 │
            │  ┌────────┐  ┌────────┐  ┌────────┐     │
            │  │ Node 1 │  │ Node 2 │  │ Node 3 │     │
-           │  │ Keys   │  │ Keys   │  │ Keys   │     │
-           │  │ A-F    │  │ G-M    │  │ N-Z    │     │
+           │  │ Slots   │  │ Slots   │  │ Slots   │     │
+           │  │ 0-5460 │  │5461-10922│ │10923-16383│  │
+           │  └────────┘  └────────┘  └────────┘     │
+           │      │            │            │         │
+           │  ┌────────┐  ┌────────┐  ┌────────┐     │
+           │  │Replica 1│ │Replica 2│ │Replica 3│     │
            │  └────────┘  └────────┘  └────────┘     │
            └──────────────────────────────────────────┘
                           ▲
-                          │ Consistent Hashing
+                          │ Consistent Hashing / Hash Slots
                           │
            ┌──────────────────────────────────────────┐
            │            App Servers                   │
            │  ┌────────┐  ┌────────┐  ┌────────┐     │
            │  │Server 1│  │Server 2│  │Server 3│     │
+           │  │ L1 Cache│  │ L1 Cache│  │ L1 Cache│   │
            │  └────────┘  └────────┘  └────────┘     │
            └──────────────────────────────────────────┘
 \`\`\`
 
-**Key Components**:
+**Key Design Decisions**:
 
-1. **Consistent hashing**: Distribute keys across nodes
-   - Add/remove nodes affects minimal keys
-   - Virtual nodes for better distribution
+**1. Data Partitioning — Consistent Hashing**
+- Hash each key to determine which node stores it
+- Redis Cluster uses 16,384 hash slots: \`slot = CRC16(key) mod 16384\`
+- Adding/removing nodes only reshuffles the slots assigned to that node (minimal data movement)
+- Virtual nodes ensure even distribution (each physical node owns multiple non-contiguous slot ranges)
+- **Why not modular hashing**: \`hash(key) % N\` means adding one node reshuffles nearly all keys — catastrophic cache miss storm
 
-2. **Replication**: Each key on 2+ nodes
-   - Read from any replica
-   - Write to primary, replicate async
+**2. Replication for High Availability**
+- Each primary node has 1+ replica nodes with async replication
+- On primary failure, a replica is promoted automatically (Redis Sentinel or Cluster auto-failover)
+- Read from replicas to spread read load (at cost of slight staleness)
+- Trade-off: synchronous replication = zero data loss but higher write latency; async = fast writes but small data loss window on failover
 
-3. **Client-side routing**: App knows which node has key
-   - No proxy latency
-   - Requires cluster-aware client
+**3. Client Routing Strategy**
+- **Smart client** (Redis Cluster): Client knows the cluster topology and routes directly to the correct node. No proxy overhead. Requires cluster-aware client library (Jedis, ioredis).
+- **Proxy-based** (Twemproxy, Envoy, mcrouter): Proxy sits between clients and cache nodes, routing requests transparently. Simpler clients but adds a network hop (~0.1-0.5ms latency).
+- **Server-side redirect** (Redis MOVED/ASK): If a client sends a request to the wrong node, the node responds with a redirect. Simple but adds round-trip on misroutes.
 
-4. **Failure handling**:
-   - Health checks detect failed nodes
-   - Traffic redirected to replicas
-   - Auto-recovery when node returns`
+**4. Failure Handling and Recovery**
+- Health checks detect failed nodes within seconds
+- Automatic failover promotes replica to primary (requires majority quorum)
+- Traffic redistributed to surviving nodes
+- When a failed node recovers, it rejoins as a replica and syncs incrementally
+- **Circuit breaker pattern**: If cache is entirely down, fall back to database with degraded performance rather than cascading failure
+
+**5. Cross-Region Considerations**
+- Global systems need cache in each region for low latency
+- Options: independent cache clusters per region (simpler, eventual consistency) or replicated cache clusters (complex, stronger consistency)
+- Netflix runs EVCache clusters in multiple AWS regions with asynchronous cross-region replication
+- Write to local region, replicate to others — read from local region only`
+        },
+        {
+          question: 'Explain CDN caching vs application caching vs database caching',
+          answer: `Modern systems use multiple cache layers, each with different characteristics and serving different purposes. Understanding which layer to use and when is critical for system design interviews.
+
+**Layer 1: Client-Side / Browser Cache**
+- **What**: HTTP cache headers (Cache-Control, ETag, Last-Modified) instruct the browser to store responses locally
+- **Latency**: 0ms (no network request at all)
+- **Scope**: Single user, single device
+- **Best for**: Static assets (JS, CSS, images), API responses that rarely change
+- **Control**: Cache-Control headers (\`max-age=31536000, immutable\` for versioned assets)
+- **Real-world**: Every major website uses this. Google serves cached search JS bundles with 1-year max-age + content hash in filename for instant cache busting on deploy.
+
+**Layer 2: CDN / Edge Cache**
+- **What**: Geographically distributed edge servers cache content near users
+- **Latency**: 5-40ms (edge server in user's region vs. 100-300ms to origin)
+- **Scope**: All users in a geographic region
+- **Best for**: Static media (images, video, JS/CSS), public API responses, semi-static HTML pages
+- **Control**: Cache-Control headers, CDN-specific rules (Cloudflare Page Rules, CloudFront behaviors)
+- **Real-world**: Netflix's Open Connect CDN caches 95%+ of video traffic at the edge across 19,000+ servers in 175+ countries. Requests from India to a Virginia origin drop from 250-300ms to 20-40ms via CDN edge.
+- **Key insight**: CDN can cache dynamic content too — Cloudflare Workers and CloudFront@Edge run compute at the edge, caching personalized responses.
+
+**Layer 3: Application-Level Cache (L1 — In-Process)**
+- **What**: Data stored directly in application memory (HashMap, Guava/Caffeine cache, Node.js Map)
+- **Latency**: Nanoseconds (no network, no serialization)
+- **Scope**: Single application instance only
+- **Best for**: Configuration, feature flags, hot keys, small reference data sets
+- **Limitation**: Each server instance has its own copy — no shared state, consistency challenges across instances
+- **Real-world**: GitHub caches repository metadata in local application memory for the most frequently accessed repos
+
+**Layer 4: Distributed Cache (L2 — Redis/Memcached)**
+- **What**: Shared in-memory cache service accessed over the network
+- **Latency**: 0.5-2ms (network round-trip + serialization)
+- **Scope**: All application instances share the same cache
+- **Best for**: User sessions, database query results, computed aggregations, rate limiting, leaderboards
+- **Control**: Application-managed TTL, eviction policies, explicit invalidation
+- **Real-world**: Facebook's Memcached deployment handles trillions of requests/day. Twitter uses Redis for timelines and counters.
+
+**Layer 5: Database Query Cache / Buffer Pool**
+- **What**: Database engine's internal caching of query results and data pages in memory
+- **Latency**: 1-10ms (still a DB round-trip, but avoids disk I/O)
+- **Scope**: All queries against that database
+- **Best for**: Repeated identical queries, frequently accessed table pages
+- **Control**: Database configuration (InnoDB buffer pool size, PostgreSQL shared_buffers)
+- **Real-world**: PostgreSQL shared_buffers typically set to 25% of system RAM. MySQL InnoDB buffer pool should hold your entire working set if possible.
+
+**Layered Caching Strategy (recommended for interviews)**:
+\`\`\`
+User Request
+  → Browser Cache (0ms) — serves immutable assets
+  → CDN Edge (5-40ms) — serves static + cacheable dynamic content
+  → L1 In-Process Cache (ns) — serves ultra-hot keys
+  → L2 Redis/Memcached (1-2ms) — serves most dynamic data
+  → Database Buffer Pool (5-10ms) — serves remaining queries
+  → Disk (10-50ms) — cold data only
+\`\`\`
+Each layer reduces the load on the next layer by 80-95%. This is how systems scale from thousands to millions of requests per second.`
+        },
+        {
+          question: 'How do you size a cache and estimate memory requirements?',
+          answer: `Cache sizing is a critical design decision. Too small and your hit rate suffers (frequent evictions); too large and you waste expensive memory. The goal is to cache the working set — the subset of data that serves the majority of requests.
+
+**The 80/20 Rule (Pareto Principle)**:
+In most systems, 20% of the data serves 80% of the requests. For many web applications, the ratio is even more skewed — 5% of data may serve 95% of traffic. This means you do not need to cache everything; you need to cache the hot set.
+
+**Step-by-Step Sizing Estimation** (back-of-envelope):
+
+*Example: E-commerce product catalog*
+\`\`\`
+Total products:         10 million
+Average product size:   2 KB (JSON with name, price, images, description)
+Total data size:        10M x 2KB = 20 GB
+80/20 working set:      20% of products = 2M products = 4 GB
+With overhead (30%):    4 GB x 1.3 = 5.2 GB → round to 8 GB Redis instance
+
+Validation:
+  Daily unique products viewed: 500K
+  If cache holds 2M products: covers 4 days of unique views
+  Expected hit rate: 90-95% (since popular products are viewed repeatedly)
+\`\`\`
+
+*Example: User session store*
+\`\`\`
+Total active users:     5 million DAU
+Session size:           1 KB (user ID, preferences, cart, auth token)
+All sessions:           5M x 1KB = 5 GB
+Session TTL:            30 minutes → at any moment, ~500K active = 500 MB
+With overhead (30%):    500 MB x 1.3 = 650 MB → 1 GB Redis instance
+\`\`\`
+
+**Key Sizing Principles**:
+
+1. **Start with the working set, not total data**: Cache only what is actively accessed, not everything in your database.
+2. **Account for Redis memory overhead**: Redis stores metadata per key (pointers, TTL, encoding info). Overhead varies by data type — Strings have ~56 bytes overhead per key, Hashes with <128 fields use ziplist encoding (very compact). Budget 20-30% overhead on top of raw data size.
+3. **Monitor and adjust**: After deployment, track hit rate and eviction rate. If hit rate drops below 90%, increase cache size. If eviction rate is near zero, you may be over-provisioned.
+4. **Plan for peak traffic**: Size for peak, not average. If Black Friday traffic is 5x normal, your cache needs to hold 5x the concurrent working set.
+5. **Use Redis Hash for small objects**: Redis Hash with ziplist encoding (default for <128 fields and <64 bytes per value) uses 10x less memory than individual String keys. Store user attributes as a Hash rather than separate keys.
+
+**Memory Optimization Techniques**:
+- **Compression**: Compress large values (>1KB) with LZ4 or Snappy before caching. 2-5x compression ratio is typical for JSON.
+- **Short key names**: \`u:123:p\` instead of \`user:123:profile\` saves 15 bytes per key — at 10M keys, that is 150MB.
+- **Integer encoding**: Redis automatically stores small integers (0-9999) as shared objects, using near-zero additional memory.
+- **Eviction headroom**: Set maxmemory to 75% of physical memory, leaving headroom for background processes, replication buffers, and fragmentation.`
+        },
+        {
+          question: 'What are cache warming strategies and when do you need them?',
+          answer: `Cache warming is the process of pre-loading data into an empty cache before traffic hits it. A cold cache (empty after deploy, restart, or failover) causes every request to be a cache miss, potentially overwhelming the database with a stampede of queries.
+
+**When cache warming is critical**:
+- After deploying a new cache cluster (empty by default)
+- After a cache node restart or failover (data lost from memory)
+- During scaling events (adding new cache nodes that have no data)
+- Migrating from one cache cluster to another
+- Disaster recovery (rebuilt infrastructure, empty caches)
+
+**Strategy 1: RDB/AOF Snapshot Restore** — Fastest recovery
+If using Redis with persistence enabled, restore the latest RDB snapshot or replay AOF logs on startup. The cache starts warm with the data from the last snapshot.
+\`\`\`
+# Redis recovers automatically from disk on restart:
+# 1. Loads RDB snapshot (point-in-time backup)
+# 2. Replays AOF log for writes since last snapshot
+# Result: Cache is warm within seconds to minutes
+\`\`\`
+- **Pros**: Near-instant warm-up, no DB load increase, data from moments before crash
+- **Cons**: Requires persistence to be enabled (slight write performance cost), data may be slightly stale by snapshot age
+- **Used by**: Any Redis deployment with persistence enabled (most production setups)
+
+**Strategy 2: Access-Log-Based Pre-Loading** — Data-driven
+Analyze recent access logs or query patterns to identify the most frequently accessed keys, then bulk-load them into cache before serving traffic.
+\`\`\`
+# Script to warm cache from access logs:
+top_keys = analyze_access_logs(last_24h, top_n=100000)
+for key in top_keys:
+    data = db.query(key)
+    cache.set(key, data, ttl=3600)
+    rate_limit(100_per_second)  # Don't overwhelm DB
+\`\`\`
+- **Pros**: Loads exactly what users will need, high hit rate from the start
+- **Cons**: Requires access log infrastructure, script development and maintenance
+- **Used by**: E-commerce platforms warming product cache before Black Friday
+
+**Strategy 3: Gradual Traffic Ramp (Canary Warm-Up)** — Safest
+Instead of sending all traffic to the cold cache immediately, gradually increase the percentage of traffic routed to the new cache nodes.
+\`\`\`
+Minute 0-5:    10% of traffic → new cache (90% still to old/DB)
+Minute 5-15:   30% of traffic → new cache
+Minute 15-30:  60% of traffic → new cache
+Minute 30+:    100% of traffic → new cache (now warm)
+\`\`\`
+- **Pros**: No stampede risk, cache fills organically, DB load stays manageable
+- **Cons**: Slower warm-up, requires traffic routing infrastructure (load balancer or service mesh)
+- **Used by**: Netflix during cache cluster deployments
+
+**Strategy 4: Replica Promotion** — Zero-downtime for Redis
+Before taking a cache node down for maintenance, ensure it has a fully synchronized replica. Promote the replica (which has all the data already warm) and then maintain the old node.
+- **Pros**: Zero cold-start, instantaneous cutover
+- **Cons**: Requires running extra replica capacity, replication lag means slight staleness
+- **Used by**: Any Redis Sentinel or Cluster deployment during planned maintenance
+
+**Strategy 5: Synthetic Pre-Warming Script** — Brute force
+Run a script that queries your database for known high-traffic keys and loads them into cache. Often done as a deployment step or cron job.
+- **Pros**: Simple to implement, controllable pace
+- **Cons**: Must know which keys to warm in advance, adds DB load during warming
+- **Best for**: Known, predictable key sets (e.g., top 1000 products, all feature flags, all country/currency reference data)
+
+**Anti-patterns to avoid**:
+- Never load your entire database into cache — cache the working set only
+- Never warm at full speed — use rate limiting to avoid overwhelming the DB during warm-up
+- Never skip warming for hot keys — a cold cache on hot keys causes the worst stampedes`
+        },
+        {
+          question: 'How do you maintain cache consistency in a microservices architecture?',
+          answer: `In a microservices architecture, multiple services may cache overlapping data, creating a distributed consistency challenge. When the Order Service caches product prices and the Inventory Service updates a price, how does the Order Service know to invalidate its cache?
+
+**The Core Problem**:
+\`\`\`
+Inventory Service: updates product price in DB
+  → Inventory Service's own cache: invalidated
+  → Order Service's cache: still has old price
+  → Recommendation Service's cache: still has old price
+  → CDN edge cache: still has old price
+\`\`\`
+
+**Pattern 1: Event-Driven Invalidation via Message Bus** — Industry standard
+The service that owns the data publishes a change event to a message broker (Kafka, RabbitMQ, SNS). All services that cache that data subscribe and invalidate their copies.
+\`\`\`
+# Inventory Service (data owner)
+def update_price(product_id, new_price):
+    db.update("products", product_id, price=new_price)
+    kafka.publish("product.updated", {
+        "product_id": product_id,
+        "fields_changed": ["price"],
+        "timestamp": now()
+    })
+
+# Order Service (cache consumer)
+@kafka_consumer("product.updated")
+def on_product_updated(event):
+    cache.delete(f"product:{event.product_id}")
+    cache.delete(f"product:{event.product_id}:price")
+\`\`\`
+- **Pros**: Decoupled, scalable, works across any number of services
+- **Cons**: Eventually consistent (event delivery takes milliseconds to seconds), event loss means stale cache
+- **Used by**: Amazon, Uber, most microservices architectures at scale
+
+**Pattern 2: Shared Cache (Single Source of Truth)** — Simplest
+Instead of each service maintaining its own cache, all services read from a single shared Redis cluster. The data owner writes to both DB and cache; consumers only read from cache.
+\`\`\`
+# Inventory Service: writes to shared cache
+cache.set(f"product:{product_id}", updated_data, ttl=3600)
+
+# Order Service: reads from same shared cache
+product = cache.get(f"product:{product_id}")
+\`\`\`
+- **Pros**: Single point of truth, no stale copies, simple invalidation
+- **Cons**: Tight coupling between services (shared infrastructure), single point of failure, cache key conflicts possible
+- **Best for**: Small-medium systems where operational simplicity outweighs decoupling benefits
+
+**Pattern 3: Change Data Capture (CDC)** — Most reliable
+Capture database changes at the binlog/WAL level and propagate them to caches automatically using tools like Debezium or DynamoDB Streams.
+\`\`\`
+Database WAL → Debezium → Kafka → Cache Invalidation Consumer
+\`\`\`
+- **Pros**: Cannot miss an update (captures all DB changes), no application code changes needed
+- **Cons**: Infrastructure complexity (Debezium + Kafka + consumer), higher latency (seconds)
+- **Used by**: LinkedIn (Databus), Facebook (Wormhole), Netflix
+
+**Pattern 4: Two-Layer Defense (TTL + Events)** — Production best practice
+Combine event-driven invalidation for immediate freshness with TTL as a safety net for missed events.
+\`\`\`
+# Event arrives: immediately invalidate
+on_event("product.updated") → cache.delete(key)
+
+# TTL safety net: even if event is lost, cache expires in 5 minutes
+cache.set(key, value, ttl=300)
+
+# Worst case: data is stale for 5 minutes if event is lost
+# Happy path: data is fresh within milliseconds of the update
+\`\`\`
+- **Pros**: Handles event loss gracefully, bounded staleness guarantee
+- **Cons**: Slightly more complex, but minimal
+- **This is the recommended approach for most production systems**
+
+**Pattern 5: Read-Your-Writes Consistency** — User-facing freshness
+After a user updates their data, ensure that same user sees the updated data immediately, even if other users see slightly stale data.
+\`\`\`
+# After user updates profile:
+1. Write to DB
+2. Invalidate cache
+3. Set a "dirty" flag in user's session: session.set("profile_dirty", true, ttl=5)
+
+# On next read by SAME user:
+if session.get("profile_dirty"):
+    return db.query(user_id)  # Bypass cache for this user
+else:
+    return cache.get(f"user:{user_id}")  # Serve from cache
+\`\`\`
+- **Pros**: User always sees their own updates, other users still benefit from cache
+- **Cons**: Adds per-user logic, slightly more DB queries for recently-updated users`
+        },
+        {
+          question: 'Explain cache penetration, cache breakdown, and cache avalanche — and how to prevent each',
+          answer: `These are three distinct cache failure patterns that interviewers expect you to differentiate. Each has a different root cause and different solutions.
+
+**Cache Penetration** — Queries for data that does not exist
+- **What**: Requests for keys that do not exist in the cache OR the database. Every request bypasses the cache and hits the database, which also returns nothing. The cache provides zero benefit.
+- **Example**: An attacker sends millions of requests for user IDs that do not exist (user:-1, user:-2, ...). The cache never has these keys, so every request goes to DB.
+- **Impact**: Database overwhelmed by queries that will always return empty, cache is effectively useless
+\`\`\`
+Request for user:999999999 → Cache miss → DB query → Empty result → No cache fill
+Next request for user:999999999 → Cache miss again → DB query again → Empty again
+(Repeats indefinitely)
+\`\`\`
+
+**Solutions for cache penetration**:
+1. **Bloom filter**: A probabilistic data structure that can tell you definitively if a key does NOT exist (with zero false negatives). Check the Bloom filter before cache/DB. If the filter says "not present," reject immediately. Facebook uses Bloom filters to prevent lookups for non-existent social graph edges.
+2. **Cache negative results**: When DB returns empty, cache the empty result with a short TTL (30-60 seconds). \`cache.set("user:999999999", NULL, ttl=60)\`. Prevents repeated DB hits for the same non-existent key.
+3. **Input validation**: Validate that requested IDs match expected formats before hitting cache or DB. Reject obviously invalid IDs at the API layer.
+
+**Cache Breakdown** — A single hot key expires under heavy load
+- **What**: One extremely popular key (a celebrity profile, a viral product, breaking news article) expires while under heavy concurrent load. All requests for that key simultaneously hit the database.
+- **Difference from stampede**: Breakdown is about ONE key; stampede can involve many keys expiring at once.
+- **Impact**: Database receives a spike of identical queries for one key, potentially causing cascading failure
+\`\`\`
+Hot key "product:iphone" serves 50,000 req/sec
+TTL expires at t=0
+t=0 to t=200ms: 10,000 concurrent requests all hit DB for the same product
+DB response time spikes from 5ms to 2000ms, affecting ALL queries
+\`\`\`
+
+**Solutions for cache breakdown**:
+1. **Never expire hot keys**: Set no TTL on known hot keys; use explicit invalidation only when data actually changes.
+2. **Mutex lock**: Only one request rebuilds the cache; others wait or return stale data (same as stampede prevention).
+3. **Logical expiration**: Store the expiration timestamp inside the cached value itself (not as Redis TTL). When a request reads a "logically expired" value, it triggers an async refresh while returning the stale value immediately.
+
+**Cache Avalanche** — Mass expiration or total cache failure
+- **What**: A large number of cache keys expire at the same time, OR the entire cache cluster goes down. Suddenly, the database receives the full, uncached traffic load.
+- **Difference from breakdown**: Avalanche affects MANY keys simultaneously, not just one.
+- **Example**: You set TTL=3600 on 1 million keys all loaded at the same time. Exactly one hour later, all 1 million keys expire simultaneously.
+- **Impact**: Database receives 100% of traffic with zero cache assistance, likely causing total system outage
+
+**Solutions for cache avalanche**:
+1. **Jittered TTL**: Add random jitter to TTL values so keys expire at different times. \`ttl = base_ttl + random(0, base_ttl * 0.1)\`. A 1-hour TTL becomes 3600 + random(0, 360) seconds, spreading expirations over 6 minutes.
+2. **High-availability cache cluster**: Redis Sentinel or Redis Cluster with automatic failover. If one node dies, replicas take over within seconds.
+3. **Circuit breaker pattern**: When cache failure is detected, activate circuit breakers that rate-limit database queries, return degraded responses, or serve stale data from a backup store.
+4. **Multi-tier caching**: If the distributed cache (L2) goes down, the in-process cache (L1) still serves hot data. The database only receives truly cold requests.
+5. **Cache warm-up after recovery**: When the cache cluster comes back online, gradually warm it (see cache warming strategies) rather than letting all traffic generate misses simultaneously.
+
+**Summary Table**:
+| Failure | Root Cause | Scope | Key Solution |
+|---------|-----------|-------|-------------|
+| Penetration | Non-existent keys queried | Per-key | Bloom filter + cache nulls |
+| Breakdown | Hot key expires | Single key | No TTL on hot keys + mutex |
+| Avalanche | Mass expiry or cluster crash | System-wide | Jittered TTL + HA cluster + circuit breaker |`
+        },
+        {
+          question: 'How do you handle hot keys in a distributed cache?',
+          answer: `A hot key is a single cache key that receives a disproportionately large volume of requests, concentrating load on one cache node and potentially overwhelming it. In a distributed cache using consistent hashing, each key maps to exactly one primary node — if that key is extremely popular, that node becomes a bottleneck.
+
+**Real-world examples of hot keys**:
+- A celebrity's profile during a scandal (millions of views/minute on one user ID)
+- A flash sale product (100K+ requests/second for one product key)
+- Breaking news article (viral content viewed by millions simultaneously)
+- Super Bowl halftime tweet (Twitter saw 580K tweets/minute during the 2014 Super Bowl)
+
+**Detection**: Monitor per-key request rates. Redis provides \`redis-cli --hotkeys\` (with LFU enabled) and \`OBJECT FREQ key\` to identify hot keys. In production, use a sampling approach to avoid monitoring overhead.
+
+**Solution 1: Local In-Process Cache (L1) for Hot Keys**
+Cache the hot key in each application server's local memory (L1 cache) with a very short TTL (1-5 seconds). This eliminates the network round-trip to Redis entirely.
+\`\`\`
+# Pseudocode: L1 cache with short TTL
+def get_with_l1(key):
+    value = local_cache.get(key)      # L1: in-process, nanoseconds
+    if value: return value
+
+    value = redis.get(key)            # L2: distributed, ~1ms
+    if value:
+        local_cache.set(key, value, ttl=2)  # Short TTL: 2 seconds
+    return value
+\`\`\`
+- **Pros**: Eliminates network overhead entirely, each server handles its own load
+- **Cons**: N servers = N copies of hot data (memory waste), 1-5 second staleness window
+- **Used by**: Twitter, Instagram for celebrity profile caches
+
+**Solution 2: Key Replication Across Multiple Nodes**
+Create multiple copies of the hot key on different cache nodes by appending a random suffix. Distribute reads across all copies.
+\`\`\`
+# Write: replicate hot key to 5 shards
+for i in range(5):
+    cache.set(f"product:iphone:{i}", data, ttl=300)
+
+# Read: pick a random shard
+shard = random.randint(0, 4)
+data = cache.get(f"product:iphone:{shard}")
+\`\`\`
+- **Pros**: Spreads load across multiple nodes, no single node bottleneck
+- **Cons**: More memory used (N copies), invalidation must hit all copies, write amplification
+- **Used by**: Facebook, Alibaba for flash sale products
+
+**Solution 3: Read Replicas**
+Configure Redis with read replicas. Route hot key reads to replicas, spreading the load across multiple nodes without duplicating key names.
+- **Pros**: No application logic changes, built-in Redis feature
+- **Cons**: Replication lag means slight staleness, still limits to one primary for writes
+
+**Solution 4: Request Rate Limiting Per Key**
+If a key exceeds a request threshold, activate a circuit breaker that serves a cached-in-memory copy and batches requests to the cache node.
+- **Pros**: Protects the cache node from overload
+- **Cons**: Adds request queueing latency
+
+**Prevention**: The best approach is to plan for hot keys from the start. If your system has celebrity users, viral content, or flash sales, design your caching layer with L1 local caches and key replication from day one rather than reacting after an outage.`
+        },
+        {
+          question: 'Walk through a real-world caching architecture for a social media news feed',
+          answer: `Let us design the caching architecture for a social media news feed (similar to Twitter/X timeline or Instagram feed) to see how all caching concepts come together in a real system.
+
+**Requirements**:
+- 500M daily active users, each loading feed ~10 times/day = 5B feed requests/day
+- Each feed shows 20 posts with author info, images, like counts, comments preview
+- Feed must load in <200ms (perceived latency)
+- Posts can be edited/deleted and must reflect within 30 seconds
+- Trending posts may get 1M+ views per minute
+
+**Architecture**:
+\`\`\`
+User → CDN (images/video) → Load Balancer → App Server
+                                               │
+                              L1 Cache (local)──┤
+                                               │
+                              L2 Redis Cluster──┤
+                                               │
+                              Timeline Service──┤
+                                               │
+                              PostgreSQL/Cassandra
+\`\`\`
+
+**Layer 1: CDN for Media**
+- All post images and video thumbnails cached at CDN edge (CloudFront/Cloudflare)
+- Cache-Control: \`public, max-age=31536000, immutable\` (images are content-addressed by hash)
+- Hit rate: 98%+ — only the first viewer in a region triggers an origin fetch
+- Saves: 95%+ of bandwidth costs and reduces image load time from 200ms to 20ms
+
+**Layer 2: L1 In-Process Cache for Hot Data**
+- Cache top trending posts and celebrity profiles in application server memory
+- Caffeine cache (JVM) or Node.js LRU cache, max 1000 entries, TTL=5 seconds
+- Hit rate for trending posts: 60-80% (since trending posts are requested by many users on the same server)
+- Saves: ~1ms per Redis round-trip for the hottest 1000 items
+
+**Layer 3: L2 Redis Cluster for Feed Data**
+This is where the primary caching magic happens:
+
+\`\`\`
+Key: feed:{userId}:timeline → Sorted Set of post IDs (score = timestamp)
+Key: post:{postId} → Hash with author, text, media_urls, created_at
+Key: user:{userId}:profile → Hash with name, avatar, follower_count
+Key: post:{postId}:counts → Hash with likes, comments, shares (updated via HINCRBY)
+Key: trending:global → Sorted Set of post IDs (score = engagement velocity)
+\`\`\`
+
+**Caching Strategy by Data Type**:
+| Data | Strategy | TTL | Invalidation | Why |
+|------|---------|-----|-------------|-----|
+| Timeline (post IDs) | Cache-aside | 10 min | Event-driven on new post | Changes on every post |
+| Post content | Cache-aside | 1 hour | Event-driven on edit/delete | Rarely changes after creation |
+| User profiles | Cache-aside | 30 min | Event-driven on profile edit | Changes infrequently |
+| Like/comment counts | Write-behind | No TTL | Overwrite from DB hourly | High write frequency, approximate OK |
+| Trending posts | Background refresh | 1 min | Worker refreshes every 30s | Must be fresh, predictable key set |
+| Media URLs | CDN + long TTL | 1 year | Content-addressed (hash in URL) | Never changes (immutable) |
+
+**Handling the Hard Problems**:
+
+*Celebrity post (hot key)*: When a celebrity with 50M followers posts, that post becomes a hot key. Solution: replicate \`post:{id}\` across 10 cache shards with random suffix routing, plus L1 cache on every app server with 5-second TTL.
+
+*Feed fanout*: Two approaches:
+- **Push model** (fanout on write): When a user posts, immediately write the post ID into the timeline cache of all followers. Fast reads, expensive writes. Good for users with <10K followers.
+- **Pull model** (fanout on read): When loading a feed, fetch post IDs from all followed users and merge. Expensive reads, cheap writes. Good for celebrity accounts (1M+ followers).
+- **Hybrid** (Twitter/X approach): Push for normal users, pull for celebrities. Cache the merged timeline.
+
+*Stale data after post edit*: Use event-driven invalidation via Kafka. When a post is edited, publish event to \`post.updated\` topic. All services consuming this event invalidate \`post:{id}\` cache key. TTL=1 hour as safety net. Worst case: 1 hour of stale data if event is lost (acceptable for social media).
+
+*Cache sizing*:
+\`\`\`
+500M users x 20 post IDs per timeline x 8 bytes per ID = 80 GB for timelines
+100M unique posts cached x 2KB per post = 200 GB for post content
+500M user profiles x 500 bytes = 250 GB for profiles
+Total: ~530 GB → 600 GB Redis Cluster (with 30% overhead)
+= 20 nodes x 32 GB RAM each (with replication = 40 nodes)
+\`\`\`
+
+This architecture achieves: <50ms p50 feed load time, >95% cache hit rate, handles 5B+ requests/day, and degrades gracefully if cache fails (slower but still functional).`
+        },
+        {
+          question: 'What is the difference between local caching and distributed caching?',
+          answer: `Local caching and distributed caching solve different problems and are best used together in a two-tier architecture.
+
+**Local (In-Process) Cache**:
+- Data stored directly in application server memory (HashMap, Guava/Caffeine, lru-cache)
+- Access time: nanoseconds (no network, no serialization/deserialization)
+- Scope: single process only — each server instance has its own independent cache
+- Memory: limited to what a single process can hold (typically hundreds of MB)
+- Consistency: each server has its own copy, so different servers may serve different versions of the same data
+
+\`\`\`
+Server A's local cache:  user:123 = { name: "Alice", v2 }  (updated 5s ago)
+Server B's local cache:  user:123 = { name: "Alice Smith", v3 }  (updated 1s ago)
+Server C's local cache:  user:123 = { name: "Alice", v2 }  (never invalidated)
+→ Users hitting different servers see different data
+\`\`\`
+
+**Distributed Cache** (Redis, Memcached):
+- Data stored in a dedicated cache service, accessed over the network
+- Access time: 0.5-2ms (network round-trip + serialization)
+- Scope: shared across all application instances — single source of truth
+- Memory: scales to terabytes across cache cluster nodes
+- Consistency: all servers read the same data from the same cache
+
+**Head-to-Head Comparison**:
+| Dimension | Local Cache | Distributed Cache |
+|-----------|------------|-------------------|
+| Latency | Nanoseconds | 0.5-2ms |
+| Capacity | MB-level (per instance) | GB-TB level (cluster) |
+| Shared state | No (per-instance) | Yes (all instances) |
+| Consistency | Weak (each has own copy) | Strong (single source) |
+| Failure blast radius | Only affects one server | Affects all servers |
+| Memory cost | Duplicated across N servers | Single copy shared |
+| Network overhead | Zero | Serialization + round-trip |
+| Invalidation | Must broadcast to all instances | Single delete operation |
+| Persistence | None (lost on restart) | Optional (RDB/AOF) |
+
+**When to use local cache only**:
+- Configuration and feature flags (loaded once, rarely changes)
+- Hot keys that are read thousands of times per second per server
+- Small reference data (country codes, currency rates, enum lookups)
+- Rate limiting counters (per-server is acceptable)
+
+**When to use distributed cache only**:
+- User sessions (must be consistent across servers behind a load balancer)
+- Shopping carts, form state (user may hit different servers)
+- Database query results that are expensive to compute
+- Any data that must be shared across all instances
+
+**Two-Tier Architecture (L1 + L2) — Best practice**:
+Use both layers together. L1 (local) for the hottest data with very short TTL, L2 (distributed) for everything else.
+\`\`\`
+def get_data(key):
+    # L1: local in-process cache (nanoseconds)
+    value = local_cache.get(key)
+    if value: return value
+
+    # L2: distributed Redis (1-2ms)
+    value = redis.get(key)
+    if value:
+        local_cache.set(key, value, ttl=5)  # Very short L1 TTL
+        return value
+
+    # L3: database (50-100ms)
+    value = db.query(key)
+    redis.set(key, value, ttl=300)          # Longer L2 TTL
+    local_cache.set(key, value, ttl=5)
+    return value
+\`\`\`
+
+**L1 invalidation challenge**: When data changes, you need to invalidate all L1 caches across all servers. Solutions:
+- **Short TTL** (1-5 seconds): Stale data is bounded to a few seconds. Simplest approach.
+- **Redis Pub/Sub**: Publish invalidation events; all servers subscribe and clear their L1 cache. Near-instant, but adds complexity.
+- **Polling**: Each server periodically checks a "version" key in Redis and clears L1 if version has incremented. Simple but adds slight delay.
+
+The two-tier approach is what most high-performance systems use. GitHub, Twitter, Instagram, and Netflix all use local caches in front of their distributed Redis/Memcached layers.`
         }
       ],
 
@@ -2729,18 +3718,24 @@ def process_message(msg):
       title: 'API Design',
       icon: 'code',
       color: '#6366f1',
-      questions: 8,
+      questions: 12,
       description: 'REST, GraphQL, gRPC, and API best practices.',
-      concepts: ['REST principles', 'GraphQL vs REST', 'gRPC for microservices', 'API versioning', 'Rate limiting', 'Pagination'],
+      concepts: ['REST principles', 'GraphQL vs REST', 'gRPC for microservices', 'API versioning', 'Rate limiting', 'Pagination', 'Idempotency', 'API gateway', 'OpenAPI/Swagger', 'OAuth2 & JWT'],
       tips: [
-        'Use REST for public APIs, gRPC for internal microservices',
-        'GraphQL when clients need flexible queries',
-        'Always version your APIs (v1, v2) in the URL or header'
+        'Use REST for public APIs, gRPC for internal microservices, GraphQL for mobile/complex UIs',
+        'Stripe processes 1,000 API calls/second per account — design your APIs to handle similar throughput',
+        'Always version your APIs — URL path (/v1/) for public APIs, header versioning for internal',
+        'Cursor-based pagination is 177x faster than offset at page 1000 — always prefer cursors for large datasets',
+        'Idempotency keys are mandatory for payment APIs — Stripe, PayPal, and Square all require them'
       ],
 
-      introduction: `API design is how services communicate. A well-designed API is intuitive, consistent, and scales with your product. A poorly designed API creates technical debt that's painful to fix.
+      introduction: `API design is how services communicate in distributed systems, and it is arguably the most important architectural decision you will make. A well-designed API is intuitive, consistent, and scales with your product. A poorly designed API creates compounding technical debt — every client that integrates with a bad API becomes a migration burden when you inevitably need to fix it. Stripe and Twilio built their reputations largely on excellent API design; developers love using them because endpoints follow predictable patterns, error messages are actionable, and documentation stays in sync with the actual implementation.
 
-Stripe and Twilio are famous for excellent API design—developers love using them. Understanding REST, GraphQL, and gRPC, and when to use each, is fundamental to system design interviews.`,
+The modern API landscape spans three dominant paradigms. REST (Representational State Transfer) remains the universal standard for public APIs, used by over 80% of web integrations. It leverages HTTP verbs (GET, POST, PUT, PATCH, DELETE), resource-oriented URLs, and JSON payloads. GraphQL, pioneered by Facebook in 2015 and adopted by GitHub, Shopify, and Yelp, lets clients specify exactly what data they need in a single request — eliminating the over-fetching and under-fetching problems that plague REST. In October 2024, Shopify announced that GraphQL would become their definitive API, requiring all new apps to use it by April 2025 and reducing API call volume by 80% for some integrations. gRPC, built by Google on HTTP/2 and Protocol Buffers, delivers up to 7x faster performance than REST in microservice architectures, with payloads 5-10x smaller than JSON, making it the standard for high-performance internal service communication at companies like Netflix, Square, and Cloudflare.
+
+Beyond choosing a paradigm, production API design requires mastering pagination (cursor-based vs offset, with 177x performance differences at deep pages), versioning (URL path vs header vs query parameter, each with real trade-offs for caching and discoverability), authentication (OAuth2 for delegated third-party access, JWT for stateless sessions, API keys for server-to-server), idempotency (critical for payment processing — Stripe requires Idempotency-Key headers for all POST mutations), and rate limiting (Stripe allows 100 req/sec for Connect platforms, GitHub caps authenticated users at 5,000 req/hour). The API gateway pattern — used by Kong, AWS API Gateway, and Envoy — centralizes cross-cutting concerns like auth, rate limiting, and request transformation at the edge, keeping individual services focused on business logic.
+
+A strong system design interview answer demonstrates not just knowledge of these concepts but the judgment to choose the right tool for each scenario, the awareness of real-world numbers (latency budgets, throughput targets, rate limit tiers), and the ability to reason about trade-offs like REST's cacheability vs GraphQL's flexibility, or gRPC's performance vs its browser incompatibility.`,
 
       functionalRequirements: [
         'Support CRUD operations on resources',
