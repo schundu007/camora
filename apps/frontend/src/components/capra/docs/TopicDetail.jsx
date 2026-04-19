@@ -1803,9 +1803,9 @@ export default function TopicDetail({
                   {/* Product Hero — shown when productMeta exists */}
                   {topicDetails.productMeta && (
                     <div className="p-5 pb-0">
-                      <div className="flex flex-col lg:flex-row gap-5">
+                      <div className="flex flex-col sm:flex-row items-start gap-4">
                         {/* Left: product stats */}
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0">
                           <p className="text-sm text-[var(--text-secondary)] landing-body mb-3">{topicDetails.productMeta.tagline}</p>
                           {/* Stats row */}
                           <div className="flex flex-wrap gap-4 mb-4">
@@ -1817,9 +1817,9 @@ export default function TopicDetail({
                             ))}
                           </div>
                         </div>
-                        {/* Right: CSS WhatsApp UI mockup */}
-                        <div className="w-full lg:w-[220px] flex-shrink-0">
-                          <div className="rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm bg-[#f0f2f5]" style={{ maxWidth: '220px', margin: '0 auto' }}>
+                        {/* Right: UI mockup — compact, next to stats */}
+                        <div className="w-[180px] flex-shrink-0">
+                          <div className="rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm bg-[#f0f2f5]" style={{ maxWidth: '180px' }}>
                             {/* WhatsApp header */}
                             <div className="h-9 flex items-center px-3 gap-2" style={{ background: '#075e54' }}>
                               <div className="w-5 h-5 rounded-full bg-white/20" />
