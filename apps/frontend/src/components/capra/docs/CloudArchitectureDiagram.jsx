@@ -16,7 +16,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
     if (!containerRef.current || !imgRef.current) return;
     const cw = containerRef.current.clientWidth;
     const iw = imgRef.current.naturalWidth;
-    if (iw > 0) { setScale(Math.max(1, cw / iw * 1.8)); setTranslate({ x: 0, y: 0 }); }
+    const ch = containerRef.current.clientHeight || 500; const ih = imgRef.current.naturalHeight; if (iw > 0 && ih > 0) { setScale(Math.min(cw / iw, ch / ih) * 0.92); setTranslate({ x: 0, y: 0 }); }
   }, []);
 
   useEffect(() => { setImageError(false); resetView(); }, [imageUrl, resetView]);
@@ -76,7 +76,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
       </div>
       <div ref={containerRef}
         className="rounded-lg select-none flex items-center justify-center"
-        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', height: '450px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', maxHeight: '70vh', minHeight: '300px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
         onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.15 : 0.15)), 5)); }}
         onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
         onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
