@@ -403,6 +403,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
 
       createFlow: {
         title: 'Create URL Flow',
+        diagramSrc: '/diagrams/url-shortener/flow-create-url.png',
         steps: [
           'Client makes POST request with long URL to load balancer',
           'Load balancer distributes request to a web server',
@@ -415,6 +416,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
 
       redirectFlow: {
         title: 'Redirect URL Flow',
+        diagramSrc: '/diagrams/url-shortener/flow-redirect-url.png',
         steps: [
           'Client makes GET request with short URL',
           'Load balancer routes to a web server',
@@ -1392,6 +1394,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
 
       createFlow: {
         title: 'Post Tweet Flow',
+        diagramSrc: '/diagrams/twitter/flow-create-tweet.png',
         steps: [
           'Client sends POST /api/tweets with content',
           'Tweet Service validates content (280 chars, spam check)',
@@ -1406,6 +1409,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
 
       redirectFlow: {
         title: 'Read Timeline Flow',
+        diagramSrc: '/diagrams/twitter/flow-read-timeline.png',
         steps: [
           'Client requests GET /api/timeline with cursor',
           'Timeline Service fetches user\'s pre-computed timeline from Redis',
@@ -2125,6 +2129,7 @@ rides {
 
       createFlow: {
         title: 'Ride Request Flow',
+        diagramSrc: '/diagrams/uber/flow-ride-request.png',
         steps: [
           'Rider opens app, sends pickup and dropoff locations',
           'Gateway determines cell containing pickup location',
@@ -2141,6 +2146,7 @@ rides {
 
       redirectFlow: {
         title: 'Ride Tracking Flow',
+        diagramSrc: '/diagrams/uber/flow-ride-tracking.png',
         steps: [
           'Match confirmed, both apps establish WebSocket connection',
           'Driver app sends location updates every 3-4 seconds',
@@ -3422,7 +3428,7 @@ Why Cassandra wins for messages:
 
       createFlow: {
         title: 'Send Message Flow',
-        diagramSrc: '/diagrams/whatsapp/message-flow-online.svg',
+        diagramSrc: '/diagrams/whatsapp/flow-create-send.png',
         steps: [
           'Sender types message; client generates a unique messageId (UUID v4) for idempotency',
           'Client encrypts message content using the Double Ratchet session key (Signal Protocol)',
@@ -3442,7 +3448,7 @@ Why Cassandra wins for messages:
 
       redirectFlow: {
         title: 'Receive Message Flow (Reconnection & Sync)',
-        diagramSrc: '/diagrams/whatsapp/message-flow-offline.svg',
+        diagramSrc: '/diagrams/whatsapp/flow-redirect-receive.png',
         steps: [
           'User opens app or regains connectivity; client initiates WebSocket connection with auth token + deviceId',
           'Gateway routes connection to a chat server via consistent hashing on userId',
@@ -6474,7 +6480,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 
       createFlow: {
         title: 'Video Playback Flow',
-        diagramSrc: '/diagrams/netflix/playback-flow.svg',
+        diagramSrc: '/diagrams/netflix/flow-create-playback.png',
         steps: [
           'User selects a title; client sends GET /api/playback/{id}/manifest with profileId and deviceType',
           'Zuul API Gateway authenticates the JWT token and routes to the Playback Service',
@@ -6494,7 +6500,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 
       redirectFlow: {
         title: 'Content Ingestion + Transcoding Pipeline',
-        diagramSrc: '/diagrams/netflix/transcoding-pipeline.svg',
+        diagramSrc: '/diagrams/netflix/flow-redirect-ingest.png',
         steps: [
           'Studio uploads master source file (8K/4K ProRes, 50-100 GB per hour of content) to the ingest service',
           'Ingest service validates the file (format, resolution, audio channels) and stores the master in S3 origin',
