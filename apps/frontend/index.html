@@ -69,6 +69,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&family=Source+Sans+3:wght@400;500;600;700;800&family=Comfortaa:wght@700&display=swap" rel="stylesheet" />
     <!-- Camora custom fonts: Clash Display (headings) + Satoshi (body) -->
     <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&f[]=satoshi@300,400,500,700,900&display=swap" rel="stylesheet" />
+    <!-- WinterKei display font for titles and important text -->
+    <style>
+      @font-face {
+        font-family: 'Winter Kei';
+        src: url('/fonts/WinterKei.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      :root {
+        --font-display: 'Winter Kei', 'Clash Display', 'Satoshi', sans-serif;
+      }
+    </style>
   </head>
   <body class="antialiased text-sm">
     <div id="root"></div>

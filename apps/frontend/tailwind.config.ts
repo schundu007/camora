@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Satoshi', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
-        display: ['Clash Display', 'Satoshi', 'system-ui', 'sans-serif'],
+        display: ['Winter Kei', 'Clash Display', 'Satoshi', 'system-ui', 'sans-serif'],
         code: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         mono: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         logo: ['Clash Display', 'system-ui', 'sans-serif'],
