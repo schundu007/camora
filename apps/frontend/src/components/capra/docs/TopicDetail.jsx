@@ -341,7 +341,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
       </div>
       <div ref={containerRef}
         className="rounded-lg select-none flex items-center justify-center"
-        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '500px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', height: '450px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
         onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.15 : 0.15)), 5)); }}
         onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
         onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
