@@ -690,7 +690,7 @@ export default function TopicDetail({
       )}
 
       {/* Right: Topic content */}
-      <div className="flex-1 min-w-0 lg:max-w-[75%] mx-auto">
+      <div className="flex-1 min-w-0 lg:max-w-[85%] mx-auto">
       {/* Topic Header — no duplicate breadcrumb */}
       <div className="rounded-xl p-3 mb-3 border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between mb-2">

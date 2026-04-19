@@ -579,7 +579,7 @@ export default function DocsPage({ onBack }) {
 
       <div className="relative min-h-screen flex">
           {/* Center Content */}
-          <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[75%] ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
+          <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[85%] ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
             {/* Breadcrumb Bar — secondary bar below TopBar */}
             <div className="sticky z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 0 }}>
               {/* Mobile: back button when viewing a topic */}
