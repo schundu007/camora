@@ -146,6 +146,11 @@
     min-width: 0;
   }
 
+  /* Winter Kei for all headings and important text */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+
   .light-theme {
     color-scheme: light;
   }
