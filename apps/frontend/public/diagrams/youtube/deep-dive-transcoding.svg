@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="400" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Video Transcoding Pipeline — Multi-Codec, Multi-Resolution</text>
+
+  <!-- Input -->
+  <rect x="20" y="55" width="140" height="60" rx="10" fill="#f97316"/>
+  <text x="90" y="80" text-anchor="middle" fill="white" font-size="11" font-weight="700">Raw Upload</text>
+  <text x="90" y="97" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9">Any codec, up to 4K</text>
+
+  <line x1="160" y1="85" x2="195" y2="85" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Splitter -->
+  <rect x="200" y="55" width="120" height="60" rx="10" fill="#6366f1"/>
+  <text x="260" y="80" text-anchor="middle" fill="white" font-size="10" font-weight="700">Segment Splitter</text>
+  <text x="260" y="97" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">Split into chunks</text>
+
+  <!-- Fan-out arrows -->
+  <line x1="320" y1="70" x2="370" y2="55" stroke="#334155" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="320" y1="85" x2="370" y2="85" stroke="#334155" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="320" y1="100" x2="370" y2="115" stroke="#334155" stroke-width="1.2" marker-end="url(#a)"/>
+
+  <!-- Resolution workers -->
+  <rect x="375" y="38" width="100" height="30" rx="6" fill="#22c55e"/>
+  <text x="425" y="58" text-anchor="middle" fill="white" font-size="9" font-weight="600">360p Worker</text>
+  <rect x="375" y="73" width="100" height="30" rx="6" fill="#3b82f6"/>
+  <text x="425" y="93" text-anchor="middle" fill="white" font-size="9" font-weight="600">720p Worker</text>
+  <rect x="375" y="108" width="100" height="30" rx="6" fill="#3b82f6"/>
+  <text x="425" y="128" text-anchor="middle" fill="white" font-size="9" font-weight="600">1080p Worker</text>
+
+  <!-- More workers for other resolutions -->
+  <rect x="490" y="38" width="100" height="30" rx="6" fill="#a855f7"/>
+  <text x="540" y="58" text-anchor="middle" fill="white" font-size="9" font-weight="600">1440p Worker</text>
+  <rect x="490" y="73" width="100" height="30" rx="6" fill="#a855f7"/>
+  <text x="540" y="93" text-anchor="middle" fill="white" font-size="9" font-weight="600">4K Worker</text>
+
+  <!-- Priority note -->
+  <rect x="375" y="148" width="215" height="22" rx="6" fill="rgba(34,197,94,0.1)" stroke="#22c55e" stroke-width="1"/>
+  <text x="482" y="163" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">✓ 360p completes first → video watchable in minutes</text>
+
+  <!-- Codec comparison -->
+  <rect x="20" y="190" width="370" height="190" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="20" y="190" width="370" height="28" rx="10 10 0 0" fill="#1e293b"/>
+  <text x="205" y="209" text-anchor="middle" fill="white" font-size="12" font-weight="700">Codec Comparison</text>
+
+  <!-- Table headers -->
+  <text x="40" y="240" fill="#64748b" font-size="9" font-weight="700">Codec</text>
+  <text x="130" y="240" fill="#64748b" font-size="9" font-weight="700">Compression</text>
+  <text x="230" y="240" fill="#64748b" font-size="9" font-weight="700">Encode Speed</text>
+  <text x="330" y="240" fill="#64748b" font-size="9" font-weight="700">Usage</text>
+
+  <line x1="30" y1="248" x2="380" y2="248" stroke="#e2e8f0"/>
+
+  <text x="40" y="268" fill="#1e293b" font-size="9" font-weight="600">H.264</text>
+  <text x="130" y="268" fill="#475569" font-size="9">Baseline</text>
+  <text x="230" y="268" fill="#16a34a" font-size="9">⚡ Fastest</text>
+  <text x="330" y="268" fill="#475569" font-size="9">Fallback</text>
+
+  <text x="40" y="293" fill="#1e293b" font-size="9" font-weight="600">VP9</text>
+  <text x="130" y="293" fill="#475569" font-size="9">30-50% better</text>
+  <text x="230" y="293" fill="#f59e0b" font-size="9">Moderate</text>
+  <text x="330" y="293" fill="#2563eb" font-size="9" font-weight="600">Default</text>
+
+  <text x="40" y="318" fill="#1e293b" font-size="9" font-weight="600">AV1</text>
+  <text x="130" y="318" fill="#475569" font-size="9">50-70% better</text>
+  <text x="230" y="318" fill="#ef4444" font-size="9">10x slower</text>
+  <text x="330" y="318" fill="#7c3aed" font-size="9" font-weight="600">Quality+</text>
+
+  <rect x="30" y="335" width="350" height="22" rx="5" fill="rgba(37,99,235,0.08)"/>
+  <text x="205" y="350" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="600">YouTube default: VP9 for most, AV1 for bandwidth savings, H.264 fallback</text>
+
+  <!-- Per-title encoding -->
+  <rect x="410" y="190" width="370" height="190" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="410" y="190" width="370" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="595" y="209" text-anchor="middle" fill="white" font-size="12" font-weight="700">Per-Title Encoding Optimization</text>
+
+  <text x="430" y="240" fill="#1e293b" font-size="10" font-weight="600">Static slideshow:</text>
+  <rect x="550" y="228" width="80" height="16" rx="3" fill="#22c55e"/>
+  <text x="590" y="240" text-anchor="middle" fill="white" font-size="8" font-weight="600">Low bitrate OK</text>
+
+  <text x="430" y="268" fill="#1e293b" font-size="10" font-weight="600">Talking head:</text>
+  <rect x="550" y="256" width="100" height="16" rx="3" fill="#3b82f6"/>
+  <text x="600" y="268" text-anchor="middle" fill="white" font-size="8" font-weight="600">Medium bitrate</text>
+
+  <text x="430" y="296" fill="#1e293b" font-size="10" font-weight="600">Action/sports:</text>
+  <rect x="550" y="284" width="130" height="16" rx="3" fill="#ef4444"/>
+  <text x="615" y="296" text-anchor="middle" fill="white" font-size="8" font-weight="600">High bitrate needed</text>
+
+  <text x="430" y="324" fill="#1e293b" font-size="10" font-weight="600">Gaming (60fps):</text>
+  <rect x="550" y="312" width="160" height="16" rx="3" fill="#a855f7"/>
+  <text x="630" y="324" text-anchor="middle" fill="white" font-size="8" font-weight="600">Highest bitrate + 60fps</text>
+
+  <text x="430" y="352" fill="#475569" font-size="9">ML analyzes content complexity per scene</text>
+  <text x="430" y="367" fill="#475569" font-size="9">and allocates bitrate accordingly — saves 20-40%</text>
+  <text x="430" y="382" fill="#475569" font-size="9">bandwidth vs fixed bitrate encoding.</text>
+</svg>

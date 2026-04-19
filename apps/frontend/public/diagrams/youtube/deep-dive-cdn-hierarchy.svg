@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="380" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">CDN Cache Hierarchy — Serving 175 Tbps Peak Bandwidth</text>
+
+  <!-- Viewer -->
+  <circle cx="70" cy="120" r="30" fill="#f97316"/>
+  <text x="70" y="118" text-anchor="middle" fill="white" font-size="20">👁</text>
+  <text x="70" y="135" text-anchor="middle" fill="white" font-size="7" font-weight="600">Viewer</text>
+  <text x="70" y="165" text-anchor="middle" fill="#64748b" font-size="9">1B hrs/day</text>
+
+  <line x1="100" y1="120" x2="150" y2="120" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Tier 1: Edge -->
+  <rect x="155" y="65" width="180" height="115" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <rect x="155" y="65" width="180" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="245" y="84" text-anchor="middle" fill="white" font-size="11" font-weight="700">🗼 Tier 1 — Edge PoPs</text>
+
+  <text x="170" y="110" fill="#1e293b" font-size="9" font-weight="600">100+ locations worldwide</text>
+  <text x="170" y="128" fill="#475569" font-size="9">Embedded in ISP networks</text>
+  <text x="170" y="146" fill="#475569" font-size="9">SSD storage only</text>
+  <text x="170" y="164" fill="#22c55e" font-size="9" font-weight="700">Top 1% of videos cached</text>
+  <text x="170" y="178" fill="#22c55e" font-size="10" font-weight="800">95%+ hit rate</text>
+
+  <!-- Miss arrow -->
+  <line x1="335" y1="120" x2="380" y2="120" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a)"/>
+  <text x="358" y="112" fill="#ef4444" font-size="7" font-weight="600">5% miss</text>
+
+  <!-- Tier 2: Regional -->
+  <rect x="385" y="65" width="170" height="115" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="385" y="65" width="170" height="28" rx="10 10 0 0" fill="#3b82f6"/>
+  <text x="470" y="84" text-anchor="middle" fill="white" font-size="11" font-weight="700">🏢 Tier 2 — Regional</text>
+
+  <text x="400" y="110" fill="#1e293b" font-size="9" font-weight="600">~20 regional centers</text>
+  <text x="400" y="128" fill="#475569" font-size="9">HDD + SSD tiered</text>
+  <text x="400" y="146" fill="#475569" font-size="9">Larger storage capacity</text>
+  <text x="400" y="164" fill="#3b82f6" font-size="9" font-weight="700">Top 10% cached</text>
+
+  <!-- Miss arrow -->
+  <line x1="555" y1="120" x2="600" y2="120" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a)"/>
+  <text x="578" y="112" fill="#ef4444" font-size="7" font-weight="600">miss</text>
+
+  <!-- Origin Shield -->
+  <rect x="605" y="75" width="80" height="90" rx="8" fill="#a855f7"/>
+  <text x="645" y="110" text-anchor="middle" fill="white" font-size="8" font-weight="700">Origin</text>
+  <text x="645" y="125" text-anchor="middle" fill="white" font-size="8" font-weight="700">Shield</text>
+  <text x="645" y="145" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Collapse</text>
+  <text x="645" y="157" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">duplicates</text>
+
+  <line x1="685" y1="120" x2="715" y2="120" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Origin -->
+  <rect x="720" y="70" width="60" height="100" rx="8" fill="#64748b"/>
+  <text x="750" y="105" text-anchor="middle" fill="white" font-size="8" font-weight="700">Origin</text>
+  <text x="750" y="120" text-anchor="middle" fill="white" font-size="8" font-weight="700">3-5 DCs</text>
+  <text x="750" y="140" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Full catalog</text>
+  <text x="750" y="155" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Hot/Cold</text>
+
+  <!-- Long-tail problem -->
+  <rect x="20" y="200" width="370" height="160" rx="10" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="20" y="200" width="370" height="28" rx="10 10 0 0" fill="#f59e0b"/>
+  <text x="205" y="219" text-anchor="middle" fill="white" font-size="12" font-weight="700">📊 The Long-Tail Challenge</text>
+
+  <!-- Distribution bars -->
+  <text x="40" y="250" fill="#1e293b" font-size="10" font-weight="600">Video Popularity Distribution:</text>
+
+  <rect x="40" y="260" width="15" height="60" rx="2" fill="#ef4444"/>
+  <text x="48" y="330" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="700">1%</text>
+  <text x="48" y="342" fill="#ef4444" font-size="6">popular</text>
+
+  <rect x="60" y="280" width="30" height="40" rx="2" fill="#f59e0b"/>
+  <text x="75" y="330" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="700">9%</text>
+  <text x="75" y="342" fill="#f59e0b" font-size="6">medium</text>
+
+  <rect x="95" y="300" width="250" height="20" rx="2" fill="#94a3b8"/>
+  <text x="220" y="315" text-anchor="middle" fill="white" font-size="8" font-weight="600">90% of videos — rarely watched</text>
+  <text x="220" y="342" fill="#64748b" font-size="7">long-tail (but must still be accessible in &lt;500ms)</text>
+
+  <!-- Caching strategies -->
+  <rect x="410" y="200" width="370" height="160" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="410" y="200" width="370" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="595" y="219" text-anchor="middle" fill="white" font-size="12" font-weight="700">⚡ Caching Strategies</text>
+
+  <text x="430" y="250" fill="#22c55e" font-size="10" font-weight="700">✓ Pre-warming</text>
+  <text x="440" y="268" fill="#475569" font-size="9">Push anticipated viral content to edge before release</text>
+
+  <text x="430" y="290" fill="#22c55e" font-size="10" font-weight="700">✓ Request Coalescing</text>
+  <text x="440" y="308" fill="#475569" font-size="9">Multiple clients requesting same video → single origin fetch</text>
+
+  <text x="430" y="330" fill="#22c55e" font-size="10" font-weight="700">✓ Origin Shield</text>
+  <text x="440" y="348" fill="#475569" font-size="9">Intermediate layer collapses duplicate edge-to-origin requests</text>
+</svg>

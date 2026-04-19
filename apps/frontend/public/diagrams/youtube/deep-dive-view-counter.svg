@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="350" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">View Counter Architecture — 58K Writes/sec with Fraud Detection</text>
+
+  <!-- Pipeline -->
+  <rect x="20" y="50" width="100" height="50" rx="8" fill="#f97316"/>
+  <text x="70" y="72" text-anchor="middle" fill="white" font-size="9" font-weight="700">Client View</text>
+  <text x="70" y="87" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">5B/day</text>
+
+  <line x1="120" y1="75" x2="155" y2="75" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="160" y="50" width="100" height="50" rx="8" fill="#f97316"/>
+  <text x="210" y="72" text-anchor="middle" fill="white" font-size="9" font-weight="700">Kafka Topic</text>
+  <text x="210" y="87" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">view-events</text>
+
+  <line x1="260" y1="75" x2="295" y2="75" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="300" y="45" width="120" height="60" rx="8" fill="#ef4444"/>
+  <text x="360" y="70" text-anchor="middle" fill="white" font-size="10" font-weight="700">Flink Pipeline</text>
+  <text x="360" y="87" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Dedup + Validate</text>
+  <text x="360" y="100" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Fraud filter</text>
+
+  <line x1="420" y1="75" x2="455" y2="75" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="460" y="50" width="120" height="50" rx="8" fill="#3b82f6"/>
+  <text x="520" y="72" text-anchor="middle" fill="white" font-size="9" font-weight="700">Batch Aggregator</text>
+  <text x="520" y="87" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Every 5-10 min</text>
+
+  <line x1="580" y1="75" x2="615" y2="75" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="620" y="50" width="100" height="50" rx="8" fill="#22c55e"/>
+  <text x="670" y="72" text-anchor="middle" fill="white" font-size="9" font-weight="700">View Count DB</text>
+  <text x="670" y="87" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">Vitess/MySQL</text>
+
+  <!-- Fraud Detection Details -->
+  <rect x="20" y="120" width="370" height="200" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="120" width="370" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="205" y="139" text-anchor="middle" fill="white" font-size="12" font-weight="700">🛡 Fraud Detection Pipeline</text>
+
+  <text x="40" y="170" fill="#ef4444" font-size="10" font-weight="700">Filters (applied in order):</text>
+
+  <text x="40" y="195" fill="#1e293b" font-size="10">1. 🕐  Minimum watch time: 30 seconds</text>
+  <text x="60" y="212" fill="#64748b" font-size="8">Reject views where user watched &lt;30s</text>
+
+  <text x="40" y="235" fill="#1e293b" font-size="10">2. 🔄  Deduplication window</text>
+  <text x="60" y="252" fill="#64748b" font-size="8">Same user + same video in 24hr → count once</text>
+
+  <text x="40" y="275" fill="#1e293b" font-size="10">3. 🤖  Bot detection ML model</text>
+  <text x="60" y="292" fill="#64748b" font-size="8">Device fingerprint, behavior patterns, click farms</text>
+
+  <text x="40" y="315" fill="#1e293b" font-size="10">4. 📍  Rate limiting: per IP + per device</text>
+
+  <!-- Counter Sharding -->
+  <rect x="410" y="120" width="370" height="200" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="410" y="120" width="370" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="595" y="139" text-anchor="middle" fill="white" font-size="12" font-weight="700">🔥 Hot-Key: Counter Sharding for Viral Videos</text>
+
+  <text x="430" y="168" fill="#1e293b" font-size="10" font-weight="600">Problem: Viral video = millions of writes to single key</text>
+
+  <text x="430" y="195" fill="#2563eb" font-size="10" font-weight="600">Solution: Shard counter across N Redis instances</text>
+
+  <!-- Shard visualization -->
+  <rect x="440" y="210" width="55" height="30" rx="4" fill="#ef4444"/>
+  <text x="467" y="230" text-anchor="middle" fill="white" font-size="8" font-weight="600">Shard 1</text>
+  <rect x="500" y="210" width="55" height="30" rx="4" fill="#ef4444"/>
+  <text x="527" y="230" text-anchor="middle" fill="white" font-size="8" font-weight="600">Shard 2</text>
+  <rect x="560" y="210" width="55" height="30" rx="4" fill="#ef4444"/>
+  <text x="587" y="230" text-anchor="middle" fill="white" font-size="8" font-weight="600">Shard 3</text>
+  <text x="625" y="230" fill="#64748b" font-size="10">...</text>
+  <rect x="640" y="210" width="55" height="30" rx="4" fill="#ef4444"/>
+  <text x="667" y="230" text-anchor="middle" fill="white" font-size="8" font-weight="600">Shard N</text>
+  <rect x="700" y="210" width="60" height="30" rx="4" fill="#22c55e"/>
+  <text x="730" y="225" text-anchor="middle" fill="white" font-size="7" font-weight="600">N=100</text>
+  <text x="730" y="236" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">typical</text>
+
+  <text x="430" y="265" fill="#1e293b" font-size="10"><tspan font-weight="600">Write:</tspan> INCR random shard → O(1)</text>
+  <text x="430" y="285" fill="#1e293b" font-size="10"><tspan font-weight="600">Read:</tspan> SUM all shards → O(N)</text>
+
+  <rect x="430" y="298" width="330" height="18" rx="4" fill="rgba(37,99,235,0.08)"/>
+  <text x="595" y="311" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="600">Eventual consistency OK — public count can lag hours for new videos</text>
+</svg>
