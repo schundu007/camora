@@ -401,7 +401,8 @@ export function StaticDiagram({ diagram }) {
           key={currentSrc}
           src={currentSrc}
           alt={`${diagram.title} — ${provider.toUpperCase()}`}
-          className={`w-full rounded-lg transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+          className={`rounded-lg transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'} ${diagram.type === 'ui' ? 'max-h-[320px] mx-auto' : 'w-full'}`}
+          style={diagram.type === 'ui' ? { width: 'auto', maxHeight: '320px' } : { maxHeight: '500px', objectFit: 'contain', width: '100%' }}
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
           loading="lazy"
