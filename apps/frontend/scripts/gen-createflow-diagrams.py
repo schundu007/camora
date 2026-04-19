@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Generate createFlow/redirectFlow diagrams for ALL topics that have them."""
+import graphviz, os
+
+BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
+
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+C = {
+    'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
+    'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
+    'pink': ('#fce7f3','#ec4899','#9d174d'), 'orange': ('#ffedd5','#f97316','#9a3412'),
+    'teal': ('#ccfbf1','#14b8a6','#115e59'), 'gray': ('#f3f4f6','#6b7280','#374151'),
+    'red': ('#fee2e2','#ef4444','#991b1b'),
+}
+def n(g, nm, label, c): g.node(nm, label, fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2], **NODE)
+def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
+def mk(out, name, title, **kw):
+    os.makedirs(out, exist_ok=True)
+    g = graphviz.Digraph(format='png')
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+           label=f'  {title}  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b', **kw)
+    return g, os.path.join(out, name)
+
+# ── URL SHORTENER ──
+def url_create():
+    OUT = os.path.join(BASE, 'url-shortener')
+    g, path = mk(OUT, 'flow-create-url', 'Create Short URL', rankdir='LR')
+    n(g, 'client', 'Client\nPOST /urls', 'blue')
+    n(g, 'api', 'API Gateway\n(rate limit)', 'gray')
+    n(g, 'validate', 'Validate URL\n+ custom alias', 'green')
+    n(g, 'gen', 'Generate ID\n(Base62 encode\nor custom)', 'purple')
+    n(g, 'db', 'Write to DB\n(MySQL/DynamoDB)', 'teal')
+    n(g, 'cache', 'Cache\n(Redis)', 'pink')
+    n(g, 'resp', 'Return\nshort URL', 'blue')
+    e(g, 'client', 'api', '① POST', '#3b82f6')
+    e(g, 'api', 'validate', '② check', '#22c55e')
+    e(g, 'validate', 'gen', '③ generate', '#6366f1')
+    e(g, 'gen', 'db', '④ persist', '#14b8a6')
+    e(g, 'gen', 'cache', '⑤ cache', '#ec4899')
+    e(g, 'gen', 'resp', '⑥ return', '#3b82f6')
+    g.render(path, cleanup=True)
+
+def url_redirect():
+    OUT = os.path.join(BASE, 'url-shortener')
+    g, path = mk(OUT, 'flow-redirect-url', 'Redirect Short URL', rankdir='LR')
+    n(g, 'client', 'Browser\nGET /abc123', 'blue')
+    n(g, 'api', 'API Gateway', 'gray')
+    n(g, 'cache', 'Redis Cache\n(check first)', 'pink')
+    n(g, 'db', 'DB Lookup\n(cache miss)', 'purple')
+    n(g, 'analytics', 'Analytics\n(log click,\ngeo, device)', 'yellow')
+    n(g, 'redirect', '301/302\nRedirect\nto long URL', 'green')
+    e(g, 'client', 'api', '① GET', '#3b82f6')
+    e(g, 'api', 'cache', '② lookup', '#ec4899')
+    e(g, 'cache', 'redirect', 'cache hit\n(~95%)', '#22c55e')
+    e(g, 'cache', 'db', 'cache miss', '#6366f1', 'dashed')
+    e(g, 'db', 'cache', 'backfill', '#6366f1', 'dashed')
+    e(g, 'api', 'analytics', '③ async log', '#f59e0b', 'dashed')
+    e(g, 'db', 'redirect', '④ found', '#22c55e')
+    g.render(path, cleanup=True)
+
+# ── TWITTER ──
+def twitter_create():
+    OUT = os.path.join(BASE, 'twitter')
+    g, path = mk(OUT, 'flow-create-tweet', 'Post Tweet Flow', rankdir='LR')
+    n(g, 'user', 'User\nposts tweet', 'blue')
+    n(g, 'api', 'API Gateway\n(rate limit)', 'gray')
+    n(g, 'validate', 'Validate\n(280 chars,\nspam check)', 'green')
+    n(g, 'snowflake', 'Snowflake ID\n(time-sortable)', 'purple')
+    n(g, 'db', 'Tweet DB\n(MySQL sharded)', 'teal')
+    n(g, 'fanout', 'Fan-out Service\n(hybrid: push\nfor <10K)', 'orange')
+    n(g, 'timeline', 'Follower\nTimelines\n(Redis)', 'yellow')
+    n(g, 'index', 'Search Index\n+ Trends', 'pink')
+    e(g, 'user', 'api', '① POST', '#3b82f6')
+    e(g, 'api', 'validate', '② check', '#22c55e')
+    e(g, 'validate', 'snowflake', '③ gen ID', '#6366f1')
+    e(g, 'snowflake', 'db', '④ persist', '#14b8a6')
+    e(g, 'db', 'fanout', '⑤ trigger', '#f97316')
+    e(g, 'fanout', 'timeline', '⑥ push to\nfollower feeds', '#f59e0b')
+    e(g, 'db', 'index', '⑦ index +\ntrend count', '#ec4899', 'dashed')
+    g.render(path, cleanup=True)
+
+def twitter_read():
+    OUT = os.path.join(BASE, 'twitter')
+    g, path = mk(OUT, 'flow-read-timeline', 'Read Timeline Flow', rankdir='LR')
+    n(g, 'user', 'User opens\nfeed', 'blue')
+    n(g, 'feed', 'Feed Service', 'green')
+    n(g, 'redis', 'Pre-built\nTimeline\n(Redis list)', 'yellow')
+    n(g, 'celeb', 'Celebrity\nTweets\n(pull on read)', 'orange')
+    n(g, 'rank', 'ML Ranking\n(engagement\nprediction)', 'purple')
+    n(g, 'hydrate', 'Hydrate\n(full tweet\nobjects)', 'teal')
+    n(g, 'resp', 'Paginated\nFeed', 'blue')
+    e(g, 'user', 'feed', '① GET /feed', '#3b82f6')
+    e(g, 'feed', 'redis', '② fetch\npre-built', '#f59e0b')
+    e(g, 'feed', 'celeb', '③ pull celeb\ntweets', '#f97316')
+    e(g, 'redis', 'rank', 'merge', '#6366f1')
+    e(g, 'celeb', 'rank', 'merge', '#6366f1')
+    e(g, 'rank', 'hydrate', '④ top 20', '#14b8a6')
+    e(g, 'hydrate', 'resp', '⑤ return', '#3b82f6')
+    g.render(path, cleanup=True)
+
+# ── UBER ──
+def uber_request():
+    OUT = os.path.join(BASE, 'uber')
+    g, path = mk(OUT, 'flow-ride-request', 'Ride Request Flow', rankdir='TB')
+    n(g, 'rider', 'Rider\nopens app', 'blue')
+    n(g, 'api', 'API Gateway', 'gray')
+    n(g, 'pricing', 'Pricing Service\n(surge × ETA\n× distance)', 'yellow')
+    n(g, 'match', 'Matching Service\n(GEORADIUS 5km\nfrom pickup)', 'green')
+    n(g, 'rank', 'Score & Rank\n(distance, rating,\nacceptance rate)', 'purple')
+    n(g, 'dispatch', 'Dispatch\n(push to top\ndriver, 15s timer)', 'orange')
+    n(g, 'driver', 'Driver\naccepts', 'blue')
+    n(g, 'ws', 'WebSocket\n(real-time GPS\nstreaming)', 'teal')
+    n(g, 'complete', 'Ride Complete\n(fare, payment,\nratings)', 'pink')
+    e(g, 'rider', 'api', '① request\nride', '#3b82f6')
+    e(g, 'api', 'pricing', '② calc fare\n+ surge', '#f59e0b')
+    e(g, 'api', 'match', '③ find nearby\ndrivers', '#22c55e')
+    e(g, 'match', 'rank', '④ score\ncandidates', '#6366f1')
+    e(g, 'rank', 'dispatch', '⑤ dispatch\ntop driver', '#f97316')
+    e(g, 'dispatch', 'driver', '⑥ push\nnotification', '#3b82f6')
+    e(g, 'driver', 'ws', '⑦ GPS\nstreaming', '#14b8a6')
+    e(g, 'ws', 'complete', '⑧ arrive +\ncomplete', '#ec4899')
+    g.render(path, cleanup=True)
+
+def uber_tracking():
+    OUT = os.path.join(BASE, 'uber')
+    g, path = mk(OUT, 'flow-ride-tracking', 'Ride Tracking Flow', rankdir='LR')
+    n(g, 'driver', 'Driver\nApp', 'blue')
+    n(g, 'gps', 'GPS Service\n(every 2s)', 'green')
+    n(g, 'kafka', 'Kafka\n(location\nstream)', 'yellow')
+    n(g, 'geo', 'Geospatial\nIndex\n(H3 cells)', 'purple')
+    n(g, 'eta', 'ETA Service\n(real-time\nrecalculation)', 'orange')
+    n(g, 'rider', 'Rider App\n(live map\nvia WebSocket)', 'blue')
+    e(g, 'driver', 'gps', '① location\nupdate', '#22c55e')
+    e(g, 'gps', 'kafka', '② publish', '#f59e0b')
+    e(g, 'kafka', 'geo', '③ update\nH3 index', '#6366f1')
+    e(g, 'kafka', 'eta', '④ recalc\nETA', '#f97316')
+    e(g, 'eta', 'rider', '⑤ push\nvia WS', '#3b82f6')
+    e(g, 'geo', 'rider', '⑥ map\nupdate', '#3b82f6', 'dashed')
+    g.render(path, cleanup=True)
+
+# ── WHATSAPP ──
+def wa_send():
+    OUT = os.path.join(BASE, 'whatsapp')
+    g, path = mk(OUT, 'flow-create-send', 'Send Message Flow', rankdir='LR')
+    n(g, 'sender', 'Sender\nDevice', 'blue')
+    n(g, 'encrypt', 'Signal Protocol\nEncrypt', 'purple')
+    n(g, 'gw1', 'Chat\nGateway 1', 'green')
+    n(g, 'redis', 'Redis\n(sessions)', 'pink')
+    n(g, 'kafka', 'Kafka\n(routing)', 'yellow')
+    n(g, 'cass', 'Cassandra\n(persist)', 'teal')
+    n(g, 'gw2', 'Chat\nGateway 2', 'green')
+    n(g, 'recv', 'Recipient\nDevice', 'blue')
+    e(g, 'sender', 'encrypt', '① encrypt', '#6366f1')
+    e(g, 'encrypt', 'gw1', '② WS send', '#22c55e')
+    e(g, 'gw1', 'redis', '③ lookup\nrecipient', '#ec4899')
+    e(g, 'gw1', 'kafka', '④ route', '#f59e0b')
+    e(g, 'gw1', 'cass', '⑤ persist', '#14b8a6', 'dashed')
+    e(g, 'kafka', 'gw2', '⑥ deliver', '#f59e0b')
+    e(g, 'gw2', 'recv', '⑦ WS push\n✓✓', '#3b82f6')
+    g.render(path, cleanup=True)
+
+def wa_receive():
+    OUT = os.path.join(BASE, 'whatsapp')
+    g, path = mk(OUT, 'flow-redirect-receive', 'Receive Flow (Reconnection)', rankdir='LR')
+    n(g, 'user', 'User\nreconnects', 'blue')
+    n(g, 'gw', 'Chat\nGateway', 'green')
+    n(g, 'redis', 'Redis\n(register\nsession)', 'pink')
+    n(g, 'queue', 'Offline\nQueue', 'orange')
+    n(g, 'deliver', 'Batch\nDeliver\n(50 at a time)', 'yellow')
+    n(g, 'decrypt', 'Decrypt\n(private key)', 'purple')
+    n(g, 'ack', 'ACK ✓✓\nDelivered', 'teal')
+    e(g, 'user', 'gw', '① new WS\nconnection', '#3b82f6')
+    e(g, 'gw', 'redis', '② register\nsession', '#ec4899')
+    e(g, 'gw', 'queue', '③ fetch\npending', '#f97316')
+    e(g, 'queue', 'deliver', '④ flush\nbatch', '#f59e0b')
+    e(g, 'deliver', 'decrypt', '⑤ decrypt\nlocally', '#6366f1')
+    e(g, 'decrypt', 'ack', '⑥ ACK\neach msg', '#14b8a6')
+    g.render(path, cleanup=True)
+
+# ── NETFLIX ──
+def netflix_playback():
+    OUT = os.path.join(BASE, 'netflix')
+    g, path = mk(OUT, 'flow-create-playback', 'Video Playback Flow', rankdir='LR')
+    n(g, 'user', 'User clicks\nPlay', 'blue')
+    n(g, 'api', 'Playback\nAPI', 'green')
+    n(g, 'drm', 'DRM License\nServer', 'purple')
+    n(g, 'steer', 'CDN Steering\n(closest OCA)', 'yellow')
+    n(g, 'oca', 'Open Connect\nAppliance\n(at ISP)', 'red')
+    n(g, 'abr', 'Adaptive\nBitrate\n(client)', 'orange')
+    n(g, 'player', 'Video\nPlayer', 'blue')
+    e(g, 'user', 'api', '① play', '#3b82f6')
+    e(g, 'api', 'drm', '② license', '#6366f1')
+    e(g, 'api', 'steer', '③ best CDN', '#f59e0b')
+    e(g, 'steer', 'oca', '④ redirect', '#ef4444')
+    e(g, 'oca', 'abr', '⑤ stream\nchunks', '#f97316')
+    e(g, 'abr', 'player', '⑥ adaptive\nquality', '#3b82f6')
+    g.render(path, cleanup=True)
+
+def netflix_ingest():
+    OUT = os.path.join(BASE, 'netflix')
+    g, path = mk(OUT, 'flow-redirect-ingest', 'Content Ingestion Pipeline', rankdir='LR')
+    n(g, 'studio', 'Content\nStudio', 'blue')
+    n(g, 'upload', 'Upload\nService', 'green')
+    n(g, 'raw', 'S3\n(raw master)', 'purple')
+    n(g, 'transcode', 'Transcoding\n(1,200+ profiles)', 'orange')
+    n(g, 'validate', 'Quality\nValidation\n(VMAF)', 'teal')
+    n(g, 'oc', 'Push to\nOpen Connect\nCDN', 'red')
+    e(g, 'studio', 'upload', '① upload', '#3b82f6')
+    e(g, 'upload', 'raw', '② store', '#6366f1')
+    e(g, 'raw', 'transcode', '③ encode', '#f97316')
+    e(g, 'transcode', 'validate', '④ VMAF\ncheck', '#14b8a6')
+    e(g, 'validate', 'oc', '⑤ distribute\nto ISPs', '#ef4444')
+    g.render(path, cleanup=True)
+
+if __name__ == '__main__':
+    fns = [url_create, url_redirect, twitter_create, twitter_read, uber_request, uber_tracking, wa_send, wa_receive, netflix_playback, netflix_ingest]
+    for fn in fns:
+        fn(); print(f'OK: {fn.__name__}')
+    print(f'\nGenerated {len(fns)} createFlow/redirectFlow diagrams')
