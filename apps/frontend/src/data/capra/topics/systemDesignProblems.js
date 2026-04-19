@@ -129,7 +129,35 @@ Being able to discuss the flaws of the basic approach and how the advanced appro
   createdAt: timestamp
   expiresAt: timestamp (nullable)
   clickCount: bigint (default 0)
+}`,
+        examples: [
+          {
+            table: 'urls',
+            label: 'URL Mapping Record',
+            json: `{
+  "id": 8742910553,
+  "shortUrl": "dK9v2Tx",
+  "longUrl": "https://www.example.com/blog/2026/04/how-to-design-scalable-systems-at-scale?utm_source=newsletter&utm_medium=email",
+  "userId": 440012,
+  "createdAt": "2026-04-18T09:15:42Z",
+  "expiresAt": null,
+  "clickCount": 15420
 }`
+          },
+          {
+            table: 'analytics',
+            label: 'Click Analytics Event',
+            json: `{
+  "shortCode": "dK9v2Tx",
+  "timestamp": "2026-04-18T14:32:07Z",
+  "ip": "203.0.113.42",
+  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 19_0)",
+  "referer": "https://twitter.com",
+  "country": "US",
+  "city": "San Francisco"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -1060,7 +1088,39 @@ follows {
   followeeId: bigint
   createdAt: timestamp
   PRIMARY KEY (followerId, followeeId)
+}`,
+        examples: [
+          {
+            table: 'tweets',
+            label: 'Tweet Record',
+            json: `{
+  "id": 1780642319874056192,
+  "userId": 44196397,
+  "content": "Just deployed our new microservice architecture. Latency dropped 40% across the board.",
+  "mediaUrls": ["https://pbs.twimg.com/media/Gk2x1a.jpg"],
+  "replyToId": null,
+  "retweetOf": null,
+  "likeCount": 8432,
+  "retweetCount": 1205,
+  "createdAt": "2026-04-18T15:42:09Z"
 }`
+          },
+          {
+            table: 'timeline_cache',
+            label: 'Timeline Cache Entry (Redis)',
+            json: `{
+  "userId": 98201044,
+  "timelineType": "home",
+  "tweetIds": [
+    1780642319874056192,
+    1780638901223415808,
+    1780635482177775616
+  ],
+  "lastRefreshed": "2026-04-18T15:43:00Z",
+  "ttl": 300
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -1880,7 +1940,12 @@ rides {
   requestedAt: timestamp
   startedAt: timestamp nullable
   completedAt: timestamp nullable
-}`
+}`,
+        examples: [
+          { table: 'rides', label: 'Active ride in progress', json: '{ "id": 8827361, "riderId": 4421, "driverId": 7893, "pickup": {"lat": 40.758, "lng": -73.985}, "dropoff": {"lat": 40.712, "lng": -74.006}, "status": "IN_PROGRESS", "fare": null, "requestedAt": "2026-04-19T14:23:00Z", "startedAt": "2026-04-19T14:28:12Z" }' },
+          { table: 'drivers', label: 'Available driver with live GPS', json: '{ "userId": 7893, "vehicleInfo": {"make": "Toyota", "model": "Camry", "year": 2023, "plate": "ABC-1234"}, "isAvailable": true, "currentLocation": {"lat": 40.754, "lng": -73.984}, "lastLocationUpdate": "2026-04-19T14:22:57Z" }' },
+          { table: 'location_event', label: 'GPS update from driver app', json: '{ "driverId": 7893, "lat": 40.755, "lng": -73.983, "heading": 225, "speed": 12.4, "accuracy": 8.2, "timestamp": "2026-04-19T14:23:00Z", "cellId": "h3_89283082e73ffff" }' },
+        ]
       },
 
       apiDesign: {
@@ -2744,7 +2809,12 @@ watch_history {
   watchedAt: timestamp
   watchDuration: int (seconds)
   completionRate: float
-}`
+}`,
+        examples: [
+          { table: 'videos', label: 'Published video with metadata', json: '{ "id": "dQw4w9WgXcQ", "channelId": 281902, "title": "React Hooks Tutorial", "uploadStatus": "READY", "duration": 1847, "viewCount": 2841093, "likeCount": 98234, "uploadedAt": "2026-03-15T10:00:00Z" }' },
+          { table: 'video_formats', label: 'Transcoded 1080p VP9 entry', json: '{ "videoId": "dQw4w9WgXcQ", "resolution": 1080, "codec": "VP9", "bitrate": 5000000, "storageUrl": "gs://yt-transcoded/dQw4/1080p_vp9.webm", "segmentManifest": "gs://yt-manifests/dQw4/1080p.m3u8" }' },
+          { table: 'watch_history', label: 'User watch session', json: '{ "userId": 44219, "videoId": "dQw4w9WgXcQ", "watchedAt": "2026-04-19T20:15:00Z", "watchDuration": 1200, "completionRate": 0.65 }' },
+        ]
       },
 
       apiDesign: {
@@ -4409,7 +4479,46 @@ feed_cache {
   userId: bigint PK
   posts: jsonb -- pre-computed list of postIds
   updatedAt: timestamp
+}`,
+        examples: [
+          {
+            table: 'posts',
+            label: 'Instagram Post Record',
+            json: `{
+  "id": 3291847562,
+  "userId": 25025320,
+  "caption": "Golden hour at Big Sur. No filter needed.",
+  "location": "Big Sur, California",
+  "likeCount": 24819,
+  "commentCount": 342,
+  "createdAt": "2026-04-17T19:45:12Z"
 }`
+          },
+          {
+            table: 'media',
+            label: 'Post Media Asset',
+            json: `{
+  "id": 9918273641,
+  "postId": 3291847562,
+  "type": "IMAGE",
+  "url": "https://scontent.cdninstagram.com/v/t51.2885-15/3291847562_n.jpg",
+  "thumbnailUrl": "https://scontent.cdninstagram.com/v/t51.2885-15/3291847562_s150x150.jpg",
+  "width": 1080,
+  "height": 1350,
+  "duration": null,
+  "orderIndex": 0
+}`
+          },
+          {
+            table: 'feed_cache',
+            label: 'Feed Cache Entry (Redis)',
+            json: `{
+  "userId": 25025320,
+  "posts": [3291847562, 3291803219, 3291756001, 3291698445],
+  "updatedAt": "2026-04-18T02:00:00Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -5657,7 +5766,12 @@ sync_cursors {
   deviceId: varchar PK
   cursor: varchar -- position in change stream
   lastSyncAt: timestamp
-}`
+}`,
+        examples: [
+          { table: 'files', label: 'Synced document with block hashes', json: '{ "id": "f8a2c3d1-e4b5", "userId": 44219, "name": "quarterly-report.docx", "size": 8388608, "contentHash": "sha256_a7f3c2e1...", "blockHashes": ["sha256_block1...", "sha256_block2..."], "version": 7, "isDeleted": false, "modifiedAt": "2026-04-19T15:30:00Z" }' },
+          { table: 'blocks', label: 'Content-addressed storage block', json: '{ "hash": "sha256_a7f3c2e1d4b5a6c7d8e9f0...", "size": 4194304, "storageUrl": "s3://dropbox-blocks/a7/f3/c2e1d4b5", "referenceCount": 847 }' },
+          { table: 'sync_cursors', label: 'Device sync position', json: '{ "userId": 44219, "deviceId": "macbook-pro-2024", "cursor": "AAGxyz123_seq_98234", "lastSyncAt": "2026-04-19T15:30:02Z" }' },
+        ]
       },
 
       apiDesign: {
@@ -6182,7 +6296,50 @@ watch_history {
   duration: int
   watchedAt: timestamp
   completed: boolean
+}`,
+        examples: [
+          {
+            table: 'content',
+            label: 'Content Metadata Record',
+            json: `{
+  "id": "81145628",
+  "type": "SERIES",
+  "title": "Stranger Things",
+  "releaseYear": 2016,
+  "duration": null,
+  "maturityRating": "PG13",
+  "genres": ["sci-fi", "horror", "drama"],
+  "cast": ["Millie Bobby Brown", "Finn Wolfhard", "Winona Ryder"],
+  "director": "The Duffer Brothers",
+  "synopsis": "When a young boy vanishes, a small town uncovers a mystery involving secret experiments...",
+  "thumbnailUrl": "/titles/81145628/thumb.jpg",
+  "trailerUrl": "/titles/81145628/trailer.mp4"
 }`
+          },
+          {
+            table: 'video_assets',
+            label: 'Encoding Version',
+            json: `{
+  "contentId": "81145628",
+  "quality": "UHD",
+  "codec": "AV1",
+  "bitrate": 15000,
+  "manifestUrl": "https://oca.nflxvideo.net/81145628/uhd/av1/manifest.mpd"
+}`
+          },
+          {
+            table: 'watch_history',
+            label: 'Watch Progress Record',
+            json: `{
+  "profileId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "contentId": "81145628",
+  "position": 2347,
+  "duration": 3180,
+  "watchedAt": "2026-04-18T22:14:33Z",
+  "completed": false
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -7500,7 +7657,60 @@ cart {
   userId: bigint PK
   items: jsonb -- [{productId, quantity, addedAt}]
   updatedAt: timestamp
+}`,
+        examples: [
+          {
+            table: 'products',
+            label: 'Product Listing (ASIN)',
+            json: `{
+  "id": "B09V3KXJPB",
+  "title": "Apple AirPods Pro (2nd Gen)",
+  "categoryId": 112,
+  "sellerId": 100042,
+  "price": 249.00,
+  "images": ["/img/B09V3KXJPB_1.jpg", "/img/B09V3KXJPB_2.jpg"],
+  "attributes": {
+    "color": "White",
+    "connectivity": "Bluetooth 5.3",
+    "noiseCancellation": true
+  },
+  "rating": 4.7,
+  "reviewCount": 128453,
+  "createdAt": "2024-09-12T08:00:00Z"
 }`
+          },
+          {
+            table: 'inventory',
+            label: 'Warehouse Stock Record',
+            json: `{
+  "productId": "B09V3KXJPB",
+  "warehouseId": 7,
+  "quantity": 3420,
+  "reservedQuantity": 187,
+  "lastUpdated": "2026-04-19T10:15:32Z",
+  "version": 42
+}`
+          },
+          {
+            table: 'orders',
+            label: 'Confirmed Order',
+            json: `{
+  "id": 9928374651,
+  "userId": 500123,
+  "status": "CONFIRMED",
+  "totalAmount": 273.49,
+  "shippingAddress": {
+    "line1": "123 Main St",
+    "city": "Seattle",
+    "state": "WA",
+    "zip": "98101"
+  },
+  "paymentId": "pi_3Nq8kR2eZvKYlo2C",
+  "createdAt": "2026-04-19T14:02:11Z",
+  "updatedAt": "2026-04-19T14:02:45Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -8260,7 +8470,53 @@ presence {
   color: varchar(7)
   name: varchar(100)
   lastSeen: timestamp
+}`,
+        examples: [
+          {
+            table: 'operations',
+            label: 'Insert Operation',
+            json: `{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "documentId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "userId": 330421,
+  "revision": 1847,
+  "type": "INSERT",
+  "position": 342,
+  "content": "distributed consensus",
+  "attributes": null,
+  "timestamp": "2026-04-18T14:22:08.192Z"
 }`
+          },
+          {
+            table: 'operations',
+            label: 'Format Operation',
+            json: `{
+  "id": "9b2d6f3a-1e4c-4a8b-b5d7-3c9e8f0a2b1d",
+  "documentId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "userId": 330421,
+  "revision": 1848,
+  "type": "FORMAT",
+  "position": 342,
+  "content": null,
+  "attributes": {"bold": true, "length": 21},
+  "timestamp": "2026-04-18T14:22:09.004Z"
+}`
+          },
+          {
+            table: 'presence',
+            label: 'Active Collaborator Cursor',
+            json: `{
+  "documentId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "userId": 880093,
+  "cursorPosition": 587,
+  "selectionStart": 580,
+  "selectionEnd": 612,
+  "color": "#e91e63",
+  "name": "Sarah Chen",
+  "lastSeen": "2026-04-18T14:22:10.331Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -9097,7 +9353,39 @@ refunds {
   status: enum(PENDING, SUCCEEDED, FAILED)
   reason: varchar
   createdAt: timestamp
+}`,
+        examples: [
+          {
+            table: 'ledger_entries',
+            label: 'Double-Entry Ledger (Debit)',
+            json: `{
+  "id": 928374651,
+  "transactionId": "pi_3Nq8kR2eZvKYlo2C1a2b3c",
+  "accountId": 10042,
+  "type": "DEBIT",
+  "amount": 4999,
+  "currency": "USD",
+  "balance": 1284350,
+  "createdAt": "2026-04-18T16:05:22.481Z"
 }`
+          },
+          {
+            table: 'payments',
+            label: 'Captured Payment Record',
+            json: `{
+  "id": "pi_3Nq8kR2eZvKYlo2C1a2b3c",
+  "merchantId": 55021,
+  "customerId": 770314,
+  "amount": 4999,
+  "currency": "USD",
+  "status": "CAPTURED",
+  "paymentMethodId": "pm_1Nq8kR2eZvKYlo2C",
+  "idempotencyKey": "order_8827341_attempt_1",
+  "metadata": {"orderId": "8827341", "product": "Pro Plan Monthly"},
+  "createdAt": "2026-04-18T16:05:22Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -9932,7 +10220,45 @@ url_frontier {
   priority: float
   last_crawled: timestamp
   crawl_frequency: interval
+}`,
+        examples: [
+          {
+            table: 'inverted_index',
+            label: 'Inverted Index Entry',
+            json: `{
+  "term": "distributed",
+  "posting_list": [
+    {"doc_id": 48291037, "frequency": 7, "positions": [12, 45, 89, 134, 201, 267, 310], "field_weights": {"title": 2.0, "body": 1.0}},
+    {"doc_id": 73018245, "frequency": 3, "positions": [5, 78, 156], "field_weights": {"title": 0, "body": 1.0}},
+    {"doc_id": 91204836, "frequency": 11, "positions": [2, 23, 67, 91, 145, 198, 234, 289, 312, 378, 401], "field_weights": {"title": 2.0, "body": 1.0, "h1": 1.5}}
+  ],
+  "idf": 4.721
 }`
+          },
+          {
+            table: 'documents',
+            label: 'Crawled Page Record',
+            json: `{
+  "doc_id": 48291037,
+  "url": "https://engineering.example.com/blog/distributed-systems-at-scale",
+  "title": "Building Distributed Systems at Scale",
+  "content_hash": "a3f8c91e7b244d5fb6e19c8d",
+  "pagerank": 0.00087,
+  "last_crawled": "2026-04-18T06:12:44Z",
+  "language": "en"
+}`
+          },
+          {
+            table: 'url_frontier',
+            label: 'Crawl Frontier Entry',
+            json: `{
+  "url": "https://engineering.example.com/blog/distributed-systems-at-scale",
+  "priority": 0.82,
+  "last_crawled": "2026-04-18T06:12:44Z",
+  "crawl_frequency": "7 days"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -10698,7 +11024,51 @@ device_tokens {
   platform: enum(IOS, ANDROID, WEB)
   token: varchar
   created_at: timestamp
+}`,
+        examples: [
+          {
+            table: 'notifications',
+            label: 'Push Notification Record',
+            json: `{
+  "id": "c7e3a91f-2d4b-4e8c-a1f5-9b3d7e6c8a02",
+  "user_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "template_id": "order_shipped",
+  "channel": "PUSH",
+  "priority": "NORMAL",
+  "status": "DELIVERED",
+  "data": {"orderId": "9928374651", "carrier": "FedEx", "trackingNumber": "7489201847"},
+  "scheduled_at": null,
+  "sent_at": "2026-04-18T11:30:02.481Z",
+  "created_at": "2026-04-18T11:30:00.112Z"
 }`
+          },
+          {
+            table: 'notifications',
+            label: 'Urgent SMS (OTP)',
+            json: `{
+  "id": "a8b2c4d6-e1f3-5a7b-9c0d-2e4f6a8b0c1d",
+  "user_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "template_id": "otp_verification",
+  "channel": "SMS",
+  "priority": "URGENT",
+  "status": "SENT",
+  "data": {"code": "847291", "expiresInMinutes": 5},
+  "scheduled_at": null,
+  "sent_at": "2026-04-18T14:05:01.092Z",
+  "created_at": "2026-04-18T14:05:00.887Z"
+}`
+          },
+          {
+            table: 'device_tokens',
+            label: 'Registered Device Token',
+            json: `{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "platform": "IOS",
+  "token": "a9d0ed10e53b3e0a7e1f4c2d8b6e9f0a1c3d5e7f9b0d2e4f6a8c0e2d4f6a8b0",
+  "created_at": "2026-03-12T08:44:19Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -13306,7 +13676,49 @@ user_presence {
   status: enum(ACTIVE, AWAY, DND, OFFLINE)
   status_text: varchar(100)
   last_active: timestamp
+}`,
+        examples: [
+          {
+            table: 'messages',
+            label: 'Channel Message',
+            json: `{
+  "id": 1780642319874056192,
+  "channel_id": "b4e7c2a1-3f8d-4e9b-a5c1-7d2e6f0b8a34",
+  "user_id": "e1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6",
+  "thread_id": null,
+  "content": "The deployment pipeline is green. Pushing to prod at 3pm EST.",
+  "attachments": [],
+  "reactions": {"thumbsup": ["e1a2b3c4", "f2b3c4d5"], "rocket": ["a3b4c5d6"]},
+  "edited_at": null,
+  "created_at": "2026-04-18T14:32:07.221Z"
 }`
+          },
+          {
+            table: 'messages',
+            label: 'Thread Reply',
+            json: `{
+  "id": 1780642891203481600,
+  "channel_id": "b4e7c2a1-3f8d-4e9b-a5c1-7d2e6f0b8a34",
+  "user_id": "f2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7",
+  "thread_id": 1780642319874056192,
+  "content": "LGTM. I'll monitor the error dashboard during rollout.",
+  "attachments": [],
+  "reactions": {},
+  "edited_at": null,
+  "created_at": "2026-04-18T14:35:42.108Z"
+}`
+          },
+          {
+            table: 'user_presence',
+            label: 'Online User Presence',
+            json: `{
+  "user_id": "e1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6",
+  "status": "ACTIVE",
+  "status_text": "Deploying v2.4.1",
+  "last_active": "2026-04-18T14:35:50Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -13881,7 +14293,42 @@ user_actions {
   business_id: uuid FK
   action: enum(BOOKMARK, CHECKIN, REVIEW, PHOTO)
   timestamp: timestamp
+}`,
+        examples: [
+          {
+            table: 'businesses',
+            label: 'Restaurant Listing',
+            json: `{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "Tartine Bakery",
+  "category_ids": ["restaurants", "bakeries", "cafes"],
+  "location": {"lat": 37.7614, "lng": -122.4241},
+  "geohash": "9q8yyk8yuv",
+  "address": {"street": "600 Guerrero St", "city": "San Francisco", "state": "CA", "zip": "94110"},
+  "phone": "+14154872600",
+  "hours": {"mon": "7:30-19:00", "tue": "7:30-19:00", "wed": "7:30-19:00"},
+  "price_range": 2,
+  "avg_rating": 4.5,
+  "review_count": 4823,
+  "photo_count": 1247,
+  "claimed": true
 }`
+          },
+          {
+            table: 'reviews',
+            label: 'User Review',
+            json: `{
+  "id": "d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90",
+  "business_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "user_id": "e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b",
+  "rating": 5,
+  "text": "Best morning bun in the city. The line is worth it. Get there before 9am on weekends.",
+  "photos": ["https://s3-media.yelp.com/bphoto/abc123.jpg"],
+  "useful_count": 42,
+  "created_at": "2026-04-12T16:22:09Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -14447,7 +14894,39 @@ recommendation_queue {
   userId: bigint PK
   recommendations: bigint[] -- pre-computed stack
   generatedAt: timestamp
+}`,
+        examples: [
+          {
+            table: 'swipes',
+            label: 'Swipe Event',
+            json: `{
+  "swiperId": 44019283,
+  "targetId": 55028374,
+  "action": "LIKE",
+  "timestamp": "2026-04-18T21:14:33.092Z"
 }`
+          },
+          {
+            table: 'matches',
+            label: 'Mutual Match Record',
+            json: `{
+  "id": 982734165,
+  "user1Id": 44019283,
+  "user2Id": 55028374,
+  "matchedAt": "2026-04-18T21:14:33.108Z",
+  "unmatched": false
+}`
+          },
+          {
+            table: 'recommendation_queue',
+            label: 'Pre-Computed Recommendation Stack',
+            json: `{
+  "userId": 44019283,
+  "recommendations": [55028374, 66037465, 77046556, 88055647, 99064738],
+  "generatedAt": "2026-04-18T21:00:00Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -15126,7 +15605,12 @@ listening_history {
   played_at: timestamp
   context: varchar -- playlist_id, album_id, etc.
   play_duration_ms: int
-}`
+}`,
+        examples: [
+          { table: 'tracks', label: 'Track with audio features', json: '{ "id": "4cOdK2wGLETKBW3PvgPWqT", "title": "Bohemian Rhapsody", "artist_ids": ["1dfeR4HaWDbWqFH"], "duration_ms": 354320, "audio_files": {"320": "gs://spotify/4cOd/320.ogg", "160": "gs://spotify/4cOd/160.ogg"}, "popularity": 91, "audio_features": {"tempo": 143, "energy": 0.67, "danceability": 0.42} }' },
+          { table: 'playlists', label: 'User-created playlist', json: '{ "id": "37i9dQZF1DXcBWIGoYBM5M", "owner_id": "user_44219", "name": "Chill Vibes", "is_public": true, "track_count": 42, "followers": 1283 }' },
+          { table: 'listening_history', label: 'Stream event for royalties', json: '{ "user_id": "user_44219", "track_id": "4cOdK2wGLETKBW3PvgPWqT", "played_at": "2026-04-19T21:15:00Z", "context": "playlist:37i9dQZF1DXcBWIGoYBM5M", "play_duration_ms": 213400 }' },
+        ]
       },
 
       apiDesign: {
@@ -15896,7 +16380,65 @@ reviews {
   rating: decimal(2,1)
   content: text
   createdAt: timestamp
+}`,
+        examples: [
+          {
+            table: 'listings',
+            label: 'Active Listing',
+            json: `{
+  "id": 847291,
+  "hostId": 30045,
+  "title": "Sunny Marina Loft with Bay Views",
+  "propertyType": "APARTMENT",
+  "location": {"lat": 37.8024, "lng": -122.4382},
+  "address": {
+    "city": "San Francisco",
+    "state": "CA",
+    "country": "US",
+    "neighborhood": "Marina District"
+  },
+  "amenities": ["wifi", "kitchen", "parking", "washer"],
+  "maxGuests": 4,
+  "bedrooms": 2,
+  "beds": 2,
+  "bathrooms": 1.5,
+  "pricePerNight": 189.00,
+  "cleaningFee": 75.00,
+  "instantBook": true,
+  "status": "ACTIVE"
 }`
+          },
+          {
+            table: 'bookings',
+            label: 'Confirmed Booking',
+            json: `{
+  "id": 5523891,
+  "listingId": 847291,
+  "guestId": 72003,
+  "checkin": "2026-05-01",
+  "checkout": "2026-05-05",
+  "guests": 2,
+  "totalPrice": 831.00,
+  "status": "CONFIRMED",
+  "paymentId": "pi_4Rk2mT1fYvLZnp3D",
+  "idempotencyKey": "a3f8c91e-7b24-4d5f-b6e1-9c8d7a2e3f41",
+  "createdAt": "2026-04-15T09:12:33Z"
+}`
+          },
+          {
+            table: 'availability',
+            label: 'Calendar Date Entry',
+            json: `{
+  "listingId": 847291,
+  "date": "2026-05-02",
+  "status": "BOOKED",
+  "price": 199.00,
+  "minNights": 2,
+  "bookingId": 5523891,
+  "version": 3
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -16583,7 +17125,44 @@ driver_locations {
   location: geography(POINT)
   timestamp: timestamp
   -- Time-series data, partition by time
+}`,
+        examples: [
+          {
+            table: 'orders',
+            label: 'Active Delivery Order',
+            json: `{
+  "id": "d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90",
+  "customer_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "restaurant_id": "c3d4e5f6-a7b8-9012-cdef-3456789abcde",
+  "driver_id": "f6a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1c",
+  "status": "DELIVERING",
+  "items": [
+    {"name": "Spicy Chicken Sandwich", "qty": 2, "price": 12.99, "mods": ["extra sauce"]},
+    {"name": "Waffle Fries (Large)", "qty": 1, "price": 4.49, "mods": []}
+  ],
+  "subtotal": 30.47,
+  "delivery_fee": 3.99,
+  "tip": 6.00,
+  "delivery_address": {"street": "742 Evergreen Terrace", "city": "Springfield", "zip": "62704"},
+  "estimated_delivery": "2026-04-18T18:42:00Z",
+  "actual_delivery": null,
+  "created_at": "2026-04-18T18:15:33Z"
 }`
+          },
+          {
+            table: 'drivers',
+            label: 'Active Dasher Record',
+            json: `{
+  "id": "f6a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1c",
+  "name": "Marcus Johnson",
+  "vehicle_type": "CAR",
+  "current_location": {"lat": 37.7749, "lng": -122.4194},
+  "status": "DELIVERING",
+  "current_order_ids": ["d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90"],
+  "rating": 4.9
+}`
+          }
+        ]
       },
 
       apiDesign: {
@@ -26577,7 +27156,50 @@ aggregated_clicks (OLAP store) {
   unique_users: bigint (HyperLogLog)
   spend: decimal
   filtered_count: bigint (fraud)
+}`,
+        examples: [
+          {
+            table: 'click_events',
+            label: 'Raw Click Event (Kafka)',
+            json: `{
+  "click_id": "c7a1e8f0-3b24-4d9a-b5c2-8e7f6a1d0c3b",
+  "ad_id": 990421,
+  "campaign_id": 5502,
+  "advertiser_id": 1087,
+  "user_id": "hsh_9f3a7c2e",
+  "timestamp": 1745071381000,
+  "ip_address": "203.0.113.42",
+  "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)",
+  "geo": "US-CA-SFO"
 }`
+          },
+          {
+            table: 'aggregated_clicks',
+            label: '1-Minute Aggregation Window',
+            json: `{
+  "ad_id": 990421,
+  "window_start": "2026-04-19T14:23:00Z",
+  "window_size": "1MIN",
+  "click_count": 347,
+  "unique_users": 312,
+  "spend": 52.05,
+  "filtered_count": 8
+}`
+          },
+          {
+            table: 'aggregated_clicks',
+            label: '1-Hour Billing Rollup',
+            json: `{
+  "ad_id": 990421,
+  "window_start": "2026-04-19T14:00:00Z",
+  "window_size": "1HR",
+  "click_count": 18942,
+  "unique_users": 16204,
+  "spend": 2841.30,
+  "filtered_count": 423
+}`
+          }
+        ]
       },
 
       apiDesign: {
