@@ -151,7 +151,9 @@ export const companyPrep = [
       count: 12,
       principles: ['Googliness', 'General Cognitive Ability', 'Leadership', 'Role-Related Knowledge'],
 
-      introduction: `Google evaluates candidates on four key dimensions: General Cognitive Ability, Role-Related Knowledge, Leadership, and "Googliness" (culture fit). Behavioral questions at Google focus less on specific frameworks and more on how you think, collaborate, and navigate ambiguity. Expect questions about complex technical decisions and working across teams.`,
+      introduction: `Google evaluates candidates on four key dimensions: General Cognitive Ability, Role-Related Knowledge, Leadership, and "Googliness" (culture fit). Unlike Amazon, Google doesn't map each interview to specific principles. Instead, every interviewer assesses all four dimensions and submits independent feedback to a hiring committee.
+
+Behavioral questions at Google focus on how you think, collaborate, and navigate ambiguity. Expect questions about complex technical decisions, working across teams, and situations where you didn't have all the answers. Google values intellectual humility above all—they'd rather hire someone who says "I was wrong, here's what I learned" than someone who's never been wrong. Prepare 8-10 stories that demonstrate structured thinking, collaboration, and growth.`,
 
       keyQuestions: [
         {
@@ -241,6 +243,24 @@ export const companyPrep = [
 **Result**: "Team velocity improved 40% in the next quarter. Conflicts dropped to near-zero. I was promoted, but more importantly, the team functioned better."
 
 **Key Principle**: At Google, you don't need a title to lead. Leadership is about creating clarity and enabling others.`
+        },
+        {
+          question: 'How does Google\'s interview process differ from Amazon?',
+          answer: `**Key Differences**:
+
+**No LP Mapping**: Amazon assigns specific Leadership Principles per interviewer. Google interviewers independently assess all four dimensions (GCA, RRK, Leadership, Googliness). There's no "this round tests X."
+
+**Hiring Committee**: Google's hiring committee reviews all interviewer feedback and makes a collective decision. Individual interviewers don't have veto power. This means one bad round doesn't automatically reject you.
+
+**Less Structured**: Amazon asks highly structured behavioral questions tied to LPs. Google's behavioral questions are more open-ended: "Tell me about a complex project" rather than "Tell me about a time you demonstrated Customer Obsession."
+
+**Intellectual Humility**: Google specifically probes for intellectual humility. "When were you wrong?" and "What would you do differently?" are not trap questions—they're assessing whether you can learn and grow.
+
+**What This Means for Prep**:
+- Prepare versatile stories, not LP-mapped ones
+- Practice explaining technical decisions to non-experts
+- Have stories ready about times you were wrong or changed your mind
+- Show genuine curiosity—Google wants people who are excited to learn, not just deliver`
         }
       ]
     },
@@ -253,7 +273,9 @@ export const companyPrep = [
       count: 10,
       principles: ['Move Fast', 'Be Bold', 'Focus on Impact', 'Be Open', 'Build Social Value'],
 
-      introduction: `Meta's behavioral interviews focus on their core values: Move Fast, Be Bold, Focus on Impact, Be Open, and Build Social Value. They want builders who ship quickly, take big swings, and prioritize impact over perfection. Expect questions about moving fast, learning from failures, and making high-impact decisions.`,
+      introduction: `Meta's behavioral interviews assess four core competencies: Resolving Conflicts, Navigating Ambiguity, Driving Results, and Growing Continuously. These map to Meta's culture of "Move Fast, Be Bold, Focus on Impact, Be Open, Build Social Value." Unlike Amazon's LP-per-round structure, Meta interviewers score all four competencies in each behavioral round.
+
+Meta values builders who ship quickly, take big swings, and prioritize impact over perfection. They explicitly reward killing low-impact projects early—sunk cost fallacy is a red flag. Expect questions like "Tell me about a time you shipped something fast," "When did you pivot after realizing something wasn't working?" and "How do you decide what to work on?" Prepare stories that show velocity, impact-driven prioritization, and learning from bold bets that didn't pan out.`,
 
       keyQuestions: [
         {
@@ -329,6 +351,26 @@ export const companyPrep = [
 **Result**: "Got approval for the rewrite. Delivered in 7 weeks with the promised improvements. The bold bet paid off, and the team's morale improved dramatically."
 
 **Key Phrase**: "If we only make safe bets, we'll only get safe results."`
+        },
+        {
+          question: 'How does Meta\'s interview differ from other FAANG companies?',
+          answer: `**Meta's Unique Behavioral Dimensions**:
+
+**1. Resolving Conflicts** — Not about avoiding conflict, but about navigating it productively. They specifically ask about disagreements with data, not hierarchy.
+
+**2. Navigating Ambiguity** — Meta moves so fast that requirements change constantly. They want people who can operate without a complete spec. "What do you do when no one tells you what to build?"
+
+**3. Driving Results** — Outcomes over activities. "What shipped? What was the impact?" Not "I worked really hard."
+
+**4. Growing Continuously** — They explicitly value learning velocity. "What new skill did you develop recently? How did a failure change your approach?"
+
+**Key Differences from Amazon**:
+- Less structured than Amazon (no LP mapping per round)
+- More emphasis on shipping velocity than long-term planning
+- Culture rewards killing projects early if impact isn't materializing
+- "Move Fast" culture means they want stories about speed AND quality, not speed OR quality
+
+**What to Emphasize**: Show you can ship fast, measure impact, and pivot when data shows you're wrong. Meta values intellectual honesty about what's working and what isn't.`
         }
       ]
     },
@@ -341,7 +383,9 @@ export const companyPrep = [
       count: 8,
       principles: ['Growth Mindset', 'Customer Obsessed', 'Diverse and Inclusive', 'One Microsoft', 'Making a Difference'],
 
-      introduction: `Microsoft's cultural transformation under Satya Nadella centers on Growth Mindset—the belief that abilities can be developed through dedication and hard work. Expect questions about learning from failure, embracing feedback, and collaborating across teams (One Microsoft). Show intellectual curiosity and humility.`,
+      introduction: `Microsoft's cultural transformation under Satya Nadella centers on Growth Mindset—the belief that abilities can be developed through dedication and hard work. This isn't just a buzzword; it fundamentally changed Microsoft's interview philosophy. They explicitly hire for learning ability over existing knowledge.
+
+Expect questions about learning from failure, embracing feedback, collaborating across teams ("One Microsoft"), and customer-centricity. Microsoft's behavioral interviews are generally less intense than Amazon's LP rounds but more focused on authenticity—they want genuine stories of growth, not polished performances. The "Growth Mindset" signal is often decisive: candidates who describe failures as learning moments and feedback as a gift consistently score higher than those who present a flawless narrative.`,
 
       keyQuestions: [
         {
@@ -416,6 +460,26 @@ export const companyPrep = [
 **Result**: "Leadership approved a roadmap shift. Customer satisfaction scores increased 25% in the next quarter. More importantly, we established a process for continuously incorporating customer feedback."
 
 **Key Phrase**: "The best products come from deeply understanding customer problems, not from internal brainstorming."`
+        },
+        {
+          question: 'How does Microsoft\'s interview differ from other FAANG companies?',
+          answer: `**Microsoft's Unique Interview Style**:
+
+**Growth Mindset is Non-Negotiable**: Microsoft explicitly screens for growth mindset. A candidate who says "I've never received critical feedback" will likely be rejected. They want to hear about genuine struggles and genuine learning.
+
+**Less Adversarial Than Amazon**: Microsoft's behavioral interviews feel more conversational. Interviewers are looking for a genuine person, not a polished presentation. Authenticity matters more than perfect STAR structure.
+
+**"One Microsoft" is Real**: Cross-team collaboration stories carry heavy weight. Microsoft had a notorious siloed culture before Nadella—they now aggressively hire for people who break down silos.
+
+**Diverse & Inclusive Signal**: Microsoft values stories about working with diverse teams, mentoring underrepresented engineers, and creating inclusive environments. This isn't just lip service—it's scored.
+
+**Interview Structure**:
+- Typically 4-5 rounds (less than Amazon's 5-6)
+- Mix of coding, system design, and behavioral
+- Final "as-appropriate" (AA) interview with a senior leader
+- AA round is mostly behavioral/culture fit
+
+**What to Emphasize**: Growth through failure, cross-team impact, genuine curiosity, and stories where you helped others succeed. Microsoft values team players over individual stars.`
         }
       ]
     },
