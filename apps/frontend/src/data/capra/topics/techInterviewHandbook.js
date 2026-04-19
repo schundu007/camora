@@ -133,6 +133,44 @@ export const techInterviewTopics = [
       { title: 'LRU Cache', difficulty: 'Medium', url: 'https://leetcode.com/problems/lru-cache/' },
       { title: 'All O one Data Structure', difficulty: 'Hard', url: 'https://leetcode.com/problems/all-oone-data-structure/' },
     ],
+    keyQuestions: [
+      {
+        question: 'When should you use a hash table vs other data structures?',
+        answer: `**Use a hash table when**:
+- You need O(1) average lookup/insert/delete by key
+- You're solving "find complement" problems (Two Sum pattern)
+- You need frequency counting (character counts, word counts)
+- You need deduplication (tracking seen elements)
+
+**Use something else when**:
+- You need ordered data → TreeMap/sorted array + binary search
+- You need range queries → balanced BST or segment tree
+- You need memory efficiency → array-based solutions
+- You need worst-case O(1) → hash table worst case is O(n) with collisions
+
+**Interview Pattern Recognition**:
+- "Find if X exists" → hash set O(1) lookup
+- "Count occurrences of X" → hash map frequency counter
+- "Find pair that sums to target" → hash map complement lookup
+- "Group items by property" → hash map with lists as values
+- "Find first non-repeating" → hash map + order tracking`
+      },
+      {
+        question: 'How do you implement an LRU Cache?',
+        answer: `LRU Cache = Hash Map + Doubly Linked List. O(1) for both get and put.
+
+**Structure**: Hash map stores key → node pointer. Doubly linked list maintains access order (most recent at head, least recent at tail).
+
+**Get(key)**: Look up in hash map. If found, move node to head of list, return value. If not found, return -1.
+
+**Put(key, value)**: If key exists, update value and move to head. If key doesn't exist, create new node at head. If capacity exceeded, remove tail node and delete from hash map.
+
+**Why doubly linked list?** Need O(1) removal of a node given its pointer (remove from middle). Singly linked list requires O(n) to find the previous node.
+
+This is one of the most commonly asked data structure design questions at FAANG companies. Know it cold.`
+      }
+    ],
+
     tips: [
       'Hash tables are the most common space-time tradeoff in interviews.',
       'In most languages: C++ uses std::unordered_map, Java uses java.util.HashMap, Python uses dict, JavaScript uses Object or Map.',
@@ -190,6 +228,39 @@ export const techInterviewTopics = [
       { title: 'Find Minimum in Rotated Sorted Array', difficulty: 'Medium', url: 'https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/' },
       { title: 'Median of Two Sorted Arrays', difficulty: 'Hard', url: 'https://leetcode.com/problems/median-of-two-sorted-arrays/' },
     ],
+    keyQuestions: [
+      {
+        question: 'What binary search patterns appear most often in interviews?',
+        answer: `**Pattern 1: Standard Binary Search** — find exact target in sorted array. Template: left=0, right=len-1, while left<=right, check mid.
+
+**Pattern 2: First/Last Occurrence** — find the leftmost or rightmost position of a target. When found, don't return immediately; continue searching left (for first) or right (for last). This is the bisect_left/bisect_right pattern.
+
+**Pattern 3: Search on Answer Space** — binary search on the answer, not the input. "What is the minimum capacity to ship packages in D days?" Binary search on capacity [max_weight, sum_weights], check feasibility. This pattern appears in 30%+ of binary search problems.
+
+**Pattern 4: Rotated Array** — find target or minimum in a rotated sorted array. Key insight: one half is always sorted. Determine which half, then check if target is in that half.
+
+**Key Insight**: If the problem says "sorted" or "monotonic," binary search should be your first thought. Time drops from O(n) to O(log n).`
+      },
+      {
+        question: 'When should you use which sorting algorithm?',
+        answer: `**In interviews, you almost never implement sorting from scratch.** Use your language's built-in sort. But know the trade-offs:
+
+| Algorithm | Time | Space | Stable? | Best For |
+|-----------|------|-------|---------|----------|
+| Merge Sort | O(n log n) | O(n) | Yes | Linked lists, external sort |
+| Quick Sort | O(n log n) avg | O(log n) | No | Arrays (cache-friendly) |
+| Heap Sort | O(n log n) | O(1) | No | When O(1) space required |
+| Counting Sort | O(n+k) | O(k) | Yes | Small range integers |
+| Radix Sort | O(nk) | O(n+k) | Yes | Fixed-length integers/strings |
+
+**Interview Scenarios**:
+- "Sort with O(1) extra space" → Heap sort
+- "Sort a nearly-sorted array" → Insertion sort (O(n) for nearly sorted)
+- "Find kth largest" → Quick select O(n) avg, or min-heap of size k O(n log k)
+- "Sort linked list" → Merge sort (no random access needed)`
+      }
+    ],
+
     tips: [
       'You are unlikely to be asked to implement sorting from scratch in an interview.',
       'When a given sequence is sorted, always consider binary search first.',
@@ -271,6 +342,46 @@ export const techInterviewTopics = [
       { title: 'Validate Binary Search Tree', difficulty: 'Medium', url: 'https://leetcode.com/problems/validate-binary-search-tree/', subcategory: 'BST' },
       { title: 'Kth Smallest Element in a BST', difficulty: 'Medium', url: 'https://leetcode.com/problems/kth-smallest-element-in-a-bst/', subcategory: 'BST' },
     ],
+    keyQuestions: [
+      {
+        question: 'What are the most common tree problem patterns?',
+        answer: `**Pattern 1: DFS with Return Value** — recursion returns info from subtrees.
+Examples: max depth, diameter, is balanced, path sum. Template: return value from left and right subtrees, combine at current node.
+
+**Pattern 2: DFS with Global Variable** — update a global answer during traversal.
+Examples: max path sum, longest consecutive sequence. Useful when the optimal path may not pass through the root.
+
+**Pattern 3: BFS Level-Order** — process tree level by level using a queue.
+Examples: level order traversal, right side view, zigzag traversal, minimum depth.
+
+**Pattern 4: BST Property Exploitation** — use sorted order for O(log n) operations.
+Examples: validate BST (pass min/max bounds), kth smallest (in-order traversal), LCA in BST (compare values to split left/right).
+
+**Pattern 5: Tree Construction** — build tree from traversal sequences.
+Examples: construct from preorder+inorder, serialize/deserialize. Key: preorder gives root, inorder splits left/right subtrees.
+
+**The Meta-Pattern**: 90% of tree problems are "compute something for each node using info from its children" = post-order DFS.`
+      },
+      {
+        question: 'How do you solve Lowest Common Ancestor (LCA)?',
+        answer: `**BST LCA** (O(log n)): Start at root. If both nodes are smaller, go left. If both are larger, go right. When they split (one left, one right), current node is the LCA.
+
+**Binary Tree LCA** (O(n)): Recursive DFS. For each node, search left and right subtrees. If node matches p or q, return it. If left and right both return non-null, current node is LCA. If only one returns non-null, propagate it up.
+
+\`\`\`
+def lowestCommonAncestor(root, p, q):
+    if not root or root == p or root == q:
+        return root
+    left = lowestCommonAncestor(root.left, p, q)
+    right = lowestCommonAncestor(root.right, p, q)
+    if left and right: return root  # Split point = LCA
+    return left or right
+\`\`\`
+
+This is one of the top 5 most-asked tree problems at FAANG companies. Know both BST and general binary tree versions.`
+      }
+    ],
+
     tips: [
       'Recursion is the most common approach for tree problems.',
       'Always remember the base case: usually when the node is null.',
@@ -400,6 +511,38 @@ def bfs(matrix):
       'Topological sort is useful for dependency ordering (e.g., course prerequisites).',
       'For 2D matrix traversal, define the 4 directions as constants: ((0,1), (0,-1), (1,0), (-1,0)).',
     ],
+
+    keyQuestions: [
+      {
+        question: 'When do you use BFS vs DFS for graph problems?',
+        answer: `**Use BFS when**:
+- Finding shortest path in unweighted graph (BFS guarantees shortest path)
+- Level-order traversal needed (distance from source)
+- Finding nearest/closest (Rotting Oranges, 01 Matrix)
+- Multi-source BFS (start from multiple nodes simultaneously)
+
+**Use DFS when**:
+- Exploring all paths or backtracking (permutations, combinations)
+- Detecting cycles
+- Topological sorting (use DFS + post-order for reverse topo sort)
+- Connected components (count islands)
+- Path existence (does any path exist from A to B?)
+
+**Key Decision**: "Shortest" or "minimum steps" = BFS. "All paths" or "any path" = DFS. "Dependency ordering" = topological sort (BFS with in-degree or DFS post-order).
+
+**2D Matrix Pattern**: Treat each cell as a node with 4 neighbors. Use directions array: [(0,1),(0,-1),(1,0),(-1,0)]. Check bounds and visited status before processing.`
+      },
+      {
+        question: 'How do you detect cycles in a graph?',
+        answer: `**Undirected Graph**: Use DFS with a visited set. If you visit a node that's already visited AND it's not your parent, there's a cycle. Alternative: Union-Find — if two nodes in an edge are already in the same set, there's a cycle.
+
+**Directed Graph**: Use DFS with THREE states: unvisited, in-progress (on current DFS path), completed. If you reach an in-progress node, there's a cycle. This is the "gray/white/black" coloring approach.
+
+**Topological Sort Approach**: Run Kahn's algorithm (BFS with in-degrees). If the result has fewer nodes than the graph, there's a cycle (some nodes could never reach in-degree 0).
+
+**Interview Tip**: For "Course Schedule" type problems, cycle detection in a directed graph is the core algorithm. Use the three-state DFS approach — it's cleaner than topological sort for explaining in an interview.`
+      }
+    ],
   },
   {
     id: 'tih-linked-list',
@@ -456,6 +599,27 @@ def bfs(matrix):
       'The interviewer will usually request in-place solutions without additional storage.',
       'Only Java provides a built-in linked list implementation; in Python and JavaScript you implement your own.',
       'Borrow ideas from Reverse a Linked List for many in-place modification problems.',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'What are the essential linked list patterns for interviews?',
+        answer: `**Pattern 1: Two Pointers (Fast/Slow)**
+- Detect cycle: fast moves 2 steps, slow moves 1. If they meet, cycle exists.
+- Find middle: when fast reaches end, slow is at middle.
+- Find kth from end: advance fast k steps, then move both until fast reaches end.
+
+**Pattern 2: Reverse a Linked List (in-place)**
+Three pointers: prev=None, curr=head, next=curr.next. Reverse curr.next to prev, advance all pointers. This is the foundation for many problems (reverse sublist, palindrome check, reorder list).
+
+**Pattern 3: Dummy Head Node**
+Create a dummy node pointing to head. This eliminates edge cases when the head itself might change (merge lists, remove duplicates, partition list). Return dummy.next at the end.
+
+**Pattern 4: Merge Two Sorted Lists**
+Two pointers, one per list. Compare values, attach smaller to result, advance that pointer. Handle remaining nodes at the end.
+
+**Must-Know Problems**: Reverse Linked List, Merge Two Sorted Lists, Detect Cycle, Remove Nth Node From End, Reorder List.`
+      }
     ],
   },
   {
@@ -709,6 +873,53 @@ def bfs(matrix):
       { title: 'Unique Paths', difficulty: 'Medium', url: 'https://leetcode.com/problems/unique-paths/' },
       { title: 'Jump Game', difficulty: 'Medium', url: 'https://leetcode.com/problems/jump-game/' },
     ],
+    keyQuestions: [
+      {
+        question: 'What are the main DP patterns you need to know for interviews?',
+        answer: `**Pattern 1: Fibonacci / Linear DP** — each state depends on 1-2 previous states.
+Examples: Climbing Stairs, House Robber, Decode Ways.
+State: dp[i] = answer for first i elements. Space optimization: keep only last 2 values.
+
+**Pattern 2: 0/1 Knapsack** — choose to include or exclude each item.
+Examples: Partition Equal Subset Sum, Target Sum, Coin Change (unbounded variant).
+State: dp[i][w] = best value using items 0..i with capacity w.
+
+**Pattern 3: Longest Common Subsequence (LCS)** — two sequences, match characters.
+Examples: LCS, Edit Distance, Minimum ASCII Delete Sum.
+State: dp[i][j] = answer for first i chars of s1 and first j chars of s2.
+
+**Pattern 4: Longest Increasing Subsequence (LIS)** — single sequence, find optimal subsequence.
+Examples: LIS, Russian Doll Envelopes, Number of LIS.
+State: dp[i] = length of LIS ending at index i. O(n^2) DP, O(n log n) with patience sorting.
+
+**Pattern 5: Grid/Matrix DP** — paths in a 2D grid.
+Examples: Unique Paths, Minimum Path Sum, Dungeon Game.
+State: dp[i][j] = answer to reach cell (i,j).
+
+**Pattern 6: Interval DP** — merge intervals or compute on substrings.
+Examples: Burst Balloons, Matrix Chain Multiplication, Palindrome Partitioning.
+State: dp[i][j] = answer for subarray/substring from i to j.`
+      },
+      {
+        question: 'How do you approach a DP problem in an interview?',
+        answer: `**Step-by-Step Framework**:
+
+**1. Recognize it's DP**: Ask "can I break this into overlapping subproblems?" If yes, and the problem asks for optimization (min/max) or counting, it's likely DP.
+
+**2. Define the state**: What information uniquely identifies a subproblem? This becomes your dp array dimensions. Example: "minimum coins to make amount a" → dp[a].
+
+**3. Write the recurrence**: How does dp[i] relate to smaller subproblems? Example for Coin Change: dp[amount] = min(dp[amount - coin] + 1) for each coin.
+
+**4. Identify base cases**: What are the trivial subproblems? dp[0] = 0 (zero coins for amount 0).
+
+**5. Determine computation order**: Bottom-up: compute dp[0], dp[1], ..., dp[n]. Ensure each dp[i] only depends on already-computed values.
+
+**6. Optimize space**: If dp[i] only depends on dp[i-1] or dp[i-2], use rolling variables instead of full array. 2D → 1D row optimization.
+
+**Pro Tip**: Start by explaining the recursive solution with memoization. Then offer to convert to iterative bottom-up. Interviewers appreciate seeing both thought processes.`
+      }
+    ],
+
     tips: [
       'The only way to get better at DP is to practice.',
       'If you can optimize space by only keeping the last row or last two values, mention it to the interviewer.',
