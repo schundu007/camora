@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">👥 1B+ total members</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Monthly active users:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">310M MAU</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Daily active users (&#x2248;40%):</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 125M DAU</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Feed requests (avg 5 loads/day):</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">125M x 5 / 86,400s</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 7,200 QPS</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="425" fill="white" font-size="11">Connection requests:</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">&#x2248; 2 connections/sec</text>
+  <text x="45" y="470" fill="rgba(255,255,255,0.6)" font-size="10">(&#x2248;170K new connections/day)</text>
+
+  <!-- Column 2: Graph -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Social Graph Scale</text>
+
+  <text x="335" y="148" fill="#fbbf24" font-size="13" font-weight="700">&#x1F517; 1B nodes (members)</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="198" fill="white" font-size="12">Avg connections per user:</text>
+  <text x="335" y="218" fill="#fbbf24" font-size="15" font-weight="700">&#x2248; 500 connections</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="268" fill="white" font-size="11">Total edges: 1B x 500 / 2</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">250 Billion edges</text>
+
+  <rect x="325" y="302" width="235" height="22" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="442" y="318" text-anchor="middle" fill="white" font-size="10" font-weight="600">&#x26A0;️ Graph DB or adjacency list at scale!</text>
+
+  <!-- Column 2b: Storage -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Estimates</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Profile data: <tspan fill="#fbbf24" font-weight="700">&#x2248; 50KB/user</tspan></text>
+  <text x="335" y="432" fill="white" font-size="11">1B users x 50KB</text>
+  <text x="442" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="475" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 50 TB profile data</text>
+  <text x="335" y="500" fill="white" font-size="11">Graph edges (16B each):</text>
+  <text x="335" y="518" fill="#f97316" font-size="14" font-weight="700">&#x2248; 4 TB graph storage</text>
+
+  <!-- Column 3: Jobs -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Job Search Scale</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Active job postings:</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="20" font-weight="800">10M+ listings</text>
+  <text x="615" y="198" fill="white" font-size="12">Search queries (job seekers):</text>
+  <text x="735" y="220" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="245" fill="white" font-size="11">&#x2248; 50M searches/day</text>
+  <text x="615" y="268" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 580 QPS search</text>
+  <text x="615" y="290" fill="rgba(255,255,255,0.6)" font-size="10">Elasticsearch cluster with geo sharding</text>
+
+  <!-- Column 3b: Feed -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Feed Fan-out</text>
+
+  <text x="615" y="410" fill="white" font-size="11">New posts/day: &#x2248; 2M</text>
+  <text x="615" y="432" fill="white" font-size="11">Avg followers: &#x2248; 500</text>
+  <text x="735" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="475" fill="white" font-size="11">Fan-out writes/day:</text>
+  <text x="615" y="495" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 1 Billion feed items</text>
+  <text x="615" y="518" fill="#f97316" font-size="12" font-weight="700">Hybrid: fan-out-on-write + pull</text>
+
+  <!-- Key insight box -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Read-heavy platform</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">100:1 read-to-write ratio.</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">Caching is critical for feeds.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">Graph is the core asset</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">250B edges. 2nd/3rd degree</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">lookups need graph-native DB.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Feed = hybrid fan-out</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">Fan-out-on-write for regular users,</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">fan-out-on-read for influencers.</text>
+
+  <text x="920" y="340" fill="white" font-size="11" font-weight="600">Search complexity</text>
+  <text x="920" y="358" fill="rgba(255,255,255,0.7)" font-size="10">Jobs + People + Content = separate</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">search indices with ranking ML.</text>
+
+  <text x="920" y="405" fill="white" font-size="11" font-weight="600">Recommendation engine</text>
+  <text x="920" y="423" fill="rgba(255,255,255,0.7)" font-size="10">"People You May Know" drives</text>
+  <text x="920" y="438" fill="rgba(255,255,255,0.7)" font-size="10">engagement. Collaborative filtering.</text>
+
+  <text x="920" y="470" fill="white" font-size="11" font-weight="600">Profile = structured data</text>
+  <text x="920" y="488" fill="rgba(255,255,255,0.7)" font-size="10">50KB avg profile. 50TB total.</text>
+  <text x="920" y="503" fill="rgba(255,255,255,0.7)" font-size="10">Denormalized for read perf.</text>
+</svg>

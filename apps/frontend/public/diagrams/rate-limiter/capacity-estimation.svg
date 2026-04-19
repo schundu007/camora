@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="370" y="16" width="460" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope: Rate Limiter</text>
+
+  <!-- Column 1: Request Volume -->
+  <rect x="20" y="75" width="275" height="350" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="75" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Request Volume</text>
+
+  <text x="45" y="140" fill="#fbbf24" font-size="13" font-weight="700">&#x26A1; Millions of requests/sec</text>
+  <text x="157" y="162" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="185" fill="white" font-size="12">Every API request checked:</text>
+  <text x="45" y="208" fill="#fbbf24" font-size="16" font-weight="800">1M+ rate checks/sec</text>
+  <text x="157" y="230" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="255" fill="white" font-size="11">Overhead budget per check:</text>
+  <text x="45" y="278" fill="#f97316" font-size="18" font-weight="800">&lt;1ms latency</text>
+  <text x="157" y="300" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="325" fill="white" font-size="11">At 1M req/sec, 1ms overhead =</text>
+  <text x="45" y="348" fill="white" font-size="11">1000 CPU-seconds per second</text>
+  <text x="45" y="375" fill="#f97316" font-size="14" font-weight="700">Must be O(1) per check</text>
+
+  <text x="45" y="410" fill="rgba(255,255,255,0.7)" font-size="10">p99 latency: &lt;0.5ms target</text>
+
+  <!-- Column 2: Counter Storage -->
+  <rect x="310" y="75" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="75" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Counter Storage</text>
+
+  <text x="335" y="140" fill="white" font-size="11">Unique rate limit keys:</text>
+  <text x="335" y="162" fill="#fbbf24" font-size="14" font-weight="700">~100M active keys</text>
+  <text x="335" y="188" fill="white" font-size="11">Per key: counter + window (~64 bytes)</text>
+  <text x="442" y="208" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="335" y="230" fill="#f97316" font-size="14" font-weight="700">&#x2248; 6.4 GB in-memory</text>
+
+  <!-- Column 3: Distributed Sync -->
+  <rect x="310" y="260" width="265" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="260" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">Distributed Sync</text>
+
+  <text x="335" y="320" fill="white" font-size="11">N gateway nodes (e.g., 50 nodes)</text>
+  <text x="335" y="342" fill="white" font-size="11">Each sees 1M/50 = 20K req/sec</text>
+  <text x="335" y="367" fill="#fbbf24" font-size="13" font-weight="700">Central counter sync needed</text>
+  <text x="442" y="387" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="335" y="410" fill="#f97316" font-size="13" font-weight="700">Redis INCR: 1M+ ops/sec</text>
+
+  <!-- Column 4: Algorithm Comparison -->
+  <rect x="590" y="75" width="290" height="195" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="75" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Algorithm Trade-offs</text>
+
+  <text x="615" y="135" fill="#fbbf24" font-size="12" font-weight="700">Token Bucket</text>
+  <text x="615" y="155" fill="rgba(255,255,255,0.7)" font-size="10">O(1) check, allows burst</text>
+  <text x="615" y="170" fill="rgba(255,255,255,0.7)" font-size="10">Memory: 16 bytes/key</text>
+
+  <text x="615" y="195" fill="#fbbf24" font-size="12" font-weight="700">Sliding Window</text>
+  <text x="615" y="215" fill="rgba(255,255,255,0.7)" font-size="10">O(1) check, smooth limiting</text>
+  <text x="615" y="230" fill="rgba(255,255,255,0.7)" font-size="10">Memory: 64 bytes/key</text>
+
+  <text x="615" y="255" fill="#fbbf24" font-size="12" font-weight="700">Fixed Window</text>
+  <text x="615" y="275" fill="rgba(255,255,255,0.7)" font-size="10">Simplest, but boundary spike issue</text>
+
+  <!-- Rule Configuration -->
+  <rect x="590" y="285" width="290" height="140" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="285" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="309" text-anchor="middle" fill="white" font-size="14" font-weight="700">Rule Configuration</text>
+
+  <text x="615" y="345" fill="white" font-size="11">Multiple dimensions per request:</text>
+  <text x="615" y="367" fill="rgba(255,255,255,0.7)" font-size="10">user_id + endpoint + IP</text>
+  <text x="615" y="392" fill="white" font-size="11">Rule lookups per request:</text>
+  <text x="615" y="412" fill="#f97316" font-size="14" font-weight="700">3-5 Redis operations/req</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="75" width="280" height="350" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="113" x2="1160" y2="113" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="140" fill="white" font-size="11" font-weight="600">Latency is everything</text>
+  <text x="920" y="158" fill="rgba(255,255,255,0.7)" font-size="10">&lt;1ms overhead means rate limiter</text>
+  <text x="920" y="173" fill="rgba(255,255,255,0.7)" font-size="10">must use in-memory stores.</text>
+  <text x="920" y="188" fill="rgba(255,255,255,0.7)" font-size="10">Redis or local cache required.</text>
+
+  <text x="920" y="218" fill="white" font-size="11" font-weight="600">Local vs. global trade-off</text>
+  <text x="920" y="236" fill="rgba(255,255,255,0.7)" font-size="10">Local counters are fastest but</text>
+  <text x="920" y="251" fill="rgba(255,255,255,0.7)" font-size="10">inaccurate across nodes. Redis</text>
+  <text x="920" y="266" fill="rgba(255,255,255,0.7)" font-size="10">adds ~0.3ms network hop.</text>
+
+  <text x="920" y="296" fill="white" font-size="11" font-weight="600">Lua scripts for atomicity</text>
+  <text x="920" y="314" fill="rgba(255,255,255,0.7)" font-size="10">INCR + EXPIRE must be atomic.</text>
+  <text x="920" y="329" fill="rgba(255,255,255,0.7)" font-size="10">Redis Lua scripts ensure no</text>
+  <text x="920" y="344" fill="rgba(255,255,255,0.7)" font-size="10">race conditions between ops.</text>
+
+  <text x="920" y="374" fill="white" font-size="11" font-weight="600">Graceful degradation</text>
+  <text x="920" y="392" fill="rgba(255,255,255,0.7)" font-size="10">If Redis is down, allow traffic</text>
+  <text x="920" y="407" fill="rgba(255,255,255,0.7)" font-size="10">(fail-open) rather than blocking</text>
+  <text x="920" y="422" fill="rgba(255,255,255,0.7)" font-size="10">all requests (fail-closed).</text>
+</svg>

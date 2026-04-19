@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates (QPS)</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">⚡ Target throughput</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Read QPS target:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">1 Million reads/sec</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Write QPS target:</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">500K writes/sec</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Read:Write ratio:</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">Typically 2:1 (read-heavy)</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="14" font-weight="800">1.5M total QPS</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="425" fill="white" font-size="11">Latency requirement:</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">&lt;10ms p99</text>
+  <text x="45" y="475" fill="rgba(255,255,255,0.7)" font-size="10">&lt;1ms p50 for cached reads</text>
+
+  <!-- Column 2: Data Size -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Data Size</text>
+
+  <text x="335" y="145" fill="#fbbf24" font-size="13" font-weight="700">🗂️ 1 Billion key-value pairs</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="195" fill="white" font-size="12">Avg value size:</text>
+  <text x="335" y="215" fill="#fbbf24" font-size="15" font-weight="700">10 KB (key: 256B)</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="268" fill="white" font-size="11">Total data (single copy):</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">≈ 10 TB</text>
+
+  <!-- Column 3: Replication -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Replication &amp; Storage</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Replication factor: <tspan fill="#fbbf24" font-weight="700">N = 3</tspan></text>
+  <text x="442" y="430" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+
+  <text x="335" y="450" fill="white" font-size="11">Total storage: 10TB x 3 replicas</text>
+  <text x="335" y="472" fill="#fbbf24" font-size="15" font-weight="800">= 30 TB total</text>
+
+  <text x="335" y="500" fill="white" font-size="11">With compaction overhead (2x):</text>
+  <text x="335" y="520" fill="#f97316" font-size="15" font-weight="800">≈ 60 TB raw disk</text>
+
+  <!-- Column 4: Node Count -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Cluster Sizing</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Per node capacity:</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="15" font-weight="700">2 TB SSD + 64 GB RAM</text>
+
+  <text x="615" y="208" fill="white" font-size="12">Nodes for storage:</text>
+  <text x="615" y="230" fill="#fbbf24" font-size="15" font-weight="700">60TB / 2TB = 30 nodes</text>
+
+  <text x="615" y="262" fill="white" font-size="12">Per-node QPS capacity:</text>
+  <text x="615" y="284" fill="#fbbf24" font-size="15" font-weight="700">~50K QPS per node</text>
+
+  <text x="735" y="308" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+  <text x="615" y="322" fill="#f97316" font-size="16" font-weight="800">30-50 nodes total</text>
+
+  <!-- Column 5: Availability -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Availability Target</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Target availability:</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">99.999% (five nines)</text>
+
+  <text x="615" y="462" fill="white" font-size="11">Allowed downtime per year:</text>
+  <text x="615" y="484" fill="#f97316" font-size="14" font-weight="700">5 minutes 15 seconds</text>
+
+  <text x="615" y="510" fill="rgba(255,255,255,0.6)" font-size="10">Requires hinted handoff + anti-entropy repair</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">💡 Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Consistent hashing is critical</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">Virtual nodes ensure even data</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">distribution. Adding/removing nodes</text>
+  <text x="920" y="193" fill="rgba(255,255,255,0.7)" font-size="10">only moves 1/N of the data.</text>
+
+  <text x="920" y="225" fill="white" font-size="11" font-weight="600">Tunable W/R quorums</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">W=2, R=2, N=3 for strong.</text>
+  <text x="920" y="258" fill="rgba(255,255,255,0.7)" font-size="10">W=1, R=1 for eventual.</text>
+  <text x="920" y="273" fill="rgba(255,255,255,0.7)" font-size="10">Trade consistency for latency.</text>
+
+  <text x="920" y="305" fill="white" font-size="11" font-weight="600">Hot keys cause skew</text>
+  <text x="920" y="323" fill="rgba(255,255,255,0.7)" font-size="10">Popular keys overload single</text>
+  <text x="920" y="338" fill="rgba(255,255,255,0.7)" font-size="10">partitions. Need client-side</text>
+  <text x="920" y="353" fill="rgba(255,255,255,0.7)" font-size="10">caching or key splitting.</text>
+
+  <text x="920" y="385" fill="white" font-size="11" font-weight="600">LSM-tree for write throughput</text>
+  <text x="920" y="403" fill="rgba(255,255,255,0.7)" font-size="10">Write to memtable + WAL first,</text>
+  <text x="920" y="418" fill="rgba(255,255,255,0.7)" font-size="10">flush to SSTables. Compaction</text>
+  <text x="920" y="433" fill="rgba(255,255,255,0.7)" font-size="10">handles read amplification.</text>
+
+  <text x="920" y="465" fill="white" font-size="11" font-weight="600">Gossip for membership</text>
+  <text x="920" y="483" fill="rgba(255,255,255,0.7)" font-size="10">No single coordinator. Each</text>
+  <text x="920" y="498" fill="rgba(255,255,255,0.7)" font-size="10">node knows cluster topology</text>
+  <text x="920" y="513" fill="rgba(255,255,255,0.7)" font-size="10">via gossip protocol.</text>
+</svg>

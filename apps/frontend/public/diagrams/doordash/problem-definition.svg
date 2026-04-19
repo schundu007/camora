@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="600" fill="url(#bg)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="370" y="20" width="460" height="44" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="50" text-anchor="middle" fill="white" font-size="22" font-weight="700">Problem Definition: Designing DoorDash</text>
+
+  <!-- Column 1: Users & Core Actions -->
+  <text x="200" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Users &amp; Core Actions</text>
+  <rect x="40" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <!-- Three user types -->
+  <circle cx="90" cy="165" r="24" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="90" y="171" text-anchor="middle" fill="white" font-size="20">👤</text>
+  <text x="90" y="205" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11">Customer</text>
+
+  <circle cx="200" cy="165" r="24" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="200" y="171" text-anchor="middle" fill="white" font-size="20">🍽️</text>
+  <text x="200" y="205" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11">Restaurant</text>
+
+  <circle cx="310" cy="165" r="24" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="310" y="171" text-anchor="middle" fill="white" font-size="20">🚗</text>
+  <text x="310" y="205" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11">Dasher</text>
+
+  <!-- Core Actions Box -->
+  <rect x="55" y="225" width="290" height="230" rx="12" fill="#f97316" filter="url(#shadow)"/>
+  <text x="200" y="255" text-anchor="middle" fill="white" font-size="15" font-weight="700">Core Actions</text>
+  <line x1="75" y1="267" x2="325" y2="267" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="80" y="295" fill="white" font-size="13">🔍  Browse restaurants &amp; menus</text>
+  <text x="80" y="322" fill="white" font-size="13">🛒  Place order &amp; pay</text>
+  <text x="80" y="349" fill="white" font-size="13">🚗  Dispatch driver in real-time</text>
+  <text x="80" y="376" fill="white" font-size="13">📍  Track order live on map</text>
+  <text x="80" y="403" fill="white" font-size="13">⏱️  Estimate delivery time (ETA)</text>
+  <text x="80" y="430" fill="white" font-size="13">💳  Process payments &amp; tips</text>
+
+  <!-- Column 2: In Scope -->
+  <text x="600" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">In Scope: Essentials</text>
+  <rect x="440" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="440" y="125" width="320" height="350" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <text x="470" y="160" fill="white" font-size="13" font-weight="600">🍽️  Restaurant catalog &amp; menus</text>
+  <text x="490" y="180" fill="rgba(255,255,255,0.7)" font-size="11">(search, filter by cuisine/rating)</text>
+  <text x="470" y="210" fill="white" font-size="13" font-weight="600">🛒  Order placement &amp; management</text>
+  <text x="490" y="230" fill="rgba(255,255,255,0.7)" font-size="11">(cart, checkout, order status)</text>
+  <text x="470" y="260" fill="white" font-size="13" font-weight="600">🚗  Real-time driver dispatch</text>
+  <text x="490" y="280" fill="rgba(255,255,255,0.7)" font-size="11">(matching algorithm, batching)</text>
+  <text x="470" y="310" fill="white" font-size="13" font-weight="600">⏱️  ETA estimation</text>
+  <text x="490" y="330" fill="rgba(255,255,255,0.7)" font-size="11">(prep time + drive time + traffic)</text>
+  <text x="470" y="360" fill="white" font-size="13" font-weight="600">📍  Live order tracking</text>
+  <text x="470" y="390" fill="white" font-size="13" font-weight="600">💳  Payment processing</text>
+  <text x="470" y="420" fill="white" font-size="13" font-weight="600">⭐  Ratings &amp; reviews</text>
+  <text x="470" y="450" fill="white" font-size="13" font-weight="600">📱  Push notifications</text>
+
+  <!-- Column 3: Out of Scope -->
+  <text x="1000" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Out of Scope / Future</text>
+  <rect x="840" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="840" y="125" width="320" height="280" rx="12" fill="rgba(245,158,11,0.25)" stroke="rgba(245,158,11,0.5)" stroke-width="1"/>
+
+  <text x="870" y="160" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  DashPass subscription management</text>
+  <text x="870" y="195" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Merchant onboarding tools</text>
+  <text x="870" y="230" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Driver onboarding &amp; training</text>
+  <text x="870" y="265" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Grocery / convenience delivery</text>
+  <text x="870" y="300" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Promotions &amp; coupon engine</text>
+  <text x="870" y="335" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Fraud detection system</text>
+  <text x="870" y="370" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Analytics &amp; merchant dashboards</text>
+
+  <!-- Bottom -->
+  <text x="600" y="535" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12">Focus on the three-sided marketplace (customer, restaurant, dasher) with real-time dispatch and ETA</text>
+
+  <rect x="440" y="485" width="320" height="36" rx="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="600" y="509" text-anchor="middle" fill="white" font-size="13" font-weight="600">🏗️  Food Delivery Platform</text>
+</svg>

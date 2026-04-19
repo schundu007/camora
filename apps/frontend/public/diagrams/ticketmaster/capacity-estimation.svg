@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates (QPS)</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">🎫 500M tickets/year</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Average daily bookings:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">1.37M bookings/day</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Avg Write QPS:</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">≈ 16 QPS (normal)</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Peak onsale (100K+ concurrent):</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">All users booking in 2-min window</text>
+  <text x="45" y="378" fill="#f97316" font-size="18" font-weight="800">≈ 50,000+ QPS</text>
+
+  <rect x="35" y="392" width="245" height="22" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="157" y="408" text-anchor="middle" fill="white" font-size="10" font-weight="600">⚠️ 3000x spike vs normal load!</text>
+
+  <text x="45" y="450" fill="white" font-size="11">Browse/search QPS (read-heavy):</text>
+  <text x="45" y="472" fill="#fbbf24" font-size="15" font-weight="800">≈ 500K QPS at peak</text>
+  <text x="45" y="495" fill="rgba(255,255,255,0.7)" font-size="10">10:1 browse-to-book ratio</text>
+
+  <!-- Column 2: Inventory -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Seat Inventory</text>
+
+  <text x="335" y="145" fill="#fbbf24" font-size="13" font-weight="700">🏟️ ~500K events/year</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="195" fill="white" font-size="12">Avg venue capacity:</text>
+  <text x="335" y="215" fill="#fbbf24" font-size="15" font-weight="700">20,000 seats</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="268" fill="white" font-size="11">Active seat records at any time:</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">≈ 100M seat rows</text>
+
+  <!-- Column 3: Storage -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Estimates</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Booking record: <tspan fill="#fbbf24" font-weight="700">~2 KB each</tspan></text>
+  <text x="442" y="430" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+
+  <text x="335" y="450" fill="white" font-size="11">500M bookings x 2KB:</text>
+  <text x="335" y="472" fill="#fbbf24" font-size="15" font-weight="800">= 1 TB/year (bookings)</text>
+
+  <text x="335" y="500" fill="white" font-size="11">Event metadata + images:</text>
+  <text x="335" y="520" fill="#f97316" font-size="15" font-weight="800">≈ 5 TB/year total</text>
+
+  <!-- Column 4: Concurrency -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Concurrency Challenge</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Hot event onsale window:</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="20" font-weight="800">100,000+</text>
+  <text x="615" y="198" fill="white" font-size="12">concurrent users trying to</text>
+  <text x="615" y="218" fill="white" font-size="12">book the same seats in</text>
+  <text x="615" y="238" fill="white" font-size="12">under 2 minutes.</text>
+
+  <text x="735" y="268" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+  <text x="615" y="292" fill="white" font-size="11">Seat lock hold time: 5 min</text>
+  <text x="615" y="316" fill="#f97316" font-size="16" font-weight="800">Optimistic locking required</text>
+
+  <!-- Column 5: Queue -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Virtual Queue</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Users enter waiting room:</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">≈ 1M users in queue</text>
+
+  <text x="615" y="462" fill="white" font-size="11">Released in batches of:</text>
+  <text x="615" y="484" fill="#f97316" font-size="14" font-weight="700">5,000 users every 30s</text>
+
+  <text x="615" y="510" fill="rgba(255,255,255,0.6)" font-size="10">Prevents thundering herd on inventory DB</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">💡 Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Extreme read/write asymmetry</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">Normal: 16 QPS writes.</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">Peak onsale: 50K+ QPS writes.</text>
+  <text x="920" y="193" fill="rgba(255,255,255,0.7)" font-size="10">Must auto-scale 3000x.</text>
+
+  <text x="920" y="225" fill="white" font-size="11" font-weight="600">Seat-level locking is critical</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">Double-booking is unacceptable.</text>
+  <text x="920" y="258" fill="rgba(255,255,255,0.7)" font-size="10">Optimistic locking + TTL holds</text>
+  <text x="920" y="273" fill="rgba(255,255,255,0.7)" font-size="10">on Redis for seat reservation.</text>
+
+  <text x="920" y="305" fill="white" font-size="11" font-weight="600">Virtual queue absorbs spikes</text>
+  <text x="920" y="323" fill="rgba(255,255,255,0.7)" font-size="10">Without queuing, 100K users</text>
+  <text x="920" y="338" fill="rgba(255,255,255,0.7)" font-size="10">slam the DB simultaneously.</text>
+  <text x="920" y="353" fill="rgba(255,255,255,0.7)" font-size="10">Queue + batch release is key.</text>
+
+  <text x="920" y="385" fill="white" font-size="11" font-weight="600">Storage is modest</text>
+  <text x="920" y="403" fill="rgba(255,255,255,0.7)" font-size="10">~5 TB/year total. The challenge</text>
+  <text x="920" y="418" fill="rgba(255,255,255,0.7)" font-size="10">is concurrency, not storage.</text>
+
+  <text x="920" y="450" fill="white" font-size="11" font-weight="600">CDN for event pages</text>
+  <text x="920" y="468" fill="rgba(255,255,255,0.7)" font-size="10">Cache event details + venue maps</text>
+  <text x="920" y="483" fill="rgba(255,255,255,0.7)" font-size="10">aggressively. Only inventory</text>
+  <text x="920" y="498" fill="rgba(255,255,255,0.7)" font-size="10">checks hit origin servers.</text>
+</svg>

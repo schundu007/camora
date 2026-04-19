@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">&#x1F4CD; Billions of POIs worldwide</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Total POIs indexed:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">&#x2248; 2 Billion POIs</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Daily active users:</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">500M DAU</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Proximity searches/day (avg 5):</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">500M x 5 = 2.5B/day</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 29,000 QPS</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="425" fill="white" font-size="11">Peak QPS (3x):</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">&#x2248; 87,000 QPS</text>
+  <text x="45" y="470" fill="rgba(255,255,255,0.6)" font-size="10">(Lunch/dinner time spikes)</text>
+  <text x="45" y="490" fill="rgba(255,255,255,0.6)" font-size="10">Must respond in &lt;100ms</text>
+
+  <!-- Column 2: Geospatial -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Geohash Precision</text>
+
+  <text x="335" y="148" fill="#fbbf24" font-size="13" font-weight="700">&#x1F30D; Geohash precision levels</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="195" fill="rgba(255,255,255,0.7)" font-size="10">Level 4: &#x2248;39km x 20km cells</text>
+  <text x="335" y="213" fill="rgba(255,255,255,0.7)" font-size="10">Level 5: &#x2248;5km x 5km cells</text>
+  <text x="335" y="231" fill="#fbbf24" font-size="11" font-weight="700">Level 6: &#x2248;1.2km x 0.6km cells &#x2190; sweet spot</text>
+  <text x="335" y="249" fill="rgba(255,255,255,0.7)" font-size="10">Level 7: &#x2248;150m x 150m cells</text>
+  <text x="335" y="267" fill="rgba(255,255,255,0.7)" font-size="10">Level 8: &#x2248;40m x 20m cells</text>
+
+  <text x="335" y="298" fill="white" font-size="11">Total level-6 cells globally:</text>
+  <text x="335" y="318" fill="#f97316" font-size="14" font-weight="800">&#x2248; 32 Billion cells</text>
+
+  <!-- Column 2b: QuadTree -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">QuadTree Alternative</text>
+
+  <text x="335" y="410" fill="white" font-size="11">POIs per leaf: <tspan fill="#fbbf24" font-weight="700">max 100</tspan></text>
+  <text x="335" y="432" fill="white" font-size="11">2B POIs / 100 per leaf</text>
+  <text x="442" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="475" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 20M leaf nodes</text>
+  <text x="335" y="500" fill="white" font-size="11">Tree depth: &#x2248; 12-15 levels</text>
+  <text x="335" y="518" fill="#16a34a" font-size="12" font-weight="700">In-memory: &#x2248; 10-20 GB</text>
+
+  <!-- Column 3: Storage -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">POI Storage</text>
+
+  <text x="615" y="148" fill="white" font-size="12">POI record size:</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="20" font-weight="800">&#x2248; 1 KB each</text>
+  <text x="615" y="198" fill="rgba(255,255,255,0.7)" font-size="10">(name, lat, lng, category, hours, etc.)</text>
+  <text x="735" y="218" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="245" fill="white" font-size="11">Total POI storage: 2B x 1KB</text>
+  <text x="615" y="268" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 2 TB</text>
+  <text x="615" y="290" fill="rgba(255,255,255,0.6)" font-size="10">Fits in memory across cluster</text>
+
+  <!-- Column 3b: Latency -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Search Latency</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Geohash lookup: <tspan fill="#16a34a" font-weight="700">O(1)</tspan></text>
+  <text x="615" y="432" fill="white" font-size="11">Neighbors (8 adjacent): O(8)</text>
+  <text x="735" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="475" fill="white" font-size="11">Total search time:</text>
+  <text x="615" y="498" fill="#16a34a" font-size="18" font-weight="800">&lt; 10ms</text>
+  <text x="615" y="518" fill="rgba(255,255,255,0.6)" font-size="10">Well within 100ms budget</text>
+
+  <!-- Key insight box -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Geohash vs QuadTree</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">Geohash: simple, DB-friendly, fixed</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">grid. QuadTree: adaptive density.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">Read-heavy, rarely written</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">POIs change infrequently.</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">Aggressive caching works well.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Data fits in memory</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">2 TB total POI data. Sharded</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">across 20 nodes = 100GB each.</text>
+
+  <text x="920" y="340" fill="white" font-size="11" font-weight="600">Neighbor cell lookups</text>
+  <text x="920" y="358" fill="rgba(255,255,255,0.7)" font-size="10">Must check 8 surrounding geohash</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">cells for edge-case coverage.</text>
+
+  <text x="920" y="405" fill="white" font-size="11" font-weight="600">Sharding by geohash prefix</text>
+  <text x="920" y="423" fill="rgba(255,255,255,0.7)" font-size="10">Co-locate nearby POIs on same</text>
+  <text x="920" y="438" fill="rgba(255,255,255,0.7)" font-size="10">shard for fast local queries.</text>
+
+  <text x="920" y="470" fill="white" font-size="11" font-weight="600">Search is sub-10ms</text>
+  <text x="920" y="488" fill="rgba(255,255,255,0.7)" font-size="10">In-memory geohash lookup + filter.</text>
+  <text x="920" y="503" fill="rgba(255,255,255,0.7)" font-size="10">Network latency is the bottleneck.</text>
+</svg>

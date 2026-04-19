@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">👥 300M daily participants</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Avg meeting duration:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">52 minutes</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Annual meeting minutes:</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">3.3 Trillion min/year</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Concurrent meetings (peak):</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">300M spread over 12h active window</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 20M concurrent</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="425" fill="white" font-size="11">Peak media sessions:</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">&#x2248; 50M+ streams</text>
+  <text x="45" y="470" fill="rgba(255,255,255,0.6)" font-size="10">(avg 2.5 participants per meeting)</text>
+
+  <!-- Column 2: Latency -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Latency Requirements</text>
+
+  <text x="335" y="148" fill="#fbbf24" font-size="13" font-weight="700">&#x26A1; Target: &lt;150ms end-to-end</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="198" fill="white" font-size="12">Glass-to-glass budget:</text>
+  <text x="335" y="218" fill="rgba(255,255,255,0.7)" font-size="10">Capture: 16ms (60fps)</text>
+  <text x="335" y="236" fill="rgba(255,255,255,0.7)" font-size="10">Encode: 10-30ms (H.264/VP8)</text>
+  <text x="335" y="254" fill="rgba(255,255,255,0.7)" font-size="10">Network: 50-80ms</text>
+  <text x="335" y="272" fill="rgba(255,255,255,0.7)" font-size="10">SFU routing: 5-10ms</text>
+  <text x="335" y="290" fill="rgba(255,255,255,0.7)" font-size="10">Decode + render: 20-30ms</text>
+
+  <rect x="325" y="302" width="235" height="22" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="442" y="318" text-anchor="middle" fill="white" font-size="10" font-weight="600">&#x26A0;️ Needs global SFU edge network!</text>
+
+  <!-- Column 2b: Bandwidth -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Bandwidth per User</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Video (720p): <tspan fill="#fbbf24" font-weight="700">1.5 Mbps</tspan></text>
+  <text x="335" y="432" fill="white" font-size="11">Audio (Opus): <tspan fill="#fbbf24" font-weight="700">32 Kbps</tspan></text>
+  <text x="442" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="475" fill="white" font-size="11">10-person meeting (SFU):</text>
+  <text x="335" y="495" fill="#fbbf24" font-size="14" font-weight="700">Send 1.5 + Recv 13.5 Mbps</text>
+  <text x="335" y="510" fill="#f97316" font-size="12" font-weight="700">&#x2248; 15 Mbps per participant</text>
+
+  <!-- Column 3: SFU Infrastructure -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">SFU Server Scaling</text>
+
+  <text x="615" y="148" fill="white" font-size="12">WebRTC via SFU (not mesh)</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="20" font-weight="800">50M streams</text>
+  <text x="615" y="198" fill="white" font-size="12">at peak concurrency</text>
+  <text x="735" y="220" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="245" fill="white" font-size="11">At 500 streams per SFU server:</text>
+  <text x="615" y="268" fill="#f97316" font-size="16" font-weight="800">100,000 SFU servers</text>
+  <text x="615" y="290" fill="rgba(255,255,255,0.6)" font-size="10">Distributed across 20+ global regions</text>
+
+  <!-- Column 3b: Storage -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Recording Storage</text>
+
+  <text x="615" y="410" fill="white" font-size="11">If 10% of meetings recorded:</text>
+  <text x="615" y="430" fill="rgba(255,255,255,0.7)" font-size="10">2M meetings x 52min x 150MB/hr</text>
+  <text x="735" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="475" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 260 TB/day recordings</text>
+  <text x="615" y="500" fill="white" font-size="11">Annual: <tspan fill="#f97316" font-weight="800">&#x2248; 95 PB/year</tspan></text>
+  <text x="615" y="518" fill="rgba(255,255,255,0.6)" font-size="10">Tiered storage: hot (S3) + cold (Glacier)</text>
+
+  <!-- Key insight box -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Latency is king</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">&lt;150ms glass-to-glass. SFU</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">edge network across 20+ regions.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">SFU over mesh topology</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">Mesh: N*(N-1) streams. SFU:</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">N upload + N download. 10x savings.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Bandwidth is the bottleneck</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">15 Mbps per user in a 10-person</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">call. Simulcast + ABR essential.</text>
+
+  <text x="920" y="340" fill="white" font-size="11" font-weight="600">Adaptive bitrate crucial</text>
+  <text x="920" y="358" fill="rgba(255,255,255,0.7)" font-size="10">3 simulcast layers (180p/360p/720p)</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">selected per receiver's bandwidth.</text>
+
+  <text x="920" y="405" fill="white" font-size="11" font-weight="600">Recording storage explodes</text>
+  <text x="920" y="423" fill="rgba(255,255,255,0.7)" font-size="10">95 PB/year. Must use tiered</text>
+  <text x="920" y="438" fill="rgba(255,255,255,0.7)" font-size="10">storage with lifecycle policies.</text>
+
+  <text x="920" y="470" fill="white" font-size="11" font-weight="600">Server cost = SFU fleet</text>
+  <text x="920" y="488" fill="rgba(255,255,255,0.7)" font-size="10">100K SFU servers at peak.</text>
+  <text x="920" y="503" fill="rgba(255,255,255,0.7)" font-size="10">Auto-scale by time zone demand.</text>
+</svg>

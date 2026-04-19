@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="75" width="275" height="350" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="75" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="138" fill="#fbbf24" font-size="13" font-weight="700">&#x1F465; 178M unique visitors/mo</text>
+  <text x="157" y="160" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="185" fill="white" font-size="12">Daily active users:</text>
+  <text x="45" y="205" fill="#fbbf24" font-size="15" font-weight="700">~6M DAU</text>
+  <text x="157" y="225" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="250" fill="white" font-size="12">Avg 5 searches/session:</text>
+  <text x="45" y="270" fill="#fbbf24" font-size="16" font-weight="800">29.7M searches/day</text>
+  <text x="157" y="292" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="317" fill="white" font-size="11">Search QPS (Average):</text>
+  <text x="45" y="335" fill="rgba(255,255,255,0.7)" font-size="10">29.7M / 86,400s</text>
+  <text x="45" y="357" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 344 search/sec</text>
+  <text x="157" y="377" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="45" y="397" fill="white" font-size="11">Peak QPS (3x):</text>
+  <text x="45" y="415" fill="#f97316" font-size="16" font-weight="800">&#x2248; 1,032 search/sec</text>
+
+  <!-- Column 2: Data Volume -->
+  <rect x="310" y="75" width="265" height="215" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="75" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Data Volume</text>
+
+  <text x="335" y="135" fill="white" font-size="12">Reviews:</text>
+  <text x="335" y="155" fill="#fbbf24" font-size="15" font-weight="700">330M reviews (660 GB)</text>
+  <text x="335" y="172" fill="rgba(255,255,255,0.6)" font-size="10">Avg 2KB per review</text>
+
+  <text x="442" y="192" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="212" fill="white" font-size="12">Businesses:</text>
+  <text x="335" y="232" fill="#fbbf24" font-size="15" font-weight="700">7.74M listings (77 GB)</text>
+  <text x="335" y="249" fill="rgba(255,255,255,0.6)" font-size="10">Avg 10KB per business profile</text>
+
+  <text x="335" y="275" fill="white" font-size="12">Photos: <tspan fill="#f97316" font-weight="700">~12TB total</tspan></text>
+
+  <!-- Column 3: Geospatial -->
+  <rect x="310" y="305" width="265" height="120" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="305" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="329" text-anchor="middle" fill="white" font-size="14" font-weight="700">Geospatial Index</text>
+
+  <text x="335" y="365" fill="white" font-size="11">QuadTree for 7.74M businesses:</text>
+  <text x="335" y="388" fill="#fbbf24" font-size="16" font-weight="800">1.71 GB in-memory</text>
+  <text x="335" y="410" fill="rgba(255,255,255,0.7)" font-size="10">~220 bytes/entry (lat, lng, id, metadata)</text>
+
+  <!-- Column 4: Read/Write Split -->
+  <rect x="590" y="75" width="280" height="190" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="75" width="280" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="730" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Read/Write Split</text>
+
+  <text x="615" y="138" fill="white" font-size="12">Read-heavy workload:</text>
+  <text x="615" y="161" fill="#fbbf24" font-size="16" font-weight="800">100:1 read/write ratio</text>
+  <text x="730" y="183" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="206" fill="white" font-size="11">New reviews/day: ~150K</text>
+  <text x="615" y="226" fill="white" font-size="11">New businesses/day: ~5K</text>
+  <text x="615" y="248" fill="#f97316" font-size="13" font-weight="700">Write QPS &#x2248; 2 writes/sec</text>
+
+  <!-- Column 5: CDN & Photos -->
+  <rect x="590" y="280" width="280" height="145" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="280" width="280" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="730" y="304" text-anchor="middle" fill="white" font-size="14" font-weight="700">Photo &amp; CDN Load</text>
+
+  <text x="615" y="340" fill="white" font-size="11">Photo uploads/day:</text>
+  <text x="615" y="360" fill="#fbbf24" font-size="14" font-weight="700">~50K photos (15 GB)</text>
+
+  <text x="615" y="388" fill="white" font-size="11">Photo serves/day (CDN):</text>
+  <text x="615" y="408" fill="#f97316" font-size="14" font-weight="700">~500M image requests</text>
+
+  <!-- Key Insights -->
+  <rect x="890" y="75" width="290" height="350" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1035" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="910" y1="113" x2="1160" y2="113" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="910" y="140" fill="white" font-size="11" font-weight="600">Read-dominated system</text>
+  <text x="910" y="158" fill="rgba(255,255,255,0.7)" font-size="10">344 QPS is low. Cache aggressively</text>
+  <text x="910" y="173" fill="rgba(255,255,255,0.7)" font-size="10">with Redis + CDN for photos.</text>
+
+  <text x="910" y="203" fill="white" font-size="11" font-weight="600">QuadTree fits in memory</text>
+  <text x="910" y="221" fill="rgba(255,255,255,0.7)" font-size="10">1.71 GB is trivial. Replicate</text>
+  <text x="910" y="236" fill="rgba(255,255,255,0.7)" font-size="10">across servers for low-latency</text>
+  <text x="910" y="251" fill="rgba(255,255,255,0.7)" font-size="10">geospatial queries.</text>
+
+  <text x="910" y="281" fill="white" font-size="11" font-weight="600">Reviews are the core data</text>
+  <text x="910" y="299" fill="rgba(255,255,255,0.7)" font-size="10">330M reviews at 660GB.</text>
+  <text x="910" y="314" fill="rgba(255,255,255,0.7)" font-size="10">Denormalize aggregates onto</text>
+  <text x="910" y="329" fill="rgba(255,255,255,0.7)" font-size="10">business profiles for fast reads.</text>
+
+  <text x="910" y="359" fill="white" font-size="11" font-weight="600">Photos dominate storage</text>
+  <text x="910" y="377" fill="rgba(255,255,255,0.7)" font-size="10">12TB of photos vs 737GB text.</text>
+  <text x="910" y="392" fill="rgba(255,255,255,0.7)" font-size="10">S3 + CloudFront with multiple</text>
+  <text x="910" y="407" fill="rgba(255,255,255,0.7)" font-size="10">size variants per photo.</text>
+</svg>

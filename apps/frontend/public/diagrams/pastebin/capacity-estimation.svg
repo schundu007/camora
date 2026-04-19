@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates (QPS)</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">📝 10M pastes/month</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Write QPS (creates):</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">≈ 4 pastes/sec</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Read:Write ratio = 5:1</text>
+  <text x="45" y="288" fill="rgba(255,255,255,0.7)" font-size="10">50M reads/month</text>
+  <text x="45" y="310" fill="#fbbf24" font-size="16" font-weight="800">≈ 20 reads/sec</text>
+  <text x="157" y="335" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="362" fill="white" font-size="11">Total QPS (avg):</text>
+  <text x="45" y="382" fill="#fbbf24" font-size="16" font-weight="800">≈ 24 QPS</text>
+
+  <text x="45" y="415" fill="white" font-size="11">Peak QPS (5x):</text>
+  <text x="45" y="438" fill="#f97316" font-size="18" font-weight="800">≈ 120 QPS</text>
+  <text x="45" y="465" fill="rgba(255,255,255,0.7)" font-size="10">Very manageable traffic load</text>
+
+  <rect x="35" y="478" width="245" height="22" rx="6" fill="rgba(22,163,106,0.3)" stroke="rgba(22,163,106,0.5)" stroke-width="1"/>
+  <text x="157" y="494" text-anchor="middle" fill="white" font-size="10" font-weight="600">Low QPS — storage is the real challenge</text>
+
+  <!-- Column 2: Storage -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Estimates</text>
+
+  <text x="335" y="145" fill="#fbbf24" font-size="13" font-weight="700">📄 Avg paste size: 10 KB</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="195" fill="white" font-size="12">Storage per month:</text>
+  <text x="335" y="215" fill="#fbbf24" font-size="15" font-weight="700">10M x 10KB = 100 GB</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="268" fill="white" font-size="11">Storage per year:</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">≈ 1.2 TB/year</text>
+
+  <!-- Column 3: 10-year projection -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">10-Year Projection</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Total pastes: <tspan fill="#fbbf24" font-weight="700">1.2 Billion</tspan></text>
+  <text x="442" y="430" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+
+  <text x="335" y="450" fill="white" font-size="11">Total storage (raw):</text>
+  <text x="335" y="472" fill="#fbbf24" font-size="15" font-weight="800">= 12 TB</text>
+
+  <text x="335" y="500" fill="white" font-size="11">With metadata + indexes:</text>
+  <text x="335" y="520" fill="#f97316" font-size="15" font-weight="800">≈ 15 TB total</text>
+
+  <!-- Column 4: Short URL -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Short URL Space</text>
+
+  <text x="615" y="148" fill="white" font-size="12">URL encoding: base62</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="15" font-weight="700">[a-zA-Z0-9]</text>
+
+  <text x="615" y="208" fill="white" font-size="12">6-char key space:</text>
+  <text x="615" y="235" fill="#fbbf24" font-size="20" font-weight="800">62^6 = 56.8B</text>
+  <text x="615" y="258" fill="white" font-size="12">unique short URLs</text>
+
+  <text x="735" y="285" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+  <text x="615" y="308" fill="white" font-size="11">At 10M pastes/month:</text>
+  <text x="615" y="326" fill="#16a34a" font-size="16" font-weight="800">Lasts 473 years</text>
+
+  <!-- Column 5: Caching -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Caching Strategy</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Hot pastes (top 20%):</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">2M pastes in cache</text>
+
+  <text x="615" y="462" fill="white" font-size="11">Cache size: 2M x 10KB</text>
+  <text x="615" y="484" fill="#f97316" font-size="14" font-weight="700">= 20 GB (fits in RAM)</text>
+
+  <text x="615" y="510" fill="rgba(255,255,255,0.6)" font-size="10">80/20 rule: cache 20% of pastes, serve 80% of reads</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">💡 Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">This is a storage problem</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">120 peak QPS is trivial for</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">any modern server. The design</text>
+  <text x="920" y="193" fill="rgba(255,255,255,0.7)" font-size="10">challenge is cheap, durable storage.</text>
+
+  <text x="920" y="225" fill="white" font-size="11" font-weight="600">Object storage for paste content</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">Store paste content in S3/blob</text>
+  <text x="920" y="258" fill="rgba(255,255,255,0.7)" font-size="10">storage. Metadata (URL, expiry)</text>
+  <text x="920" y="273" fill="rgba(255,255,255,0.7)" font-size="10">in relational DB.</text>
+
+  <text x="920" y="305" fill="white" font-size="11" font-weight="600">Expiration needs cleanup job</text>
+  <text x="920" y="323" fill="rgba(255,255,255,0.7)" font-size="10">Background worker deletes expired</text>
+  <text x="920" y="338" fill="rgba(255,255,255,0.7)" font-size="10">pastes. Lazy deletion on read</text>
+  <text x="920" y="353" fill="rgba(255,255,255,0.7)" font-size="10">as a fallback.</text>
+
+  <text x="920" y="385" fill="white" font-size="11" font-weight="600">CDN handles read traffic</text>
+  <text x="920" y="403" fill="rgba(255,255,255,0.7)" font-size="10">Popular pastes get millions of</text>
+  <text x="920" y="418" fill="rgba(255,255,255,0.7)" font-size="10">views. CDN caches rendered HTML</text>
+  <text x="920" y="433" fill="rgba(255,255,255,0.7)" font-size="10">at edge, reducing origin load.</text>
+
+  <text x="920" y="465" fill="white" font-size="11" font-weight="600">Short URL is basically solved</text>
+  <text x="920" y="483" fill="rgba(255,255,255,0.7)" font-size="10">6-char base62 gives 56.8B URLs.</text>
+  <text x="920" y="498" fill="rgba(255,255,255,0.7)" font-size="10">Pre-generate keys or use</text>
+  <text x="920" y="513" fill="rgba(255,255,255,0.7)" font-size="10">auto-increment + base62 encode.</text>
+</svg>

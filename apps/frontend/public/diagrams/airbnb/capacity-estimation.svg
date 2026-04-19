@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="75" width="275" height="350" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="75" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="138" fill="#fbbf24" font-size="13" font-weight="700">&#x1F465; 200M registered users</text>
+  <text x="157" y="160" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="185" fill="white" font-size="12">Active searchers/day:</text>
+  <text x="45" y="203" fill="#fbbf24" font-size="15" font-weight="700">~3.3M DAU</text>
+  <text x="157" y="225" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="250" fill="white" font-size="12">Avg 10 searches/session:</text>
+  <text x="45" y="270" fill="#fbbf24" font-size="16" font-weight="800">33.3M searches/day</text>
+  <text x="157" y="292" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="317" fill="white" font-size="11">Search QPS (Average):</text>
+  <text x="45" y="335" fill="rgba(255,255,255,0.7)" font-size="10">33.3M / 86,400s</text>
+  <text x="45" y="357" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 386 search/sec</text>
+  <text x="157" y="377" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="45" y="397" fill="white" font-size="11">Peak QPS (3x):</text>
+  <text x="45" y="415" fill="#f97316" font-size="16" font-weight="800">&#x2248; 1,158 search/sec</text>
+
+  <!-- Column 2: Booking TPS -->
+  <rect x="310" y="75" width="265" height="200" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="75" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Booking Throughput</text>
+
+  <text x="335" y="138" fill="white" font-size="12">Total bookings/year:</text>
+  <text x="335" y="158" fill="#fbbf24" font-size="15" font-weight="700">~500M nights booked</text>
+  <text x="442" y="178" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="200" fill="white" font-size="12">Bookings/day:</text>
+  <text x="335" y="220" fill="#fbbf24" font-size="15" font-weight="700">1.5M bookings/day</text>
+
+  <text x="335" y="248" fill="white" font-size="11">Booking TPS:</text>
+  <text x="335" y="268" fill="#f97316" font-size="18" font-weight="800">&#x2248; 17 TPS</text>
+
+  <rect x="325" y="278" width="235" height="22" rx="6" fill="rgba(22,163,106,0.3)" stroke="rgba(22,163,106,0.5)" stroke-width="1"/>
+  <text x="442" y="294" text-anchor="middle" fill="white" font-size="10" font-weight="600">Low TPS but strict consistency needed!</text>
+
+  <!-- Column 3: Data Volume -->
+  <rect x="310" y="310" width="265" height="115" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="310" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="334" text-anchor="middle" fill="white" font-size="14" font-weight="700">Data Volume</text>
+
+  <text x="335" y="370" fill="white" font-size="11">Listings: <tspan fill="#fbbf24" font-weight="700">8M (400 GB)</tspan></text>
+  <text x="335" y="390" fill="white" font-size="11">Photos: <tspan fill="#f97316" font-weight="700">160 TB (~20 per listing)</tspan></text>
+  <text x="335" y="410" fill="white" font-size="11">Calendar: <tspan fill="#fbbf24" font-weight="700">292 GB (365 days x 8M)</tspan></text>
+
+  <!-- Column 4: Availability System -->
+  <rect x="590" y="75" width="280" height="200" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="75" width="280" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="730" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Availability Calendar</text>
+
+  <text x="615" y="138" fill="white" font-size="12">Calendar entries:</text>
+  <text x="615" y="161" fill="#fbbf24" font-size="16" font-weight="800">2.92B rows</text>
+  <text x="615" y="178" fill="rgba(255,255,255,0.6)" font-size="10">8M listings x 365 days</text>
+  <text x="730" y="198" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="220" fill="white" font-size="11">Calendar reads/search:</text>
+  <text x="615" y="240" fill="#fbbf24" font-size="14" font-weight="700">~50 listings checked/query</text>
+  <text x="615" y="262" fill="#f97316" font-size="13" font-weight="700">19.3K calendar reads/sec</text>
+
+  <!-- Column 5: Payment Flow -->
+  <rect x="590" y="290" width="280" height="135" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="290" width="280" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="730" y="314" text-anchor="middle" fill="white" font-size="14" font-weight="700">Payment Processing</text>
+
+  <text x="615" y="350" fill="white" font-size="11">Avg booking value:</text>
+  <text x="615" y="370" fill="#fbbf24" font-size="14" font-weight="700">$150/night x 3 nights = $450</text>
+
+  <text x="615" y="398" fill="white" font-size="11">Daily GMV:</text>
+  <text x="615" y="418" fill="#f97316" font-size="15" font-weight="800">$675M/day processed</text>
+
+  <!-- Key Insights -->
+  <rect x="890" y="75" width="290" height="350" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1035" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="910" y1="113" x2="1160" y2="113" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="910" y="140" fill="white" font-size="11" font-weight="600">Low write, high read</text>
+  <text x="910" y="158" fill="rgba(255,255,255,0.7)" font-size="10">17 booking TPS but 386 search</text>
+  <text x="910" y="173" fill="rgba(255,255,255,0.7)" font-size="10">QPS. Read replicas + caching.</text>
+
+  <text x="910" y="203" fill="white" font-size="11" font-weight="600">Calendar is the hard part</text>
+  <text x="910" y="221" fill="rgba(255,255,255,0.7)" font-size="10">2.92B calendar rows. Search must</text>
+  <text x="910" y="236" fill="rgba(255,255,255,0.7)" font-size="10">filter by date range + location.</text>
+  <text x="910" y="251" fill="rgba(255,255,255,0.7)" font-size="10">Pre-aggregate availability windows.</text>
+
+  <text x="910" y="281" fill="white" font-size="11" font-weight="600">Double-booking prevention</text>
+  <text x="910" y="299" fill="rgba(255,255,255,0.7)" font-size="10">17 TPS is low but requires</text>
+  <text x="910" y="314" fill="rgba(255,255,255,0.7)" font-size="10">strict consistency. Use optimistic</text>
+  <text x="910" y="329" fill="rgba(255,255,255,0.7)" font-size="10">locking or DB-level constraints.</text>
+
+  <text x="910" y="359" fill="white" font-size="11" font-weight="600">Photos dominate storage</text>
+  <text x="910" y="377" fill="rgba(255,255,255,0.7)" font-size="10">160TB photos vs 400GB listings.</text>
+  <text x="910" y="392" fill="rgba(255,255,255,0.7)" font-size="10">CDN + lazy loading + responsive</text>
+  <text x="910" y="407" fill="rgba(255,255,255,0.7)" font-size="10">image variants are essential.</text>
+</svg>

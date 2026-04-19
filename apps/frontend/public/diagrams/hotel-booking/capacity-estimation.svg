@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">&#x1F3E8; 28 Million listings</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Room nights booked/day:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">1.5 Million/day</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Booking QPS:</text>
+  <text x="45" y="288" fill="rgba(255,255,255,0.7)" font-size="10">1.5M / 86,400</text>
+  <text x="45" y="310" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 17 bookings/sec</text>
+  <text x="157" y="332" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="358" fill="white" font-size="11">Search QPS (100:1 search:book):</text>
+  <text x="45" y="378" fill="rgba(255,255,255,0.7)" font-size="10">17 x 100 search per booking</text>
+  <text x="45" y="398" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 1,700 search QPS</text>
+  <text x="157" y="418" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="445" fill="white" font-size="11">Peak (holiday season 3x):</text>
+  <text x="45" y="468" fill="#f97316" font-size="18" font-weight="800">&#x2248; 5,100 search QPS</text>
+  <text x="45" y="488" fill="rgba(255,255,255,0.6)" font-size="10">(Black Friday / summer peak)</text>
+
+  <!-- Column 2: Inventory -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Inventory Scale</text>
+
+  <text x="335" y="148" fill="#fbbf24" font-size="13" font-weight="700">&#x1F4C5; 28M listings x 365 days</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="198" fill="white" font-size="12">Availability records:</text>
+  <text x="335" y="218" fill="#fbbf24" font-size="15" font-weight="700">&#x2248; 10.2B date-room rows</text>
+  <text x="335" y="240" fill="rgba(255,255,255,0.7)" font-size="10">(Each with price, count, status)</text>
+  <text x="442" y="262" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="288" fill="white" font-size="11">Concurrent booking conflicts:</text>
+  <text x="335" y="308" fill="#f97316" font-size="16" font-weight="800">Race condition risk</text>
+
+  <rect x="325" y="318" width="235" height="22" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="442" y="334" text-anchor="middle" fill="white" font-size="10" font-weight="600">&#x26A0;️ Pessimistic locks on checkout!</text>
+
+  <!-- Column 2b: Reviews -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Reviews &amp; Content</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Total reviews: <tspan fill="#fbbf24" font-weight="700">590 Million</tspan></text>
+  <text x="335" y="432" fill="white" font-size="11">Avg review size: &#x2248; 500 bytes</text>
+  <text x="442" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="475" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 295 GB review text</text>
+  <text x="335" y="500" fill="white" font-size="11">Photos: &#x2248; 250M images</text>
+  <text x="335" y="518" fill="#f97316" font-size="14" font-weight="700">&#x2248; 50 TB hotel images</text>
+
+  <!-- Column 3: Concurrency -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Booking Concurrency</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Popular hotels: 100+ users</text>
+  <text x="615" y="168" fill="white" font-size="12">viewing same room type</text>
+  <text x="615" y="195" fill="#fbbf24" font-size="18" font-weight="800">simultaneously</text>
+  <text x="735" y="218" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="245" fill="white" font-size="11">Strategy: Reserve-then-pay</text>
+  <text x="615" y="268" fill="#16a34a" font-size="14" font-weight="800">10-min hold on checkout</text>
+  <text x="615" y="290" fill="rgba(255,255,255,0.6)" font-size="10">Row-level locks + TTL reservation</text>
+
+  <!-- Column 3b: Internationalization -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Multi-Region</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Languages: <tspan fill="#fbbf24" font-weight="700">43 supported</tspan></text>
+  <text x="615" y="432" fill="white" font-size="11">Currencies: 70+ supported</text>
+  <text x="735" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="475" fill="white" font-size="11">Translation content size:</text>
+  <text x="615" y="495" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 12 TB (43 x listing data)</text>
+  <text x="615" y="518" fill="rgba(255,255,255,0.6)" font-size="10">Currency rates updated every 15 min</text>
+
+  <!-- Key insight box -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Read-heavy, write-critical</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">100:1 search-to-book ratio.</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">But each booking MUST be atomic.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">Inventory = time-series</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">10.2B date-room records. Needs</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">efficient date-range queries.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Double-booking prevention</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">Pessimistic locking at checkout.</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">10-min TTL reservations.</text>
+
+  <text x="920" y="340" fill="white" font-size="11" font-weight="600">Price varies constantly</text>
+  <text x="920" y="358" fill="rgba(255,255,255,0.7)" font-size="10">Dynamic pricing by demand, season,</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">currency. Cache invalidation hard.</text>
+
+  <text x="920" y="405" fill="white" font-size="11" font-weight="600">Search is multi-dimensional</text>
+  <text x="920" y="423" fill="rgba(255,255,255,0.7)" font-size="10">Location + dates + price + stars +</text>
+  <text x="920" y="438" fill="rgba(255,255,255,0.7)" font-size="10">amenities. Elasticsearch cluster.</text>
+
+  <text x="920" y="470" fill="white" font-size="11" font-weight="600">Reviews build trust</text>
+  <text x="920" y="488" fill="rgba(255,255,255,0.7)" font-size="10">590M reviews. Fraud detection</text>
+  <text x="920" y="503" fill="rgba(255,255,255,0.7)" font-size="10">for fake reviews is essential.</text>
+</svg>
