@@ -1930,7 +1930,145 @@ rides {
    • Divide city into cells
    • Each cell handled by dedicated server
    • Reduces contention`
-        }
+        },
+        {
+          question: 'How does surge pricing work technically?',
+          answer: `Surge pricing dynamically adjusts fares when demand exceeds supply in a geographic area.
+
+**Implementation**:
+1. Divide city into hexagonal cells (~1 km²)
+2. For each cell, compute: surge_multiplier = demand / supply
+3. Apply smoothing: rolling average over 5-minute windows to prevent oscillation
+4. Cap multiplier at a configurable maximum (typically 5-8x)
+5. Cache surge multipliers in Redis with 60-second TTL
+
+**Pricing Flow**:
+• Rider opens app → client fetches surge multiplier for pickup cell
+• Show upfront price = base_fare + (distance × per_mile × surge) + (time × per_min × surge)
+• Lock the surge multiplier at booking time (rider sees exact price)
+
+**Anti-gaming Measures**:
+• Gradual ramp-up/down to prevent drivers from waiting for higher surge
+• Geographic smoothing — neighboring cells influence each other
+• Time-decay: surge drops faster than it rises
+• Heat maps shown to drivers to redistribute supply`
+        },
+        {
+          question: 'How is ETA calculated accurately?',
+          answer: `ETA calculation combines multiple data sources:
+
+**Data Sources**:
+1. Historical travel times per road segment (time-of-day, day-of-week adjusted)
+2. Real-time traffic from active driver GPS traces
+3. Road network graph (OpenStreetMap or proprietary)
+4. Live incidents (accidents, road closures)
+
+**Algorithm**:
+• Model the city as a weighted directed graph (intersections = nodes, roads = edges)
+• Edge weights = estimated travel time (not distance)
+• Use Contraction Hierarchies or A* for route planning
+• Adjust edge weights with real-time traffic multipliers
+
+**Accuracy at Scale**:
+• Uber reports ETA accuracy within 2 minutes for 95% of rides
+• Separate models per city (NYC traffic ≠ Mumbai)
+• ML model trained on millions of historical trips
+• Fallback: straight-line distance × average speed if route computation fails`
+        },
+        {
+          question: 'How does the matching algorithm optimize driver assignment?',
+          answer: `The matching engine minimizes total wait time across all pending requests.
+
+**Single-request Matching**:
+1. Query Redis GEORADIUS for drivers within expanding radius (1km → 3km → 5km)
+2. Filter by: availability, vehicle type, rating threshold, acceptance rate
+3. Score each candidate: score = w1/distance + w2×rating + w3×acceptance_rate
+4. Send to top-ranked driver, wait 15s for acceptance; if declined, try next
+
+**Batch Matching (High-Demand Periods)**:
+• Collect ride requests over a 2-second window
+• Model as bipartite graph: riders ↔ drivers
+• Use the Hungarian algorithm for minimum-cost assignment
+• Batch matching improves efficiency by 20-30%
+
+**Multi-Ride (UberPool)**:
+• Solve Vehicle Routing Problem variant
+• Detour constraint: existing rider's trip extended by max 25%
+• Dynamic insertion: check if new pickup/dropoff fits active route`
+        },
+        {
+          question: 'How do we ensure payment reliability and fare accuracy?',
+          answer: `Payment processing involves pre-authorization, real-time metering, and settlement.
+
+**Pre-Ride**: Pre-authorize estimated fare, tokenized card storage (PCI compliant)
+**During Ride**: Fare = base + (distance × rate) + (time × rate) × surge. Distance from GPS trace, toll detection automatic.
+**Post-Ride**: Calculate final fare, charge rider, driver payout = fare − 20-25% commission, weekly batch payouts.
+
+**Fraud Prevention**:
+• Detect fake GPS locations (impossible speed between updates)
+• Flag trips with unusual patterns (circular routes, very short rides)
+• Velocity checks: max 3 rides in 10 minutes per rider
+• Device fingerprinting to prevent multi-accounting`
+        },
+        {
+          question: 'How does the system handle safety features?',
+          answer: `**Real-time Safety**:
+• Share trip with trusted contacts via live tracking URL
+• In-app emergency button: GPS snapshot + audio recording
+• Unusual route detection: alert rider if driver deviates from optimal path
+• RideCheck: if trip stops unexpectedly for 5+ min, check on both parties
+
+**Trip Verification**:
+• PIN verification: 4-digit code to start trip (prevents wrong pickups)
+• Photo verification: periodic driver selfie matched against profile
+
+**Post-Trip**:
+• Bidirectional ratings with mandatory feedback below 3 stars
+• Drivers below 4.6 get warnings; below 4.4 face deactivation
+• Insurance claim system integrated with trip GPS data`
+        },
+        {
+          question: 'How does Uber handle city-specific regulations?',
+          answer: `**Regulatory Config Service**: Each city has a config specifying max surge multiplier, insurance requirements, driver licensing, airport geofenced zones.
+
+**Dynamic Geofencing**: Define zones where rides cannot start/end, airport queuing areas, event pickup/dropoff points.
+
+**Tax & Compliance**: Different tax rates per jurisdiction, e-receipt generation with legally required fields, real-time tax calculation in fare.
+
+**Data Residency**: GDPR data within EU, per-country retention policies, right-to-deletion with cascading purge.`
+        },
+        {
+          question: 'How do we handle service failures gracefully?',
+          answer: `Failures directly strand real people, so graceful degradation is critical.
+
+**Failure Modes**:
+1. **Matching down**: Show "high demand", active rides unaffected, fallback to nearest-driver
+2. **Location down**: Client stores GPS locally, replays on reconnect, use last-known location
+3. **Payment down**: Complete ride, charge async via durable Kafka queue
+4. **DB failover**: Read replicas for history, Redis cluster auto-failover for location
+
+**Circuit Breaker**: Open after 5 failures in 30s, half-open every 10s, fallback per dependency.`
+        },
+        {
+          question: 'How does demand prediction and driver positioning work?',
+          answer: `**Prediction Model**: Features include time-of-day, weather, events, historical patterns. GBDT or LSTM per city, predict demand per S2 cell per 15-min window, retrained weekly.
+
+**Driver Positioning**: Show demand heat maps, incentive bonuses for repositioning to underserved areas.
+
+**Event-Based**: Integrate with Ticketmaster/sports APIs, predict surge at event end ± 30 min, position drivers before concerts.`
+        },
+        {
+          question: 'How would you design Uber for a new city launch?',
+          answer: `Bootstrapping both supply and demand simultaneously is the key challenge.
+
+**Technical**: Provision S2 cells, import road network, calibrate ETA model, configure payment/tax/compliance.
+
+**Cold Start Supply**: Guarantee minimum hourly earnings, referral bonuses, partner with taxi companies.
+
+**Cold Start Demand**: Promo codes, geo-targeted ads, partner with hotels/airports, launch focused zone first.
+
+**Scaling**: Phase 1 downtown+airport → Phase 2 suburbs → Phase 3 full city. Expand when drivers busy 60%+ of online time.`
+        },
       ],
 
       basicImplementation: {
