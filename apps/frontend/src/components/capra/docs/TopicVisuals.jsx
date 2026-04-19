@@ -94,29 +94,39 @@ export function ComparisonCard({ comparison }) {
 
 // ── CheatSheetCard ──────────────────────────────────────────────────────────
 // Visual bar chart card with labeled values (latency numbers, availability, etc.)
+// Supports both rich format (color, icon, bar values) and simple format (label + description)
 export function CheatSheetCard({ card }) {
+  const cardColor = card.color || 'var(--accent)';
+  const hasBarData = card.items?.[0]?.bar !== undefined;
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-      <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2" style={{ background: `${card.color}08` }}>
-        <Icon name={card.icon} size={14} style={{ color: card.color }} />
-        <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{card.title}</h3>
-        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{card.items.length} items</span>
+      <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2" style={{ background: `${cardColor}08` }}>
+        {card.icon && <Icon name={card.icon} size={14} style={{ color: cardColor }} />}
+        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{card.title}</h3>
+        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{card.items?.length || 0} items</span>
       </div>
       <div className="p-3 space-y-1.5">
-        {card.items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2 group">
-            <span className="text-xs text-[var(--text-secondary)] landing-body w-[45%] flex-shrink-0 truncate" title={item.label}>{item.label}</span>
-            <div className="flex-1 h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden relative">
-              <div
-                className="h-full rounded-full transition-all duration-500 ease-out"
-                style={{
-                  width: `${Math.max(item.bar, 3)}%`,
-                  background: `linear-gradient(90deg, ${card.color}40, ${card.color})`
-                }}
-              />
+        {(card.items || []).map((item, i) => (
+          hasBarData ? (
+            <div key={i} className="flex items-center gap-2 group">
+              <span className="text-xs text-[var(--text-secondary)] landing-body w-[45%] flex-shrink-0 truncate" title={item.label}>{item.label}</span>
+              <div className="flex-1 h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden relative">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${Math.max(item.bar || 0, 3)}%`,
+                    background: `linear-gradient(90deg, ${cardColor}40, ${cardColor})`
+                  }}
+                />
+              </div>
+              <span className="text-[10px] landing-mono font-semibold text-[var(--text-muted)] w-[25%] flex-shrink-0 text-right">{item.value}</span>
             </div>
-            <span className="text-[10px] landing-mono font-semibold text-[var(--text-muted)] w-[25%] flex-shrink-0 text-right">{item.value}</span>
-          </div>
+          ) : (
+            <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">
+              <span className="text-sm font-semibold text-[var(--text-primary)] landing-mono whitespace-nowrap">{item.label}</span>
+              <span className="text-sm text-[var(--text-secondary)] landing-body">{item.description || item.value}</span>
+            </div>
+          )
         ))}
       </div>
     </div>
@@ -128,25 +138,27 @@ export function CheatSheetCard({ card }) {
 export function EvolutionTimeline({ steps }) {
   const [activeStep, setActiveStep] = useState(0);
   const current = steps[activeStep];
+  // Detect if steps use rich format (color, pros, cons) or simple format (title + description only)
+  const isRich = current?.color;
+  const stepColor = current?.color || 'var(--accent)';
 
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="trendingUp" size={14} className="text-[var(--accent)]" />
-        <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Architecture Evolution</h3>
+        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Architecture Evolution</h3>
         <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{steps.length} stages</span>
       </div>
 
       {/* Step Selector - Horizontal */}
       <div className="px-3 pt-3 pb-1">
         <div className="flex items-center gap-0 relative">
-          {/* Connecting line */}
           <div className="absolute top-[14px] left-4 right-4 h-0.5 bg-[var(--bg-elevated)] z-0" />
           <div
             className="absolute top-[14px] left-4 h-0.5 z-[1] transition-all duration-300"
             style={{
-              width: `${(activeStep / (steps.length - 1)) * (100 - (8 / steps.length))}%`,
-              background: current.color
+              width: `${(activeStep / Math.max(steps.length - 1, 1)) * (100 - (8 / steps.length))}%`,
+              background: stepColor
             }}
           />
           {steps.map((s, i) => (
@@ -158,12 +170,16 @@ export function EvolutionTimeline({ steps }) {
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2"
                 style={{
-                  background: i <= activeStep ? s.color : '#f7f8f9',
-                  borderColor: i <= activeStep ? s.color : '#e3e8ee',
+                  background: i <= activeStep ? (s.color || 'var(--accent)') : '#f7f8f9',
+                  borderColor: i <= activeStep ? (s.color || 'var(--accent)') : '#e3e8ee',
                   transform: i === activeStep ? 'scale(1.2)' : 'scale(1)'
                 }}
               >
-                <Icon name={s.icon} size={12} style={{ color: i <= activeStep ? '#fff' : '#9ca3af' }} />
+                {s.icon ? (
+                  <Icon name={s.icon} size={12} style={{ color: i <= activeStep ? '#fff' : '#9ca3af' }} />
+                ) : (
+                  <span className="text-[10px] font-bold" style={{ color: i <= activeStep ? '#fff' : '#9ca3af' }}>{i + 1}</span>
+                )}
               </div>
               <span className={`text-[9px] landing-mono font-semibold text-center leading-tight transition-colors ${
                 i === activeStep ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'
@@ -180,48 +196,60 @@ export function EvolutionTimeline({ steps }) {
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: `${current.color}15`, color: current.color }}>
-                Stage {current.step}
+              <span className="text-xs font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: `${stepColor}15`, color: stepColor }}>
+                Stage {current.step || activeStep + 1}
               </span>
               <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display">{current.title}</h4>
             </div>
             <p className="text-xs text-[var(--text-secondary)] mb-2 landing-body">{current.description}</p>
 
-            {/* Capacity + RPS badges */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
-                <Icon name="users" size={10} className="inline mr-1" />{current.capacity}
-              </span>
-              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
-                <Icon name="zap" size={10} className="inline mr-1" />{current.rps} RPS
-              </span>
-            </div>
+            {/* Capacity + RPS badges — only if present */}
+            {(current.capacity || current.rps) && (
+              <div className="flex items-center gap-2 mb-3">
+                {current.capacity && (
+                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
+                    <Icon name="users" size={10} className="inline mr-1" />{current.capacity}
+                  </span>
+                )}
+                {current.rps && (
+                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
+                    <Icon name="zap" size={10} className="inline mr-1" />{current.rps} RPS
+                  </span>
+                )}
+              </div>
+            )}
 
-            {/* Pros / Cons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <span className="text-[10px] landing-mono font-bold text-[var(--success)] uppercase tracking-wider">Pros</span>
-                <ul className="mt-1 space-y-0.5">
-                  {current.pros.map((p, i) => (
-                    <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
-                      <span className="text-[var(--accent)] mt-px flex-shrink-0">+</span>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Pros / Cons — only if present */}
+            {(current.pros || current.cons) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {current.pros && (
+                  <div>
+                    <span className="text-[10px] landing-mono font-bold text-[var(--success)] uppercase tracking-wider">Pros</span>
+                    <ul className="mt-1 space-y-0.5">
+                      {current.pros.map((p, i) => (
+                        <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
+                          <span className="text-[var(--accent)] mt-px flex-shrink-0">+</span>
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {current.cons && (
+                  <div>
+                    <span className="text-[10px] landing-mono font-bold text-red-500 uppercase tracking-wider">Cons</span>
+                    <ul className="mt-1 space-y-0.5">
+                      {current.cons.map((c, i) => (
+                        <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
+                          <span className="text-red-400 mt-px flex-shrink-0">−</span>
+                          <span>{c}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-              <div>
-                <span className="text-[10px] landing-mono font-bold text-red-500 uppercase tracking-wider">Cons</span>
-                <ul className="mt-1 space-y-0.5">
-                  {current.cons.map((c, i) => (
-                    <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
-                      <span className="text-red-400 mt-px flex-shrink-0">−</span>
-                      <span>{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Evolution Diagram (static image) */}
