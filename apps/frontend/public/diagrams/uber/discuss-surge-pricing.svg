@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="800" height="280" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Surge Pricing — Real-Time Supply/Demand per Cell</text>
+
+  <!-- Cells with different surge levels -->
+  <rect x="20" y="50" width="370" height="200" rx="10" fill="#fff" stroke="#e2e8f0"/>
+  <text x="205" y="72" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="700">City Grid — Surge Multipliers</text>
+
+  <!-- Low surge cells -->
+  <rect x="40" y="85" width="70" height="50" rx="6" fill="rgba(34,197,94,0.15)" stroke="#22c55e"/>
+  <text x="75" y="108" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="700">1.0x</text>
+  <text x="75" y="125" text-anchor="middle" fill="#64748b" font-size="7">Balanced</text>
+
+  <rect x="115" y="85" width="70" height="50" rx="6" fill="rgba(34,197,94,0.15)" stroke="#22c55e"/>
+  <text x="150" y="108" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="700">1.0x</text>
+
+  <!-- Medium surge -->
+  <rect x="190" y="85" width="70" height="50" rx="6" fill="rgba(249,115,22,0.2)" stroke="#f97316"/>
+  <text x="225" y="108" text-anchor="middle" fill="#ea580c" font-size="10" font-weight="700">1.5x</text>
+  <text x="225" y="125" text-anchor="middle" fill="#64748b" font-size="7">Moderate</text>
+
+  <!-- High surge -->
+  <rect x="265" y="85" width="70" height="50" rx="6" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="2"/>
+  <text x="300" y="108" text-anchor="middle" fill="#dc2626" font-size="12" font-weight="800">2.8x</text>
+  <text x="300" y="125" text-anchor="middle" fill="#64748b" font-size="7">🔥 High demand</text>
+
+  <!-- Row 2 -->
+  <rect x="40" y="140" width="70" height="50" rx="6" fill="rgba(34,197,94,0.15)" stroke="#22c55e"/>
+  <text x="75" y="163" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="700">1.0x</text>
+
+  <rect x="115" y="140" width="70" height="50" rx="6" fill="rgba(249,115,22,0.2)" stroke="#f97316"/>
+  <text x="150" y="163" text-anchor="middle" fill="#ea580c" font-size="10" font-weight="700">1.3x</text>
+
+  <rect x="190" y="140" width="70" height="50" rx="6" fill="rgba(249,115,22,0.2)" stroke="#f97316"/>
+  <text x="225" y="163" text-anchor="middle" fill="#ea580c" font-size="10" font-weight="700">1.8x</text>
+
+  <rect x="265" y="140" width="70" height="50" rx="6" fill="rgba(239,68,68,0.15)" stroke="#ef4444"/>
+  <text x="300" y="163" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="700">2.1x</text>
+
+  <text x="40" y="210" fill="#64748b" font-size="9">Geographic smoothing: neighbors influence each other</text>
+  <text x="40" y="225" fill="#64748b" font-size="9">Fast ramp-up (30s) / slow decay (5 min cooldown)</text>
+  <text x="40" y="240" fill="#22c55e" font-size="9" font-weight="600">✓ Price locked at booking time — guaranteed fare</text>
+
+  <!-- Formula -->
+  <rect x="410" y="50" width="370" height="200" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+  <rect x="410" y="50" width="370" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="595" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">⚡ Surge Computation (every 60s)</text>
+
+  <text x="430" y="100" fill="#1e293b" font-size="10" font-weight="600">For each H3 cell:</text>
+  <text x="445" y="120" fill="#7c3aed" font-size="11" font-weight="700">surge = requests / available_drivers</text>
+
+  <text x="430" y="148" fill="#1e293b" font-size="10" font-weight="600">Smoothing:</text>
+  <text x="445" y="168" fill="#475569" font-size="9">Rolling 5-min average prevents oscillation</text>
+
+  <text x="430" y="192" fill="#1e293b" font-size="10" font-weight="600">Caps:</text>
+  <text x="445" y="212" fill="#475569" font-size="9">City-specific max (NYC: 8x, London: 3x, Singapore: 2x)</text>
+
+  <text x="430" y="238" fill="#1e293b" font-size="10" font-weight="600">Storage:</text>
+  <text x="445" y="254" fill="#475569" font-size="9">Redis: surge:{cellId} → multiplier (TTL 60s)</text>
+
+  <!-- Bottom -->
+  <rect x="20" y="258" width="760" height="16" rx="4" fill="rgba(124,58,237,0.05)"/>
+  <text x="400" y="271" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">Anti-gaming: gradual transitions • Heat maps incentivize driver repositioning • Regulatory caps enforced per jurisdiction</text>
+</svg>

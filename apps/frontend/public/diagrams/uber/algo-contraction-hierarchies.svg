@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="800" height="320" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Contraction Hierarchies — Microsecond Shortest-Path Queries</text>
+
+  <!-- Before: Dijkstra -->
+  <rect x="20" y="50" width="370" height="240" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="50" width="370" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="205" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">❌ Dijkstra: Explore Everything</text>
+
+  <!-- Graph nodes -->
+  <circle cx="80" cy="130" r="14" fill="#3b82f6" stroke="white" stroke-width="2"/>
+  <text x="80" y="134" text-anchor="middle" fill="white" font-size="8" font-weight="700">S</text>
+  <circle cx="160" cy="100" r="10" fill="#94a3b8"/>
+  <circle cx="160" cy="160" r="10" fill="#94a3b8"/>
+  <circle cx="240" cy="100" r="10" fill="#94a3b8"/>
+  <circle cx="240" cy="160" r="10" fill="#94a3b8"/>
+  <circle cx="200" cy="130" r="10" fill="#94a3b8"/>
+  <circle cx="280" cy="130" r="10" fill="#94a3b8"/>
+  <circle cx="320" cy="130" r="14" fill="#ef4444" stroke="white" stroke-width="2"/>
+  <text x="320" y="134" text-anchor="middle" fill="white" font-size="8" font-weight="700">T</text>
+
+  <!-- Explored area (shaded) -->
+  <ellipse cx="200" cy="130" rx="130" ry="50" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-dasharray="4,4"/>
+  <text x="200" y="200" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="600">Explores ALL nodes in range</text>
+
+  <text x="40" y="240" fill="#ef4444" font-size="10" font-weight="700">⏱ Query time: ~50ms</text>
+  <text x="40" y="258" fill="#475569" font-size="9">Visits thousands of nodes</text>
+  <text x="40" y="273" fill="#475569" font-size="9">Too slow for 2,500 QPS at peak</text>
+
+  <!-- After: CH -->
+  <rect x="410" y="50" width="370" height="240" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="410" y="50" width="370" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="595" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ CH: Only Explore Upward</text>
+
+  <!-- Hierarchy levels -->
+  <text x="430" y="100" fill="#64748b" font-size="8">Level 3 (highways)</text>
+  <circle cx="595" cy="100" r="14" fill="#a855f7" stroke="white" stroke-width="2"/>
+  <text x="595" y="104" text-anchor="middle" fill="white" font-size="7" font-weight="700">HWY</text>
+
+  <text x="430" y="145" fill="#64748b" font-size="8">Level 2 (arterials)</text>
+  <circle cx="520" cy="145" r="12" fill="#3b82f6"/>
+  <circle cx="670" cy="145" r="12" fill="#3b82f6"/>
+
+  <text x="430" y="195" fill="#64748b" font-size="8">Level 1 (local)</text>
+  <circle cx="470" cy="195" r="12" fill="#22c55e" stroke="white" stroke-width="2"/>
+  <text x="470" y="199" text-anchor="middle" fill="white" font-size="8" font-weight="700">S</text>
+  <circle cx="720" cy="195" r="12" fill="#ef4444" stroke="white" stroke-width="2"/>
+  <text x="720" y="199" text-anchor="middle" fill="white" font-size="8" font-weight="700">T</text>
+
+  <!-- Upward arrows -->
+  <line x1="470" y1="183" x2="520" y2="157" stroke="#22c55e" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="520" y1="133" x2="595" y2="114" stroke="#3b82f6" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="595" y1="114" x2="670" y2="133" stroke="#3b82f6" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="670" y1="157" x2="720" y2="183" stroke="#22c55e" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- Shortcut edge -->
+  <line x1="520" y1="145" x2="670" y2="145" stroke="#a855f7" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="595" y="140" text-anchor="middle" fill="#a855f7" font-size="7" font-weight="600">shortcut edge</text>
+
+  <text x="430" y="240" fill="#22c55e" font-size="10" font-weight="700">⚡ Query time: &lt;1ms</text>
+  <text x="430" y="258" fill="#475569" font-size="9">Only explores upward from S and T</text>
+  <text x="430" y="273" fill="#475569" font-size="9">Meets in the middle at highway level</text>
+
+  <!-- Bottom -->
+  <rect x="20" y="297" width="760" height="18" rx="4" fill="rgba(34,197,94,0.08)"/>
+  <text x="400" y="310" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">Pre-process: hours • Query: microseconds • Real-time traffic overlaid via edge weight adjustment • Per-city graph</text>
+</svg>

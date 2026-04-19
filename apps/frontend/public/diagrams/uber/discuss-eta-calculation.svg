@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="300" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">ETA Calculation — Road Graph + Live Traffic + ML Prediction</text>
+
+  <!-- Data sources -->
+  <rect x="20" y="50" width="150" height="35" rx="6" fill="#3b82f6"/>
+  <text x="95" y="72" text-anchor="middle" fill="white" font-size="9" font-weight="600">📍 Road Network Graph</text>
+
+  <rect x="20" y="95" width="150" height="35" rx="6" fill="#22c55e"/>
+  <text x="95" y="117" text-anchor="middle" fill="white" font-size="9" font-weight="600">🚗 Driver Fleet GPS</text>
+
+  <rect x="20" y="140" width="150" height="35" rx="6" fill="#f97316"/>
+  <text x="95" y="162" text-anchor="middle" fill="white" font-size="9" font-weight="600">📅 Historical Patterns</text>
+
+  <rect x="20" y="185" width="150" height="35" rx="6" fill="#ef4444"/>
+  <text x="95" y="207" text-anchor="middle" fill="white" font-size="9" font-weight="600">🚧 Incidents / Closures</text>
+
+  <line x1="170" y1="130" x2="210" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Computation -->
+  <rect x="215" y="65" width="180" height="80" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="90" text-anchor="middle" fill="#2563eb" font-size="11" font-weight="700">🗺 Route Engine</text>
+  <text x="305" y="108" text-anchor="middle" fill="#475569" font-size="9">Contraction Hierarchies</text>
+  <text x="305" y="123" text-anchor="middle" fill="#475569" font-size="9">Sub-millisecond queries</text>
+  <text x="305" y="138" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="600">Edge weight = travel time</text>
+
+  <rect x="215" y="155" width="180" height="70" rx="10" fill="#fff" stroke="#f97316" stroke-width="1.5"/>
+  <text x="305" y="178" text-anchor="middle" fill="#f97316" font-size="11" font-weight="700">🚦 Traffic Overlay</text>
+  <text x="305" y="196" text-anchor="middle" fill="#475569" font-size="9">Real-time speed per segment</text>
+  <text x="305" y="212" text-anchor="middle" fill="#475569" font-size="9">From driver fleet GPS traces</text>
+
+  <line x1="395" y1="140" x2="435" y2="140" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- ML model -->
+  <rect x="440" y="80" width="160" height="120" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="520" y="108" text-anchor="middle" fill="#7c3aed" font-size="12" font-weight="700">🧠 ML Model</text>
+  <text x="520" y="128" text-anchor="middle" fill="#475569" font-size="9">Gradient Boosted Trees</text>
+  <text x="520" y="146" text-anchor="middle" fill="#475569" font-size="9">Features: route + traffic</text>
+  <text x="520" y="162" text-anchor="middle" fill="#475569" font-size="9">+ time + weather + events</text>
+  <text x="520" y="184" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">Per-city trained model</text>
+
+  <line x1="600" y1="140" x2="640" y2="140" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Output -->
+  <rect x="645" y="90" width="135" height="100" rx="10" fill="rgba(34,197,94,0.1)" stroke="#22c55e" stroke-width="2"/>
+  <text x="712" y="118" text-anchor="middle" fill="#16a34a" font-size="13" font-weight="800">ETA: 7 min</text>
+  <text x="712" y="140" text-anchor="middle" fill="#475569" font-size="9">Confidence: ±2 min</text>
+  <text x="712" y="158" text-anchor="middle" fill="#475569" font-size="9">Refreshed every 30s</text>
+  <text x="712" y="178" text-anchor="middle" fill="#22c55e" font-size="9" font-weight="600">95% accurate</text>
+
+  <!-- Bottom stats -->
+  <rect x="20" y="240" width="760" height="50" rx="8" fill="rgba(37,99,235,0.05)" stroke="rgba(37,99,235,0.15)"/>
+  <text x="150" y="263" text-anchor="middle" fill="#2563eb" font-size="10" font-weight="700">🏎 Query: &lt;1ms</text>
+  <text x="150" y="280" text-anchor="middle" fill="#64748b" font-size="8">via Contraction Hierarchies</text>
+  <text x="400" y="263" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="700">📊 Accuracy: 95%</text>
+  <text x="400" y="280" text-anchor="middle" fill="#64748b" font-size="8">within 2 minutes of actual</text>
+  <text x="650" y="263" text-anchor="middle" fill="#f97316" font-size="10" font-weight="700">🌍 Per-City Models</text>
+  <text x="650" y="280" text-anchor="middle" fill="#64748b" font-size="8">NYC traffic ≠ Mumbai traffic</text>
+</svg>
