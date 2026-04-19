@@ -83,8 +83,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <div
             className="flex items-center gap-2 w-full max-w-md px-3 h-8 rounded-full cursor-pointer transition-colors"
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid var(--border)',
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.25)',
             }}
             role="button"
             tabIndex={0}
@@ -106,23 +106,23 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
-              style={{ color: 'rgba(255,255,255,0.8)', flexShrink: 0 }}
+              style={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }}
             >
               <circle cx="7" cy="7" r="5.5" />
               <path d="M11 11l3.5 3.5" />
             </svg>
             <span
               className="text-xs flex-1 truncate"
-              style={{ color: 'rgba(255,255,255,0.8)' }}
+              style={{ color: 'rgba(255,255,255,0.9)' }}
             >
               Search topics...
             </span>
             <kbd
               className="hidden lg:inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded"
               style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                color: 'rgba(255,255,255,0.8)',
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                color: 'rgba(255,255,255,0.9)',
                 fontFamily: 'var(--font-sans)',
               }}
             >
