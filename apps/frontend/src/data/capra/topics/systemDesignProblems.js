@@ -5853,6 +5853,7 @@ user_history {
         description: 'Autocomplete suggestion endpoint',
         endpoints: [
           { method: 'GET', path: '/api/suggest', params: 'prefix, limit=10, userId?', response: '{ suggestions: [{ text, type, score }] }',
+            description: 'Returns autocomplete suggestions as the user types. Uses a trie stored in Redis for prefix lookup with O(L) complexity where L is prefix length. Suggestions are ranked by frequency (from search logs), freshness (trending queries boost), and personalization (user\'s recent searches). The response targets <50ms latency. Offensive and sensitive queries are filtered using a blocklist. Results may include entity suggestions (people, places) alongside query suggestions.',
             description: 'Returns search suggestions for a prefix as the user types. Uses a distributed trie stored in Redis, updated hourly from search query logs. Suggestions are ranked by frequency, recency, and personalization (user\'s past searches). The trie is sharded by first 2 characters for horizontal scaling. Target latency: <30ms to feel instant. Results include suggestion type (query, entity, URL) for rich display.' },
           { method: 'POST', path: '/api/suggest/feedback', params: '{ prefix, selectedSuggestion }', response: '{ success }',
             description: 'Records which suggestion the user selected after typing a prefix. This feedback loop improves suggestion ranking — frequently selected suggestions are promoted. Data is aggregated in a Kafka pipeline and used to rebuild the suggestion trie hourly. Also detects trending queries by monitoring sudden spikes in selection frequency.' }
@@ -6210,6 +6211,7 @@ user_presence {
         description: 'REST API for CRUD, WebSocket for real-time',
         endpoints: [
           { method: 'POST', path: '/api/messages', params: '{ channelId, content, threadId?, attachments[] }', response: '{ message }',
+            description: 'REST fallback for sending messages when WebSocket is unavailable. The message is encrypted on the client, stored in the recipient\'s message queue (per-user partition in Cassandra), and delivered when they connect. Provides at-least-once delivery semantics — the client retries until it receives an acknowledgment. Duplicate detection uses a client-generated message ID.',
             description: 'Sends a message to a channel or thread. The message is persisted to the database, indexed in Elasticsearch for search, and broadcast to all online channel members via their WebSocket connections. Supports rich text (Markdown), file attachments (uploaded separately to S3), and thread replies. Message delivery is at-least-once with client-side deduplication using a client-generated nonce.' },
           { method: 'GET', path: '/api/channels/:id/messages', params: 'before, after, limit', response: '{ messages[], hasMore }',
             description: 'Fetches message history for a channel using cursor-based pagination (before/after a message ID). Messages are stored in a time-series partitioned table (by channel + month) for efficient range queries. Supports both backward scrolling (before) and forward loading (after) for jumping to a specific message. Includes thread reply counts and reaction summaries inline.' },
@@ -6580,6 +6582,7 @@ user_actions {
         endpoints: [
           { method: 'GET', path: '/api/search', params: 'q, lat, lng, radius, category, price, rating, sortBy', response: '{ businesses[], total, facets }' },
           { method: 'GET', path: '/api/businesses/:id', params: '-', response: '{ business, recentReviews[], photos[] }',
+            description: 'Returns full details for a single business including name, address, coordinates, category, hours, rating, phone, website, and photos. Business data is stored in a NoSQL document store (DynamoDB/MongoDB) for flexible schema. Read-heavy traffic is served from a Redis cache with a 1-hour TTL. Includes real-time status (open/closed) computed from the hours field.',
             description: 'Returns full business details including hours, photos, attributes (WiFi, parking, outdoor seating), and the most recent/helpful reviews. Review data is denormalized into the business document for fast reads. Photos are served from CDN. The response includes the user\'s check-in history and whether they\'ve bookmarked this business.' },
           { method: 'POST', path: '/api/reviews', params: '{ businessId, rating, text, photos[] }', response: '{ reviewId }',
             description: 'Submits a review with rating (1-5 stars), text, and optional photos. Reviews go through a moderation pipeline: spam detection (ML model trained on flagged reviews), profanity filter, and fake review detection (analyzing reviewer behavior patterns). Approved reviews update the business\'s aggregate rating asynchronously. The reviewer cannot edit their rating after 30 days.' },
@@ -8265,6 +8268,7 @@ driver_locations {
           { method: 'POST', path: '/api/orders', params: '{ restaurantId, items[], address, tip }', response: '{ orderId, estimatedDelivery }',
             description: 'Creates a new delivery order. Validates item availability with the restaurant\'s POS system, calculates subtotal with tax and delivery fee, applies promotional discounts, and initiates payment authorization. The order enters a queue and is dispatched to the restaurant\'s tablet. A Dasher (driver) is assigned using a matching algorithm that considers proximity, current deliveries, and estimated route efficiency.' },
           { method: 'GET', path: '/api/orders/:id', params: '-', response: '{ order, driverLocation, eta }',
+            description: 'Returns order status with shipping tracking information. Integrates with carrier APIs (FedEx, UPS, USPS) for real-time tracking updates. Status transitions are event-driven via a message queue. Includes estimated delivery date recalculated based on carrier scan events. Returns item-level status for orders with items shipping from different warehouses.',
             description: 'Returns the current order status with real-time Dasher location and ETA. Status flow: PLACED → CONFIRMED_BY_RESTAURANT → BEING_PREPARED → READY_FOR_PICKUP → DASHER_ASSIGNED → PICKED_UP → EN_ROUTE → DELIVERED. ETA is dynamically recalculated using the Dasher\'s live GPS position and current traffic conditions. Includes Dasher profile (name, photo, rating) once assigned.' },
           { method: 'WS', path: '/ws/track/:orderId', params: '-', response: 'LOCATION_UPDATE, STATUS_CHANGE events',
             description: 'WebSocket connection for real-time order tracking. Pushes LOCATION_UPDATE events (Dasher GPS every 5 seconds during delivery), STATUS_CHANGE events (each status transition), and ETA_UPDATE events (recalculated ETA). The map UI interpolates between GPS updates for smooth animation. Falls back to polling GET /api/orders/:id every 10 seconds if WebSocket unavailable.' }
@@ -8648,8 +8652,10 @@ trending_topics {
       apiDesign: {
         description: 'Simple read-heavy API backed by cache',
         endpoints: [
-          { method: 'GET', path: '/api/trends', params: 'location, count, category', response: '{ trends: [{ topic, tweetCount, category, rank }] }' },
-          { method: 'GET', path: '/api/trends/:topic', params: '-', response: '{ topic, history[], relatedTopics[], topTweets[] }' },
+          { method: 'GET', path: '/api/trends', params: 'location, count, category', response: '{ trends: [{ topic, tweetCount, category, rank }] }',
+            description: 'Returns trending topics for a location using a count-min sketch data structure. Tweets are processed in real-time via Kafka Streams, extracting hashtags, phrases, and entities. The count-min sketch tracks approximate frequency counts with minimal memory. Trends are computed by comparing current velocity against baseline frequency — a sudden spike in mentions makes a topic trend. Results are cached per location with a 5-minute TTL.' },
+          { method: 'GET', path: '/api/trends/:topic', params: '-', response: '{ topic, history[], relatedTopics[], topTweets[] }',
+            description: 'Returns detailed information about a trending topic including its mention count over time (hourly histogram), related trending topics, and top tweets sorted by engagement. The history data comes from a time-series database (InfluxDB/TimescaleDB). Related topics are computed using co-occurrence analysis — topics that appear together in the same tweets.' },
           { method: 'Internal', path: '/stream/tweets', params: '-', response: 'Kafka topic with tweet events' }
         ]
       },
@@ -9091,11 +9097,16 @@ paste_views {
       apiDesign: {
         description: 'Simple REST API for paste operations',
         endpoints: [
-          { method: 'POST', path: '/api/paste', params: '{ content, title?, syntax?, expiresIn?, password? }', response: '{ key, url, expiresAt }' },
-          { method: 'GET', path: '/api/paste/:key', params: 'password (header)', response: '{ content, syntax, createdAt, expiresAt }' },
-          { method: 'GET', path: '/api/paste/:key/raw', params: '-', response: 'Plain text content' },
-          { method: 'DELETE', path: '/api/paste/:key', params: '-', response: '{ deleted: true }' },
-          { method: 'GET', path: '/api/paste/:key/stats', params: '-', response: '{ viewCount, createdAt }' }
+          { method: 'POST', path: '/api/paste', params: '{ content, title?, syntax?, expiresIn?, password? }', response: '{ key, url, expiresAt }',
+            description: 'Creates a new paste and returns a unique short key (6-8 character Base62). Content is stored in object storage (S3) for large pastes or directly in the database for small ones (<64KB). Supports optional syntax highlighting language, password protection (bcrypt hashed), and expiration (1 hour to never). The key is generated using a pre-generated ID pool to avoid collisions under high concurrency.' },
+          { method: 'GET', path: '/api/paste/:key', params: 'password (header)', response: '{ content, syntax, createdAt, expiresAt }',
+            description: 'Retrieves a paste by its key. For password-protected pastes, the password must be provided in the Authorization header. Content is served from CDN cache for popular pastes. View count is incremented asynchronously via a Kafka consumer to avoid write contention on hot pastes. Returns 404 for expired or deleted pastes.' },
+          { method: 'GET', path: '/api/paste/:key/raw', params: '-', response: 'Plain text content',
+            description: 'Returns the raw content without HTML wrapping or syntax highlighting. Used for programmatic access (curl, wget) and embedding. Served with Content-Type: text/plain and appropriate CORS headers. Rate-limited per IP to prevent abuse as a free file hosting service.' },
+          { method: 'DELETE', path: '/api/paste/:key', params: '-', response: '{ deleted: true }',
+            description: 'Deletes a paste. Only the creator (identified by API key or session) can delete their pastes. The content is soft-deleted (marked as deleted but retained for 30 days for abuse investigation). The key is released back to the available pool after the retention period.' },
+          { method: 'GET', path: '/api/paste/:key/stats', params: '-', response: '{ viewCount, createdAt }',
+            description: 'Returns paste analytics including total view count, creation date, and expiration date. View counts are approximate (aggregated from the async counter). Available only to the paste creator via API key authentication.' }
         ]
       },
 
@@ -9674,11 +9685,16 @@ feed_cache {
       apiDesign: {
         description: 'Feed retrieval with cursor-based pagination',
         endpoints: [
-          { method: 'GET', path: '/api/feed', params: 'cursor, limit', response: '{ posts[], nextCursor, hasMore }' },
-          { method: 'POST', path: '/api/posts', params: '{ content, media[], audience }', response: '{ postId }' },
-          { method: 'POST', path: '/api/posts/:id/like', params: '-', response: '{ liked: true }' },
-          { method: 'GET', path: '/api/feed/updates', params: 'since_time', response: '{ newPostCount }' },
-          { method: 'WS', path: '/ws/feed', params: '-', response: 'REALTIME_POST, LIKE_UPDATE events' }
+          { method: 'GET', path: '/api/feed', params: 'cursor, limit', response: '{ posts[], nextCursor, hasMore }',
+            description: 'Returns the professional content feed with cursor-based pagination. Content sources: posts from connections, followed influencers, company pages, and LinkedIn News. Ranking uses engagement prediction (likelihood the member will like, comment, or share) combined with content quality signals and topic relevance. LinkedIn\'s feed emphasizes professional content over personal — a content classifier filters non-professional posts.' },
+          { method: 'POST', path: '/api/posts', params: '{ content, media[], audience }', response: '{ postId }',
+            description: 'Creates a new post with audience targeting (Public, Friends, Friends of Friends, Only Me, Custom List). Media is uploaded separately and referenced by ID. The post triggers fan-out to friends\' feed caches — for users with <5000 friends, fan-out on write; for public figures, fan-out on read. The post is indexed in a real-time search engine for Graph Search.' },
+          { method: 'POST', path: '/api/posts/:id/like', params: '-', response: '{ liked: true }',
+            description: 'Toggles a like reaction on a post. Like counts are maintained in a Redis counter (not computed from the likes table) for fast reads. The like event is published to Kafka for feed ranking updates (liking a friend\'s post increases affinity score), notification delivery, and analytics. Supports reaction types (Like, Love, Haha, Wow, Sad, Angry) stored as an enum.' },
+          { method: 'GET', path: '/api/feed/updates', params: 'since_time', response: '{ newPostCount }',
+            description: 'Lightweight polling endpoint that returns the count of new posts since the user last loaded their feed. Called every 30 seconds by the client to show the \'X new posts\' banner. Only counts posts that pass the ranking threshold — not every post from every friend. Uses a Redis sorted set of post timestamps per user.' },
+          { method: 'WS', path: '/ws/feed', params: '-', response: 'REALTIME_POST, LIKE_UPDATE events',
+            description: 'WebSocket connection for real-time feed updates. Pushes REALTIME_POST events for new posts from close friends (high affinity) and LIKE_UPDATE events for engagement on the user\'s own posts. Not all posts are pushed in real-time — only high-priority ones to avoid notification fatigue. The WebSocket connection is multiplexed with chat (Messenger) events.' }
         ]
       },
 
@@ -10099,10 +10115,14 @@ node_registry {
       apiDesign: {
         description: 'Simple CRUD with consistency options',
         endpoints: [
-          { method: 'PUT', path: '/kv/:key', params: '{ value, ttl?, consistency }', response: '{ version }' },
-          { method: 'GET', path: '/kv/:key', params: 'consistency', response: '{ value, version }' },
-          { method: 'DELETE', path: '/kv/:key', params: '-', response: '{ deleted: true }' },
-          { method: 'PUT', path: '/kv/:key/cas', params: '{ value, expectedVersion }', response: '{ success, newVersion }' }
+          { method: 'PUT', path: '/kv/:key', params: '{ value, ttl?, consistency }', response: '{ version }',
+            description: 'Stores a key-value pair with optional TTL and configurable consistency level. Consistency options: ONE (write to any single replica — fastest), QUORUM (write to majority of replicas — balanced), ALL (write to every replica — safest but slowest). The value is replicated to N nodes determined by consistent hashing. Each write increments a vector clock for conflict detection. Supports values up to 1MB.' },
+          { method: 'GET', path: '/kv/:key', params: 'consistency', response: '{ value, version }',
+            description: 'Reads a value by key with configurable consistency. At consistency=ONE, reads from the nearest replica (fastest, may return stale data). At QUORUM, reads from a majority and returns the most recent value. At ALL, reads from every replica. Read repair is triggered if replicas return different versions — the most recent version (by vector clock) is propagated to stale replicas.' },
+          { method: 'DELETE', path: '/kv/:key', params: '-', response: '{ deleted: true }',
+            description: 'Deletes a key-value pair by writing a tombstone (delete marker with timestamp). The tombstone is replicated to all nodes using the same consistency level as writes. Actual data removal happens during compaction (garbage collection) after a grace period (default 10 days) to ensure the delete propagates to all replicas, including temporarily unavailable ones.' },
+          { method: 'PUT', path: '/kv/:key/cas', params: '{ value, expectedVersion }', response: '{ success, newVersion }',
+            description: 'Compare-And-Swap — atomic conditional update. Updates the value only if the current version matches expectedVersion. Used for implementing distributed locks, counters, and optimistic concurrency control. If the version doesn\'t match (concurrent modification detected), returns success: false and the client must retry with the new version. Linearizable consistency is enforced for CAS operations regardless of the consistency setting.' }
         ]
       },
 
@@ -10558,9 +10578,12 @@ Decimal: 1234567890123456789`
       apiDesign: {
         description: 'Simple ID generation API',
         endpoints: [
-          { method: 'GET', path: '/api/id', params: '-', response: '{ id: 1234567890123456789 }' },
-          { method: 'GET', path: '/api/ids', params: 'count (max 1000)', response: '{ ids: [...] }' },
-          { method: 'GET', path: '/api/id/parse/:id', params: '-', response: '{ timestamp, machineId, sequence }' }
+          { method: 'GET', path: '/api/id', params: '-', response: '{ id: 1234567890123456789 }',
+            description: 'Generates a single globally unique, roughly time-ordered 64-bit ID using a Snowflake-inspired scheme: 41 bits for millisecond timestamp (69 years), 10 bits for machine/datacenter ID (1024 instances), and 12 bits for sequence number (4096 IDs per millisecond per machine). IDs are generated entirely in-memory with no network calls or database writes, achieving <1ms latency and 4M IDs/second per instance. Clock skew is handled by waiting until the clock catches up.' },
+          { method: 'GET', path: '/api/ids', params: 'count (max 1000)', response: '{ ids: [...] }',
+            description: 'Batch endpoint that generates up to 1000 IDs in a single request. More efficient than calling /api/id in a loop because the sequence counter is incremented atomically for the entire batch. Used by services that need to pre-allocate IDs before inserting multiple records in a transaction. The batch is guaranteed to be monotonically increasing within the same machine.' },
+          { method: 'GET', path: '/api/id/parse/:id', params: '-', response: '{ timestamp, machineId, sequence }',
+            description: 'Decodes a Snowflake ID back into its components: the embedded timestamp (when the ID was generated), the machine/datacenter ID (which instance generated it), and the sequence number. Useful for debugging (determining when and where an entity was created) and for time-range queries (extract timestamp from ID to filter by creation date without a separate column).' }
         ]
       },
 
@@ -11045,11 +11068,16 @@ sources {
       apiDesign: {
         description: 'News feed with filtering and personalization',
         endpoints: [
-          { method: 'GET', path: '/api/news', params: 'category, country, language, cursor', response: '{ stories[], nextCursor }' },
-          { method: 'GET', path: '/api/news/for-you', params: 'cursor', response: '{ stories[] } (personalized)' },
-          { method: 'GET', path: '/api/news/story/:id', params: '-', response: '{ story, articles[], relatedStories[] }' },
-          { method: 'GET', path: '/api/news/trending', params: 'country', response: '{ stories[] }' },
-          { method: 'GET', path: '/api/news/search', params: 'q, dateRange', response: '{ articles[] }' }
+          { method: 'GET', path: '/api/news', params: 'category, country, language, cursor', response: '{ stories[], nextCursor }',
+            description: 'Returns news stories filtered by category, country, and language with cursor-based pagination. Stories are aggregated from thousands of RSS/Atom feeds crawled every 5-15 minutes. Duplicate detection uses MinHash (locality-sensitive hashing) to group articles about the same event into a single story. Stories are ranked by source authority, freshness, and geographic relevance.' },
+          { method: 'GET', path: '/api/news/for-you', params: 'cursor', response: '{ stories[] } (personalized)',
+            description: 'Returns a personalized news feed based on the user\'s reading history, topic preferences, and interaction signals (clicks, read time, shares). Uses a combination of collaborative filtering and content-based recommendations. The model balances exploitation (topics you read) with exploration (new topics to prevent filter bubbles). Feed diversity is enforced — no more than 3 consecutive stories from the same category.' },
+          { method: 'GET', path: '/api/news/story/:id', params: '-', response: '{ story, articles[], relatedStories[] }',
+            description: 'Returns a news story with all its source articles from different publications. Articles within a story are ranked by source credibility, original reporting (vs. wire service copies), and perspective diversity. Includes a timeline of how the story developed. Related stories are computed using topic modeling (LDA) and entity co-occurrence.' },
+          { method: 'GET', path: '/api/news/trending', params: 'country', response: '{ stories[] }',
+            description: 'Returns trending news stories for a country using velocity-based detection. Monitors the rate of new article publications about each story — a sudden spike indicates trending. Uses a sliding window counter (5-minute windows) compared against a 24-hour baseline. Trending stories are cached per country with a 2-minute TTL for freshness.' },
+          { method: 'GET', path: '/api/news/search', params: 'q, dateRange', response: '{ articles[] }',
+            description: 'Full-text search across all aggregated articles using Elasticsearch. Supports date range filtering, source filtering, and Boolean operators (AND, OR, NOT). Articles are indexed with extracted entities (people, organizations, locations) for structured search. Results are ranked by relevance with a time decay factor — recent articles score higher.' }
         ]
       },
 
@@ -11513,10 +11541,14 @@ leaderboard_snapshots {
       apiDesign: {
         description: 'Simple score update and rank queries',
         endpoints: [
-          { method: 'POST', path: '/api/scores', params: '{ playerId, gameId, score }', response: '{ newRank }' },
-          { method: 'GET', path: '/api/leaderboard/:gameId/top', params: 'limit, timeframe', response: '{ rankings: [{ playerId, score, rank }] }' },
-          { method: 'GET', path: '/api/leaderboard/:gameId/rank/:playerId', params: 'timeframe', response: '{ rank, score, percentile }' },
-          { method: 'GET', path: '/api/leaderboard/:gameId/around/:playerId', params: 'range', response: '{ rankings[] } (players above/below)' }
+          { method: 'POST', path: '/api/scores', params: '{ playerId, gameId, score }', response: '{ newRank }',
+            description: 'Increments the score for an item in a category. Uses Redis sorted sets (ZINCRBY) for atomic score updates with O(log N) complexity. For time-windowed leaderboards, scores are written to multiple sorted sets (current hour, current day, current week) simultaneously. Returns the item\'s new score and rank. High-frequency items (viral content) may use a write-behind buffer to batch Redis updates.' },
+          { method: 'GET', path: '/api/leaderboard/:gameId/top', params: 'limit, timeframe', response: '{ rankings: [{ playerId, score, rank }] }',
+            description: 'Returns the top N players sorted by score in descending order. Uses Redis ZREVRANGE for O(log N + M) retrieval where M is the limit. Supports multiple timeframes (all-time, monthly, weekly, daily) via separate sorted sets. Results are cached at the application level with a 10-second TTL to reduce Redis load during peak gaming hours.' },
+          { method: 'GET', path: '/api/leaderboard/:gameId/rank/:playerId', params: 'timeframe', response: '{ rank, score, percentile }',
+            description: 'Returns a specific player\'s rank, score, and percentile. Rank is computed via Redis ZREVRANK in O(log N). Percentile is calculated as (total_players - rank) / total_players * 100. For leaderboards with millions of players, approximate rank is acceptable and computed using a count-min sketch for O(1) lookups.' },
+          { method: 'GET', path: '/api/leaderboard/:gameId/around/:playerId', params: 'range', response: '{ rankings[] } (players above/below)',
+            description: 'Returns players ranked immediately above and below the given player. Uses Redis ZREVRANGE with offset calculated from the player\'s rank. The \'range\' parameter specifies how many players above and below to return (e.g., range=5 returns 11 players total). This neighborhood view helps players see who they need to beat to climb the leaderboard.' }
         ]
       },
 
@@ -12004,11 +12036,16 @@ bookings {
       apiDesign: {
         description: 'Search, availability, and booking flows',
         endpoints: [
-          { method: 'GET', path: '/api/hotels/search', params: 'lat, lng, radius, checkin, checkout, guests, filters', response: '{ hotels[], totalCount }' },
-          { method: 'GET', path: '/api/hotels/:id', params: '-', response: '{ hotel, roomTypes[], photos[], reviews[] }' },
-          { method: 'GET', path: '/api/hotels/:id/availability', params: 'checkin, checkout, guests', response: '{ roomTypes[], prices[] }' },
-          { method: 'POST', path: '/api/bookings', params: '{ hotelId, roomTypeId, checkin, checkout, guests, payment }', response: '{ bookingId, confirmationCode }' },
-          { method: 'DELETE', path: '/api/bookings/:id', params: '-', response: '{ refundAmount, status }' }
+          { method: 'GET', path: '/api/hotels/search', params: 'lat, lng, radius, checkin, checkout, guests, filters', response: '{ hotels[], totalCount }',
+            description: 'Searches hotels by location, dates, and guest count. Combines geo-distance filtering with availability checking — only hotels with rooms available for the requested dates are returned. Uses Elasticsearch for geo and text search, then cross-references availability in the booking database. Results include real-time pricing (dynamic pricing based on demand, seasonality, and competitor rates). Sorted by relevance, price, rating, or distance.' },
+          { method: 'GET', path: '/api/hotels/:id', params: '-', response: '{ hotel, roomTypes[], photos[], reviews[] }',
+            description: 'Returns complete hotel information including room types with photos, amenities, cancellation policies, and aggregated guest reviews. Room type availability and pricing are computed in real-time based on the requested dates. Includes nearby attractions and transportation options from a points-of-interest database. Review summaries use NLP to extract sentiment per category (cleanliness, location, service).' },
+          { method: 'GET', path: '/api/hotels/:id/availability', params: 'checkin, checkout, guests', response: '{ roomTypes[], prices[] }',
+            description: 'Returns available room types with real-time pricing for specific check-in/check-out dates. Availability is checked against a calendar table (similar to Airbnb). Pricing uses a dynamic model considering base rate, demand multiplier, day-of-week factor, and promotional discounts. Room allocations are tentative — actual reservation happens at booking time with optimistic locking to prevent overbooking.' },
+          { method: 'POST', path: '/api/bookings', params: '{ hotelId, roomTypeId, checkin, checkout, guests, payment }', response: '{ bookingId, confirmationCode }',
+            description: 'Creates a confirmed hotel reservation. Validates room availability using SELECT FOR UPDATE to prevent double-booking, charges the payment method (full or deposit depending on cancellation policy), and sends confirmation with a unique confirmation code. The booking is immediately reflected in the availability calendar. Confirmation emails include calendar invite attachments (ICS format).' },
+          { method: 'DELETE', path: '/api/bookings/:id', params: '-', response: '{ refundAmount, status }',
+            description: 'Cancels a booking and processes a refund according to the cancellation policy. Free cancellation policies refund 100% before the cutoff date. Non-refundable bookings return $0. Partial refund policies are time-based (e.g., 50% refund if cancelled 24-48 hours before check-in). The cancelled room is immediately released back to inventory for resale.' }
         ]
       },
 
@@ -12505,11 +12542,16 @@ tiles {
       apiDesign: {
         description: 'Map tiles, directions, and places',
         endpoints: [
-          { method: 'GET', path: '/tiles/:z/:x/:y.png', params: 'style', response: 'PNG image (256x256 or 512x512)' },
-          { method: 'GET', path: '/api/directions', params: 'origin, destination, mode, avoid, departure_time', response: '{ routes: [{ distance, duration, steps[], polyline }] }' },
-          { method: 'GET', path: '/api/places/search', params: 'query, location, radius, type', response: '{ places[] }' },
-          { method: 'GET', path: '/api/places/:id', params: '-', response: '{ place details, reviews[], photos[] }' },
-          { method: 'GET', path: '/api/geocode', params: 'address OR latlng', response: '{ location, formatted_address }' }
+          { method: 'GET', path: '/tiles/:z/:x/:y.png', params: 'style', response: 'PNG image (256x256 or 512x512)',
+            description: 'Returns a map tile image at zoom level z, column x, row y using the Slippy Map tile naming convention. Tiles are pre-rendered at 23 zoom levels and stored in object storage. Popular tiles (city centers, highways) are cached at CDN edge nodes. Vector tiles (Protobuf format) are served for the mobile app for client-side rendering with custom styling. Each tile is 256x256 pixels (or 512x512 for Retina displays).' },
+          { method: 'GET', path: '/api/directions', params: 'origin, destination, mode, avoid, departure_time', response: '{ routes: [{ distance, duration, steps[], polyline }] }',
+            description: 'Calculates optimal routes between origin and destination. Uses a modified Dijkstra\'s algorithm on a hierarchical road graph (contraction hierarchies) for car routing and A* for walking/cycling. The road graph is partitioned into cells for parallel computation across servers. Real-time traffic data from driver GPS reports adjusts edge weights. Returns multiple route options with distance, duration (with and without traffic), turn-by-turn steps, and an encoded polyline for map rendering.' },
+          { method: 'GET', path: '/api/places/search', params: 'query, location, radius, type', response: '{ places[] }',
+            description: 'Searches for places (restaurants, gas stations, ATMs) by text query within a geographic area. Combines text relevance, distance, rating, popularity, and business hours. Results include the place\'s category, rating, price level, current open/closed status, and a photo reference. The places index is built from business listings, web crawls, and user-contributed data.' },
+          { method: 'GET', path: '/api/places/:id', params: '-', response: '{ place details, reviews[], photos[] }',
+            description: 'Returns complete place details including address, phone, website, hours of operation, user reviews, photos, and popular times (hourly visit histogram). Popular times are computed from anonymized location data. Reviews are aggregated from Google users and sorted by helpfulness. The response includes attribution requirements for third-party data sources.' },
+          { method: 'GET', path: '/api/geocode', params: 'address OR latlng', response: '{ location, formatted_address }',
+            description: 'Converts between addresses and coordinates (forward and reverse geocoding). Forward geocoding parses the address string, matches it against an address database, and returns latitude/longitude. Reverse geocoding takes coordinates and returns the nearest address using a spatial index (R-tree). Supports component filtering (country, postal code) to disambiguate addresses. Results include address components (street, city, state, country) for structured display.' }
         ]
       },
 
@@ -12998,11 +13040,16 @@ recordings {
       apiDesign: {
         description: 'Meeting management and real-time signaling',
         endpoints: [
-          { method: 'POST', path: '/api/meetings', params: '{ title, scheduledStart, settings }', response: '{ meetingId, joinUrl, hostKey }' },
-          { method: 'POST', path: '/api/meetings/:id/join', params: '{ displayName, password }', response: '{ participantId, sfuUrl, iceServers[] }' },
-          { method: 'WS', path: '/signaling/:meetingId', params: '-', response: 'SDP offer/answer, ICE candidates' },
-          { method: 'POST', path: '/api/meetings/:id/record/start', params: '-', response: '{ recordingId }' },
-          { method: 'GET', path: '/api/recordings/:id', params: '-', response: '{ url, duration, status }' }
+          { method: 'POST', path: '/api/meetings', params: '{ title, scheduledStart, settings }', response: '{ meetingId, joinUrl, hostKey }',
+            description: 'Creates a scheduled meeting and generates a unique meeting ID and join URL. The meeting ID is a 10-11 digit number designed to be easy to type and share. Settings include waiting room, password requirement, screen sharing permissions, recording options, and maximum participants. The meeting is registered in a meeting registry service that maps meeting IDs to the SFU (Selective Forwarding Unit) server that will host the call.' },
+          { method: 'POST', path: '/api/meetings/:id/join', params: '{ displayName, password }', response: '{ participantId, sfuUrl, iceServers[] }',
+            description: 'Authenticates a participant and returns connection details for the media server. The response includes the SFU URL (WebSocket for signaling, UDP for media), ICE servers for NAT traversal (STUN/TURN), and the participant\'s unique ID. The server selects the nearest SFU based on the participant\'s IP geolocation. If the meeting has a waiting room, the participant is placed in a holding state until the host admits them.' },
+          { method: 'WS', path: '/signaling/:meetingId', params: '-', response: 'SDP offer/answer, ICE candidates',
+            description: 'WebSocket connection for WebRTC signaling. Exchanges SDP (Session Description Protocol) offers and answers to negotiate media capabilities (codecs, resolution) between participants. Also relays ICE candidates for NAT traversal. The SFU mediates the connection — each participant sends one upstream and receives N-1 downstreams, avoiding the N² mesh problem of peer-to-peer. The signaling server handles participant join/leave events and manages the speaker detection for active speaker view.' },
+          { method: 'POST', path: '/api/meetings/:id/record/start', params: '-', response: '{ recordingId }',
+            description: 'Starts cloud recording of the meeting. The SFU server begins capturing audio/video streams from all participants, composing them into a single recording using a layout engine (gallery view or active speaker view). The recording is streamed to object storage in real-time. Recording consent notifications are displayed to all participants. Supports separate audio track recording for transcription.' },
+          { method: 'GET', path: '/api/recordings/:id', params: '-', response: '{ url, duration, status }',
+            description: 'Returns recording metadata and a time-limited download URL. The recording is transcoded to MP4 (H.264 + AAC) after the meeting ends. Processing time depends on meeting duration (typically 1.5x real-time). Includes auto-generated transcript (if enabled), chat log, and participant list. The download URL expires after 24 hours and requires authentication.' }
         ]
       },
 
@@ -13492,11 +13539,16 @@ posts {
       apiDesign: {
         description: 'Profile, network, jobs, and feed APIs',
         endpoints: [
-          { method: 'GET', path: '/api/members/:id', params: '-', response: '{ member, experiences[], skills[] }' },
-          { method: 'GET', path: '/api/network/connections', params: 'degree, limit, offset', response: '{ connections[], totalCount }' },
-          { method: 'POST', path: '/api/network/connect', params: '{ memberId, message }', response: '{ requestId }' },
-          { method: 'GET', path: '/api/jobs/search', params: 'keywords, location, experience', response: '{ jobs[], totalCount }' },
-          { method: 'GET', path: '/api/jobs/recommended', params: '-', response: '{ jobs[] } (personalized)' },
+          { method: 'GET', path: '/api/members/:id', params: '-', response: '{ member, experiences[], skills[] }',
+            description: 'Returns a member\'s public profile including headline, current position, work history, education, skills with endorsement counts, and connection degree (1st, 2nd, 3rd). Profile data is served from a distributed cache (Voldemort/Espresso). Skills and endorsements are aggregated from the social graph. The response respects the member\'s privacy settings — some fields may be hidden based on connection level.' },
+          { method: 'GET', path: '/api/network/connections', params: 'degree, limit, offset', response: '{ connections[], totalCount }',
+            description: 'Returns a member\'s professional network connections with filtering by degree (1st = direct, 2nd = friend-of-friend, 3rd = three hops). The social graph is stored in a custom graph database optimized for traversal queries. 2nd-degree connections are computed by intersecting adjacency lists of 1st-degree connections. Results include mutual connections and how the member is connected (through whom).' },
+          { method: 'POST', path: '/api/network/connect', params: '{ memberId, message }', response: '{ requestId }',
+            description: 'Sends a connection request with an optional personalized message. The request appears in the recipient\'s notification inbox. If accepted, both members become 1st-degree connections and their networks are merged — each gains access to the other\'s connections as 2nd-degree. Connection requests from the same person are rate-limited (100/week) to prevent spam.' },
+          { method: 'GET', path: '/api/jobs/search', params: 'keywords, location, experience', response: '{ jobs[], totalCount }',
+            description: 'Searches job listings by keywords, location, experience level, and company. Uses Elasticsearch with custom scoring that factors in job freshness, company rating, salary competitiveness, and applicant-to-job fit. Results are boosted for jobs from companies where the member has connections (social proof). Easy Apply jobs (no external redirect) are highlighted.' },
+          { method: 'GET', path: '/api/jobs/recommended', params: '-', response: '{ jobs[] } (personalized)',
+            description: 'Returns personalized job recommendations based on the member\'s profile (skills, experience, industry), search history, and application patterns. Uses a deep learning model trained on successful placement data. Recommendations are refreshed daily and cached per member. The algorithm also considers jobs that similar members (same skills/industry) have applied to.' },
           { method: 'GET', path: '/api/feed', params: 'cursor', response: '{ posts[], nextCursor }' }
         ]
       },
@@ -13992,9 +14044,12 @@ aggregated_clicks (OLAP store) {
       apiDesign: {
         description: 'Click ingestion and aggregation query endpoints',
         endpoints: [
-          { method: 'POST', path: '/api/clicks', params: '{ adId, userId, timestamp, metadata }', response: '202 Accepted' },
-          { method: 'GET', path: '/api/aggregation/:adId', params: 'windowSize, startTime, endTime', response: '{ windows: [{ start, clickCount, spend }] }' },
-          { method: 'GET', path: '/api/campaigns/:campaignId/stats', params: 'granularity, dateRange', response: '{ totalClicks, totalSpend, ctr, fraudRate }' }
+          { method: 'POST', path: '/api/clicks', params: '{ adId, userId, timestamp, metadata }', response: '202 Accepted',
+            description: 'Records a click event asynchronously (returns 202 Accepted immediately). The click is published to a Kafka topic partitioned by adId for ordered processing. Each event includes the ad ID, user ID (hashed for privacy), timestamp, and metadata (device, location, referrer). Click fraud detection runs inline — suspicious patterns (rapid clicks, bot signatures, click farms) are flagged before aggregation. Events are deduplicated using a sliding window Bloom filter.' },
+          { method: 'GET', path: '/api/aggregation/:adId', params: 'windowSize, startTime, endTime', response: '{ windows: [{ start, clickCount, spend }] }',
+            description: 'Returns click count aggregations for a specific ad in configurable time windows (1 minute, 5 minutes, 1 hour, 1 day). Aggregations are computed by a stream processing engine (Flink/Spark Streaming) and stored in a time-series database. Supports real-time (< 1 minute delay) and exact counts by combining a streaming approximate count with periodic batch reconciliation (Lambda architecture).' },
+          { method: 'GET', path: '/api/campaigns/:campaignId/stats', params: 'granularity, dateRange', response: '{ totalClicks, totalSpend, ctr, fraudRate }',
+            description: 'Returns campaign-level statistics aggregated from all ads in the campaign. Metrics include total clicks, total spend (clicks × CPC), click-through rate (CTR = clicks/impressions), and fraud rate (fraudulent clicks / total clicks). Supports daily, weekly, and monthly granularity. Data freshness: real-time for clicks, 15-minute delay for spend (after fraud filtering).' }
         ]
       },
 
@@ -14181,7 +14236,8 @@ trending_queries (real-time) {
         description: 'Prefix search and query logging endpoints',
         endpoints: [
           { method: 'GET', path: '/api/suggest', params: 'prefix, limit=10, userId?', response: '{ suggestions: [{ query, score }] }' },
-          { method: 'POST', path: '/api/queries', params: '{ query, userId }', response: '202 Accepted (async processing)' }
+          { method: 'POST', path: '/api/queries', params: '{ query, userId }', response: '202 Accepted (async processing)',
+            description: 'Logs a completed search query for autocomplete training. Processed asynchronously — the query is published to Kafka and consumed by a pipeline that updates query frequency counts. The trie is rebuilt periodically (every 15 minutes) from the aggregated query logs. Only queries with sufficient frequency (>5 occurrences) are added to the trie to filter out typos and unique queries.' }
         ]
       },
 
@@ -14328,9 +14384,12 @@ cart_items {
       apiDesign: {
         description: 'Product, cart, and order endpoints',
         endpoints: [
-          { method: 'GET', path: '/api/products/search', params: 'q, category, priceRange, rating, page', response: '{ products[], total, facets }' },
-          { method: 'POST', path: '/api/cart/items', params: '{ productId, quantity }', response: '{ cartItem }' },
-          { method: 'POST', path: '/api/checkout', params: '{ cartId, paymentMethod, shippingAddress }', response: '{ orderId, estimatedDelivery }' },
+          { method: 'GET', path: '/api/products/search', params: 'q, category, priceRange, rating, page', response: '{ products[], total, facets }',
+            description: 'Searches the product catalog using Elasticsearch with faceted filtering. Supports full-text search across product names, descriptions, brands, and categories. Returns faceted counts for each filter dimension (brand, price range, rating) for the filter sidebar UI. Results are ranked by relevance, popularity (sales velocity), and promoted placement. Supports spell correction and synonym expansion.' },
+          { method: 'POST', path: '/api/cart/items', params: '{ productId, quantity }', response: '{ cartItem }',
+            description: 'Adds a product to the shopping cart with specified quantity. Cart is stored in Redis for fast access and persisted to a database for durability. Cart items are validated against current inventory but stock is not reserved until checkout. Supports cart merging when a guest user logs in (guest cart + user cart). Price changes between add-to-cart and checkout are shown to the user.' },
+          { method: 'POST', path: '/api/checkout', params: '{ cartId, paymentMethod, shippingAddress }', response: '{ orderId, estimatedDelivery }',
+            description: 'Processes the complete checkout flow: validates inventory availability, calculates shipping based on address and item dimensions, applies tax rules by jurisdiction, processes payment (authorization + capture), creates the order, and decrements inventory. The entire flow uses the Saga pattern — if payment fails after inventory is decremented, a compensating transaction restores the stock.' },
           { method: 'GET', path: '/api/orders/:id', params: '-', response: '{ order, trackingInfo }' }
         ]
       },
@@ -14478,10 +14537,13 @@ messages {
       apiDesign: {
         description: 'WebSocket for real-time messaging, REST for history',
         endpoints: [
-          { method: 'WS', path: '/ws/chat', params: 'auth_token', response: 'Bidirectional message stream' },
+          { method: 'WS', path: '/ws/chat', params: 'auth_token', response: 'Bidirectional message stream',
+            description: 'Persistent WebSocket connection for real-time messaging. Handles bidirectional message delivery, typing indicators, read receipts, and online/offline presence. Messages are end-to-end encrypted using the Signal Protocol. The server acts as a relay — it cannot read message content. Connection state is tracked in a presence service (Redis) for routing messages to the correct WebSocket server instance.' },
           { method: 'POST', path: '/api/messages', params: '{ conversationId, content, type }', response: '{ messageId, timestamp }' },
-          { method: 'GET', path: '/api/conversations/:id/messages', params: 'before, limit', response: '{ messages[], hasMore }' },
-          { method: 'POST', path: '/api/groups', params: '{ name, participantIds }', response: '{ conversationId }' }
+          { method: 'GET', path: '/api/conversations/:id/messages', params: 'before, limit', response: '{ messages[], hasMore }',
+            description: 'Fetches message history using cursor-based pagination (before=messageId). Messages are stored in a per-conversation partition in Cassandra, ordered by timestamp. Efficient for both recent message loading (app open) and scrolling back through history. Each message includes sender, timestamp, content type (text, image, video, location), delivery status, and read receipts.' },
+          { method: 'POST', path: '/api/groups', params: '{ name, participantIds }', response: '{ conversationId }',
+            description: 'Creates a group conversation with specified participants. Group metadata (name, avatar, admin list) is stored in the database. Each participant receives a notification about being added. Group messages use a fan-out pattern — the message is written once and a reference is added to each participant\'s conversation list. Supports up to 256 participants (WhatsApp-style) or 200K (Slack-style) depending on the system design.' }
         ]
       },
 
@@ -14620,10 +14682,14 @@ alert_rules {
       apiDesign: {
         description: 'Metric ingestion and query endpoints',
         endpoints: [
-          { method: 'POST', path: '/api/metrics', params: '{ series: [{ metric, tags, points: [{ts, value}] }] }', response: '202 Accepted' },
-          { method: 'GET', path: '/api/query', params: 'query, from, to, granularity', response: '{ series: [{ tags, datapoints }] }' },
-          { method: 'POST', path: '/api/alerts', params: '{ name, query, condition, threshold, channels }', response: '{ alertId }' },
-          { method: 'GET', path: '/api/alerts/:id/history', params: 'from, to', response: '{ events: [{ triggeredAt, resolvedAt, value }] }' }
+          { method: 'POST', path: '/api/metrics', params: '{ series: [{ metric, tags, points: [{ts, value}] }] }', response: '202 Accepted',
+            description: 'Ingests time-series metric data points in batches. Each data point has a metric name, tags (key-value labels), timestamp, and value. Data is written to a time-series database (InfluxDB, TimescaleDB, or custom) optimized for append-heavy workloads. Ingestion is buffered and written in micro-batches for throughput. Supports counter, gauge, histogram, and distribution metric types. At scale, handles millions of data points per second.' },
+          { method: 'GET', path: '/api/query', params: 'query, from, to, granularity', response: '{ series: [{ tags, datapoints }] }',
+            description: 'Queries time-series data using a custom query language (similar to PromQL or Datadog\'s query syntax). Supports aggregation functions (avg, sum, max, min, percentile), grouping by tags, arithmetic between metrics, and time-shifting for comparison. The query engine reads from multiple storage tiers: recent data (last 2 hours) from memory, medium-term (last 30 days) from SSD, historical from object storage. Downsampling is applied automatically for large time ranges.' },
+          { method: 'POST', path: '/api/alerts', params: '{ name, query, condition, threshold, channels }', response: '{ alertId }',
+            description: 'Creates an alert rule that monitors a metric query against a threshold condition. The alert evaluator runs the query periodically (every 30-60 seconds) and triggers when the condition is met. Alert channels include email, Slack, PagerDuty, and webhook. Supports escalation policies (notify on-call after 5 minutes if unacknowledged). Alert deduplication prevents notification storms during cascading failures.' },
+          { method: 'GET', path: '/api/alerts/:id/history', params: 'from, to', response: '{ events: [{ triggeredAt, resolvedAt, value }] }',
+            description: 'Returns the alert\'s trigger history showing when it was triggered and resolved. Each event includes the metric value that triggered/resolved the alert, the duration of the alert state, and who acknowledged it. Used for post-incident analysis and SLA compliance reporting. Alert history is retained for 90 days by default.' }
         ]
       },
 
@@ -14766,10 +14832,14 @@ merchants {
       apiDesign: {
         description: 'Payment processing and merchant endpoints',
         endpoints: [
-          { method: 'POST', path: '/api/payments', params: '{ amount, currency, cardToken, merchantId, idempotencyKey }', response: '{ paymentId, status, processorRef }' },
-          { method: 'POST', path: '/api/payments/:id/capture', params: '{ amount? }', response: '{ status }' },
-          { method: 'POST', path: '/api/payments/:id/refund', params: '{ amount? }', response: '{ refundId, status }' },
-          { method: 'GET', path: '/api/merchants/:id/transactions', params: 'from, to, status, page', response: '{ transactions[], balance }' }
+          { method: 'POST', path: '/api/payments', params: '{ amount, currency, cardToken, merchantId, idempotencyKey }', response: '{ paymentId, status, processorRef }',
+            description: 'Processes a payment by authorizing the card with the payment processor (Visa/Mastercard network). The idempotencyKey ensures exactly-once processing — retries with the same key return the original result. The card token (from tokenization service) is used instead of raw card numbers for PCI-DSS compliance. The payment goes through fraud scoring (ML model) before reaching the processor. Status: authorized (funds held) or declined.' },
+          { method: 'POST', path: '/api/payments/:id/capture', params: '{ amount? }', response: '{ status }',
+            description: 'Captures a previously authorized payment, moving funds from the cardholder to the merchant. Partial capture is supported — capture less than the authorized amount. Authorization holds expire after 7 days (Visa) or 30 days (Mastercard). The capture triggers settlement processing where the acquirer bank transfers funds to the merchant\'s bank account (T+1 or T+2 depending on the processor).' },
+          { method: 'POST', path: '/api/payments/:id/refund', params: '{ amount? }', response: '{ refundId, status }',
+            description: 'Issues a refund to the original payment method. Full or partial refunds are supported. The refund is processed through the payment network and typically takes 5-10 business days to appear on the cardholder\'s statement. The refund amount is debited from the merchant\'s settlement balance. Refunds for payments older than 120 days may fail — a credit must be issued instead.' },
+          { method: 'GET', path: '/api/merchants/:id/transactions', params: 'from, to, status, page', response: '{ transactions[], balance }',
+            description: 'Returns a merchant\'s transaction history with filtering by date range, status (authorized, captured, refunded, disputed), and pagination. Includes running balance calculation. Used for merchant dashboards and financial reconciliation. Data is read from a read replica to avoid impacting payment processing performance. Supports CSV export for accounting integration.' }
         ]
       },
 
@@ -14912,9 +14982,11 @@ quadtree_node {
       apiDesign: {
         description: 'Proximity search endpoint',
         endpoints: [
-          { method: 'GET', path: '/api/nearby', params: 'lat, lng, radius, category?, limit, page', response: '{ businesses: [{ id, name, distance, rating }], total }' },
+          { method: 'GET', path: '/api/nearby', params: 'lat, lng, radius, category?, limit, page', response: '{ businesses: [{ id, name, distance, rating }], total }',
+            description: 'Returns businesses near a geographic point within a specified radius. Uses a geospatial index — either Geohash-based (Redis GEO) or QuadTree for adaptive density handling. The index is partitioned into cells; the query identifies relevant cells using the radius and fetches businesses from those cells. Results are sorted by distance (Haversine formula). Category filtering and pagination are applied after the geo-query. Caching uses geohash-prefix grouping for cache-friendly lookups.' },
           { method: 'GET', path: '/api/businesses/:id', params: '-', response: '{ business details }' },
-          { method: 'PUT', path: '/api/businesses/:id/location', params: '{ latitude, longitude }', response: '{ updated geohash }' }
+          { method: 'PUT', path: '/api/businesses/:id/location', params: '{ latitude, longitude }', response: '{ updated geohash }',
+            description: 'Updates a business\'s geographic coordinates. Triggers re-indexing in the geospatial index (geohash recalculation). The old location is removed and the new location is inserted atomically to prevent the business from appearing in queries for both locations. Location changes are audited for fraud prevention (businesses gaming proximity rankings).' }
         ]
       },
 
@@ -15031,9 +15103,12 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
       apiDesign: {
         description: 'Simple create and redirect API',
         endpoints: [
-          { method: 'POST', path: '/api/shorten', params: '{ longUrl, customAlias?, expiresIn? }', response: '{ shortUrl }' },
-          { method: 'GET', path: '/:shortCode', params: '-', response: '301 Redirect to long URL' },
-          { method: 'GET', path: '/api/stats/:shortCode', params: '-', response: '{ clicks, createdAt, expiresAt }' }
+          { method: 'POST', path: '/api/shorten', params: '{ longUrl, customAlias?, expiresIn? }', response: '{ shortUrl }',
+            description: 'Creates a short URL mapping. Generates a 7-character Base62 key using a pre-computed ID sequence (avoids collision checking at write time). Custom aliases are checked for uniqueness against the database. The mapping is stored in a distributed key-value store (DynamoDB/Cassandra) for high availability. Supports optional expiration (1 hour to 1 year). Rate limited to 100 URLs/hour per API key to prevent abuse.' },
+          { method: 'GET', path: '/:shortCode', params: '-', response: '301 Redirect to long URL',
+            description: 'Redirects to the original long URL. Uses a 301 (permanent) redirect for SEO credit transfer to the destination. The lookup goes through a multi-tier cache: L1 application cache (in-process, 10K entries) → L2 Redis (millions of entries) → L3 database. Cache hit rate for popular URLs exceeds 99%. Click events are logged asynchronously to Kafka for analytics without adding latency to the redirect.' },
+          { method: 'GET', path: '/api/stats/:shortCode', params: '-', response: '{ clicks, createdAt, expiresAt }',
+            description: 'Returns click analytics for a short URL including total clicks, unique visitors (estimated via HyperLogLog), creation date, and expiration date. Analytics data is computed from the click event stream by a Flink job and stored in a time-series database. Supports hourly/daily/weekly granularity. Geographic and device breakdowns are available for paid API users.' }
         ]
       },
 
@@ -15165,8 +15240,10 @@ Count-Min Sketch {
         description: 'Score update and ranking query endpoints',
         endpoints: [
           { method: 'POST', path: '/api/scores', params: '{ itemId, category, scoreIncrement }', response: '{ newScore, newRank }' },
-          { method: 'GET', path: '/api/topk/:category', params: 'k=100, timeframe', response: '{ rankings: [{ itemId, score, rank }] }' },
-          { method: 'GET', path: '/api/rank/:category/:itemId', params: 'timeframe', response: '{ rank, score, percentile }' }
+          { method: 'GET', path: '/api/topk/:category', params: 'k=100, timeframe', response: '{ rankings: [{ itemId, score, rank }] }',
+            description: 'Returns the top K items sorted by score in descending order. Uses Redis ZREVRANGE for O(log N + K) retrieval. For very large leaderboards (millions of items), a separate \'top-K\' cache is maintained using a min-heap that only tracks the top K items, reducing memory from O(N) to O(K). Supports multiple timeframes (hourly, daily, weekly, all-time) via separate sorted sets per window.' },
+          { method: 'GET', path: '/api/rank/:category/:itemId', params: 'timeframe', response: '{ rank, score, percentile }',
+            description: 'Returns a specific item\'s rank, score, and percentile within a category. Uses ZREVRANK for exact rank in O(log N). Percentile is computed as (total_items - rank) / total_items × 100. For categories with millions of items where exact rank is expensive, an approximate rank using a count-min sketch or sampling is returned with an accuracy indicator.' }
         ]
       },
 
