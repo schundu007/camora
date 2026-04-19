@@ -2413,38 +2413,47 @@ JWT Payload:
       title: 'Load Balancing',
       icon: 'share',
       color: '#14b8a6',
-      questions: 6,
+      questions: 12,
       description: 'Distribute traffic across servers effectively.',
-      concepts: ['Round Robin', 'Least Connections', 'IP Hash', 'Layer 4 vs Layer 7', 'Health checks', 'Session affinity'],
+      concepts: ['Round Robin', 'Least Connections', 'Weighted', 'IP Hash', 'Consistent Hashing', 'Layer 4 vs Layer 7', 'Health checks', 'Session affinity', 'SSL termination', 'GSLB', 'Connection draining', 'Auto-scaling integration'],
       tips: [
-        'Layer 7 (application) for content-based routing',
-        'Layer 4 (transport) for raw performance',
-        'Use health checks to remove unhealthy servers',
-        'Use Least Connections for variable-duration requests; Round Robin for uniform workloads',
-        'Layer 4 (TCP) LBs are faster but Layer 7 (HTTP) LBs can route based on content, headers, and cookies',
-        'Always enable health checks — a load balancer routing to a dead server is worse than no LB at all'
+        'Layer 7 (application) for content-based routing; Layer 4 (transport) for raw performance',
+        'Use Least Connections for variable-duration requests; Round Robin only when servers are identical',
+        'Always enable health checks — a load balancer routing to a dead server is worse than no LB at all',
+        'Terminate SSL at the load balancer to offload crypto from backends and centralize certificate management',
+        'For WebSocket workloads, use L7 with sticky sessions or externalize connection state to Redis',
+        'Consistent hashing minimizes cache invalidation when scaling — essential for distributed caches and CDNs',
+        'AWS NLB handles millions of requests/sec with sub-millisecond latency; ALB adds ~1-5ms but gives you content routing',
+        'Connection draining is mandatory for zero-downtime deploys — always drain before removing a server from the pool'
       ],
 
-      introduction: `Load balancing distributes incoming traffic across multiple servers to ensure no single server becomes overwhelmed. It's the foundation of horizontal scaling and high availability.
+      introduction: `Load balancing is the practice of distributing incoming network traffic across a pool of backend servers so that no single machine becomes a bottleneck. It is the foundational building block of horizontal scaling, high availability, and fault tolerance in modern distributed systems. Without a load balancer, adding more servers does nothing — clients have no way to discover or reach them.
 
-Every major website uses load balancing. Google handles billions of requests by distributing them across thousands of servers. Understanding load balancing algorithms and configurations is essential for building scalable systems.`,
+The scale at which load balancers operate is staggering. AWS Network Load Balancer is engineered to handle millions of requests per second while maintaining sub-millisecond latency, auto-scaling transparently without any pre-warming. Google built Maglev, a custom software load balancer that saturates a 10 Gbps link and processes roughly 12 million packets per second on a single 8-core commodity server. Netflix routes all streaming traffic through its Zuul edge gateway backed by Eureka service discovery, distributing requests across thousands of instances spanning multiple AWS regions.
+
+Load balancers come in many forms: hardware appliances (F5 BIG-IP), software reverse proxies (NGINX, HAProxy, Envoy), cloud-managed services (AWS ALB/NLB, GCP Cloud Load Balancing, Azure Load Balancer), and even client-side libraries (gRPC, Netflix Ribbon). The choice depends on where in the network stack you operate, what routing intelligence you need, and whether you want to manage the infrastructure yourself. In a system design interview, you are expected to reason about algorithm selection, layer 4 vs layer 7 trade-offs, health checking strategies, session persistence, SSL offloading, and global multi-region routing.
+
+Understanding load balancing deeply means knowing not just how traffic is distributed, but how the load balancer itself avoids becoming a single point of failure, how it integrates with auto-scaling to absorb traffic spikes, how it handles long-lived connections like WebSockets and gRPC streams, and how it enables zero-downtime deployments through connection draining and graceful shutdown.`,
 
       functionalRequirements: [
-        'Distribute traffic across healthy servers',
-        'Support multiple distribution algorithms',
-        'Detect and remove unhealthy servers',
-        'Handle SSL/TLS termination',
-        'Support session persistence when needed',
-        'Enable zero-downtime deployments'
+        'Distribute traffic across healthy servers using configurable algorithms',
+        'Support multiple distribution algorithms (round-robin, least connections, weighted, consistent hashing)',
+        'Detect and remove unhealthy servers via active and passive health checks',
+        'Handle SSL/TLS termination and certificate management',
+        'Support session persistence (sticky sessions) when required by stateful applications',
+        'Enable zero-downtime deployments via connection draining',
+        'Route traffic based on content (URL path, headers, cookies) at Layer 7',
+        'Integrate with auto-scaling to register/deregister instances automatically'
       ],
 
       nonFunctionalRequirements: [
-        'Latency: < 1ms added overhead',
-        'Throughput: Millions of connections/second',
-        'Availability: 99.999% (no single point of failure)',
-        'Failover: Automatic in < 5 seconds',
-        'Scalability: Handle 10x traffic spikes',
-        'Health checks: Detect failures within seconds'
+        'Latency: < 1ms added overhead for L4; < 5ms for L7 with SSL termination',
+        'Throughput: Millions of new connections/second (AWS NLB benchmark)',
+        'Availability: 99.999% — no single point of failure via active-passive or active-active pairs',
+        'Failover: Automatic detection and rerouting in < 5 seconds',
+        'Scalability: Handle 10x traffic spikes without pre-warming (cloud-native LBs)',
+        'Health checks: Detect server failures within 10-30 seconds (configurable thresholds)',
+        'Connection draining: Complete in-flight requests within configurable timeout (default 30s)'
       ],
 
       dataModel: {
@@ -2454,284 +2463,454 @@ Every major website uses load balancing. Google handles billions of requests by 
   frontend: {
     bind: "0.0.0.0:443",
     protocol: "HTTPS",
-    ssl_certificate: "/path/to/cert.pem"
+    ssl_certificate: "/path/to/cert.pem",
+    ssl_policy: "TLSv1.2_2021"
   },
   backend: {
     name: "app_servers",
-    algorithm: "round_robin",
+    algorithm: "least_connections",
+    sticky_sessions: {
+      enabled: true,
+      type: "cookie",
+      cookie_name: "SERVERID",
+      ttl: "1h"
+    },
     servers: [
-      { address: "10.0.0.1:8080", weight: 1 },
-      { address: "10.0.0.2:8080", weight: 2 },
-      { address: "10.0.0.3:8080", weight: 1 }
+      { address: "10.0.0.1:8080", weight: 3, zone: "us-east-1a" },
+      { address: "10.0.0.2:8080", weight: 3, zone: "us-east-1b" },
+      { address: "10.0.0.3:8080", weight: 1, zone: "us-east-1c" }
     ],
     health_check: {
+      type: "http",
       path: "/health",
-      interval: "5s",
-      timeout: "2s",
-      unhealthy_threshold: 3
+      interval: "10s",
+      timeout: "5s",
+      unhealthy_threshold: 3,
+      healthy_threshold: 2
+    },
+    connection_draining: {
+      enabled: true,
+      timeout: "30s"
     }
   }
 }
 
 Server Pool State:
-  server_1: { status: "healthy", connections: 45 }
-  server_2: { status: "healthy", connections: 32 }
-  server_3: { status: "unhealthy", last_check: "2024-01-01T12:00:00Z" }`
+  server_1: { status: "healthy", active_connections: 145, weight: 3, avg_response_ms: 12 }
+  server_2: { status: "healthy", active_connections: 132, weight: 3, avg_response_ms: 15 }
+  server_3: { status: "draining", active_connections: 8, drain_started: "2024-01-01T12:00:00Z" }`
       },
 
       apiDesign: {
         description: 'Common load balancer operations',
         endpoints: [
           { method: 'GET', path: '/health', params: '-', response: '200 OK (health check endpoint)' },
-          { method: 'GET', path: '/api/lb/status', params: '-', response: 'Server pool health status' },
-          { method: 'POST', path: '/api/lb/servers', params: 'server address', response: 'Add server to pool' },
+          { method: 'GET', path: '/api/lb/status', params: '-', response: 'Server pool health status with connection counts' },
+          { method: 'POST', path: '/api/lb/servers', params: 'server address, weight, zone', response: 'Register server in pool' },
           { method: 'DELETE', path: '/api/lb/servers/:id', params: '-', response: 'Remove server from pool' },
-          { method: 'PUT', path: '/api/lb/servers/:id/drain', params: '-', response: 'Drain connections before removal' }
+          { method: 'PUT', path: '/api/lb/servers/:id/drain', params: 'timeout', response: 'Drain connections before removal' },
+          { method: 'PUT', path: '/api/lb/algorithm', params: 'algorithm name, params', response: 'Update distribution algorithm' },
+          { method: 'GET', path: '/api/lb/metrics', params: 'window', response: 'RPS, latency percentiles, error rates per server' }
         ]
       },
 
       keyQuestions: [
         {
-          question: 'What are the main load balancing algorithms?',
-          answer: `**Round Robin**:
-- Rotate through servers in order
-- Simple and fair
-- Best when servers are equal capacity
-- Problem: Ignores server load/capacity
-
-**Weighted Round Robin**:
-- Assign weights to servers (server1: 3, server2: 1)
-- Faster servers get more requests
-- Good for heterogeneous hardware
-
-**Least Connections**:
-- Route to server with fewest active connections
-- Better for varying request times
-- Best for long-lived connections (WebSocket)
-
-**Least Response Time**:
-- Consider both connections and response time
-- Route to fastest responding server
-- Requires continuous monitoring
-
-**IP Hash**:
-- Hash client IP to determine server
-- Same client always goes to same server
-- Natural session affinity
-- Problem: Uneven distribution possible
-
-**Consistent Hashing**:
-- Hash both servers and requests to ring
-- Minimal redistribution when servers change
-- Used by CDNs, distributed caches
-
-**Random**:
-- Simple, surprisingly effective
-- No state to maintain
-- Good enough for many use cases`
-        },
-        {
           question: 'What is the difference between Layer 4 and Layer 7 load balancing?',
-          answer: `**Layer 4 (Transport Layer)**:
-\`\`\`
-Client ──TCP/UDP──▶ Load Balancer ──TCP/UDP──▶ Server
+          answer: `**Layer 4 (Transport Layer) — TCP/UDP awareness only:**
+L4 load balancers operate at the transport layer of the OSI model. They make routing decisions based solely on source/destination IP addresses, ports, and protocol type (TCP or UDP). They never inspect the application payload — they simply forward raw TCP connections or UDP datagrams. This makes them extremely fast: Google's Maglev processes ~12M packets/sec on a single 8-core server at line rate.
 
-Makes decision based on:
-- Source/destination IP
-- Source/destination port
-- Protocol (TCP/UDP)
 \`\`\`
-- Faster: Just forwards packets
-- Simpler: No application awareness
-- Can't route based on content
-- Examples: AWS NLB, HAProxy TCP mode
-
-**Layer 7 (Application Layer)**:
+Client ──TCP──▶ L4 LB ──TCP──▶ Server
+                │
+   Sees: IP, port, protocol
+   Cannot see: URL, headers, cookies, body
 \`\`\`
-Client ──HTTP──▶ Load Balancer ──HTTP──▶ Server
 
-Makes decision based on:
-- URL path (/api vs /static)
-- HTTP headers (Host, User-Agent)
-- Cookies
-- Request content
+L4 maintains a single TCP connection from client to server (or does NAT), adding minimal latency (sub-millisecond). AWS NLB is L4 — it provides static IP addresses per AZ, handles millions of requests/sec, and absorbs sudden traffic spikes without pre-warming. Use L4 for non-HTTP protocols (database proxying, gaming, DNS, IoT MQTT), or when raw throughput matters more than routing intelligence.
+
+**Layer 7 (Application Layer) — full HTTP awareness:**
+L7 load balancers terminate the client's TCP connection, parse the full HTTP request (URL path, headers, cookies, query strings, even request body), then open a new connection to the chosen backend. This two-connection model adds 1-5ms latency but enables powerful routing: send /api/* to API servers, /static/* to CDN origin, route by Host header for multi-tenant apps, or inspect cookies for A/B testing.
+
 \`\`\`
-- Content-based routing: /api → API servers
-- SSL termination: Decrypt at LB
-- Header manipulation: Add X-Forwarded-For
-- Caching: Cache responses
-- Examples: AWS ALB, NGINX, HAProxy HTTP mode
+Client ──HTTPS──▶ L7 LB ──HTTP──▶ Server
+                   │
+   Sees: URL path, Host header, cookies, JWT,
+         Content-Type, query params, gRPC method
+   Can: terminate SSL, inject X-Forwarded-For,
+        rewrite URLs, cache responses, rate-limit
+\`\`\`
 
-**When to use each**:
-| Use Case | Layer |
-|----------|-------|
-| Simple TCP pass-through | L4 |
-| High-performance | L4 |
-| Content-based routing | L7 |
-| SSL termination | L7 |
-| Header inspection | L7 |
-| WebSocket | Either (L7 for routing) |`
+AWS ALB is L7 — it supports path-based routing, host-based routing, HTTP/2, WebSocket, and native authentication integration. NGINX and Envoy are popular software L7 load balancers. For most web applications, L7 is the right choice because the routing flexibility far outweighs the small latency cost.`
         },
         {
-          question: 'How do health checks work?',
-          answer: `**Active Health Checks**:
-Load balancer periodically probes servers.
+          question: 'What are the main load balancing algorithms and when should you use each?',
+          answer: `**Round Robin** — Rotate through servers sequentially (A, B, C, A, B, C...). Zero state required, dead simple. Best when all servers are identical hardware and requests take roughly equal time. Problem: a slow server still gets equal traffic, causing request pile-up.
 
-\`\`\`
-Load Balancer                    Server
-     │                              │
-     │──GET /health────────────────▶│
-     │◀─────────────200 OK──────────│
-     │                              │
-     │──GET /health────────────────▶│
-     │◀─────────────500 Error───────│
-     │                              │
-     │ (Mark unhealthy after 3 fails)
-     │──GET /health────────────────▶│
-     │◀─────────────200 OK──────────│
-     │ (Mark healthy after 2 passes)
-\`\`\`
+**Weighted Round Robin** — Assign weights proportional to server capacity (e.g., server A weight=5, server B weight=2). Server A gets 5 requests for every 2 to server B. Useful for heterogeneous hardware — a 16-core machine should handle more than an 4-core machine. NGINX uses smooth weighted round-robin to avoid bursts.
 
-**Health Check Parameters**:
-- Interval: How often to check (5-30 seconds)
-- Timeout: How long to wait for response (2-10 seconds)
-- Unhealthy threshold: Failures before marking down (2-5)
-- Healthy threshold: Passes before marking up (2-3)
+**Least Connections** — Route each new request to the server with the fewest active connections. Naturally adapts to variable request durations — if one endpoint takes 500ms while another takes 50ms, slow servers accumulate fewer new requests. Best for long-lived connections (WebSocket, database connection pooling, gRPC streams). HAProxy and NGINX both support this.
 
-**Types of Health Checks**:
-- **TCP**: Can establish connection?
-- **HTTP**: Returns 2xx/3xx status?
-- **HTTPS**: Valid SSL + HTTP check
-- **Custom**: Application-specific logic
+**Least Response Time** — Combines connection count with actual measured latency. Routes to the server that responds fastest, accounting for both load AND network conditions. AWS ALB uses this approach internally. Requires the LB to continuously track response-time metrics per backend, adding slight overhead.
 
-**Deep Health Checks**:
-\`\`\`python
-@app.route('/health')
-def health():
-    # Check database
-    if not db.ping():
-        return "DB down", 503
+**IP Hash** — Hash the client IP to deterministically select a server. Same client always lands on the same server without cookies. Provides natural session affinity but distribution can be uneven, especially when many clients share a NAT IP. Useful when you need sticky routing without cookie support (non-HTTP protocols).
 
-    # Check cache
-    if not cache.ping():
-        return "Cache down", 503
+**Consistent Hashing** — Map both servers and request keys onto a virtual hash ring. Each request is routed to the nearest server clockwise on the ring. When a server is added or removed, only ~1/N of requests are remapped instead of all. Virtual nodes (100-200 per physical server) ensure even distribution. Critical for distributed caches (Memcached, Redis Cluster) and CDNs where cache locality matters. Used by Amazon DynamoDB, Cassandra, and Akamai.
 
-    # Check dependencies
-    if not check_dependencies():
-        return "Dependency down", 503
-
-    return "OK", 200
-\`\`\`
-
-**Passive Health Checks**:
-Monitor real traffic for failures.
-- Track error rates per server
-- Mark unhealthy if errors exceed threshold
-- Faster detection than active checks`
+**Random with Two Choices (Power of Two)** — Pick two servers at random, route to the one with fewer connections. Statistically near-optimal distribution with almost zero coordination overhead. Used by Envoy proxy as its default algorithm.`
         },
         {
-          question: 'How do you handle session persistence (sticky sessions)?',
-          answer: `**The Problem**:
-- User logs in on Server A
-- Next request goes to Server B
-- Server B doesn't have session = user logged out!
+          question: 'How do active and passive health checks work, and how should you configure thresholds?',
+          answer: `**Active Health Checks** — The load balancer periodically sends probe requests to each backend server and evaluates the response. This is the primary mechanism for detecting server failures.
 
-**Solutions**:
+\`\`\`
+LB ──GET /health──▶ Server    (every 10s)
+LB ◀──200 OK───────  Server    → mark healthy
+LB ──GET /health──▶ Server    (every 10s)
+LB ◀──503 Error────  Server    → failure count: 1/3
+LB ──GET /health──▶ Server    (10s later)
+LB ◀──timeout──────  Server    → failure count: 2/3
+LB ──GET /health──▶ Server    (10s later)
+LB ◀──503 Error────  Server    → failure count: 3/3 → MARK UNHEALTHY
+\`\`\`
 
-1. **Sticky Sessions (Session Affinity)**:
-\`\`\`
-Load balancer routes same user to same server
+**Key parameters to tune:**
+- **Interval**: 10-30s typical. Too frequent wastes backend resources; too slow delays failure detection.
+- **Timeout**: 5-10s. Must be shorter than interval. Set based on your slowest acceptable /health response.
+- **Unhealthy threshold**: 2-5 consecutive failures. Set to 3 for most apps — avoids false positives from transient network blips.
+- **Healthy threshold**: 2-3 consecutive passes. Prevents a flapping server from rejoining the pool prematurely.
 
-Methods:
-- Cookie-based: LB adds cookie with server ID
-- IP-based: Hash client IP
-- Header-based: Use session ID in header
-\`\`\`
-- Pros: Simple, works with stateful apps
-- Cons: Uneven load, server failure loses sessions
+**Deep vs Shallow health checks** — A shallow check (TCP connect or HTTP 200 from /health) proves the process is running. A deep check verifies the server can actually serve traffic by testing database connectivity, cache availability, and downstream dependencies. Use deep checks but add a circuit breaker — if your DB is down globally, deep checks will mark ALL servers unhealthy simultaneously, causing a total outage.
 
-2. **Session Replication**:
-\`\`\`
-Server A ←──sync──→ Server B
-        ←──sync──→ Server C
+**Passive Health Checks** — Instead of probing, the LB monitors real production traffic. If a server's error rate exceeds a threshold (e.g., >50% 5xx responses in 30s), it is marked unhealthy. Envoy calls this "outlier detection." Passive checks detect degraded performance faster than active probes (which may check /health while real endpoints fail), but cannot detect a server that has completely crashed with no traffic flowing to it. Best practice: use both active AND passive checks together.`
+        },
+        {
+          question: 'How do you handle session persistence (sticky sessions), and what are the trade-offs?',
+          answer: `**The problem:** User logs into Server A, next request goes to Server B, Server B has no session data, user sees a login screen. This breaks any stateful workflow — shopping carts, multi-step forms, file upload progress.
 
-All servers have all sessions
-\`\`\`
-- Pros: Any server can handle any request
-- Cons: Sync overhead, consistency issues
+**Solution 1 — Cookie-based sticky sessions (most common):**
+The load balancer inserts a cookie (e.g., AWSALB, SERVERID) containing the target server identifier. All subsequent requests carrying that cookie route to the same server. AWS ALB supports duration-based (1s-7days) and application-based stickiness. Pros: works through NAT and proxies (unlike IP hash). Cons: if the target server dies, the session is lost and the user must start over.
 
-3. **Centralized Session Store** (recommended):
+**Solution 2 — Centralized session store (recommended for production):**
 \`\`\`
-Server A ──┐
-Server B ──┼──▶ Redis (sessions)
-Server C ──┘
+All servers ──read/write──▶ Redis / Memcached (session store)
 \`\`\`
-- Pros: Stateless servers, easy scaling
-- Cons: Redis dependency, network latency
+Servers are fully stateless — any server can handle any request by reading session data from Redis. This is what most production systems use: Shopify, GitHub, and Stripe all store sessions in Redis. Pros: perfect load distribution, server failure has zero session impact. Cons: adds Redis as a dependency (but Redis Sentinel or Cluster provides HA), adds ~1ms network latency per session read.
 
-4. **Stateless Sessions (JWT)**:
-\`\`\`
-Session data encoded in token
-Sent with every request
-No server-side storage
-\`\`\`
-- Pros: Truly stateless, no shared storage
-- Cons: Token size, can't revoke easily
+**Solution 3 — Client-side tokens (JWT):**
+Encode session data directly in a signed JWT token sent with every request. Zero server-side state. Pros: truly stateless, works across regions. Cons: token size grows with session data, cannot revoke individual sessions without a blocklist, and sensitive data in tokens requires encryption (JWE) not just signing.
 
-**Recommendation**: Use centralized store (Redis) or JWT`
+**When sticky sessions are genuinely needed:**
+- WebSocket connections (inherently sticky by nature of TCP)
+- File upload chunking (chunks must reach the same server)
+- In-memory caching where cache warm-up is expensive
+- Legacy applications that cannot be refactored to be stateless
+For everything else, externalize state to Redis and keep servers stateless.`
+        },
+        {
+          question: 'How does SSL/TLS termination work at the load balancer, and why is it important?',
+          answer: `**SSL/TLS termination** means the load balancer decrypts incoming HTTPS traffic and forwards plain HTTP to backend servers. The LB handles the computationally expensive TLS handshake (RSA/ECDSA key exchange, symmetric encryption) so backends do not have to.
+
+\`\`\`
+Client ──HTTPS (TLS 1.3)──▶ Load Balancer ──HTTP (plaintext)──▶ Backend
+                              │
+                 Terminates TLS here
+                 Manages certificates
+                 Adds X-Forwarded-Proto: https
+\`\`\`
+
+**Why terminate at the LB:**
+- **CPU offloading**: TLS handshakes are CPU-intensive (especially RSA-2048). Offloading to the LB frees backend CPU for business logic. AWS ALB and NLB handle TLS with dedicated hardware acceleration.
+- **Centralized certificate management**: Manage one certificate (or use AWS ACM for auto-renewal) instead of distributing certs to every backend server. Rotate certificates in one place.
+- **L7 routing**: You cannot inspect HTTP headers, URL paths, or cookies if the traffic is still encrypted. SSL termination at the LB enables content-based routing.
+- **Simplified backends**: Backend servers run plain HTTP — simpler configuration, easier debugging, no cert expiry surprises.
+
+**Security concern — internal traffic is unencrypted:**
+Traffic between the LB and backends travels over your private network in plaintext. For most applications inside a VPC/private subnet, this is acceptable. For strict compliance (PCI-DSS, HIPAA), you have two options: (1) **re-encryption** — the LB terminates client TLS, then opens a new TLS connection to the backend (AWS ALB supports this), or (2) **TLS passthrough** — the L4 LB forwards encrypted traffic directly to the backend without terminating it (AWS NLB in TCP mode), but you lose all L7 routing capabilities.
+
+**Real-world example**: Cloudflare terminates TLS at their edge PoPs (300+ cities), then uses their private backbone to reach origin servers. This gives users fast TLS handshakes (close PoP) while origin servers handle only HTTP.`
+        },
+        {
+          question: 'What is consistent hashing and why does it matter for load balancing?',
+          answer: `**The problem with simple hashing:** If you use hash(key) % N to assign requests to N servers, adding or removing a single server changes the modulus and remaps almost every key. For a distributed cache, this means near-total cache invalidation — a cache stampede that can overwhelm your database.
+
+**How consistent hashing works:**
+1. Map the entire hash space onto a virtual ring (0 to 2^32 - 1).
+2. Hash each server's identifier (IP, hostname) and place it on the ring.
+3. For each request, hash the request key and walk clockwise on the ring to find the first server.
+4. When a server is added, only the keys between it and its counter-clockwise neighbor are remapped (~1/N keys). When a server is removed, only its keys shift to the next clockwise server.
+
+\`\`\`
+        Server A (hash=90)
+           *
+          / \\
+    0 ──/───\\── 360 (ring)
+       /     \\
+      *       *
+ Server C    Server B
+ (hash=210)  (hash=330)
+
+Request with hash=150 → walks clockwise → hits Server C
+Add Server D at hash=160 → only keys 150-160 remapped
+\`\`\`
+
+**Virtual nodes solve uneven distribution:** With only 3-5 physical servers on the ring, the arc lengths between them are uneven, causing hotspots. The fix: represent each physical server as 100-200 virtual nodes scattered across the ring. This ensures statistically even distribution. Amazon DynamoDB and Apache Cassandra both use virtual nodes (called "vnodes" in Cassandra).
+
+**Where consistent hashing is critical:**
+- **Distributed caches** (Memcached, Redis Cluster): Adding a cache node should not invalidate all existing entries.
+- **CDN edge routing** (Akamai, Cloudflare): Route the same URL to the same edge server for cache hits.
+- **Database sharding**: Rebalance minimal data when adding a shard.
+- **Service mesh load balancing**: Envoy supports consistent hashing with Ketama algorithm.
+
+**Trade-off:** Consistent hashing adds complexity over round-robin and does not consider server load. Combine it with bounded-load consistent hashing (used by Google and Vimeo) to prevent any single server from exceeding a load threshold.`
+        },
+        {
+          question: 'How does DNS-based load balancing and Global Server Load Balancing (GSLB) work?',
+          answer: `**DNS-based load balancing** is the first tier of traffic distribution — it happens before any request reaches your infrastructure. When a client resolves your domain, the DNS server returns different IP addresses to direct the client to different servers or data centers.
+
+**Simple DNS round-robin:** Configure multiple A records for the same domain. DNS rotates through them, distributing clients across servers. Free and simple, but no health awareness — DNS keeps returning dead server IPs until you manually update records.
+
+**GeoDNS / Latency-based routing:** DNS resolves to different IPs based on the client's geographic location or measured latency. AWS Route 53 offers both: geolocation routing (US users hit us-east, EU users hit eu-west) and latency-based routing (Route 53 continuously measures latency to each region and returns the fastest endpoint). Cloudflare uses Anycast — the same IP is announced from all PoPs, and BGP routing naturally sends users to the nearest one.
+
+**Global Server Load Balancing (GSLB):**
+\`\`\`
+User in Tokyo                          User in London
+     │                                      │
+     ▼                                      ▼
+ DNS query: app.example.com            DNS query: app.example.com
+     │                                      │
+     ▼                                      ▼
+ GSLB returns: 13.112.x.x             GSLB returns: 52.56.x.x
+ (ap-northeast-1)                      (eu-west-2)
+     │                                      │
+     ▼                                      ▼
+ Tokyo ALB → Tokyo servers             London ALB → London servers
+\`\`\`
+
+GSLB goes beyond simple GeoDNS by incorporating real-time health checks, server load metrics, and network conditions into the DNS response. If the Tokyo data center goes down, GSLB detects the failure via health probes and stops returning Tokyo IPs — all traffic automatically shifts to the next nearest healthy region. F5 GTM, Cloudflare Load Balancing, and AWS Route 53 health-checked failover all provide GSLB.
+
+**Key limitation of DNS:** TTL caching. Even if you update DNS immediately after a failure, clients and recursive resolvers cache the old IP for the remaining TTL (often 60-300 seconds). For faster failover, use low TTLs (30-60s) — but this increases DNS query volume and slightly increases first-request latency. Anycast avoids this problem entirely because failover happens at the BGP routing layer, not DNS.`
+        },
+        {
+          question: 'How do you handle WebSocket connections with load balancers?',
+          answer: `**The challenge:** WebSocket connections are long-lived, stateful, full-duplex TCP connections. Unlike HTTP request-response cycles that complete in milliseconds, a WebSocket connection may persist for hours (chat apps, live dashboards, multiplayer games). This creates unique problems for load balancers.
+
+**Problem 1 — Connection stickiness is inherent:**
+Once a WebSocket handshake completes, the client has a persistent TCP connection to a specific backend server. The LB cannot move this connection to another server without breaking it. If that server crashes, the WebSocket dies — the client must reconnect and re-subscribe to events.
+
+**Problem 2 — Uneven distribution during scaling:**
+When auto-scaling adds new servers, existing WebSocket connections stay on old servers. New servers receive only new connections. Over time, old servers become overloaded while new servers sit idle. This is the "long-lived connection" problem.
+
+**L7 vs L4 for WebSocket:**
+\`\`\`
+L7 (ALB): Client ──HTTP Upgrade──▶ ALB ──WebSocket──▶ Server
+  - ALB understands the HTTP Upgrade handshake
+  - Can route based on URL path (/ws/chat vs /ws/notifications)
+  - AWS ALB supports WebSocket natively (idle timeout up to 4000s)
+  - Adds slight latency for the initial handshake
+
+L4 (NLB): Client ──TCP──▶ NLB ──TCP──▶ Server
+  - NLB forwards raw TCP — WebSocket just works
+  - No URL-based routing
+  - Better for very high connection counts (100K+)
+\`\`\`
+
+**Solutions for balanced distribution:**
+1. **Maximum connection lifetime**: Set a server-side max duration (e.g., 4 hours). When reached, gracefully close the WebSocket with a reconnect signal. The client reconnects and the LB routes it to the least-loaded server.
+2. **Connection-aware balancing**: Use least-connections algorithm so new WebSocket connections preferentially go to servers with fewer connections.
+3. **Externalized state with pub/sub**: Store chat rooms, subscriptions, and user presence in Redis Pub/Sub or Kafka. Any server can handle any user because state is shared. Socket.IO with the Redis adapter uses this exact pattern. When a server dies, clients reconnect to any server and seamlessly resume.
+4. **Periodic rebalancing**: Envoy and Linkerd support connection rebalancing — they can signal clients to reconnect, spreading connections across the pool.`
+        },
+        {
+          question: 'What is connection draining and why is it critical for zero-downtime deployments?',
+          answer: `**Connection draining** (also called "deregistration delay") is the process of allowing in-flight requests to complete on a server before removing it from the load balancer pool. Without it, active requests are abruptly terminated when a server is pulled — users see 502 errors, file uploads fail, database transactions are interrupted.
+
+**How it works during a rolling deployment:**
+\`\`\`
+1. Mark server as "draining" in the LB
+   └─ LB stops sending NEW requests to this server
+   └─ Existing connections continue normally
+
+2. Wait for drain timeout (e.g., 30 seconds)
+   └─ In-flight requests complete
+   └─ Active TCP connections close naturally
+   └─ WebSocket clients receive close frame
+
+3. Server is fully drained (0 active connections)
+   └─ Safe to stop/replace the server
+   └─ Deploy new version, register with LB
+
+4. LB health-checks the new server
+   └─ After 2-3 healthy checks, start routing traffic
+   └─ Optional: slow-start ramp (10% → 50% → 100%)
+\`\`\`
+
+**Configuring drain timeout:**
+- **Short-lived HTTP APIs**: 30 seconds is sufficient — most API calls complete in <1 second.
+- **File uploads / large responses**: 300 seconds — large uploads may take minutes.
+- **WebSocket connections**: 3600 seconds or more — chat connections are long-lived. Better to send a graceful close frame and let clients reconnect.
+- **gRPC streams**: Depends on stream lifetime — use deadlines in your gRPC configuration.
+
+**AWS implementation:**
+- ALB: "Deregistration delay" setting on the target group (default 300s, configurable 0-3600s).
+- When an Auto Scaling group terminates an instance, it deregisters from the target group first, triggering the drain timeout.
+- During CodeDeploy blue/green deployments, the old target group drains while the new one receives traffic.
+
+**The slow-start complement:** After deploying a new server, do not immediately route 100% of its share of traffic. Use slow-start (linear ramp-up over 30-120 seconds) so the JVM can warm up, caches can populate, and connection pools can initialize. AWS ALB supports slow-start mode natively. NGINX uses the "slow_start" parameter in upstream blocks.`
+        },
+        {
+          question: 'How do auto-scaling groups integrate with load balancers?',
+          answer: `**The core integration loop:** Auto-scaling dynamically adjusts the number of backend servers based on demand metrics (CPU, request count, custom metrics). The load balancer must automatically discover new servers and stop routing to terminated ones — without any manual intervention.
+
+**AWS architecture — the three components:**
+\`\`\`
+CloudWatch Alarm (CPU > 70%)
+     │
+     ▼
+Auto Scaling Group (ASG)
+  ├─ Launch Template (AMI, instance type, user data)
+  ├─ Min: 2, Desired: 4, Max: 20
+  └─ Target Group attachment ← key integration point
+     │
+     ▼
+Application Load Balancer (ALB)
+  └─ Target Group (registered instances)
+       ├─ Instance A (healthy, serving traffic)
+       ├─ Instance B (healthy, serving traffic)
+       ├─ Instance C (initializing, health check pending)
+       └─ Instance D (draining, being terminated)
+\`\`\`
+
+**Automatic registration flow:**
+1. CloudWatch detects CPU > 70% across the ASG, triggers scale-out.
+2. ASG launches a new EC2 instance from the launch template.
+3. Instance starts, application boots, begins responding on port 8080.
+4. ASG automatically registers the instance with the target group.
+5. ALB begins health checking the new instance (GET /health every 10s).
+6. After 2 consecutive healthy responses, ALB marks it healthy and starts routing traffic.
+7. Optional: slow-start mode gradually increases traffic over 30-120 seconds.
+
+**Automatic deregistration flow:**
+1. CloudWatch detects CPU < 30%, triggers scale-in.
+2. ASG selects an instance to terminate (by default, oldest launch config in the AZ with most instances).
+3. ASG deregisters the instance from the target group.
+4. ALB begins connection draining (default 300s timeout).
+5. After all in-flight requests complete (or timeout expires), the instance is terminated.
+
+**Health check integration — critical subtlety:**
+ASGs can use either EC2 health checks (is the VM running?) or ELB health checks (is the application responding?). Always enable ELB health checks on the ASG — otherwise a server whose application has crashed (but VM is still running) will never be replaced. When the ALB marks a target unhealthy AND ELB health checks are enabled on the ASG, the ASG automatically terminates and replaces that instance.
+
+**Scaling policies to know:**
+- **Target tracking**: Maintain average CPU at 60% — ASG automatically adjusts capacity.
+- **Step scaling**: Add 2 instances when CPU > 70%, add 4 when CPU > 90%.
+- **Scheduled scaling**: Scale to 10 instances every Monday 9 AM for predictable traffic patterns.
+- **Predictive scaling**: Uses ML to forecast traffic and pre-scale before spikes hit.`
         },
         {
           question: 'How do you achieve high availability for the load balancer itself?',
-          answer: `**The Problem**: Load balancer is a single point of failure!
+          answer: `**The problem:** A single load balancer is a single point of failure — if it goes down, your entire application is unreachable regardless of how many healthy backend servers you have.
 
-**Solution: Active-Passive (VRRP)**:
+**Solution 1 — Active-Passive with VRRP (on-premise):**
 \`\`\`
-┌─────────────────────────────────────┐
-│         Virtual IP: 10.0.0.100      │
-│              (Floating)             │
-└─────────────────┬───────────────────┘
+         Virtual IP: 10.0.0.100 (floating)
+              │
+  ┌───────────┴───────────┐
+  │                       │
+┌─▼─────┐           ┌────▼────┐
+│Active │ heartbeat │ Standby │
+│  LB   │◀─────────▶│   LB    │
+│ NGINX │  (VRRP)   │  NGINX  │
+└───────┘           └─────────┘
+\`\`\`
+Both LBs run keepalived, which uses VRRP (Virtual Router Redundancy Protocol) to share a floating virtual IP. The active LB holds the VIP and serves all traffic. If the standby detects missed heartbeats (typically 3 missed at 1s intervals), it claims the VIP via a gratuitous ARP broadcast. Failover completes in 1-5 seconds. Cons: the standby wastes resources sitting idle.
+
+**Solution 2 — Active-Active with DNS:**
+\`\`\`
+          DNS: lb1.example.com → 10.0.0.1
+               lb2.example.com → 10.0.0.2
+              │                │
+         ┌────▼───┐      ┌────▼───┐
+         │  LB 1  │      │  LB 2  │
+         │ Active │      │ Active │
+         └───┬────┘      └───┬────┘
+             └────────┬──────┘
+                      ▼
+                  Servers
+\`\`\`
+Both LBs handle traffic simultaneously. DNS distributes across them. Better resource utilization than active-passive. Requires shared state for sticky sessions (or externalize to Redis). If one LB fails, DNS health checks stop returning its IP.
+
+**Solution 3 — Cloud-managed LBs (production standard):**
+AWS ALB/NLB are inherently highly available — AWS deploys LB nodes across multiple Availability Zones automatically. You never manage the LB instances yourself. Under the hood, ALB is a fleet of EC2 instances behind a DNS name that scales automatically. GCP and Azure load balancers work similarly. This is why most production systems use managed load balancers — the HA problem is solved by the cloud provider. The only consideration is cross-region HA, which requires GSLB (Route 53 failover, Cloudflare Load Balancing) on top of regional LBs.`
+        },
+        {
+          question: 'What are the real-world differences between AWS ALB, NLB, and Classic Load Balancer?',
+          answer: `**Application Load Balancer (ALB) — Layer 7:**
+- Routes based on URL path (/api/*, /static/*), hostname (api.example.com vs www.example.com), HTTP headers, query strings, and source IP.
+- Supports HTTP/2, WebSocket, gRPC natively.
+- Native integration with AWS WAF, Cognito authentication, and Lambda targets.
+- Pricing: per LCU (Load Balancer Capacity Unit) — based on new connections, active connections, processed bytes, and rule evaluations.
+- Ideal for: microservices routing, container-based apps (ECS/EKS), APIs with path-based routing, any HTTP/HTTPS workload.
+
+**Network Load Balancer (NLB) — Layer 4:**
+- Routes based on IP and port only (TCP, UDP, TLS).
+- Ultra-high performance: handles millions of requests/sec with sub-millisecond latency.
+- Provides static IP addresses per AZ (critical for allowlisting, DNS caching, firewall rules).
+- Handles sudden traffic spikes without pre-warming — scales instantly at the connection level.
+- Preserves client source IP (unlike ALB which uses X-Forwarded-For header).
+- Supports TLS passthrough (backend terminates TLS) or TLS termination.
+- Ideal for: gaming servers, IoT, VoIP/SIP, TCP proxying, any non-HTTP protocol, extreme throughput requirements.
+
+**Classic Load Balancer (CLB) — Legacy:**
+- Predecessor to ALB and NLB. Supports both L4 and L7 but with limited features.
+- No path-based routing, no host-based routing, no WebSocket support, no HTTP/2.
+- AWS recommends migrating all CLBs to ALB or NLB.
+- Only reason to keep: legacy EC2-Classic instances (rare).
+
+**Decision framework:**
+\`\`\`
+Is traffic HTTP/HTTPS?
+  ├─ YES → Do you need content-based routing?
+  │    ├─ YES → ALB
+  │    └─ NO → ALB (still recommended for HTTP)
+  └─ NO → NLB
+Need static IPs?       → NLB
+Need extreme perf?     → NLB
+Need WAF integration?  → ALB
+Need gRPC?             → ALB
+Both L4 + L7?          → NLB → ALB (chain them)
+\`\`\`
+
+AWS supports chaining NLB in front of ALB — giving you static IPs (NLB) with content-based routing (ALB). This is common for enterprise setups requiring IP allowlisting.`
+        },
+        {
+          question: 'How does client-side load balancing work in service meshes and microservices?',
+          answer: `**Traditional server-side LB** places a load balancer between clients and servers — every request adds a network hop. In microservices architectures with hundreds of internal services calling each other, this hop multiplies: Service A calls B through LB, B calls C through another LB, C calls D through yet another. Each hop adds 1-5ms latency.
+
+**Client-side load balancing** embeds the routing logic directly in the calling service. The client maintains a list of available server instances (via service discovery) and chooses which one to call — eliminating the LB network hop entirely.
+
+\`\`\`
+Server-side:  Service A ──▶ LB ──▶ Service B    (extra hop)
+Client-side:  Service A ──────────▶ Service B    (direct)
                   │
-     ┌────────────┴────────────┐
-     │                         │
-┌────▼────┐               ┌────▼────┐
-│ Active  │  Heartbeat    │ Passive │
-│   LB    │◀─────────────▶│   LB    │
-│10.0.0.1 │               │10.0.0.2 │
-└─────────┘               └─────────┘
-
-- Active handles all traffic
-- Passive monitors via heartbeat
-- If Active fails, Passive takes VIP
-- Failover in < 5 seconds
+         Has local copy of
+         Service B instance list
+         from service registry
 \`\`\`
 
-**Solution: Active-Active**:
-\`\`\`
-                DNS Round Robin
-┌───────────────────┴───────────────────┐
-│                                       │
-▼                                       ▼
-┌─────────┐                       ┌─────────┐
-│   LB 1  │                       │   LB 2  │
-│ Active  │                       │ Active  │
-└────┬────┘                       └────┬────┘
-     │                                 │
-     └─────────────┬───────────────────┘
-                   ▼
-           ┌─────────────┐
-           │   Servers   │
-           └─────────────┘
+**Service discovery integration:**
+1. Service B instances register with a service registry (Consul, Eureka, Kubernetes DNS).
+2. Service A periodically fetches the list of healthy Service B instances.
+3. Service A's embedded LB picks an instance using round-robin, least-connections, or consistent hashing.
+4. The request goes directly to the chosen instance — no intermediate proxy.
 
-- Both LBs handle traffic
-- DNS distributes across LBs
-- Better utilization
-- Requires shared state for sessions
-\`\`\`
+**gRPC built-in LB:** gRPC has native client-side load balancing. The client resolves a service name to multiple addresses via DNS or a custom resolver, then applies a pick_first or round_robin policy. For advanced policies (least-request, ring-hash), gRPC supports xDS protocol integration with control planes like Istio.
 
-**Cloud Solutions**:
-- AWS: ALB/NLB are inherently HA (multi-AZ)
-- GCP: Cloud Load Balancing (global)
-- Azure: Load Balancer with availability zones`
+**Service mesh sidecar (Envoy, Linkerd):** A hybrid approach. Each service gets a co-located sidecar proxy (Envoy). Outbound traffic goes localhost:port → local Envoy → remote Envoy → remote service. The sidecar handles load balancing, retries, circuit breaking, mTLS, and observability — without any code changes to the application. Istio and Linkerd both use this model. The "extra hop" is to localhost, adding only ~0.5ms.
+
+**Trade-offs:**
+- Client-side: lowest latency, but every client must implement LB logic or use a library (gRPC, Ribbon). Updating the LB algorithm requires redeploying all clients.
+- Server-side: centralized control, simple clients, but adds a network hop per call.
+- Sidecar: best of both worlds — minimal latency, centralized control plane — but adds operational complexity (mesh deployment, sidecar resource consumption).`
         }
       ],
 
@@ -2764,31 +2943,34 @@ No server-side storage
         {
           topic: 'Algorithm Selection',
           points: [
-            'Round Robin: Default for equal servers',
-            'Least Connections: Long-running requests',
-            'IP Hash: Need session affinity without cookies',
-            'Weighted: Mixed server capacities',
-            'Random: Simple, often good enough'
+            'Round Robin: Default for equal servers, zero state needed',
+            'Least Connections: Variable-duration requests, WebSocket, gRPC streams',
+            'IP Hash: Session affinity without cookies, non-HTTP protocols',
+            'Weighted: Mixed server capacities (16-core vs 4-core)',
+            'Consistent Hashing: Distributed caches, CDN edge routing, minimal redistribution',
+            'Random Two-Choice: Near-optimal with zero coordination (Envoy default)'
           ]
         },
         {
           topic: 'Common Load Balancer Options',
           points: [
-            'NGINX: Versatile, widely used, good performance',
-            'HAProxy: High performance, feature-rich',
-            'AWS ALB/NLB: Managed, integrates with AWS',
-            'Envoy: Modern, observability-focused',
-            'Traefik: Container-native, auto-discovery'
+            'NGINX: Versatile, widely used, supports L4/L7, Plus version adds active health checks',
+            'HAProxy: High performance, battle-tested at GitHub/Stack Overflow/Reddit scale',
+            'AWS ALB: Managed L7, path/host routing, WAF integration, WebSocket/gRPC',
+            'AWS NLB: Managed L4, static IPs, millions RPS, sub-ms latency',
+            'Envoy: Modern L7, xDS API, observability-first, Istio/service mesh backbone',
+            'Traefik: Container-native, auto-discovery from Docker/K8s labels, Let\'s Encrypt built-in'
           ]
         },
         {
           topic: 'Production Considerations',
           points: [
-            'Connection draining before removing servers',
-            'Graceful degradation under load',
-            'SSL certificate management',
-            'Logging and metrics collection',
-            'Rate limiting at the load balancer'
+            'Connection draining before removing servers (30s for APIs, 300s+ for WebSocket)',
+            'Slow-start mode for newly added servers (JVM warm-up, cache priming)',
+            'SSL certificate management and auto-renewal (ACM, Let\'s Encrypt, cert-manager)',
+            'Access logging and metrics (RPS, latency p50/p95/p99, 5xx rate per target)',
+            'Rate limiting at the LB layer to protect backends from traffic spikes',
+            'Cross-zone load balancing to prevent AZ imbalance'
           ]
         }
       ],
@@ -2809,8 +2991,9 @@ No server-side storage
               { label: 'Speed', value: 'Very fast — no payload inspection' },
               { label: 'Intelligence', value: 'Low — can\'t read HTTP headers/URL' },
               { label: 'SSL', value: 'Passes through (or TCP termination)' },
-              { label: 'Use When', value: 'Raw speed, non-HTTP protocols, gaming' },
-              { label: 'Examples', value: 'AWS NLB, HAProxy TCP mode' }
+              { label: 'Connection Model', value: 'Single TCP connection — client to server' },
+              { label: 'Use When', value: 'Raw speed, non-HTTP protocols, gaming, IoT' },
+              { label: 'Examples', value: 'AWS NLB, HAProxy TCP, Google Maglev' }
             ]
           },
           right: {
@@ -2819,11 +3002,12 @@ No server-side storage
             color: '#3b82f6',
             items: [
               { label: 'Level', value: 'HTTP — routes by URL, headers, cookies' },
-              { label: 'Speed', value: 'Slower — inspects request content' },
-              { label: 'Intelligence', value: 'High — content-based routing' },
-              { label: 'SSL', value: 'Terminates SSL, can modify headers' },
-              { label: 'Use When', value: 'Web apps, A/B testing, canary deploys' },
-              { label: 'Examples', value: 'AWS ALB, Nginx, Envoy' }
+              { label: 'Speed', value: 'Slower — inspects request content (1-5ms)' },
+              { label: 'Intelligence', value: 'High — content-based routing, A/B testing' },
+              { label: 'SSL', value: 'Terminates SSL, can modify/inject headers' },
+              { label: 'Connection Model', value: 'Two TCP connections — client-LB and LB-server' },
+              { label: 'Use When', value: 'Web apps, microservices, canary deploys, WAF' },
+              { label: 'Examples', value: 'AWS ALB, NGINX, Envoy, Traefik' }
             ]
           }
         }
@@ -2841,34 +3025,46 @@ No server-side storage
             { label: 'Least Response Time', value: 'Route to fastest server', bar: 75 },
             { label: 'IP Hash', value: 'Sticky sessions by client IP', bar: 50 },
             { label: 'Consistent Hashing', value: 'Minimal redistribution on change', bar: 85 },
-            { label: 'Random', value: 'Random selection — surprisingly effective', bar: 25 }
+            { label: 'Random Two-Choice', value: 'Power of two — near-optimal, zero state', bar: 70 }
           ]
         }
       ],
       patternCards: [
         {
           id: 'health-checks', name: 'Health Checks', icon: 'heart', color: '#ef4444',
-          description: 'Periodically probe backends to remove unhealthy servers.',
-          useWhen: 'Always — essential for any load balancer',
-          example: 'HTTP GET /health every 10s, remove after 3 failures'
+          description: 'Active probes + passive traffic monitoring to detect and remove unhealthy backends.',
+          useWhen: 'Always — essential for any load balancer. Use deep checks for critical paths.',
+          example: 'HTTP GET /health every 10s, unhealthy after 3 failures, healthy after 2 passes'
         },
         {
           id: 'sticky-sessions', name: 'Sticky Sessions', icon: 'lock', color: '#f59e0b',
-          description: 'Route same client to same server (session affinity).',
-          useWhen: 'Stateful apps, WebSocket connections, file uploads',
-          example: 'Cookie-based affinity, IP hash in Nginx'
+          description: 'Route same client to same server via cookie, IP hash, or header-based affinity.',
+          useWhen: 'WebSocket, file upload chunking, legacy stateful apps. Prefer Redis sessions instead.',
+          example: 'ALB duration-based stickiness (1h cookie), NGINX ip_hash directive'
         },
         {
           id: 'global-lb', name: 'Global Load Balancing', icon: 'globe', color: '#3b82f6',
-          description: 'DNS-based routing to nearest regional data center.',
-          useWhen: 'Multi-region deployments, disaster recovery',
-          example: 'AWS Route 53 latency routing, Cloudflare Load Balancing'
+          description: 'DNS-based routing with health checks to direct users to nearest healthy data center.',
+          useWhen: 'Multi-region deployments, disaster recovery, latency-sensitive global apps',
+          example: 'Route 53 latency routing + failover, Cloudflare GSLB, Anycast'
         },
         {
           id: 'circuit-breaker-lb', name: 'Circuit Breaker', icon: 'shield', color: '#8b5cf6',
-          description: 'Stop routing to failing backends, try again after timeout.',
-          useWhen: 'Prevent cascade failures when a backend is degraded',
-          example: 'Envoy outlier detection, Istio circuit breaking'
+          description: 'Stop routing to failing backends after error threshold, retry after cooldown period.',
+          useWhen: 'Prevent cascade failures when a backend is degraded or a dependency is down',
+          example: 'Envoy outlier detection (5xx > 50% in 30s), Istio circuit breaking'
+        },
+        {
+          id: 'connection-draining', name: 'Connection Draining', icon: 'clock', color: '#14b8a6',
+          description: 'Allow in-flight requests to complete before removing a server from the pool.',
+          useWhen: 'Rolling deployments, scale-in events, server maintenance windows',
+          example: 'ALB deregistration delay 300s, NGINX graceful shutdown, K8s preStop hook'
+        },
+        {
+          id: 'ssl-termination', name: 'SSL Termination', icon: 'lock', color: '#10b981',
+          description: 'Decrypt TLS at the load balancer, forward plaintext HTTP to backends.',
+          useWhen: 'Offload crypto CPU from backends, centralize cert management, enable L7 routing',
+          example: 'ALB + ACM auto-renewal, NGINX ssl_certificate, Cloudflare edge TLS'
         }
       ],
       comparisonCards: [
@@ -2879,8 +3075,8 @@ No server-side storage
             { name: 'High Availability', description: 'Reroute traffic away from failed or unhealthy servers to healthy ones automatically. Ensures uninterrupted service even during server failures.' },
             { name: 'SSL Termination', description: 'Offload SSL/TLS encryption and decryption from backend servers, reducing their CPU workload and improving overall throughput.' },
             { name: 'Session Persistence', description: 'Ensure a user\'s requests are consistently routed to the same backend server (sticky sessions). Critical for stateful applications.' },
-            { name: 'Scalability', description: 'Seamlessly add or remove servers behind the load balancer. New instances register automatically and start receiving traffic.' },
-            { name: 'Health Monitoring', description: 'Continuously monitor backend server health via heartbeats. Automatically remove unhealthy servers and add them back when recovered.' }
+            { name: 'Scalability', description: 'Seamlessly add or remove servers behind the load balancer. New instances register automatically and start receiving traffic after passing health checks.' },
+            { name: 'Health Monitoring', description: 'Continuously monitor backend server health via active probes and passive traffic analysis. Automatically remove unhealthy servers and add them back when recovered.' }
           ]
         },
         {
@@ -2896,22 +3092,25 @@ No server-side storage
         }
       ],
       edgeCases: [
-        { scenario: 'Health check passes but service is degraded', impact: 'Load balancer routes traffic to a server returning 200 on /health but responding to real requests in 10+ seconds, causing user-facing timeouts', mitigation: 'Implement deep health checks that test downstream dependencies, use latency-based health scoring, and remove servers with high p99 latency' },
-        { scenario: 'Thundering herd after backend recovery', impact: 'All queued requests flood a recovered server simultaneously, causing it to crash again in a restart loop', mitigation: 'Use slow-start / warm-up mode that gradually increases traffic to recovered instances, implement connection draining' },
-        { scenario: 'Sticky sessions with server failure', impact: 'Server holding session state crashes, user loses session and must re-authenticate or loses in-progress work', mitigation: 'Store session state externally (Redis), use cookie-based session encoding (JWT), or replicate session data across servers' },
-        { scenario: 'Uneven load distribution with long-lived connections', impact: 'WebSocket or gRPC streaming connections stick to original servers, new servers added via auto-scaling receive no traffic', mitigation: 'Use connection-aware load balancing (least connections), implement periodic connection rebalancing, set maximum connection lifetime' },
-        { scenario: 'Single load balancer becomes a bottleneck', impact: 'All traffic funnels through one load balancer, which becomes the system throughput ceiling and single point of failure', mitigation: 'Deploy active-passive or active-active load balancer pairs, use DNS-based load balancing as the first tier, leverage cloud-native LB (ALB/NLB)' },
+        { scenario: 'Health check passes but service is degraded', impact: 'Load balancer routes traffic to a server returning 200 on /health but responding to real requests in 10+ seconds, causing user-facing timeouts', mitigation: 'Implement deep health checks that test downstream dependencies, use latency-based health scoring via passive checks, and remove servers with high p99 latency' },
+        { scenario: 'Thundering herd after backend recovery', impact: 'All queued requests flood a recovered server simultaneously, causing it to crash again in a restart loop', mitigation: 'Use slow-start / warm-up mode that gradually ramps traffic over 30-120s, combine with connection draining on the failing side' },
+        { scenario: 'Sticky sessions with server failure', impact: 'Server holding session state crashes, user loses session and must re-authenticate or loses in-progress work', mitigation: 'Store session state externally in Redis Cluster (HA), use cookie-based session encoding (JWT), or replicate session data across servers' },
+        { scenario: 'Uneven load distribution with long-lived connections', impact: 'WebSocket or gRPC streaming connections stick to original servers, new servers added via auto-scaling receive no traffic', mitigation: 'Use least-connections algorithm, implement maximum connection lifetime with graceful reconnect, set up periodic connection rebalancing (Envoy)' },
+        { scenario: 'Single load balancer becomes a bottleneck', impact: 'All traffic funnels through one load balancer, which becomes the system throughput ceiling and single point of failure', mitigation: 'Deploy active-passive or active-active LB pairs, use DNS-based load balancing as the first tier, leverage cloud-native LBs (ALB/NLB are inherently multi-AZ HA)' },
+        { scenario: 'DNS caching delays failover during regional outage', impact: 'GSLB updates DNS to remove failed region, but clients cache old IP for remaining TTL (60-300s), continuing to hit the dead data center', mitigation: 'Use low TTLs (30-60s) for GSLB records, implement client-side retry with fallback DNS resolution, or use Anycast where BGP handles failover at the network layer' },
+        { scenario: 'SSL certificate expiry on the load balancer', impact: 'All HTTPS traffic fails with certificate errors, entire site becomes unreachable even though backends are healthy', mitigation: 'Use AWS ACM for auto-renewal, set up certificate expiry monitoring alerts (30/14/7 days), implement cert-manager for Kubernetes with Let\'s Encrypt auto-renewal' },
       ],
       tradeoffs: [
-        { decision: 'Layer 4 vs Layer 7 load balancing', pros: 'L4 is faster with less overhead (operates on TCP); L7 enables content-based routing, SSL termination, and HTTP header inspection', cons: 'L4 cannot inspect HTTP content or route by URL/header; L7 adds latency from full HTTP parsing', recommendation: 'L7 for most web applications; L4 for raw TCP performance needs like gaming or database proxying' },
-        { decision: 'Hardware vs Software load balancer', pros: 'Hardware (F5) provides predictable performance with dedicated ASICs; software (Nginx, HAProxy, Envoy) is flexible, cheap, and cloud-native', cons: 'Hardware is expensive and hard to scale; software has slightly lower raw throughput per instance', recommendation: 'Software load balancers for nearly all modern applications; hardware only for extreme throughput edge cases' },
-        { decision: 'Client-side vs Server-side load balancing', pros: 'Client-side (gRPC, Ribbon) eliminates the LB hop latency; server-side (ALB, Nginx) centralizes routing logic', cons: 'Client-side requires every client to implement LB logic and service discovery; server-side adds a network hop', recommendation: 'Server-side for external traffic; client-side for internal service-to-service calls in a service mesh' },
+        { decision: 'Layer 4 vs Layer 7 load balancing', pros: 'L4 is faster with less overhead (sub-ms latency, millions of connections/sec); L7 enables content-based routing, SSL termination, HTTP header inspection, and A/B testing', cons: 'L4 cannot inspect HTTP content, route by URL/header, or terminate SSL intelligently; L7 adds 1-5ms latency from full HTTP parsing and maintains two TCP connections per request', recommendation: 'L7 (ALB/NGINX) for web applications and microservices; L4 (NLB) for non-HTTP protocols, extreme throughput, or when you need static IPs' },
+        { decision: 'Hardware vs Software load balancer', pros: 'Hardware (F5 BIG-IP) provides predictable performance with dedicated ASICs; software (NGINX, HAProxy, Envoy) is flexible, cheap, cloud-native, and can run anywhere', cons: 'Hardware is expensive ($50K-$500K), hard to scale horizontally, and vendor-locked; software has slightly lower raw throughput per instance but scales out easily', recommendation: 'Software load balancers for nearly all modern applications; managed cloud LBs (ALB/NLB) when you want zero operational overhead' },
+        { decision: 'Client-side vs Server-side load balancing', pros: 'Client-side (gRPC, Ribbon, Envoy sidecar) eliminates the LB network hop latency; server-side (ALB, NGINX) centralizes routing logic and simplifies clients', cons: 'Client-side requires every client to implement LB logic and service discovery, algorithm updates need client redeployment; server-side adds a network hop per call', recommendation: 'Server-side for external/edge traffic; client-side or sidecar proxy for internal service-to-service calls in a service mesh' },
+        { decision: 'Sticky sessions vs Stateless servers', pros: 'Sticky sessions are simple to implement and work with legacy stateful apps; stateless servers with external session store (Redis) allow perfect load distribution and instant failover', cons: 'Sticky sessions cause uneven load and session loss on server failure; external session stores add a Redis dependency and ~1ms latency per session read', recommendation: 'Stateless servers with Redis for session storage in all new architectures; sticky sessions only for legacy apps that cannot be refactored' },
       ],
       layeredDesign: [
-        { name: 'Global / DNS Layer', purpose: 'Route users to the nearest regional data center using DNS-based load balancing', components: ['GeoDNS (Route 53)', 'Anycast', 'Multi-Region Failover', 'Health-Based DNS Routing'] },
-        { name: 'Edge / L4 Layer', purpose: 'Handle TCP-level traffic distribution with minimal latency overhead', components: ['Network Load Balancer (NLB)', 'TCP Connection Routing', 'TLS Passthrough', 'DDoS Protection'] },
-        { name: 'Application / L7 Layer', purpose: 'Route HTTP requests based on content, headers, and URL patterns', components: ['Application Load Balancer (ALB)', 'URL-Based Routing', 'SSL Termination', 'Header Inspection', 'WebSocket Support'] },
-        { name: 'Service Mesh Layer', purpose: 'Handle service-to-service load balancing within the cluster', components: ['Envoy Sidecar Proxy', 'Client-Side LB (gRPC)', 'Service Discovery', 'Circuit Breaking'] },
+        { name: 'Global / DNS Layer', purpose: 'Route users to the nearest regional data center using DNS-based load balancing with health-aware failover', components: ['GeoDNS (Route 53 Latency Routing)', 'Anycast (Cloudflare)', 'GSLB Health Checks', 'Multi-Region Active-Active Failover'] },
+        { name: 'Edge / L4 Layer', purpose: 'Handle TCP-level traffic distribution with minimal latency overhead and static IP endpoints', components: ['Network Load Balancer (NLB)', 'TCP/UDP Connection Routing', 'TLS Passthrough', 'DDoS Protection (Shield)', 'Static IP per AZ'] },
+        { name: 'Application / L7 Layer', purpose: 'Route HTTP requests based on content, headers, and URL patterns with SSL termination', components: ['Application Load Balancer (ALB)', 'Path/Host-Based Routing', 'SSL Termination + ACM', 'WAF Integration', 'WebSocket/gRPC Support', 'Slow-Start Mode'] },
+        { name: 'Service Mesh Layer', purpose: 'Handle service-to-service load balancing within the cluster with observability and mTLS', components: ['Envoy Sidecar Proxy', 'Client-Side LB (gRPC xDS)', 'Service Discovery (Consul/Eureka/K8s)', 'Circuit Breaking', 'Connection Rebalancing'] },
       ]
     },
     {
