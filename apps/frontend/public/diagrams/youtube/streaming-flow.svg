@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgSF" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#991b1b"/></linearGradient>
+    <marker id="aS" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="white"/></marker>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bgSF)" rx="16"/>
+  <text x="600" y="35" text-anchor="middle" fill="white" font-size="20" font-weight="800">Adaptive Bitrate Streaming — Playback Flow</text>
+
+  <!-- Viewer -->
+  <rect x="30" y="70" width="140" height="100" rx="12" fill="#f97316" stroke="white" stroke-width="2"/>
+  <text x="100" y="100" text-anchor="middle" fill="white" font-size="24">👁</text>
+  <text x="100" y="125" text-anchor="middle" fill="white" font-size="12" font-weight="800">Viewer</text>
+  <text x="100" y="142" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Phone / TV / Desktop</text>
+  <text x="100" y="158" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="600">ABR Player</text>
+
+  <line x1="170" y1="120" x2="215" y2="120" stroke="#fbbf24" stroke-width="2" marker-end="url(#aS)"/>
+
+  <!-- Step 1: Request Manifest -->
+  <rect x="220" y="75" width="160" height="90" rx="10" fill="#3b82f6" stroke="white" stroke-width="1.5"/>
+  <text x="300" y="100" text-anchor="middle" fill="white" font-size="11" font-weight="700">📋 Request Manifest</text>
+  <text x="300" y="118" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">GET /video/{id}/manifest</text>
+  <text x="300" y="135" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Returns HLS (M3U8) or</text>
+  <text x="300" y="150" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">DASH (MPD) file</text>
+
+  <line x1="380" y1="120" x2="420" y2="120" stroke="#fbbf24" stroke-width="2" marker-end="url(#aS)"/>
+
+  <!-- Manifest contents -->
+  <rect x="425" y="65" width="200" height="110" rx="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)"/>
+  <text x="525" y="88" text-anchor="middle" fill="white" font-size="11" font-weight="700">Manifest Contents</text>
+  <rect x="440" y="96" width="80" height="18" rx="3" fill="#22c55e"/>
+  <text x="480" y="110" text-anchor="middle" fill="white" font-size="8" font-weight="600">360p @ 0.5M</text>
+  <rect x="525" y="96" width="85" height="18" rx="3" fill="#22c55e"/>
+  <text x="567" y="110" text-anchor="middle" fill="white" font-size="8" font-weight="600">720p @ 2.5M</text>
+  <rect x="440" y="118" width="85" height="18" rx="3" fill="#3b82f6"/>
+  <text x="482" y="132" text-anchor="middle" fill="white" font-size="8" font-weight="600">1080p @ 5M</text>
+  <rect x="530" y="118" width="80" height="18" rx="3" fill="#a855f7"/>
+  <text x="570" y="132" text-anchor="middle" fill="white" font-size="8" font-weight="600">4K @ 20M</text>
+  <text x="525" y="158" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">Each quality: list of 4s segment URLs</text>
+
+  <!-- ABR Decision -->
+  <line x1="525" y1="175" x2="525" y2="210" stroke="#fbbf24" stroke-width="2" marker-end="url(#aS)"/>
+
+  <rect x="425" y="215" width="200" height="120" rx="12" fill="#ec4899" stroke="white" stroke-width="2"/>
+  <text x="525" y="240" text-anchor="middle" fill="white" font-size="12" font-weight="800">🧠 ABR Algorithm</text>
+  <text x="525" y="260" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Measure bandwidth</text>
+  <text x="525" y="278" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Check buffer health</text>
+  <text x="525" y="296" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Select quality level</text>
+  <text x="525" y="318" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="700">Hysteresis prevents oscillation</text>
+
+  <!-- CDN Request -->
+  <line x1="625" y1="275" x2="680" y2="275" stroke="#fbbf24" stroke-width="2" marker-end="url(#aS)"/>
+
+  <!-- CDN Tiers -->
+  <rect x="685" y="200" width="170" height="155" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(34,197,94,0.4)"/>
+  <text x="770" y="225" text-anchor="middle" fill="#4ade80" font-size="12" font-weight="700">🌐 CDN Delivery</text>
+
+  <rect x="700" y="238" width="140" height="28" rx="5" fill="#22c55e"/>
+  <text x="770" y="257" text-anchor="middle" fill="white" font-size="9" font-weight="600">Edge PoP (nearest ISP)</text>
+
+  <text x="770" y="280" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">cache hit? ↓ if miss</text>
+
+  <rect x="700" y="288" width="140" height="28" rx="5" fill="#3b82f6"/>
+  <text x="770" y="307" text-anchor="middle" fill="white" font-size="9" font-weight="600">Regional PoP</text>
+
+  <text x="770" y="325" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">cache hit? ↓ if miss</text>
+
+  <rect x="700" y="330" width="140" height="22" rx="5" fill="#64748b"/>
+  <text x="770" y="346" text-anchor="middle" fill="white" font-size="9" font-weight="600">Origin DC</text>
+
+  <!-- Playback Quality Timeline -->
+  <rect x="30" y="200" width="370" height="190" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+  <text x="215" y="225" text-anchor="middle" fill="white" font-size="13" font-weight="700">▶️ Playback Quality Timeline</text>
+
+  <!-- Timeline visualization -->
+  <line x1="50" y1="260" x2="380" y2="260" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <rect x="50" y="245" width="60" height="30" rx="4" fill="#22c55e"/>
+  <text x="80" y="264" text-anchor="middle" fill="white" font-size="8" font-weight="600">360p</text>
+  <text x="80" y="290" fill="rgba(255,255,255,0.5)" font-size="8">0-2s</text>
+
+  <rect x="115" y="240" width="70" height="35" rx="4" fill="#3b82f6"/>
+  <text x="150" y="262" text-anchor="middle" fill="white" font-size="8" font-weight="600">720p</text>
+  <text x="150" y="290" fill="rgba(255,255,255,0.5)" font-size="8">2-6s</text>
+
+  <rect x="190" y="235" width="90" height="40" rx="4" fill="#a855f7"/>
+  <text x="235" y="260" text-anchor="middle" fill="white" font-size="9" font-weight="600">1080p</text>
+  <text x="235" y="290" fill="rgba(255,255,255,0.5)" font-size="8">6s+</text>
+
+  <rect x="285" y="230" width="95" height="45" rx="4" fill="#ec4899"/>
+  <text x="332" y="258" text-anchor="middle" fill="white" font-size="9" font-weight="600">4K (if BW ok)</text>
+  <text x="332" y="290" fill="rgba(255,255,255,0.5)" font-size="8">stable</text>
+
+  <text x="50" y="240" fill="#fbbf24" font-size="8" font-weight="700">Start low</text>
+  <text x="285" y="225" fill="#fbbf24" font-size="8" font-weight="700">Ramp up ↗</text>
+
+  <text x="215" y="325" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">Start playback in &lt;200ms with low quality, ramp up as bandwidth confirms</text>
+  <text x="215" y="340" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">Buffer 15+ seconds ahead • Prefetch next video in autoplay queue</text>
+
+  <!-- Stats -->
+  <rect x="880" y="70" width="290" height="120" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+  <text x="1025" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="700">📊 Streaming Stats</text>
+  <text x="905" y="118" fill="rgba(255,255,255,0.7)" font-size="11">Start playback:</text>
+  <text x="1100" y="118" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">&lt;200ms</text>
+  <text x="905" y="138" fill="rgba(255,255,255,0.7)" font-size="11">Rebuffer rate target:</text>
+  <text x="1100" y="138" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">&lt;1%</text>
+  <text x="905" y="158" fill="rgba(255,255,255,0.7)" font-size="11">CDN cache hit rate:</text>
+  <text x="1100" y="158" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">95%+</text>
+  <text x="905" y="178" fill="rgba(255,255,255,0.7)" font-size="11">Peak bandwidth:</text>
+  <text x="1100" y="178" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">175 Tbps</text>
+
+  <!-- Analytics -->
+  <rect x="880" y="200" width="290" height="80" rx="10" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.4)"/>
+  <text x="1025" y="225" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="700">📈 Analytics Events (async to Kafka)</text>
+  <text x="905" y="248" fill="rgba(255,255,255,0.6)" font-size="9">• View start, 25/50/75/100% completion</text>
+  <text x="905" y="264" fill="rgba(255,255,255,0.6)" font-size="9">• Quality changes, rebuffers, errors</text>
+</svg>
