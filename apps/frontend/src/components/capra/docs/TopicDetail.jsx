@@ -603,21 +603,48 @@ export default function TopicDetail({
 
     if (topicDetails.introduction) s.push({ id: 'overview', label: 'Overview' });
 
-    // ── System Design ──
+    // ── System Design — ordered by interview priority ──
     if (isSDStyle || activePage === 'low-level') {
-      if (topicDetails.concepts?.length) s.push({ id: 'concepts', label: 'Key Concepts', children: topicDetails.concepts.slice(0, 6).map(c => typeof c === 'string' ? trunc(c) : trunc(c.name)) });
+      // 1. Requirements
       if (topicDetails.functionalRequirements || topicDetails.requirements) {
         const children = [];
         if (topicDetails.functionalRequirements) children.push('Functional Requirements');
         if (topicDetails.nonFunctionalRequirements) children.push('Non-Functional Requirements');
         s.push({ id: 'requirements', label: 'Requirements', children });
       }
+      // 2. Capacity
       if (topicDetails.estimation) s.push({ id: 'capacity', label: 'Capacity Planning' });
+      // 3. Architecture
       if (isSDStyle) s.push({ id: 'architecture', label: 'Architecture Diagram' });
+      // 4. System Flows
+      if (topicDetails.createFlow || topicDetails.redirectFlow) {
+        const children = [];
+        if (topicDetails.createFlow) children.push(trunc(topicDetails.createFlow.title));
+        if (topicDetails.redirectFlow) children.push(trunc(topicDetails.redirectFlow.title));
+        s.push({ id: 'flows', label: 'System Flows', children });
+      }
+      // 5. API Design
+      if (topicDetails.apiDesign?.endpoints) s.push({ id: 'api-design', label: 'API Design', children: topicDetails.apiDesign.endpoints.slice(0, 5).map(e => trunc(`${e.method} ${e.path}`, 28)) });
+      // 6. Data Model
+      if (topicDetails.dataModel) s.push({ id: 'data-model', label: 'Data Model' });
+      // 7. Key Concepts (if present)
+      if (topicDetails.concepts?.length) s.push({ id: 'concepts', label: 'Key Concepts', children: topicDetails.concepts.slice(0, 6).map(c => typeof c === 'string' ? trunc(c) : trunc(c.name)) });
+      // 8. Deep Dives
+      if (topicDetails.deepDiveTopics) s.push({ id: 'deep-dive', label: 'Deep Dives', children: topicDetails.deepDiveTopics.slice(0, 6).map(d => trunc(d.topic, 30)) });
+      // 9. Architecture Layers
       if (topicDetails.architectureLayers) s.push({ id: 'arch-layers', label: 'Architecture Layers', children: topicDetails.architectureLayers.slice(0, 5).map(l => trunc(l.name)) });
       if (topicDetails.layeredDesign) s.push({ id: 'layered-design', label: 'Layered Design', children: topicDetails.layeredDesign.slice(0, 5).map(l => trunc(l.name)) });
-      if (topicDetails.apiDesign?.endpoints) s.push({ id: 'api-design', label: 'API Design', children: topicDetails.apiDesign.endpoints.slice(0, 5).map(e => trunc(`${e.method} ${e.path}`, 28)) });
-      if (topicDetails.dataModel) s.push({ id: 'data-model', label: 'Data Model' });
+      // 10. Trade-offs
+      if (topicDetails.tradeoffDecisions || topicDetails.tradeoffs) {
+        const items = topicDetails.tradeoffDecisions || topicDetails.tradeoffs || [];
+        s.push({ id: 'tradeoffs', label: 'Trade-offs', children: items.slice(0, 5).map(t => trunc(t.choice || t.decision, 30)) });
+      }
+      // 11. Edge Cases
+      if (topicDetails.edgeCases) s.push({ id: 'edge-cases', label: 'Edge Cases', children: topicDetails.edgeCases.slice(0, 5).map(e => trunc(e.scenario, 30)) });
+      // 12. Discussion + Follow-ups
+      if (topicDetails.discussionPoints) s.push({ id: 'discussion', label: 'Discussion Points', children: topicDetails.discussionPoints.slice(0, 5).map(d => trunc(d.topic, 30)) });
+      if (topicDetails.interviewFollowups) s.push({ id: 'followups', label: 'Follow-up Questions', children: topicDetails.interviewFollowups.slice(0, 5).map(f => trunc(f.question, 30)) });
+      // 13. Implementation
       if (topicDetails.basicImplementation || topicDetails.advancedImplementation) {
         const children = [];
         if (topicDetails.basicImplementation) children.push(trunc(topicDetails.basicImplementation.title || 'Basic Approach'));
@@ -625,20 +652,7 @@ export default function TopicDetail({
         if (topicDetails.algorithmApproaches) topicDetails.algorithmApproaches.slice(0, 3).forEach(a => children.push(trunc(a.name)));
         s.push({ id: 'implementation', label: 'Implementation', children });
       }
-      if (topicDetails.createFlow || topicDetails.redirectFlow) {
-        const children = [];
-        if (topicDetails.createFlow) children.push(trunc(topicDetails.createFlow.title));
-        if (topicDetails.redirectFlow) children.push(trunc(topicDetails.redirectFlow.title));
-        s.push({ id: 'flows', label: 'System Flows', children });
-      }
-      if (topicDetails.deepDiveTopics) s.push({ id: 'deep-dive', label: 'Potential Deep Dives', children: topicDetails.deepDiveTopics.slice(0, 6).map(d => trunc(d.topic, 30)) });
-      if (topicDetails.tradeoffDecisions || topicDetails.tradeoffs) {
-        const items = topicDetails.tradeoffDecisions || topicDetails.tradeoffs || [];
-        s.push({ id: 'tradeoffs', label: 'Trade-offs', children: items.slice(0, 5).map(t => trunc(t.choice || t.decision, 30)) });
-      }
-      if (topicDetails.edgeCases) s.push({ id: 'edge-cases', label: 'Edge Cases', children: topicDetails.edgeCases.slice(0, 5).map(e => trunc(e.scenario, 30)) });
-      if (topicDetails.discussionPoints) s.push({ id: 'discussion', label: 'Discussion Points', children: topicDetails.discussionPoints.slice(0, 5).map(d => trunc(d.topic, 30)) });
-      if (topicDetails.interviewFollowups) s.push({ id: 'followups', label: 'Follow-up Questions', children: topicDetails.interviewFollowups.slice(0, 5).map(f => trunc(f.question, 30)) });
+      // 14. Code, Questions, Tips
       if (topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples)) s.push({ id: 'code-examples', label: 'Implementation Code' });
       if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Questions', children: topicDetails.keyQuestions.slice(0, 5).map(q => trunc(q.question, 30)) });
       if (topicDetails.tips) s.push({ id: 'tips', label: 'Interview Tips' });
@@ -2128,75 +2142,7 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 7. Architecture Layers + Layered Design */}
-              {topicDetails.architectureLayers && (
-                <div id="arch-layers" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="layers" size={16} className="text-white" />
-                    <h3 className="text-[15px] font-bold text-white landing-display">Architecture Layers</h3>
-                  </div>
-                  <div className="p-3 space-y-1.5">
-                    {topicDetails.architectureLayers.map((layer, i) => (
-                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
-                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
-                        <div>
-                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
-                          <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
-                            <FormattedContent content={layer.description} color="blue" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {topicDetails.layeredDesign && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="layers" size={14} className="text-white" />
-                    <h3 className="text-[15px] font-bold text-white landing-display">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
-                  </div>
-                  <div className="p-2.5 space-y-0">
-                    {topicDetails.layeredDesign.map((layer, i) => {
-                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#60A5FA', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#2D8CFF'];
-                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
-                      return (
-                        <div key={i} className="relative">
-                          {i > 0 && (
-                            <div className="flex justify-center -my-1 z-10 relative">
-                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                            </div>
-                          )}
-                          <div className="rounded-xl border border-[var(--border)] bg-white hover:border-[var(--border)] transition-all overflow-hidden">
-                            <div className="px-4 py-3">
-                              <div className="flex items-center gap-2.5 mb-1.5">
-                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>
-                                  L{i + 1}
-                                </span>
-                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
-                              </div>
-                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
-                              {layer.components && (
-                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
-                                  {layer.components.map((comp, j) => (
-                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>
-                                      {comp}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 7. API Design + Data Model — stacked vertically */}
+              {/* 7. API Design + Data Model — right after flows */}
               {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
                 <div className="space-y-3 scroll-mt-24">
                   {/* API Design — Stripe-style endpoint cards */}
@@ -2337,6 +2283,70 @@ export default function TopicDetail({
                   )}
                 </div>
               ) : null}
+
+              {/* Architecture Layers + Layered Design — after deep dives */}
+              {topicDetails.architectureLayers && (
+                <div id="arch-layers" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={16} className="text-white" />
+                    <h3 className="text-[15px] font-bold text-white landing-display">Architecture Layers</h3>
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    {topicDetails.architectureLayers.map((layer, i) => (
+                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
+                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
+                        <div>
+                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
+                          <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
+                            <FormattedContent content={layer.description} color="blue" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {topicDetails.layeredDesign && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={14} className="text-white" />
+                    <h3 className="text-[15px] font-bold text-white landing-display">Layered Design</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                  </div>
+                  <div className="p-2.5 space-y-0">
+                    {topicDetails.layeredDesign.map((layer, i) => {
+                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#60A5FA', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#2D8CFF'];
+                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
+                      return (
+                        <div key={i} className="relative">
+                          {i > 0 && (
+                            <div className="flex justify-center -my-1 z-10 relative">
+                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </div>
+                          )}
+                          <div className="rounded-xl border border-[var(--border)] bg-white transition-all overflow-hidden">
+                            <div className="px-4 py-3">
+                              <div className="flex items-center gap-2.5 mb-1.5">
+                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>L{i + 1}</span>
+                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
+                              </div>
+                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
+                              {layer.components && (
+                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
+                                  {layer.components.map((comp, j) => (
+                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>{comp}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* 11. Visual Assets — comparisons, cheat sheets, charts, evolution */}
               {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
