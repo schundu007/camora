@@ -322,12 +322,12 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
         />
         {!expanded && (
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(transparent, white)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to expand ↓</span>
+            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'white', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to expand ↓</span>
           </div>
         )}
         {expanded && (
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to collapse ↑</span>
+            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'white', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to collapse ↑</span>
           </div>
         )}
       </div>
@@ -501,39 +501,16 @@ export default function TopicDetail({
 
   return (
     <div className="landing-root animate-fade-in">
-      {/* Breadcrumb navigation */}
-      <div className="flex items-center gap-1.5 mb-3 text-sm landing-body flex-wrap">
-        <button onClick={() => setSelectedTopic(null)} className="text-[var(--accent)] hover:text-[var(--accent)] font-medium transition-colors">
-          {pageConfig.title}
-        </button>
-        <Icon name="chevronRight" size={12} className="text-gray-300" />
-        <span className="text-[var(--text-primary)] font-semibold truncate max-w-[300px]">{topicDetails.title}</span>
-        {currentIndex >= 0 && filteredTopics && (
-          <span className="text-[var(--text-muted)] text-xs ml-1">({currentIndex + 1} of {filteredTopics.length})</span>
-        )}
-        {/* Quick prev/next in breadcrumb */}
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            onClick={() => prevTopic && setSelectedTopic(prevTopic.id)}
-            disabled={!prevTopic}
-            className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title={prevTopic ? `Previous: ${prevTopic.title}` : 'No previous topic'}
-          >
-            <Icon name="chevronLeft" size={16} />
-          </button>
-          <button
-            onClick={() => nextTopic && setSelectedTopic(nextTopic.id)}
-            disabled={!nextTopic}
-            className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title={nextTopic ? `Next: ${nextTopic.title}` : 'No next topic'}
-          >
-            <Icon name="chevronRight" size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Topic Header - Clean minimal design */}
+      {/* Topic Header — no duplicate breadcrumb */}
       <div className="rounded-xl p-3 mb-3 border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={() => setSelectedTopic(null)} className="text-xs text-[var(--accent)] font-medium transition-colors">← Back to {pageConfig.title}</button>
+          <div className="flex items-center gap-1">
+            {currentIndex >= 0 && filteredTopics && <span className="text-[var(--text-muted)] text-[10px] mr-2" style={{ fontFamily: 'var(--font-mono)' }}>{currentIndex + 1}/{filteredTopics.length}</span>}
+            <button onClick={() => prevTopic && setSelectedTopic(prevTopic.id)} disabled={!prevTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronLeft" size={16} /></button>
+            <button onClick={() => nextTopic && setSelectedTopic(nextTopic.id)} disabled={!nextTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronRight" size={16} /></button>
+          </div>
+        </div>
         <div className="flex items-start gap-2">
           {getCompanyLogoSrc(selectedTopic) ? (
             <CompanyLogo topicId={selectedTopic} size={48} />
@@ -610,7 +587,7 @@ export default function TopicDetail({
       </div>
 
       {/* ── Interactive Toolbar with Progress ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 rounded-lg mb-2 bg-[var(--bg-elevated)] border border-[var(--border)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 rounded-lg mb-2 bg-white border border-[var(--border)]">
         <div className="flex items-center gap-2">
           {/* Progress */}
           {progressInfo && (
@@ -1694,7 +1671,7 @@ export default function TopicDetail({
                       <div className="p-3">
                         <div className="grid grid-cols-1 gap-2">
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
-                            <div key={i} className="rounded-xl p-3.5 bg-white border border-[var(--border)] hover:shadow-md hover:border-[var(--border-hover,var(--border))] hover:-translate-y-0.5 transition-all">
+                            <div key={i} className="rounded-xl p-3.5 border border-[var(--border)] hover:shadow-md hover:border-[var(--border-hover,var(--border))] hover:-translate-y-0.5 transition-all">
                               <div className="flex items-center gap-2.5 mb-2">
                                 <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
                                   endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20' :
