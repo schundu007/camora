@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="350" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Block-Level Sync — Edit 1 Paragraph in 100MB Doc, Transfer 4MB</text>
+
+  <!-- Before edit -->
+  <rect x="20" y="50" width="370" height="130" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="20" y="50" width="370" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="205" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">Before Edit — 100MB file (25 blocks × 4MB)</text>
+
+  <rect x="35" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="50" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B1</text>
+  <rect x="68" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="83" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B2</text>
+  <rect x="101" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="116" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B3</text>
+  <rect x="134" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="149" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B4</text>
+  <rect x="167" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="182" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B5</text>
+  <text x="210" y="110" fill="#64748b" font-size="10">...</text>
+  <rect x="230" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="245" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B24</text>
+  <rect x="263" y="90" width="30" height="30" rx="3" fill="#94a3b8"/>
+  <text x="278" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B25</text>
+
+  <text x="35" y="150" fill="#64748b" font-size="9">All blocks hashed: h1, h2, h3, h4, h5, ..., h24, h25</text>
+  <text x="35" y="168" fill="#64748b" font-size="9">All hashes exist on server ✓</text>
+
+  <!-- After edit -->
+  <rect x="410" y="50" width="370" height="130" rx="10" fill="#fff" stroke="#f97316" stroke-width="1.5"/>
+  <rect x="410" y="50" width="370" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="595" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">After Edit — User changes paragraph in block 7</text>
+
+  <rect x="425" y="90" width="30" height="30" rx="3" fill="#22c55e"/>
+  <text x="440" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B1</text>
+  <rect x="458" y="90" width="30" height="30" rx="3" fill="#22c55e"/>
+  <text x="473" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B2</text>
+  <text x="500" y="110" fill="#64748b" font-size="10">...</text>
+  <rect x="515" y="90" width="30" height="30" rx="3" fill="#22c55e"/>
+  <text x="530" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B6</text>
+  <rect x="548" y="85" width="35" height="38" rx="3" fill="#ef4444" stroke="#ef4444" stroke-width="2"/>
+  <text x="565" y="107" text-anchor="middle" fill="white" font-size="8" font-weight="800">B7*</text>
+  <rect x="586" y="90" width="30" height="30" rx="3" fill="#22c55e"/>
+  <text x="601" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B8</text>
+  <text x="625" y="110" fill="#64748b" font-size="10">...</text>
+  <rect x="645" y="90" width="30" height="30" rx="3" fill="#22c55e"/>
+  <text x="660" y="110" text-anchor="middle" fill="white" font-size="7" font-weight="600">B25</text>
+
+  <text x="425" y="148" fill="#22c55e" font-size="9" font-weight="600">✓ 24 blocks unchanged — hashes match server</text>
+  <text x="425" y="165" fill="#ef4444" font-size="9" font-weight="600">★ 1 block changed — new hash, upload needed</text>
+
+  <!-- Comparison -->
+  <rect x="20" y="200" width="370" height="130" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="200" width="370" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="205" y="219" text-anchor="middle" fill="white" font-size="12" font-weight="700">❌ Without Block Sync (File-Level)</text>
+
+  <text x="40" y="250" fill="#1e293b" font-size="11">Upload entire 100MB file</text>
+  <rect x="40" y="260" width="340" height="20" rx="4" fill="#ef4444"/>
+  <text x="210" y="275" text-anchor="middle" fill="white" font-size="9" font-weight="600">100 MB transferred</text>
+  <text x="40" y="305" fill="#ef4444" font-size="10" font-weight="700">Wasted bandwidth: 100MB on every small edit</text>
+  <text x="40" y="322" fill="#64748b" font-size="9">Slow on mobile, expensive for metered connections</text>
+
+  <rect x="410" y="200" width="370" height="130" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="410" y="200" width="370" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="595" y="219" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ With Block Sync (Dropbox)</text>
+
+  <text x="430" y="250" fill="#1e293b" font-size="11">Upload only changed block (B7*)</text>
+  <rect x="430" y="260" width="14" height="20" rx="4" fill="#22c55e"/>
+  <text x="450" y="275" fill="#22c55e" font-size="9" font-weight="600">4 MB transferred</text>
+  <text x="430" y="305" fill="#22c55e" font-size="10" font-weight="700">96% bandwidth savings!</text>
+  <text x="430" y="322" fill="#64748b" font-size="9">Near-instant sync even on slow connections</text>
+</svg>

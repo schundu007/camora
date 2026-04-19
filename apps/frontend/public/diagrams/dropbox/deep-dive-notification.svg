@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="320" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Long Polling Notification — Near-Instant Sync Without WebSocket</text>
+
+  <!-- Timeline -->
+  <rect x="20" y="48" width="760" height="240" rx="10" fill="#fff" stroke="#e2e8f0"/>
+
+  <!-- Device label -->
+  <rect x="30" y="65" width="80" height="22" rx="4" fill="#2563eb"/>
+  <text x="70" y="80" text-anchor="middle" fill="white" font-size="9" font-weight="600">Device B</text>
+
+  <!-- Server label -->
+  <rect x="30" y="160" width="80" height="22" rx="4" fill="#7c3aed"/>
+  <text x="70" y="175" text-anchor="middle" fill="white" font-size="9" font-weight="600">Server</text>
+
+  <!-- Connection 1: Open (no changes) -->
+  <line x1="130" y1="76" x2="130" y2="170" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="140" y="100" fill="#3b82f6" font-size="7">GET /sync?cursor=X</text>
+  <text x="140" y="115" fill="#3b82f6" font-size="7">(connection held open)</text>
+
+  <!-- Wait 90s -->
+  <rect x="135" y="125" width="60" height="35" rx="4" fill="rgba(148,163,184,0.15)" stroke="#94a3b8" stroke-dasharray="3,3"/>
+  <text x="165" y="145" text-anchor="middle" fill="#94a3b8" font-size="8">Wait...</text>
+  <text x="165" y="158" text-anchor="middle" fill="#94a3b8" font-size="7">90s timeout</text>
+
+  <!-- Timeout response -->
+  <line x1="200" y1="170" x2="200" y2="76" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="210" y="145" fill="#94a3b8" font-size="7">204 No Changes</text>
+
+  <!-- Connection 2: Open (change happens!) -->
+  <line x1="250" y1="76" x2="250" y2="170" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="260" y="100" fill="#3b82f6" font-size="7">GET /sync?cursor=X</text>
+  <text x="260" y="115" fill="#3b82f6" font-size="7">(holding...)</text>
+
+  <!-- File change event -->
+  <rect x="350" y="195" width="130" height="30" rx="6" fill="#f97316"/>
+  <text x="415" y="215" text-anchor="middle" fill="white" font-size="9" font-weight="600">📝 File Changed!</text>
+  <text x="415" y="235" fill="#f97316" font-size="8" font-weight="600">Device A edits report.docx</text>
+
+  <!-- Immediate response -->
+  <line x1="350" y1="170" x2="350" y2="76" stroke="#22c55e" stroke-width="2" marker-end="url(#a)"/>
+  <text x="360" y="120" fill="#22c55e" font-size="8" font-weight="600">INSTANT response!</text>
+  <text x="360" y="135" fill="#22c55e" font-size="7">200 { changes, newCursor }</text>
+  <text x="360" y="150" fill="#64748b" font-size="7">(held only 5 seconds)</text>
+
+  <!-- Device B fetches -->
+  <rect x="490" y="60" width="140" height="50" rx="6" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <text x="560" y="78" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">Device B syncs</text>
+  <text x="560" y="93" text-anchor="middle" fill="#64748b" font-size="8">Fetch changed blocks</text>
+  <text x="560" y="106" text-anchor="middle" fill="#64748b" font-size="8">Update local files</text>
+
+  <!-- Connection 3 -->
+  <line x1="650" y1="76" x2="650" y2="170" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="660" y="100" fill="#3b82f6" font-size="7">GET /sync?cursor=Y</text>
+  <text x="660" y="115" fill="#3b82f6" font-size="7">(new cursor)</text>
+
+  <!-- Comparison -->
+  <rect x="20" y="293" width="760" height="22" rx="6" fill="rgba(34,197,94,0.08)"/>
+  <text x="400" y="308" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">Long polling: <1 second latency • Firewall-friendly (standard HTTP) • Low server load (no wasted requests) • Scales to 200M connections</text>
+</svg>

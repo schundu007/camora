@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="400" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Block-Level Sync with Content-Addressed Deduplication</text>
+
+  <!-- Device A (sender) -->
+  <rect x="20" y="55" width="180" height="160" rx="10" fill="#fff" stroke="#0061ff" stroke-width="1.5"/>
+  <rect x="20" y="55" width="180" height="28" rx="10 10 0 0" fill="#0061ff"/>
+  <text x="110" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="700">💻 Device A (Sender)</text>
+
+  <text x="35" y="100" fill="#1e293b" font-size="9" font-weight="600">1. File watcher detects change</text>
+  <text x="35" y="120" fill="#1e293b" font-size="9" font-weight="600">2. Split into 4MB blocks</text>
+  <text x="35" y="140" fill="#1e293b" font-size="9" font-weight="600">3. SHA-256 hash each block</text>
+
+  <rect x="35" y="155" width="50" height="22" rx="4" fill="#22c55e"/>
+  <text x="60" y="170" text-anchor="middle" fill="white" font-size="7" font-weight="600">Block A</text>
+  <rect x="90" y="155" width="50" height="22" rx="4" fill="#f97316"/>
+  <text x="115" y="170" text-anchor="middle" fill="white" font-size="7" font-weight="600">Block B*</text>
+  <rect x="145" y="155" width="50" height="22" rx="4" fill="#22c55e"/>
+  <text x="170" y="170" text-anchor="middle" fill="white" font-size="7" font-weight="600">Block C</text>
+
+  <text x="35" y="198" fill="#22c55e" font-size="8" font-weight="600">✓ Unchanged</text>
+  <text x="90" y="198" fill="#f97316" font-size="8" font-weight="600">★ Changed!</text>
+
+  <text x="35" y="212" fill="#64748b" font-size="8">4. Send hashes → server</text>
+
+  <!-- Server -->
+  <rect x="270" y="45" width="260" height="180" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="270" y="45" width="260" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="400" y="64" text-anchor="middle" fill="white" font-size="11" font-weight="700">☁️ Dropbox Server</text>
+
+  <text x="285" y="95" fill="#1e293b" font-size="9" font-weight="600">5. Check block index:</text>
+
+  <rect x="290" y="105" width="225" height="22" rx="4" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <text x="402" y="120" text-anchor="middle" fill="#16a34a" font-size="8" font-weight="600">Block A: hash exists → skip upload ✓</text>
+
+  <rect x="290" y="132" width="225" height="22" rx="4" fill="rgba(249,115,22,0.15)" stroke="#f97316"/>
+  <text x="402" y="147" text-anchor="middle" fill="#ea580c" font-size="8" font-weight="600">Block B*: hash NOT found → upload needed ★</text>
+
+  <rect x="290" y="159" width="225" height="22" rx="4" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <text x="402" y="174" text-anchor="middle" fill="#16a34a" font-size="8" font-weight="600">Block C: hash exists → skip upload ✓</text>
+
+  <text x="285" y="205" fill="#7c3aed" font-size="9" font-weight="700">Result: upload 1 block instead of 3!</text>
+  <text x="285" y="220" fill="#64748b" font-size="8">Bandwidth saved: 67%</text>
+
+  <!-- Arrows -->
+  <line x1="200" y1="130" x2="266" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="230" y="124" fill="#64748b" font-size="7">hashes</text>
+
+  <!-- Block Store -->
+  <rect x="600" y="55" width="180" height="120" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="600" y="55" width="180" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="690" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="700">🧱 Block Store (S3)</text>
+
+  <text x="615" y="100" fill="#1e293b" font-size="9">Content-addressed storage</text>
+  <text x="615" y="118" fill="#1e293b" font-size="9">Key = SHA-256 hash</text>
+  <text x="615" y="136" fill="#1e293b" font-size="9">Value = 4MB block data</text>
+  <text x="615" y="158" fill="#ef4444" font-size="9" font-weight="700">Same block stored ONCE</text>
+  <text x="615" y="172" fill="#64748b" font-size="8">regardless of how many users</text>
+
+  <line x1="530" y1="140" x2="596" y2="110" stroke="#f97316" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="555" y="118" fill="#f97316" font-size="7" font-weight="600">upload B*</text>
+
+  <!-- Notification + Device B -->
+  <rect x="270" y="245" width="260" height="50" rx="8" fill="#6366f1"/>
+  <text x="400" y="270" text-anchor="middle" fill="white" font-size="11" font-weight="700">🔔 Notification Service</text>
+  <text x="400" y="286" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Long poll → push change to Device B</text>
+
+  <line x1="400" y1="225" x2="400" y2="241" stroke="#6366f1" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Device B (receiver) -->
+  <rect x="600" y="245" width="180" height="140" rx="10" fill="#fff" stroke="#0061ff" stroke-width="1.5"/>
+  <rect x="600" y="245" width="180" height="28" rx="10 10 0 0" fill="#0061ff"/>
+  <text x="690" y="263" text-anchor="middle" fill="white" font-size="11" font-weight="700">📱 Device B (Receiver)</text>
+
+  <text x="615" y="292" fill="#1e293b" font-size="9">6. Receive notification</text>
+  <text x="615" y="310" fill="#1e293b" font-size="9">7. Get new block hashes</text>
+  <text x="615" y="328" fill="#1e293b" font-size="9">8. Check local cache</text>
+  <text x="615" y="346" fill="#22c55e" font-size="9" font-weight="600">9. Download only Block B*</text>
+  <text x="615" y="364" fill="#1e293b" font-size="9">10. Assemble file locally</text>
+  <text x="615" y="382" fill="#64748b" font-size="8">Only 4MB transferred!</text>
+
+  <line x1="530" y1="270" x2="596" y2="270" stroke="#6366f1" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Dedup example at bottom -->
+  <rect x="20" y="315" width="230" height="70" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22c55e"/>
+  <text x="135" y="338" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="700">🏆 Dedup in Action</text>
+  <text x="35" y="358" fill="#475569" font-size="9">1M users upload same installer:</text>
+  <text x="35" y="375" fill="#16a34a" font-size="9" font-weight="600">Stored ONCE → 1M references → 99.99% savings</text>
+</svg>
