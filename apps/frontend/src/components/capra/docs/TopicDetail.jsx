@@ -295,64 +295,96 @@ function DataModelSection({ schema }) {
  */
 function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
   const [imgError, setImgError] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => { setImgError(false); }, [topicId, provider]);
 
-  if (imgError) {
-    // If we have a mermaid fallback from the API, render it
-    if (diagramData?.mermaidCode) {
-      return (
-        <div>
-          <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white p-4">
-            <MermaidDiagram content={diagramData.mermaidCode} />
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
-            <span>{provider.toUpperCase()} Architecture (Mermaid)</span>
-            <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors">Regenerate →</button>
-          </div>
-        </div>
-      );
-    }
+  // Loading state
+  if (generatingDiagram) {
     return (
-      <CloudArchitectureDiagram
-        imageUrl={diagramData?.imageUrl}
-        loading={generatingDiagram}
-        error={diagramError}
-        cloudProvider={provider}
-        onRetry={onGenerate}
-      />
+      <div className="flex items-center justify-center py-16 rounded-lg bg-[var(--bg-surface)]">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+          <span className="text-sm text-[var(--text-secondary)] font-medium">Generating {provider.toUpperCase()} architecture diagram...</span>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <div>
-      {/* Constrained preview — click to expand (like Medium/GFG) */}
-      <div className="rounded-lg overflow-hidden cursor-pointer relative" style={{ background: 'white', border: '1px solid var(--border)', maxHeight: expanded ? 'none' : '500px' }} onClick={() => setExpanded(!expanded)}>
-        <img
-          src={staticSrc}
-          alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }}
-          onError={() => setImgError(true)}
-        />
-        {!expanded && (
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(transparent, white)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'white', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to expand ↓</span>
+  // Priority 1: API-generated PNG image (from admin regen or "Regenerate" button)
+  if (diagramData?.imageUrl) {
+    return (
+      <div>
+        <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+          <CloudArchitectureDiagram
+            imageUrl={diagramData.imageUrl}
+            cloudProvider={provider}
+            onRetry={onGenerate}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span>{provider.toUpperCase()} Architecture (Generated)</span>
+          <div className="flex items-center gap-3">
+            <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors">Regenerate →</button>
           </div>
-        )}
-        {expanded && (
-          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'white', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to collapse ↑</span>
-          </div>
-        )}
-      </div>
-      <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
-        <span>{provider.toUpperCase()} Architecture</span>
-        <div className="flex items-center gap-3">
-          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">Regenerate →</button>
-          <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)]">Full Size →</a>
         </div>
       </div>
+    );
+  }
+
+  // Priority 2: Mermaid fallback from API
+  if (diagramData?.mermaidCode) {
+    return (
+      <div>
+        <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white p-4">
+          <MermaidDiagram content={diagramData.mermaidCode} />
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span>{provider.toUpperCase()} Architecture</span>
+          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors">Regenerate →</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Priority 3: Error state
+  if (diagramError) {
+    return (
+      <div className="text-center py-8 rounded-lg bg-red-50 border border-red-200">
+        <p className="text-sm text-red-600 font-medium mb-2">Diagram generation failed</p>
+        <p className="text-xs text-red-500 mb-3">{diagramError}</p>
+        <button onClick={onGenerate} className="px-4 py-2 text-xs bg-[var(--accent)] text-white rounded-lg hover:opacity-90 font-medium">Try Again</button>
+      </div>
+    );
+  }
+
+  // Priority 4: Static pre-generated PNG (with contrast boost for readability)
+  if (!imgError) {
+    return (
+      <div>
+        <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+          <img
+            src={staticSrc}
+            alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
+            style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto', filter: 'contrast(1.4) saturate(1.15)' }}
+            onError={() => setImgError(true)}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span>{provider.toUpperCase()} Architecture</span>
+          <div className="flex items-center gap-3">
+            <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">Regenerate →</button>
+            <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)]">Full Size →</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Priority 5: No static file, no API data — show generate button
+  return (
+    <div className="text-center py-12 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)]">
+      <p className="text-sm text-[var(--text-muted)] mb-3">No diagram available for this topic</p>
+      <button onClick={onGenerate} className="px-4 py-2 text-xs bg-[var(--accent)] text-white rounded-lg hover:opacity-90 font-medium">Generate Diagram</button>
     </div>
   );
 }
@@ -465,15 +497,26 @@ export default function TopicDetail({
           cacheKey: question,
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setAdminRegenStatus(`${engine}: HTTP ${res.status} — ${errData.error || errData.details || res.statusText}`);
+        return;
+      }
       const data = await res.json();
-      if (data.success) {
-        setAdminRegenStatus(`${engine}: done! Reload to see.`);
-        // Force refresh the static image by busting cache
-        setTimeout(() => window.location.reload(), 1500);
+      console.log(`[AdminRegen] ${engine} response:`, data);
+      if (data.success && data.image_url) {
+        const imageUrl = data.image_url.startsWith('http') ? data.image_url : `${CAPRA_API}${data.image_url}`;
+        // Directly call generateDiagram to update the diagram state so it shows immediately
+        generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel || 'overview', diagramCloudProvider || 'auto');
+        setAdminRegenStatus(`${engine}: done (PNG)!`);
+      } else if (data.success && data.mermaid_code) {
+        generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel || 'overview', diagramCloudProvider || 'auto');
+        setAdminRegenStatus(`${engine}: done (mermaid fallback — Python failed on server)`);
       } else {
-        setAdminRegenStatus(`${engine}: ${data.error || 'failed'}`);
+        setAdminRegenStatus(`${engine}: ${data.error || 'failed — no image or mermaid returned'}`);
       }
     } catch (err) {
+      console.error(`[AdminRegen] ${engine} error:`, err);
       setAdminRegenStatus(`${engine}: ${err.message}`);
     }
   };
