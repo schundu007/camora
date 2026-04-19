@@ -2641,6 +2641,7 @@ Quick quality first: 360p available in minutes, 4K later`
       discussionPoints: [
         {
           topic: 'Adaptive Bitrate Streaming',
+          diagramSrc: '/diagrams/netflix/discuss-abr.png',
           points: [
             'HLS (Apple) vs DASH (Google) - most use both',
             'Video split into 2-10 second segments',
@@ -2714,7 +2715,8 @@ Quick quality first: 360p available in minutes, 4K later`
       deepDiveTopics: [
         { topic: 'Video Transcoding Pipeline', diagramSrc: '/diagrams/youtube/deep-dive-transcoding.svg', detail: `When a creator uploads a video, it enters a multi-stage transcoding pipeline. The raw video (potentially 4K, 60fps, various codecs) is split into segments and distributed across a GPU worker fleet. Each worker transcodes one segment into one resolution/codec combination. YouTube produces 6 resolutions (360p through 4K) across 3 codecs (H.264 for compatibility, VP9 for Chrome/Android, AV1 for newest devices). Per-title encoding optimizes bitrate per content type — a static slideshow needs far less bitrate than an action movie at the same resolution. The 360p version is prioritized so the video becomes watchable within minutes, while higher resolutions continue processing in the background.` },
         { topic: 'Adaptive Bitrate Streaming', diagramSrc: '/diagrams/youtube/deep-dive-abr-streaming.svg', detail: `The player downloads a manifest file (HLS M3U8 or DASH MPD) listing all available quality levels and their segment URLs. As the video plays, the client continuously measures download throughput and buffer fill level. A buffer-based ABR algorithm selects the optimal quality: if the buffer is healthy (>15 seconds), try a higher quality; if it is draining (<5 seconds), drop to a lower quality immediately. Hysteresis prevents rapid oscillation — the algorithm requires sustained bandwidth improvement before upgrading quality. Segments are served from the nearest CDN edge, with 95%+ cache hit rates for popular content.` },
-        { topic: 'Two-Stage Recommendation Engine', diagramSrc: '/diagrams/youtube/deep-dive-recommendations.svg', detail: `YouTube recommendations are responsible for over 70% of all watch time. Stage 1 (Candidate Generation) uses a deep neural network to narrow 800M+ videos down to ~1000 candidates per user. It combines collaborative filtering signals (users with similar watch history), content-based features (video embeddings from titles and thumbnails), and contextual signals (time of day, device type). Stage 2 (Ranking) applies a separate neural network that scores each candidate on predicted watch time, not click probability — this critical design choice prevents clickbait from dominating recommendations. The ranking model incorporates hundreds of features including video freshness, creator authority, and user engagement history.` },
+        { topic: 'Two-Stage Recommendation Engine', diagramSrc: '/diagrams/youtube/deep-dive-recommendations.svg', diagramSrc: '/diagrams/netflix/deep-dive-abr.png',
+          detail: `YouTube recommendations are responsible for over 70% of all watch time. Stage 1 (Candidate Generation) uses a deep neural network to narrow 800M+ videos down to ~1000 candidates per user. It combines collaborative filtering signals (users with similar watch history), content-based features (video embeddings from titles and thumbnails), and contextual signals (time of day, device type). Stage 2 (Ranking) applies a separate neural network that scores each candidate on predicted watch time, not click probability — this critical design choice prevents clickbait from dominating recommendations. The ranking model incorporates hundreds of features including video freshness, creator authority, and user engagement history.` },
         { topic: 'View Counter Architecture', diagramSrc: '/diagrams/youtube/deep-dive-view-counter.svg', detail: `Counting 5 billion views per day (58K/second) while detecting fraud requires a specialized pipeline. View events from clients are published to Kafka, where a Flink streaming job performs deduplication (same user, same video, within time window), fraud filtering (bot detection ML model, minimum watch time of 30 seconds), and aggregation. Counts are not updated in real-time in the primary database — instead, batch jobs update view counts every 5-10 minutes. For viral videos, the counter is sharded across 100+ Redis instances to avoid hot-key bottlenecks. Public view counts may lag by hours for new videos while fraud checks complete.` },
         { topic: 'CDN Cache Hierarchy', diagramSrc: '/diagrams/youtube/deep-dive-cdn-hierarchy.svg', detail: `YouTube operates one of the world's largest CDN networks. The architecture uses three tiers: Edge PoPs (100+ locations, embedded in ISPs) cache the top 1% of videos on SSD with 95%+ hit rates. Regional PoPs (~20 locations) cache the top 10% on mixed HDD/SSD. Origin data centers (3-5 globally) store the complete catalog with hot/cold tiering. An origin shield layer sits between regional and origin, collapsing duplicate requests from multiple edge PoPs requesting the same cache miss. For anticipated viral content (music video premieres, major creator uploads), the system pre-warms edge caches before the video goes public.` },
       ],
@@ -5252,9 +5254,46 @@ class FeedService {
       difficulty: 'Hard',
       description: 'Design a cloud file storage system with sync, sharing, and real-time collaboration.',
 
-      introduction: `Dropbox and Google Drive are cloud file storage services that allow users to store files online and sync them across multiple devices. The key challenges include efficient file synchronization (only transferring changes), handling large files, maintaining consistency across devices, and supporting real-time collaboration.
+      productMeta: {
+        name: 'Dropbox',
+        tagline: 'Your files, anywhere — cloud storage and sync for 700M+ registered users',
+        stats: [
+          { label: 'Registered Users', value: '700M+' },
+          { label: 'Paying Users', value: '18M' },
+          { label: 'Files Stored', value: '550B+' },
+          { label: 'Data Stored', value: '3+ Exabytes' },
+          { label: 'Business Teams', value: '575K' },
+          { label: 'Annual Revenue', value: '$2.5B' },
+        ],
+        scope: {
+          inScope: ['File upload/download with chunked transfer', 'Block-level delta sync across devices', 'File versioning and history', 'Sharing with permissions', 'Conflict detection and resolution', 'Offline access with local caching'],
+          outOfScope: ['Real-time document editing (Google Docs)', 'Video/photo management', 'Email integration', 'Enterprise DLP/compliance', 'Desktop app OS integration details'],
+        },
+        keyChallenge: 'Sync files across millions of devices with block-level deduplication while ensuring 99.99% durability and handling conflicts from concurrent edits',
+      },
 
-The system must handle millions of concurrent users, petabytes of data, and ensure files are never lost while remaining responsive.`,
+      introduction: `Dropbox and Google Drive are cloud file storage services that allow users to store files online and sync them across multiple devices. With 700 million registered users storing over 550 billion pieces of content totaling 3+ exabytes of data, Dropbox operates one of the largest content-addressed storage systems in the world. The key challenges include efficient file synchronization (only transferring changes), handling large files, maintaining consistency across devices, and supporting real-time collaboration.
+
+The system must handle millions of concurrent users, petabytes of data, and ensure files are never lost while remaining responsive. What makes this problem uniquely interesting is the block-level sync approach — rather than transferring entire files on every change, Dropbox splits files into 4MB blocks, hashes each block, and only transfers blocks that have changed. This means editing one paragraph in a 100MB document only transfers ~4MB.
+
+The deduplication aspect is equally fascinating: because blocks are identified by their SHA-256 hash (content-addressed storage), identical blocks across all users are stored only once. When a million users upload the same OS installer, Dropbox stores it once and creates a million references. This cross-user deduplication saves enormous amounts of storage, though it raises subtle security concerns (hash probing attacks).
+
+This problem tests your understanding of distributed file systems, content-addressed storage, synchronization protocols (long polling vs WebSocket), conflict resolution strategies (last-writer-wins vs conflict copies), and the tension between consistency and availability in a system where users expect near-instant sync.`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: 'Based on Dropbox public metrics: 700M registered users, 18M paying, 550B files, 3+ EB stored',
+        calculations: [
+          { label: 'Total Files Stored', value: '550 Billion', detail: '700M users x ~786 files/user average = 550B files' },
+          { label: 'Total Data', value: '3+ Exabytes', detail: '550B files x ~5.5 KB avg (deduplicated) = 3+ EB' },
+          { label: 'Files Created/Day', value: '~500M', detail: '15B files created monthly / 30 = ~500M files/day' },
+          { label: 'Sync Events/Sec', value: '~100K', detail: 'Estimated 100M DAU x avg 86 syncs/day / 86,400s' },
+          { label: 'Block Uploads/Sec', value: '~50K', detail: '500M new files/day, avg 2 blocks each, / 86,400s' },
+          { label: 'Dedup Savings', value: '~40-60%', detail: 'Cross-user dedup on common files (OS updates, docs, etc.)' },
+          { label: 'Notification Events/Sec', value: '~200K', detail: 'Each file change notifies avg 2 devices = 200K events/sec' },
+          { label: 'Metadata DB Size', value: '~55 TB', detail: '550B files x ~100 bytes metadata each = ~55 TB' },
+        ],
+      },
 
       functionalRequirements: [
         'Upload and download files of any size',
@@ -5418,7 +5457,61 @@ For real-time collaboration (Google Docs), use OT/CRDT to merge concurrent edits
 
 Dropbox uses long polling with fallback to regular polling.
 Changes are pushed through notification service, client then fetches full delta.`
-        }
+        },
+        { question: 'How does content-addressed deduplication work at scale?', answer: `Every file is split into 4MB blocks, and each block is identified by its SHA-256 hash. When uploading, the client sends block hashes first (not data). The server checks which hashes already exist in the block store. Only missing blocks are uploaded.
+
+**Cross-user dedup**: When 1M users upload the same PDF, it is stored ONCE with 1M references. Storage savings can be 40-60% for enterprise accounts.
+
+**Security concern**: Hash probing — an attacker sends hashes to check if specific content exists. Mitigation: require authentication, rate-limit hash checks, use per-user encryption for sensitive content.
+
+**Garbage collection**: Reference counting on blocks. When last file referencing a block is deleted, block is eligible for GC. Run GC as a background job with safety margin (30 days).` },
+        { question: 'How do you handle large file uploads (50GB+)?', answer: `**Chunked upload**: Split file into 4MB blocks, upload each with CRC32 checksum. Server acknowledges each block individually.
+
+**Resumability**: If network drops at block 500 of 1000, client resumes from block 501. The server tracks which blocks have been received per upload session.
+
+**Parallel upload**: Upload 4-8 blocks concurrently to saturate bandwidth. Each block goes to the block store independently.
+
+**Bandwidth optimization**: If file was previously uploaded (any user), server already has all blocks — upload completes instantly with just metadata update (zero data transfer).` },
+        { question: 'How does the sync engine handle offline edits?', answer: `**Local-first architecture**: Client maintains a local SQLite database tracking file metadata, block hashes, and sync cursor position.
+
+**Offline editing**: User edits files normally. File watcher detects changes, computes new block hashes, marks files as pending sync.
+
+**Reconnection sync**: When network returns, client sends its cursor position to the server. Server returns all changes since that cursor. Client merges remote changes with local pending changes.
+
+**Conflict detection**: If same file was edited both locally and remotely while offline, create a conflict copy (Dropbox approach) rather than silently overwriting. User resolves manually.` },
+        { question: 'What chunking strategy should we use — fixed vs content-defined?', answer: `**Fixed-size (4MB blocks)**: Simple, good for random access. Used by Dropbox. Shift by one byte → two completely different blocks if content changes before the first boundary.
+
+**Content-defined (Rabin fingerprinting)**: Boundaries determined by content, not position. Inserting bytes at the start only affects the first chunk, not all subsequent ones. Better dedup for text files.
+
+**Trade-off**: Content-defined is better for text files (insertion doesn't cascade), fixed is simpler and better for binary. Dropbox chose fixed-size for simplicity at scale.
+
+**Block size trade-off**: Smaller blocks (1MB) = better dedup + more metadata overhead. Larger blocks (16MB) = less metadata + worse dedup. 4MB is the sweet spot.` },
+        { question: 'How do you design sharing and access control?', answer: `**Permission model**: Owner, Editor (read-write), Viewer (read-only). Can share by email (user-specific) or by link (anyone with link).
+
+**Share links**: Generate unique URL with optional password and expiry. Link contains a signed token that encodes fileId + permission level.
+
+**Shared folders**: All files in shared folder inherit the folder's permission. Shared files appear in the recipient's root namespace.
+
+**Access check**: Every file operation (read, write, delete) checks permission in the sharing service. Cache ACLs in Redis for low-latency checks.
+
+**Enterprise**: Admin can restrict external sharing, enforce 2FA for access, audit trail of all share events.` },
+        { question: 'How do you ensure 99.99% durability — never lose a file?', answer: `**Multi-layer durability**:
+1. Block store (S3/GCS): 11 nines durability (99.999999999%), 3x replication across AZs
+2. Metadata DB (MySQL): Synchronous replication with automated failover
+3. Client-side cache: User's local copy is a backup of last-synced state
+
+**Write-ahead logging**: Metadata changes are WAL'd before acknowledging to client. DB crash → replay WAL on recovery.
+
+**Integrity checks**: Block hash verified on upload (CRC32 + SHA-256) and on download. Detect bit rot with periodic background scrubbing.
+
+**Versioning**: Keep all file versions for 30 days (free) or unlimited (business). Even if user accidentally deletes a file, it is recoverable.` },
+        { question: 'How does ransomware protection work?', answer: `**Detection**: Anomaly detection flags when a device rapidly modifies/encrypts thousands of files in minutes (unusual pattern).
+
+**Prevention**: Automatic version retention — even if encrypted files sync to cloud, previous unencrypted versions are preserved for 30 days.
+
+**Recovery**: Admin can roll back an entire account or folder to a specific point in time (before the ransomware attack).
+
+**Alert system**: Notify user and admin when suspicious bulk file modification detected. Optionally auto-pause sync for affected device.` },
       ],
 
       basicImplementation: {
@@ -6274,6 +6367,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       discussionPoints: [
         {
           topic: 'Open Connect Architecture',
+          diagramSrc: '/diagrams/netflix/discuss-open-connect.png',
           points: [
             'Custom hardware appliances at ISPs/IXPs',
             '150+ Tbps capacity globally',
@@ -6284,6 +6378,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Adaptive Bitrate Streaming',
+          diagramSrc: '/diagrams/netflix/discuss-abr.png',
           points: [
             'DASH + HLS support (different devices)',
             'Per-shot encoding: Complex scenes get more bits',
@@ -6294,6 +6389,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Recommendation Personalization',
+          diagramSrc: '/diagrams/netflix/discuss-recommendations.png',
           points: [
             'Not just what to recommend, but how to present',
             'Personalized artwork: Different images for different users',
@@ -6304,6 +6400,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Resilience & Chaos Engineering',
+          diagramSrc: '/diagrams/netflix/discuss-chaos.png',
           points: [
             'Chaos Monkey: Random instance termination',
             'Chaos Kong: Simulated region failure',
@@ -6347,6 +6444,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       deepDiveTopics: [
         {
           topic: 'Adaptive Bitrate Streaming (DASH/HLS)',
+          diagramSrc: '/diagrams/netflix/deep-dive-abr.png',
           detail: `Adaptive bitrate streaming is the foundation of Netflix's viewing experience -- it ensures every viewer gets the best possible quality for their network conditions.
 
 **How segment-based streaming works:**
@@ -6369,6 +6467,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Video Encoding Pipeline (1,200+ Versions per Title)',
+          diagramSrc: '/diagrams/netflix/deep-dive-transcoding.png',
           detail: `The encoding pipeline transforms a single studio master into 1,200+ playback-ready versions:
 
 **Why so many versions?**
@@ -6394,6 +6493,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Open Connect CDN Architecture',
+          diagramSrc: '/diagrams/netflix/deep-dive-open-connect.png',
           detail: `Open Connect is the world's largest single-purpose CDN, handling 15% of all global internet traffic:
 
 **Hardware: Open Connect Appliances (OCAs):**
@@ -6428,6 +6528,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Recommendation Engine (Collaborative Filtering)',
+          diagramSrc: '/diagrams/netflix/deep-dive-recommendations.png',
           detail: `The recommendation engine drives 80% of content watched on Netflix:
 
 **Collaborative filtering (primary signal):**
@@ -6459,6 +6560,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         },
         {
           topic: 'Chaos Engineering (Simian Army)',
+          diagramSrc: '/diagrams/netflix/deep-dive-chaos.png',
           detail: `Netflix pioneered chaos engineering -- the discipline of proactively injecting failures to build resilient systems:
 
 **The Simian Army:**
@@ -6557,6 +6659,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           id: 'content-ingestion-pipeline',
           title: 'Content Ingestion Pipeline',
           description: 'How new content goes from studio master to globally available streaming',
+          src: '/diagrams/netflix/flow-content-ingestion.png',
           steps: [
             { step: 1, label: 'Ingest Master', detail: 'Receive 8K/4K ProRes master from studio, store in S3 origin (~100+ GB per title)' },
             { step: 2, label: 'Shot Analysis', detail: 'Detect scene boundaries, score each shot for spatial/temporal complexity' },
