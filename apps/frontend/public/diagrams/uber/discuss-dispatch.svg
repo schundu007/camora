@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="280" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Dispatch Optimization — Greedy vs Batch vs Pool Matching</text>
+
+  <!-- Mode selector -->
+  <rect x="20" y="50" width="245" height="200" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="20" y="50" width="245" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="142" y="69" text-anchor="middle" fill="white" font-size="11" font-weight="700">🟢 Low Demand — Greedy</text>
+
+  <text x="40" y="98" fill="#1e293b" font-size="10" font-weight="600">GEORADIUS → nearest available</text>
+  <text x="40" y="118" fill="#475569" font-size="9">Score: w1/distance + w2×rating</text>
+  <text x="40" y="138" fill="#475569" font-size="9">Dispatch to top-1 candidate</text>
+  <text x="40" y="158" fill="#475569" font-size="9">15s accept timer</text>
+
+  <text x="40" y="185" fill="#22c55e" font-size="9" font-weight="600">⚡ Latency: &lt;50ms</text>
+  <text x="40" y="200" fill="#64748b" font-size="8">Good enough when supply > demand</text>
+  <text x="40" y="215" fill="#64748b" font-size="8">O(n) where n = nearby drivers</text>
+  <text x="40" y="235" fill="#64748b" font-size="8">Heading-aware: prefer drivers</text>
+  <text x="40" y="248" fill="#64748b" font-size="8">already approaching pickup</text>
+
+  <rect x="280" y="50" width="245" height="200" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+  <rect x="280" y="50" width="245" height="28" rx="10 10 0 0" fill="#3b82f6"/>
+  <text x="402" y="69" text-anchor="middle" fill="white" font-size="11" font-weight="700">🔵 Peak Hours — Batch</text>
+
+  <text x="300" y="98" fill="#1e293b" font-size="10" font-weight="600">Accumulate 2-second window</text>
+  <text x="300" y="118" fill="#475569" font-size="9">Bipartite graph: riders ↔ drivers</text>
+  <text x="300" y="138" fill="#475569" font-size="9">Hungarian algorithm → min-cost</text>
+  <text x="300" y="158" fill="#475569" font-size="9">Dispatch all matches at once</text>
+
+  <text x="300" y="185" fill="#3b82f6" font-size="9" font-weight="600">📊 20-30% less total wait</text>
+  <text x="300" y="200" fill="#64748b" font-size="8">O(n³) but bounded by window</text>
+  <text x="300" y="215" fill="#64748b" font-size="8">(~100-200 requests per batch)</text>
+  <text x="300" y="235" fill="#64748b" font-size="8">Only used when demand > supply</text>
+
+  <rect x="540" y="50" width="240" height="200" rx="10" fill="#fff" stroke="#f97316" stroke-width="1.5"/>
+  <rect x="540" y="50" width="240" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="660" y="69" text-anchor="middle" fill="white" font-size="11" font-weight="700">🟠 Shared — UberPool</text>
+
+  <text x="560" y="98" fill="#1e293b" font-size="10" font-weight="600">Vehicle Routing Problem</text>
+  <text x="560" y="118" fill="#475569" font-size="9">Can new pickup/dropoff fit</text>
+  <text x="560" y="138" fill="#475569" font-size="9">in existing route?</text>
+  <text x="560" y="158" fill="#475569" font-size="9">Max 25% detour constraint</text>
+
+  <text x="560" y="185" fill="#f97316" font-size="9" font-weight="600">💰 Revenue: +60% per trip</text>
+  <text x="560" y="200" fill="#64748b" font-size="8">Greedy insertion heuristic</text>
+  <text x="560" y="215" fill="#64748b" font-size="8">&lt;200ms decision time</text>
+  <text x="560" y="235" fill="#64748b" font-size="8">Max 3 riders per vehicle</text>
+
+  <!-- Bottom -->
+  <rect x="20" y="258" width="760" height="16" rx="4" fill="rgba(30,41,59,0.05)"/>
+  <text x="400" y="271" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">Auto-switch: system detects demand/supply ratio and toggles between greedy (ratio &lt;1) and batch (ratio &gt;1) per cell</text>
+</svg>

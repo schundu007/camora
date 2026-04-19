@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="800" height="300" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Safety &amp; Compliance — Multi-Layer Protection System</text>
+
+  <!-- Real-time safety -->
+  <rect x="20" y="50" width="245" height="220" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="50" width="245" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="142" y="69" text-anchor="middle" fill="white" font-size="11" font-weight="700">🛡 Real-Time Safety</text>
+
+  <text x="40" y="98" fill="#ef4444" font-size="10" font-weight="600">📍 Trip Sharing</text>
+  <text x="50" y="113" fill="#475569" font-size="8">Live tracking URL for trusted contacts</text>
+
+  <text x="40" y="135" fill="#ef4444" font-size="10" font-weight="600">🆘 Emergency Button</text>
+  <text x="50" y="150" fill="#475569" font-size="8">GPS snapshot + audio recording</text>
+
+  <text x="40" y="172" fill="#ef4444" font-size="10" font-weight="600">🗺 Route Deviation Alert</text>
+  <text x="50" y="187" fill="#475569" font-size="8">Alert if driver deviates from optimal path</text>
+
+  <text x="40" y="209" fill="#ef4444" font-size="10" font-weight="600">⏸ RideCheck</text>
+  <text x="50" y="224" fill="#475569" font-size="8">Auto-check if trip stops 5+ minutes</text>
+
+  <text x="40" y="246" fill="#ef4444" font-size="10" font-weight="600">🔑 PIN Verification</text>
+  <text x="50" y="261" fill="#475569" font-size="8">4-digit code prevents wrong pickups</text>
+
+  <!-- Compliance -->
+  <rect x="280" y="50" width="245" height="220" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+  <rect x="280" y="50" width="245" height="28" rx="10 10 0 0" fill="#3b82f6"/>
+  <text x="402" y="69" text-anchor="middle" fill="white" font-size="11" font-weight="700">🏛 Per-City Compliance</text>
+
+  <text x="300" y="98" fill="#3b82f6" font-size="10" font-weight="600">💰 Surge Caps</text>
+  <text x="310" y="113" fill="#475569" font-size="8">NYC: 8x, London: 3x, Singapore: 2x</text>
+
+  <text x="300" y="135" fill="#3b82f6" font-size="10" font-weight="600">✈️ Airport Geofences</text>
+  <text x="310" y="150" fill="#475569" font-size="8">Queue zones, designated pickup spots</text>
+
+  <text x="300" y="172" fill="#3b82f6" font-size="10" font-weight="600">🧾 Tax Compliance</text>
+  <text x="310" y="187" fill="#475569" font-size="8">VAT, GST, sales tax per jurisdiction</text>
+
+  <text x="300" y="209" fill="#3b82f6" font-size="10" font-weight="600">🔒 Data Residency</text>
+  <text x="310" y="224" fill="#475569" font-size="8">GDPR: EU data stays in EU</text>
+
+  <text x="300" y="246" fill="#3b82f6" font-size="10" font-weight="600">📋 Driver Requirements</text>
+  <text x="310" y="261" fill="#475569" font-size="8">License, insurance, vehicle inspection</text>
+
+  <!-- Rating system -->
+  <rect x="540" y="50" width="240" height="220" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="540" y="50" width="240" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="660" y="69" text-anchor="middle" fill="white" font-size="11" font-weight="700">⭐ Rating &amp; Accountability</text>
+
+  <text x="560" y="98" fill="#22c55e" font-size="10" font-weight="600">Bidirectional Ratings</text>
+  <text x="570" y="113" fill="#475569" font-size="8">Both rider and driver rate 1-5 stars</text>
+
+  <text x="560" y="135" fill="#22c55e" font-size="10" font-weight="600">Feedback Required</text>
+  <text x="570" y="150" fill="#475569" font-size="8">Mandatory reason below 3 stars</text>
+
+  <text x="560" y="172" fill="#22c55e" font-size="10" font-weight="600">Deactivation Threshold</text>
+  <text x="570" y="187" fill="#475569" font-size="8">Warning at 4.6 avg, deactivate at 4.4</text>
+
+  <text x="560" y="209" fill="#22c55e" font-size="10" font-weight="600">Bayesian Average</text>
+  <text x="570" y="224" fill="#475569" font-size="8">New drivers start at city mean</text>
+  <text x="570" y="239" fill="#475569" font-size="8">Regress toward mean until 50+ rides</text>
+
+  <text x="560" y="261" fill="#22c55e" font-size="10" font-weight="600">Incident Reporting</text>
+  <text x="570" y="276" fill="#475569" font-size="8">Safety, route, cleanliness categories</text>
+
+  <!-- Bottom -->
+  <rect x="20" y="278" width="760" height="16" rx="4" fill="rgba(239,68,68,0.05)"/>
+  <text x="400" y="291" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">Safety events: 99.999% reliability via separate high-priority message queue • GPS + audio retained 7 days (indefinite for incidents)</text>
+</svg>

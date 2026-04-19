@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="350" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Hungarian Algorithm — Batch Matching vs Greedy (20-30% Better)</text>
+
+  <!-- Greedy -->
+  <rect x="20" y="50" width="370" height="270" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="50" width="370" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="205" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">❌ Greedy: Each Request Matched Independently</text>
+
+  <!-- Riders -->
+  <circle cx="60" cy="120" r="18" fill="#3b82f6"/>
+  <text x="60" y="124" text-anchor="middle" fill="white" font-size="10" font-weight="700">R1</text>
+  <circle cx="60" cy="180" r="18" fill="#3b82f6"/>
+  <text x="60" y="184" text-anchor="middle" fill="white" font-size="10" font-weight="700">R2</text>
+  <circle cx="60" cy="240" r="18" fill="#3b82f6"/>
+  <text x="60" y="244" text-anchor="middle" fill="white" font-size="10" font-weight="700">R3</text>
+
+  <!-- Drivers -->
+  <circle cx="280" cy="120" r="18" fill="#22c55e"/>
+  <text x="280" y="124" text-anchor="middle" fill="white" font-size="10" font-weight="700">D1</text>
+  <circle cx="280" cy="180" r="18" fill="#22c55e"/>
+  <text x="280" y="184" text-anchor="middle" fill="white" font-size="10" font-weight="700">D2</text>
+  <circle cx="280" cy="240" r="18" fill="#22c55e"/>
+  <text x="280" y="244" text-anchor="middle" fill="white" font-size="10" font-weight="700">D3</text>
+
+  <!-- Greedy matches (suboptimal) -->
+  <line x1="78" y1="120" x2="262" y2="120" stroke="#ef4444" stroke-width="2"/>
+  <text x="170" y="115" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">3 min</text>
+  <line x1="78" y1="180" x2="262" y2="240" stroke="#ef4444" stroke-width="2"/>
+  <text x="170" y="215" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">8 min</text>
+  <line x1="78" y1="240" x2="262" y2="180" stroke="#ef4444" stroke-width="2"/>
+  <text x="170" y="195" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">7 min</text>
+
+  <text x="40" y="290" fill="#ef4444" font-size="11" font-weight="700">Total wait: 3 + 8 + 7 = 18 min</text>
+  <text x="40" y="308" fill="#475569" font-size="9">R1 got nearest driver, but forced R2 and R3 into worse matches</text>
+
+  <!-- Hungarian -->
+  <rect x="410" y="50" width="370" height="270" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="410" y="50" width="370" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="595" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ Hungarian: Global Optimal Assignment</text>
+
+  <!-- Riders -->
+  <circle cx="450" cy="120" r="18" fill="#3b82f6"/>
+  <text x="450" y="124" text-anchor="middle" fill="white" font-size="10" font-weight="700">R1</text>
+  <circle cx="450" cy="180" r="18" fill="#3b82f6"/>
+  <text x="450" y="184" text-anchor="middle" fill="white" font-size="10" font-weight="700">R2</text>
+  <circle cx="450" cy="240" r="18" fill="#3b82f6"/>
+  <text x="450" y="244" text-anchor="middle" fill="white" font-size="10" font-weight="700">R3</text>
+
+  <!-- Drivers -->
+  <circle cx="670" cy="120" r="18" fill="#22c55e"/>
+  <text x="670" y="124" text-anchor="middle" fill="white" font-size="10" font-weight="700">D1</text>
+  <circle cx="670" cy="180" r="18" fill="#22c55e"/>
+  <text x="670" y="184" text-anchor="middle" fill="white" font-size="10" font-weight="700">D2</text>
+  <circle cx="670" cy="240" r="18" fill="#22c55e"/>
+  <text x="670" y="244" text-anchor="middle" fill="white" font-size="10" font-weight="700">D3</text>
+
+  <!-- Optimal matches -->
+  <line x1="468" y1="120" x2="652" y2="180" stroke="#22c55e" stroke-width="2.5"/>
+  <text x="560" y="145" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="600">4 min</text>
+  <line x1="468" y1="180" x2="652" y2="240" stroke="#22c55e" stroke-width="2.5"/>
+  <text x="560" y="215" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="600">3 min</text>
+  <line x1="468" y1="240" x2="652" y2="120" stroke="#22c55e" stroke-width="2.5"/>
+  <text x="560" y="175" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="600">5 min</text>
+
+  <text x="430" y="290" fill="#22c55e" font-size="11" font-weight="700">Total wait: 4 + 3 + 5 = 12 min ✓</text>
+  <text x="430" y="308" fill="#475569" font-size="9">33% less total wait! R1 waits slightly longer but everyone is better off</text>
+
+  <!-- Bottom -->
+  <rect x="20" y="327" width="760" height="18" rx="4" fill="rgba(34,197,94,0.08)"/>
+  <text x="400" y="340" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">Batch window: 2 seconds • O(n³) bounded by window size (~100-200 requests) • Used during peak hours only</text>
+</svg>

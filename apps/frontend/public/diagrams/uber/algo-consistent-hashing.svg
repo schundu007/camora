@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="800" height="350" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Consistent Hashing — Location Service Sharding for 10M+ Drivers</text>
+
+  <!-- Hash ring -->
+  <rect x="20" y="50" width="370" height="270" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="20" y="50" width="370" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="205" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">Hash Ring with Virtual Nodes</text>
+
+  <!-- Ring -->
+  <circle cx="205" cy="185" r="80" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+
+  <!-- Server nodes on ring -->
+  <circle cx="205" cy="105" r="10" fill="#ef4444"/>
+  <text x="205" y="97" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="700">Redis A</text>
+
+  <circle cx="275" cy="145" r="10" fill="#3b82f6"/>
+  <text x="295" y="143" fill="#3b82f6" font-size="8" font-weight="700">Redis B</text>
+
+  <circle cx="275" cy="225" r="10" fill="#22c55e"/>
+  <text x="295" y="228" fill="#22c55e" font-size="8" font-weight="700">Redis C</text>
+
+  <circle cx="205" cy="265" r="10" fill="#a855f7"/>
+  <text x="205" y="283" text-anchor="middle" fill="#a855f7" font-size="8" font-weight="700">Redis D</text>
+
+  <circle cx="135" cy="225" r="10" fill="#f97316"/>
+  <text x="110" y="228" fill="#f97316" font-size="8" font-weight="700">Redis E</text>
+
+  <circle cx="135" cy="145" r="10" fill="#ec4899"/>
+  <text x="105" y="143" fill="#ec4899" font-size="8" font-weight="700">Redis F</text>
+
+  <!-- Virtual nodes (smaller) -->
+  <circle cx="240" cy="112" r="5" fill="#ef4444" opacity="0.5"/>
+  <circle cx="160" cy="112" r="5" fill="#3b82f6" opacity="0.5"/>
+  <circle cx="250" cy="250" r="5" fill="#22c55e" opacity="0.5"/>
+  <circle cx="150" cy="260" r="5" fill="#a855f7" opacity="0.5"/>
+
+  <text x="40" y="315" fill="#64748b" font-size="9">Each physical server has 150-200 virtual nodes</text>
+  <text x="40" y="330" fill="#64748b" font-size="9">for even distribution of cell IDs across the ring</text>
+
+  <!-- Benefits -->
+  <rect x="410" y="50" width="370" height="125" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="410" y="50" width="370" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="595" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ Why Consistent Hashing?</text>
+
+  <text x="430" y="100" fill="#22c55e" font-size="10" font-weight="700">Add a server → only 1/N keys move</text>
+  <text x="445" y="118" fill="#475569" font-size="9">vs modulo hashing where ALL keys re-map</text>
+
+  <text x="430" y="140" fill="#22c55e" font-size="10" font-weight="700">Remove a server → neighbors absorb load</text>
+  <text x="445" y="158" fill="#475569" font-size="9">Graceful degradation on node failure</text>
+
+  <!-- Scaling scenario -->
+  <rect x="410" y="190" width="370" height="130" rx="10" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="410" y="190" width="370" height="28" rx="10 10 0 0" fill="#f59e0b"/>
+  <text x="595" y="209" text-anchor="middle" fill="white" font-size="12" font-weight="700">📈 Scaling Scenario</text>
+
+  <text x="430" y="240" fill="#1e293b" font-size="10">Before: 6 Redis nodes, 10M drivers</text>
+  <text x="430" y="258" fill="#1e293b" font-size="10">Add Redis G for capacity:</text>
+
+  <text x="430" y="282" fill="#ef4444" font-size="10" font-weight="600">❌ Modulo: ALL 10M drivers re-hashed</text>
+  <text x="430" y="300" fill="#22c55e" font-size="10" font-weight="600">✓ Consistent: only ~1.4M drivers move (1/7)</text>
+  <text x="430" y="316" fill="#64748b" font-size="9">Minimal disruption during scale-out events</text>
+
+  <!-- Bottom -->
+  <rect x="20" y="335" width="760" height="10" rx="3" fill="rgba(34,197,94,0.05)"/>
+  <text x="400" y="344" text-anchor="middle" fill="#64748b" font-size="8">Driver cell_id → hash → position on ring → nearest server clockwise = responsible Redis shard</text>
+</svg>

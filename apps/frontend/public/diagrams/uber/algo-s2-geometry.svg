@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="350" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">S2 Geometry / H3 Hexagonal Indexing — Uber's Spatial Solution</text>
+
+  <!-- Square cells vs Hex cells comparison -->
+  <rect x="20" y="50" width="370" height="270" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="50" width="370" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="205" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">❌ Square Cells (Geohash / QuadTree)</text>
+
+  <!-- Square grid -->
+  <rect x="80" y="100" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="140" y="100" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="200" y="100" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="80" y="160" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="140" y="160" width="60" height="60" fill="rgba(236,72,153,0.3)" stroke="#ec4899" stroke-width="2"/>
+  <rect x="200" y="160" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="80" y="220" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="140" y="220" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+  <rect x="200" y="220" width="60" height="60" fill="rgba(239,68,68,0.1)" stroke="#ef4444"/>
+
+  <!-- Center dot and corner distance -->
+  <circle cx="170" cy="190" r="4" fill="#ec4899"/>
+  <line x1="170" y1="190" x2="200" y2="190" stroke="#ec4899" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="185" y="186" fill="#ec4899" font-size="7" font-weight="600">d</text>
+  <line x1="170" y1="190" x2="200" y2="160" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="192" y="172" fill="#ef4444" font-size="7" font-weight="600">1.41d</text>
+
+  <text x="40" y="300" fill="#ef4444" font-size="10" font-weight="700">✗ Problem</text>
+  <text x="40" y="315" fill="#475569" font-size="9">Corner is 41% farther than edge midpoint</text>
+
+  <!-- Hex cells -->
+  <rect x="410" y="50" width="370" height="270" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="410" y="50" width="370" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="595" y="69" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ Hexagonal Cells (H3 — Uber's Choice)</text>
+
+  <!-- Hex grid -->
+  <polygon points="555,120 585,105 615,120 615,150 585,165 555,150" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <polygon points="615,120 645,105 675,120 675,150 645,165 615,150" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <polygon points="495,150 525,135 555,150 555,180 525,195 495,180" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <polygon points="555,150 585,135 615,150 615,180 585,195 555,180" fill="rgba(236,72,153,0.3)" stroke="#ec4899" stroke-width="2"/>
+  <polygon points="615,150 645,135 675,150 675,180 645,195 615,180" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <polygon points="525,180 555,165 585,180 585,210 555,225 525,210" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+  <polygon points="585,180 615,165 645,180 645,210 615,225 585,210" fill="rgba(34,197,94,0.1)" stroke="#22c55e"/>
+
+  <!-- Center and edge distance -->
+  <circle cx="585" cy="165" r="4" fill="#ec4899"/>
+  <line x1="585" y1="165" x2="615" y2="150" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="600" y="155" fill="#22c55e" font-size="7" font-weight="600">d</text>
+  <line x1="585" y1="165" x2="585" y2="135" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="590" y="148" fill="#22c55e" font-size="7" font-weight="600">~d</text>
+
+  <text x="430" y="255" fill="#22c55e" font-size="10" font-weight="700">✓ Advantage</text>
+  <text x="430" y="270" fill="#475569" font-size="9">Every point on edge is equidistant from center</text>
+  <text x="430" y="285" fill="#475569" font-size="9">6 neighbors (not 4+4 diagonal) — uniform search</text>
+  <text x="430" y="300" fill="#475569" font-size="9">Query pickup cell + 6 neighbors = no missed drivers</text>
+
+  <!-- Bottom note -->
+  <rect x="20" y="327" width="760" height="18" rx="4" fill="rgba(34,197,94,0.08)"/>
+  <text x="400" y="340" text-anchor="middle" fill="#16a34a" font-size="9" font-weight="600">H3 Level 9 (~0.1 km²) for driver indexing • 16 resolutions for hierarchical queries • Used by Uber, DoorDash, Lyft</text>
+</svg>
