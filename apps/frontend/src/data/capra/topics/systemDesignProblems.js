@@ -1721,6 +1721,35 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         { step: 4, title: 'ML-Ranked Timeline', description: 'Machine learning model ranks timeline candidates by predicted engagement. Multiple candidate sources beyond follow graph.', color: '#10b981', icon: 'globe', capacity: '~300M users', rps: '2M', pros: ['Higher user engagement', 'Personalized experience', 'Content discovery beyond follows'], cons: ['ML model training pipeline needed', 'Feature store infrastructure', 'Latency budget for inference'] },
         { step: 5, title: 'Global Scale', description: 'Multi-region deployment with regional data centers, Snowflake IDs, Earlybird search, real-time trending via Flink, and CDN for media.', color: '#7c3aed', icon: 'cpu', capacity: '500M+ users', rps: '3.5M+', pros: ['Global low-latency access', 'Real-time search and trends', 'Handles any viral event'], cons: ['Enormous infrastructure cost', 'Complex cross-region consistency', 'Thousands of microservices to maintain'] },
       ],
+      interviewFollowups: [
+        {
+          question: 'How do you handle a celebrity with 50 million followers posting a tweet?',
+          answer: `This is the classic Twitter challenge. With **fan-out on write**, posting one tweet means **50 million Redis writes** — this would take minutes and overwhelm the system.\n\n**Solution:** The hybrid fan-out model. Celebrities (>10K followers) are excluded from fan-out on write. Their tweets are stored only in the tweets table. When a follower opens their feed, the feed service:\n1. Reads their pre-built timeline (regular users' tweets)\n2. Queries the celebrity tweet cache for recent tweets from followed celebrities\n3. Merges and ranks both sets\n\nThis adds ~50ms to feed reads (vs instant for pure fan-out-on-write) but eliminates the 50M write problem entirely.`
+        },
+        {
+          question: 'How would you implement real-time trending topics?',
+          answer: `Use a **stream processing pipeline** with sliding window counters:\n\n1. Every tweet publishes hashtags/keywords to a **Kafka topic**\n2. Stream processor (Flink/Storm) maintains **per-hashtag counters** in 5-minute buckets\n3. Trending score = **velocity** (rate of change), not absolute count. A hashtag jumping from 100→10K in 5 minutes ranks higher than one steady at 50K\n4. **Geo-filtering**: separate counter sets per city/country for local trends\n5. Cache trending results in Redis with **30-second TTL**\n6. Anti-gaming: filter out bot-generated hashtags using account age, post frequency, IP clustering`
+        },
+        {
+          question: 'How does the social graph (follow/follower) scale?',
+          answer: `The follow graph has **billions of edges** (user A follows user B). Options:\n\n**Adjacency list in Redis:** Store follower list per user as a Redis set. SMEMBERS for fan-out, SCARD for follower count. Fast but memory-heavy at scale.\n\n**Graph database:** Neo4j or TAO (Facebook's graph store). Good for traversals like "mutual followers" or "followers of followers".\n\n**Twitter's actual approach:** MySQL tables for follow relationships (followerId, followeeId) with indexes on both columns. Fan-out service reads follower list during tweet posting. Cached in Redis for active users.\n\n**Key optimization:** Follower lists are **read-heavy** (read during every tweet post) so aggressively cached. Unfollow is eventually consistent — the unfollowed user's tweets may appear in the feed for a few seconds after unfollowing.`
+        },
+        {
+          question: 'How do you handle tweet deletion and edit history?',
+          answer: `**Deletion:** Soft delete — set \`deleted_at\` timestamp. Tweet removed from:\n1. Author's profile (immediate)\n2. Pre-built timelines (async fan-out of delete event)\n3. Search index (async removal from Elasticsearch)\n4. CDN caches (purge media URLs)\n\nTimelines may show "This tweet was deleted" briefly until the delete propagates.\n\n**Edit history (new feature):** Store edits as versioned records. Original tweet immutable, each edit creates a new version. Display shows latest version with "edited" indicator. Retweets/quotes reference the original tweetId, not a specific version.`
+        },
+      ],
+      tips: [
+        'Lead with the fan-out problem: "The core challenge is delivering 500K tweets/sec to the right followers in real-time"',
+        'Explain the hybrid fan-out immediately — it shows you understand Twitter\'s actual architecture',
+        'Use concrete numbers: 500M DAU, 500K tweets/sec, average user follows 200 accounts, 1% of users are celebrities',
+        'Mention the hot key problem with viral tweets — shows you think about edge cases beyond the happy path',
+        'Discuss polyglot persistence early: MySQL for tweets, Redis for timelines, Elasticsearch for search, S3 for media',
+        'The celebrity problem is the #1 follow-up question — have the hybrid fan-out answer ready',
+        'Talk about trending topics as a stream processing problem, not a batch job',
+        'Mention approximate counters for like/retweet counts — exact INCR doesn\'t scale for viral tweets',
+        'End with trade-offs: fan-out latency vs read latency, consistency vs availability for the social graph',
+      ],
 
     },
     {
