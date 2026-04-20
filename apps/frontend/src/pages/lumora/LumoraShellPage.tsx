@@ -177,7 +177,7 @@ export function LumoraShellPage() {
                 onClearFocus={() => setFocusedEntry(null)}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
                 onSwitchToDesign={(p) => navigate(p ? `/lumora/design?problem=${encodeURIComponent(p)}` : '/lumora/design')}
-                onViewAnswer={(idx) => { setCopilotViewIdx(idx); setCopilotOpen(true); }}
+                onViewAnswer={() => { setCopilotOpen(true); }}
               />
             </ErrorBoundary>
           </div>
