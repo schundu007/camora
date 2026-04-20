@@ -168,7 +168,7 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
               key={plan.name}
               className="group flex flex-col rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               style={{
-                background: (isPro || isBest) ? '#EBF6FC' : 'var(--bg-surface)',
+                background: (isPro || isBest) ? '#C2E3F5' : 'var(--bg-surface)',
                 border: (isPro || isBest) ? '2px solid var(--border)' : '1px solid var(--border)',
               }}
             >
