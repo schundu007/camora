@@ -3145,7 +3145,11 @@ rate_limit:{consumer_id}:{window} = count (EXPIRE after window)
 -- Circuit breaker state
 circuit:{upstream}:state = {open|closed|half_open}
 circuit:{upstream}:failures = count (EXPIRE 60s)
-circuit:{upstream}:last_failure = timestamp`
+circuit:{upstream}:last_failure = timestamp`,
+      examples: [
+        { table: 'routes', label: 'Route to user service with auth plugin', json: `{ "id": "rt-user-api", "path_pattern": "/api/v1/users/*", "methods": ["GET", "POST", "PUT"], "upstream_service": "user-service.internal:8080", "strip_path": true, "plugins": [{"type": "auth", "config": {"required": true}}, {"type": "rateLimit", "config": {"rpm": 60}}], "priority": 10, "enabled": true, "version": 14 }` },
+        { table: 'consumers', label: 'Partner API consumer with rate limit', json: `{ "id": "cns-partner-acme", "name": "Acme Corp", "api_key_hash": "sha256:9f86d08...c5c4", "rate_limit": 100, "scopes": ["users:read", "orders:read", "orders:write"], "enabled": true }` },
+      ]
     },
 
     basicImplementation: {
@@ -3413,7 +3417,11 @@ cluster_config {
   replication_factor: int  -- typically 2-3
   read_quorum: int
   write_quorum: int
-}`
+}`,
+      examples: [
+        { table: 'entry', label: 'Cached user session with TTL', json: `{ "key": "session:u-4829173", "value": "{\\\"userId\\\":4829173,\\\"role\\\":\\\"admin\\\"}", "ttl_ms": 1800000, "created_at": 1713482910000, "last_accessed": 1713483600000, "access_count": 37, "cas_token": 892710384 }` },
+        { table: 'cluster_config', label: 'Three-node cache cluster', json: `{ "ring": { "nodes": [{"id": "cache-01", "address": "10.0.1.10:6379", "virtual_nodes": ["vn-0","vn-1","vn-2"]}, {"id": "cache-02", "address": "10.0.1.11:6379", "virtual_nodes": ["vn-3","vn-4","vn-5"]}, {"id": "cache-03", "address": "10.0.1.12:6379", "virtual_nodes": ["vn-6","vn-7","vn-8"]}], "hash_function": "xxHash" }, "replication_factor": 2, "read_quorum": 1, "write_quorum": 2 }` },
+      ]
     },
 
     basicImplementation: {
@@ -3937,7 +3945,12 @@ data_chunks {
   checksum: varchar  -- SHA-256 for integrity verification
   node_id: varchar  -- which storage node
   replica_set: list<node_id>  -- nodes holding copies
-}`
+}`,
+      examples: [
+        { table: 'objects', label: 'Uploaded image object with metadata', json: `{ "bucket_name": "media-uploads", "key": "photos/2025/04/sunset.jpg", "version_id": "v3", "etag": "d41d8cd98f00b204e9800998ecf8427e", "size_bytes": 4218903, "content_type": "image/jpeg", "user_metadata": {"uploaded-by": "user-7291"}, "storage_class": "standard", "data_locations": [{"chunk_id": "ck-a1b2c3", "node_ids": ["node-1","node-3","node-5"]}], "created_at": "2025-04-15T09:23:11Z" }` },
+        { table: 'buckets', label: 'Versioned media bucket', json: `{ "name": "media-uploads", "owner_id": 58201, "region": "us-east-1", "versioning": true, "acl": {"owner": "FULL_CONTROL", "public": "READ"}, "lifecycle_rules": [{"prefix": "tmp/", "expiration_days": 7}], "created_at": "2024-01-10T14:00:00Z" }` },
+        { table: 'data_chunks', label: 'Erasure-coded data chunk', json: `{ "chunk_id": "ck-a1b2c3", "data": "<binary 8MB>", "checksum": "sha256:e3b0c44298fc1c14...", "node_id": "node-1", "replica_set": ["node-1", "node-3", "node-5"] }` },
+      ]
     },
 
     basicImplementation: {
@@ -4198,7 +4211,12 @@ rollups {
   interval: enum(1m, 5m, 1h, 1d)
   aggregates: map<string, {min, max, sum, count, mean}>
   bucket_time: timestamp
-}`
+}`,
+      examples: [
+        { table: 'data_point', label: 'CPU usage metric from web server', json: `{ "measurement": "cpu_usage", "tags": {"host": "web-07", "region": "us-east", "env": "production"}, "fields": {"value": 87.5, "idle": 12.5, "system": 4.2}, "timestamp": 1713483600000000000 }` },
+        { table: 'tag_index', label: 'Inverted index entry for region tag', json: `{ "tag_key": "region", "tag_value": "us-east", "series_ids": [101, 102, 205, 318, 442] }` },
+        { table: 'rollups', label: 'Hourly rollup for cpu_usage metric', json: `{ "measurement": "cpu_usage", "tags": {"host": "web-07", "region": "us-east"}, "interval": "1h", "aggregates": {"value": {"min": 22.1, "max": 97.3, "sum": 4280.5, "count": 720, "mean": 59.45}}, "bucket_time": "2025-04-18T14:00:00Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -4459,7 +4477,11 @@ raft_state {
 --   1. Acquire lock -> get fencing_token = 42
 --   2. Include fencing_token in all writes to shared resource
 --   3. Shared resource rejects writes with token < last_seen_token
---   4. Prevents stale lock holder (with token 41) from corrupting data`
+--   4. Prevents stale lock holder (with token 41) from corrupting data`,
+      examples: [
+        { table: 'locks', label: 'Acquired distributed lock on payment processing', json: `{ "name": "payment:order-8291", "owner_id": "worker-03", "lock_id": "a7b8c9d0-1e2f-4a3b-5c6d-7e8f9a0b1c2d", "fencing_token": 42, "ttl_ms": 30000, "acquired_at": "2025-04-18T10:15:30Z", "expires_at": "2025-04-18T10:16:00Z", "waiters": [{"owner_id": "worker-07", "wait_started": "2025-04-18T10:15:31Z"}] }` },
+        { table: 'raft_state', label: 'Raft cluster state on leader node', json: `{ "current_term": 18, "voted_for": "node-2", "log": [{"index": 156, "term": 18, "command": "ACQUIRE payment:order-8291 worker-03"}, {"index": 157, "term": 18, "command": "RELEASE inventory:sku-4420 worker-01"}], "commit_index": 157, "last_applied": 157 }` },
+      ]
     },
 
     basicImplementation: {
@@ -4742,7 +4764,12 @@ task_dependencies {
   task_id: uuid FK
   depends_on_task_id: uuid FK
   PK(task_id, depends_on_task_id)
-}`
+}`,
+      examples: [
+        { table: 'tasks', label: 'Recurring daily report generation task', json: `{ "id": "t-00a1b2c3", "name": "daily-sales-report", "type": "recurring", "schedule": "0 6 * * *", "next_fire_time": "2025-04-19T06:00:00Z", "payload": {"report_type": "sales", "format": "pdf", "recipients": ["team@acme.com"]}, "priority": 5, "retry_policy": {"maxRetries": 3, "backoffMs": 5000, "backoffMultiplier": 2}, "timeout_ms": 120000, "status": "active", "created_by": "admin", "created_at": "2025-01-15T09:00:00Z" }` },
+        { table: 'task_runs', label: 'Completed task execution run', json: `{ "id": "run-7829", "task_id": "t-00a1b2c3", "scheduled_for": "2025-04-18T06:00:00Z", "started_at": "2025-04-18T06:00:02Z", "finished_at": "2025-04-18T06:00:47Z", "status": "succeeded", "worker_id": "worker-12", "attempt": 1, "error_message": null, "execution_time_ms": 45200 }` },
+        { table: 'workers', label: 'Active worker with GPU capability', json: `{ "id": "worker-12", "status": "active", "current_tasks": 3, "capacity": 8, "last_heartbeat": "2025-04-18T10:14:58Z", "tags": ["gpu", "high-memory"] }` },
+      ]
     },
 
     basicImplementation: {
@@ -5047,7 +5074,12 @@ secrets {
   name: varchar
   encrypted_value: bytea  -- AES-256 encrypted
   created_at: timestamp
-}`
+}`,
+      examples: [
+        { table: 'pipeline_runs', label: 'Successful CI pipeline run', json: `{ "id": "run-e4f5a6b7", "pipeline_id": 1042, "commit_sha": "a3c8f92e1b4d6e0f7a2c5b8d3e9f1a4c7b0d2e5f", "branch": "main", "status": "succeeded", "trigger_type": "push", "triggered_by": "alice", "started_at": "2025-04-18T09:10:00Z", "finished_at": "2025-04-18T09:14:32Z", "duration_ms": 272000 }` },
+        { table: 'stages', label: 'Running test stage with Docker image', json: `{ "id": "stg-b8c9d0e1", "run_id": "run-e4f5a6b7", "name": "unit-tests", "status": "running", "image": "node:20-slim", "commands": ["npm ci", "npm test"], "depends_on": ["stg-a7b8c9d0"], "started_at": "2025-04-18T09:11:15Z", "finished_at": null, "worker_id": "ci-worker-05", "cache_key": "npm-deps-sha256:e3b0c4429..." }` },
+        { table: 'artifacts', label: 'Build artifact stored in S3', json: `{ "id": "art-c1d2e3f4", "run_id": "run-e4f5a6b7", "stage_id": "stg-b8c9d0e1", "name": "coverage-report.html", "path": "s3://ci-artifacts/run-e4f5a6b7/coverage-report.html", "size_bytes": 284510, "expires_at": "2025-05-18T09:14:32Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -5339,7 +5371,12 @@ freebusy_blocks {
   event_id: uuid FK
   transparency: enum(opaque, transparent)
   -- Indexed: (user_id, start_time, end_time) for range queries
-}`
+}`,
+      examples: [
+        { table: 'events', label: 'Recurring weekly team standup', json: `{ "id": "evt-a1b2c3d4", "calendar_id": "cal-primary-42", "title": "Team Standup", "description": "Daily sync with engineering team", "start_time": "2025-04-15T09:00:00-04:00", "end_time": "2025-04-15T09:30:00-04:00", "timezone": "America/New_York", "all_day": false, "location": "Zoom Room 3", "recurrence_rule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20251231", "recurrence_id": null, "original_start": null, "status": "confirmed", "created_at": "2025-01-10T14:00:00Z", "updated_at": "2025-04-01T08:20:00Z" }` },
+        { table: 'attendees', label: 'Accepted meeting attendee', json: `{ "event_id": "evt-a1b2c3d4", "user_id": 7291, "email": "alice@acme.com", "rsvp_status": "accepted", "is_organizer": false }` },
+        { table: 'freebusy_blocks', label: 'Opaque busy block for meeting', json: `{ "user_id": 7291, "start_time": "2025-04-18T09:00:00-04:00", "end_time": "2025-04-18T09:30:00-04:00", "event_id": "evt-a1b2c3d4", "transparency": "opaque" }` },
+      ]
     },
 
     basicImplementation: {
@@ -5642,7 +5679,12 @@ seek_pool {
   variant: varchar
   rated: boolean
   created_at: timestamp
-}`
+}`,
+      examples: [
+        { table: 'games', label: 'Completed blitz game won by white', json: `{ "id": "game-f8e7d6c5", "white_id": 40291, "black_id": 51823, "variant": "standard", "time_control": "3+2", "rated": true, "status": "checkmate", "result": "white_wins", "pgn": "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 ...", "opening_eco": "C65", "started_at": "2025-04-18T14:30:00Z", "ended_at": "2025-04-18T14:37:42Z" }` },
+        { table: 'moves', label: 'Opening move with clock time', json: `{ "game_id": "game-f8e7d6c5", "move_number": 1, "color": "white", "uci": "e2e4", "san": "e4", "fen_after": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", "clock_ms": 178500, "timestamp": "2025-04-18T14:30:05Z" }` },
+        { table: 'players', label: 'Active player with multi-variant ratings', json: `{ "id": 40291, "username": "ChessKnight99", "ratings": {"bullet": {"rating": 1850, "rd": 45, "volatility": 0.06}, "blitz": {"rating": 1920, "rd": 38, "volatility": 0.05}, "rapid": {"rating": 2010, "rd": 55, "volatility": 0.06}}, "games_played": 3842, "created_at": "2023-06-15T10:00:00Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -5951,7 +5993,12 @@ item_embeddings (feature store) {
   content_vector: float[512]  -- from content analysis
   engagement_features: jsonb  -- {ctr, avg_watch_pct, like_rate}
   last_updated: timestamp
-}`
+}`,
+      examples: [
+        { table: 'items', label: 'Movie item with content embedding', json: `{ "id": 829104, "type": "movie", "title": "Inception", "genres": ["Sci-Fi", "Action", "Thriller"], "tags": ["mind-bending", "dreams", "heist"], "creator_id": 1001, "content_embedding": [0.12, -0.34, 0.56, "...512 floats"], "popularity_score": 0.92, "freshness_score": 0.35, "created_at": "2010-07-16T00:00:00Z" }` },
+        { table: 'interactions', label: 'User watched a movie to completion', json: `{ "user_id": 7291048, "item_id": 829104, "action": "complete", "watch_duration_ms": 8880000, "watch_percentage": 1.0, "context": {"surface": "home_feed", "position": 3, "session_id": "sess-a1b2c3", "device": "smart_tv"}, "timestamp": "2025-04-17T21:30:00Z" }` },
+        { table: 'user_embeddings', label: 'User embedding with collaborative and content vectors', json: `{ "user_id": 7291048, "collaborative_vector": [0.08, -0.22, 0.41, "...256 floats"], "content_preference_vector": [0.15, -0.31, 0.67, "...256 floats"], "recent_interests": {"genres": ["Sci-Fi", "Thriller"], "avg_session_length": 3}, "last_updated": "2025-04-18T02:00:00Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -6252,7 +6299,12 @@ model_registry {
   tensor_parallel_degree: int
   status: enum(active, deprecated, canary)
   deployed_at: timestamp
-}`
+}`,
+      examples: [
+        { table: 'conversations', label: 'Active coding assistant conversation', json: `{ "id": "conv-d4e5f6a7", "user_id": 82910, "org_id": 3001, "model": "gpt-4-turbo", "system_prompt": "You are a helpful coding assistant.", "created_at": "2025-04-18T10:00:00Z", "last_active_at": "2025-04-18T10:42:15Z", "total_tokens": 14820 }` },
+        { table: 'messages', label: 'Assistant response with latency', json: `{ "id": "msg-b8c9d0e1", "conversation_id": "conv-d4e5f6a7", "role": "assistant", "content": "Here is a Python function that implements binary search...", "tool_calls": null, "token_count": 342, "model_version": "gpt-4-turbo-2024-04-09", "latency_ms": 2840, "created_at": "2025-04-18T10:42:15Z" }` },
+        { table: 'usage_records', label: 'Token usage for billing', json: `{ "id": 49201837, "org_id": 3001, "api_key_id": "key-a1b2c3d4", "model": "gpt-4-turbo", "input_tokens": 1250, "output_tokens": 342, "cost_cents": 8, "request_id": "req-f5e4d3c2", "timestamp": "2025-04-18T10:42:15Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -6568,7 +6620,12 @@ canary_metrics {
   sample_size: int
   measured_at: timestamp
   PK(deployment_id, metric_name, measured_at)
-}`
+}`,
+      examples: [
+        { table: 'deployments', label: 'Canary deployment at 5% traffic', json: `{ "id": "dep-a7b8c9d0", "service_id": "payment-service", "pipeline_id": "pipe-e1f2a3b4", "image_tag": "v2.14.0-rc3", "strategy": "canary", "status": "canary_analysis", "current_percentage": 5, "previous_version": "v2.13.2", "regions": ["us-east-1", "eu-west-1"], "config_snapshot": {"replicas": 3, "memory": "512Mi"}, "approved_by": null, "started_at": "2025-04-18T09:00:00Z", "completed_at": null }` },
+        { table: 'canary_metrics', label: 'Canary vs baseline error rate comparison', json: `{ "deployment_id": "dep-a7b8c9d0", "metric_name": "error_rate", "canary_value": 0.012, "baseline_value": 0.009, "verdict": "pass", "sample_size": 14200, "measured_at": "2025-04-18T09:15:00Z" }` },
+        { table: 'deployment_events', label: 'Health check passed event', json: `{ "id": 892014, "deployment_id": "dep-a7b8c9d0", "event_type": "health_check_pass", "details": {"region": "us-east-1", "instances_healthy": 3, "response_time_ms": 42}, "timestamp": "2025-04-18T09:02:30Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -6889,7 +6946,11 @@ cluster_state {
     disk_usage: float,
     heap_usage: float
   }]
-}`
+}`,
+      examples: [
+        { table: 'inverted_index', label: 'Posting list for term "distributed"', json: `{ "term": "distributed", "field": "body", "posting_list": [{"doc_id": 1042, "term_frequency": 3, "positions": [12, 45, 89], "field_length": 520}, {"doc_id": 2891, "term_frequency": 1, "positions": [7], "field_length": 180}], "document_frequency": 2 }` },
+        { table: 'document_store', label: 'Indexed document with field norms', json: `{ "doc_id": 1042, "_source": {"title": "Distributed Systems Design", "body": "A comprehensive guide to building distributed...", "author": "jdoe"}, "_version": 3, "field_norms": {"title": 0.577, "body": 0.044} }` },
+      ]
     },
 
     basicImplementation: {
@@ -7230,7 +7291,12 @@ chunk_placement {
   checksum: varchar(64)
   size: int
   created_at: timestamp
-}`
+}`,
+      examples: [
+        { table: 'object_metadata', label: 'Multipart-uploaded video file', json: `{ "bucket": "user-videos", "key": "uploads/2025/04/interview-recording.mp4", "version_id": "v1-abc123", "size": 524288000, "etag": "a3c8f92e1b4d-3", "content_type": "video/mp4", "storage_class": "standard", "chunk_manifest": [{"chunk_id": "ck-001", "offset": 0, "length": 67108864, "checksum": "sha256:e3b0c442...", "storage_nodes": ["sn-01","sn-04","sn-07"]}, {"chunk_id": "ck-002", "offset": 67108864, "length": 67108864, "checksum": "sha256:9f86d081...", "storage_nodes": ["sn-02","sn-05","sn-08"]}], "user_metadata": {"uploader": "user-5820"}, "created_at": "2025-04-18T08:30:00Z", "delete_marker": false }` },
+        { table: 'bucket_metadata', label: 'Versioned bucket with lifecycle rules', json: `{ "name": "user-videos", "owner_id": 58201, "region": "us-west-2", "versioning": "enabled", "lifecycle_rules": [{"prefix": "tmp/", "expiration_days": 3}, {"prefix": "", "transition_to": "infrequent", "after_days": 90}], "replication_config": {"destination": "us-east-1"}, "acl": {"owner": "FULL_CONTROL"}, "created_at": "2024-03-01T00:00:00Z" }` },
+        { table: 'chunk_placement', label: 'Erasure-coded chunk with fragment locations', json: `{ "chunk_id": "ck-001", "erasure_scheme": "8+3", "fragment_locations": [{"fragment_index": 0, "node_id": "sn-01", "disk_id": "disk-a", "offset": 1048576}, {"fragment_index": 1, "node_id": "sn-02", "disk_id": "disk-b", "offset": 2097152}, {"fragment_index": 2, "node_id": "sn-03", "disk_id": "disk-a", "offset": 524288}], "checksum": "sha256:e3b0c44298fc1c149...", "size": 67108864, "created_at": "2025-04-18T08:30:05Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -7571,7 +7637,12 @@ task_metrics {
   avg_latency_ms: float
   p99_latency_ms: float
   PK(type, window_start)
-}`
+}`,
+      examples: [
+        { table: 'tasks', label: 'Queued email task with retry policy', json: `{ "id": "task-d4e5f6a7", "idempotency_key": "email-welcome-user-7291", "type": "send_email", "payload": {"to": "alice@example.com", "template": "welcome", "vars": {"name": "Alice"}}, "priority": "normal", "status": "queued", "scheduled_at": null, "deadline": "2025-04-18T12:00:00Z", "retry_policy": {"maxRetries": 3, "backoffMs": 1000, "backoffMultiplier": 2, "maxBackoffMs": 60000}, "attempt_count": 0, "max_attempts": 3, "last_error": null, "worker_id": null, "locked_until": null, "result": null, "created_at": "2025-04-18T10:00:00Z", "started_at": null, "completed_at": null }` },
+        { table: 'dead_letter_queue', label: 'Failed task moved to DLQ after max retries', json: `{ "id": 4029, "original_task_id": "task-b1c2d3e4", "type": "generate_thumbnail", "payload": {"image_url": "s3://uploads/img-broken.png", "sizes": [128, 256]}, "error_history": [{"attempt": 1, "error": "Image decode failed: corrupt header", "timestamp": "2025-04-17T08:00:05Z"}, {"attempt": 2, "error": "Image decode failed: corrupt header", "timestamp": "2025-04-17T08:00:12Z"}, {"attempt": 3, "error": "Image decode failed: corrupt header", "timestamp": "2025-04-17T08:00:28Z"}], "total_attempts": 3, "dead_lettered_at": "2025-04-17T08:00:28Z", "requeued_at": null }` },
+        { table: 'schedules', label: 'Recurring cleanup schedule', json: `{ "id": "sched-a1b2c3d4", "type": "cleanup_temp_files", "payload": {"directory": "/tmp/uploads", "max_age_hours": 24}, "cron_expression": "0 */6 * * *", "timezone": "UTC", "next_run_at": "2025-04-18T12:00:00Z", "last_run_at": "2025-04-18T06:00:00Z", "last_task_id": "task-e5f6a7b8", "enabled": true, "created_at": "2025-01-01T00:00:00Z" }` },
+      ]
     },
 
     basicImplementation: {
@@ -7895,7 +7966,12 @@ test_cases: id, problem_id, input, expected_output, is_sample, order_index
 submissions: id, user_id, problem_id, language, code, status (pending|running|accepted|wrong_answer|TLE|MLE|RE|CE), runtime_ms, memory_kb, created_at
 submission_results: id, submission_id, test_case_id, status, actual_output, runtime_ms, memory_kb
 contests: id, title, start_time, end_time, problems[], registered_users[]
-contest_rankings: contest_id, user_id, score, penalty_time, solved_count, rank`
+contest_rankings: contest_id, user_id, score, penalty_time, solved_count, rank`,
+      examples: [
+        { table: 'submissions', label: 'Accepted Python submission', json: `{ "id": 4829173, "user_id": 82910, "problem_id": 1, "language": "python3", "code": "class Solution:\\n    def twoSum(self, nums, target):\\n        seen = {}\\n        for i, n in enumerate(nums):\\n            if target - n in seen:\\n                return [seen[target-n], i]\\n            seen[n] = i", "status": "accepted", "runtime_ms": 48, "memory_kb": 16420, "created_at": "2025-04-18T10:15:00Z" }` },
+        { table: 'problems', label: 'Medium difficulty problem', json: `{ "id": 15, "title": "3Sum", "slug": "3sum", "difficulty": "Medium", "description": "Given an integer array nums, return all the triplets...", "constraints": "-10^5 <= nums[i] <= 10^5", "companies": ["Google", "Amazon", "Meta"], "topics": ["Array", "Two Pointers", "Sorting"], "acceptance_rate": 0.332, "created_at": "2024-01-01T00:00:00Z" }` },
+        { table: 'contest_rankings', label: 'Contest participant ranking', json: `{ "contest_id": 420, "user_id": 82910, "score": 18, "penalty_time": 4520, "solved_count": 3, "rank": 142 }` },
+      ]
     },
     apiDesign: {
       description: 'REST API for submissions, problems, and contests',
@@ -7975,7 +8051,12 @@ activities: id, user_id, type (run|ride|swim), start_time, elapsed_time_s, dista
 segments: id, name, creator_id, start_latlng, end_latlng, distance_m, avg_grade, polyline, city, country, bounding_box, created_at
 segment_efforts: id, segment_id, activity_id, user_id, elapsed_time_s, start_index, end_index, rank, pr_rank, created_at
 follows: follower_id, following_id, created_at
-feed_items: id, user_id, activity_id, created_at`
+feed_items: id, user_id, activity_id, created_at`,
+      examples: [
+        { table: 'activities', label: 'Morning cycling activity with GPS data', json: `{ "id": 9201847, "user_id": 40291, "type": "ride", "start_time": "2025-04-18T06:30:00Z", "elapsed_time_s": 5420, "distance_m": 42150, "elevation_gain_m": 385, "avg_speed": 28.0, "max_speed": 52.3, "avg_hr": 148, "calories": 1120, "polyline": "}_~kFn|yiVo@mA...", "gps_points": [{"lat": 40.7128, "lng": -74.006, "elev": 10, "t": 0}], "gear_id": "bike-001" }` },
+        { table: 'segments', label: 'Popular hill climb segment', json: `{ "id": 302918, "name": "Hawk Hill Climb", "creator_id": 10042, "start_latlng": [37.8324, -122.4996], "end_latlng": [37.8265, -122.4955], "distance_m": 1820, "avg_grade": 6.2, "polyline": "qgkeFnxdjV...", "city": "Sausalito", "country": "US", "bounding_box": [37.825, -122.501, 37.834, -122.494], "created_at": "2023-05-10T12:00:00Z" }` },
+        { table: 'segment_efforts', label: 'Personal record on a segment', json: `{ "id": 58201934, "segment_id": 302918, "activity_id": 9201847, "user_id": 40291, "elapsed_time_s": 312, "start_index": 1420, "end_index": 1580, "rank": 89, "pr_rank": 1, "created_at": "2025-04-18T07:05:22Z" }` },
+      ]
     },
     apiDesign: {
       description: 'REST API for activities, segments, and social features',
@@ -8053,7 +8134,12 @@ Anti-fraud measures include shill bidding detection, bid shielding prevention, a
       schema: `auctions: id, seller_id, title, description, category, images[], starting_price, reserve_price, buy_now_price, current_bid, current_bidder_id, bid_count, start_time, end_time, status (draft|active|ended|sold|unsold), anti_snipe_extensions
 bids: id, auction_id, bidder_id, amount, max_proxy_bid, is_proxy, created_at, status (active|outbid|winning|cancelled)
 watchlist: user_id, auction_id, created_at
-payments: id, auction_id, buyer_id, seller_id, amount, platform_fee, status (pending|paid|in_escrow|released|disputed|refunded)`
+payments: id, auction_id, buyer_id, seller_id, amount, platform_fee, status (pending|paid|in_escrow|released|disputed|refunded)`,
+      examples: [
+        { table: 'auctions', label: 'Active auction with bids and reserve', json: `{ "id": 820194, "seller_id": 40291, "title": "Vintage 1967 Fender Stratocaster", "description": "Original finish, all-original electronics...", "category": "musical-instruments", "images": ["img1.jpg", "img2.jpg"], "starting_price": 5000, "reserve_price": 15000, "buy_now_price": 25000, "current_bid": 12500, "current_bidder_id": 71829, "bid_count": 23, "start_time": "2025-04-15T10:00:00Z", "end_time": "2025-04-20T10:00:00Z", "status": "active", "anti_snipe_extensions": 0 }` },
+        { table: 'bids', label: 'Proxy bid with maximum set', json: `{ "id": 5820193, "auction_id": 820194, "bidder_id": 71829, "amount": 12500, "max_proxy_bid": 18000, "is_proxy": false, "created_at": "2025-04-18T14:22:10Z", "status": "winning" }` },
+        { table: 'payments', label: 'Payment held in escrow', json: `{ "id": "pay-a1b2c3", "auction_id": 820194, "buyer_id": 71829, "seller_id": 40291, "amount": 15000, "platform_fee": 450, "status": "in_escrow" }` },
+      ]
     },
     apiDesign: {
       description: 'REST + WebSocket API for auctions and real-time bidding',
@@ -8132,7 +8218,12 @@ Additional features include comment reactions (likes), pinned comments, moderato
 comments: id, stream_id, user_id, text, created_at, is_pinned, is_deleted, moderation_status (approved|filtered|deleted)
 comment_reactions: comment_id, user_id, reaction_type, created_at
 bans: stream_id, user_id, banned_by, reason, expires_at
-moderation_rules: stream_id, rule_type (word_filter|slow_mode|subscriber_only), config JSONB`
+moderation_rules: stream_id, rule_type (word_filter|slow_mode|subscriber_only), config JSONB`,
+      examples: [
+        { table: 'comments', label: 'Approved live stream comment', json: `{ "id": 920184736, "stream_id": 50291, "user_id": 82910, "text": "This is amazing! Best stream ever!", "created_at": "2025-04-18T20:15:42Z", "is_pinned": false, "is_deleted": false, "moderation_status": "approved" }` },
+        { table: 'live_streams', label: 'Active live stream with high engagement', json: `{ "id": 50291, "broadcaster_id": 10042, "title": "Live Q&A with the Team", "status": "live", "viewer_count": 284500, "comment_count": 192048, "started_at": "2025-04-18T19:00:00Z" }` },
+        { table: 'bans', label: 'Temporarily banned spammer', json: `{ "stream_id": 50291, "user_id": 99201, "banned_by": 10042, "reason": "Repeated spam links", "expires_at": "2025-04-18T21:00:00Z" }` },
+      ]
     },
     apiDesign: {
       description: 'WebSocket-based real-time API with REST for management',
@@ -8210,7 +8301,12 @@ The ranking model blends text relevance (BM25/TF-IDF), social signals (likes, co
       schema: `search_documents: doc_id, author_id, content_text, content_type (post|comment|photo|video|event|link), privacy_level (public|friends|friends_of_friends|custom), mentioned_users[], tagged_users[], location, created_at, engagement_score, like_count, comment_count, share_count
 entity_index: entity_id, entity_type (person|page|group|place|event), name, aliases[], follower_count, category
 query_log: query_id, user_id, query_text, results_clicked[], timestamp
-typeahead_index: prefix, suggestions[] (query completions + entity matches), score`
+typeahead_index: prefix, suggestions[] (query completions + entity matches), score`,
+      examples: [
+        { table: 'search_documents', label: 'Indexed public post with engagement', json: `{ "doc_id": 920184736, "author_id": 40291, "content_text": "Just finished the marathon! 26.2 miles in 3:45:12. New personal best!", "content_type": "post", "privacy_level": "public", "mentioned_users": [], "tagged_users": [51823, 62914], "location": "Boston, MA", "created_at": "2025-04-18T14:30:00Z", "engagement_score": 0.87, "like_count": 342, "comment_count": 58, "share_count": 12 }` },
+        { table: 'entity_index', label: 'Person entity for typeahead', json: `{ "entity_id": 40291, "entity_type": "person", "name": "Alice Johnson", "aliases": ["alice.johnson", "alicej"], "follower_count": 1842, "category": null }` },
+        { table: 'typeahead_index', label: 'Typeahead suggestions for "mara"', json: `{ "prefix": "mara", "suggestions": [{"type": "query", "text": "marathon training", "score": 0.95}, {"type": "query", "text": "marathon results 2025", "score": 0.82}, {"type": "entity", "text": "Marathon Sports", "entity_id": 30291, "score": 0.78}], "score": 0.95 }` },
+      ]
     },
     apiDesign: {
       description: 'Search API with typeahead and filtered queries',
@@ -8286,7 +8382,12 @@ This is a great "Easy" system design problem because the architecture is straigh
 price_history: id, product_id, price, currency, availability (in_stock|out_of_stock), recorded_at
 alerts: id, user_id, product_id, target_price, alert_type (below_price|any_drop|percent_drop), status (active|triggered|expired), notified_at
 users: id, email, push_token, notification_preferences JSONB
-crawl_jobs: id, product_id, scheduled_at, status (pending|running|completed|failed), result_price, error_message`
+crawl_jobs: id, product_id, scheduled_at, status (pending|running|completed|failed), result_price, error_message`,
+      examples: [
+        { table: 'products', label: 'Actively tracked Amazon product', json: `{ "id": 482917, "url": "https://amazon.com/dp/B09V3KXJPB", "retailer": "amazon", "title": "Sony WH-1000XM5 Wireless Headphones", "image_url": "https://m.media-amazon.com/images/I/51aYXg.jpg", "current_price": 328.00, "currency": "USD", "last_checked_at": "2025-04-18T10:00:00Z", "check_interval_hours": 4, "status": "active" }` },
+        { table: 'alerts', label: 'Active price drop alert', json: `{ "id": "alert-a1b2c3", "user_id": 82910, "product_id": 482917, "target_price": 279.99, "alert_type": "below_price", "status": "active", "notified_at": null }` },
+        { table: 'price_history', label: 'Recorded price point', json: `{ "id": 9201847, "product_id": 482917, "price": 328.00, "currency": "USD", "availability": "in_stock", "recorded_at": "2025-04-18T10:00:15Z" }` },
+      ]
     },
     apiDesign: {
       description: 'REST API for product tracking and alerts',
@@ -8366,7 +8467,12 @@ Heavy hitter detection (identifying videos suddenly receiving disproportionate t
 video_counters: video_id, region, time_bucket (5min), view_count, unique_viewers, avg_watch_pct, like_count, comment_count, share_count
 trending_scores: video_id, region, category, score, velocity, rank, updated_at
 trending_snapshots: region, category, timestamp, video_ids[] (ordered), scores[]
-manipulation_flags: video_id, flag_type (bot_traffic|view_farm|click_fraud), confidence, detected_at, evidence JSONB`
+manipulation_flags: video_id, flag_type (bot_traffic|view_farm|click_fraud), confidence, detected_at, evidence JSONB`,
+      examples: [
+        { table: 'video_counters', label: '5-minute aggregated view counter', json: `{ "video_id": "vid-a7b8c9d0", "region": "US", "time_bucket": "2025-04-18T10:15:00Z", "view_count": 48201, "unique_viewers": 42890, "avg_watch_pct": 0.68, "like_count": 3201, "comment_count": 892, "share_count": 410 }` },
+        { table: 'trending_scores', label: 'Top trending video in US music category', json: `{ "video_id": "vid-a7b8c9d0", "region": "US", "category": "music", "score": 98420.5, "velocity": 2.8, "rank": 1, "updated_at": "2025-04-18T10:20:00Z" }` },
+        { table: 'manipulation_flags', label: 'Detected bot traffic on video', json: `{ "video_id": "vid-x1y2z3w4", "flag_type": "bot_traffic", "confidence": 0.89, "detected_at": "2025-04-18T09:45:00Z", "evidence": {"regular_interval_pct": 0.72, "short_watch_pct": 0.85, "new_account_pct": 0.64, "unique_ip_ratio": 0.12} }` },
+      ]
     },
     apiDesign: {
       description: 'REST API for trending consumption and event ingestion',
