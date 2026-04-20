@@ -173,7 +173,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Practice', path: '/capra/practice', icon: icons.play },
       { label: 'Blind 75', path: '/handbook', icon: icons.star },
-      { label: 'Achievements', path: '/capra/achievements', icon: icons.trophy },
+      { label: 'Achievements', path: '/profile?tab=achievements', icon: icons.trophy },
     ],
   },
   {

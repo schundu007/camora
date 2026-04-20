@@ -23,7 +23,7 @@ const PREPARE_ITEMS = [
 const PRACTICE_ITEMS = [
   { id: 'practice', label: 'Thaw', icon: 'code', href: '/capra/practice' },
   { id: 'plan', label: 'Ice Path', icon: 'calendar', href: '/capra/plan' },
-  { id: 'achievements', label: 'Frost Badges', icon: 'trophy', href: '/capra/achievements' },
+  { id: 'achievements', label: 'Frost Badges', icon: 'trophy', href: '/profile?tab=achievements' },
 ];
 
 /**
