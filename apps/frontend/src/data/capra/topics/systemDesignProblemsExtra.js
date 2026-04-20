@@ -5724,6 +5724,14 @@ seek_pool {
       'Spectator mode is a pub/sub fan-out problem'
     ],
 
+    keyDecisions: [
+      'WebSocket vs HTTP polling for real-time moves — chose WebSocket for sub-100ms move delivery and bidirectional communication',
+      'ELO rating vs Glicko-2 for matchmaking — chose Glicko-2 for better handling of rating uncertainty and inactive players',
+      'Stateful game server vs stateless — chose stateful with session affinity to keep game state in memory for instant move validation',
+      'Redis vs in-memory for game clocks — chose Redis Sorted Sets for distributed timer management with automatic expiry',
+      'Event sourcing vs state snapshot for game history — chose event sourcing (append-only move log) for replay capability and dispute resolution'
+    ],
+
     keyQuestions: [
       {
         question: 'How does server-side clock management work?',
@@ -8007,6 +8015,14 @@ contest_rankings: contest_id, user_id, score, penalty_time, solved_count, rank`,
       databaseChoice: 'PostgreSQL for problems/submissions/users, Redis for leaderboards and queue metadata, S3 for code storage and test case files',
       caching: 'Cache problem metadata and sample test cases in CDN, compilation results by code hash, leaderboard snapshots in Redis',
     },
+    keyDecisions: [
+      'Docker containers vs VMs for sandboxing — chose Docker with seccomp for fast startup (< 500ms) with sufficient isolation',
+      'Async queue-based vs synchronous execution — chose SQS queue to handle burst submissions during contests',
+      'Warm container pool vs cold start — chose pre-warmed containers per language to reduce latency from 3s to 200ms',
+      'Redis Sorted Sets vs PostgreSQL for leaderboards — chose Redis for O(log N) real-time contest standings',
+      'AST-based vs text similarity for plagiarism — chose AST normalization for language-independent structural comparison'
+    ],
+
   },
 
   // ─── NEW: Strava Fitness Tracking ────────────────────────────────────
@@ -8092,6 +8108,14 @@ feed_items: id, user_id, activity_id, created_at`,
       databaseChoice: 'PostgreSQL + PostGIS for activities and segments, Redis for leaderboards and live tracking, Kafka for processing pipeline, S3 for raw GPS files',
       caching: 'Cache segment leaderboard top-100 in Redis, activity summaries in CDN, feed items with embedded activity thumbnails',
     },
+    keyDecisions: [
+      'S2 geometry vs Geohash for segment matching — chose S2 for uniform cell sizes across latitudes',
+      'Redis Sorted Sets vs PostgreSQL for KOM leaderboards — chose Redis for O(log N) real-time rank queries',
+      'Kafka async vs synchronous GPS processing — chose Kafka to decouple ingestion from segment matching',
+      'PostGIS + S2 index vs dedicated spatial DB — chose PostGIS for mature ecosystem with S2 extension',
+      'Hybrid push/pull fan-out for activity feed — push for close friends, pull for clubs and public feeds'
+    ],
+
   },
 
   // ─── NEW: Online Auction ─────────────────────────────────────────────
@@ -8175,6 +8199,14 @@ payments: id, auction_id, buyer_id, seller_id, amount, platform_fee, status (pen
       databaseChoice: 'PostgreSQL for auctions/bids/users with version column, Redis for timers and leaderboards, Elasticsearch for auction search, Kafka for event processing',
       caching: 'Cache auction details in Redis with short TTL (5s), search results in CDN, user bid history in application cache',
     },
+    keyDecisions: [
+      'Optimistic concurrency vs pessimistic locking for bids — chose OCC with version numbers for high throughput',
+      'Redis TTL vs DB polling for auction timers — chose Redis keyspace notifications for precise end times',
+      'WebSocket vs polling for bid updates — chose WebSocket with channel-per-auction for real-time notifications',
+      'Event sourcing vs CRUD for bid history — chose event sourcing for complete audit trail',
+      'Escrow state machine vs direct payment — chose escrow (hold-capture-release) for buyer/seller protection'
+    ],
+
   },
 
   // ─── NEW: Facebook Live Comments ─────────────────────────────────────
@@ -8259,6 +8291,14 @@ moderation_rules: stream_id, rule_type (word_filter|slow_mode|subscriber_only), 
       databaseChoice: 'Kafka for comment ingestion and distribution, Redis for hot comment storage and pub/sub, PostgreSQL for archived comments, DynamoDB for user reputation scores',
       caching: 'Edge servers cache pinned comments and stream metadata, CDN for broadcaster profile images, in-memory word blocklist on ingestion servers',
     },
+    keyDecisions: [
+      'Hierarchical fan-out vs flat broadcast — chose relay tree for millions of concurrent viewers',
+      'Server-side comment sampling vs showing all — chose adaptive sampling (1:N) for streams > 50K viewers',
+      'Kafka vs Redis Pub/Sub as backbone — chose Kafka for durability and replay during reconnections',
+      'Aho-Corasick vs regex for spam filtering — chose Aho-Corasick for O(n) multi-pattern matching',
+      'Lamport timestamps vs wall clock — chose Lamport for cross-region clock skew handling'
+    ],
+
   },
 
   // ─── NEW: Facebook Post Search ───────────────────────────────────────
@@ -8340,6 +8380,14 @@ typeahead_index: prefix, suggestions[] (query completions + entity matches), sco
       databaseChoice: 'Custom Lucene-based search index (sharded), Redis for social graph cache and privacy overrides, Kafka for real-time indexing pipeline, PostgreSQL for query logs and analytics',
       caching: 'Query result cache (30s TTL) for frequent queries, typeahead trie fully in memory, social graph adjacency lists in Redis, entity metadata in CDN',
     },
+    keyDecisions: [
+      'Bloom filter pre-check vs direct index query for privacy — eliminates 95% unauthorized results before index',
+      'Learning-to-rank vs BM25 — chose L2R combining text relevance, social signals, and recency',
+      'FST trie vs Redis for typeahead — chose Finite State Transducer for compact prefix matching',
+      'Dual-path indexing (real-time + batch) — sub-second indexing of new posts with full reindex capability',
+      'Scatter-gather vs routing for queries — scatter to all shards with early termination for top-K'
+    ],
+
   },
 
   // ─── NEW: Price Tracking Service ─────────────────────────────────────
@@ -8422,6 +8470,14 @@ crawl_jobs: id, product_id, scheduled_at, status (pending|running|completed|fail
       databaseChoice: 'PostgreSQL for products/alerts/users, TimescaleDB or ClickHouse for price history (time-series optimized), Redis for crawl scheduling queue, S3 for page snapshots',
       caching: 'Cache product details and current price in CDN (5min TTL), price history charts pre-rendered as SVGs, deals page cached with 15min refresh',
     },
+    keyDecisions: [
+      'Redis Sorted Sets vs cron for crawl scheduling — chose ZRANGEBYSCORE for dynamic priority with per-site rate limits',
+      'Playwright vs HTTP scraping — chose Playwright for JS-rendered pages, HTTP fallback for static sites',
+      'TimescaleDB vs InfluxDB for price history — chose TimescaleDB for SQL compatibility with auto-partitioning',
+      'SQS vs Kafka for alert pipeline — chose SQS for per-user delivery with built-in retry and DLQ',
+      'JSON-LD extraction vs CSS selectors — chose JSON-LD first (70% of sites), CSS as fallback'
+    ],
+
   },
 
   // ─── NEW: YouTube Top K / Trending ───────────────────────────────────
@@ -8508,5 +8564,14 @@ manipulation_flags: video_id, flag_type (bot_traffic|view_farm|click_fraud), con
       databaseChoice: 'Kafka for event ingestion, ClickHouse for time-series view counters, Redis for trending cache and Count-Min Sketches, PostgreSQL for trending snapshots and video metadata',
       caching: 'CDN caches trending page per region (5min TTL), Redis hot cache for trending lists, pre-computed trending velocity charts cached per video',
     },
+    keyDecisions: [
+      'Kafka + Flink vs batch MapReduce — chose streaming for real-time trending with 1-minute windows',
+      'Exponential time-decay vs simple view count — chose decay to favor recent viral content',
+      'Count-Min Sketch vs exact counting — chose CMS for memory-efficient approximate counting at scale',
+      'ClickHouse vs Redis for counters — chose ClickHouse for historical analysis, Redis for real-time top-K',
+      'Per-region trending vs global — chose per-region with configurable geographic granularity',
+      'CDN-cached trending vs real-time query — chose CDN with 5-min TTL to serve millions without backend load'
+    ],
+
   },
 ];
