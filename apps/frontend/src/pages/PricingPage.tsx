@@ -200,10 +200,11 @@ export default function PricingPage() {
             return (
               <div key={plan.name} className="pricing-card group relative flex flex-col rounded-2xl overflow-hidden h-full"
                 style={{
-                  zIndex: isPro ? 2 : 1,
+                  zIndex: (isPro || isAnnual) ? 2 : 1,
                   background: '#FFFFFF',
-                  border: isPro ? '2px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: isPro ? '0 8px 32px rgba(45,140,255,0.15)' : 'var(--shadow-md)',
+                  border: (isPro || isAnnual) ? '2px solid var(--accent)' : '1px solid var(--border)',
+                  boxShadow: (isPro || isAnnual) ? '0 8px 32px rgba(34,211,238,0.2)' : 'var(--shadow-md)',
+                  transform: (isPro || isAnnual) ? 'scale(1.03)' : 'none',
                 }}>
                 <div className="relative p-7 pb-0 flex flex-col flex-1">
                   <div className="flex items-center justify-between mb-5">
