@@ -534,13 +534,34 @@ export default function DocsPage({ onBack }) {
 
   const topicDetails = getSelectedTopicDetails();
 
-  // Reset diagram when topic changes — restore from local cache only (no auto-generation)
+  // Reset diagram when topic changes — check local cache, then auto-lookup from backend cache
   useEffect(() => {
     setDiagramData(null);
     setDiagramError(null);
     const cacheKey = `${selectedTopic}-${diagramDetailLevel}-${diagramCloudProvider}`;
     if (selectedTopic && diagramCache[cacheKey]) {
       setDiagramData(diagramCache[cacheKey]);
+      return;
+    }
+    // Auto-lookup from backend cache (no generation, cache-only)
+    if (selectedTopic && topicDetails?.title) {
+      const question = `Design ${topicDetails.title}`;
+      fetch(`${API_URL}/api/diagram/lookup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ question, cloudProvider: diagramCloudProvider, detailLevel: diagramDetailLevel }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            const result = data.image_url ? { imageUrl: data.image_url } : data.mermaid_code ? { mermaidCode: data.mermaid_code } : null;
+            if (result) {
+              setDiagramData(result);
+              setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
+            }
+          }
+        })
+        .catch(() => { /* silent — diagram is optional */ });
     }
   }, [selectedTopic, topicDetails?.title]);
 
