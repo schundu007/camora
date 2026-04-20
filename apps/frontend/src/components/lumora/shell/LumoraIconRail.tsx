@@ -51,10 +51,15 @@ function UserAvatarMenu() {
               <p className="text-sm font-semibold truncate" style={{ color: '#0F172A', fontFamily: "'Satoshi', sans-serif" }}>{user.name || 'User'}</p>
               <p className="text-xs truncate mt-0.5" style={{ color: '#64748B' }}>{user.email}</p>
             </div>
-            <Link to="/pricing" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Pricing</Link>
             <Link to="/capra/prepare" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Dashboard</Link>
+            <Link to="/profile" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Profile</Link>
+            <Link to="/capra/onboarding" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Onboarding</Link>
+            <Link to="/profile?tab=referrals" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Refer a Friend</Link>
+            <Link to="/pricing" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Pricing</Link>
             <Link to="/analytics" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Analytics</Link>
-            <button onClick={() => { logout(); setShowMenu(false); }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">Sign Out</button>
+            <div style={{ borderTop: '1px solid #E2E8F0' }}>
+              <button onClick={() => { logout(); setShowMenu(false); }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">Sign Out</button>
+            </div>
           </div>
         </>
       )}

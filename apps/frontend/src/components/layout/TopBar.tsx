@@ -14,6 +14,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   const { user, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const initials = user?.name
     ? user.name
@@ -196,62 +197,67 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             </svg>
           </button>
 
-          {/* Avatar — links to onboarding/profile */}
-          <Link
-            to="/capra/onboarding"
-            className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-white/10"
-            title="Update role & resume"
-          >
-            {user?.image ? (
-              <img
-                src={user.image}
-                alt={user.name || 'User'}
-                className="w-7 h-7 rounded-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
-                style={{
-                  background: 'var(--accent-subtle)',
-                  color: '#FFFFFF',
-                }}
+          {/* Avatar — user dropdown menu */}
+          <div className="relative">
+            <button
+              onClick={() => setUserMenuOpen?.(!userMenuOpen)}
+              className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-white/10"
+              title="Account menu"
+            >
+              {user?.image ? (
+                <img
+                  src={user.image}
+                  alt={user.name || 'User'}
+                  className="w-7 h-7 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
+                  style={{
+                    background: 'var(--accent-subtle)',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  {initials}
+                </div>
+              )}
+              <span
+                className="hidden md:inline text-xs font-medium truncate max-w-[120px]"
+                style={{ color: 'rgba(255,255,255,0.9)' }}
               >
-                {initials}
-              </div>
+                {user?.name}
+              </span>
+              <svg className={`w-3 h-3 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ color: 'rgba(255,255,255,0.7)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {userMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-2 w-52 rounded-xl overflow-hidden z-50" style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                  <div className="px-3 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-xs font-bold truncate" style={{ color: '#0F172A' }}>{user?.name || 'User'}</p>
+                    <p className="text-[10px] truncate" style={{ color: '#64748B' }}>{user?.email}</p>
+                  </div>
+                  {[
+                    { label: 'Dashboard', href: '/capra/prepare' },
+                    { label: 'Profile', href: '/profile' },
+                    { label: 'Onboarding', href: '/capra/onboarding' },
+                    { label: 'Refer a Friend', href: '/profile?tab=referrals' },
+                  ].map(item => (
+                    <Link key={item.label} to={item.href} onClick={() => setUserMenuOpen(false)} className="block px-3 py-2 text-[13px] font-medium transition-colors hover:bg-slate-50" style={{ color: '#334155' }}>
+                      {item.label}
+                    </Link>
+                  ))}
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <button onClick={() => { logout(); setUserMenuOpen(false); }} className="w-full text-left px-3 py-2 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors">
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
-            <span
-              className="hidden md:inline text-xs font-medium truncate max-w-[120px]"
-              style={{ color: 'rgba(255,255,255,0.9)' }}
-            >
-              {user?.name}
-            </span>
-          </Link>
+          </div>
 
-          {/* Sign out */}
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'rgba(255,255,255,0.8)' }}
-            aria-label="Sign out"
-            title="Sign out"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3" />
-              <path d="M10 11l3-3-3-3" />
-              <path d="M13 8H6" />
-            </svg>
-          </button>
         </div>
       </header>
 
