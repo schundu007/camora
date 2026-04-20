@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import CamoraLogo from './CamoraLogo';
+import UserDropdown from './UserDropdown';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
@@ -13,10 +14,9 @@ const TICKER_ITEMS = [
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [userMenu, setUserMenu] = useState(false);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -62,46 +62,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
         {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated ? (
-            <div className="relative">
-              <button onClick={() => setUserMenu(!userMenu)} className="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors" style={{ color: textColor }} onMouseEnter={e => e.currentTarget.style.background = hoverBg} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                {user?.image ? (
-                  <img src={user.image} alt="" className="w-6 h-6 rounded-full" style={{ boxShadow: `0 0 0 1px ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)'}` }} referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold" style={{ background: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)', color: textColor }}>{user?.name?.[0] || '?'}</div>
-                )}
-                <span className="text-[13px] font-bold" style={{ color: textColor }}>{user?.name?.split(' ')[0] || 'Account'}</span>
-                <svg className={`w-3 h-3 transition-transform ${userMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              {/* Dropdown */}
-              {userMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setUserMenu(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-52 rounded-xl overflow-hidden z-50" style={{ background: isLight ? '#FFFFFF' : '#1E293B', border: `1px solid ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'}`, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
-                    <div className="px-3 py-2.5 border-b" style={{ borderColor: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)' }}>
-                      <p className="text-xs font-bold truncate" style={{ color: textColor }}>{user?.name || 'User'}</p>
-                      <p className="text-[10px] truncate" style={{ color: textMuted }}>{user?.email}</p>
-                    </div>
-                    {[
-                      { label: 'Dashboard', href: '/capra/prepare', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-                      { label: 'Profile', href: '/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-                      { label: 'Onboarding', href: '/capra/onboarding', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-                      { label: 'Refer a Friend', href: '/profile?tab=referrals', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
-                    ].map(item => (
-                      <Link key={item.label} to={item.href} onClick={() => setUserMenu(false)} className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors" style={{ color: textColor }} onMouseEnter={e => e.currentTarget.style.background = isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: textMuted }}><path strokeLinecap="round" strokeLinejoin="round" d={item.icon} /></svg>
-                        {item.label}
-                      </Link>
-                    ))}
-                    <div className="border-t" style={{ borderColor: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)' }}>
-                      <button onClick={() => { logout(); setUserMenu(false); }} className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium text-red-500 transition-colors" onMouseEnter={e => e.currentTarget.style.background = isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                        Sign out
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+            <UserDropdown variant={isLight ? 'light' : 'dark'} />
           ) : (
             <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} className="text-[13px] font-bold transition-colors" style={{ color: textColor }}>Sign in</Link>
           )}
