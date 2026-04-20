@@ -39,7 +39,7 @@ export default function RootShell({ children }: RootShellProps) {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-        <main ref={mainRef} id="app-scroll-container" className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <main ref={mainRef} id="app-scroll-container" className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch', background: 'var(--bg-app)' }}>
           {children}
         </main>
       </div>

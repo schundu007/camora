@@ -253,7 +253,7 @@ export default function ChallengePage() {
   return (
     <div className="ch-root">
       <SEO title="The Camora Avalanche" description="Find bugs, build features, win $21,812 in prizes. Join the founding engineering team." path="/challenge" />
-      <SiteNav />
+      <SiteNav variant="light" />
 
       {/* ═══ HERO — Dark gradient mesh with floating orbs ═══ */}
       <section className="ch-hero">
@@ -716,14 +716,14 @@ export default function ChallengePage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter variant="light" />
 
       {/* ═══ STYLES ═══ */}
       <style>{`
         .ch-root {
           min-height: 100vh;
-          background: #0a0a0f;
-          color: #fff;
+          background: var(--bg-app);
+          color: var(--text-primary);
           font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
           overflow-x: hidden;
         }
@@ -737,10 +737,10 @@ export default function ChallengePage() {
         .ch-hero-mesh {
           position: absolute; inset: 0;
           background:
-            radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16,185,129,0.12) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 50% at 80% 20%, rgba(45,140,255,0.1) 0%, transparent 60%),
-            radial-gradient(ellipse 50% 40% at 50% 80%, rgba(6,182,212,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 40% 30% at 90% 70%, rgba(245,158,11,0.06) 0%, transparent 60%);
+            radial-gradient(ellipse 80% 60% at 20% 30%, rgba(34,211,238,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 50% at 80% 20%, rgba(56,189,248,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 50% 80%, rgba(34,211,238,0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 30% at 90% 70%, rgba(56,189,248,0.04) 0%, transparent 60%);
           animation: mesh-shift 12s ease-in-out infinite alternate;
         }
         @keyframes mesh-shift {
@@ -750,16 +750,16 @@ export default function ChallengePage() {
         .ch-hero-orb {
           position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
         }
-        .ch-orb-1 { width: 400px; height: 400px; top: 10%; left: -5%; background: rgba(16,185,129,0.15); animation: orb-float 8s ease-in-out infinite; }
-        .ch-orb-2 { width: 350px; height: 350px; top: 60%; right: -8%; background: rgba(45,140,255,0.12); animation: orb-float 10s ease-in-out infinite reverse; }
-        .ch-orb-3 { width: 250px; height: 250px; bottom: 5%; left: 30%; background: rgba(245,158,11,0.08); animation: orb-float 7s ease-in-out infinite 2s; }
+        .ch-orb-1 { width: 400px; height: 400px; top: 10%; left: -5%; background: rgba(34,211,238,0.1); animation: orb-float 8s ease-in-out infinite; }
+        .ch-orb-2 { width: 350px; height: 350px; top: 60%; right: -8%; background: rgba(56,189,248,0.08); animation: orb-float 10s ease-in-out infinite reverse; }
+        .ch-orb-3 { width: 250px; height: 250px; bottom: 5%; left: 30%; background: rgba(34,211,238,0.06); animation: orb-float 7s ease-in-out infinite 2s; }
         @keyframes orb-float {
           0%, 100% { transform: translateY(0) scale(1); }
           50% { transform: translateY(-30px) scale(1.08); }
         }
         .ch-hero-grid {
           position: absolute; inset: 0;
-          background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+          background-image: linear-gradient(rgba(34,211,238,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.06) 1px, transparent 1px);
           background-size: 48px 48px;
           mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
         }
@@ -789,11 +789,11 @@ export default function ChallengePage() {
           font-weight: 900;
           letter-spacing: -0.04em;
           line-height: 1.05;
-          color: #fff;
+          color: var(--text-primary);
           white-space: nowrap;
         }
         .ch-hero-gradient-text {
-          background: linear-gradient(135deg, #60A5FA, #2D8CFF, #38bdf8, #fbbf24);
+          background: linear-gradient(135deg, var(--accent), #06B6D4, #0891B2, #fbbf24);
           background-size: 300% 300%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -815,15 +815,15 @@ export default function ChallengePage() {
           border-radius: 14px;
           font-family: 'Space Mono', monospace;
           font-size: 28px; font-weight: 700;
-          color: #fff;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
+          color: var(--text-primary);
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(56,189,248,0.12);
           backdrop-filter: blur(12px);
-          box-shadow: 0 0 20px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: 0 2px 8px rgba(56,189,248,0.08);
         }
         .ch-countdown-label {
           margin-top: 6px; font-size: 16px; font-weight: 700;
-          color: rgba(255,255,255,0.3); letter-spacing: 0.12em;
+          color: var(--text-muted); letter-spacing: 0.12em;
         }
 
         /* ── Prize pool badge ── */
@@ -831,9 +831,10 @@ export default function ChallengePage() {
           margin-top: 32px;
           display: flex; flex-direction: column; align-items: center; gap: 6px;
           padding: 20px 40px; border-radius: 16px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(56,189,248,0.12);
           backdrop-filter: blur(12px);
+          box-shadow: 0 2px 8px rgba(56,189,248,0.06);
         }
         .ch-prize-amount {
           font-family: 'Space Mono', monospace;
@@ -864,15 +865,17 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; justify-content: center;
           padding: 14px 32px; border-radius: 12px;
           font-size: 16px; font-weight: 700;
-          color: rgba(255,255,255,0.6);
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
+          color: var(--text-secondary);
+          background: rgba(255,255,255,0.75);
+          border: 1px solid var(--border);
           cursor: pointer; transition: all 0.2s;
           text-decoration: none;
+          backdrop-filter: blur(8px);
         }
         .ch-cta-secondary:hover {
-          background: rgba(255,255,255,0.08);
-          color: rgba(255,255,255,0.9);
+          background: rgba(255,255,255,0.9);
+          color: var(--text-primary);
+          border-color: var(--accent);
           transform: translateY(-1px);
         }
 
@@ -880,37 +883,38 @@ export default function ChallengePage() {
         .ch-section { padding: 56px 0; position: relative; }
         .ch-section-head { text-align: center; margin-bottom: 40px; }
         .ch-section-tag { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; }
-        .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-top: 6px; }
-        .ch-section-sub { font-size: 16px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
+        .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-top: 6px; }
+        .ch-section-sub { font-size: 16px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; }
 
         /* ── Glass card ── */
         .ch-glass-card {
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(56,189,248,0.12);
           border-radius: 16px;
-          backdrop-filter: blur(8px);
-          transition: border-color 0.3s;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 1px 4px rgba(56,189,248,0.06);
+          transition: border-color 0.3s, box-shadow 0.3s;
         }
-        .ch-glass-card:hover { border-color: rgba(255,255,255,0.1); }
+        .ch-glass-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(34,211,238,0.1); }
 
         /* ── Inputs ── */
         .ch-input {
           padding: 12px 16px; border-radius: 10px;
-          font-size: 16px; color: #fff;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
+          font-size: 16px; color: var(--text-primary);
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           outline: none; transition: border-color 0.2s;
         }
-        .ch-input:focus { border-color: rgba(16,185,129,0.4); }
-        .ch-input::placeholder { color: rgba(255,255,255,0.2); }
+        .ch-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.12); }
+        .ch-input::placeholder { color: var(--text-muted); }
 
         .ch-code-editor {
           min-height: 180px; padding: 16px; border-radius: 12px;
           font-family: 'Space Mono', 'IBM Plex Mono', monospace;
           font-size: 16px; line-height: 1.6;
-          background: rgba(0,0,0,0.4);
-          border: 1px solid rgba(255,255,255,0.06);
-          color: #e2e8f0; outline: none; resize: vertical;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
+          color: var(--text-primary); outline: none; resize: vertical;
         }
 
         /* ── Glow icon ── */
@@ -926,40 +930,43 @@ export default function ChallengePage() {
         /* ── Prize cards ── */
         .ch-prize-card {
           position: relative; border-radius: 20px; padding: 2px;
-          background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+          background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(34,211,238,0.06));
           transition: all 0.3s;
         }
         .ch-prize-card::before {
           content: ''; position: absolute; inset: -1px; border-radius: 21px;
-          background: linear-gradient(135deg, var(--prize-glow, #fff) 0%, transparent 60%);
+          background: linear-gradient(135deg, var(--prize-glow, var(--accent)) 0%, transparent 60%);
           opacity: 0; transition: opacity 0.4s;
           z-index: -1; filter: blur(12px);
         }
         .ch-prize-card:hover { transform: translateY(-4px); }
-        .ch-prize-card:hover::before { opacity: 0.4; }
+        .ch-prize-card:hover::before { opacity: 0.3; }
         .ch-prize-card-inner {
-          background: rgba(10,10,15,0.9);
+          background: rgba(255,255,255,0.85);
           border-radius: 18px;
           padding: 28px; text-align: center;
+          backdrop-filter: blur(12px);
         }
         .ch-prize-rank {
           display: inline-block;
           padding: 5px 16px; border-radius: 8px;
-          font-size: 16px; font-weight: 800; color: #0a0a0f;
+          font-size: 16px; font-weight: 800; color: #fff;
           text-transform: uppercase; letter-spacing: 0.08em;
           margin-bottom: 12px;
         }
         .ch-prize-amount-card {
           font-family: 'Space Mono', monospace;
-          font-size: 36px; font-weight: 700; color: #fff;
+          font-size: 36px; font-weight: 700; color: var(--text-primary);
           margin-bottom: 4px;
         }
 
         /* ── Category cards ── */
         .ch-category-card {
           padding: 20px; border-radius: 16px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(56,189,248,0.12);
+          backdrop-filter: blur(12px);
+          box-shadow: 0 1px 4px rgba(56,189,248,0.06);
           transition: all 0.3s;
         }
         .ch-category-card:hover {
@@ -1001,46 +1008,25 @@ export default function ChallengePage() {
         .ch-tech-pill {
           display: flex; align-items: center; gap: 8px;
           padding: 8px 14px; border-radius: 10px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(56,189,248,0.12);
+          backdrop-filter: blur(8px);
           transition: all 0.2s;
         }
         .ch-tech-pill:hover {
-          background: rgba(255,255,255,0.06);
-          border-color: rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.9);
+          border-color: var(--accent);
           transform: translateY(-1px);
         }
 
-        /* ── Referral wrapper — retheme the light component for dark bg ── */
+        /* ── Referral wrapper — frost styling ── */
         .ch-referral-wrapper > div {
-          background: rgba(255,255,255,0.03) !important;
-          border-color: rgba(255,255,255,0.08) !important;
+          background: rgba(255,255,255,0.75) !important;
+          border-color: rgba(56,189,248,0.12) !important;
           border-radius: 16px;
-          backdrop-filter: blur(8px);
+          backdrop-filter: blur(12px);
+          box-shadow: 0 1px 4px rgba(56,189,248,0.06);
         }
-        .ch-referral-wrapper h3,
-        .ch-referral-wrapper h4 { color: #fff !important; }
-        .ch-referral-wrapper p { color: rgba(255,255,255,0.4) !important; }
-        .ch-referral-wrapper .text-gray-700,
-        .ch-referral-wrapper .text-gray-900 { color: #fff !important; }
-        .ch-referral-wrapper .text-gray-500,
-        .ch-referral-wrapper .text-gray-400 { color: rgba(255,255,255,0.35) !important; }
-        .ch-referral-wrapper .text-base.text-gray-700 { color: rgba(255,255,255,0.6) !important; }
-        .ch-referral-wrapper .bg-gray-50,
-        .ch-referral-wrapper .bg-gray-100 { background: rgba(255,255,255,0.04) !important; }
-        .ch-referral-wrapper .bg-emerald-50 { background: rgba(45,140,255,0.08) !important; }
-        .ch-referral-wrapper .border-gray-200,
-        .ch-referral-wrapper .border-gray-100 { border-color: rgba(255,255,255,0.08) !important; }
-        .ch-referral-wrapper .text-emerald-600 { color: #60A5FA !important; }
-        .ch-referral-wrapper .font-mono { color: rgba(255,255,255,0.5) !important; }
-        .ch-referral-wrapper button.bg-[var(--accent)] {
-          box-shadow: 0 0 16px rgba(45,140,255,0.3);
-        }
-        .ch-referral-wrapper .text-2xl.font-bold { color: #fff !important; }
-        .ch-referral-wrapper .bg-emerald-100 { background: rgba(45,140,255,0.1) !important; }
-        .ch-referral-wrapper .text-emerald-700 { color: #60A5FA !important; }
-        .ch-referral-wrapper .bg-amber-100 { background: rgba(245,158,11,0.15) !important; }
-        .ch-referral-wrapper .text-amber-700 { color: #fbbf24 !important; }
       `}</style>
     </div>
   );

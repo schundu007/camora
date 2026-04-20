@@ -17,9 +17,9 @@ const F = {
 };
 
 const L = {
-  bg: '#FFFFFF', surface: '#F7F8FA', elevated: '#EEF0F4',
-  border: '#E2E5EB', text: '#1A1D23', secondary: '#4A5568',
-  muted: '#8C95A6', dimmed: '#C8CDD6',
+  bg: '#F0F7FF', surface: '#FFFFFF', elevated: '#DDE9F7',
+  border: '#C4D9F2', text: '#0F172A', secondary: '#334155',
+  muted: '#7096BF', dimmed: '#B0CBE6',
   gradient: 'linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%)',
   primary: '#22D3EE', accent: '#22D3EE', radius: '12px',
   glow: '0 0 60px rgba(34,211,238,0.08)',
