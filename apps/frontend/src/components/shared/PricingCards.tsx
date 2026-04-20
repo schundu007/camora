@@ -168,8 +168,8 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
               key={plan.name}
               className="group flex flex-col rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               style={{
-                background: (isPro || isBest) ? '#AFDBF5' : 'var(--bg-surface)',
-                border: (isPro || isBest) ? '2px solid #8DCCE8' : '1px solid var(--border)',
+                background: (isPro || isBest) ? '#EBF6FC' : 'var(--bg-surface)',
+                border: (isPro || isBest) ? '2px solid #C8E5F5' : '1px solid var(--border)',
               }}
             >
               <div className="p-3 flex flex-col flex-1">
