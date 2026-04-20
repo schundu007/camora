@@ -197,10 +197,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchSubscription(token);
   }, [token, fetchSubscription]);
 
-  // Refresh subscription after Stripe checkout return (URL contains session_id)
+  // Refresh subscription after Stripe checkout return (URL contains session_id or checkout=success)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has('session_id') && token) {
+    if ((params.has('session_id') || params.get('checkout') === 'success') && token) {
       // Delay to allow webhook to process
       const timer = setTimeout(() => fetchSubscription(token), 2000);
       return () => clearTimeout(timer);
