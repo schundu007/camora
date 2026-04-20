@@ -291,7 +291,17 @@ export default function DownloadPage() {
   const [prices, setPrices] = useState<any>(null);
   useEffect(() => {
     const LUMORA = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-    fetch(`${LUMORA}/api/v1/billing/prices`).then(r => r.json()).then(setPrices).catch(() => {});
+    fetch(`${LUMORA}/api/v1/billing/prices`).then(r => r.json()).then(data => {
+      const mapped: Record<string, { priceId: string }> = {};
+      for (const p of (data.plans || data || [])) {
+        if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'desktop_monthly') mapped.desktop_monthly = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'desktop_annual') mapped.desktop_annual = { priceId: p.stripe_price_id || p.priceId || '' };
+      }
+      setPrices(mapped);
+    }).catch(() => {});
   }, []);
 
   const handleMonthlyAddon = () =>
