@@ -217,7 +217,7 @@ export default function LandingPage() {
               {isAuthenticated ? 'Enter the Blizzard' : 'Start Your Avalanche'}
             </Link>
             <Link to="/download" className="cm-outline-btn px-7 py-3.5 text-[15px] font-semibold" style={{ borderRadius: L.radius }}>
-              Download Cockpit App
+              Download Desktop App
             </Link>
           </motion.div>
 
@@ -229,7 +229,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <span className="text-sm" style={{ color: L.secondary }}>
-                <span className="font-bold" style={{ color: L.text }}>{visitorCount.toLocaleString()}+</span> passengers aboard
+                <span className="font-bold" style={{ color: L.text }}>{visitorCount.toLocaleString()}+</span> explorers in the storm
               </span>
             </motion.div>
           )}
@@ -240,7 +240,7 @@ export default function LandingPage() {
       <section className="relative px-6 py-8 overflow-hidden">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <p className="text-center text-sm font-medium mb-4" style={{ color: L.secondary }}>
-            85% of our users land offers at these companies
+            85% of our users conquer offers at these companies
           </p>
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
@@ -397,7 +397,7 @@ export default function LandingPage() {
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
               style={{ borderRadius: '999px', background: L.primary, border: '1px solid var(--border)', color: '#FFFFFF', fontFamily: F.mono }}>
               <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
-              Cockpit AI
+              Frost AI
             </span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
               Your ice breaker in the storm.
@@ -447,7 +447,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: L.primary, border: '1px solid var(--border)', color: '#FFFFFF', fontFamily: F.mono }}>Club Members Only</span>
+              style={{ borderRadius: '999px', background: L.primary, border: '1px solid var(--border)', color: '#FFFFFF', fontFamily: F.mono }}>Avalanche Makers Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Arctic-grade features. Zero meltdown.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -483,7 +483,7 @@ export default function LandingPage() {
                 <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-8 py-4 text-base font-semibold text-white" style={{ borderRadius: L.radius }}>
                   {isAuthenticated ? 'Enter the Blizzard' : 'Start Free — No Credit Card'}
                 </Link>
-                <Link to="/pricing" className="cm-outline-btn px-8 py-4 text-base font-semibold" style={{ borderRadius: L.radius }}>View Tickets</Link>
+                <Link to="/pricing" className="cm-outline-btn px-8 py-4 text-base font-semibold" style={{ borderRadius: L.radius }}>View Snow Passes</Link>
               </div>
             </div>
           </div>
