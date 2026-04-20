@@ -221,6 +221,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
   const [selectedCategory, setSelectedCategory] = useState(SQL_CATEGORIES[0]?.id ?? 'basic-joins');
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const dbRef = useRef<SqlJsDatabase | null>(null);
   const problem = SQL_PROBLEMS.find((p) => p.id === selectedProblemId) || SQL_PROBLEMS[0];
@@ -288,6 +289,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
       setSubmitResult(null);
       setShowHints(false);
       setShowSolution(false);
+      setShowSuccess(false);
     }
   }, [dbReady, selectedProblemId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -331,6 +333,9 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
         if (colOk && rowOk) {
           setSubmitResult('correct');
           setSolved((prev) => new Set([...prev, problem.id]));
+          setShowSolution(false);
+          setShowHints(false);
+          setShowSuccess(true);
         } else {
           setSubmitResult('wrong');
         }
@@ -668,8 +673,96 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             )}
           </div>
 
+          {/* Success Panel — shown after solving */}
+          {showSuccess && (() => {
+            const totalSolved = solved.size;
+            const totalProblems = SQL_PROBLEMS.length;
+            const catProblems = SQL_PROBLEMS.filter(p => {
+              const cat = SQL_CATEGORIES.find(c => c.problems.includes(p.id));
+              return cat?.id === selectedCategory;
+            });
+            const catSolved = catProblems.filter(p => solved.has(p.id)).length;
+            const nextUnsolved = SQL_PROBLEMS.find((p, i) => i > currentIndex && !solved.has(p.id));
+            const usedHint = showHints;
+
+            return (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <div className="text-center max-w-sm">
+                  {/* Celebration icon */}
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                  </div>
+
+                  <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                    {!usedHint ? 'Clean Solve!' : 'Problem Solved!'}
+                  </h3>
+                  <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+                    {problem.title} — {problem.difficulty}
+                  </p>
+
+                  {/* Stats row */}
+                  <div className="flex items-center justify-center gap-6 mb-5">
+                    <div className="text-center">
+                      <div className="text-xl font-bold" style={{ color: 'var(--accent)' }}>{totalSolved}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Solved</div>
+                    </div>
+                    <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
+                    <div className="text-center">
+                      <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{totalProblems - totalSolved}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Remaining</div>
+                    </div>
+                    <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
+                    <div className="text-center">
+                      <div className="text-xl font-bold" style={{ color: 'var(--success)' }}>{catSolved}/{catProblems.length}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Category</div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mb-6">
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span style={{ color: 'var(--text-muted)' }}>Overall Progress</span>
+                      <span className="font-bold" style={{ color: 'var(--accent)' }}>{Math.round((totalSolved / totalProblems) * 100)}%</span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, var(--accent), var(--success))', width: `${(totalSolved / totalProblems) * 100}%`, transition: 'width 0.6s ease' }} />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3">
+                    {nextUnsolved ? (
+                      <button
+                        onClick={() => { setSelectedProblemId(nextUnsolved.id); setShowSuccess(false); setSubmitResult(null); setCode(''); setOutput(null); setError(null); }}
+                        className="flex-1 py-2.5 text-sm font-bold rounded-xl text-white flex items-center justify-center gap-2"
+                        style={{ background: 'var(--accent)' }}
+                      >
+                        Next Problem
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
+                      </button>
+                    ) : (
+                      <div className="flex-1 py-2.5 text-sm font-bold rounded-xl text-center" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)' }}>
+                        All problems solved!
+                      </div>
+                    )}
+                    <button
+                      onClick={() => { setShowSuccess(false); setSubmitResult(null); }}
+                      className="px-4 py-2.5 text-sm font-medium rounded-xl"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+                    >
+                      Review
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Tab content */}
-          <div className="flex-1 overflow-auto p-4">
+          {!showSuccess && <div className="flex-1 overflow-auto p-4">
             {outputTab === 'output' ? (
               <>
                 {!dbReady && (
@@ -705,7 +798,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             ) : (
               <ResultTable columns={problem.expectedOutput.columns} rows={problem.expectedOutput.rows} />
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </div>
