@@ -224,11 +224,6 @@ export default function LandingPage() {
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.45) 60%, #FFFFFF 100%)' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.04) 0%, transparent 50%)' }} />
         </div>
-        {/* Ice shards in hero */}
-        <IceShard style={{ top: '10%', left: '2%', rotate: '-25deg' }} size={90} variant={1} />
-        <IceShard style={{ top: '25%', right: '3%', rotate: '30deg' }} size={75} variant={3} flip />
-        <IceShard style={{ bottom: '8%', left: '6%', rotate: '12deg' }} size={55} variant={4} />
-        <IceShard style={{ bottom: '15%', right: '5%', rotate: '-42deg' }} size={65} variant={0} />
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(34,211,238,0.08) 0%, transparent 70%)' }} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center relative z-10">
@@ -298,11 +293,10 @@ export default function LandingPage() {
 
       {/* ── 3. STATS BAR ── */}
       <section className="relative px-6 py-10">
-        {/* Ice shards */}
-        <IceShard style={{ top: -20, left: '4%', rotate: '25deg' }} size={60} variant={0} />
-        <IceShard style={{ bottom: -15, right: '6%', rotate: '-15deg' }} size={55} variant={2} flip />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+          <div className="relative grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+            <IceShard style={{ top: -12, left: -10, rotate: '-15deg' }} size={28} variant={0} />
+            <IceShard style={{ bottom: -10, right: -8, rotate: '25deg' }} size={24} variant={2} flip />
             {STATS.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.06}>
                 <div className="text-center">
@@ -317,11 +311,6 @@ export default function LandingPage() {
 
       {/* ── 4. APPA — Flight Path Timeline ── */}
       <section className="px-6 py-10 md:py-14 relative">
-        {/* Ice shards scattered around APPA cards */}
-        <IceShard style={{ top: 20, left: '1%', rotate: '-20deg' }} size={80} variant={1} />
-        <IceShard style={{ top: '35%', right: '2%', rotate: '35deg' }} size={70} variant={3} flip />
-        <IceShard style={{ bottom: 15, left: '10%', rotate: '10deg' }} size={50} variant={4} />
-        <IceShard style={{ top: '55%', right: '8%', rotate: '-40deg' }} size={60} variant={0} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -357,7 +346,9 @@ export default function LandingPage() {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </Link>
                       </div>
-                      <div className="lg:w-[55%] p-6 cm-glass" style={{ borderRadius: '16px' }}>
+                      <div className="lg:w-[55%] p-6 cm-glass relative" style={{ borderRadius: '16px' }}>
+                        <IceShard style={{ top: -10, right: -8, rotate: `${(i * 37 + 15) % 60 - 30}deg` }} size={22} variant={i % 5} flip={i % 2 === 0} />
+                        <IceShard style={{ bottom: -8, left: -6, rotate: `${(i * 23 + 40) % 60 - 30}deg` }} size={18} variant={(i + 2) % 5} />
                         <div className="flex items-center gap-2 mb-4">
                           <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(34,211,238,0.1)', color: L.primary }}>{step.icon}</div>
                           <span className="text-sm font-bold" style={{ fontFamily: F.display }}>{step.label}</span>
@@ -384,8 +375,6 @@ export default function LandingPage() {
 
       {/* ── 6. JOB URL ANALYSIS ── */}
       <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
-        <IceShard style={{ top: 10, right: '3%', rotate: '18deg' }} size={72} variant={2} />
-        <IceShard style={{ bottom: 20, left: '2%', rotate: '-28deg' }} size={65} variant={1} flip />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -397,7 +386,10 @@ export default function LandingPage() {
           </Reveal>
 
           <Reveal delay={0.12}>
-            <div className="cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+            <div className="cm-glass relative" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+              <IceShard style={{ top: -12, left: -10, rotate: '20deg' }} size={26} variant={1} />
+              <IceShard style={{ top: '40%', right: -10, rotate: '-30deg' }} size={22} variant={3} flip />
+              <IceShard style={{ bottom: -10, right: '20%', rotate: '40deg' }} size={20} variant={4} />
               <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
                 <div className="flex items-center gap-3 px-4 py-3" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}>
                   <svg width="16" height="16" fill="none" stroke={L.muted} viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
@@ -442,9 +434,6 @@ export default function LandingPage() {
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
       <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
-        <IceShard style={{ top: -10, left: '5%', rotate: '40deg' }} size={55} variant={4} />
-        <IceShard style={{ top: '45%', right: '1%', rotate: '-12deg' }} size={85} variant={3} />
-        <IceShard style={{ bottom: -10, left: '12%', rotate: '22deg' }} size={45} variant={0} flip />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
@@ -458,7 +447,10 @@ export default function LandingPage() {
           </Reveal>
 
           <Reveal delay={0.12}>
-            <div className="cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+            <div className="cm-glass relative" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+              <IceShard style={{ top: -10, right: -8, rotate: '-20deg' }} size={24} variant={0} />
+              <IceShard style={{ bottom: -10, left: -8, rotate: '35deg' }} size={22} variant={2} flip />
+              <IceShard style={{ top: '50%', left: -12, rotate: '10deg' }} size={18} variant={4} />
               <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
@@ -497,10 +489,6 @@ export default function LandingPage() {
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
       <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
-        <IceShard style={{ top: 15, left: '1%', rotate: '-30deg' }} size={80} variant={1} />
-        <IceShard style={{ top: '25%', right: '1%', rotate: '45deg' }} size={65} variant={4} flip />
-        <IceShard style={{ bottom: '15%', left: '3%', rotate: '15deg' }} size={70} variant={2} />
-        <IceShard style={{ bottom: 10, right: '5%', rotate: '-22deg' }} size={55} variant={3} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
@@ -510,7 +498,8 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {UNIQUE_FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.04}>
-                <div className="p-6 h-full cm-glass" style={{ borderRadius: '16px' }}>
+                <div className="p-6 h-full cm-glass relative" style={{ borderRadius: '16px' }}>
+                  <IceShard style={{ top: -8, right: -6, rotate: `${(i * 31 + 10) % 50 - 25}deg` }} size={20} variant={i % 5} flip={i % 3 === 0} />
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.03)', color: L.secondary }}>{f.icon}</div>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: 'rgba(34,211,238,0.06)', color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
@@ -527,11 +516,12 @@ export default function LandingPage() {
 
       {/* ── 12. FINAL CTA ── */}
       <section className="relative px-6 py-14 md:py-20">
-        <IceShard style={{ top: 10, left: '3%', rotate: '32deg' }} size={70} variant={0} />
-        <IceShard style={{ top: '35%', right: '2%', rotate: '-18deg' }} size={80} variant={2} flip />
-        <IceShard style={{ bottom: 15, left: '6%', rotate: '-35deg' }} size={50} variant={4} />
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(0,0,0,0.05)', boxShadow: L.glowStrong }}>
+            <IceShard style={{ top: -10, left: -8, rotate: '20deg' }} size={28} variant={1} />
+            <IceShard style={{ top: '30%', right: -10, rotate: '-25deg' }} size={24} variant={3} flip />
+            <IceShard style={{ bottom: -8, left: '30%', rotate: '35deg' }} size={20} variant={0} />
+            <IceShard style={{ bottom: -10, right: -6, rotate: '-15deg' }} size={26} variant={4} />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(34,211,238,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
