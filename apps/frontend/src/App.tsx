@@ -35,6 +35,7 @@ const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 function Loading() {
   return (
@@ -208,6 +209,9 @@ export function App() {
 
           {/* ── Challenge ─────────────────────────────── */}
           <Route path="/challenge" element={<ChallengePage />} />
+
+          {/* ── Profile ──────────────────────────────── */}
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
           {/* ── Analytics ─────────────────────────────── */}
           <Route path="/analytics" element={<ShellRoute><AnalyticsPage /></ShellRoute>} />
