@@ -44,7 +44,7 @@ export default function SharedCodeEditor({
   className,
 }: SharedCodeEditorProps) {
   return (
-    <div className={className}>
+    <div className={className} style={{ height, overflow: 'hidden' }}>
       <Suspense fallback={<EditorSkeleton height={height} />}>
         <MonacoEditor
           height={height}
