@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import UserDropdown from '../shared/UserDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from '../shared/CamoraLogo';
@@ -44,12 +45,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 shrink-0 z-40 overflow-x-auto no-scrollbar"
+        className="flex items-center justify-between px-4 shrink-0 z-50 no-scrollbar"
         style={{
           height: 'var(--topbar-height, 48px)',
-          background: '#2D8CFF',
-          borderBottom: '1px solid rgba(255,255,255,0.15)',
-          color: '#FFFFFF',
+          background: 'var(--bg-surface)',
+          borderBottom: '1px solid var(--border)',
+          color: 'var(--text-primary)',
         }}
       >
         {/* -- Left: mobile hamburger + logo ---------------------- */}
@@ -59,7 +60,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={onToggleSidebar}
             className="md:hidden flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'rgba(255,255,255,0.9)' }}
+            style={{ color: 'var(--text-primary)' }}
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
             {sidebarOpen ? (
@@ -84,8 +85,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <div
             className="flex items-center gap-2 w-full max-w-md px-3 h-8 rounded-full cursor-pointer transition-colors"
             style={{
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.25)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
             }}
             role="button"
             tabIndex={0}
@@ -107,23 +108,23 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
-              style={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }}
+              style={{ color: 'var(--text-primary)', flexShrink: 0 }}
             >
               <circle cx="7" cy="7" r="5.5" />
               <path d="M11 11l3.5 3.5" />
             </svg>
             <span
               className="text-xs flex-1 truncate"
-              style={{ color: 'rgba(255,255,255,0.9)' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               Search topics...
             </span>
             <kbd
               className="hidden lg:inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded"
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.25)',
-                color: 'rgba(255,255,255,0.9)',
+                background: 'var(--bg-app)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-muted)',
                 fontFamily: 'var(--font-sans)',
               }}
             >
@@ -139,7 +140,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={toggleTheme}
             className="flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'rgba(255,255,255,0.8)' }}
+            style={{ color: 'var(--text-muted)' }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
@@ -180,7 +181,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={() => setCmdOpen(true)}
             className="sm:hidden flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'rgba(255,255,255,0.8)' }}
+            style={{ color: 'var(--text-muted)' }}
             aria-label="Search"
           >
             <svg
@@ -201,7 +202,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen?.(!userMenuOpen)}
-              className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-white/10"
+              className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-[var(--bg-elevated)]"
               title="Account menu"
             >
               {user?.image ? (
@@ -215,7 +216,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
                   style={{
-                    background: 'var(--accent-subtle)',
+                    background: 'var(--accent)',
                     color: '#FFFFFF',
                   }}
                 >
@@ -224,11 +225,11 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               )}
               <span
                 className="hidden md:inline text-xs font-medium truncate max-w-[120px]"
-                style={{ color: 'rgba(255,255,255,0.9)' }}
+                style={{ color: 'var(--text-primary)' }}
               >
                 {user?.name}
               </span>
-              <svg className={`w-3 h-3 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ color: 'rgba(255,255,255,0.7)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              <svg className={`w-3 h-3 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ color: 'var(--text-muted)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
             </button>
             {userMenuOpen && (
               <>

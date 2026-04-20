@@ -7,14 +7,14 @@ import type { LumoraTab } from './LumoraIconRail';
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#2D8CFF',
-  surface: '#1A7AEF',
-  elevated: '#0B5CFF',
-  text: '#ffffff',
-  muted: 'rgba(255,255,255,0.9)',
-  accent: '#2D8CFF',
-  accentBg: 'rgba(45,140,255,0.15)',
-  border: 'rgba(255,255,255,0.2)',
+  base: 'var(--bg-surface)',
+  surface: 'var(--bg-elevated)',
+  elevated: 'var(--bg-app)',
+  text: 'var(--text-primary)',
+  muted: 'var(--text-secondary)',
+  accent: 'var(--accent)',
+  accentBg: 'var(--accent-subtle)',
+  border: 'var(--border)',
 };
 
 interface LumoraTopBarProps {
@@ -27,16 +27,16 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: '#2D8CFF', borderBottom: '1px solid rgba(255,255,255,0.25)' }}>
+    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: C.base, borderBottom: `1px solid ${C.border}` }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 
       {/* Center: core audio controls (compact) */}
       <div data-tour="audio" className="flex-1 flex items-center justify-center overflow-x-auto">
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)' }}>
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
           {/* Live recording controls */}
           <AudioCapture onTranscription={onTranscription} />
-          <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.2)' }} />
+          <div className="w-px h-5 mx-1" style={{ background: C.border }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
         </div>
       </div>
@@ -47,7 +47,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
         <VoiceEnrollment disabled={false} />
 
         {/* Status */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)' }}>
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
           <div className={`w-2 h-2 rounded-full ${
             status.state === 'ready' ? 'bg-[var(--accent)]' :
             status.state === 'error' ? 'bg-red-400' :
