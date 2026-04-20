@@ -9,31 +9,21 @@ export const stripe = stripeSecretKey
     })
   : null;
 
-// Price IDs from Stripe Dashboard
+// Price IDs from Stripe Dashboard — matches lumora-backend env vars
 export const STRIPE_PRICES = {
-  MONTHLY: process.env.STRIPE_PRICE_MONTHLY,              // $29/mo — Interview Ready
-  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY_PRO,  // $49/mo — Pro (includes 3 Lumora sessions)
-  ANNUAL: process.env.STRIPE_PRICE_ANNUAL,                // $19/mo billed $228/year — Annual
-  DESKTOP_MONTHLY: process.env.STRIPE_PRICE_DESKTOP_MONTHLY,  // $29/mo — Desktop App add-on (monthly)
-  DESKTOP_ANNUAL: process.env.STRIPE_PRICE_DESKTOP_ANNUAL,    // $99/year — Desktop App add-on (annual)
-  // Legacy alias
-  DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP || process.env.STRIPE_PRICE_DESKTOP_ANNUAL,
-};
-
-// Feature flags per plan (credit system deprecated — plans are now feature-based)
-export const CREDITS_PER_PLAN = {
-  monthly: 0,           // Interview Ready — feature-gated, no credits
-  quarterly_pro: 0,     // FAANG Track — feature-gated, no credits
-  desktop_monthly: 0,   // Desktop add-on monthly — feature-gated
-  desktop_annual: 0,    // Desktop add-on annual — feature-gated
-  desktop_lifetime: 0,  // Legacy alias
+  MONTHLY_STARTER: process.env.STRIPE_PRICE_STARTER,          // $29/mo — Frost (no desktop)
+  MONTHLY_PRO: process.env.STRIPE_PRICE_MONTHLY,              // $49/mo — Winter Lover (with desktop)
+  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY,           // $119/qtr — Blizzard (with desktop)
+  ANNUAL: process.env.STRIPE_PRICE_YEARLY,                     // $228/yr — Avalanche (no desktop)
+  ANNUAL_DESKTOP: process.env.STRIPE_PRICE_ANNUALLY,           // $299/yr — Avalanche+ (with desktop)
+  DESKTOP_LIFETIME: process.env.STRIPR_PRICE_DTOPLT,           // $99 one-time — Desktop only (BYOK)
 };
 
 /**
  * Check if Stripe is configured
  */
 export function isStripeConfigured() {
-  return !!(stripeSecretKey && (STRIPE_PRICES.MONTHLY || STRIPE_PRICES.QUARTERLY_PRO));
+  return !!(stripeSecretKey && (STRIPE_PRICES.MONTHLY_STARTER || STRIPE_PRICES.MONTHLY_PRO));
 }
 
 export default stripe;

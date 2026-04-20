@@ -39,43 +39,48 @@ router.get('/prices', (req, res) => {
   }
 
   res.json({
-    monthly: {
-      priceId: STRIPE_PRICES.MONTHLY,
-      amount: 2900, // $29.00 — Interview Ready
+    monthly_starter: {
+      priceId: STRIPE_PRICES.MONTHLY_STARTER,
+      amount: 2900,
       currency: 'usd',
       interval: 'month',
-      credits: CREDITS_PER_PLAN.monthly,
+      includes_desktop: false,
+    },
+    monthly_pro: {
+      priceId: STRIPE_PRICES.MONTHLY_PRO,
+      amount: 4900,
+      currency: 'usd',
+      interval: 'month',
+      includes_desktop: true,
     },
     quarterly_pro: {
       priceId: STRIPE_PRICES.QUARTERLY_PRO,
-      amount: 4900, // $49.00 — Pro
+      amount: 11900,
       currency: 'usd',
-      interval: 'month',
-      credits: CREDITS_PER_PLAN.quarterly_pro,
-      features: ['unlimited_ai', 'all_companies', 'lumora_3_sessions'],
+      interval: 'quarter',
+      includes_desktop: true,
     },
     annual: {
       priceId: STRIPE_PRICES.ANNUAL,
-      amount: 22800, // $228/year ($19/mo)
+      amount: 22800,
       currency: 'usd',
       interval: 'year',
-      features: ['unlimited_ai', 'all_companies', 'lumora_3_sessions', 'priority_support'],
+      includes_desktop: false,
     },
-    desktop_monthly: {
-      priceId: STRIPE_PRICES.DESKTOP_MONTHLY,
-      amount: 2900, // $29.00/mo — Desktop App add-on
-      currency: 'usd',
-      interval: 'month',
-      addon: true,
-      features: ['native_desktop', 'screen_share_safe', 'faster_performance', 'always_on'],
-    },
-    desktop_annual: {
-      priceId: STRIPE_PRICES.DESKTOP_ANNUAL,
-      amount: 9900, // $99.00/year — Desktop App add-on
+    annual_desktop: {
+      priceId: STRIPE_PRICES.ANNUAL_DESKTOP,
+      amount: 29900,
       currency: 'usd',
       interval: 'year',
-      addon: true,
-      features: ['native_desktop', 'screen_share_safe', 'faster_performance', 'always_on'],
+      includes_desktop: true,
+    },
+    desktop_lifetime: {
+      priceId: STRIPE_PRICES.DESKTOP_LIFETIME,
+      amount: 9900,
+      currency: 'usd',
+      interval: null,
+      desktop_only: true,
+      web_content: false,
     },
   });
 });
@@ -105,13 +110,13 @@ router.post('/checkout', jwtAuth, async (req, res) => {
 
     // Validate price ID
     const validPrices = [
-      STRIPE_PRICES.MONTHLY,
+      STRIPE_PRICES.MONTHLY_STARTER,
+      STRIPE_PRICES.MONTHLY_PRO,
       STRIPE_PRICES.QUARTERLY_PRO,
       STRIPE_PRICES.ANNUAL,
-      STRIPE_PRICES.DESKTOP_MONTHLY,
-      STRIPE_PRICES.DESKTOP_ANNUAL,
-      STRIPE_PRICES.DESKTOP_LIFETIME, // legacy
-    ].filter(Boolean); // Filter out undefined prices
+      STRIPE_PRICES.ANNUAL_DESKTOP,
+      STRIPE_PRICES.DESKTOP_LIFETIME,
+    ].filter(Boolean);
 
     if (!validPrices.includes(priceId)) {
       return res.status(400).json({ error: 'Invalid price ID' });
@@ -146,13 +151,21 @@ router.post('/checkout', jwtAuth, async (req, res) => {
 
     // Determine purchase type for metadata
     let purchaseType = 'subscription';
-    const isDesktopAddon = [STRIPE_PRICES.DESKTOP_MONTHLY, STRIPE_PRICES.DESKTOP_ANNUAL, STRIPE_PRICES.DESKTOP_LIFETIME].includes(priceId);
-    if (isDesktopAddon) {
-      purchaseType = priceId === STRIPE_PRICES.DESKTOP_ANNUAL || priceId === STRIPE_PRICES.DESKTOP_LIFETIME
-        ? 'desktop_annual' : 'desktop_monthly';
+    if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) {
+      purchaseType = 'desktop_lifetime';
+    } else if (priceId === STRIPE_PRICES.MONTHLY_STARTER) {
+      purchaseType = 'monthly_starter';
+    } else if (priceId === STRIPE_PRICES.MONTHLY_PRO) {
+      purchaseType = 'monthly_pro';
+    } else if (priceId === STRIPE_PRICES.QUARTERLY_PRO) {
+      purchaseType = 'quarterly_pro';
+    } else if (priceId === STRIPE_PRICES.ANNUAL) {
+      purchaseType = 'annual';
+    } else if (priceId === STRIPE_PRICES.ANNUAL_DESKTOP) {
+      purchaseType = 'annual_desktop';
     }
 
-    const isOneTime = purchaseType === 'desktop_annual';
+    const isOneTime = purchaseType === 'desktop_lifetime';
 
     // For subscriptions, don't allow if already subscribed
     if (!isOneTime) {
@@ -480,21 +493,17 @@ async function handleCheckoutComplete(session) {
 
   logger.info({ userId, priceId, type }, 'Processing checkout completion');
 
-  const isDesktopPurchase = ['desktop_monthly', 'desktop_annual', 'desktop_lifetime'].includes(type);
-
-  if (isDesktopPurchase) {
-    // Desktop add-on — record the purchase for download access
+  if (type === 'desktop_lifetime') {
+    // Desktop lifetime — record purchase, no web content access
     await query(
       `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)
        VALUES ($1, $2, 0, $3)`,
-      [userId, type, `Desktop App ${type === 'desktop_monthly' ? '($29/mo)' : '($99/year)'}`]
+      [userId, type, 'Desktop Lifetime ($99 one-time)']
     );
-    logger.info({ userId, type, sessionId: session.id }, 'Desktop addon activated');
-  } else if (type === 'subscription') {
-    // Regular subscription — activate plan
-    let planType = 'monthly'; // Interview Ready
-    if (priceId === STRIPE_PRICES.QUARTERLY_PRO) planType = 'quarterly_pro'; // FAANG Track
-
+    logger.info({ userId, type, sessionId: session.id }, 'Desktop lifetime activated');
+  } else {
+    // Subscription plan — activate with the type as plan_type
+    const planType = type || 'monthly_starter';
     await query(
       `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
       [planType, userId]
@@ -570,13 +579,11 @@ async function handleSubscriptionUpdated(subscription) {
   let planType = 'free';
   const priceId = subscription.items.data[0]?.price?.id;
 
-  if (priceId === STRIPE_PRICES.MONTHLY) {
-    planType = 'monthly'; // Interview Ready
-  } else if (priceId === STRIPE_PRICES.QUARTERLY_PRO) {
-    planType = 'quarterly_pro'; // FAANG Track
-  } else if (priceId === STRIPE_PRICES.DESKTOP_MONTHLY) {
-    return; // Desktop add-on subscription — don't change main plan
-  }
+  if (priceId === STRIPE_PRICES.MONTHLY_STARTER) planType = 'monthly_starter';
+  else if (priceId === STRIPE_PRICES.MONTHLY_PRO) planType = 'monthly_pro';
+  else if (priceId === STRIPE_PRICES.QUARTERLY_PRO) planType = 'quarterly_pro';
+  else if (priceId === STRIPE_PRICES.ANNUAL) planType = 'annual';
+  else if (priceId === STRIPE_PRICES.ANNUAL_DESKTOP) planType = 'annual_desktop';
 
   // Map Stripe status to our status
   let status = subscription.status;
