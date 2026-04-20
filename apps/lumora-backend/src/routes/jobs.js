@@ -142,6 +142,46 @@ router.get('/', async (req, res, next) => {
       paramIdx++;
     }
 
+    if (req.query.max_salary) {
+      const maxSalary = parseInt(req.query.max_salary, 10);
+      if (!isNaN(maxSalary)) {
+        conditions.push(`j.salary_max <= $${paramIdx}`);
+        params.push(maxSalary);
+        paramIdx++;
+      }
+    }
+
+    if (req.query.source) {
+      conditions.push(`j.source ILIKE $${paramIdx}`);
+      params.push(`%${req.query.source}%`);
+      paramIdx++;
+    }
+
+    if (req.query.department) {
+      conditions.push(`j.department ILIKE $${paramIdx}`);
+      params.push(`%${req.query.department}%`);
+      paramIdx++;
+    }
+
+    if (req.query.work_type) {
+      conditions.push(`j.work_type ILIKE $${paramIdx}`);
+      params.push(`%${req.query.work_type}%`);
+      paramIdx++;
+    }
+
+    if (req.query.experience) {
+      conditions.push(`j.experience_level ILIKE $${paramIdx}`);
+      params.push(`%${req.query.experience}%`);
+      paramIdx++;
+    }
+
+    if (req.query.posted_within) {
+      const days = parseInt(req.query.posted_within, 10);
+      if (!isNaN(days) && days > 0 && days <= 365) {
+        conditions.push(`j.posted_date >= NOW() - INTERVAL '${days} days'`);
+      }
+    }
+
     let limit = parseInt(req.query.limit, 10) || 50;
     if (limit < 1) limit = 1;
     if (limit > 200) limit = 200;
@@ -183,6 +223,29 @@ router.get('/', async (req, res, next) => {
       total: parseInt(countResult.rows[0].total, 10),
       limit,
       offset,
+    });
+  } catch (err) {
+    if (err.message === 'Jobs database not configured') {
+      return res.status(503).json({ detail: 'Jobs database not configured' });
+    }
+    next(err);
+  }
+});
+
+/**
+ * GET /filters — Distinct filter values for dropdowns.
+ */
+router.get('/filters', async (req, res, next) => {
+  try {
+    const [sources, locations, departments] = await Promise.all([
+      queryJobs(`SELECT DISTINCT source FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true ORDER BY source LIMIT 50`),
+      queryJobs(`SELECT DISTINCT location FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true ORDER BY location LIMIT 100`),
+      queryJobs(`SELECT DISTINCT department FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true ORDER BY department LIMIT 50`),
+    ]);
+    res.json({
+      sources: sources.rows.map(r => ({ value: r.source, label: r.source })),
+      locations: locations.rows.map(r => ({ value: r.location, label: r.location })),
+      departments: departments.rows.map(r => ({ value: r.department, label: r.department })),
     });
   } catch (err) {
     if (err.message === 'Jobs database not configured') {
