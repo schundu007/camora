@@ -2138,7 +2138,7 @@ export default function TopicDetail({
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
                         {topicDetails.basicImplementation.diagramSrc ? (
-                          <img src={topicDetails.basicImplementation.diagramSrc} alt={topicDetails.basicImplementation.title || 'Basic Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
+                          <img src={topicDetails.basicImplementation.diagramSrc} alt={topicDetails.basicImplementation.title || 'Basic Architecture'} className="w-full rounded-lg mb-3" style={{ maxHeight: '400px', objectFit: 'contain' }} loading="lazy" />
                         ) : topicDetails.basicImplementation.svgTemplate ? (
                           <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />
                         ) : null}
@@ -2167,7 +2167,7 @@ export default function TopicDetail({
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
                         {topicDetails.advancedImplementation.diagramSrc ? (
-                          <img src={topicDetails.advancedImplementation.diagramSrc} alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
+                          <img src={topicDetails.advancedImplementation.diagramSrc} alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'} className="w-full rounded-lg mb-3" style={{ maxHeight: '400px', objectFit: 'contain' }} loading="lazy" />
                         ) : topicDetails.advancedImplementation.svgTemplate ? (
                           <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />
                         ) : null}
@@ -2320,7 +2320,7 @@ export default function TopicDetail({
                         </div>
                         {item.diagramSrc && (
                           <div className="border-t border-[var(--border)] p-3 bg-white">
-                            <img src={item.diagramSrc} alt={item.topic} className="w-full rounded-lg" loading="lazy" />
+                            <img src={item.diagramSrc} alt={item.topic} className="w-full rounded-lg" style={{ maxHeight: '360px', objectFit: 'contain' }} loading="lazy" />
                           </div>
                         )}
                       </div>
