@@ -55,7 +55,7 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <div className="animate-pulse space-y-3">
           <div className="h-5 bg-[var(--bg-elevated)] rounded w-40" />
           {Array.from({ length: 5 }).map((_, i) => (
@@ -72,7 +72,7 @@ export default function Leaderboard() {
 
   if (error) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -80,7 +80,7 @@ export default function Leaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
         <p className="text-sm text-[var(--text-muted)] mt-2">No activity this week yet. Be the first!</p>
       </div>
@@ -88,7 +88,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6 space-y-5">
+    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
       <div>
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">Top performers this week</p>

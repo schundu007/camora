@@ -54,7 +54,7 @@ export default function InterviewCountdown() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5">
+      <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[var(--bg-elevated)] rounded w-32" />
           <div className="h-12 bg-[var(--bg-elevated)] rounded w-20" />
@@ -70,7 +70,7 @@ export default function InterviewCountdown() {
       <>
         <button
           onClick={() => setShowSetup(true)}
-          className="w-full bg-[var(--bg-surface)] border-0 rounded-2xl p-5 text-left transition-all group"
+          className="w-full rounded-2xl p-5 text-left transition-all group" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -99,7 +99,7 @@ export default function InterviewCountdown() {
   const strokeDashoffset = circumference - (completion_pct / 100) * circumference;
 
   return (
-    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5">
+    <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}">
       <div className="flex items-center gap-4">
         {/* Progress ring */}
         <div className="relative flex-shrink-0">
