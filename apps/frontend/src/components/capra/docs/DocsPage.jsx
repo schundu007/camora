@@ -1266,7 +1266,7 @@ export default function DocsPage({ onBack }) {
                   {/* All topics in a flat 2-column grid */}
                   <div className="rounded-2xl overflow-hidden mb-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
                     <div className="h-0.5" style={{ background: 'var(--accent)' }} />
-                    <div className="grid grid-cols-1 md:grid-cols-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-3">
                     {filteredTopics.map((topic, idx) => {
                       const catId = codingCategoryMap[topic.id];
                       const category = codingCategories.find(c => c.id === catId);
@@ -1278,7 +1278,7 @@ export default function DocsPage({ onBack }) {
                             const completedCount = catTopics.filter(t => completedTopics[t.id]).length;
                             const progressPct = catTopics.length > 0 ? Math.round((completedCount / catTopics.length) * 100) : 0;
                             return (
-                              <div className={`col-span-full px-4 py-2.5 flex items-center gap-3 ${idx > 0 ? 'border-t border-[var(--border)]' : ''} border-b border-[var(--border)]`} style={{ background: 'rgba(34,211,238,0.04)' }}>
+                              <div className="col-span-full px-3 py-2 flex items-center gap-3 rounded-lg" style={{ background: 'rgba(34,211,238,0.04)' }}>
                                 <Icon name={category.icon} size={12} style={{ color: 'var(--accent)' }} />
                                 <span className="landing-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-semibold">{category.name}</span>
                                 <span className="landing-mono text-[10px] text-[var(--text-muted)]">{completedCount}/{catTopics.length}</span>
@@ -1291,11 +1291,12 @@ export default function DocsPage({ onBack }) {
                           })()}
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[var(--border-hover)] transition-all group border-b border-r border-[var(--border)]"
+                            className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                            style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={10} style={{ color: 'var(--accent)' }} />}
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
                             </div>
@@ -1447,16 +1448,17 @@ export default function DocsPage({ onBack }) {
                             })()}
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -1513,14 +1515,15 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryDesigns.length} systems</span>
                           </div>
                           {/* Designs in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryDesigns.map((design) => {
                               const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
                               return (
                                 <div
                                   key={design.id}
-                                  className="px-3 py-2.5 flex items-center justify-between hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)] min-w-0 overflow-hidden"
+                                  className="group rounded-xl p-3 flex items-center justify-between transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-0 overflow-hidden"
+                                  style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div
                                     onClick={() => setSelectedTopic(design.id)}
@@ -1529,8 +1532,8 @@ export default function DocsPage({ onBack }) {
                                     {getCompanyLogoSrc(design.id) ? (
                                       <CompanyLogo topicId={design.id} size={24} />
                                     ) : (
-                                      <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                        <Icon name={design.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                        <Icon name={design.icon} size={12} style={{ color: 'var(--accent)' }} />
                                       </div>
                                     )}
                                     <div>
@@ -1586,21 +1589,22 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
-                                  className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                  className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                  style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     {getCompanyLogoSrc(problem.id) ? (
                                       <CompanyLogo topicId={problem.id} size={24} />
                                     ) : (
-                                      <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                        <Icon name={problem.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                        <Icon name={problem.icon} size={12} style={{ color: 'var(--accent)' }} />
                                       </div>
                                     )}
                                     <div>
@@ -1648,16 +1652,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                    <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
@@ -1699,16 +1704,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                    <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
@@ -1750,16 +1756,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                    <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
@@ -1801,16 +1808,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                    <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
@@ -1841,12 +1849,13 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
                       <div className="h-0.5" style={{ background: 'var(--accent)' }} />
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                            className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                            style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${topic.color}12` }}>
@@ -1921,16 +1930,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -1975,21 +1985,22 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
-                                  className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                  className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                  style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     {getCompanyLogoSrc(problem.id) ? (
                                       <CompanyLogo topicId={problem.id} size={24} />
                                     ) : (
-                                      <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                        <Icon name={problem.icon} size={11} style={{ color: 'var(--accent)' }} />
+                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                        <Icon name={problem.icon} size={12} style={{ color: 'var(--accent)' }} />
                                       </div>
                                     )}
                                     <div>
@@ -2142,16 +2153,17 @@ export default function DocsPage({ onBack }) {
                             </div>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2282,16 +2294,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2332,16 +2345,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2374,16 +2388,17 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-elevated)] transition-all group border-b border-r border-[var(--border)]"
+                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2428,7 +2443,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)]">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
                             {categoryTopics.map((topic) => {
                               const isCompleted = completedTopics[topic.id];
                               const isStarred = starredTopics[topic.id];
@@ -2437,7 +2452,8 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative px-4 py-3 border-b border-r border-[var(--border)] cursor-pointer transition-all duration-150 hover:bg-[var(--bg-elevated)] ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative rounded-xl p-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
@@ -2498,7 +2514,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)]">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
                             {categoryTopics.map((topic) => {
                               const isCompleted = completedTopics[topic.id];
                               const isStarred = starredTopics[topic.id];
@@ -2507,7 +2523,8 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative px-4 py-3 border-b border-r border-[var(--border)] cursor-pointer transition-all duration-150 hover:bg-[var(--bg-elevated)] ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative rounded-xl p-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
@@ -2565,7 +2582,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)]">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
                             {categoryTopics.map((topic) => {
                               const isCompleted = completedTopics[topic.id];
                               const isStarred = starredTopics[topic.id];
@@ -2574,7 +2591,8 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative px-4 py-3 border-b border-r border-[var(--border)] cursor-pointer transition-all duration-150 hover:bg-[var(--bg-elevated)] ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative rounded-xl p-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">

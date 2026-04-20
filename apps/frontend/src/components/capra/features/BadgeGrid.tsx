@@ -37,7 +37,7 @@ export default function BadgeGrid() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <div className="animate-pulse space-y-4">
           <div className="h-5 bg-[var(--bg-elevated)] rounded w-32" />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -52,14 +52,14 @@ export default function BadgeGrid() {
 
   if (error) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6 space-y-5">
+    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
       <div>
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Badges</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">

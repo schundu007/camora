@@ -54,7 +54,7 @@ export default function ReferralDashboard() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <div className="animate-pulse space-y-4">
           <div className="h-5 bg-[var(--bg-elevated)] rounded w-40" />
           <div className="h-10 bg-[var(--bg-elevated)] rounded" />
@@ -70,7 +70,7 @@ export default function ReferralDashboard() {
 
   if (error) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -79,7 +79,7 @@ export default function ReferralDashboard() {
   if (!data) return null;
 
   return (
-    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 space-y-6">
+    <div className="rounded-2xl p-6 space-y-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
       {/* Header */}
       <div>
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Refer Friends, Earn Credits</h3>
@@ -104,11 +104,11 @@ export default function ReferralDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[var(--bg-elevated)] rounded-xl p-4 text-center">
+        <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}>
           <p className="text-2xl font-bold text-[var(--text-primary)]">{data.total_invited}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">Invited</p>
         </div>
-        <div className="bg-[var(--bg-elevated)] rounded-xl p-4 text-center">
+        <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}>
           <p className="text-2xl font-bold text-[var(--text-primary)]">{data.total_rewarded}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">Rewarded</p>
         </div>
