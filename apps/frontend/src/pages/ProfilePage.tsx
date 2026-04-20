@@ -273,10 +273,10 @@ export default function ProfilePage() {
   useEffect(() => { document.title = 'Profile — Camora'; return () => { document.title = 'Camora'; }; }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-page, #F0F7FF)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-page, #F0F7FF)' }}>
       <SiteNav variant="light" />
 
-      <div className="max-w-3xl mx-auto px-6 pt-28 pb-20">
+      <div className="max-w-3xl mx-auto px-6 pt-28 pb-20 flex-1">
         <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-8" style={{ fontFamily: 'var(--font-display)' }}>Profile</h1>
 
         {/* Tabs */}

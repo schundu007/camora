@@ -13,14 +13,14 @@ interface LumoraIconRailProps {
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#2D8CFF',
-  surface: '#1A7AEF',
-  elevated: '#0B5CFF',
-  text: '#ffffff',
-  muted: 'rgba(255,255,255,0.9)',
-  accent: '#2D8CFF',
-  accentBg: 'rgba(45,140,255,0.15)',
-  border: 'rgba(255,255,255,0.2)',
+  base: 'var(--bg-surface)',
+  surface: 'var(--bg-elevated)',
+  elevated: 'var(--bg-app)',
+  text: 'var(--text-primary)',
+  muted: 'var(--text-secondary)',
+  accent: 'var(--accent)',
+  accentBg: 'var(--accent-subtle)',
+  border: 'var(--border)',
 };
 
 function UserAvatarMenu() {
@@ -94,7 +94,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#2D8CFF', borderRight: '1px solid rgba(255,255,255,0.2)' }}>
+    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: C.base, borderRight: `1px solid ${C.border}` }}>
       <Link to="/" className="flex items-center justify-center w-full h-12 mb-3" title="Camora">
         <CamoraLogo size={32} />
       </Link>

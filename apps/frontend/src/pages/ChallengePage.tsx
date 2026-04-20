@@ -722,6 +722,8 @@ export default function ChallengePage() {
       <style>{`
         .ch-root {
           min-height: 100vh;
+          display: flex;
+          flex-direction: column;
           background: var(--bg-app);
           color: var(--text-primary);
           font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
