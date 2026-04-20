@@ -3115,8 +3115,8 @@ Quick quality first: 360p available in minutes, 4K later`
       staticDiagrams: [
         { id: 'youtube-problem-definition', title: 'Problem Definition', description: 'YouTube system scope, scale, and key challenges', src: '/diagrams/youtube/problem-definition.svg', type: 'overview' },
         { id: 'youtube-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for YouTube scale', src: '/diagrams/youtube/capacity-estimation.svg', type: 'estimation' },
-        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', src: '/diagrams/youtube/upload-pipeline.svg', type: 'flow' },
-        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', src: '/diagrams/youtube/streaming-flow.svg', type: 'flow' },
+        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', type: 'flow' },
+        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', type: 'flow' },
       ],
     },
     {
@@ -5114,7 +5114,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Hybrid Fan-out for Feed Generation',
-          diagramSrc: '/diagrams/instagram/deep-dive-fanout.png',
+          diagramSrc: '/diagrams/instagram/feed-generation-flow.svg',
           detail: `The feed system is the core of Instagram experience -- getting it wrong means slow feeds or wasted compute.
 
 **The celebrity problem:**
@@ -5251,7 +5251,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'photo-upload-pipeline',
           title: 'Photo Upload Pipeline',
           description: 'Complete flow from client upload to CDN-ready image with multiple resolutions',
-          src: '/diagrams/instagram/flow-photo-upload.png',
+          src: '/diagrams/instagram/photo-upload-flow.svg',
           steps: [
             { step: 1, label: 'Client Upload', detail: 'Client sends photo (avg 2MB) to Upload Service via pre-signed S3 URL' },
             { step: 2, label: 'Store Original', detail: 'Raw image stored in S3 Raw bucket with unique postId key' },
@@ -5338,6 +5338,8 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
         { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope features vs out-of-scope for the Instagram design interview', src: '/diagrams/instagram/problem-definition.svg', type: 'overview' },
         { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Upload QPS, feed read QPS, storage growth (600 TB/day), CDN egress, and like throughput calculations', src: '/diagrams/instagram/capacity-estimation.svg', type: 'estimation' },
         { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/flow-photo-upload.png', type: 'flow' },
+        { id: 'feed-generation-flow', title: 'Feed Generation Flow', description: 'Feed Generation Flow diagram for instagram', src: '/diagrams/instagram/feed-generation-flow.svg', type: 'flow' },
+        { id: 'photo-upload-flow', title: 'Photo Upload Flow', description: 'Photo Upload Flow diagram for instagram', src: '/diagrams/instagram/photo-upload-flow.svg', type: 'flow' },
       ],
       // ── Charts ──
       charts: [
@@ -6174,6 +6176,12 @@ Changes are pushed through notification service, client then fetches full delta.
         { id: 'dropbox-problem-definition', title: 'Problem Definition', description: 'Dropbox system scope, scale, and key challenges', src: '/diagrams/dropbox/problem-definition.svg', type: 'overview' },
         { id: 'dropbox-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for Dropbox scale', src: '/diagrams/dropbox/capacity-estimation.svg', type: 'estimation' },
         { id: 'dropbox-sync-architecture', title: 'Sync Architecture', description: 'Block-level sync with deduplication flow', src: '/diagrams/dropbox/sync-architecture.svg', type: 'flow' },
+        { id: 'deep-dive-block-sync', title: 'Deep Dive Block Sync', description: 'Deep dive into block sync for dropbox', src: '/diagrams/dropbox/deep-dive-block-sync.svg', type: 'deep-dive' },
+        { id: 'deep-dive-conflict', title: 'Deep Dive Conflict', description: 'Deep dive into conflict for dropbox', src: '/diagrams/dropbox/deep-dive-conflict.svg', type: 'deep-dive' },
+        { id: 'deep-dive-dedup', title: 'Deep Dive Dedup', description: 'Deep dive into dedup for dropbox', src: '/diagrams/dropbox/deep-dive-dedup.svg', type: 'deep-dive' },
+        { id: 'deep-dive-notification', title: 'Deep Dive Notification', description: 'Deep dive into notification for dropbox', src: '/diagrams/dropbox/deep-dive-notification.svg', type: 'deep-dive' },
+        { id: 'file-sync-flow', title: 'File Sync Flow', description: 'File Sync Flow diagram for dropbox', src: '/diagrams/dropbox/file-sync-flow.svg', type: 'flow' },
+        { id: 'sharing-flow', title: 'Sharing Flow', description: 'Sharing Flow diagram for dropbox', src: '/diagrams/dropbox/sharing-flow.svg', type: 'flow' },
       ],
     },
     {
@@ -8360,6 +8368,12 @@ cart {
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for amazon scale', src: '/diagrams/amazon/capacity-estimation.svg', type: 'estimation' },
+        { id: 'checkout-flow', title: 'Checkout Flow', description: 'Checkout Flow diagram for amazon', src: '/diagrams/amazon/checkout-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for amazon design', src: '/diagrams/amazon/problem-definition.svg', type: 'overview' },
+        { id: 'search-flow', title: 'Search Flow', description: 'Search Flow diagram for amazon', src: '/diagrams/amazon/search-flow.svg', type: 'flow' },
+      ],
       evolutionSteps: [
         { step: 1, title: 'Monolith', description: 'Single application server with one relational database handling all e-commerce functions.', color: '#94a3b8', icon: 'server', capacity: '~10K products', rps: '100', pros: ['Simple to build and deploy', 'Single database for consistency', 'Easy debugging'], cons: ['Cannot scale services independently', 'Database becomes bottleneck', 'Full-table scans for search'] },
         { step: 2, title: 'Service Split', description: 'Decompose into microservices (Product, Cart, Order, Payment) with dedicated databases per service.', color: '#2D8CFF', icon: 'layers', capacity: '~1M products', rps: '5K', pros: ['Independent scaling per domain', 'Technology choice per service', 'Fault isolation'], cons: ['Distributed transaction complexity', 'Service discovery needed', 'Network latency between services'] },
@@ -9231,6 +9245,12 @@ presence {
             { label: '4 TB ops/day', value: 'Operation log growth', bar: 65 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for google docs scale', src: '/diagrams/google-docs/capacity-estimation.svg', type: 'estimation' },
+        { id: 'conflict-resolution', title: 'Conflict Resolution', description: 'Conflict Resolution diagram for google docs', src: '/diagrams/google-docs/conflict-resolution.svg', type: 'flow' },
+        { id: 'edit-flow', title: 'Edit Flow', description: 'Edit Flow diagram for google docs', src: '/diagrams/google-docs/edit-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for google docs design', src: '/diagrams/google-docs/problem-definition.svg', type: 'overview' },
       ],
       evolutionSteps: [
         { step: 1, title: 'Save & Refresh', description: 'Simple document editor with manual save. No collaboration — last save wins.', color: '#94a3b8', icon: 'server', capacity: '~1K documents', rps: '10', pros: ['Simple to build', 'No conflict resolution needed', 'Standard CRUD'], cons: ['Data loss from concurrent edits', 'No real-time collaboration', 'Manual save required'] },
@@ -10882,6 +10902,12 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
             { step: 8, label: 'Assemble Results', detail: 'Generate snippets, blend special results, insert ads, cache, return in <200ms' },
           ]
         },
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the search engine design', src: '/diagrams/search-engine/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Traffic, index size, crawl throughput calculations', src: '/diagrams/search-engine/capacity-estimation.svg', type: 'estimation' },
+        { id: 'crawl-index', title: 'Crawl and Index Pipeline', description: 'URL discovery through indexing flow', src: '/diagrams/search-engine/crawl-index-flow.svg', type: 'flow' },
+        { id: 'query-flow', title: 'Query Processing Flow', description: 'User query through fan-out to ranked results', src: '/diagrams/search-engine/query-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -14301,6 +14327,12 @@ When a channel receives messages faster than members can consume, the gateway ap
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for chat system scale', src: '/diagrams/chat-system/capacity-estimation.svg', type: 'estimation' },
+        { id: 'presence-flow', title: 'Presence Flow', description: 'Presence Flow diagram for chat system', src: '/diagrams/chat-system/presence-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for chat system design', src: '/diagrams/chat-system/problem-definition.svg', type: 'overview' },
+        { id: 'send-message-flow', title: 'Send Message Flow', description: 'Send Message Flow diagram for chat system', src: '/diagrams/chat-system/send-message-flow.svg', type: 'flow' },
+      ],
       evolutionSteps: [
         { step: 1, title: 'Single Server Chat', description: 'One WebSocket server with PostgreSQL. All connections on one machine, messages stored in a single database.', color: '#94a3b8', icon: 'server', capacity: '~10K connections', rps: '100', pros: ['Simple to build and deploy', 'No distributed systems complexity', 'Easy to debug message ordering'], cons: ['Single point of failure', 'Limited to one server memory for connections', 'No search capability'] },
         { step: 2, title: 'Multi-Gateway + Redis', description: 'Multiple WebSocket gateways with Redis Pub/Sub for cross-server fan-out. Connection registry in Redis maps users to gateways.', color: '#2D8CFF', icon: 'layers', capacity: '~500K connections', rps: '5K', pros: ['Horizontal scaling of connections', 'Stateless gateways with easy failover', 'Redis Pub/Sub handles fan-out'], cons: ['Redis becomes bottleneck for large channels', 'No full-text search yet', 'Single-region only'] },
@@ -14864,6 +14896,12 @@ Not all photos are equal. The "primary photo" for a business listing is selected
             { step: 6, label: 'Update Rating', detail: 'Async worker recomputes business avg_rating and review_count, invalidates cache' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the Yelp proximity search design', src: '/diagrams/yelp/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Business count, search QPS, storage calculations', src: '/diagrams/yelp/capacity-estimation.svg', type: 'estimation' },
+        { id: 'nearby-search', title: 'Nearby Business Search Flow', description: 'Geohash lookup through ranking to results', src: '/diagrams/yelp/nearby-search-flow.svg', type: 'flow' },
+        { id: 'write-review', title: 'Write Review Flow', description: 'Review submission through fraud detection to rating update', src: '/diagrams/yelp/write-review-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -15599,6 +15637,12 @@ The first 24 hours of swipe data from other users seeing the new profile provide
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the Tinder matching design', src: '/diagrams/tinder/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Swipe volume, match detection, storage calculations', src: '/diagrams/tinder/capacity-estimation.svg', type: 'estimation' },
+        { id: 'swipe-match', title: 'Swipe and Match Flow', description: 'Right-swipe through reciprocal check to match notification', src: '/diagrams/tinder/swipe-match-flow.svg', type: 'flow' },
+        { id: 'recommendation', title: 'Recommendation Stack Generation', description: 'S2 cell query through ELO scoring to user stack', src: '/diagrams/tinder/recommendation-flow.svg', type: 'flow' },
+      ],
       visualCards: [
         {
           id: 'tech-stack',
@@ -16229,6 +16273,7 @@ When a user has zero listening history, recommendations must still feel relevant
       deepDiveTopics: [
         {
           topic: 'Adaptive Bitrate Streaming',
+          diagramSrc: '/diagrams/spotify/deep-dive-streaming.svg',
           detail: `Spotify encodes every track in 3 quality tiers: 96kbps (data saver), 160kbps (free default), 320kbps (premium). The client dynamically switches based on network conditions.
 
 **How ABR Works**:
@@ -16241,6 +16286,7 @@ When a user has zero listening history, recommendations must still feel relevant
         },
         {
           topic: 'CDN Strategy and Audio Delivery',
+          diagramSrc: '/diagrams/spotify/deep-dive-connect.svg',
           detail: `With 11K concurrent streams/sec, CDN is critical for low-latency delivery.
 
 **Tiered Caching**:
@@ -16254,6 +16300,7 @@ When a user has zero listening history, recommendations must still feel relevant
         },
         {
           topic: 'DRM and Content Protection',
+          diagramSrc: '/diagrams/spotify/deep-dive-royalty.svg',
           detail: `Premium content requires Digital Rights Management to prevent piracy.
 
 **Widevine DRM** (Google): Used across Android, Chrome, smart TVs. Three security levels: L1 (hardware TEE), L2 (software), L3 (basic).
@@ -16278,6 +16325,7 @@ When a user has zero listening history, recommendations must still feel relevant
         },
         {
           topic: 'Listening Analytics Pipeline',
+          diagramSrc: '/diagrams/spotify/deep-dive-discover-weekly.svg',
           detail: `Every play event feeds into Spotify's analytics for royalties, recommendations, and Spotify Wrapped.
 
 **Pipeline**: Client events -> Kafka (partitioned by userId) -> Flink (stream processing) -> Data Lake (S3 Parquet) -> Spark (batch aggregation) -> BigQuery/Redshift (reporting).
@@ -16372,6 +16420,12 @@ When a user has zero listening history, recommendations must still feel relevant
             { step: 6, label: 'Index Update', detail: 'Add to Elasticsearch search index, Cassandra catalog, and recommendation embedding space. Track goes live.' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the Spotify streaming design', src: '/diagrams/spotify/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Streaming bandwidth, catalog size, CDN capacity calculations', src: '/diagrams/spotify/capacity-estimation.svg', type: 'estimation' },
+        { id: 'streaming-play', title: 'Audio Streaming Flow', description: 'End-to-end flow from play request to audio delivery', src: '/diagrams/spotify/streaming-play-flow.svg', type: 'flow' },
+        { id: 'streaming', title: 'Streaming Architecture', description: 'CDN tiered caching and adaptive bitrate streaming', src: '/diagrams/spotify/streaming-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -17159,6 +17213,12 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
             { label: '$12.2B revenue', value: 'Annual revenue', bar: 95 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'booking-flow', title: 'Booking Flow', description: 'Booking Flow diagram for airbnb', src: '/diagrams/airbnb/booking-flow.svg', type: 'flow' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for airbnb scale', src: '/diagrams/airbnb/capacity-estimation.svg', type: 'estimation' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for airbnb design', src: '/diagrams/airbnb/problem-definition.svg', type: 'overview' },
+        { id: 'search-flow', title: 'Search Flow', description: 'Search Flow diagram for airbnb', src: '/diagrams/airbnb/search-flow.svg', type: 'flow' },
       ],
       evolutionSteps: [
         { step: 1, title: 'Monolith + PostgreSQL', description: 'Single Rails/Django app with PostgreSQL. PostGIS for basic geo queries. Simple booking with row-level locks.', color: '#94a3b8', icon: 'server', capacity: '~10K listings', rps: '50', pros: ['Simple to build and iterate', 'PostGIS handles basic geo queries', 'Strong consistency by default'], cons: ['Slow search with complex JOINs', 'Lock contention on popular listings', 'No caching layer'] },
@@ -18036,6 +18096,12 @@ Constraints:
             { label: '~250 Orders/sec', value: 'Peak QPS (dinner)', bar: 95 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for doordash scale', src: '/diagrams/doordash/capacity-estimation.svg', type: 'estimation' },
+        { id: 'dispatch-flow', title: 'Dispatch Flow', description: 'Dispatch Flow diagram for doordash', src: '/diagrams/doordash/dispatch-flow.svg', type: 'flow' },
+        { id: 'order-flow', title: 'Order Flow', description: 'Order Flow diagram for doordash', src: '/diagrams/doordash/order-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for doordash design', src: '/diagrams/doordash/problem-definition.svg', type: 'overview' },
       ],
 
       evolutionSteps: [
@@ -19307,6 +19373,11 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
             { step: 8, label: 'Return Content', detail: 'Serve with syntax highlighting and cache headers' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the Pastebin design', src: '/diagrams/pastebin/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Paste volume, storage, and bandwidth calculations', src: '/diagrams/pastebin/capacity-estimation.svg', type: 'estimation' },
+        { id: 'create-paste', title: 'Create Paste Flow', description: 'Paste submission through dedup to URL generation', src: '/diagrams/pastebin/create-paste-flow.svg', type: 'flow' },
       ],
 
       visualCards: [
@@ -20644,6 +20715,12 @@ When a normal user (<10K followers) posts:
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for facebook newsfeed scale', src: '/diagrams/facebook-newsfeed/capacity-estimation.svg', type: 'estimation' },
+        { id: 'feed-flow', title: 'Feed Flow', description: 'Feed Flow diagram for facebook newsfeed', src: '/diagrams/facebook-newsfeed/feed-flow.svg', type: 'flow' },
+        { id: 'post-fanout-flow', title: 'Post Fanout Flow', description: 'Post Fanout Flow diagram for facebook newsfeed', src: '/diagrams/facebook-newsfeed/post-fanout-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for facebook newsfeed design', src: '/diagrams/facebook-newsfeed/problem-definition.svg', type: 'overview' },
+      ],
 
       evolutionSteps: [
         { step: 1, title: 'Chronological Pull', description: 'Simple reverse-chronological feed. Query friends list, fetch their recent posts, sort by time. N+1 query problem causes 500ms+ latency.', color: '#94a3b8', icon: 'server', capacity: '~1M users', rps: '1K', pros: ['Simple and transparent', 'No ML complexity', 'Easy to debug'], cons: ['N+1 query problem (slow)', 'No relevance ranking', 'Celebrity posts cause hot spots'] },
@@ -21283,6 +21360,12 @@ Merkle Tree sync:
             { label: '<1ms in-memory', value: 'Cache read latency', bar: 95 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for key value store scale', src: '/diagrams/key-value-store/capacity-estimation.svg', type: 'estimation' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for key value store design', src: '/diagrams/key-value-store/problem-definition.svg', type: 'overview' },
+        { id: 'read-flow', title: 'Read Flow', description: 'Read Flow diagram for key value store', src: '/diagrams/key-value-store/read-flow.svg', type: 'flow' },
+        { id: 'write-flow', title: 'Write Flow', description: 'Write Flow diagram for key value store', src: '/diagrams/key-value-store/write-flow.svg', type: 'flow' },
       ],
 
       evolutionSteps: [
@@ -23934,6 +24017,7 @@ DEL temp:friends:player123 temp:result
           id: 'score-update-flow',
           title: 'Score Update Flow',
           description: 'From game event to updated leaderboard rank',
+          src: '/diagrams/leaderboard/score-update-flow.svg',
           steps: [
             { step: 1, label: 'Game Event', detail: 'Game server determines player earned points (e.g., match won, achievement unlocked)' },
             { step: 2, label: 'Score Validation', detail: 'Anti-cheat service validates: score within expected range, update rate not suspicious' },
@@ -23988,6 +24072,9 @@ DEL temp:friends:player123 temp:result
             { label: '1000+ boards', value: 'Concurrent leaderboards', bar: 60 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'score-update-flow', title: 'Score Update Flow', description: 'Score Update Flow diagram for leaderboard', src: '/diagrams/leaderboard/score-update-flow.svg', type: 'flow' },
       ],
 
       evolutionSteps: [
@@ -25044,6 +25131,7 @@ Every layer is safe to retry independently.
           id: 'booking-flow',
           title: 'Hotel Booking Flow',
           description: 'End-to-end flow from search to confirmed reservation',
+          src: '/diagrams/hotel-booking/booking-flow.svg',
           steps: [
             { step: 1, label: 'Search', detail: 'User enters location, dates, guests; Elasticsearch returns candidate hotels with approximate availability' },
             { step: 2, label: 'Select Hotel', detail: 'User views hotel detail page; exact availability fetched from inventory DB for selected dates' },
@@ -25098,6 +25186,11 @@ Every layer is safe to retry independently.
             { label: '$26.9B revenue', value: 'Annual platform revenue', bar: 100 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'booking-flow', title: 'Booking Flow', description: 'Booking Flow diagram for hotel booking', src: '/diagrams/hotel-booking/booking-flow.svg', type: 'flow' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for hotel booking scale', src: '/diagrams/hotel-booking/capacity-estimation.svg', type: 'estimation' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for hotel booking design', src: '/diagrams/hotel-booking/problem-definition.svg', type: 'overview' },
       ],
 
       evolutionSteps: [
@@ -26143,6 +26236,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
           id: 'routing-flow',
           title: 'Route Calculation Flow',
           description: 'How a driving directions request is processed from query to polyline response',
+          src: '/diagrams/google-maps/route-calculation-flow.svg',
           steps: [
             { step: 1, label: 'Geocode Endpoints', detail: 'Resolve origin and destination to lat/lng coordinates if addresses were provided' },
             { step: 2, label: 'Graph Partition Lookup', detail: 'Determine which graph partitions contain origin and destination using S2 cell mapping' },
@@ -26197,6 +26291,11 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
             { label: '<2 min traffic', value: 'Traffic data freshness', bar: 75 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for google maps scale', src: '/diagrams/google-maps/capacity-estimation.svg', type: 'estimation' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for google maps design', src: '/diagrams/google-maps/problem-definition.svg', type: 'overview' },
+        { id: 'route-calculation-flow', title: 'Route Calculation Flow', description: 'Route Calculation Flow diagram for google maps', src: '/diagrams/google-maps/route-calculation-flow.svg', type: 'flow' },
       ],
 
       evolutionSteps: [
@@ -27639,6 +27738,11 @@ Privacy: Option to view anonymously (hides viewer)
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for linkedin scale', src: '/diagrams/linkedin/capacity-estimation.svg', type: 'estimation' },
+        { id: 'feed-post-flow', title: 'Feed Post Flow', description: 'Feed Post Flow diagram for linkedin', src: '/diagrams/linkedin/feed-post-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for linkedin design', src: '/diagrams/linkedin/problem-definition.svg', type: 'overview' },
+      ],
 
       evolutionSteps: [
         { step: 1, title: 'Basic Profiles', description: 'Simple member profiles with SQL database and basic search.', color: '#94a3b8', icon: 'server', capacity: '~100K members', rps: '100', pros: ['Simple CRUD', 'SQL queries', 'Easy to build'], cons: ['No graph features', 'No recommendations', 'Search is basic'] },
@@ -27942,7 +28046,7 @@ aggregated_clicks (OLAP store) {
         },
         {
           topic: 'Click Fraud Detection Pipeline',
-          diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-fraud.png',
+          diagramSrc: '/diagrams/ad-click-aggregation/click-pipeline-flow.svg',
           detail: `Click fraud costs advertisers billions annually. Detection operates at two speeds.
 
 **Inline rules (<10ms):** Same user clicking same ad >5 times/minute. Known bot user-agents. Data center IP ranges. Click-through rate anomaly (>10x normal). These are simple, fast, and catch ~70% of fraud.
@@ -28001,7 +28105,7 @@ aggregated_clicks (OLAP store) {
           id: 'click-processing-pipeline',
           title: 'Click Processing Pipeline',
           description: 'End-to-end flow from ad click to aggregated billing',
-          src: '/diagrams/ad-click-aggregation/flow-click-pipeline.png',
+          src: '/diagrams/ad-click-aggregation/click-pipeline-flow.svg',
           steps: [
             { step: 1, label: 'Click Event', detail: 'User clicks ad -- event sent to click collector (202 Accepted)' },
             { step: 2, label: 'Kafka Publish', detail: 'Event published to Kafka topic partitioned by ad_id' },
@@ -28059,6 +28163,11 @@ aggregated_clicks (OLAP store) {
             { label: '27K peak TPS', value: 'Black Friday peak', bar: 70 },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for ad click aggregation scale', src: '/diagrams/ad-click-aggregation/capacity-estimation.svg', type: 'estimation' },
+        { id: 'click-pipeline-flow', title: 'Click Pipeline Flow', description: 'Click Pipeline Flow diagram for ad click aggregation', src: '/diagrams/ad-click-aggregation/click-pipeline-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for ad click aggregation design', src: '/diagrams/ad-click-aggregation/problem-definition.svg', type: 'overview' },
       ],
 
       evolutionSteps: [
@@ -28464,6 +28573,11 @@ trending_queries (real-time) {
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for autocomplete system scale', src: '/diagrams/autocomplete-system/capacity-estimation.svg', type: 'estimation' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for autocomplete system design', src: '/diagrams/autocomplete-system/problem-definition.svg', type: 'overview' },
+        { id: 'suggest-flow', title: 'Suggest Flow', description: 'Suggest Flow diagram for autocomplete system', src: '/diagrams/autocomplete-system/suggest-flow.svg', type: 'flow' },
+      ],
 
       evolutionSteps: [
         { step: 1, title: 'Database LIKE', description: 'SQL LIKE query on a query_log table for prefix matching.', color: '#94a3b8', icon: 'database', capacity: '~100 QPS', rps: '100', pros: ['No extra infrastructure', 'Simple to implement', 'Full SQL flexibility'], cons: ['Full table scan', 'Very slow at scale', 'No ranking'] },
@@ -28722,12 +28836,17 @@ If version mismatch, retry. If quantity = 0, sold out.
         { id: 'cart-storage', title: 'Cart Storage: Redis vs Database vs Session', headers: ['Aspect', 'Redis', 'Database', 'Browser Session'], rows: [['Speed', 'Sub-ms reads', '5-10ms', 'Instant (client)'], ['Persistence', 'With persistence', 'Durable', 'Lost on clear'], ['Cross-Device', 'Yes (server-side)', 'Yes', 'No'], ['Cost', 'RAM-priced', 'Cheaper storage', 'Free']], verdict: 'Redis for active carts, database for durability' }
       ],
       flowcharts: [
-        { id: 'checkout-saga', title: 'Checkout Saga Flow', description: 'Distributed checkout across inventory, payment, and order services', steps: [{ step: 1, label: 'Validate Cart', detail: 'Check all items still available and prices unchanged' }, { step: 2, label: 'Reserve Inventory', detail: 'Decrement available count with optimistic lock (or Redis token)' }, { step: 3, label: 'Process Payment', detail: 'Authorize card via payment processor (Stripe/Adyen)' }, { step: 4, label: 'Create Order', detail: 'Insert order record with CONFIRMED status' }, { step: 5, label: 'Send Confirmation', detail: 'Email + push notification with order details' }, { step: 6, label: 'Compensate on Failure', detail: 'If any step fails: refund payment, release inventory, cancel order' }] },
+        { id: 'checkout-saga', title: 'Checkout Saga Flow', description: 'Distributed checkout across inventory, payment, and order services', src: '/diagrams/ecommerce-platform/checkout-flow.svg', steps: [{ step: 1, label: 'Validate Cart', detail: 'Check all items still available and prices unchanged' }, { step: 2, label: 'Reserve Inventory', detail: 'Decrement available count with optimistic lock (or Redis token)' }, { step: 3, label: 'Process Payment', detail: 'Authorize card via payment processor (Stripe/Adyen)' }, { step: 4, label: 'Create Order', detail: 'Insert order record with CONFIRMED status' }, { step: 5, label: 'Send Confirmation', detail: 'Email + push notification with order details' }, { step: 6, label: 'Compensate on Failure', detail: 'If any step fails: refund payment, release inventory, cancel order' }] },
         { id: 'search-flow', title: 'Product Search Pipeline', description: 'How a search query becomes ranked product results', steps: [{ step: 1, label: 'Parse Query', detail: 'Spell check, tokenize, identify facet filters' }, { step: 2, label: 'Elasticsearch', detail: 'Full-text search + faceted filtering across 600M products' }, { step: 3, label: 'Relevance Score', detail: 'BM25 text relevance x popularity x promoted placement' }, { step: 4, label: 'Personalize', detail: 'Boost results based on user browsing history and preferences' }, { step: 5, label: 'Return Results', detail: 'Paginated results with facet counts for filter sidebar' }] }
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#ff9900', items: [{ label: 'Elasticsearch', value: '600M products indexed', bar: 90 }, { label: 'Redis (Cart + Tokens)', value: '100 GB active carts', bar: 70 }, { label: 'PostgreSQL (Orders)', value: '500 GB/month', bar: 60 }, { label: 'Kafka (Events)', value: 'Order status streaming', bar: 50 }, { label: 'ML Recommendations', value: '200 GPU hours/day', bar: 40 }, { label: 'CDN (Images)', value: 'Product images globally', bar: 80 }] },
         { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '12M orders/day', value: 'Transaction volume', bar: 100 }, { label: '600M products', value: 'Catalog size', bar: 95 }, { label: '$1.75B daily revenue', value: 'GMV', bar: 90 }, { label: '35K search QPS', value: 'Product searches', bar: 80 }, { label: '<3s checkout', value: 'End-to-end latency', bar: 85 }, { label: '~40% US market', value: 'Market dominance', bar: 75 }] }
+      ],
+      staticDiagrams: [
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for ecommerce platform scale', src: '/diagrams/ecommerce-platform/capacity-estimation.svg', type: 'estimation' },
+        { id: 'checkout-flow', title: 'Checkout Flow', description: 'Checkout Flow diagram for ecommerce platform', src: '/diagrams/ecommerce-platform/checkout-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries and key challenges for ecommerce platform design', src: '/diagrams/ecommerce-platform/problem-definition.svg', type: 'overview' },
       ],
       evolutionSteps: [
         { step: 1, title: 'Monolith', description: 'Single app with catalog, cart, checkout, and inventory in one database.', color: '#94a3b8', icon: 'server', capacity: '~1K orders/day', rps: '10', pros: ['Simple deployment', 'ACID transactions', 'Easy debugging'], cons: ['Single point of failure', 'Cannot scale independently', 'Database bottleneck'] },
@@ -30175,7 +30294,7 @@ topk:songs:hourly:2024-06-05-14  -- expires after 48 hours
         { id: 'sync-vs-async', title: 'Score Updates: Synchronous vs Async', headers: ['Aspect', 'Synchronous', 'Async (Kafka buffer)'], rows: [['Latency Impact', 'User sees updated rank immediately', '100ms-1s delay'], ['Throughput', 'Limited by Redis write speed', 'Handles any burst'], ['Consistency', 'Strong (always current)', 'Eventual (slight lag)'], ['Failure Mode', 'Blocks on Redis down', 'Kafka buffers during outage'], ['Best For', 'Gaming (instant feedback)', 'Analytics (high volume)']], verdict: 'Async via Kafka for high-throughput, sync for interactive games' }
       ],
       flowcharts: [
-        { id: 'score-update-flow', title: 'Score Update Flow', description: 'How a score event becomes an updated ranking', steps: [{ step: 1, label: 'Score Event', detail: 'POST /api/scores with itemId, category, scoreIncrement' }, { step: 2, label: 'Kafka Publish', detail: 'Event buffered in Kafka for reliability during spikes' }, { step: 3, label: 'Consumer Process', detail: 'Score aggregator consumer reads from Kafka partition' }, { step: 4, label: 'Redis ZADD', detail: 'Atomically update all active time window sorted sets' }, { step: 5, label: 'Rank Available', detail: 'Updated ranking immediately queryable via ZREVRANGE' }] },
+        { id: 'score-update-flow', title: 'Score Update Flow', description: 'How a score event becomes an updated ranking', src: '/diagrams/top-k-leaderboard/topk-flow.svg', steps: [{ step: 1, label: 'Score Event', detail: 'POST /api/scores with itemId, category, scoreIncrement' }, { step: 2, label: 'Kafka Publish', detail: 'Event buffered in Kafka for reliability during spikes' }, { step: 3, label: 'Consumer Process', detail: 'Score aggregator consumer reads from Kafka partition' }, { step: 4, label: 'Redis ZADD', detail: 'Atomically update all active time window sorted sets' }, { step: 5, label: 'Rank Available', detail: 'Updated ranking immediately queryable via ZREVRANGE' }] },
         { id: 'topk-query-flow', title: 'Top-K Query Flow', description: 'How a leaderboard request is served', steps: [{ step: 1, label: 'API Request', detail: 'GET /api/topk/songs?k=100&timeframe=daily' }, { step: 2, label: 'Redis Query', detail: 'ZREVRANGE topk:songs:daily:2026-04-18 0 99 WITHSCORES' }, { step: 3, label: 'Enrich', detail: 'Batch lookup item metadata (names, images) from cache/DB' }, { step: 4, label: 'Return', detail: 'Ranked list with scores and metadata (<50ms total)' }] }
       ],
       visualCards: [
