@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { stripe, STRIPE_PRICES, CREDITS_PER_PLAN, isStripeConfigured } from '../config/stripe.js';
+import { stripe, STRIPE_PRICES, isStripeConfigured } from '../config/stripe.js';
 import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
@@ -533,7 +533,7 @@ async function handleInvoicePaid(invoice) {
   // Plans are now feature-based (credit system deprecated)
   // Still update subscription period below for plan renewal tracking
   const planType = subscription.plan_type;
-  const credits = CREDITS_PER_PLAN[planType] || 0;
+  const credits = 0; // Credit system deprecated — plans are feature-based
 
   if (credits > 0) {
     await addCredits(
