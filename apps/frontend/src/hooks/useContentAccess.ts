@@ -1,8 +1,8 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-const STORAGE_KEY = 'camora_topics_read';
+
 const FREE_LIMITS: Record<string, number> = {
   'coding': 3,
   'system-design': 2,
@@ -22,25 +22,12 @@ function getFreeLimitForCategory(category: string): number {
 
 type Category = string;
 
-/** localStorage as a fast cache — server is source of truth */
-function getCachedTopics(): Record<Category, string[]> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveCachedTopics(data: Record<Category, string[]>) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-}
-
 export function useContentAccess() {
   const { token, subscription, subscriptionLoading } = useAuth();
-  const [topicsMap, setTopicsMap] = useState<Record<Category, string[]>>(getCachedTopics);
+  // Server is the single source of truth — no localStorage
+  const [topicsMap, setTopicsMap] = useState<Record<Category, string[]>>({});
   const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
-  const fetchedRef = useRef<Set<string>>(new Set());
+  const fetchingRef = useRef<Set<string>>(new Set());
 
   const isPaidUser = useMemo(() => {
     if (subscriptionLoading) return false;
@@ -49,33 +36,45 @@ export function useContentAccess() {
     return plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
   }, [subscription, subscriptionLoading]);
 
-  /** Lazy-fetch read topics for a category from server (once per category per session) */
-  const ensureLoaded = useCallback((category: Category) => {
-    if (!token || isPaidUser || fetchedRef.current.has(category)) return;
-    fetchedRef.current.add(category);
+  /** Fetch read topics for a category from server */
+  const fetchCategory = useCallback((category: Category) => {
+    if (!token || isPaidUser || fetchingRef.current.has(category)) return;
+    fetchingRef.current.add(category);
     fetch(`${API_URL}/api/topic-reads?category=${encodeURIComponent(category)}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.readTopics) {
-          setTopicsMap(prev => {
-            const updated = { ...prev, [category]: data.readTopics };
-            saveCachedTopics(updated);
-            return updated;
-          });
+          setTopicsMap(prev => ({ ...prev, [category]: data.readTopics }));
+        } else {
+          // Server returned no data — treat as 0 reads
+          setTopicsMap(prev => ({ ...prev, [category]: prev[category] || [] }));
         }
         setLoadedCategories(prev => new Set(prev).add(category));
       })
       .catch(() => {
+        // Network error — treat as 0 reads (locked by default)
+        setTopicsMap(prev => ({ ...prev, [category]: prev[category] || [] }));
         setLoadedCategories(prev => new Set(prev).add(category));
       });
   }, [token, isPaidUser]);
 
+  // Prefetch all categories on mount (once token is available)
+  useEffect(() => {
+    if (!token || isPaidUser || subscriptionLoading) return;
+    const categories = Object.keys(FREE_LIMITS);
+    categories.forEach(cat => fetchCategory(cat));
+  }, [token, isPaidUser, subscriptionLoading, fetchCategory]);
+
+  const isCategoryLoaded = useCallback((category: Category): boolean => {
+    return isPaidUser || loadedCategories.has(category);
+  }, [isPaidUser, loadedCategories]);
+
   const getReadTopicIds = useCallback((category: Category): string[] => {
-    ensureLoaded(category);
+    if (!isCategoryLoaded(category)) fetchCategory(category);
     return topicsMap[category] || [];
-  }, [topicsMap, ensureLoaded]);
+  }, [topicsMap, isCategoryLoaded, fetchCategory]);
 
   const getReadCount = useCallback((category: Category): number => {
     return getReadTopicIds(category).length;
@@ -86,18 +85,23 @@ export function useContentAccess() {
   }, [getReadTopicIds]);
 
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
-    if (subscriptionLoading) return true; // Don't lock while loading subscription
+    if (subscriptionLoading) return true; // Don't lock while checking subscription
     if (isPaidUser) return true;
-    ensureLoaded(category);
+    // If category not loaded from server yet, lock by default (safe side)
+    if (!isCategoryLoaded(category)) {
+      fetchCategory(category);
+      return false; // Locked until server confirms
+    }
     const readList = topicsMap[category] || [];
-    if (readList.includes(topicId)) return true;
+    if (readList.includes(topicId)) return true; // Already read
     return readList.length < getFreeLimitForCategory(category);
-  }, [isPaidUser, subscriptionLoading, topicsMap, ensureLoaded]);
+  }, [isPaidUser, subscriptionLoading, topicsMap, isCategoryLoaded, fetchCategory]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
-    if (subscriptionLoading) return false; // Don't show locks while loading
+    if (subscriptionLoading) return false; // Don't flash locks while loading
+    if (isPaidUser) return false;
     return !canReadTopic(category, topicId);
-  }, [canReadTopic, subscriptionLoading]);
+  }, [canReadTopic, subscriptionLoading, isPaidUser]);
 
   const markTopicRead = useCallback((category: Category, topicId: string) => {
     if (isPaidUser) return;
@@ -106,19 +110,25 @@ export function useContentAccess() {
     setTopicsMap(prev => {
       const list = prev[category] || [];
       if (list.includes(topicId)) return prev;
-      if (list.length >= getFreeLimitForCategory(category)) return prev; // at limit
-      const updated = { ...prev, [category]: [...list, topicId] };
-      saveCachedTopics(updated);
-      return updated;
+      if (list.length >= getFreeLimitForCategory(category)) return prev;
+      return { ...prev, [category]: [...list, topicId] };
     });
 
-    // Persist to server
+    // Persist to server — update local state with server response
     if (token) {
       fetch(`${API_URL}/api/topic-reads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ category, topicId }),
-      }).catch(() => {}); // fire-and-forget
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data?.readTopics) {
+            // Sync with server truth
+            setTopicsMap(prev => ({ ...prev, [category]: data.readTopics }));
+          }
+        })
+        .catch(() => {}); // Optimistic update already applied
     }
   }, [token, isPaidUser]);
 
@@ -131,6 +141,7 @@ export function useContentAccess() {
     markTopicRead,
     getReadCount,
     getReadTopicIds,
+    isCategoryLoaded,
     FREE_LIMITS,
     getFreeLimitForCategory,
   };
