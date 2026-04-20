@@ -39,6 +39,7 @@ function saveCachedTopics(data: Record<Category, string[]>) {
 export function useContentAccess() {
   const { token, subscription, subscriptionLoading } = useAuth();
   const [topicsMap, setTopicsMap] = useState<Record<Category, string[]>>(getCachedTopics);
+  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
   const fetchedRef = useRef<Set<string>>(new Set());
 
   const isPaidUser = useMemo(() => {
@@ -64,8 +65,11 @@ export function useContentAccess() {
             return updated;
           });
         }
+        setLoadedCategories(prev => new Set(prev).add(category));
       })
-      .catch(() => {}); // network error — use cache
+      .catch(() => {
+        setLoadedCategories(prev => new Set(prev).add(category));
+      });
   }, [token, isPaidUser]);
 
   const getReadTopicIds = useCallback((category: Category): string[] => {
@@ -82,16 +86,18 @@ export function useContentAccess() {
   }, [getReadTopicIds]);
 
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
+    if (subscriptionLoading) return true; // Don't lock while loading subscription
     if (isPaidUser) return true;
     ensureLoaded(category);
     const readList = topicsMap[category] || [];
     if (readList.includes(topicId)) return true;
     return readList.length < getFreeLimitForCategory(category);
-  }, [isPaidUser, topicsMap, ensureLoaded]);
+  }, [isPaidUser, subscriptionLoading, topicsMap, ensureLoaded]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
+    if (subscriptionLoading) return false; // Don't show locks while loading
     return !canReadTopic(category, topicId);
-  }, [canReadTopic]);
+  }, [canReadTopic, subscriptionLoading]);
 
   const markTopicRead = useCallback((category: Category, topicId: string) => {
     if (isPaidUser) return;

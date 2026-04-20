@@ -3,7 +3,23 @@ import { jwtAuth } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 
 const router = Router();
-const FREE_TOPICS_PER_CATEGORY = 1;
+
+const FREE_LIMITS = {
+  'coding': 3,
+  'system-design': 2,
+  'low-level': 2,
+  'behavioral': 2,
+  'microservices': 2,
+  'databases': 2,
+  'sql': 2,
+  'projects': 2,
+  'roadmaps': 2,
+  'eng-blogs': 2,
+};
+const DEFAULT_FREE_LIMIT = 2;
+function getFreeLimitForCategory(category) {
+  return FREE_LIMITS[category] || DEFAULT_FREE_LIMIT;
+}
 
 /**
  * Check if user has an active paid subscription
@@ -48,10 +64,11 @@ router.get('/', jwtAuth, async (req, res) => {
 
     let locked = false;
     if (topicId) {
-      locked = !readTopics.includes(topicId) && readTopics.length >= FREE_TOPICS_PER_CATEGORY;
+      const limit = getFreeLimitForCategory(category);
+      locked = !readTopics.includes(topicId) && readTopics.length >= limit;
     }
 
-    res.json({ readTopics, locked, count: readTopics.length, limit: FREE_TOPICS_PER_CATEGORY });
+    res.json({ readTopics, locked, count: readTopics.length, limit: getFreeLimitForCategory(category) });
   } catch (err) {
     console.error('[TopicReads] GET error:', err.message);
     res.status(500).json({ error: 'Failed to check topic access' });
@@ -97,8 +114,9 @@ router.post('/', jwtAuth, async (req, res) => {
       [userId, category]
     );
     const count = parseInt(countResult.rows[0].cnt, 10);
-    if (count >= FREE_TOPICS_PER_CATEGORY) {
-      return res.status(403).json({ error: 'Free topic limit reached', locked: true, limit: FREE_TOPICS_PER_CATEGORY });
+    const limit = getFreeLimitForCategory(category);
+    if (count >= limit) {
+      return res.status(403).json({ error: 'Free topic limit reached', locked: true, limit });
     }
 
     // Insert
