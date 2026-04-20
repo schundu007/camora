@@ -625,7 +625,7 @@ export default function DocsPage({ onBack }) {
                     to="/capra/practice"
                     className="px-5 py-2 bg-[var(--accent)] text-white font-semibold text-sm rounded hover:bg-[var(--accent-hover)] transition-colors landing-body"
                   >
-                    Start Practice
+                    Start Thawing
                   </Link>
                 </div>
               )}
@@ -672,35 +672,30 @@ export default function DocsPage({ onBack }) {
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
                     <>
-                      {/* Hero Banner — frosted glass with gradient */}
-                      <div className="relative mb-8 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 40%, #38bdf8 70%, #818cf8 100%)', padding: '2px' }}>
-                        <div className="rounded-[14px] p-6 md:p-8" style={{ background: 'rgba(240,247,255,0.92)', backdropFilter: 'blur(20px)' }}>
-                          <div className="flex items-start justify-between flex-wrap gap-4">
-                            <div>
-                              <h1 className="font-extrabold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-                                Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
-                              </h1>
-                              <p className="text-sm landing-body" style={{ color: 'var(--text-secondary)' }}>
-                                Your frost training grounds. <strong>{overviewTotalTopics}+</strong> topics across <strong>{overviewCategories.length}</strong> categories.
-                              </p>
-                            </div>
-                            <Link to="/capra/practice" className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 hover:shadow-lg" style={{ background: 'linear-gradient(135deg, #0ea5e9, #22d3ee)', boxShadow: '0 4px 14px rgba(34,211,238,0.3)' }}>
-                              Start Thawing
-                            </Link>
+                      {/* Hero Banner — frosted glass, single cyan tone */}
+                      <div className="relative mb-8 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                        <div className="rounded-[15px] p-6 md:p-8" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                          <div>
+                            <h1 className="font-extrabold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                              Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+                            </h1>
+                            <p className="text-sm landing-body" style={{ color: 'var(--text-secondary)' }}>
+                              {overviewTotalTopics}+ topics across {overviewCategories.length} categories.
+                            </p>
                           </div>
 
-                          {/* Stats row — glassmorphism pills */}
+                          {/* Stats row */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                             {[
-                              { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' },
-                              { label: 'Completed', value: overviewTotalCompleted, icon: 'check', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)' },
-                              { label: 'Categories', value: overviewCategories.length, icon: 'grid', gradient: 'linear-gradient(135deg, #818cf8, #6366f1)' },
-                              { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', gradient: 'linear-gradient(135deg, #34d399, #10b981)' },
+                              { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen' },
+                              { label: 'Completed', value: overviewTotalCompleted, icon: 'check' },
+                              { label: 'Categories', value: overviewCategories.length, icon: 'grid' },
+                              { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp' },
                             ].map(stat => (
-                              <div key={stat.label} className="rounded-xl p-4 backdrop-blur-sm transition-all hover:scale-[1.02]" style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(56,189,248,0.15)', boxShadow: '0 2px 8px rgba(56,189,248,0.06)' }}>
+                              <div key={stat.label} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: stat.gradient }}>
-                                    <Icon name={stat.icon} size={15} />
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <Icon name={stat.icon} size={15} style={{ color: 'var(--accent)' }} />
                                   </div>
                                 </div>
                                 <div className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{stat.value}</div>
@@ -727,12 +722,12 @@ export default function DocsPage({ onBack }) {
                               style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
                             >
                               {/* Top accent bar */}
-                              <div className="h-1" style={{ background: `linear-gradient(90deg, ${cat.color}, ${cat.color}88)` }} />
+                              <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               <div className="p-4">
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${cat.color}, ${cat.color}cc)` }}>
-                                      <Icon name={cat.icon} size={18} />
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                      <Icon name={cat.icon} size={18} style={{ color: 'var(--accent)' }} />
                                     </div>
                                     <div>
                                       <h3 className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
@@ -743,18 +738,18 @@ export default function DocsPage({ onBack }) {
                                   <div className="relative shrink-0" style={{ width: 48, height: 48 }}>
                                     <svg width="48" height="48" viewBox="0 0 48 48" className="transform -rotate-90">
                                       <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(56,189,248,0.1)" strokeWidth="3" />
-                                      <circle cx="24" cy="24" r={radius} fill="none" stroke={cat.color} strokeWidth="3"
+                                      <circle cx="24" cy="24" r={radius} fill="none" stroke="var(--accent)" strokeWidth="3"
                                         strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                                         strokeLinecap="round" className="transition-all duration-1000" />
                                     </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold" style={{ color: cat.progress > 0 ? cat.color : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                                    <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
                                       {cat.progress}%
                                     </span>
                                   </div>
                                 </div>
                                 {/* Progress bar */}
-                                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(56,189,248,0.08)' }}>
-                                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: `linear-gradient(90deg, ${cat.color}, ${cat.color}aa)` }} />
+                                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(34,211,238,0.08)' }}>
+                                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                 </div>
                               </div>
                             </a>
@@ -769,13 +764,13 @@ export default function DocsPage({ onBack }) {
                         <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
-                              { step: 1, title: 'Ice Crystals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' },
-                              { step: 2, title: 'Glacier Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
-                              { step: 3, title: 'Frost Blueprints', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', gradient: 'linear-gradient(135deg, #ec4899, #f472b6)' },
-                              { step: 4, title: 'Northern Lights', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', gradient: 'linear-gradient(135deg, #a855f7, #c084fc)' },
+                              { step: 1, title: 'Ice Crystals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu' },
+                              { step: 2, title: 'Glacier Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign' },
+                              { step: 3, title: 'Frost Blueprints', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
+                              { step: 4, title: 'Northern Lights', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
                             ].map((phase, idx) => (
                               <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-5 transition-all hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 shadow-sm group-hover:scale-110 transition-transform" style={{ background: phase.gradient }}>
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
                                   <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
                                 <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-2" style={{ background: 'rgba(56,189,248,0.06)' }}>
@@ -794,26 +789,26 @@ export default function DocsPage({ onBack }) {
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Frost Arsenal</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', icon: 'checklist', gradient: 'linear-gradient(135deg, #0ea5e9, #22d3ee)', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Thaw' },
+                            { href: '/capra/prepare?page=coding', icon: 'checklist', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Thaw' },
                           ].map(resource => (
                             <a
                               key={resource.title}
                               href={resource.href}
-                              className="group rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                              style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}
+                              className="group rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                              style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}
                             >
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
-                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-sm" style={{ background: resource.gradient }}>
-                                    <Icon name={resource.icon} size={18} />
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <Icon name={resource.icon} size={18} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
                                     {resource.badge}
                                   </span>
                                 </div>
-                                <h3 className="text-sm font-bold mb-1 transition-colors" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
+                                <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
                                 <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{resource.desc}</p>
                                 <div className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--accent)' }}>
                                   <span>Explore</span>
@@ -830,18 +825,18 @@ export default function DocsPage({ onBack }) {
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Survival Guide</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)', step: 'Prep' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)', step: 'Execute' },
-                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)', step: 'Follow up' },
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', step: 'Prep' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', step: 'Execute' },
+                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', step: 'Follow up' },
                           ].map((card) => (
                             <div
                               key={card.title}
-                              className="rounded-2xl overflow-hidden transition-all hover:shadow-md"
-                              style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}
+                              className="rounded-2xl overflow-hidden"
+                              style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}
                             >
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ background: card.gradient }}>
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                   <Icon name={card.icon} size={18} style={{ color: card.color }} />
                                 </div>
                                 <div>
