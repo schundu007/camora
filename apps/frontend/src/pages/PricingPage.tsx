@@ -120,7 +120,7 @@ export default function PricingPage() {
   }));
 
   useEffect(() => {
-    document.title = 'Tickets | Camora';
+    document.title = 'Snow Passes | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 
@@ -171,7 +171,7 @@ export default function PricingPage() {
 
       {/* Header */}
       <section className="pt-24 pb-4 px-6 text-center">
-        <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tickets</span>
+        <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Snow Passes</span>
         <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
           Choose your Snow Strength.
         </h1>
