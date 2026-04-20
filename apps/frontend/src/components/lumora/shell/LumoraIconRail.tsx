@@ -14,14 +14,14 @@ interface LumoraIconRailProps {
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: 'var(--bg-surface)',
-  surface: 'var(--bg-elevated)',
-  elevated: 'var(--bg-app)',
-  text: 'var(--text-primary)',
-  muted: 'var(--text-secondary)',
-  accent: 'var(--accent)',
-  accentBg: 'var(--accent-subtle)',
-  border: 'var(--border)',
+  base: '#0e7490',
+  surface: 'rgba(255,255,255,0.12)',
+  elevated: 'rgba(255,255,255,0.08)',
+  text: '#FFFFFF',
+  muted: 'rgba(255,255,255,0.7)',
+  accent: '#22D3EE',
+  accentBg: 'rgba(34,211,238,0.15)',
+  border: 'rgba(255,255,255,0.15)',
 };
 
 function UserAvatarMenu() {
@@ -90,7 +90,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {showMore && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
-            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#1A7AEF', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#0e7490', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
               {moreItems.map(mi => {
                 const cls = "flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors";
                 const sty = mi.label === 'Sessions' && sessionsOpen ? { color: '#FFFFFF', background: 'rgba(255,255,255,0.15)' } : { color: 'rgba(255,255,255,0.85)' };

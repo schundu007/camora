@@ -127,7 +127,7 @@ export function LumoraShellPage() {
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#FFFFFF' }}>
+    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}
