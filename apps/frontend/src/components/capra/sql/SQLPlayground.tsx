@@ -677,10 +677,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
           {showSuccess && (() => {
             const totalSolved = solved.size;
             const totalProblems = SQL_PROBLEMS.length;
-            const catProblems = SQL_PROBLEMS.filter(p => {
-              const cat = SQL_CATEGORIES.find(c => c.problems.includes(p.id));
-              return cat?.id === selectedCategory;
-            });
+            const catProblems = SQL_PROBLEMS.filter(p => p.category === selectedCategory);
             const catSolved = catProblems.filter(p => solved.has(p.id)).length;
             const nextUnsolved = SQL_PROBLEMS.find((p, i) => i > currentIndex && !solved.has(p.id));
             const usedHint = showHints;
