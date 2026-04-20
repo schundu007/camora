@@ -179,10 +179,10 @@ export default function PricingPage() {
       </section>
 
       {/* Plans */}
-      <section className="w-full lg:max-w-[85%] mx-auto px-6 py-14">
+      <section className="w-full lg:max-w-[85%] mx-auto px-6 pt-14 pb-20">
         {/* Plans header removed — already in page header above */}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-start">
           {plans.map((plan) => {
             const isPro = plan.popular;
             const isAnnual = plan.name === 'Avalanche Maker';
@@ -198,7 +198,7 @@ export default function PricingPage() {
               : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
 
             return (
-              <div key={plan.name} className="pricing-card group relative flex flex-col rounded-2xl overflow-hidden h-full"
+              <div key={plan.name} className="pricing-card group relative flex flex-col rounded-2xl h-full"
                 style={{
                   zIndex: (isPro || isAnnual) ? 2 : 1,
                   background: '#FFFFFF',
