@@ -163,6 +163,7 @@ const sections: NavSection[] = [
       { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: icons.code },
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
       { label: 'Databases', path: '/capra/prepare/databases', icon: icons.database },
+      { label: 'SQL', path: '/capra/prepare/sql', icon: icons.database },
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
       { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: icons.book },
