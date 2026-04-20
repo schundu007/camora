@@ -2062,6 +2062,70 @@ export default function TopicDetail({
                 </div>
               )}
 
+              {/* 5b. Architecture Layers + Layered Design — immediately after architecture diagram */}
+              {topicDetails.architectureLayers && (
+                <div id="arch-layers" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
+                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={16} className="text-white" />
+                    <h3 className="text-[15px] font-bold text-white landing-display">Architecture Layers</h3>
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    {topicDetails.architectureLayers.map((layer, i) => (
+                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
+                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
+                        <div>
+                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
+                          <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
+                            <FormattedContent content={layer.description} color="blue" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {topicDetails.layeredDesign && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
+                    <Icon name="layers" size={14} className="text-white" />
+                    <h3 className="text-[15px] font-bold text-white landing-display">Layered Design</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                  </div>
+                  <div className="p-2.5 space-y-0">
+                    {topicDetails.layeredDesign.map((layer, i) => {
+                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#60A5FA', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#2D8CFF'];
+                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
+                      return (
+                        <div key={i} className="relative">
+                          {i > 0 && (
+                            <div className="flex justify-center -my-1 z-10 relative">
+                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </div>
+                          )}
+                          <div className="rounded-xl border border-[var(--border)] bg-white transition-all overflow-hidden">
+                            <div className="px-4 py-3">
+                              <div className="flex items-center gap-2.5 mb-1.5">
+                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>L{i + 1}</span>
+                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
+                              </div>
+                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
+                              {layer.components && (
+                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
+                                  {layer.components.map((comp, j) => (
+                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>{comp}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* 6. System Flows + Flowcharts — show right after architecture */}
               {(topicDetails.createFlow || topicDetails.redirectFlow) && (
                 <div id="flows" className="space-y-3 scroll-mt-24">
@@ -2266,73 +2330,9 @@ export default function TopicDetail({
                 </div>
               ) : null}
 
-              {/* Architecture Layers + Layered Design — after deep dives */}
-              {topicDetails.architectureLayers && (
-                <div id="arch-layers" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="layers" size={16} className="text-white" />
-                    <h3 className="text-[15px] font-bold text-white landing-display">Architecture Layers</h3>
-                  </div>
-                  <div className="p-3 space-y-1.5">
-                    {topicDetails.architectureLayers.map((layer, i) => (
-                      <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]">
-                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
-                        <div>
-                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
-                          <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
-                            <FormattedContent content={layer.description} color="blue" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {topicDetails.layeredDesign && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
-                    <Icon name="layers" size={14} className="text-white" />
-                    <h3 className="text-[15px] font-bold text-white landing-display">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.layeredDesign.length} layers</span>
-                  </div>
-                  <div className="p-2.5 space-y-0">
-                    {topicDetails.layeredDesign.map((layer, i) => {
-                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#60A5FA', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#2D8CFF'];
-                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
-                      return (
-                        <div key={i} className="relative">
-                          {i > 0 && (
-                            <div className="flex justify-center -my-1 z-10 relative">
-                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                            </div>
-                          )}
-                          <div className="rounded-xl border border-[var(--border)] bg-white transition-all overflow-hidden">
-                            <div className="px-4 py-3">
-                              <div className="flex items-center gap-2.5 mb-1.5">
-                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>L{i + 1}</span>
-                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
-                              </div>
-                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
-                              {layer.components && (
-                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
-                                  {layer.components.map((comp, j) => (
-                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>{comp}</span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* 11. Visual Assets — comparisons, cheat sheets, charts, evolution */}
               {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                <div className={`grid grid-cols-1 gap-2 ${topicDetails.comparisonTables.length >= 2 ? 'lg:grid-cols-2' : ''}`}>
                   {topicDetails.comparisonTables.map((comp) => (
                     <ComparisonCard key={comp.id} comparison={comp} />
                   ))}
@@ -2340,7 +2340,7 @@ export default function TopicDetail({
               )}
 
               {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                <div className={`grid grid-cols-1 gap-2 ${topicDetails.visualCards.length >= 3 ? 'lg:grid-cols-3' : topicDetails.visualCards.length === 2 ? 'lg:grid-cols-2' : ''}`}>
                   {topicDetails.visualCards.map((card) => (
                     <CheatSheetCard key={card.id} card={card} />
                   ))}
