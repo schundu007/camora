@@ -10,6 +10,7 @@ import { InterviewTimer } from '../../components/shared/timer/InterviewTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
+const DashboardPage = lazy(() => import('./DashboardPage'));
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -313,6 +314,9 @@ export default function PracticePage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
+  // Top-level tab: practice | code-solver | design-solver
+  const [activeView, setActiveView] = useState('practice');
+
   // Stats
   const [stats, setStats] = useState(getStats);
 
@@ -592,13 +596,57 @@ export default function PracticePage() {
       <div>
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
-          {/* ── SETUP PHASE ── */}
-          {phase === 'setup' && (
+          {/* ── View Tabs: Practice / Code Solver / Design Solver ── */}
+          <div style={{ marginBottom: 24 }}>
+            <h1 className="practice-display" style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Practice</h1>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6 }}>Mock interviews, code solver, and design solver — all in one place.</p>
+
+            <div style={{ display: 'flex', gap: 4, marginTop: 16, padding: 4, background: 'var(--bg-elevated)', borderRadius: 12, border: '1px solid var(--border)', width: 'fit-content' }}>
+              {[
+                { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={14} /> },
+                { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={14} /> },
+                { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={14} /> },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveView(tab.key)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 600,
+                    background: activeView === tab.key ? 'var(--accent)' : 'transparent',
+                    color: activeView === tab.key ? '#fff' : 'var(--text-secondary)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Code Solver View ── */}
+          {activeView === 'code-solver' && (
+            <div style={{ margin: '0 -16px', minHeight: 'calc(100vh - 200px)' }}>
+              <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+                <DashboardPage mode="coding" />
+              </Suspense>
+            </div>
+          )}
+
+          {/* ── Design Solver View ── */}
+          {activeView === 'design-solver' && (
+            <div style={{ margin: '0 -16px', minHeight: 'calc(100vh - 200px)' }}>
+              <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+                <DashboardPage mode="system-design" />
+              </Suspense>
+            </div>
+          )}
+
+          {/* ── SETUP PHASE (Mock Interview) ── */}
+          {activeView === 'practice' && phase === 'setup' && (
             <>
-              <div style={{ marginBottom: 24 }}>
-                <h1 className="practice-display" style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Practice</h1>
-                <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6 }}>Mock interviews with AI scoring. Build speed and confidence.</p>
-              </div>
 
               {/* Readiness — compact inline */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'none' }}>
@@ -792,7 +840,7 @@ export default function PracticePage() {
           )}
 
           {/* ── ACTIVE PHASE ── */}
-          {phase === 'active' && questions[currentIdx] && (
+          {activeView === 'practice' && phase === 'active' && questions[currentIdx] && (
             <div>
               {/* Timer bar + progress dots */}
               <div style={{ marginBottom: 20 }}>
@@ -1172,7 +1220,7 @@ export default function PracticePage() {
           )}
 
           {/* ── RESULTS PHASE ── */}
-          {phase === 'results' && (() => {
+          {activeView === 'practice' && phase === 'results' && (() => {
             const passed = scores.filter(s => s >= 60).length;
             const total = scores.length;
             const grade = finalAvgScore >= 90 ? 'A+' : finalAvgScore >= 80 ? 'A' : finalAvgScore >= 70 ? 'B' : finalAvgScore >= 60 ? 'C' : finalAvgScore >= 40 ? 'D' : 'F';
