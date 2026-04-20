@@ -207,9 +207,9 @@ export default function PricingPage() {
                 }}>
                 <div className="relative p-7 pb-0 flex flex-col flex-1">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
-                    {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'var(--accent)', color: '#fff' }}>Most Popular</span>}
-                    {isAnnual && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'var(--warning)', color: '#fff' }}>Best Value</span>}
+                    <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: (isPro || isAnnual) ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
+                    {isPro && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)', color: '#fff' }}>Most Popular</span>}
+                    {isAnnual && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)', color: '#fff' }}>Best Value</span>}
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: '44px', color: 'var(--text-primary)' }}>{plan.price}</span>
