@@ -543,15 +543,29 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               </div>
             )}
             {showSolution && (
-              <div className="mt-2 relative group/sol">
-                <button
-                  onClick={() => { navigator.clipboard.writeText(problem.solution); }}
-                  className="absolute top-2 right-2 px-2 py-1 rounded text-[10px] font-semibold opacity-0 group-hover/sol:opacity-100 transition-opacity"
-                  style={{ background: 'var(--accent)', color: '#fff' }}
-                  title="Copy solution"
-                >
-                  Copy
-                </button>
+              <div className="mt-2 relative">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Solution</span>
+                  <button
+                    onClick={() => {
+                      const el = document.createElement('textarea');
+                      el.value = problem.solution;
+                      el.style.position = 'fixed';
+                      el.style.opacity = '0';
+                      document.body.appendChild(el);
+                      el.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(el);
+                      const btn = document.getElementById('sql-copy-btn');
+                      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+                    }}
+                    id="sql-copy-btn"
+                    className="px-2.5 py-1 rounded text-[10px] font-semibold transition-colors"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                  >
+                    Copy
+                  </button>
+                </div>
                 <pre
                   className="text-xs text-[var(--accent)] bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.2)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
