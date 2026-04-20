@@ -11,7 +11,6 @@ const PREPARE_ITEMS = [
   { id: 'system-design', label: 'Glacier Design', icon: 'systemDesign', href: '/capra/prepare/system-design' },
   { id: 'microservices', label: 'Snowflake Patterns', icon: 'grid', href: '/capra/prepare/microservices' },
   { id: 'databases', label: 'Permafrost Storage', icon: 'database', href: '/capra/prepare/databases' },
-  { id: 'sql', label: 'Frozen Queries', icon: 'database', href: '/capra/prepare/sql' },
   { id: 'low-level', label: 'Frost Blueprints', icon: 'layers', href: '/capra/prepare/low-level-design' },
   { id: 'projects', label: 'Ice Forge', icon: 'code', href: '/capra/prepare/projects' },
   { id: 'roadmaps', label: 'Expedition Maps', icon: 'trendingUp', href: '/capra/prepare/roadmaps' },

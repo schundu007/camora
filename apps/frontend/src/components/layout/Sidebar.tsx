@@ -162,8 +162,7 @@ const sections: NavSection[] = [
       { label: 'Behavioral', path: '/capra/prepare/behavioral', icon: icons.users },
       { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: icons.code },
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
-      { label: 'Databases', path: '/capra/prepare/databases', icon: icons.database },
-      { label: 'SQL', path: '/capra/prepare/sql', icon: icons.database },
+      { label: 'Databases & SQL', path: '/capra/prepare/databases', icon: icons.database },
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
       { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: icons.book },
@@ -392,13 +391,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* ── Desktop sidebar ─────────────────────────────────── */}
       <aside
-        className="hidden md:flex flex-col shrink-0"
+        className="hidden md:flex flex-col shrink-0 h-full"
         style={{
           width: sidebarWidth,
           transition: 'width 0.2s ease-out',
-          height: 'calc(100vh - var(--topbar-height, 48px))',
-          position: 'sticky',
-          top: 'var(--topbar-height, 48px)',
           background: '#2D8CFF',
           borderRight: '1px solid rgba(255,255,255,0.15)',
         }}
