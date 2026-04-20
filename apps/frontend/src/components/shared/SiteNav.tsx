@@ -5,11 +5,11 @@ import CamoraLogo from './CamoraLogo';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
-  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#22D3EE' },
-  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#67E8F9' },
-  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#22D3EE' },
-  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#67E8F9' },
-  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#22D3EE' },
+  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#9EA667' },
+  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#B4BC85' },
+  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#9EA667' },
+  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#B4BC85' },
+  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#9EA667' },
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
@@ -117,8 +117,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
           background: isLight
-            ? 'linear-gradient(90deg, rgba(34,211,238,0.06) 0%, rgba(103,232,249,0.06) 50%, rgba(34,211,238,0.06) 100%)'
-            : 'linear-gradient(90deg, #22D3EE, #67E8F9, #22D3EE, #67E8F9)',
+            ? 'linear-gradient(90deg, rgba(158,166,103,0.06) 0%, rgba(180,188,133,0.06) 50%, rgba(158,166,103,0.06) 100%)'
+            : 'linear-gradient(90deg, #9EA667, #B4BC85, #9EA667, #B4BC85)',
           height: TICKER_HEIGHT,
           borderTop: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
           borderBottom: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
