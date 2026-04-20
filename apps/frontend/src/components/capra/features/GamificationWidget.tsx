@@ -3,6 +3,20 @@ import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
+/* Mini frost badge icons for the widget strip */
+const MINI_ICONS: Record<string, JSX.Element> = {
+  snowflake: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" /></svg>,
+  compass: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88" /></svg>,
+  trophy: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22M18 2H6v7a6 6 0 1012 0V2Z" /></svg>,
+  flame: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" /></svg>,
+  mountain: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3l4 8 5-5 5 15H2L8 3z" /></svg>,
+  layers: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>,
+  aurora: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 18c2-4 4-8 8-10s6 2 8-2M4 14c3-3 5-6 8-7s5 1 8-3" /></svg>,
+  mic: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 10a7 7 0 0014 0M12 17v4M8 21h8" /></svg>,
+  flag: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22V2" /></svg>,
+  users: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>,
+};
+
 interface GamificationProfile {
   xp: number;
   level: number;
@@ -133,8 +147,8 @@ export default function GamificationWidget() {
             <div style={{ display: 'flex', gap: 6 }}>
               {badges.map(badge => (
                 <div key={badge.key} title={badge.desc}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--border)', borderRadius: 8 }}>
-                  <span style={{ fontSize: 14 }}>{badge.icon}</span>
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--accent)' }}>
+                  {MINI_ICONS[badge.icon] || <span style={{ fontSize: 12 }}>{badge.icon}</span>}
                   <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>{badge.title}</span>
                 </div>
               ))}
