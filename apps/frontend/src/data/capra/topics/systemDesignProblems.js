@@ -405,6 +405,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
       basicImplementation: {
         title: 'Basic Implementation',
         description: 'Client → Load Balancer → Web Server → Count Cache → Database. The web server requests a base-10 number from the count cache, converts it to base-62, and uses it as the short URL.',
+        diagramSrc: '/diagrams/url-shortener/impl-basic.png',
         svgTemplate: 'urlShortener',
         problems: [
           'Single point of failure in web server, cache, and database',
@@ -417,6 +418,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
       advancedImplementation: {
         title: 'Advanced Implementation with ZooKeeper',
         description: 'ZooKeeper allocates ID ranges to web servers, avoiding collisions. Each server generates IDs independently.',
+        diagramSrc: '/diagrams/url-shortener/impl-advanced.png',
         svgTemplate: 'urlShortenerAdvanced',
         keyPoints: [
           'ZooKeeper allocates ranges of 1 million IDs to each web server',
@@ -1428,6 +1430,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       basicImplementation: {
         title: 'Basic Implementation (Fan-out on Write)',
         description: 'When a user posts a tweet, fan-out service pushes it to all followers\' timeline caches',
+        diagramSrc: '/diagrams/twitter/impl-basic.png',
         svgTemplate: 'fanoutOnWrite',
         problems: [
           'Celebrity tweets to 10M followers = 10M cache writes',
@@ -2168,6 +2171,7 @@ rides {
       basicImplementation: {
         title: 'Basic Implementation',
         description: 'Rider and Driver apps connect to Matching service, with Location service and Redis for real-time tracking',
+        diagramSrc: '/diagrams/uber/impl-basic.png',
         svgTemplate: 'rideSharing',
         problems: [
           'Database cannot handle 1M location updates/second',
@@ -2180,6 +2184,7 @@ rides {
       advancedImplementation: {
         title: 'Scalable Implementation with Cell-based Architecture',
         description: 'City divided into S2 cells, each with dedicated services. Redis Geo for O(log N) spatial queries.',
+        diagramSrc: '/diagrams/uber/impl-advanced.png',
         svgTemplate: 'cellBasedArch',
         keyPoints: [
           'Divide city into S2 cells (roughly 1km²)',
@@ -2894,6 +2899,7 @@ Quick quality first: 360p available in minutes, 4K later`
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Upload → Transcode → Store → CDN → Client pipeline for video streaming',
+        diagramSrc: '/diagrams/youtube/impl-basic.png',
         svgTemplate: 'videoStreaming',
         problems: [
           'Single transcoding queue becomes bottleneck',
@@ -2906,6 +2912,7 @@ Quick quality first: 360p available in minutes, 4K later`
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/youtube/impl-advanced.png',
         svgTemplate: 'youtubeAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -3096,8 +3103,8 @@ Quick quality first: 360p available in minutes, 4K later`
       ],
 
       flowcharts: [
-        { id: 'youtube-upload-flow', title: 'Video Upload Pipeline', description: 'From creator upload to globally available video', steps: [{ step: 1, label: 'Chunked Upload', detail: 'Client splits video into 8MB chunks, uploads with CRC32 checksums. Resume from last chunk on failure.' }, { step: 2, label: 'Chunk Assembly', detail: 'Server assembles chunks in object storage (GCS), verifies integrity, sets status to PROCESSING.' }, { step: 3, label: 'Content ID Scan', detail: 'Audio/visual fingerprinting against 100M+ reference files. Block, monetize, or allow based on rights holder config.' }, { step: 4, label: 'Parallel Transcode', detail: 'GPU workers encode 6 resolutions × 3 codecs in parallel. 360p prioritized for fast availability.' }, { step: 5, label: 'Segment + Package', detail: 'Each resolution split into 4-second segments. Generate HLS manifest (M3U8) and DASH manifest (MPD).' }, { step: 6, label: 'Thumbnail + Metadata', detail: 'Auto-generate thumbnails at key frames. Extract captions via speech-to-text. Index in search.' }, { step: 7, label: 'CDN Distribution', detail: 'Segments pushed to origin storage. Popular content pre-warmed at edge PoPs. Status → READY.' }] },
-        { id: 'youtube-playback-flow', title: 'Video Playback Flow', description: 'From user click to adaptive bitrate playback', steps: [{ step: 1, label: 'Video Page Load', detail: 'Client requests video metadata (title, description, view count) from Vitess database.' }, { step: 2, label: 'Manifest Request', detail: 'Client requests HLS/DASH manifest listing all quality levels and segment URLs from nearest CDN.' }, { step: 3, label: 'Initial Segment', detail: 'Start with low quality (360p) for fast playback start (<200ms). Buffer first 2-3 segments.' }, { step: 4, label: 'Bandwidth Probe', detail: 'Measure download speed of initial segments. ABR algorithm selects optimal quality.' }, { step: 5, label: 'Quality Ramp-up', detail: 'Switch to higher quality at next segment boundary. Buffer 15+ seconds ahead.' }, { step: 6, label: 'Prefetch Next', detail: 'If autoplay enabled, prefetch first segments of next video in recommendation list.' }, { step: 7, label: 'Analytics Events', detail: 'Log view start, 25/50/75/100% completion, quality changes, rebuffers to Kafka for analytics.' }] },
+        { id: 'youtube-upload-flow', title: 'Video Upload Pipeline', description: 'From creator upload to globally available video', src: '/diagrams/youtube/upload-pipeline.svg', steps: [{ step: 1, label: 'Chunked Upload', detail: 'Client splits video into 8MB chunks, uploads with CRC32 checksums. Resume from last chunk on failure.' }, { step: 2, label: 'Chunk Assembly', detail: 'Server assembles chunks in object storage (GCS), verifies integrity, sets status to PROCESSING.' }, { step: 3, label: 'Content ID Scan', detail: 'Audio/visual fingerprinting against 100M+ reference files. Block, monetize, or allow based on rights holder config.' }, { step: 4, label: 'Parallel Transcode', detail: 'GPU workers encode 6 resolutions × 3 codecs in parallel. 360p prioritized for fast availability.' }, { step: 5, label: 'Segment + Package', detail: 'Each resolution split into 4-second segments. Generate HLS manifest (M3U8) and DASH manifest (MPD).' }, { step: 6, label: 'Thumbnail + Metadata', detail: 'Auto-generate thumbnails at key frames. Extract captions via speech-to-text. Index in search.' }, { step: 7, label: 'CDN Distribution', detail: 'Segments pushed to origin storage. Popular content pre-warmed at edge PoPs. Status → READY.' }] },
+        { id: 'youtube-playback-flow', title: 'Video Playback Flow', description: 'From user click to adaptive bitrate playback', src: '/diagrams/youtube/streaming-flow.svg', steps: [{ step: 1, label: 'Video Page Load', detail: 'Client requests video metadata (title, description, view count) from Vitess database.' }, { step: 2, label: 'Manifest Request', detail: 'Client requests HLS/DASH manifest listing all quality levels and segment URLs from nearest CDN.' }, { step: 3, label: 'Initial Segment', detail: 'Start with low quality (360p) for fast playback start (<200ms). Buffer first 2-3 segments.' }, { step: 4, label: 'Bandwidth Probe', detail: 'Measure download speed of initial segments. ABR algorithm selects optimal quality.' }, { step: 5, label: 'Quality Ramp-up', detail: 'Switch to higher quality at next segment boundary. Buffer 15+ seconds ahead.' }, { step: 6, label: 'Prefetch Next', detail: 'If autoplay enabled, prefetch first segments of next video in recommendation list.' }, { step: 7, label: 'Analytics Events', detail: 'Log view start, 25/50/75/100% completion, quality changes, rebuffers to Kafka for analytics.' }] },
       ],
 
       visualCards: [
@@ -4835,6 +4842,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Monolithic service with pull-based feed generation',
+        diagramSrc: '/diagrams/instagram/impl-basic.png',
         svgTemplate: 'instagram',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -5931,6 +5939,7 @@ Changes are pushed through notification service, client then fetches full delta.
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple upload/download without block-level sync',
+        diagramSrc: '/diagrams/dropbox/impl-basic.png',
         svgTemplate: 'dropbox',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -5965,6 +5974,7 @@ Changes are pushed through notification service, client then fetches full delta.
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/dropbox/impl-advanced.png',
         svgTemplate: 'dropboxAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -6706,6 +6716,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple streaming with single CDN',
+        diagramSrc: '/diagrams/netflix/impl-basic.png',
         svgTemplate: 'netflix',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -6748,6 +6759,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/netflix/impl-advanced.png',
         svgTemplate: 'netflixAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -8091,6 +8103,7 @@ cart {
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Client → CDN → Load Balancer → microservices (Product, Order, Payment)',
+        diagramSrc: '/diagrams/ecommerce-platform/impl-basic.png',
         svgTemplate: 'ecommerce',
         problems: [
           'Single database bottleneck',
@@ -8103,6 +8116,7 @@ cart {
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/ecommerce-platform/impl-advanced.png',
         svgTemplate: 'ecommerceAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -8944,6 +8958,7 @@ presence {
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple last-write-wins without real-time collaboration',
+        diagramSrc: '/diagrams/google-docs/impl-basic.png',
         svgTemplate: 'googleDocs',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -8976,6 +8991,7 @@ presence {
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/google-docs/impl-advanced.png',
         svgTemplate: 'googleDocsAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -9848,6 +9864,7 @@ Step 2 — Merchant payout:
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/payment-system/impl-advanced.png',
         svgTemplate: 'paymentAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -10114,6 +10131,12 @@ Step 2 — Merchant payout:
             { step: 6, label: 'Webhook', detail: 'Send refund.created webhook to merchant, customer receives funds in 5-10 days' },
           ]
         },
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the payment system design', src: '/diagrams/payment-system/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Traffic, throughput, storage, and ledger calculations', src: '/diagrams/payment-system/capacity-estimation.svg', type: 'estimation' },
+        { id: 'payment-auth', title: 'Payment Authorization Flow', description: 'End-to-end authorization flow from tokenization to card network', src: '/diagrams/payment-system/payment-auth-flow.svg', type: 'flow' },
+        { id: 'refund-flow', title: 'Refund Processing Flow', description: 'Merchant-initiated refund through card network and ledger reversal', src: '/diagrams/payment-system/refund-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -10671,6 +10694,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
       basicImplementation: {
         title: 'Basic Search Architecture',
         description: 'Query → Search Service → Elasticsearch with index shards for parallel query processing',
+        diagramSrc: '/diagrams/search-engine/impl-basic.png',
         svgTemplate: 'searchEngine',
         architecture: `
 │ └───────┘      └───────┘       └───────┘       └───────┘       │
@@ -10692,6 +10716,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 
       advancedImplementation: {
         title: 'Production Search Architecture',
+        diagramSrc: '/diagrams/search-engine/impl-advanced.png',
         svgTemplate: 'searchEngineAdvanced',
         architecture: `
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -11373,6 +11398,7 @@ const userTime = convertToTimezone(now(), user.timezone);
       basicImplementation: {
         title: 'Basic Notification Architecture',
         description: 'Single queue with multiple channel workers distributing to Push, Email, and SMS providers',
+        diagramSrc: '/diagrams/notification-system/impl-basic.png',
         svgTemplate: 'notificationSystem',
         problems: [
           'Single queue = no priority handling',
@@ -11384,6 +11410,7 @@ const userTime = convertToTimezone(now(), user.timezone);
 
       advancedImplementation: {
         title: 'Production Notification Architecture',
+        diagramSrc: '/diagrams/notification-system/impl-advanced.png',
         svgTemplate: 'notificationAdvanced',
         architecture: `
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -12109,6 +12136,7 @@ Rules evaluated in order: specific overrides general.
       basicImplementation: {
         title: 'Basic Rate Limiter Architecture',
         description: 'Single server rate limiting with Redis',
+        diagramSrc: '/diagrams/rate-limiter/impl-basic.png',
         svgTemplate: 'distributedRateLimiter',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────┐
@@ -12148,6 +12176,7 @@ Rules evaluated in order: specific overrides general.
 
       advancedImplementation: {
         title: 'Production Distributed Rate Limiter',
+        diagramSrc: '/diagrams/rate-limiter/impl-advanced.png',
         svgTemplate: 'rateLimiterDistributed',
         architecture: `
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -12432,6 +12461,11 @@ Rules evaluated in order: specific overrides general.
             { step: 5, label: 'Full Recovery', detail: 'If Redis responds normally for 5 consecutive probes, close circuit breaker and restore centralized rate limiting.' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the rate limiter design', src: '/diagrams/rate-limiter/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Request throughput, memory, and counter calculations', src: '/diagrams/rate-limiter/capacity-estimation.svg', type: 'estimation' },
+        { id: 'token-bucket', title: 'Token Bucket Flow', description: 'Token bucket algorithm request processing flow', src: '/diagrams/rate-limiter/token-bucket-flow.svg', type: 'flow' },
       ],
       visualCards: [
         {
@@ -12924,6 +12958,7 @@ queue_positions {
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple booking without queue or advanced locking',
+        diagramSrc: '/diagrams/ticketmaster/impl-basic.png',
         svgTemplate: 'ticketBooking',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -12957,6 +12992,7 @@ queue_positions {
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/ticketmaster/impl-advanced.png',
         svgTemplate: 'ticketmasterAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -13169,6 +13205,12 @@ queue_positions {
         { id: 'on-sale-flow', title: 'High-Demand On-Sale Flow', description: 'Complete flow from user arriving to ticket purchase with virtual queue', src: '/diagrams/ticketmaster/onsale-flow.svg', steps: [{ step: 1, label: 'Arrive at Event Page', detail: 'User lands on CDN-cached event page with countdown timer.' }, { step: 2, label: 'Queue Join', detail: 'At on-sale time, CAPTCHA verification, then random queue position via Redis ZADD.' }, { step: 3, label: 'Wait in Queue', detail: 'WebSocket shows position updates every 10 seconds. Lightweight CDN-cached queue page.' }, { step: 4, label: 'Admitted to Shopping', detail: 'Position reached, enter shopping. 15-minute timer starts.' }, { step: 5, label: 'Select Seats', detail: 'CDN snapshot + WebSocket deltas. Select specific seats or use Best Available.' }, { step: 6, label: 'Hold Seats', detail: 'Redis SETNX locks seats for 10 minutes. If held: suggest alternatives.' }, { step: 7, label: 'Checkout + Payment', detail: 'Stripe PaymentIntent. On success: SOLD. On failure: release hold.' }] },
         { id: 'seat-release-flow', title: 'Seat Release and Recovery Flow', description: 'How held seats are released when checkout is abandoned', src: '/diagrams/ticketmaster/seat-selection-flow.svg', steps: [{ step: 1, label: 'Hold Created', detail: 'Redis key with 10-minute TTL when user selects seats.' }, { step: 2, label: 'Timer Running', detail: 'Client countdown. 10 minutes to complete payment.' }, { step: 3, label: 'Abandon/Timeout', detail: 'Browser closed or timer expires. Redis TTL auto-deletes hold.' }, { step: 4, label: 'Background Sweep', detail: 'Safety job every 30s: find HELD seats with expired hold_expiry.' }, { step: 5, label: 'Release + Notify', detail: 'Set AVAILABLE. Pub/Sub push. WebSocket updates seat map.' }] },
         { id: 'payment-hold-flow', title: 'Payment Within Hold Window', description: 'How payment processing works within the 10-minute seat hold', steps: [{ step: 1, label: 'Hold Active', detail: 'Seats held in Redis with 10-min TTL. Client displays countdown.' }, { step: 2, label: 'Payment Details', detail: 'User enters card info. Typically 2-5 minutes.' }, { step: 3, label: 'Verify Hold', detail: 'Backend checks Redis: hold still exists? If expired, return error.' }, { step: 4, label: 'Charge Card', detail: 'Stripe PaymentIntent confirm. If fails: release hold, show error.' }, { step: 5, label: 'Confirm Booking', detail: 'DB UPDATE seats SET status=SOLD. Generate encrypted barcode ticket.' }] }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the Ticketmaster design', src: '/diagrams/ticketmaster/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'On-sale traffic, seat inventory, and payment throughput', src: '/diagrams/ticketmaster/capacity-estimation.svg', type: 'estimation' },
+        { id: 'onsale-flow', title: 'On-Sale Flow', description: 'User arrival through virtual queue to ticket purchase', src: '/diagrams/ticketmaster/onsale-flow.svg', type: 'flow' },
+        { id: 'seat-selection', title: 'Seat Selection Flow', description: 'Seat hold and release lifecycle', src: '/diagrams/ticketmaster/seat-selection-flow.svg', type: 'flow' },
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#2D8CFF', items: [{ label: 'Redis (Seat Locks)', value: 'SETNX with TTL per seat', bar: 95 }, { label: 'PostgreSQL (Bookings)', value: 'Optimistic locking + ACID', bar: 90 }, { label: 'WebSocket (Real-Time)', value: 'Seat map + queue updates', bar: 85 }, { label: 'CDN (Static Assets)', value: '99% of page loads cached', bar: 80 }, { label: 'Stripe (Payments)', value: 'PaymentIntent with holds', bar: 75 }, { label: 'Kafka (Events)', value: 'Booking + analytics stream', bar: 65 }] },
@@ -13533,6 +13575,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
       basicImplementation: {
         title: 'Basic Typeahead Architecture',
         description: 'In-memory trie with pre-computed suggestions',
+        diagramSrc: '/diagrams/typeahead/impl-basic.png',
         svgTemplate: 'typeahead',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────┐
@@ -13564,6 +13607,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
 
       advancedImplementation: {
         title: 'Production Typeahead Architecture',
+        diagramSrc: '/diagrams/typeahead/impl-advanced.png',
         svgTemplate: 'typeaheadAdvanced',
         architecture: `
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -13696,6 +13740,11 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
       flowcharts: [
         { id: 'suggestion-flow', title: 'Typeahead Suggestion Flow', description: 'End-to-end flow from keystroke to rendered suggestions', src: '/diagrams/typeahead/suggestion-flow.svg', steps: [{ step: 1, label: 'Keystroke', detail: 'User types a character. Client debounces for 150ms after last keystroke.' }, { step: 2, label: 'Local Cache Check', detail: 'Check browser-local LRU cache for this prefix. If hit: render immediately, still fetch for freshness.' }, { step: 3, label: 'CDN Edge', detail: 'Request hits CDN. For 1-3 char prefixes: 99% cache hit. Return cached suggestions in ~50ms.' }, { step: 4, label: 'Trie Service', detail: 'On CDN miss: route to trie shard based on prefix. O(k) lookup returns pre-computed top-10.' }, { step: 5, label: 'Personalization Merge', detail: 'If user authenticated: blend global results with per-user suggestions from Redis (70/30 split).' }, { step: 6, label: 'Content Filter', detail: 'Apply blocklist filter and safe search rules. Remove any offensive or restricted suggestions.' }, { step: 7, label: 'Render Dropdown', detail: 'Client renders suggestions with type indicators (query, entity). Highlight matching prefix in bold.' }] },
         { id: 'trie-update-flow', title: 'Trie Update Pipeline', description: 'How the suggestion trie is rebuilt from search analytics', steps: [{ step: 1, label: 'Collect Search Logs', detail: 'All search queries logged to Kafka with timestamp, userId, query text, and selected result.' }, { step: 2, label: 'Batch Aggregation', detail: 'Spark job processes 1 week of logs. Count query frequency, compute trending scores, extract entities.' }, { step: 3, label: 'Build New Trie', detail: 'Construct compressed trie with top-10 suggestions per node. Apply blocklist. Total build: ~30 minutes.' }, { step: 4, label: 'Atomic Swap', detail: 'New trie loaded into memory on all shard replicas. Atomic pointer swap ensures zero-downtime update.' }, { step: 5, label: 'CDN Purge', detail: 'Invalidate CDN cache for changed prefixes. Next requests populate CDN with fresh suggestions.' }] }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the typeahead design', src: '/diagrams/typeahead/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Query volume, trie size, and CDN calculations', src: '/diagrams/typeahead/capacity-estimation.svg', type: 'estimation' },
+        { id: 'suggestion-flow', title: 'Suggestion Flow', description: 'Keystroke through trie lookup to rendered suggestions', src: '/diagrams/typeahead/suggestion-flow.svg', type: 'flow' },
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#2D8CFF', items: [{ label: 'In-Memory Trie', value: '~10 GB compressed', bar: 95 }, { label: 'CDN Edge Cache', value: '99% hit for short prefixes', bar: 90 }, { label: 'Redis (Personalization)', value: 'Per-user search history', bar: 70 }, { label: 'Flink (Trending)', value: '1-min window detection', bar: 65 }, { label: 'Spark (Rebuild)', value: 'Weekly trie construction', bar: 55 }, { label: 'Kafka (Logs)', value: '500M searches/day', bar: 80 }] },
@@ -14121,6 +14170,7 @@ When a channel receives messages faster than members can consume, the gateway ap
       basicImplementation: {
         title: 'Basic Chat Architecture',
         description: 'Single WebSocket server with direct database connection for real-time messaging',
+        diagramSrc: '/diagrams/chat-system/impl-basic.png',
         svgTemplate: 'simpleChat',
         problems: [
           'Single server = limited connections',
@@ -14133,6 +14183,7 @@ When a channel receives messages faster than members can consume, the gateway ap
       advancedImplementation: {
         title: 'Production Chat Architecture',
         description: 'WebSocket gateway cluster with Redis Pub/Sub for cross-server message fan-out, Vitess/ScyllaDB for message storage.',
+        diagramSrc: '/diagrams/chat-system/impl-advanced.png',
         svgTemplate: 'distributedChat',
         keyPoints: [
           'WebSocket Gateway cluster with 50K connections per node',
@@ -14749,6 +14800,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
       basicImplementation: {
         title: 'Basic Yelp Architecture',
         description: 'PostGIS for geospatial, single database',
+        diagramSrc: '/diagrams/yelp/impl-basic.png',
         svgTemplate: 'yelp',
         problems: [
           'Single database = scaling bottleneck',
@@ -14760,6 +14812,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
 
       advancedImplementation: {
         title: 'Production Yelp Architecture',
+        diagramSrc: '/diagrams/yelp/impl-advanced.png',
         svgTemplate: 'yelpAdvanced',
         keyPoints: [
           'QuadTree + Elasticsearch for geospatial + full-text search',
@@ -15418,6 +15471,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple swipe and match without optimization',
+        diagramSrc: '/diagrams/tinder/impl-basic.png',
         svgTemplate: 'tinder',
         problems: [
           'Query users on every recommendation request',
@@ -16110,6 +16164,7 @@ When a user has zero listening history, recommendations must still feel relevant
       basicImplementation: {
         title: 'Basic Music Streaming',
         description: 'Simple audio serving with basic playlists',
+        diagramSrc: '/diagrams/spotify/impl-basic.png',
         svgTemplate: 'spotify',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────┐
@@ -16138,6 +16193,7 @@ When a user has zero listening history, recommendations must still feel relevant
 
       advancedImplementation: {
         title: 'Production Spotify Architecture',
+        diagramSrc: '/diagrams/spotify/impl-advanced.png',
         svgTemplate: 'spotifyAdvanced',
         architecture: `
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -16384,6 +16440,7 @@ When a user has zero listening history, recommendations must still feel relevant
           id: 'audio-stream-flow',
           title: 'Audio Streaming Flow',
           description: 'End-to-end flow from user pressing play to audio reaching speakers',
+          src: '/diagrams/spotify/streaming-play-flow.svg',
           steps: [
             { step: 1, label: 'Play Request', detail: 'User taps play. Client requests track metadata from Catalog Service (track ID, audio file URLs, DRM license).' },
             { step: 2, label: 'License Check', detail: 'License server validates active subscription and returns content decryption key for the track.' },
@@ -16398,6 +16455,7 @@ When a user has zero listening history, recommendations must still feel relevant
           id: 'discover-weekly-flow',
           title: 'Discover Weekly Generation Pipeline',
           description: 'How Spotify generates personalized Discover Weekly playlists for 675M+ users',
+          src: '/diagrams/spotify/streaming-flow.svg',
           steps: [
             { step: 1, label: 'Collect Listening Data', detail: 'Aggregate past 30 days of listening events from Kafka into user taste profiles (genre weights, artist affinity).' },
             { step: 2, label: 'Collaborative Filtering', detail: 'ALS matrix factorization on Spark cluster finds users with similar listening patterns and their unique tracks.' },
@@ -16988,6 +17046,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple search and booking without availability optimization',
+        diagramSrc: '/diagrams/airbnb/impl-basic.png',
         svgTemplate: 'airbnb',
         problems: [
           'Slow search: JOIN between listings and availability',
@@ -16999,6 +17058,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/airbnb/impl-advanced.png',
         svgTemplate: 'airbnbAdvanced',
         keyPoints: [
           'Two-stage search: ES for filtering, DB for availability',
@@ -17745,6 +17805,7 @@ Constraints:
       basicImplementation: {
         title: 'Basic Food Delivery',
         description: 'Simple order flow without optimization',
+        diagramSrc: '/diagrams/doordash/impl-basic.png',
         svgTemplate: 'doordash',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────┐
@@ -17773,6 +17834,7 @@ Constraints:
 
       advancedImplementation: {
         title: 'Production Food Delivery Architecture',
+        diagramSrc: '/diagrams/doordash/impl-advanced.png',
         svgTemplate: 'doordashAdvanced',
         architecture: `
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -18404,6 +18466,7 @@ Where credibility considers:
       basicImplementation: {
         title: 'Single Region Architecture',
         description: 'Handle trends for one geographic area',
+        diagramSrc: '/diagrams/twitter-trends/impl-basic.png',
         svgTemplate: 'twitterTrending',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -18448,6 +18511,7 @@ Where credibility considers:
 
       advancedImplementation: {
         title: 'Global Multi-Region Architecture',
+        diagramSrc: '/diagrams/twitter-trends/impl-advanced.png',
         svgTemplate: 'twitterTrendsAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -18716,6 +18780,7 @@ Where credibility considers:
           id: 'tweet-to-trend-pipeline',
           title: 'Tweet-to-Trend Detection Pipeline',
           description: 'Complete flow from raw tweet ingestion to trend publication',
+          src: '/diagrams/twitter-trends/trend-detect-flow.svg',
           steps: [
             { step: 1, label: 'Tweet Ingested', detail: 'Raw tweet arrives via Kafka, geo-partitioned by user region' },
             { step: 2, label: 'Spam Pre-filter', detail: 'Check account age, rate limits, known bot list -- assign credibility weight (0.0-1.0)' },
@@ -19147,6 +19212,7 @@ Cons: Storage not immediately reclaimed
       basicImplementation: {
         title: 'Simple Architecture',
         description: 'Single server with direct S3 access',
+        diagramSrc: '/diagrams/pastebin/impl-basic.png',
         svgTemplate: 'pastebin',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -19182,6 +19248,7 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/pastebin/impl-advanced.png',
         svgTemplate: 'pastebinAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -19347,6 +19414,7 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
           id: 'create-paste-flow',
           title: 'Create Paste Flow',
           description: 'Complete flow from paste submission to short URL return',
+          src: '/diagrams/pastebin/create-paste-flow.svg',
           steps: [
             { step: 1, label: 'Submit Paste', detail: 'Client sends content, syntax, expiration, optional password' },
             { step: 2, label: 'Rate Limit Check', detail: 'Check IP-based rate limit (10 pastes/min)' },
@@ -19614,6 +19682,7 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Single-threaded crawler',
+        diagramSrc: '/diagrams/web-crawler/impl-basic.png',
         svgTemplate: 'webCrawler',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -19633,6 +19702,7 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/web-crawler/impl-advanced.png',
         svgTemplate: 'webCrawlerAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -19771,6 +19841,7 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
           id: 'crawl-pipeline',
           title: 'Page Crawl Pipeline',
           description: 'End-to-end flow from URL selection to content storage',
+          src: '/diagrams/web-crawler/crawl-pipeline-flow.svg',
           steps: [
             { step: 1, label: 'URL Selection', detail: 'Priority selector picks URL from frontier front-queue' },
             { step: 2, label: 'Politeness Check', detail: 'Route to domain back-queue, wait if nextFetchTime not reached' },
@@ -19796,6 +19867,11 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
             { step: 6, label: 'Politeness Gate', detail: 'Only release to fetcher when nextFetchTime is passed' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the web crawler design', src: '/diagrams/web-crawler/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Crawl throughput, storage, and bandwidth calculations', src: '/diagrams/web-crawler/capacity-estimation.svg', type: 'estimation' },
+        { id: 'crawl-pipeline', title: 'Crawl Pipeline Flow', description: 'URL selection through fetching to content storage', src: '/diagrams/web-crawler/crawl-pipeline-flow.svg', type: 'flow' },
       ],
 
       visualCards: [
@@ -20361,6 +20437,7 @@ When a normal user (<10K followers) posts:
       basicImplementation: {
         title: 'Pull-Based Architecture',
         description: 'Simple pull model - compute feed on read',
+        diagramSrc: '/diagrams/facebook-newsfeed/impl-basic.png',
         svgTemplate: 'facebookFeed',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -20397,6 +20474,7 @@ When a normal user (<10K followers) posts:
 
       advancedImplementation: {
         title: 'Hybrid Fan-out Architecture',
+        diagramSrc: '/diagrams/facebook-newsfeed/impl-advanced.png',
         svgTemplate: 'facebookFeedAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -21072,6 +21150,7 @@ Merkle Tree sync:
       basicImplementation: {
         title: 'Single-Node Key-Value Store',
         description: 'In-memory hash map with persistence',
+        diagramSrc: '/diagrams/key-value-store/impl-basic.png',
         svgTemplate: 'keyValueStore',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -21104,6 +21183,7 @@ Merkle Tree sync:
 
       advancedImplementation: {
         title: 'Distributed Key-Value Store',
+        diagramSrc: '/diagrams/key-value-store/impl-advanced.png',
         svgTemplate: 'keyValueAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -21792,6 +21872,7 @@ No coordination, but:
       basicImplementation: {
         title: 'Single Server Snowflake',
         description: 'Simple in-memory generator',
+        diagramSrc: '/diagrams/unique-id-generator/impl-basic.png',
         svgTemplate: 'distributedId',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -21823,6 +21904,7 @@ No coordination, but:
 
       advancedImplementation: {
         title: 'Distributed Snowflake Service',
+        diagramSrc: '/diagrams/unique-id-generator/impl-advanced.png',
         svgTemplate: 'distributedIdAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -22000,6 +22082,7 @@ No coordination, but:
           id: 'id-generation-flow',
           title: 'Snowflake ID Generation',
           description: 'Step-by-step flow of generating a single 64-bit ID',
+          src: '/diagrams/unique-id-generator/snowflake-flow.svg',
           steps: [
             { step: 1, label: 'Get Current Time', detail: 'Read system clock in milliseconds' },
             { step: 2, label: 'Clock Check', detail: 'Is current_time >= last_timestamp? If backwards, wait or error' },
@@ -22024,6 +22107,11 @@ No coordination, but:
             { step: 7, label: 'Crash Recovery', detail: 'On crash, ephemeral node auto-deleted; ID released for reuse' },
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the unique ID generator design', src: '/diagrams/unique-id-generator/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'ID throughput, bit allocation, and keyspace calculations', src: '/diagrams/unique-id-generator/capacity-estimation.svg', type: 'estimation' },
+        { id: 'snowflake-flow', title: 'Snowflake ID Generation', description: 'Step-by-step 64-bit ID generation flow', src: '/diagrams/unique-id-generator/snowflake-flow.svg', type: 'flow' },
       ],
 
       visualCards: [
@@ -22803,6 +22891,7 @@ Monitor and alert on:
       basicImplementation: {
         title: 'Simple News Aggregator',
         description: 'RSS ingestion with basic ranking',
+        diagramSrc: '/diagrams/news-aggregator/impl-basic.png',
         svgTemplate: 'googleNews',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -22828,6 +22917,7 @@ Monitor and alert on:
 
       advancedImplementation: {
         title: 'Production News Platform',
+        diagramSrc: '/diagrams/news-aggregator/impl-advanced.png',
         svgTemplate: 'googleNewsAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -23064,6 +23154,7 @@ Monitor and alert on:
           id: 'article-ingestion-flow',
           title: 'Article Ingestion Pipeline',
           description: 'From RSS poll to searchable, clustered article',
+          src: '/diagrams/news-aggregator/article-ingestion-flow.svg',
           steps: [
             { step: 1, label: 'Feed Poll', detail: 'Scheduler triggers RSS poll for source based on adaptive interval (5 min to 1 hour)' },
             { step: 2, label: 'URL Dedup', detail: 'Check Bloom filter for already-crawled URLs; skip known URLs to save bandwidth' },
@@ -23764,6 +23855,7 @@ DEL temp:friends:player123 temp:result
       basicImplementation: {
         title: 'Single Redis Leaderboard',
         description: 'Simple sorted set implementation',
+        diagramSrc: '/diagrams/leaderboard/impl-basic.png',
         svgTemplate: 'leaderboard',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -23793,6 +23885,7 @@ DEL temp:friends:player123 temp:result
 
       advancedImplementation: {
         title: 'Production Leaderboard System',
+        diagramSrc: '/diagrams/leaderboard/impl-advanced.png',
         svgTemplate: 'leaderboardAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -24857,6 +24950,7 @@ Every layer is safe to retry independently.
       basicImplementation: {
         title: 'Simple Booking System',
         description: 'Single database with basic search',
+        diagramSrc: '/diagrams/hotel-booking/impl-basic.png',
         svgTemplate: 'hotelBooking',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -24888,6 +24982,7 @@ Every layer is safe to retry independently.
 
       advancedImplementation: {
         title: 'Production Booking Platform',
+        diagramSrc: '/diagrams/hotel-booking/impl-advanced.png',
         svgTemplate: 'hotelBookingAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -25964,6 +26059,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
       basicImplementation: {
         title: 'Basic Mapping System',
         description: 'Static tiles with simple routing',
+        diagramSrc: '/diagrams/google-maps/impl-basic.png',
         svgTemplate: 'googleMaps',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -25994,6 +26090,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
 
       advancedImplementation: {
         title: 'Production Maps Platform',
+        diagramSrc: '/diagrams/google-maps/impl-advanced.png',
         svgTemplate: 'googleMapsAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -27450,6 +27547,7 @@ Privacy: Option to view anonymously (hides viewer)
       basicImplementation: {
         title: 'Simple Professional Network',
         description: 'Basic profiles and connections',
+        diagramSrc: '/diagrams/linkedin/impl-basic.png',
         svgTemplate: 'linkedin',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -27479,6 +27577,7 @@ Privacy: Option to view anonymously (hides viewer)
 
       advancedImplementation: {
         title: 'Production LinkedIn Architecture',
+        diagramSrc: '/diagrams/linkedin/impl-advanced.png',
         svgTemplate: 'linkedinAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -29094,7 +29193,7 @@ messages {
         { id: 'delivery-semantics', title: 'Delivery: At-Most-Once vs At-Least-Once vs Exactly-Once', headers: ['Aspect', 'At-Most-Once', 'At-Least-Once', 'Exactly-Once'], rows: [['Message Loss', 'Possible', 'Never', 'Never'], ['Duplicates', 'Never', 'Possible', 'Never'], ['Complexity', 'Simplest', 'Moderate (ACK + dedup)', 'Most complex'], ['Use Case', 'Typing indicators', 'Chat messages', 'Payment messages']], verdict: 'At-least-once with client-side dedup for chat messages' }
       ],
       flowcharts: [
-        { id: 'send-message', title: 'Send Message Flow', description: 'Complete flow when User A messages User B (both online)', steps: [{ step: 1, label: 'Encrypt', detail: 'Client encrypts message with Signal Protocol' }, { step: 2, label: 'WebSocket Send', detail: 'Encrypted message sent to User A chat server' }, { step: 3, label: 'Assign Sequence', detail: 'Server assigns monotonic sequence number via Redis INCR' }, { step: 4, label: 'ACK Sent', detail: 'Server sends SENT acknowledgment (single tick) to sender' }, { step: 5, label: 'Persist', detail: 'Write to Cassandra (conversationId partition)' }, { step: 6, label: 'Route', detail: 'Lookup User B server in Redis, publish to Kafka' }, { step: 7, label: 'Deliver', detail: 'User B chat server delivers via WebSocket' }, { step: 8, label: 'ACK Delivered', detail: 'User B client sends DELIVERED ACK (double ticks)' }] },
+        { id: 'send-message', title: 'Send Message Flow', description: 'Complete flow when User A messages User B (both online)', src: '/diagrams/messaging-app/send-receive-flow.svg', steps: [{ step: 1, label: 'Encrypt', detail: 'Client encrypts message with Signal Protocol' }, { step: 2, label: 'WebSocket Send', detail: 'Encrypted message sent to User A chat server' }, { step: 3, label: 'Assign Sequence', detail: 'Server assigns monotonic sequence number via Redis INCR' }, { step: 4, label: 'ACK Sent', detail: 'Server sends SENT acknowledgment (single tick) to sender' }, { step: 5, label: 'Persist', detail: 'Write to Cassandra (conversationId partition)' }, { step: 6, label: 'Route', detail: 'Lookup User B server in Redis, publish to Kafka' }, { step: 7, label: 'Deliver', detail: 'User B chat server delivers via WebSocket' }, { step: 8, label: 'ACK Delivered', detail: 'User B client sends DELIVERED ACK (double ticks)' }] },
         { id: 'offline-delivery', title: 'Offline Message Delivery', description: 'How messages reach users who are not currently connected', steps: [{ step: 1, label: 'Check Presence', detail: 'Redis shows User B is OFFLINE' }, { step: 2, label: 'Queue Message', detail: 'Store in offline_queue (Cassandra, 30-day TTL)' }, { step: 3, label: 'Push Notification', detail: 'Send FCM/APNs alert (no content for privacy)' }, { step: 4, label: 'User Opens App', detail: 'User B launches app, establishes WebSocket' }, { step: 5, label: 'Flush Queue', detail: 'Server delivers all queued messages in sequence order' }, { step: 6, label: 'Batch ACK', detail: 'Client ACKs all delivered messages, queue entries removed' }] }
       ],
       visualCards: [
@@ -29336,7 +29435,7 @@ alert_rules {
         { id: 'push-vs-pull', title: 'Push vs Pull Collection', headers: ['Aspect', 'Pull (Prometheus)', 'Push (Datadog Agent)'], rows: [['Control', 'Central scrape config', 'Agent self-reports'], ['Short-lived Jobs', 'Needs push gateway', 'Native support'], ['Service Discovery', 'Required', 'Not required'], ['Firewall', 'Collector needs access', 'Agent pushes out'], ['Scaling', 'Scraper bottleneck', 'Scales with agents']], verdict: 'Pull for long-lived services, push for ephemeral jobs and firewalled environments' }
       ],
       flowcharts: [
-        { id: 'metric-pipeline', title: 'Metric Ingestion Pipeline', description: 'From agent collection to queryable storage', steps: [{ step: 1, label: 'Agent Collects', detail: 'Host agent scrapes /metrics endpoint every 10 seconds' }, { step: 2, label: 'Batch Send', detail: 'Agent batches data points and sends to ingestion endpoint' }, { step: 3, label: 'Kafka Buffer', detail: 'Events buffered in Kafka for reliability (6-hour retention)' }, { step: 4, label: 'Cardinality Check', detail: 'Validate tag cardinality limits before storage' }, { step: 5, label: 'Write to TSDB', detail: 'Compressed write to time-series storage (delta-of-delta + XOR)' }, { step: 6, label: 'Query Ready', detail: 'Data available for dashboard queries within seconds' }] },
+        { id: 'metric-pipeline', title: 'Metric Ingestion Pipeline', description: 'From agent collection to queryable storage', src: '/diagrams/metrics-monitoring/metrics-pipeline-flow.svg', steps: [{ step: 1, label: 'Agent Collects', detail: 'Host agent scrapes /metrics endpoint every 10 seconds' }, { step: 2, label: 'Batch Send', detail: 'Agent batches data points and sends to ingestion endpoint' }, { step: 3, label: 'Kafka Buffer', detail: 'Events buffered in Kafka for reliability (6-hour retention)' }, { step: 4, label: 'Cardinality Check', detail: 'Validate tag cardinality limits before storage' }, { step: 5, label: 'Write to TSDB', detail: 'Compressed write to time-series storage (delta-of-delta + XOR)' }, { step: 6, label: 'Query Ready', detail: 'Data available for dashboard queries within seconds' }] },
         { id: 'alert-flow', title: 'Alert Evaluation Flow', description: 'How alert rules are evaluated and notifications dispatched', steps: [{ step: 1, label: 'Load Rules', detail: 'Alert manager reads 50K rules from config store' }, { step: 2, label: 'Evaluate (30s)', detail: 'Leader evaluator runs each rule query against TSDB' }, { step: 3, label: 'State Machine', detail: 'OK -> PENDING -> FIRING -> RESOLVED transition' }, { step: 4, label: 'Group Alerts', detail: 'Batch related alerts by service/dependency to prevent storms' }, { step: 5, label: 'Notify', detail: 'Send to configured channels: Slack, PagerDuty, email' }, { step: 6, label: 'Escalate', detail: 'If unacknowledged after 5 min, escalate to next on-call' }] }
       ],
       visualCards: [
@@ -29598,7 +29697,7 @@ Every payment creates balanced debit + credit entries:
         { id: 'consistency-models', title: 'Payment Consistency: Sync vs Async', headers: ['Aspect', 'Synchronous', 'Asynchronous'], rows: [['User Experience', 'Immediate confirmation', 'Processing... please wait'], ['Complexity', 'Simpler error handling', 'Webhook-based status updates'], ['Reliability', 'Fails if downstream slow', 'Tolerates transient failures'], ['Best For', 'Authorization', 'Settlement, reconciliation']], verdict: 'Synchronous for authorization, async for settlement and webhooks' }
       ],
       flowcharts: [
-        { id: 'payment-flow', title: 'Payment Authorization Flow', description: 'Complete flow from merchant request to card network approval', steps: [{ step: 1, label: 'Merchant Request', detail: 'POST /api/payments with amount, card token, idempotency key' }, { step: 2, label: 'Idempotency Check', detail: 'Check if key already processed; if so, return cached result' }, { step: 3, label: 'Fraud Scoring', detail: 'ML model scores transaction risk (0-100), block if >80' }, { step: 4, label: 'Detokenize', detail: 'Retrieve raw card data from tokenization vault (PCI scope)' }, { step: 5, label: 'Card Network', detail: 'Send auth request to Visa/Mastercard via acquirer' }, { step: 6, label: 'Issuer Decision', detail: 'Cardholder bank approves/declines, places hold on funds' }, { step: 7, label: 'Ledger Entry', detail: 'Create debit (customer hold) + credit (merchant receivable)' }, { step: 8, label: 'Return Result', detail: 'Return authorized/declined status to merchant' }] },
+        { id: 'payment-flow', title: 'Payment Authorization Flow', description: 'Complete flow from merchant request to card network approval', src: '/diagrams/payment-gateway/transaction-flow.svg', steps: [{ step: 1, label: 'Merchant Request', detail: 'POST /api/payments with amount, card token, idempotency key' }, { step: 2, label: 'Idempotency Check', detail: 'Check if key already processed; if so, return cached result' }, { step: 3, label: 'Fraud Scoring', detail: 'ML model scores transaction risk (0-100), block if >80' }, { step: 4, label: 'Detokenize', detail: 'Retrieve raw card data from tokenization vault (PCI scope)' }, { step: 5, label: 'Card Network', detail: 'Send auth request to Visa/Mastercard via acquirer' }, { step: 6, label: 'Issuer Decision', detail: 'Cardholder bank approves/declines, places hold on funds' }, { step: 7, label: 'Ledger Entry', detail: 'Create debit (customer hold) + credit (merchant receivable)' }, { step: 8, label: 'Return Result', detail: 'Return authorized/declined status to merchant' }] },
         { id: 'settlement-flow', title: 'Daily Settlement Batch', description: 'How captured payments become funds in merchant accounts', steps: [{ step: 1, label: 'Batch Close', detail: 'End-of-day: collect all captured payments since last batch' }, { step: 2, label: 'Net Calculation', detail: 'Subtract refunds, calculate net payout per merchant' }, { step: 3, label: 'Acquirer Submit', detail: 'Submit batch to acquirer bank for settlement' }, { step: 4, label: 'Interchange', detail: 'Card network deducts interchange fees (~2-3%)' }, { step: 5, label: 'Fund Transfer', detail: 'Net amount transferred to merchant bank account (T+2)' }, { step: 6, label: 'Reconciliation', detail: 'Match settled amounts with internal ledger, flag discrepancies' }] }
       ],
       visualCards: [
@@ -29831,7 +29930,12 @@ quadtree_node {
         { id: 'database-geo', title: 'Geo-Query Database Options', headers: ['Aspect', 'PostGIS', 'Elasticsearch Geo', 'Redis GEO'], rows: [['Query Types', 'Full spatial SQL', 'Radius + bounding box', 'Radius only'], ['Scaling', 'Read replicas', 'Cluster sharding', 'Cluster sharding'], ['Rich Filtering', 'Full SQL + spatial', 'Text + geo + facets', 'Limited'], ['Latency', '5-50ms', '10-100ms', '<5ms'], ['Best For', 'Complex spatial queries', 'Combined text + geo search', 'Simple proximity cache']], verdict: 'PostGIS for primary store, Redis GEO for hot area caching' }
       ],
       flowcharts: [
-        { id: 'proximity-search', title: 'Proximity Search Flow', description: 'How a nearby business search is executed', steps: [{ step: 1, label: 'User Request', detail: 'GET /api/nearby?lat=40.74&lng=-73.99&radius=2km&category=restaurant' }, { step: 2, label: 'Compute Geohash', detail: 'Encode user location to geohash at appropriate precision for radius' }, { step: 3, label: 'Find 9 Cells', detail: 'User cell + 8 neighboring cells to handle boundary cases' }, { step: 4, label: 'Cache Check', detail: 'Check Redis for cached results for these geohash prefixes' }, { step: 5, label: 'Database Query', detail: 'If cache miss: PostGIS query with geohash prefix + category filter' }, { step: 6, label: 'Distance Filter', detail: 'Haversine formula to compute exact distance, filter to radius' }, { step: 7, label: 'Rank Results', detail: 'Sort by distance (or relevance = distance x rating x popularity)' }, { step: 8, label: 'Return Page', detail: 'Return top results with distance, rating, and business details' }] }
+        { id: 'proximity-search', title: 'Proximity Search Flow', description: 'How a nearby business search is executed', src: '/diagrams/proximity-service/nearby-search-flow.svg', steps: [{ step: 1, label: 'User Request', detail: 'GET /api/nearby?lat=40.74&lng=-73.99&radius=2km&category=restaurant' }, { step: 2, label: 'Compute Geohash', detail: 'Encode user location to geohash at appropriate precision for radius' }, { step: 3, label: 'Find 9 Cells', detail: 'User cell + 8 neighboring cells to handle boundary cases' }, { step: 4, label: 'Cache Check', detail: 'Check Redis for cached results for these geohash prefixes' }, { step: 5, label: 'Database Query', detail: 'If cache miss: PostGIS query with geohash prefix + category filter' }, { step: 6, label: 'Distance Filter', detail: 'Haversine formula to compute exact distance, filter to radius' }, { step: 7, label: 'Rank Results', detail: 'Sort by distance (or relevance = distance x rating x popularity)' }, { step: 8, label: 'Return Page', detail: 'Return top results with distance, rating, and business details' }] }
+      ],
+      staticDiagrams: [
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for the proximity service design', src: '/diagrams/proximity-service/problem-definition.svg', type: 'overview' },
+        { id: 'capacity-est', title: 'Capacity Estimation', description: 'Business count, search QPS, and geohash calculations', src: '/diagrams/proximity-service/capacity-estimation.svg', type: 'estimation' },
+        { id: 'nearby-search', title: 'Nearby Search Flow', description: 'Geohash query through distance filter to ranked results', src: '/diagrams/proximity-service/nearby-search-flow.svg', type: 'flow' },
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#d32323', items: [{ label: 'PostGIS', value: '200M businesses indexed', bar: 90 }, { label: 'Redis GEO', value: 'Hot area cache', bar: 60 }, { label: 'Geohash Index', value: 'B-tree on prefix', bar: 75 }, { label: 'CDN', value: 'Business detail pages', bar: 40 }, { label: 'Haversine Calculator', value: '~50 per query', bar: 30 }, { label: 'API Servers', value: '15K peak QPS', bar: 50 }] },
@@ -30047,7 +30151,7 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
       ],
       flowcharts: [
         { id: 'create-short-url', title: 'Create Short URL Flow', description: 'From long URL submission to short code generation', steps: [{ step: 1, label: 'Submit URL', detail: 'Client sends POST /api/shorten with long URL' }, { step: 2, label: 'Rate Limit', detail: 'Check IP/API key rate limit (100/hour)' }, { step: 3, label: 'URL Validation', detail: 'Validate URL format, check Safe Browsing API' }, { step: 4, label: 'Generate Code', detail: 'Claim next ID from pre-allocated counter range, Base62 encode' }, { step: 5, label: 'Store Mapping', detail: 'Insert short_code -> long_url in database' }, { step: 6, label: 'Return', detail: 'Return short URL to client (e.g., tny.url/a7Bx3kQ)' }] },
-        { id: 'redirect-flow', title: 'URL Redirect Flow', description: 'How a short URL click becomes a redirect in <50ms', steps: [{ step: 1, label: 'Click', detail: 'User clicks short URL or types in browser' }, { step: 2, label: 'L1 Cache', detail: 'Check in-process LRU cache (~10K hot entries)' }, { step: 3, label: 'L2 Cache', detail: 'If L1 miss, check Redis (100M entries, <5ms)' }, { step: 4, label: 'Database', detail: 'If L2 miss, query Cassandra (<20ms)' }, { step: 5, label: 'Expiry Check', detail: 'If URL expired, return 404 with friendly page' }, { step: 6, label: 'Redirect', detail: '302 redirect to long URL (or 301 if permanent)' }, { step: 7, label: 'Log Click', detail: 'Async: publish click event to Kafka for analytics' }] }
+        { id: 'redirect-flow', title: 'URL Redirect Flow', description: 'How a short URL click becomes a redirect in <50ms', src: '/diagrams/tiny-url/redirect-flow.svg', steps: [{ step: 1, label: 'Click', detail: 'User clicks short URL or types in browser' }, { step: 2, label: 'L1 Cache', detail: 'Check in-process LRU cache (~10K hot entries)' }, { step: 3, label: 'L2 Cache', detail: 'If L1 miss, check Redis (100M entries, <5ms)' }, { step: 4, label: 'Database', detail: 'If L2 miss, query Cassandra (<20ms)' }, { step: 5, label: 'Expiry Check', detail: 'If URL expired, return 404 with friendly page' }, { step: 6, label: 'Redirect', detail: '302 redirect to long URL (or 301 if permanent)' }, { step: 7, label: 'Log Click', detail: 'Async: publish click event to Kafka for analytics' }] }
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#10b981', items: [{ label: 'CDN', value: 'Global edge caching', bar: 90 }, { label: 'Redis (L2 Cache)', value: '100M URLs cached', bar: 80 }, { label: 'Cassandra', value: 'URL mapping store', bar: 70 }, { label: 'ZooKeeper', value: 'Counter range allocation', bar: 30 }, { label: 'Kafka (Analytics)', value: 'Click event streaming', bar: 50 }, { label: 'Safe Browsing API', value: 'Abuse prevention', bar: 25 }] },
