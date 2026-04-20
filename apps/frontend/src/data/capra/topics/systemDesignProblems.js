@@ -15401,6 +15401,35 @@ The first 24 hours of swipe data from other users seeing the new profile provide
         ]
       },
 
+      createFlow: {
+        title: 'Swipe & Match Detection Flow',
+        diagramSrc: '/diagrams/tinder/flow-swipe-match.png',
+        steps: [
+          { step: 1, label: 'User Swipes Right', detail: 'User swipes right (LIKE) on a profile card in the app' },
+          { step: 2, label: 'API Gateway', detail: 'Rate limiting (prevent bot swiping), authenticate user, forward to swipe service' },
+          { step: 3, label: 'Record Swipe', detail: 'Swipe service records the like: SADD user:{swiperId}:likes {targetId} in Redis' },
+          { step: 4, label: 'Check Reciprocal', detail: 'SISMEMBER user:{targetId}:likes {swiperId} — O(1) check if target already liked us' },
+          { step: 5, label: 'Match Created', detail: 'If mutual like found: create match record in database, open chat channel' },
+          { step: 6, label: 'Push Notifications', detail: 'Send push notification to both users: "It\'s a Match!" with profile photos' },
+          { step: 7, label: 'Async Persistence', detail: 'Swipe event published to Kafka for durable persistence to Cassandra swipe log' },
+          { step: 8, label: 'Update Recs', detail: 'Remove matched user from both recommendation stacks to prevent re-showing' },
+        ]
+      },
+
+      redirectFlow: {
+        title: 'Recommendation Pipeline',
+        diagramSrc: '/diagrams/tinder/flow-recommendation.png',
+        steps: [
+          { step: 1, label: 'Batch Trigger', detail: 'Runs every 4 hours per user, or immediately when recommendation stack is depleted' },
+          { step: 2, label: 'S2 Geo Query', detail: 'Query users in the same S2 cell region (level 12 = ~3.3km cells) for the user\'s location' },
+          { step: 3, label: 'Preference Filter', detail: 'Filter ~10K candidates by mutual preferences: age range overlap, gender, interested_in, max distance' },
+          { step: 4, label: 'Bloom Filter Dedup', detail: 'Check each candidate against user\'s Bloom filter to exclude already-swiped profiles (O(k) per check)' },
+          { step: 5, label: 'ML Ranking', detail: 'Score remaining ~2K candidates using ELO similarity, distance decay, activity recency, profile completeness' },
+          { step: 6, label: 'Diversity Rules', detail: 'Apply diversity constraints: mix attractiveness tiers (70% similar, 30% exploratory), vary profile types' },
+          { step: 7, label: 'Cache Top 100', detail: 'Store ranked recommendation stack in Redis sorted set per user. Serve via GET /recommendations in <100ms' },
+        ]
+      },
+
       swipeFlow: {
         title: 'Swipe Flow',
         steps: [
