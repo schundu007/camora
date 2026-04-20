@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import UserDropdown from '../shared/UserDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from '../shared/CamoraLogo';
 import CommandPalette from './CommandPalette';
+import { NAV_LINKS } from '../../lib/constants';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -15,6 +16,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   const { user, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const location = useLocation();
+  const isNavActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
   const initials = user?.name
     ? user.name
@@ -77,10 +80,27 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <Link to="/" className="flex items-center no-underline">
             <CamoraLogo size={28} />
           </Link>
+
+          {/* Nav links — desktop only */}
+          <nav className="hidden lg:flex items-center gap-1 ml-4">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors no-underline"
+                style={{
+                  color: isNavActive(link.href) ? 'var(--accent)' : 'var(--text-secondary)',
+                  background: isNavActive(link.href) ? 'var(--accent-subtle)' : 'transparent',
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         {/* -- Center: search bar --------------------------------- */}
-        <div className="hidden sm:flex flex-1 justify-center px-6">
+        <div className="hidden sm:flex flex-1 justify-center px-6 lg:max-w-xs">
           <div
             className="flex items-center gap-2 w-full max-w-md px-3 h-8 rounded-full cursor-pointer transition-colors"
             style={{
