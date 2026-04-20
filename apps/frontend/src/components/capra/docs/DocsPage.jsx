@@ -672,84 +672,89 @@ export default function DocsPage({ onBack }) {
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
                     <>
-                      {/* Welcome + Stats */}
-                      <div className="mb-8">
-                        <h1 className="landing-display font-extrabold text-2xl md:text-3xl tracking-tight text-[var(--text-primary)] mb-2">
-                          Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
-                        </h1>
-                        <p className="text-sm text-[var(--text-muted)] landing-body mb-5">
-                          Your interview preparation dashboard. {overviewTotalTopics}+ topics across {overviewCategories.length} categories.
-                        </p>
-
-                        {/* Overall progress stats row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {[
-                            { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', color: '#2D8CFF' },
-                            { label: 'Completed', value: overviewTotalCompleted, icon: 'check', color: '#06b6d4' },
-                            { label: 'Categories', value: overviewCategories.length, icon: 'grid', color: '#60A5FA' },
-                            { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', color: '#3b82f6' },
-                          ].map(stat => (
-                            <div key={stat.label} className="rounded-xl p-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                                  <Icon name={stat.icon} size={16} style={{ color: stat.color }} />
-                                </div>
-                              </div>
-                              <div className="text-2xl font-extrabold landing-display" style={{ color: 'var(--text-primary)' }}>{stat.value}</div>
-                              <div className="text-[11px] landing-body mt-0.5 font-semibold" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+                      {/* Hero Banner — frosted glass with gradient */}
+                      <div className="relative mb-8 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 40%, #38bdf8 70%, #818cf8 100%)', padding: '2px' }}>
+                        <div className="rounded-[14px] p-6 md:p-8" style={{ background: 'rgba(240,247,255,0.92)', backdropFilter: 'blur(20px)' }}>
+                          <div className="flex items-start justify-between flex-wrap gap-4">
+                            <div>
+                              <h1 className="font-extrabold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                                Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+                              </h1>
+                              <p className="text-sm landing-body" style={{ color: 'var(--text-secondary)' }}>
+                                Your frost training grounds. <strong>{overviewTotalTopics}+</strong> topics across <strong>{overviewCategories.length}</strong> categories.
+                              </p>
                             </div>
-                          ))}
+                            <Link to="/capra/practice" className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 hover:shadow-lg" style={{ background: 'linear-gradient(135deg, #0ea5e9, #22d3ee)', boxShadow: '0 4px 14px rgba(34,211,238,0.3)' }}>
+                              Start Thawing
+                            </Link>
+                          </div>
+
+                          {/* Stats row — glassmorphism pills */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                            {[
+                              { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' },
+                              { label: 'Completed', value: overviewTotalCompleted, icon: 'check', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)' },
+                              { label: 'Categories', value: overviewCategories.length, icon: 'grid', gradient: 'linear-gradient(135deg, #818cf8, #6366f1)' },
+                              { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', gradient: 'linear-gradient(135deg, #34d399, #10b981)' },
+                            ].map(stat => (
+                              <div key={stat.label} className="rounded-xl p-4 backdrop-blur-sm transition-all hover:scale-[1.02]" style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(56,189,248,0.15)', boxShadow: '0 2px 8px rgba(56,189,248,0.06)' }}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: stat.gradient }}>
+                                    <Icon name={stat.icon} size={15} />
+                                  </div>
+                                </div>
+                                <div className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{stat.value}</div>
+                                <div className="text-[11px] landing-body mt-0.5 font-semibold" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Category Cards Grid */}
+                      {/* Category Cards Grid — modern frost cards with gradient borders */}
                       <div className="mb-8">
-                        <h2 className="section-label mb-3">Categories</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Frost Zones</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {overviewCategories.map(cat => {
-                            const radius = 18;
+                            const radius = 20;
                             const circumference = 2 * Math.PI * radius;
                             const strokeDashoffset = circumference - (cat.progress / 100) * circumference;
                             return (
                             <a
                               key={cat.id}
                               href={`/capra/prepare/${cat.href}`}
-                              className="group relative rounded-xl overflow-hidden transition-all duration-200"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
-                              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                              className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                              style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
                             >
+                              {/* Top accent bar */}
+                              <div className="h-1" style={{ background: `linear-gradient(90deg, ${cat.color}, ${cat.color}88)` }} />
                               <div className="p-4">
-                                {/* Row 1: Icon + Title + Topic count */}
-                                <div className="flex items-center gap-3 mb-4">
-                                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${cat.color}18` }}>
-                                    <Icon name={cat.icon} size={18} style={{ color: cat.color }} />
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${cat.color}, ${cat.color}cc)` }}>
+                                      <Icon name={cat.icon} size={18} />
+                                    </div>
+                                    <div>
+                                      <h3 className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                      <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
+                                    </div>
                                   </div>
-                                  <h3 className="text-[14px] font-semibold text-[var(--text-primary)] flex-1 min-w-0 truncate">{cat.title}</h3>
-                                  <span className="text-2xl font-bold tabular-nums shrink-0" style={{ color: cat.color }}>{cat.count}</span>
-                                </div>
-                                {/* Row 2: Progress ring + stats */}
-                                <div className="flex items-center gap-3">
-                                  {/* Mini progress ring */}
-                                  <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
-                                    <svg width="44" height="44" viewBox="0 0 44 44" className="transform -rotate-90">
-                                      <circle cx="22" cy="22" r={radius} fill="none" stroke="var(--bg-elevated)" strokeWidth="3" />
-                                      <circle cx="22" cy="22" r={radius} fill="none" stroke={cat.color} strokeWidth="3"
+                                  {/* Progress ring */}
+                                  <div className="relative shrink-0" style={{ width: 48, height: 48 }}>
+                                    <svg width="48" height="48" viewBox="0 0 48 48" className="transform -rotate-90">
+                                      <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(56,189,248,0.1)" strokeWidth="3" />
+                                      <circle cx="24" cy="24" r={radius} fill="none" stroke={cat.color} strokeWidth="3"
                                         strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-                                        strokeLinecap="round" className="transition-all duration-700" />
+                                        strokeLinecap="round" className="transition-all duration-1000" />
                                     </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold" style={{ color: cat.progress > 0 ? cat.color : 'var(--text-muted)' }}>
+                                    <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold" style={{ color: cat.progress > 0 ? cat.color : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
                                       {cat.progress}%
                                     </span>
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                      {cat.completed} of {cat.count} completed
-                                    </div>
-                                    <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                                      {cat.progress === 0 ? 'Not started' : cat.progress === 100 ? 'Completed!' : 'In progress'}
-                                    </div>
-                                  </div>
+                                </div>
+                                {/* Progress bar */}
+                                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(56,189,248,0.08)' }}>
+                                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: `linear-gradient(90deg, ${cat.color}, ${cat.color}aa)` }} />
                                 </div>
                               </div>
                             </a>
@@ -758,69 +763,59 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Recommended Learning Path — horizontal timeline */}
+                      {/* Expedition Map — learning path */}
                       <div className="mb-8">
-                        <h2 className="section-label mb-3">Recommended Path</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-0">
-                          {[
-                            { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#2D8CFF' },
-                            { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6' },
-                            { step: 3, title: 'Low Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899' },
-                            { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#a855f7' },
-                          ].map((phase, idx) => (
-                            <Link key={phase.step} to={phase.href} className="group relative">
-                              {/* Connector line between steps */}
-                              {idx < 3 && (
-                                <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 z-0" style={{ background: 'var(--border)' }} />
-                              )}
-                              <div className="relative z-10 flex flex-col items-center text-center p-4 rounded-xl">
-                                {/* Step number circle */}
-                                <div
-                                  className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
-                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                                >
-                                  <span className="text-sm font-extrabold landing-mono" style={{ color: 'var(--text-primary)' }}>{phase.step}</span>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Expedition Map</h2>
+                        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+                            {[
+                              { step: 1, title: 'Ice Crystals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' },
+                              { step: 2, title: 'Glacier Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
+                              { step: 3, title: 'Frost Blueprints', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', gradient: 'linear-gradient(135deg, #ec4899, #f472b6)' },
+                              { step: 4, title: 'Northern Lights', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', gradient: 'linear-gradient(135deg, #a855f7, #c084fc)' },
+                            ].map((phase, idx) => (
+                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-5 transition-all hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 shadow-sm group-hover:scale-110 transition-transform" style={{ background: phase.gradient }}>
+                                  <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: 'var(--bg-elevated)' }}>
-                                  <Icon name={phase.icon} size={16} style={{ color: phase.color }} />
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-2" style={{ background: 'rgba(56,189,248,0.06)' }}>
+                                  <Icon name={phase.icon} size={14} style={{ color: 'var(--accent)' }} />
                                 </div>
-                                <div className="text-sm font-bold text-[var(--text-primary)] landing-display mb-1 transition-colors">{phase.title}</div>
-                                <div className="text-xs text-[var(--text-muted)] landing-body leading-relaxed">{phase.desc}</div>
-                              </div>
-                            </Link>
-                          ))}
+                                <div className="text-sm font-bold mb-1 transition-colors" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{phase.title}</div>
+                                <div className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{phase.desc}</div>
+                              </Link>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Interview Resources */}
+                      {/* Interview Resources — frost glass cards */}
                       <div className="mb-8">
-                        <h2 className="section-label mb-3">Interview Resources</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Frost Arsenal</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#2D8CFF', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', color: '#60A5FA', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', color: '#06b6d4', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/prepare?page=coding', icon: 'checklist', gradient: 'linear-gradient(135deg, #0ea5e9, #22d3ee)', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Thaw' },
                           ].map(resource => (
                             <a
                               key={resource.title}
                               href={resource.href}
-                              className="group rounded-xl overflow-hidden transition-colors"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
-                              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
-                              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                              className="group rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                              style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}
                             >
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
-                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                                    <Icon name={resource.icon} size={20} style={{ color: resource.color }} />
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-sm" style={{ background: resource.gradient }}>
+                                    <Icon name={resource.icon} size={18} />
                                   </div>
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
                                     {resource.badge}
                                   </span>
                                 </div>
-                                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display mb-1 transition-colors">{resource.title}</h3>
-                                <p className="text-xs text-[var(--text-muted)] landing-body leading-relaxed mb-3">{resource.desc}</p>
-                                <div className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity landing-body" style={{ color: resource.color }}>
+                                <h3 className="text-sm font-bold mb-1 transition-colors" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
+                                <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{resource.desc}</p>
+                                <div className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--accent)' }}>
                                   <span>Explore</span>
                                   <Icon name="arrowRight" size={12} />
                                 </div>
@@ -832,21 +827,21 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Cheatsheet — Before / During / After */}
                       <div className="mb-8">
-                        <h2 className="section-label mb-3">Interview Cheatsheet</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Survival Guide</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#2D8CFF', step: 'Prep' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#60A5FA', step: 'Execute' },
-                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#06b6d4', step: 'Follow up' },
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)', step: 'Prep' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)', step: 'Execute' },
+                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)', step: 'Follow up' },
                           ].map((card) => (
                             <div
                               key={card.title}
-                              className="rounded-xl overflow-hidden"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
+                              className="rounded-2xl overflow-hidden transition-all hover:shadow-md"
+                              style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}
                             >
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ background: card.gradient }}>
                                   <Icon name={card.icon} size={18} style={{ color: card.color }} />
                                 </div>
                                 <div>
