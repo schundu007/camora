@@ -2126,6 +2126,70 @@ export default function TopicDetail({
                 </div>
               )}
 
+              {/* 5c. Basic + Advanced Implementation — right after layered design, before flows */}
+              {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
+                <div id="implementation" className={`grid gap-3 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                  {topicDetails.basicImplementation && (
+                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
+                      <div className="border-b border-[var(--accent)] px-4 py-2.5 flex items-center gap-2 bg-[var(--accent)]">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Basic</span>
+                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
+                        {topicDetails.basicImplementation.diagramSrc ? (
+                          <img src={topicDetails.basicImplementation.diagramSrc} alt={topicDetails.basicImplementation.title || 'Basic Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
+                        ) : topicDetails.basicImplementation.svgTemplate ? (
+                          <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />
+                        ) : null}
+                        {topicDetails.basicImplementation.problems && (
+                          <div>
+                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
+                            <div className="grid grid-cols-1 gap-0.5">
+                              {topicDetails.basicImplementation.problems.map((problem, i) => (
+                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
+                                  <span className="text-red-400 mt-px flex-shrink-0">✕</span>
+                                  <span className="text-[var(--text-secondary)]">{problem}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {topicDetails.advancedImplementation && (
+                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
+                      <div className="border-b border-[var(--accent)] px-4 py-2.5 flex items-center gap-2 bg-[var(--accent)]">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Advanced</span>
+                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
+                        {topicDetails.advancedImplementation.diagramSrc ? (
+                          <img src={topicDetails.advancedImplementation.diagramSrc} alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
+                        ) : topicDetails.advancedImplementation.svgTemplate ? (
+                          <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />
+                        ) : null}
+                        {topicDetails.advancedImplementation.keyPoints && (
+                          <div className="mb-3">
+                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>
+                            <div className="grid grid-cols-1 gap-0.5">
+                              {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
+                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
+                                  <span className="text-[var(--accent)] mt-px flex-shrink-0">✓</span>
+                                  <span className="text-[var(--text-secondary)]">{point}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* 6. System Flows + Flowcharts — show right after architecture */}
               {(topicDetails.createFlow || topicDetails.redirectFlow) && (
                 <div id="flows" className="space-y-3 scroll-mt-24">
@@ -2537,69 +2601,7 @@ export default function TopicDetail({
                 <PatternCardGrid patterns={topicDetails.patternCards} title="Key Design Patterns" />
               )}
 
-              {/* 13. Implementation (Basic + Advanced + Algorithms) — moved after trade-offs */}
-              {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
-                <div id="implementation" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                  {topicDetails.basicImplementation && (
-                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2 bg-[var(--accent)]">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Basic</span>
-                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
-                      </div>
-                      <div className="p-4">
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
-                        {topicDetails.basicImplementation.diagramSrc ? (
-                          <img src={topicDetails.basicImplementation.diagramSrc} alt={topicDetails.basicImplementation.title || 'Basic Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
-                        ) : topicDetails.basicImplementation.svgTemplate ? (
-                          <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />
-                        ) : null}
-                        {topicDetails.basicImplementation.problems && (
-                          <div>
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
-                            <div className="grid grid-cols-1 gap-0.5">
-                              {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
-                                  <span className="text-red-400 mt-px flex-shrink-0">✕</span>
-                                  <span className="text-[var(--text-secondary)]">{problem}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {topicDetails.advancedImplementation && (
-                    <div className="rounded-2xl overflow-hidden border border-[var(--accent)]/20 bg-white">
-                      <div className="border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2 bg-[var(--accent)]">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wider landing-mono">Advanced</span>
-                        <h3 className="text-[15px] font-bold text-white landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
-                      </div>
-                      <div className="p-4">
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
-                        {topicDetails.advancedImplementation.diagramSrc ? (
-                          <img src={topicDetails.advancedImplementation.diagramSrc} alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
-                        ) : topicDetails.advancedImplementation.svgTemplate ? (
-                          <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />
-                        ) : null}
-                        {topicDetails.advancedImplementation.keyPoints && (
-                          <div className="mb-3">
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>
-                            <div className="grid grid-cols-1 gap-0.5">
-                              {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
-                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
-                                  <span className="text-[var(--accent)] mt-px flex-shrink-0">✓</span>
-                                  <span className="text-[var(--text-secondary)]">{point}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Implementation cards moved to section 5c (after architecture diagram + layered design) */}
 
               {topicDetails.algorithmApproaches && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
