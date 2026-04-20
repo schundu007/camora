@@ -322,11 +322,11 @@ export default function LandingPage() {
             85% of our users conquer offers at these companies
           </p>
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7">
               {COMPANIES.map((c) => (
-                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-black/[0.02]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
+                <div key={c} className="flex items-center justify-center py-3 px-3 transition-all hover:bg-black/[0.02]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
                   <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                    alt={c} className="h-8 object-contain" loading="lazy"
+                    alt={c} className="h-6 object-contain" loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               ))}
