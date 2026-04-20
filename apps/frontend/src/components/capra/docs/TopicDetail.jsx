@@ -454,8 +454,14 @@ function PricingCards({ navigate, getAuthHeaders }) {
     { name: 'Desktop App', price: '$29', period: '/mo', subtitle: 'Or $99/year', features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance', 'Always-on assistant'], addon: true, key: 'desktop_monthly' },
   ];
 
-  const handleCheckout = async (priceId) => {
-    if (!priceId) { navigate('/pricing'); return; }
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const handleCheckout = async (priceId, planName) => {
+    if (!priceId) {
+      // Price not loaded from backend — go to pricing page as fallback
+      navigate('/pricing');
+      return;
+    }
+    setCheckoutLoading(planName);
     try {
       const BILLING_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
       const resp = await fetch(`${BILLING_URL}/api/v1/billing/checkout`, {
@@ -463,11 +469,24 @@ function PricingCards({ navigate, getAuthHeaders }) {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ price_id: priceId, success_url: window.location.href, cancel_url: window.location.href }),
       });
-      if (!resp.ok) { navigate('/pricing'); return; }
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        console.error('Checkout error:', err);
+        navigate('/pricing');
+        return;
+      }
       const data = await resp.json();
-      if (data.url) window.location.href = data.url;
-      else navigate('/pricing');
-    } catch { navigate('/pricing'); }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        navigate('/pricing');
+      }
+    } catch (e) {
+      console.error('Checkout failed:', e);
+      navigate('/pricing');
+    } finally {
+      setCheckoutLoading(null);
+    }
   };
 
   return (
@@ -497,11 +516,12 @@ function PricingCards({ navigate, getAuthHeaders }) {
               ))}
             </ul>
             <button
-              onClick={() => handleCheckout(priceId)}
-              className={`mt-3 w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all hover:opacity-90 ${plan.popular || plan.best || plan.addon ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
-              style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #60A5FA, #2D8CFF)' } : {}}
+              onClick={() => handleCheckout(priceId, plan.name)}
+              disabled={checkoutLoading === plan.name}
+              className={`mt-3 w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all hover:opacity-90 disabled:opacity-50 ${plan.popular || plan.best || plan.addon ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
+              style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #60A5FA, #22D3EE)' } : {}}
             >
-              {plan.addon ? 'Add Desktop App' : `Get ${plan.name}`}
+              {checkoutLoading === plan.name ? 'Loading...' : plan.addon ? 'Add Desktop App' : `Get ${plan.name}`}
             </button>
           </div>
         );
