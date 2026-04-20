@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import CamoraLogo from '../../shared/CamoraLogo';
+import UserDropdown from '../../shared/UserDropdown';
 
 export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar';
 
@@ -24,47 +25,7 @@ const C = {
 };
 
 function UserAvatarMenu() {
-  const { user, logout } = useAuth();
-  const [showMenu, setShowMenu] = useState(false);
-  if (!user) return null;
-
-  const initials = (user.name || user.email || '?').slice(0, 2).toUpperCase();
-
-  return (
-    <div className="relative mb-2">
-      <button onClick={() => setShowMenu(!showMenu)}
-        className="w-10 h-10 rounded-full overflow-hidden mx-auto flex items-center justify-center transition-all hover:ring-2 hover:ring-white/20"
-        title={`${user.name || 'User'}\n${user.email || ''}`}>
-        {user.image ? (
-          <img src={user.image} alt="" className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold"
-            style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', border: '2px solid rgba(255,255,255,0.5)' }}>{initials}</div>
-        )}
-      </button>
-      {showMenu && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute left-full bottom-0 ml-2 w-52 rounded-xl z-50 overflow-hidden"
-            style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 12px 40px rgba(0,0,0,0.15)' }}>
-            <div className="px-4 py-3" style={{ borderBottom: '1px solid #E2E8F0' }}>
-              <p className="text-sm font-semibold truncate" style={{ color: '#0F172A', fontFamily: "'Satoshi', sans-serif" }}>{user.name || 'User'}</p>
-              <p className="text-xs truncate mt-0.5" style={{ color: '#64748B' }}>{user.email}</p>
-            </div>
-            <Link to="/capra/prepare" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Dashboard</Link>
-            <Link to="/profile" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Profile</Link>
-            <Link to="/capra/onboarding" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Onboarding</Link>
-            <Link to="/profile?tab=referrals" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Refer a Friend</Link>
-            <Link to="/pricing" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Pricing</Link>
-            <Link to="/analytics" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-slate-50" style={{ color: '#475569' }}>Analytics</Link>
-            <div style={{ borderTop: '1px solid #E2E8F0' }}>
-              <button onClick={() => { logout(); setShowMenu(false); }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">Sign Out</button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
+  return <UserDropdown variant="dark" compact showName={false} position="right-bottom" />;
 }
 
 export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {

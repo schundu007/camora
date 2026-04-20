@@ -1,61 +1,10 @@
-import { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
+import UserDropdown from '../../shared/UserDropdown';
 import { useAppShell } from './AppShellContext.jsx';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile.js';
 import { useAuth } from '../../../contexts/AuthContext';
-
-function UserMenu({ user, signOut, isCollapsed }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative mb-2">
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center rounded-lg transition-colors hover:bg-[var(--bg-elevated)] ${isCollapsed ? 'justify-center p-2' : 'gap-2.5 px-3 py-2'}`}
-      >
-        {user.avatar ? (
-          <img src={user.avatar} alt="" className="w-7 h-7 rounded-full flex-shrink-0" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="w-7 h-7 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
-            {(user.name || user.email || '?')[0].toUpperCase()}
-          </div>
-        )}
-        {!isCollapsed && (
-          <>
-            <div className="flex-1 min-w-0 text-left">
-              <div className="text-[13px] font-medium text-[var(--text-primary)] truncate">{user.name || 'User'}</div>
-              <div className="text-[10px] text-[var(--text-muted)] truncate">{user.email}</div>
-            </div>
-            <svg className={`w-3 h-3 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-          </>
-        )}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`absolute z-50 w-52 rounded-xl overflow-hidden ${isCollapsed ? 'left-full bottom-0 ml-2' : 'left-0 bottom-full mb-2'}`} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
-            {[
-              { label: 'Dashboard', href: '/capra/prepare' },
-              { label: 'Profile', href: '/profile' },
-              { label: 'Onboarding', href: '/capra/onboarding' },
-              { label: 'Refer a Friend', href: '/profile?tab=referrals' },
-            ].map(item => (
-              <Link key={item.label} to={item.href} onClick={() => setOpen(false)} className="block px-3 py-2 text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors">
-                {item.label}
-              </Link>
-            ))}
-            <div style={{ borderTop: '1px solid var(--border)' }}>
-              <button onClick={() => { signOut(); setOpen(false); }} className="w-full text-left px-3 py-2 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors">
-                Sign out
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 const PREPARE_ITEMS = [
   { id: 'overview', label: 'Base Camp', icon: 'home', href: '/capra/prepare' },
@@ -251,7 +200,7 @@ export default function ShellSidebar() {
       <div className={`border-t border-[var(--border)] ${isCollapsed ? 'px-1.5 py-2' : 'px-3 py-3'}`}>
         {/* User info with dropdown */}
         {user && (
-          <UserMenu user={user} signOut={signOut} isCollapsed={isCollapsed} />
+          <UserDropdown variant="light" compact={isCollapsed} position={isCollapsed ? 'right-bottom' : 'above-left'} showName={!isCollapsed} />
         )}
         <button
           onClick={handleSettingsClick}
