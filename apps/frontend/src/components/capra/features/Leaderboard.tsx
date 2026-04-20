@@ -13,8 +13,8 @@ interface LeaderboardEntry {
 }
 
 const RANK_STYLES: Record<number, { bg: string; text: string; icon: string }> = {
-  1: { bg: 'bg-amber-500/10', text: 'text-amber-400', icon: '🥇' },
-  2: { bg: 'bg-[var(--bg-elevated)]', text: 'text-[var(--text-muted)]', icon: '🥈' },
+  1: { bg: 'bg-[var(--warning)]/15', text: 'text-[var(--warning)]', icon: '🥇' },
+  2: { bg: 'bg-[var(--bg-elevated)]', text: 'text-[var(--text-secondary)]', icon: '🥈' },
   3: { bg: 'bg-[var(--warning)]/10', text: 'text-[var(--warning)]', icon: '🥉' },
 };
 
@@ -55,7 +55,7 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
         <div className="animate-pulse space-y-3">
           <div className="h-5 bg-[var(--bg-elevated)] rounded w-40" />
           {Array.from({ length: 5 }).map((_, i) => (
@@ -72,7 +72,7 @@ export default function Leaderboard() {
 
   if (error) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -80,7 +80,7 @@ export default function Leaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6">
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
         <p className="text-sm text-[var(--text-muted)] mt-2">No activity this week yet. Be the first!</p>
       </div>
@@ -88,7 +88,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 space-y-5">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6 space-y-5">
       <div>
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">Top performers this week</p>
