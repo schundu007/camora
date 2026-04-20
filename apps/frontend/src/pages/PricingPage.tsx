@@ -108,7 +108,20 @@ export default function PricingPage() {
 
   const [backendPrices, setBackendPrices] = useState<any>(null);
   useEffect(() => {
-    fetch(`${API_URL}/api/v1/billing/prices`).then(r => r.json()).then(setBackendPrices).catch(err => console.error('Failed to load plans:', err));
+    fetch(`${API_URL}/api/v1/billing/prices`)
+      .then(r => r.json())
+      .then(data => {
+        // Backend returns { plans: [{ id, stripe_price_id, ... }] }
+        // Map to { monthly: { priceId }, quarterly_pro: { priceId }, ... }
+        const mapped: Record<string, { priceId: string }> = {};
+        for (const p of (data.plans || data || [])) {
+          if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
+          if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
+          if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
+        }
+        setBackendPrices(mapped);
+      })
+      .catch(err => console.error('Failed to load plans:', err));
   }, []);
 
   const plans = PLANS.map(p => ({
@@ -125,8 +138,8 @@ export default function PricingPage() {
   }, []);
 
   const handleCheckout = async (plan: typeof PLANS[number]) => {
-    // Free plan — go straight to the app
-    if (!plan.priceId) { navigate('/lumora'); return; }
+    // Free plan — go to prepare dashboard
+    if (!plan.priceId) { navigate('/capra/prepare'); return; }
     // Not logged in — send to login first
     if (!token) { navigate('/login'); return; }
     setLoading(plan.name);
@@ -143,9 +156,10 @@ export default function PricingPage() {
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Checkout error:', err);
-        // If billing not configured, redirect to app for now
+        // If billing not configured, redirect to pricing with error
         if (resp.status === 503 || resp.status === 400) {
-          navigate('/lumora');
+          alert('Payment service temporarily unavailable. Please try again.');
+          setLoading('');
           return;
         }
         console.error('Checkout failed:', err.error || 'Unknown error');
@@ -154,10 +168,9 @@ export default function PricingPage() {
       }
       const data = await resp.json();
       if (data.url) window.location.href = data.url;
-      else { navigate('/lumora'); }
+      else { alert('Could not create checkout session. Please try again.'); }
     } catch {
-      // Fallback: if checkout fails, still let user access the app
-      navigate('/lumora');
+      alert('Payment service error. Please try again later.');
     } finally {
       setLoading('');
     }
