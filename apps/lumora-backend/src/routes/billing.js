@@ -56,44 +56,129 @@ const PRICE_LIFETIME = () => process.env.STRIPE_PRICE_LIFETIME;
 router.get('/prices', (_req, res) => {
   res.json({
     plans: [
+      // ── Subscription Plans ──
       {
-        id: 'free',
-        name: 'Free Trial',
-        price: 0,
-        interval: null,
-        features: ['Limited topics', '1 solve per feature', 'Basic AI'],
-      },
-      {
-        id: 'monthly',
-        name: 'Starter',
+        id: 'monthly_starter',
+        name: 'Monthly Starter',
         price: 2900,
         interval: 'month',
-        stripe_price_id: process.env.STRIPE_PRICE_STARTER || process.env.STRIPE_PRICE_MONTHLY || null,
-        features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations', 'Coding solutions'],
+        yearly_total: 34800,
+        stripe_price_id: process.env.STRIPE_PRICE_STARTER || null,
+        includes_desktop: false,
+        features: [
+          'Unlimited prep and practice',
+          '10 live interview sessions/mo',
+          'AI-powered explanations',
+          'System design diagrams',
+          'Code solutions with complexity',
+          'All programming languages',
+        ],
+        upgrade_note: 'Upgrade to Monthly Pro for desktop access',
       },
       {
         id: 'monthly_pro',
-        name: 'Pro',
+        name: 'Monthly Pro',
         price: 4900,
         interval: 'month',
+        yearly_total: 58800,
         stripe_price_id: process.env.STRIPE_PRICE_MONTHLY || null,
-        features: ['Everything in Starter', 'Unlimited live sessions', 'Company-specific prep', 'Desktop + Mobile app'],
+        includes_desktop: true,
+        features: [
+          'Everything in Starter',
+          'Unlimited live sessions',
+          'Desktop app included',
+          'Job discovery and matching',
+          'Auto resume and cover letter',
+          'Company-specific prep',
+          'Speaker voice filtering',
+          'Priority AI responses',
+        ],
+      },
+      {
+        id: 'quarterly_pro',
+        name: 'Quarterly Pro',
+        price: 11900,
+        interval: 'quarter',
+        monthly_equiv: 3967,
+        yearly_total: 47600,
+        stripe_price_id: process.env.STRIPE_PRICE_QUARTERLY || null,
+        includes_desktop: true,
+        features: [
+          'Everything in Monthly Pro',
+          'Save 19% vs monthly',
+          'Desktop app included',
+          'Full access for 3 months',
+        ],
       },
       {
         id: 'annual',
-        name: 'Annual',
+        name: 'Annual (No Desktop)',
         price: 22800,
         interval: 'year',
+        monthly_equiv: 1900,
         stripe_price_id: process.env.STRIPE_PRICE_YEARLY || null,
-        features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'],
+        includes_desktop: false,
+        features: [
+          'Everything in Monthly Pro (web only)',
+          'Save 61% vs monthly',
+          'Locked-in pricing for 1 year',
+          'Priority support',
+        ],
+        upgrade_note: 'Add desktop: upgrade to Annual+Desktop or pay $29/mo',
       },
       {
-        id: 'lifetime',
-        name: '8-Pack',
+        id: 'annual_desktop',
+        name: 'Annual + Desktop',
+        price: 29900,
+        interval: 'year',
+        monthly_equiv: 2492,
+        stripe_price_id: process.env.STRIPE_PRICE_ANNUALLY || null,
+        includes_desktop: true,
+        features: [
+          'Everything in Annual',
+          'Desktop app included',
+          'Full web + desktop for 1 year',
+          'Best overall value',
+        ],
+      },
+      {
+        id: 'desktop_lifetime',
+        name: 'Desktop Lifetime',
         price: 9900,
         interval: null,
-        stripe_price_id: process.env.STRIPE_PRICE_LIFETIME || null,
-        features: ['8 sessions (90 min each)', 'Never expires', 'All features included'],
+        stripe_price_id: process.env.STRIPR_PRICE_DTOPLT || process.env.STRIPE_PRICE_DESKTOP_LIFETIME || null,
+        includes_desktop: true,
+        desktop_only: true,
+        features: [
+          'Lumora Desktop forever',
+          'Single purchase, no subscription',
+          'Bring your own AI keys (OpenAI/Claude)',
+          'You pay AI costs directly',
+        ],
+      },
+    ],
+    // ── Top-Up Packs (for subscribers who exhaust monthly quota) ──
+    topups: [
+      {
+        id: 'topup_20q',
+        name: '20 AI Questions',
+        price: 500,
+        stripe_price_id: process.env.STRIPE_PRICE_TOPUP_20Q || 'price_1THiZuITUCNxtMxlS1Py7hSO',
+        description: '20 additional AI-generated questions',
+      },
+      {
+        id: 'topup_50q',
+        name: '50 AI Questions',
+        price: 1000,
+        stripe_price_id: process.env.STRIPE_PRICE_TOPUP_50Q || 'price_1THiaHITUCNxtMxlQ31IpECl',
+        description: '50 additional AI-generated questions',
+      },
+      {
+        id: 'topup_5s',
+        name: '5 Sessions',
+        price: 1500,
+        stripe_price_id: process.env.STRIPE_PRICE_TOPUP_5S || 'price_1THiagITUCNxtMxlG8idH0Cz',
+        description: '5 Lumora Desktop sessions (60 min each)',
       },
     ],
   });
@@ -120,10 +205,16 @@ router.post('/checkout', authenticate, async (req, res) => {
   }
 
   const validPrices = [
-    process.env.STRIPE_PRICE_MONTHLY,
     process.env.STRIPE_PRICE_STARTER,
+    process.env.STRIPE_PRICE_MONTHLY,
+    process.env.STRIPE_PRICE_QUARTERLY,
     process.env.STRIPE_PRICE_YEARLY,
-    process.env.STRIPE_PRICE_LIFETIME,
+    process.env.STRIPE_PRICE_ANNUALLY,
+    process.env.STRIPR_PRICE_DTOPLT,
+    process.env.STRIPE_PRICE_DESKTOP_LIFETIME,
+    process.env.STRIPE_PRICE_TOPUP_20Q || 'price_1THiZuITUCNxtMxlS1Py7hSO',
+    process.env.STRIPE_PRICE_TOPUP_50Q || 'price_1THiaHITUCNxtMxlQ31IpECl',
+    process.env.STRIPE_PRICE_TOPUP_5S || 'price_1THiagITUCNxtMxlG8idH0Cz',
   ].filter(Boolean);
   if (!validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
@@ -162,19 +253,36 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
-    // Determine payment mode — all plans are subscriptions except lifetime/8-pack
-    const isSubscription = price_id !== PRICE_LIFETIME();
+    // Determine payment mode and plan type
+    const desktopLifetimeId = process.env.STRIPR_PRICE_DTOPLT || process.env.STRIPE_PRICE_DESKTOP_LIFETIME;
+    const topupIds = [
+      process.env.STRIPE_PRICE_TOPUP_20Q || 'price_1THiZuITUCNxtMxlS1Py7hSO',
+      process.env.STRIPE_PRICE_TOPUP_50Q || 'price_1THiaHITUCNxtMxlQ31IpECl',
+      process.env.STRIPE_PRICE_TOPUP_5S || 'price_1THiagITUCNxtMxlG8idH0Cz',
+    ];
+    const isOneTime = price_id === desktopLifetimeId || topupIds.includes(price_id);
+
+    // Map price_id to plan name for webhook metadata
+    let planType = 'monthly_starter';
+    if (price_id === process.env.STRIPE_PRICE_STARTER) planType = 'monthly_starter';
+    else if (price_id === process.env.STRIPE_PRICE_MONTHLY) planType = 'monthly_pro';
+    else if (price_id === process.env.STRIPE_PRICE_QUARTERLY) planType = 'quarterly_pro';
+    else if (price_id === process.env.STRIPE_PRICE_YEARLY) planType = 'annual';
+    else if (price_id === process.env.STRIPE_PRICE_ANNUALLY) planType = 'annual_desktop';
+    else if (price_id === desktopLifetimeId) planType = 'desktop_lifetime';
+    else if (topupIds.includes(price_id)) planType = 'topup';
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{ price: price_id, quantity: 1 }],
-      mode: isSubscription ? 'subscription' : 'payment',
+      mode: isOneTime ? 'payment' : 'subscription',
       success_url,
       cancel_url,
       metadata: {
         user_id: String(userId),
-        plan: isSubscription ? 'pro' : 'lifetime',
+        plan: planType,
+        price_id,
       },
     });
 

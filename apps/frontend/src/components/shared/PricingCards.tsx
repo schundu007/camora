@@ -13,13 +13,12 @@ export const PLANS = [
     period: '',
     description: 'Play around a bit',
     features: [
-      '3 live interview sessions',
+      '3 free topics per category',
       'Browse all 300+ prep topics',
       'System design, coding, behavioral',
-      'Voice transcription',
       'No credit card required',
     ],
-    cta: 'Try Snowballs',
+    cta: 'Try Free',
     popular: false,
     priceKey: null as string | null,
   },
@@ -27,57 +26,103 @@ export const PLANS = [
     name: 'Frost',
     price: '$29',
     period: '/mo',
-    description: 'Start the real deal',
+    description: 'Monthly Starter — no desktop',
     features: [
       'Unlimited prep and practice',
       '10 live interview sessions/mo',
       'AI-powered explanations',
-      'Mock interview simulator',
       'System design diagrams',
       'Code solutions with complexity',
       'All programming languages',
     ],
     cta: 'Get Frost',
     popular: false,
-    priceKey: 'monthly',
+    priceKey: 'monthly_starter',
   },
   {
     name: 'Winter Lover',
     price: '$49',
     period: '/mo',
-    description: 'Make your interviewers freeze',
+    description: 'Monthly Pro — includes desktop',
     features: [
       'Everything in Frost',
       'Unlimited live sessions',
+      'Desktop app included',
       'Job discovery and matching',
       'Auto resume and cover letter',
-      'Auto job apply',
-      'Company-specific prep material',
+      'Company-specific prep',
       'Speaker voice filtering',
       'Priority AI responses',
-      'Desktop app included',
-      'Mobile app (iOS & Android)',
     ],
     cta: 'Upgrade',
     popular: true,
     priceKey: 'monthly_pro',
   },
   {
-    name: 'Avalanche Maker',
-    price: '$19',
+    name: 'Blizzard',
+    price: '$39',
     period: '/mo',
-    description: "It's your sandbox",
+    subtitle: 'Billed $119/quarter',
+    description: 'Quarterly Pro — save 19%',
     features: [
       'Everything in Winter Lover',
-      'Save 61% vs monthly',
-      'Locked-in pricing',
-      'Priority support',
-      'Desktop app add-on: +$29/mo',
+      'Save 19% vs monthly',
+      'Desktop app included',
+      'Full access for 3 months',
     ],
-    cta: 'Go Avalanche',
+    cta: 'Get Blizzard',
+    popular: false,
+    priceKey: 'quarterly_pro',
+  },
+  {
+    name: 'Avalanche',
+    price: '$19',
+    period: '/mo',
+    subtitle: 'Billed $228/year — no desktop',
+    description: 'Annual — save 61%',
+    features: [
+      'Everything in Monthly Pro (web)',
+      'Save 61% vs monthly',
+      'Locked-in pricing for 1 year',
+      'Priority support',
+    ],
+    cta: 'Go Annual',
     popular: false,
     priceKey: 'annual',
     best: true,
+    upgrade_note: 'Add desktop: upgrade to Avalanche+ or $29/mo',
+  },
+  {
+    name: 'Avalanche+',
+    price: '$25',
+    period: '/mo',
+    subtitle: 'Billed $299/year — with desktop',
+    description: 'Annual + Desktop — best value',
+    features: [
+      'Everything in Avalanche',
+      'Desktop app included',
+      'Full web + desktop for 1 year',
+      'Best overall value',
+    ],
+    cta: 'Go Avalanche+',
+    popular: false,
+    priceKey: 'annual_desktop',
+  },
+  {
+    name: 'Desktop Lifetime',
+    price: '$99',
+    period: 'one-time',
+    description: 'Lumora Desktop forever',
+    features: [
+      'Desktop app — single purchase',
+      'Never expires',
+      'Bring your own AI keys',
+      'You pay AI costs directly',
+    ],
+    cta: 'Buy Desktop',
+    popular: false,
+    priceKey: 'desktop_lifetime',
+    addon: true,
   },
 ];
 
@@ -90,11 +135,14 @@ export function usePlanPrices() {
       .then(r => r.json())
       .then(data => {
         const mapped: Record<string, { priceId: string }> = {};
-        for (const p of (data.plans || data || [])) {
-          if (p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'monthly_pro') mapped.monthly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'lifetime') mapped.lifetime = { priceId: p.stripe_price_id || p.priceId || '' };
+        for (const p of (data.plans || [])) {
+          const pid = p.stripe_price_id || p.priceId || '';
+          if (pid) mapped[p.id] = { priceId: pid };
+        }
+        // Also map top-ups
+        for (const t of (data.topups || [])) {
+          const pid = t.stripe_price_id || '';
+          if (pid) mapped[t.id] = { priceId: pid };
         }
         setPrices(mapped);
       })
