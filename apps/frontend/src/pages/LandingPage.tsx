@@ -321,10 +321,10 @@ export default function LandingPage() {
           <p className="text-center text-sm font-medium mb-4" style={{ color: L.secondary }}>
             85% of our users conquer offers at these companies
           </p>
-          <div className="flex items-center justify-center gap-6 flex-wrap">
+          <div className="flex items-center justify-center gap-8 flex-wrap">
             {COMPANIES.map((c) => (
-              <img key={c} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                alt={c} className="h-5 object-contain opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" loading="lazy"
+              <img key={c} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
+                alt={c} className="h-4 object-contain opacity-40 hover:opacity-80 transition-opacity" loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             ))}
           </div>
