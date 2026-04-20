@@ -312,11 +312,11 @@ router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
     // Reset free usage counters (paid plan bypasses limits, so keep defaults)
     await query(
       `INSERT INTO ascend_free_usage (user_id, coding_used, coding_limit, design_used, design_limit, company_prep_used, company_prep_limit)
-       VALUES ($1, 0, 1, 0, 1, 0, 1)
+       VALUES ($1, 0, 3, 0, 2, 0, 2)
        ON CONFLICT (user_id) DO UPDATE SET
-         coding_used = 0, coding_limit = 1,
-         design_used = 0, design_limit = 1,
-         company_prep_used = 0, company_prep_limit = 1`,
+         coding_used = 0, coding_limit = 3,
+         design_used = 0, design_limit = 2,
+         company_prep_used = 0, company_prep_limit = 2`,
       [userId]
     );
 
