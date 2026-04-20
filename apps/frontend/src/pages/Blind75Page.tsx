@@ -531,7 +531,7 @@ export default function Blind75Page() {
       </div>
 
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
-      <div style={{ background: 'rgba(13,12,20,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
+      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
         <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }} className="b75-pills-scroll">
             {TABS.map((tab) => {
@@ -568,7 +568,7 @@ export default function Blind75Page() {
       {activeTab === 'blind75' && (
         <>
           {/* Filter Bar */}
-          <div style={{ background: 'rgba(13,12,20,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border)' }}>
             <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ padding: '12px 0' }}>
               {/* Category pills */}
               <div className="b75-pills-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>

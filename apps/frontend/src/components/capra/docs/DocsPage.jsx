@@ -72,7 +72,7 @@ export default function DocsPage({ onBack }) {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
     const rawPage = params.get('page') || (pathSegment || 'overview');
     // Support 'dsa' as alias for 'coding'
-    const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level' };
+    const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
     const page = pageAliases[rawPage] || rawPage;
     return {
       page,
@@ -133,7 +133,7 @@ export default function DocsPage({ onBack }) {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
     const params = new URLSearchParams(routerLocation.search);
     const rawPage = params.get('page') || (pathSegment || 'overview');
-    const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level' };
+    const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
     const page = pageAliases[rawPage] || rawPage;
     const topic = params.get('topic') || null;
     const role = params.get('role') || null;
@@ -185,7 +185,7 @@ export default function DocsPage({ onBack }) {
       const params = new URLSearchParams(window.location.search);
       const topic = params.get('topic') || null;
       const rawPage = params.get('page') || window.location.pathname.replace('/capra/prepare', '').replace(/^\//, '') || 'overview';
-      const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level' };
+      const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
       const page = pageAliases[rawPage] || rawPage;
       setActivePageState(page);
       setSelectedTopicState(topic);
@@ -347,8 +347,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'system-design' ? [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] :
       activePage === 'low-level' ? [...lldTopics, ...lldProblems] :
       activePage === 'microservices' ? microservicesPatterns :
-      activePage === 'databases' ? databaseTopics :
-      activePage === 'sql' ? sqlTopics :
+      activePage === 'databases' ? [...databaseTopics, ...sqlTopics] :
       activePage === 'projects' ? projectTopics :
       activePage === 'roadmaps' ? roadmapTopics :
       activePage === 'eng-blogs' ? engBlogTopics :
@@ -426,8 +425,7 @@ export default function DocsPage({ onBack }) {
     { id: 'coding', label: 'Data Structures & Algorithms', icon: 'code' },
     { id: 'system-design', label: 'System Design', icon: 'systemDesign' },
     { id: 'microservices', label: 'Microservices', icon: 'grid' },
-    { id: 'databases', label: 'Databases', icon: 'database' },
-    { id: 'sql', label: 'SQL for Interviews', icon: 'database' },
+    { id: 'databases', label: 'Databases & SQL', icon: 'database' },
     { id: 'low-level', label: 'Low Level Design', icon: 'puzzle' },
     { id: 'behavioral', label: 'Behavioral', icon: 'users' },
   ];
@@ -465,8 +463,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'low-level') topics = lldTopics;
     else if (activePage === 'behavioral') topics = behavioralTopics;
     else if (activePage === 'microservices') topics = microservicesPatterns;
-    else if (activePage === 'databases') topics = databaseTopics;
-    else if (activePage === 'sql') topics = sqlTopics;
+    else if (activePage === 'databases') topics = [...databaseTopics, ...sqlTopics];
     else if (activePage === 'projects') topics = projectTopics;
     else if (activePage === 'roadmaps') topics = roadmapTopics;
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
@@ -506,8 +503,7 @@ export default function DocsPage({ onBack }) {
       case 'low-level': return { title: 'Low Level Design', color: '#ec4899' };
       case 'behavioral': return { title: 'Behavioral Interviews', color: '#a855f7' };
       case 'microservices': return { title: 'Microservices Patterns', color: '#60A5FA' };
-      case 'databases': return { title: 'Databases', color: '#f59e0b' };
-      case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
+      case 'databases': return { title: 'Databases & SQL', color: '#f59e0b' };
       case 'projects': return { title: 'Projects', color: '#10b981' };
       case 'roadmaps': return { title: 'Roadmaps', color: '#2D8CFF' };
       case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
@@ -554,8 +550,7 @@ export default function DocsPage({ onBack }) {
       { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#2D8CFF', grad: 'linear-gradient(135deg, #2D8CFF, #60A5FA)', topics: codingTopics },
       { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
       { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#60A5FA', grad: 'linear-gradient(135deg, #60A5FA, #2D8CFF)', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Databases', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: databaseTopics },
-      { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', topics: sqlTopics },
+      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: [...databaseTopics, ...sqlTopics] },
       { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #60A5FA)', topics: projectTopics },
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#2D8CFF', grad: 'linear-gradient(135deg, #2D8CFF, #60A5FA)', topics: roadmapTopics },
@@ -924,7 +919,7 @@ export default function DocsPage({ onBack }) {
                   <div className="mb-4">
 
                       {/* SQL Playground toggle */}
-                      {(activePage === 'databases' || activePage === 'sql') && (
+                      {(activePage === 'databases') && (
                         <div className="flex items-center gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
@@ -942,7 +937,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {/* SQL Playground — takes over entire content area */}
-                  {(activePage === 'databases' || activePage === 'sql') && sqlPlaygroundOpen && (
+                  {(activePage === 'databases') && sqlPlaygroundOpen && (
                     <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
                       <div style={{ margin: '0 -24px', minHeight: 'calc(100vh - 200px)' }}>
                         <SQLPlayground />
@@ -1147,35 +1142,12 @@ export default function DocsPage({ onBack }) {
                             <Icon name="database" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Database Internals</h2>
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                             <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                              Go beyond SELECT queries. Understand indexing strategies, replication, partitioning, and consistency models. Know when to choose SQL vs NoSQL, and how databases like PostgreSQL, MongoDB, and Redis work under the hood.
+                              Master database internals and SQL queries for interviews. Understand indexing, replication, partitioning, consistency models, window functions, CTEs, and complex joins — the exact topics asked at Meta, Amazon, and top firms.
                             </p>
                             <div className="flex flex-wrap gap-2">
-                              {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'SQL vs NoSQL', 'Query Optimization'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activePage === 'sql' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
-                        <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                            <Icon name="database" size={28} style={{ color: 'var(--accent)' }} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>SQL for Interviews</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                              Master the SQL questions asked at data-heavy companies. Practice window functions, CTEs, complex joins, and aggregation patterns — the exact query types tested in coding rounds at Meta, Amazon, and top fintech firms.
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {['Window Functions', 'CTEs', 'Complex Joins', 'Subqueries', 'Aggregations', 'Performance Tuning'].map(tag => (
+                              {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
@@ -2388,20 +2360,8 @@ export default function DocsPage({ onBack }) {
                         </div>
                       );
                     })}
-                    </div>
-                  </div>
-                </>
-              )}
 
-              {/* SQL Topics */}
-              {activePage === 'sql' && (
-                <>
-                  <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Query Mastery</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">SQL Topics</h2>
-                    </div>
-                    <div className="space-y-3">
+                    {/* SQL Categories */}
                     {sqlCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => sqlCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
