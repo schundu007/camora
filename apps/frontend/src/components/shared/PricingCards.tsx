@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { getAuthHeaders } from '../../utils/authHeaders';
 
 const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -11,15 +10,9 @@ export const PLANS = [
     name: 'Snowballs',
     price: '$0',
     period: '',
-    description: 'Play around a bit',
-    features: [
-      '3 free topics per category',
-      'Browse all 300+ prep topics',
-      'System design, coding, behavioral',
-      'No credit card required',
-    ],
+    description: 'Free — explore the platform',
+    features: ['3 free topics per category', 'Browse 300+ prep topics', 'Basic AI'],
     cta: 'Try Free',
-    popular: false,
     priceKey: null as string | null,
   },
   {
@@ -27,33 +20,16 @@ export const PLANS = [
     price: '$29',
     period: '/mo',
     description: 'Monthly Starter — no desktop',
-    features: [
-      'Unlimited prep and practice',
-      '10 live interview sessions/mo',
-      'AI-powered explanations',
-      'System design diagrams',
-      'Code solutions with complexity',
-      'All programming languages',
-    ],
+    features: ['Unlimited prep topics', '10 live sessions/mo', 'AI explanations', 'System design diagrams'],
     cta: 'Get Frost',
-    popular: false,
     priceKey: 'monthly_starter',
   },
   {
     name: 'Winter Lover',
     price: '$49',
     period: '/mo',
-    description: 'Monthly Pro — includes desktop',
-    features: [
-      'Everything in Frost',
-      'Unlimited live sessions',
-      'Desktop app included',
-      'Job discovery and matching',
-      'Auto resume and cover letter',
-      'Company-specific prep',
-      'Speaker voice filtering',
-      'Priority AI responses',
-    ],
+    description: 'Monthly Pro + Desktop',
+    features: ['Everything in Frost', 'Unlimited sessions', 'Desktop app included', 'Company-specific prep', 'Voice filtering'],
     cta: 'Upgrade',
     popular: true,
     priceKey: 'monthly_pro',
@@ -62,69 +38,47 @@ export const PLANS = [
     name: 'Blizzard',
     price: '$39',
     period: '/mo',
-    subtitle: 'Billed $119/quarter',
-    description: 'Quarterly Pro — save 19%',
-    features: [
-      'Everything in Winter Lover',
-      'Save 19% vs monthly',
-      'Desktop app included',
-      'Full access for 3 months',
-    ],
+    subtitle: '$119/quarter',
+    description: 'Quarterly — save 19%',
+    features: ['Everything in Winter Lover', 'Save 19% vs monthly', 'Desktop included', '3-month access'],
     cta: 'Get Blizzard',
-    popular: false,
     priceKey: 'quarterly_pro',
   },
   {
     name: 'Avalanche',
     price: '$19',
     period: '/mo',
-    subtitle: 'Billed $228/year — no desktop',
+    subtitle: '$228/year — no desktop',
     description: 'Annual — save 61%',
-    features: [
-      'Everything in Monthly Pro (web)',
-      'Save 61% vs monthly',
-      'Locked-in pricing for 1 year',
-      'Priority support',
-    ],
+    features: ['All web features', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'],
     cta: 'Go Annual',
-    popular: false,
     priceKey: 'annual',
     best: true,
-    upgrade_note: 'Add desktop: upgrade to Avalanche+ or $29/mo',
+    upgrade_note: 'Add desktop → Avalanche+',
   },
   {
     name: 'Avalanche+',
     price: '$25',
     period: '/mo',
-    subtitle: 'Billed $299/year — with desktop',
+    subtitle: '$299/year + desktop',
     description: 'Annual + Desktop — best value',
-    features: [
-      'Everything in Avalanche',
-      'Desktop app included',
-      'Full web + desktop for 1 year',
-      'Best overall value',
-    ],
+    features: ['Everything in Avalanche', 'Desktop app included', 'Full access for 1 year'],
     cta: 'Go Avalanche+',
-    popular: false,
     priceKey: 'annual_desktop',
   },
-  {
-    name: 'Desktop Lifetime',
-    price: '$99',
-    period: 'one-time',
-    description: 'Lumora Desktop only — no web content',
-    features: [
-      'Lumora Desktop app forever',
-      'Bring your own OpenAI / Claude keys',
-      'You pay AI costs directly',
-      'No web prep content included',
-      'Buy a web plan separately for full access',
-    ],
-    cta: 'Buy Desktop Only',
-    popular: false,
-    priceKey: 'desktop_lifetime',
-    addon: true,
-  },
+];
+
+export const DESKTOP_LIFETIME = {
+  name: 'Desktop Lifetime',
+  price: '$99',
+  description: 'Lumora Desktop only — bring your own AI keys',
+  priceKey: 'desktop_lifetime',
+};
+
+export const TOPUPS = [
+  { name: '20 AI Questions', price: '$5', desc: 'Additional AI-generated questions', priceKey: 'topup_20q' },
+  { name: '50 AI Questions', price: '$10', desc: 'Additional AI-generated questions', priceKey: 'topup_50q' },
+  { name: '5 Sessions', price: '$15', desc: '5 desktop sessions (60 min each)', priceKey: 'topup_5s' },
 ];
 
 /* ── Shared price fetching hook ── */
@@ -140,7 +94,6 @@ export function usePlanPrices() {
           const pid = p.stripe_price_id || p.priceId || '';
           if (pid) mapped[p.id] = { priceId: pid };
         }
-        // Also map top-ups
         for (const t of (data.topups || [])) {
           const pid = t.stripe_price_id || '';
           if (pid) mapped[t.id] = { priceId: pid };
@@ -160,7 +113,7 @@ export function useCheckout() {
   const [loading, setLoading] = useState('');
 
   const checkout = async (priceId: string, planName: string) => {
-    if (!priceId) { navigate('/capra/prepare'); return; }
+    if (!priceId) { navigate('/pricing'); return; }
     if (!token) { navigate('/login'); return; }
     setLoading(planName);
     try {
@@ -174,11 +127,8 @@ export function useCheckout() {
         }),
       });
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: 'Unknown error' }));
         if (resp.status === 503 || resp.status === 400) {
           alert('Payment service temporarily unavailable. Please try again.');
-        } else {
-          console.error('Checkout failed:', err.error);
         }
         setLoading('');
         return;
@@ -196,91 +146,138 @@ export function useCheckout() {
   return { checkout, loading };
 }
 
-/* ── Shared PricingCards component ── */
-interface PricingCardsProps {
-  variant?: 'full' | 'compact';
-  plans?: typeof PLANS;
-  showFree?: boolean;
-}
-
-export default function PricingCards({ variant = 'full', plans: customPlans, showFree = true }: PricingCardsProps) {
+/* ── Pricing Cards ── */
+export default function PricingCards({ showFree = true }: { showFree?: boolean }) {
   const prices = usePlanPrices();
   const { checkout, loading } = useCheckout();
   const navigate = useNavigate();
 
-  const displayPlans = (customPlans || PLANS).filter(p => showFree || p.priceKey !== null);
-
-  const isCompact = variant === 'compact';
+  const displayPlans = PLANS.filter(p => showFree || p.priceKey !== null);
 
   return (
-    <div className={`grid gap-4 ${isCompact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
-      {displayPlans.map(plan => {
-        const priceId = plan.priceKey ? (prices?.[plan.priceKey]?.priceId || '') : '';
-        const isPro = plan.popular;
-        const isBest = (plan as any).best;
+    <div className="space-y-8">
+      {/* ── Subscription Plans Grid ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {displayPlans.map(plan => {
+          const priceId = plan.priceKey ? (prices?.[plan.priceKey]?.priceId || '') : '';
+          const isPro = (plan as any).popular;
+          const isBest = (plan as any).best;
 
-        return (
-          <div
-            key={plan.name}
-            className="group relative flex flex-col rounded-2xl h-full transition-all duration-300 hover:-translate-y-1"
-            style={{
-              background: 'var(--bg-surface)',
-              border: (isPro || isBest) ? '2px solid var(--accent)' : '1px solid var(--border)',
-              boxShadow: (isPro || isBest) ? '0 8px 32px rgba(34,211,238,0.15)' : 'var(--shadow-sm)',
-            }}
-          >
-            <div className={`relative flex flex-col flex-1 ${isCompact ? 'p-5 pb-0' : 'p-7 pb-0'}`}>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: (isPro || isBest) ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>{plan.name}</h3>
-                {isPro && <span className="px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider text-white" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)' }}>Popular</span>}
-                {isBest && <span className="px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider text-white" style={{ background: 'linear-gradient(135deg, var(--warning), #d97706)' }}>Best Value</span>}
-              </div>
+          return (
+            <div
+              key={plan.name}
+              className="group flex flex-col rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              style={{
+                background: 'var(--bg-surface)',
+                border: (isPro || isBest) ? '2px solid var(--accent)' : '1px solid var(--border)',
+              }}
+            >
+              <div className="p-3 flex flex-col flex-1">
+                {/* Badge */}
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-[10px] font-bold uppercase tracking-wider" style={{ color: (isPro || isBest) ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
+                  {isPro && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: 'var(--accent)' }}>Popular</span>}
+                  {isBest && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: 'var(--warning)' }}>Best</span>}
+                </div>
 
-              {/* Price */}
-              <div className="flex items-baseline gap-1">
-                <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: isCompact ? '36px' : '44px', color: 'var(--text-primary)' }}>{plan.price}</span>
-                {plan.period && <span className="text-base font-medium" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>}
-              </div>
-              {!isCompact && <p className="mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>}
+                {/* Price */}
+                <div className="flex items-baseline gap-0.5 mb-1">
+                  <span className="text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>{plan.price}</span>
+                  {plan.period && <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>}
+                </div>
+                {(plan as any).subtitle && <p className="text-[9px] mb-1" style={{ color: 'var(--text-muted)' }}>{(plan as any).subtitle}</p>}
 
-              <div className="my-4 h-px" style={{ background: 'var(--border)' }} />
+                {/* Features */}
+                <ul className="space-y-1 flex-1 mb-3">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-1 text-[10px] leading-tight">
+                      <svg className="w-3 h-3 mt-px shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
+                    </li>
+                  ))}
+                </ul>
 
-              {/* Features */}
-              <ul className={`space-y-2.5 flex-1 ${isCompact ? 'mb-5' : 'mb-7'}`}>
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[13px] leading-snug">
-                    <svg className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 4L6 11L3 8" /></svg>
-                    <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* CTA */}
-            <div className={isCompact ? 'p-5 pt-0' : 'p-7 pt-0'}>
-              <button
-                onClick={() => plan.priceKey ? checkout(priceId, plan.name) : navigate('/capra/prepare')}
-                disabled={loading === plan.name}
-                className="w-full py-3 text-sm font-bold rounded-xl cursor-pointer transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                style={isPro
-                  ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(34,211,238,0.3)' }
-                  : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
-                }
-              >
-                {loading === plan.name ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                    Processing...
-                  </span>
-                ) : (
-                  <>{plan.cta} <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg></>
+                {/* Upgrade note */}
+                {(plan as any).upgrade_note && (
+                  <p className="text-[8px] mb-2" style={{ color: 'var(--warning)' }}>{(plan as any).upgrade_note}</p>
                 )}
-              </button>
+              </div>
+
+              {/* CTA */}
+              <div className="px-3 pb-3">
+                <button
+                  onClick={() => plan.priceKey ? checkout(priceId, plan.name) : navigate('/capra/prepare')}
+                  disabled={loading === plan.name}
+                  className="w-full py-2 text-[11px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50"
+                  style={isPro
+                    ? { background: 'var(--accent)', color: '#fff' }
+                    : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
+                  }
+                >
+                  {loading === plan.name ? 'Processing...' : plan.cta}
+                </button>
+              </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop Download ── */}
+      <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)', color: 'var(--accent)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
           </div>
-        );
-      })}
+          <div>
+            <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
+            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe. Included in Winter Lover, Blizzard, Avalanche+ plans.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              const pid = prices?.desktop_lifetime?.priceId || '';
+              if (pid) checkout(pid, 'Desktop Lifetime');
+              else navigate('/pricing');
+            }}
+            disabled={loading === 'Desktop Lifetime'}
+            className="px-3 py-1.5 text-[10px] font-semibold rounded-lg" style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+          >
+            Buy $99 Lifetime
+          </button>
+          <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-white text-[10px] font-semibold rounded-lg" style={{ background: 'var(--accent)' }}>
+            Download
+          </a>
+        </div>
+      </div>
+
+      {/* ── Top-Up Packs ── */}
+      <div>
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-center mb-3" style={{ color: 'var(--text-muted)' }}>Top-Up Packs — for subscribers who exhaust monthly quota</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {TOPUPS.map(pack => {
+            const pid = prices?.[pack.priceKey]?.priceId || '';
+            return (
+              <div key={pack.priceKey} className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                <div>
+                  <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
+                  <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-sm font-bold" style={{ color: 'var(--accent)' }}>{pack.price}</span>
+                  <button
+                    onClick={() => pid ? checkout(pid, pack.name) : navigate('/pricing')}
+                    disabled={loading === pack.name}
+                    className="px-2.5 py-1 text-white text-[9px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
+                  >
+                    {loading === pack.name ? '...' : 'Buy'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
