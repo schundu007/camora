@@ -25,11 +25,11 @@
     --text-muted: #7096BF;
     --text-dimmed: #B0CBE6;
 
-    /* Accent — Sage olive */
-    --accent: #9EA667;
-    --accent-hover: #8A9258;
-    --accent-subtle: rgba(158,166,103,0.10);
-    --accent-text: #7A8449;
+    /* Accent — Icy cyan-blue (matches logo) */
+    --accent: #22D3EE;
+    --accent-hover: #06B6D4;
+    --accent-subtle: rgba(34,211,238,0.10);
+    --accent-text: #0891B2;
 
     /* Semantic — frost-compatible */
     --success: #34D399;
@@ -109,7 +109,7 @@
     --text-secondary: #334155;
     --text-muted: #7096BF;
     --text-dimmed: #B0CBE6;
-    --accent-subtle: rgba(158,166,103,0.10);
+    --accent-subtle: rgba(34,211,238,0.10);
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
     --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
     --shadow-md: 0 4px 12px rgba(56,189,248,0.10);

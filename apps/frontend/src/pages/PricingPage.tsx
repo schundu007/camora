@@ -190,11 +190,11 @@ export default function PricingPage() {
             const isStarter = plan.name === 'Frost';
 
             const accent = isPro
-              ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent)', glow: 'rgba(158,166,103,0.4)', checkColor: 'var(--accent)' }
+              ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent)', glow: 'rgba(34,211,238,0.4)', checkColor: '#60A5FA' }
               : isAnnual
               ? { from: 'var(--warning)', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
               : isStarter
-              ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent-hover)', glow: 'rgba(158,166,103,0.15)', checkColor: 'var(--accent)' }
+              ? { from: 'var(--accent)', via: 'var(--accent)', to: '#60A5FA', glow: 'rgba(34,211,238,0.15)', checkColor: 'var(--accent)' }
               : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
 
             return (
@@ -203,14 +203,14 @@ export default function PricingPage() {
                   zIndex: (isPro || isAnnual) ? 2 : 1,
                   background: '#FFFFFF',
                   border: (isPro || isAnnual) ? '2px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: (isPro || isAnnual) ? '0 8px 32px rgba(158,166,103,0.2)' : 'var(--shadow-md)',
+                  boxShadow: (isPro || isAnnual) ? '0 8px 32px rgba(34,211,238,0.2)' : 'var(--shadow-md)',
                   transform: (isPro || isAnnual) ? 'scale(1.03)' : 'none',
                 }}>
                 <div className="relative p-7 pb-0 flex flex-col flex-1">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: (isPro || isAnnual) ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
-                    {isPro && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #7A8449)', color: '#fff' }}>Most Popular</span>}
-                    {isAnnual && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #7A8449)', color: '#fff' }}>Best Value</span>}
+                    {isPro && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)', color: '#fff' }}>Most Popular</span>}
+                    {isAnnual && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)', color: '#fff' }}>Best Value</span>}
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: '44px', color: 'var(--text-primary)' }}>{plan.price}</span>
@@ -231,7 +231,7 @@ export default function PricingPage() {
                   <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name}
                     className="pricing-cta w-full py-3.5 text-sm font-bold rounded-xl cursor-pointer transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                     style={isPro
-                      ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(158,166,103,0.3)' }
+                      ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(34,211,238,0.3)' }
                       : { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
                     }>
                     {loading === plan.name ? (
@@ -289,7 +289,7 @@ export default function PricingPage() {
                       const val = (row as any)[k];
                       const isCamora = ci === 0;
                       return (
-                        <div key={`${ri}-${k}`} style={{ padding: '7px 2px', textAlign: 'center', borderBottom: isLast ? 'none' : '1px solid var(--border)', background: isCamora ? 'rgba(158,166,103,0.04)' : bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div key={`${ri}-${k}`} style={{ padding: '7px 2px', textAlign: 'center', borderBottom: isLast ? 'none' : '1px solid var(--border)', background: isCamora ? 'rgba(34,211,238,0.04)' : bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {val === true ? (
                             isCamora
                               ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)' }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
@@ -317,7 +317,7 @@ export default function PricingPage() {
           {/* Desktop App */}
           <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(158,166,103,0.15), rgba(158,166,103,0.08))', color: 'var(--accent)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.15), rgba(139,92,246,0.15))', color: 'var(--accent)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
