@@ -173,7 +173,7 @@ export default function PricingPage() {
       <section className="pt-24 pb-4 px-6 text-center">
         <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tickets</span>
         <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-          Choose your boarding class.
+          Choose your Snow Strength.
         </h1>
         <p className="mt-3 text-base" style={{ color: 'var(--text-secondary)' }}>Start free. Upgrade when you're ready.</p>
       </section>
