@@ -131,6 +131,7 @@
     overflow-x: hidden;
     width: 100%;
     color-scheme: light;
+    zoom: 1.25;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
