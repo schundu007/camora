@@ -92,12 +92,12 @@ A well-designed Slack system must balance write-heavy workloads (messages, react
     apiDesign: {
       description: 'REST for CRUD operations, WebSocket for real-time delivery',
       endpoints: [
-        { method: 'POST', path: '/api/channels', params: '{ name, type, members[] }', response: '201 { channelId, name }' },
-        { method: 'POST', path: '/api/channels/:channelId/messages', params: '{ content, threadId?, attachments[] }', response: '201 { messageId, timestamp }' },
-        { method: 'GET', path: '/api/channels/:channelId/messages', params: 'cursor, limit, before?', response: '{ messages[], nextCursor }' },
-        { method: 'POST', path: '/api/messages/:messageId/reactions', params: '{ emoji }', response: '200 { reactionCount }' },
-        { method: 'GET', path: '/api/search', params: 'query, channelId?, from?, after?, before?', response: '{ results[], total }' },
-        { method: 'WS', path: '/ws/connect', params: 'auth token', response: 'Bidirectional: messages, typing, presence events' }
+        { method: 'POST', path: '/api/channels', params: '{ name, type, members[] }', response: '201 { channelId, name }', description: 'Create a new channel (public, private, or DM). The members array seeds initial membership. Channel names are unique per workspace and automatically lowercased/slugified. Creating a DM reuses an existing conversation if one already exists between the same participants.' },
+        { method: 'POST', path: '/api/channels/:channelId/messages', params: '{ content, threadId?, attachments[] }', response: '201 { messageId, timestamp }', description: 'Send a message to a channel. If threadId is provided, the message is posted as a threaded reply. Messages are persisted to Cassandra and simultaneously published to the channel\'s Kafka topic for real-time fan-out to online members via WebSocket gateways. Attachments are referenced by pre-uploaded file IDs.' },
+        { method: 'GET', path: '/api/channels/:channelId/messages', params: 'cursor, limit, before?', response: '{ messages[], nextCursor }', description: 'Fetch paginated message history for a channel using cursor-based pagination. Messages are returned in reverse chronological order. The cursor is a snowflake message ID; passing before? fetches messages older than that ID. Recent messages (last 50) are served from Redis cache, older ones from Cassandra.' },
+        { method: 'POST', path: '/api/messages/:messageId/reactions', params: '{ emoji }', response: '200 { reactionCount }', description: 'Toggle an emoji reaction on a message. If the user already reacted with the same emoji, it is removed (idempotent toggle). Reaction counts are denormalized on the message document for fast reads. The reaction event is broadcast to channel members via WebSocket for real-time UI updates.' },
+        { method: 'GET', path: '/api/search', params: 'query, channelId?, from?, after?, before?', response: '{ results[], total }', description: 'Full-text search across all messages the user has access to, powered by Elasticsearch. Supports filtering by channel, sender, and date range. Results include highlighted snippets with matching terms. Queries are rate-limited to 20/min per user to protect the search cluster from expensive wildcard queries.' },
+        { method: 'WS', path: '/ws/connect', params: 'auth token', response: 'Bidirectional: messages, typing, presence events', description: 'Establish a persistent WebSocket connection for real-time events. The server authenticates via the token and subscribes the connection to all channels the user belongs to. Inbound frames include typing indicators and presence heartbeats (every 30s). The server sends message delivery, reaction updates, and channel membership changes.' }
       ]
     },
 
@@ -146,7 +146,46 @@ messages_search_index {
   message_id, channel_id, workspace_id
   content: text (analyzed)
   sender_name, timestamp
+}`,
+        examples: [
+          {
+            table: 'messages',
+            label: 'Channel message with reactions',
+            json: `{
+  "id": 7291048362817429504,
+  "channel_id": "c8a3f1e2-4d5b-4c9a-b7e6-2f1a3d5c8e9b",
+  "user_id": "u4b2e7d1-9a3c-4f8b-a5d6-7e1c3b9f2a4d",
+  "content": "Just pushed the hotfix for the login timeout issue. Can someone on the SRE team verify?",
+  "thread_id": null,
+  "edited_at": null,
+  "created_at": "2026-04-19T14:32:17Z",
+  "reaction_counts": {"white_check_mark": 3, "eyes": 1},
+  "reply_count": 0
 }`
+          },
+          {
+            table: 'channel_members',
+            label: 'Member with unread tracking',
+            json: `{
+  "channel_id": "c8a3f1e2-4d5b-4c9a-b7e6-2f1a3d5c8e9b",
+  "user_id": "u4b2e7d1-9a3c-4f8b-a5d6-7e1c3b9f2a4d",
+  "last_read_msg_id": 7291048362817429504,
+  "muted": false,
+  "joined_at": "2025-09-12T08:00:00Z"
+}`
+          },
+          {
+            table: 'workspaces',
+            label: 'Enterprise workspace',
+            json: `{
+  "id": "w1a2b3c4-5d6e-7f8a-9b0c-d1e2f3a4b5c6",
+  "name": "Acme Engineering",
+  "domain": "acme-eng",
+  "plan": "enterprise",
+  "created_at": "2024-03-15T10:00:00Z"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -322,12 +361,12 @@ Key architectural tensions include: upload processing latency vs. quality, recom
     apiDesign: {
       description: 'REST APIs for CRUD, specialized endpoints for feed and upload',
       endpoints: [
-        { method: 'POST', path: '/api/videos/upload', params: '{ video binary, caption, hashtags[], soundId? }', response: '202 { uploadId, status: processing }' },
-        { method: 'GET', path: '/api/feed/foryou', params: 'cursor, count=10, sessionId', response: '{ videos[], nextCursor, sessionId }' },
-        { method: 'GET', path: '/api/feed/following', params: 'cursor, count=20', response: '{ videos[], nextCursor }' },
-        { method: 'POST', path: '/api/videos/:videoId/interactions', params: '{ type: like|save|share, value }', response: '200 { updated }' },
-        { method: 'POST', path: '/api/videos/:videoId/comments', params: '{ text, replyToId? }', response: '201 { commentId }' },
-        { method: 'GET', path: '/api/search', params: 'query, type=video|user|hashtag, cursor', response: '{ results[], nextCursor }' }
+        { method: 'POST', path: '/api/videos/upload', params: '{ video binary, caption, hashtags[], soundId? }', response: '202 { uploadId, status: processing }', description: 'Upload a short-form video for processing. Returns 202 immediately as the video enters an async transcoding pipeline that generates multiple resolutions (360p, 720p, 1080p) and creates an HLS manifest. The soundId links to a reusable audio track. A webhook or polling endpoint notifies the client when processing completes.' },
+        { method: 'GET', path: '/api/feed/foryou', params: 'cursor, count=10, sessionId', response: '{ videos[], nextCursor, sessionId }', description: 'Fetch the personalized For You feed powered by the recommendation engine. The sessionId ties a viewing session together so the model can learn from in-session engagement signals (watch time, replays, skips). Each batch is pre-ranked by the ML scoring service. Videos are returned with pre-signed CDN URLs for instant playback.' },
+        { method: 'GET', path: '/api/feed/following', params: 'cursor, count=20', response: '{ videos[], nextCursor }', description: 'Fetch videos from accounts the user follows, sorted reverse-chronologically. Unlike the For You feed, this uses a simple fan-out-on-read model: the server queries the user\'s follow list, then merges recent videos from each followed creator. Results are cursor-paginated by timestamp.' },
+        { method: 'POST', path: '/api/videos/:videoId/interactions', params: '{ type: like|save|share, value }', response: '200 { updated }', description: 'Record a user interaction (like, save, or share) on a video. Likes are idempotent toggles. Interaction counts are updated asynchronously via a counter service backed by Redis to avoid write contention on hot videos. Each interaction event is also published to Kafka for the recommendation engine to consume as a training signal.' },
+        { method: 'POST', path: '/api/videos/:videoId/comments', params: '{ text, replyToId? }', response: '201 { commentId }', description: 'Post a comment on a video, optionally as a reply to an existing comment. Comments pass through a content moderation pipeline (toxicity filter + spam detection) before becoming visible. Reply threads are limited to 2 levels deep. The video owner receives a push notification unless they have disabled comment notifications.' },
+        { method: 'GET', path: '/api/search', params: 'query, type=video|user|hashtag, cursor', response: '{ results[], nextCursor }', description: 'Search across videos, users, or hashtags using Elasticsearch. Video search indexes captions and hashtags; user search indexes display names and bios. Trending hashtags are boosted in results via a time-decayed popularity score. Results are personalized based on the user\'s language and region preferences.' }
       ]
     },
 
@@ -373,7 +412,51 @@ video_embeddings (ML feature store) {
   engagement_score: float
   topic_tags: text[]
   created_at: timestamp
+}`,
+        examples: [
+          {
+            table: 'videos',
+            label: 'Active short video with engagement stats',
+            json: `{
+  "id": 7384920156283401728,
+  "creator_id": 991204837,
+  "caption": "POV: your microservices start talking to each other #devlife #backend",
+  "sound_id": 820193746,
+  "duration_ms": 28400,
+  "status": "active",
+  "cdn_urls": {"360p": "https://cdn.tt/v/7384920/360p.mp4", "720p": "https://cdn.tt/v/7384920/720p.mp4", "1080p": "https://cdn.tt/v/7384920/1080p.mp4"},
+  "thumbnail_url": "https://cdn.tt/thumb/7384920.jpg",
+  "hashtags": ["devlife", "backend", "microservices"],
+  "view_count": 2840193,
+  "like_count": 341029,
+  "share_count": 12840,
+  "created_at": "2026-04-17T19:22:05Z"
 }`
+          },
+          {
+            table: 'user_interactions',
+            label: 'User watch event with engagement signal',
+            json: `{
+  "user_id": 550382917,
+  "video_id": 7384920156283401728,
+  "interaction_type": "view",
+  "watch_duration_ms": 27200,
+  "watch_percentage": 0.96,
+  "replayed": true,
+  "timestamp": "2026-04-19T10:15:33Z"
+}`
+          },
+          {
+            table: 'user_embeddings',
+            label: 'ML interest embedding for feed personalization',
+            json: `{
+  "user_id": 550382917,
+  "interest_vector": [0.142, -0.038, 0.891, 0.204, -0.553, "...(256 dims)"],
+  "recent_topics": {"tech_humor": 0.82, "coding_tutorials": 0.65, "startup_culture": 0.41},
+  "last_updated": "2026-04-19T10:16:00Z"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -570,11 +653,11 @@ The nested comment system is another distinguishing challenge: a popular post ca
     apiDesign: {
       description: 'RESTful API with cursor-based pagination',
       endpoints: [
-        { method: 'GET', path: '/api/r/:subreddit/posts', params: 'sort=hot|new|top|controversial, timeframe, cursor', response: '{ posts[], nextCursor }' },
-        { method: 'POST', path: '/api/r/:subreddit/posts', params: '{ title, type, content, flair? }', response: '201 { postId }' },
-        { method: 'GET', path: '/api/posts/:postId/comments', params: 'sort=best|top|new, depth=3, limit=200', response: '{ comments[] (nested), moreIds[] }' },
-        { method: 'POST', path: '/api/vote', params: '{ targetId, targetType, direction: up|down|none }', response: '200 { newScore }' },
-        { method: 'GET', path: '/api/home', params: 'sort, cursor', response: '{ posts[] (from subscribed subreddits) }' }
+        { method: 'GET', path: '/api/r/:subreddit/posts', params: 'sort=hot|new|top|controversial, timeframe, cursor', response: '{ posts[], nextCursor }', description: 'Fetch posts from a subreddit with configurable sort algorithm. The "hot" sort uses a time-decayed scoring formula (similar to Wilson score) combining upvotes, downvotes, and post age. The "controversial" sort surfaces posts with roughly equal up/down vote ratios. Results are cursor-paginated and served from a pre-computed cache for popular subreddits.' },
+        { method: 'POST', path: '/api/r/:subreddit/posts', params: '{ title, type, content, flair? }', response: '201 { postId }', description: 'Create a new post in a subreddit. The type field determines the post format (text, link, image, or poll). Posts go through an automod rules engine that checks subreddit-specific rules (minimum karma, account age, banned keywords) before publishing. Flair is validated against the subreddit\'s allowed flair list. New posts trigger notifications to subreddit subscribers who opted in.' },
+        { method: 'GET', path: '/api/posts/:postId/comments', params: 'sort=best|top|new, depth=3, limit=200', response: '{ comments[] (nested), moreIds[] }', description: 'Fetch the comment tree for a post. Comments are returned as a nested structure up to the specified depth; deeper branches are collapsed and their IDs returned in moreIds for lazy loading. The "best" sort uses a confidence-based ranking (lower bound of Wilson score interval) that accounts for sample size. Collapsed/removed comments show [deleted] placeholders to preserve tree structure.' },
+        { method: 'POST', path: '/api/vote', params: '{ targetId, targetType, direction: up|down|none }', response: '200 { newScore }', description: 'Cast an upvote, downvote, or remove a previous vote on a post or comment. Votes are idempotent -- voting the same direction twice is a no-op, and "none" retracts any existing vote. Vote counts are maintained in Redis for fast reads and periodically flushed to the database. Each user can only have one active vote per target, enforced by a composite unique constraint.' },
+        { method: 'GET', path: '/api/home', params: 'sort, cursor', response: '{ posts[] (from subscribed subreddits) }', description: 'Fetch the user\'s personalized home feed aggregated from all subscribed subreddits. Uses a fan-out-on-read approach: the server merges top posts from each subscribed subreddit\'s pre-ranked cache, then applies a final ranking pass. For users subscribed to many subreddits, a sampling strategy ensures diversity across communities rather than letting one active subreddit dominate the feed.' }
       ]
     },
 
@@ -623,7 +706,53 @@ votes {
   target_type: enum(post, comment)
   direction: smallint  -- +1, -1, 0
   PK(user_id, target_id)
+}`,
+        examples: [
+          {
+            table: 'posts',
+            label: 'Popular post with pre-computed hot rank',
+            json: `{
+  "id": 8291047283749120,
+  "subreddit_id": 44021,
+  "author_id": 7720183,
+  "title": "I built a distributed rate limiter that handles 1M req/s on a single node. Here's the architecture.",
+  "type": "text",
+  "content": "After months of benchmarking, we settled on a token bucket implementation backed by Redis...",
+  "url": null,
+  "score": 4287,
+  "upvotes": 4891,
+  "downvotes": 604,
+  "comment_count": 342,
+  "hot_rank": 7842.31,
+  "created_at": "2026-04-19T08:14:22Z"
 }`
+          },
+          {
+            table: 'comments',
+            label: 'Nested comment with materialized path',
+            json: `{
+  "id": 8291048391027456,
+  "post_id": 8291047283749120,
+  "parent_id": 8291047502918144,
+  "author_id": 3310924,
+  "content": "Have you considered using a sliding window approach instead? It handles burst traffic more gracefully.",
+  "score": 189,
+  "depth": 2,
+  "path": "8291047283749120.8291047502918144.8291048391027456",
+  "created_at": "2026-04-19T08:47:03Z"
+}`
+          },
+          {
+            table: 'votes',
+            label: 'User upvote on a post',
+            json: `{
+  "user_id": 3310924,
+  "target_id": 8291047283749120,
+  "target_type": "post",
+  "direction": 1
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -815,11 +944,11 @@ The economic model also influences architecture: streamers produce content (writ
     apiDesign: {
       description: 'REST for metadata, RTMP for stream ingest, HLS for playback, WebSocket for chat',
       endpoints: [
-        { method: 'POST', path: '/api/streams/key', params: '{ channelId }', response: '{ streamKey, ingestServer }' },
-        { method: 'GET', path: '/api/streams/:channelId/playlist.m3u8', params: 'quality?', response: 'HLS playlist' },
-        { method: 'GET', path: '/api/streams/directory', params: 'category?, sort=viewers, cursor', response: '{ streams[], nextCursor }' },
-        { method: 'WS', path: '/ws/chat/:channelId', params: 'auth token', response: 'Bidirectional: messages, events, moderation' },
-        { method: 'POST', path: '/api/clips', params: '{ channelId, startOffset, duration }', response: '202 { clipId, status: processing }' }
+        { method: 'POST', path: '/api/streams/key', params: '{ channelId }', response: '{ streamKey, ingestServer }', description: 'Generate a new stream key for a channel. The stream key is a one-time-use secret the broadcaster configures in their OBS/streaming software. The ingestServer returns the nearest RTMP endpoint based on the broadcaster\'s geographic location. Regenerating a key invalidates the previous one to prevent unauthorized restreaming.' },
+        { method: 'GET', path: '/api/streams/:channelId/playlist.m3u8', params: 'quality?', response: 'HLS playlist', description: 'Returns the HLS manifest for a live stream. The playlist contains multiple quality variants (160p, 480p, 720p, 1080p) so the client can perform adaptive bitrate switching based on network conditions. Each segment is 2-4 seconds long, balancing latency against buffering. The playlist is served from CDN edge nodes with a 2-second TTL to keep it fresh.' },
+        { method: 'GET', path: '/api/streams/directory', params: 'category?, sort=viewers, cursor', response: '{ streams[], nextCursor }', description: 'Browse live streams, optionally filtered by category (e.g., gaming, music). Sorted by concurrent viewer count by default. Viewer counts are approximate, updated every 5-10 seconds via a distributed counter service. Stream thumbnails are auto-generated every 30 seconds from the live feed. Results are cursor-paginated to handle directories with thousands of live streams.' },
+        { method: 'WS', path: '/ws/chat/:channelId', params: 'auth token', response: 'Bidirectional: messages, events, moderation', description: 'Join a channel\'s live chat via WebSocket. Messages are broadcast to all connected viewers with sub-200ms latency. For channels with 100K+ viewers, messages are sampled server-side to prevent client flooding. Moderator actions (timeouts, bans, message deletions) are delivered as special event frames. Slow mode and subscriber-only mode are enforced server-side.' },
+        { method: 'POST', path: '/api/clips', params: '{ channelId, startOffset, duration }', response: '202 { clipId, status: processing }', description: 'Create a clip from a live or recent stream. Returns 202 immediately while a background worker extracts the segment from the stream\'s rolling buffer (typically last 60 seconds). Duration is capped at 60 seconds. The worker transcodes the clip into a standalone MP4 and generates a thumbnail. The clip is associated with the source stream\'s VOD timeline for context.' }
       ]
     },
 
@@ -866,7 +995,53 @@ follows {
   notify: boolean
   followed_at: timestamp
   PK(follower_id, channel_id)
+}`,
+        examples: [
+          {
+            table: 'stream_sessions',
+            label: 'Active live stream session',
+            json: `{
+  "id": 49201837465,
+  "channel_id": 28401923,
+  "title": "Speedrunning Elden Ring DLC - Day 3 attempts",
+  "category_id": 509658,
+  "started_at": "2026-04-19T16:00:00Z",
+  "ended_at": null,
+  "peak_viewers": 84210,
+  "avg_viewers": 52300,
+  "vod_url": null
 }`
+          },
+          {
+            table: 'chat_messages',
+            label: 'Chat message with subscriber badge and emote',
+            json: `{
+  "channel_id": 28401923,
+  "message_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "user_id": 7782019,
+  "content": "LET'S GOOO that skip was insane PogChamp",
+  "emotes": [{"id": "305954156", "name": "PogChamp", "positions": [38, 46]}],
+  "badges": ["subscriber/24", "glhf-pledge/1"],
+  "is_action": false,
+  "created_at": "2026-04-19T17:42:18Z"
+}`
+          },
+          {
+            table: 'channels',
+            label: 'Live channel with current stream',
+            json: `{
+  "id": 28401923,
+  "username": "speedmaster_ttv",
+  "display_name": "SpeedMaster",
+  "category_id": 509658,
+  "is_live": true,
+  "current_stream_id": 49201837465,
+  "follower_count": 1420000,
+  "subscriber_count": 8420,
+  "created_at": "2022-06-14T12:00:00Z"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -1072,12 +1247,12 @@ A unique challenge of email systems compared to chat apps is the federated proto
     apiDesign: {
       description: 'RESTful API for client operations, SMTP for email transport',
       endpoints: [
-        { method: 'GET', path: '/api/messages', params: 'labelId, q (search), maxResults, pageToken', response: '{ messages[{id, threadId, snippet}], nextPageToken }' },
-        { method: 'GET', path: '/api/messages/:id', params: 'format=full|metadata|minimal', response: '{ id, threadId, labels[], payload, sizeEstimate }' },
-        { method: 'POST', path: '/api/messages/send', params: '{ raw (RFC 2822), threadId? }', response: '{ id, threadId, labelIds[] }' },
-        { method: 'POST', path: '/api/messages/:id/modify', params: '{ addLabelIds[], removeLabelIds[] }', response: '{ id, labelIds[] }' },
-        { method: 'GET', path: '/api/threads/:id', params: 'format', response: '{ id, messages[], snippet }' },
-        { method: 'POST', path: '/api/messages/:id/attachments', params: 'binary upload', response: '{ attachmentId, size }' }
+        { method: 'GET', path: '/api/messages', params: 'labelId, q (search), maxResults, pageToken', response: '{ messages[{id, threadId, snippet}], nextPageToken }', description: 'List messages matching the given criteria. The q parameter supports Gmail-style search operators (from:, to:, subject:, has:attachment, after:, before:). Messages are returned as lightweight stubs with snippets; full content requires a separate fetch. Results are page-token paginated to handle mailboxes with millions of messages efficiently.' },
+        { method: 'GET', path: '/api/messages/:id', params: 'format=full|metadata|minimal', response: '{ id, threadId, labels[], payload, sizeEstimate }', description: 'Fetch a single message with configurable detail level. "minimal" returns only IDs and labels for batch operations; "metadata" adds headers (From, To, Subject, Date); "full" includes the decoded MIME body tree. Inline images are returned as base64 content parts. The sizeEstimate helps clients decide whether to fetch attachments on metered connections.' },
+        { method: 'POST', path: '/api/messages/send', params: '{ raw (RFC 2822), threadId? }', response: '{ id, threadId, labelIds[] }', description: 'Send an email. The raw field contains a complete RFC 2822 message (headers + body) encoded as base64url. If threadId is provided, the message is threaded with the existing conversation using In-Reply-To and References headers. The server queues the message for SMTP delivery asynchronously and applies the SENT label. Rate-limited to 500 messages/day per user to prevent abuse.' },
+        { method: 'POST', path: '/api/messages/:id/modify', params: '{ addLabelIds[], removeLabelIds[] }', response: '{ id, labelIds[] }', description: 'Modify the labels on a message (e.g., archive by removing INBOX, mark as read by removing UNREAD). This is the primary mechanism for organizing email since Gmail uses labels instead of folders. The operation is atomic -- all label additions and removals are applied together. System labels (SENT, DRAFT) cannot be modified through this endpoint.' },
+        { method: 'GET', path: '/api/threads/:id', params: 'format', response: '{ id, messages[], snippet }', description: 'Fetch an entire email thread (conversation) with all its messages. Messages within the thread are ordered chronologically. The snippet is the last message\'s preview text. Thread grouping is based on the Subject header and RFC 2822 References chain. This endpoint is the primary way to render a conversation view, avoiding N+1 queries for individual messages.' },
+        { method: 'POST', path: '/api/messages/:id/attachments', params: 'binary upload', response: '{ attachmentId, size }', description: 'Upload a binary attachment for a draft message. Attachments are stored in object storage (GCS/S3) and referenced by attachmentId in the message body. Maximum size is 25MB per attachment, 35MB total per message. Large files above the limit should be uploaded to Google Drive and shared as a link instead. The server validates MIME type and scans for malware before accepting.' }
       ]
     },
 
@@ -1129,7 +1304,51 @@ threads {
 email_search_index {
   message_id, user_id, from, to, subject, body_text,
   labels, has_attachment, date, size
+}`,
+        examples: [
+          {
+            table: 'messages',
+            label: 'Received email with attachment reference',
+            json: `{
+  "id": 18294710384562,
+  "user_id": 440291837,
+  "thread_id": 18294710384500,
+  "from_addr": "alice@company.com",
+  "to_addrs": ["bob@gmail.com"],
+  "cc_addrs": ["team-leads@company.com"],
+  "subject": "Q1 Performance Review - Final Draft",
+  "snippet": "Hi Bob, please find the finalized Q1 performance review attached. Let me know if you have...",
+  "body_ref": "gs://mail-bodies/sha256/a1b2c3d4e5f6",
+  "attachment_refs": [{"name": "Q1_Review_Final.pdf", "size": 2841920, "mime": "application/pdf", "ref": "gs://mail-attach/sha256/f6e5d4c3b2a1"}],
+  "size_bytes": 2904128,
+  "is_read": false,
+  "is_starred": true,
+  "spam_score": 0.02,
+  "received_at": "2026-04-19T09:14:33Z"
 }`
+          },
+          {
+            table: 'threads',
+            label: 'Email thread with multiple participants',
+            json: `{
+  "id": 18294710384500,
+  "user_id": 440291837,
+  "subject": "Q1 Performance Review - Final Draft",
+  "last_message_at": "2026-04-19T09:14:33Z",
+  "message_count": 4,
+  "participant_addrs": ["alice@company.com", "bob@gmail.com", "team-leads@company.com"]
+}`
+          },
+          {
+            table: 'message_labels',
+            label: 'Label assignment for inbox categorization',
+            json: `{
+  "user_id": 440291837,
+  "message_id": 18294710384562,
+  "label_id": "INBOX"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -1332,12 +1551,12 @@ The sync engine is particularly challenging: it must handle concurrent modificat
     apiDesign: {
       description: 'RESTful API with resumable uploads for large files',
       endpoints: [
-        { method: 'POST', path: '/api/files/upload', params: 'multipart: { metadata, file binary } or resumable session', response: '{ fileId, version, md5 }' },
-        { method: 'GET', path: '/api/files/:fileId', params: 'version?, alt=media (download)', response: 'File binary or metadata JSON' },
-        { method: 'GET', path: '/api/files', params: 'folderId, q (search), pageToken, orderBy', response: '{ files[], nextPageToken }' },
-        { method: 'PATCH', path: '/api/files/:fileId', params: '{ name?, parentId?, starred? }', response: '{ updated file metadata }' },
-        { method: 'POST', path: '/api/files/:fileId/permissions', params: '{ email, role: viewer|commenter|editor }', response: '{ permissionId }' },
-        { method: 'GET', path: '/api/changes', params: 'startChangeId, pageToken', response: '{ changes[], newStartChangeId }' }
+        { method: 'POST', path: '/api/files/upload', params: 'multipart: { metadata, file binary } or resumable session', response: '{ fileId, version, md5 }', description: 'Upload a file using either simple multipart (files <5MB) or resumable upload (large files). Resumable uploads return a session URI that accepts chunked PUT requests, enabling retry of individual chunks on network failure without re-uploading the entire file. The server computes an MD5 checksum and returns it for client-side verification. Each upload creates version 1 of the file.' },
+        { method: 'GET', path: '/api/files/:fileId', params: 'version?, alt=media (download)', response: 'File binary or metadata JSON', description: 'Fetch file metadata (default) or download file content (alt=media). Without alt=media, returns JSON metadata including name, size, MIME type, sharing permissions, and version history. The version parameter retrieves a specific historical version. Downloads are served via a CDN redirect (302) with a time-limited signed URL to offload bandwidth from the API servers.' },
+        { method: 'GET', path: '/api/files', params: 'folderId, q (search), pageToken, orderBy', response: '{ files[], nextPageToken }', description: 'List files in a folder or search across all files. The q parameter supports search operators (name contains, mimeType, modifiedTime >, owners, sharedWithMe). Results can be ordered by name, modifiedTime, or sharedWithMeTime. Page-token pagination handles folders with thousands of files. Trashed files are excluded by default unless explicitly queried.' },
+        { method: 'PATCH', path: '/api/files/:fileId', params: '{ name?, parentId?, starred? }', response: '{ updated file metadata }', description: 'Update file metadata without re-uploading content. Supports renaming, moving to a different folder (changing parentId), starring, and updating description. Moving a file requires write access to both the source and destination folders. The operation uses optimistic concurrency control via an If-Match header with the file\'s etag to prevent lost updates from concurrent modifications.' },
+        { method: 'POST', path: '/api/files/:fileId/permissions', params: '{ email, role: viewer|commenter|editor }', response: '{ permissionId }', description: 'Share a file with a specific user by granting a permission. The role determines the access level: viewers can read, commenters can add comments, editors can modify content. Sharing sends an email notification to the recipient. Permissions cascade to child files in shared folders. The owner can revoke any permission by deleting the permissionId. Link-sharing (anyone with the link) is also supported via a special "anyone" permission type.' },
+        { method: 'GET', path: '/api/changes', params: 'startChangeId, pageToken', response: '{ changes[], newStartChangeId }', description: 'Poll for file changes since a given checkpoint. The client stores newStartChangeId and uses it in subsequent polls to receive only incremental changes (creates, updates, deletes, permission changes). This is the foundation of the desktop sync client -- it polls every 30-60 seconds and applies changes locally. For real-time sync, a push notification channel can be registered to receive instant change webhooks.' }
       ]
     },
 
@@ -1393,7 +1612,53 @@ blobs {
   storage_path: varchar
   size_bytes: bigint
   ref_count: int  -- for garbage collection
+}`,
+        examples: [
+          {
+            table: 'files',
+            label: 'Shared document with version history',
+            json: `{
+  "id": "d4e5f6a7-b8c9-4d0e-a1f2-3b4c5d6e7f8a",
+  "owner_id": 772019384,
+  "name": "System Design Interview Notes.docx",
+  "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "size_bytes": 1482935,
+  "parent_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "is_folder": false,
+  "current_version": 12,
+  "md5_checksum": "e99a18c428cb38d5f260853678922e03",
+  "blob_ref": "cas://sha256/7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+  "is_trashed": false,
+  "created_at": "2026-03-01T10:30:00Z",
+  "modified_at": "2026-04-19T11:22:45Z"
 }`
+          },
+          {
+            table: 'file_versions',
+            label: 'Version snapshot from collaborative edit',
+            json: `{
+  "file_id": "d4e5f6a7-b8c9-4d0e-a1f2-3b4c5d6e7f8a",
+  "version": 12,
+  "blob_ref": "cas://sha256/7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+  "size_bytes": 1482935,
+  "modified_by": 881029374,
+  "created_at": "2026-04-19T11:22:45Z"
+}`
+          },
+          {
+            table: 'permissions',
+            label: 'Editor access shared with a collaborator',
+            json: `{
+  "id": "p9a8b7c6-d5e4-4f3a-b2c1-d0e9f8a7b6c5",
+  "file_id": "d4e5f6a7-b8c9-4d0e-a1f2-3b4c5d6e7f8a",
+  "grantee_id": 881029374,
+  "grantee_type": "user",
+  "role": "editor",
+  "inherited": false,
+  "created_at": "2026-03-02T14:00:00Z"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -1600,12 +1865,12 @@ The system must balance customizability (each store looks and behaves differentl
     apiDesign: {
       description: 'Merchant Admin API and Storefront API, both scoped by store',
       endpoints: [
-        { method: 'POST', path: '/admin/api/products', params: '{ title, variants[], images[], price }', response: '201 { productId }', notes: 'Merchant admin: create product' },
-        { method: 'GET', path: '/storefront/api/products', params: 'collection?, sort, cursor', response: '{ products[], pageInfo }', notes: 'Public: browse products' },
-        { method: 'POST', path: '/storefront/api/cart', params: '{ lineItems[{variantId, quantity}] }', response: '{ cartId, lineItems[], totalPrice }' },
-        { method: 'POST', path: '/storefront/api/checkout', params: '{ cartId, shippingAddress, paymentMethod }', response: '{ orderId, confirmationUrl }' },
-        { method: 'GET', path: '/admin/api/orders', params: 'status, dateRange, cursor', response: '{ orders[], pageInfo }' },
-        { method: 'POST', path: '/admin/api/orders/:id/fulfill', params: '{ trackingNumber, carrier }', response: '{ fulfillmentId }' }
+        { method: 'POST', path: '/admin/api/products', params: '{ title, variants[], images[], price }', response: '201 { productId }', notes: 'Merchant admin: create product', description: 'Create a product in the merchant\'s catalog. Each product can have multiple variants (size, color) with independent inventory tracking and pricing. Images are uploaded to a CDN and automatically resized to multiple dimensions for thumbnails, listing pages, and zoom views. The product is indexed in Elasticsearch within seconds for storefront search availability.' },
+        { method: 'GET', path: '/storefront/api/products', params: 'collection?, sort, cursor', response: '{ products[], pageInfo }', notes: 'Public: browse products', description: 'Browse products on a store\'s public storefront. Results can be filtered by collection (e.g., "Summer Sale") and sorted by price, popularity, or newest. Responses are aggressively cached at the CDN edge with a 60-second TTL since product catalogs change infrequently. Cursor-based pagination via pageInfo ensures stable results even as new products are added between pages.' },
+        { method: 'POST', path: '/storefront/api/cart', params: '{ lineItems[{variantId, quantity}] }', response: '{ cartId, lineItems[], totalPrice }', description: 'Create or update a shopping cart. Cart state is stored server-side keyed by cartId (returned in a cookie for anonymous users). Inventory is not reserved at cart time -- availability is only checked at checkout. The totalPrice includes applicable taxes and discounts computed in real-time. Cart contents expire after 14 days of inactivity to release stale data.' },
+        { method: 'POST', path: '/storefront/api/checkout', params: '{ cartId, shippingAddress, paymentMethod }', response: '{ orderId, confirmationUrl }', description: 'Convert a cart into a paid order. This endpoint orchestrates a multi-step transaction: validate inventory availability, calculate final shipping rates, authorize payment via the payment gateway, decrement inventory atomically, and create the order record. If payment authorization fails, inventory is immediately released. The confirmationUrl redirects the buyer to the order confirmation page. The entire checkout is idempotent when retried with the same cartId.' },
+        { method: 'GET', path: '/admin/api/orders', params: 'status, dateRange, cursor', response: '{ orders[], pageInfo }', description: 'List orders for the merchant\'s store with filtering by status (pending, fulfilled, refunded, cancelled) and date range. Orders include line items, customer info, payment status, and fulfillment details. Results are sorted by creation date descending. This endpoint powers the merchant\'s order management dashboard and supports export for accounting integrations.' },
+        { method: 'POST', path: '/admin/api/orders/:id/fulfill', params: '{ trackingNumber, carrier }', response: '{ fulfillmentId }', description: 'Mark an order as fulfilled by providing shipping details. This triggers an automated email to the customer with tracking information and updates the order status to "fulfilled." Partial fulfillment is supported for orders with multiple line items shipping separately. The tracking number is validated against the carrier\'s API format. Fulfillment events are published to webhooks for third-party integrations (e.g., inventory management systems).' }
       ]
     },
 
@@ -1667,7 +1932,50 @@ inventory_levels {
   available: int
   reserved: int  -- in checkout but not yet ordered
   PK(variant_id, location_id)
+}`,
+        examples: [
+          {
+            table: 'orders',
+            label: 'Paid order awaiting fulfillment',
+            json: `{
+  "id": 5820193746582,
+  "store_id": 44019283,
+  "customer_id": 8829104,
+  "order_number": 1047,
+  "total_price": 129.97,
+  "financial_status": "paid",
+  "fulfillment_status": "unfulfilled",
+  "line_items": [{"variant_id": 39201847, "title": "Classic Hoodie - Black / L", "quantity": 2, "price": 49.99}, {"variant_id": 39201903, "title": "Logo Cap - Navy", "quantity": 1, "price": 29.99}],
+  "shipping_address": {"name": "Jamie Chen", "address1": "742 Evergreen Terrace", "city": "Portland", "province": "OR", "zip": "97201", "country": "US"},
+  "created_at": "2026-04-19T13:42:18Z"
 }`
+          },
+          {
+            table: 'variants',
+            label: 'Product variant with inventory and pricing',
+            json: `{
+  "id": 39201847,
+  "product_id": 8102938,
+  "store_id": 44019283,
+  "sku": "HOOD-BLK-L",
+  "price": 49.99,
+  "compare_at_price": 69.99,
+  "inventory_quantity": 142,
+  "option_values": {"size": "L", "color": "Black"},
+  "weight": 0.45
+}`
+          },
+          {
+            table: 'inventory_levels',
+            label: 'Warehouse stock with active reservations',
+            json: `{
+  "variant_id": 39201847,
+  "location_id": 7720194,
+  "available": 142,
+  "reserved": 8
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -1871,10 +2179,10 @@ The key insight is that this is fundamentally a rate-limiting and queuing proble
     apiDesign: {
       description: 'Minimal API surface for maximum performance during sale',
       endpoints: [
-        { method: 'GET', path: '/api/sale/:saleId/status', params: '', response: '{ status: upcoming|active|sold_out, remainingQty, startsAt }' },
-        { method: 'POST', path: '/api/sale/:saleId/reserve', params: '{ userId, captchaToken }', response: '{ reservationId, expiresAt } or { status: sold_out }' },
-        { method: 'POST', path: '/api/sale/:saleId/purchase', params: '{ reservationId, paymentMethodId }', response: '{ orderId, confirmationNumber }' },
-        { method: 'GET', path: '/api/sale/:saleId/queue', params: '{ userId }', response: '{ position, estimatedWait }' }
+        { method: 'GET', path: '/api/sale/:saleId/status', params: '', response: '{ status: upcoming|active|sold_out, remainingQty, startsAt }', description: 'Check the current status of a flash sale. This endpoint is heavily cached at the CDN edge with a 1-second TTL to handle millions of concurrent polling clients. The remainingQty is approximate (updated every few seconds from Redis) to avoid putting read pressure on the inventory counter. The response includes cache headers to prevent thundering herd problems when the sale transitions from "upcoming" to "active."' },
+        { method: 'POST', path: '/api/sale/:saleId/reserve', params: '{ userId, captchaToken }', response: '{ reservationId, expiresAt } or { status: sold_out }', description: 'Attempt to reserve an item during an active sale. The captchaToken prevents bot abuse. Inventory is atomically decremented using Redis DECR -- if the counter reaches zero, all subsequent requests receive "sold_out" instantly. Successful reservations are held for 5 minutes (expiresAt) and released back to inventory if not purchased. A distributed rate limiter restricts each user to one reservation attempt per sale.' },
+        { method: 'POST', path: '/api/sale/:saleId/purchase', params: '{ reservationId, paymentMethodId }', response: '{ orderId, confirmationNumber }', description: 'Complete the purchase of a reserved item before the reservation expires. The server validates the reservation is still active, charges the payment method via a pre-authorized payment gateway, and converts the reservation to a confirmed order atomically. If payment fails, the reservation remains active until expiry so the user can retry with a different payment method. The endpoint is idempotent -- retrying with the same reservationId returns the existing order.' },
+        { method: 'GET', path: '/api/sale/:saleId/queue', params: '{ userId }', response: '{ position, estimatedWait }', description: 'Check the user\'s position in the virtual waiting room queue. When traffic exceeds system capacity, users are placed in a FIFO queue and admitted in batches. Position is updated in real-time via server-sent events. The estimatedWait is calculated from the current processing rate and queue depth. Queue position is backed by a Redis sorted set with join timestamp as the score to ensure fairness.' }
       ]
     },
 
@@ -1915,7 +2223,49 @@ user_sale_attempts {
   ip_address: varchar
   device_fingerprint: varchar
   PK(user_id, sale_id)
+}`,
+        examples: [
+          {
+            table: 'flash_sales',
+            label: 'Active flash sale event',
+            json: `{
+  "id": 20482,
+  "item_id": 991028,
+  "title": "PlayStation 6 Pro - Launch Day Deal",
+  "original_price": 699.99,
+  "sale_price": 399.99,
+  "total_quantity": 500,
+  "starts_at": "2026-04-19T18:00:00Z",
+  "ends_at": "2026-04-19T18:30:00Z",
+  "status": "active"
 }`
+          },
+          {
+            table: 'reservations',
+            label: 'Successful reservation pending payment',
+            json: `{
+  "id": "res-a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+  "sale_id": 20482,
+  "user_id": 33019284,
+  "status": "reserved",
+  "reserved_at": "2026-04-19T18:00:02Z",
+  "expires_at": "2026-04-19T18:05:02Z",
+  "purchased_at": null
+}`
+          },
+          {
+            table: 'user_sale_attempts',
+            label: 'Bot detection tracking record',
+            json: `{
+  "user_id": 33019284,
+  "sale_id": 20482,
+  "attempt_count": 1,
+  "first_attempt_at": "2026-04-19T18:00:02Z",
+  "ip_address": "198.51.100.42",
+  "device_fingerprint": "fp_x7k9m2n4p6q8r0"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -2128,11 +2478,11 @@ Additional challenges include: integrating with external banking networks (ACH, 
     apiDesign: {
       description: 'RESTful API with idempotency keys for financial safety',
       endpoints: [
-        { method: 'POST', path: '/api/transfers', params: '{ fromWalletId, toWalletId, amount, currency, idempotencyKey, note }', response: '{ transferId, status, timestamp }' },
-        { method: 'POST', path: '/api/topup', params: '{ walletId, bankAccountId, amount, idempotencyKey }', response: '{ transactionId, status: pending }' },
-        { method: 'POST', path: '/api/withdraw', params: '{ walletId, bankAccountId, amount, idempotencyKey }', response: '{ transactionId, status: pending }' },
-        { method: 'GET', path: '/api/wallets/:walletId/balance', params: '', response: '{ available, pending, currency }' },
-        { method: 'GET', path: '/api/wallets/:walletId/transactions', params: 'type, startDate, endDate, cursor', response: '{ transactions[], nextCursor }' }
+        { method: 'POST', path: '/api/transfers', params: '{ fromWalletId, toWalletId, amount, currency, idempotencyKey, note }', response: '{ transferId, status, timestamp }', description: 'Transfer funds between two wallets atomically. The idempotencyKey (client-generated UUID) ensures the transfer is processed exactly once even if the client retries due to network timeouts. The operation uses a serializable database transaction to debit the sender and credit the receiver, preventing double-spending. Transfers between different currencies trigger real-time exchange rate lookup. The note is visible to both parties in their transaction history.' },
+        { method: 'POST', path: '/api/topup', params: '{ walletId, bankAccountId, amount, idempotencyKey }', response: '{ transactionId, status: pending }', description: 'Initiate a wallet top-up from a linked bank account. Returns "pending" immediately because bank transfers (ACH/SEPA) settle asynchronously over 1-3 business days. The pending amount is reflected in the balance but not available for spending until settlement confirmation arrives via webhook from the payment processor. The idempotencyKey prevents duplicate top-ups from retried requests.' },
+        { method: 'POST', path: '/api/withdraw', params: '{ walletId, bankAccountId, amount, idempotencyKey }', response: '{ transactionId, status: pending }', description: 'Withdraw funds from the wallet to a linked bank account. The available balance is immediately decreased to prevent overdraft, but the bank transfer settles asynchronously. Withdrawals above a threshold trigger additional KYC/AML verification and may be held for manual review. The idempotencyKey ensures a withdrawal is only initiated once. Failed withdrawals (e.g., invalid bank account) automatically refund the wallet balance.' },
+        { method: 'GET', path: '/api/wallets/:walletId/balance', params: '', response: '{ available, pending, currency }', description: 'Fetch the current wallet balance split into available (immediately spendable) and pending (in-transit top-ups and unsettled transactions). The balance is read from a strongly consistent data store to prevent stale reads that could allow double-spending. This endpoint is called on every app launch and before payment initiation. Response is not cached to ensure real-time accuracy for financial operations.' },
+        { method: 'GET', path: '/api/wallets/:walletId/transactions', params: 'type, startDate, endDate, cursor', response: '{ transactions[], nextCursor }', description: 'Fetch paginated transaction history for a wallet, filterable by type (transfer, topup, withdrawal, purchase) and date range. Transactions are returned in reverse chronological order with details including counterparty, amount, status (completed, pending, failed), and descriptive note. Cursor-based pagination ensures stable results as new transactions arrive. This data is served from a read replica to avoid impacting transactional throughput.' }
       ]
     },
 
@@ -2185,7 +2535,54 @@ linked_accounts {
   account_number_encrypted: bytea
   verified: boolean
   created_at: timestamp
+}`,
+        examples: [
+          {
+            table: 'transactions',
+            label: 'Completed P2P transfer with idempotency key',
+            json: `{
+  "id": "tx-7a8b9c0d-1e2f-4a3b-5c6d-7e8f9a0b1c2d",
+  "type": "p2p_transfer",
+  "status": "completed",
+  "amount": 42.50,
+  "currency": "USD",
+  "from_wallet_id": 88201937,
+  "to_wallet_id": 55102938,
+  "external_ref": null,
+  "idempotency_key": "idem-client-a1b2c3d4e5f6",
+  "note": "Dinner last night - your share",
+  "created_at": "2026-04-19T20:15:33Z",
+  "completed_at": "2026-04-19T20:15:33Z"
 }`
+          },
+          {
+            table: 'ledger_entries',
+            label: 'Debit entry for sender in double-entry ledger',
+            json: `{
+  "id": 9920184756,
+  "transaction_id": "tx-7a8b9c0d-1e2f-4a3b-5c6d-7e8f9a0b1c2d",
+  "wallet_id": 88201937,
+  "entry_type": "debit",
+  "amount": 42.50,
+  "balance_after": 157.50,
+  "created_at": "2026-04-19T20:15:33Z"
+}`
+          },
+          {
+            table: 'wallets',
+            label: 'Active wallet with daily limit',
+            json: `{
+  "id": 88201937,
+  "user_id": 440291,
+  "balance": 157.50,
+  "pending_balance": 250.00,
+  "currency": "USD",
+  "status": "active",
+  "daily_limit": 2500.00,
+  "created_at": "2025-01-22T14:30:00Z"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
@@ -2409,11 +2806,11 @@ Key constraints include regulatory requirements for fairness (orders must be pro
     apiDesign: {
       description: 'FIX protocol for institutional trading, REST/WebSocket for retail',
       endpoints: [
-        { method: 'POST', path: '/api/orders', params: '{ symbol, side: buy|sell, type: limit|market, quantity, price?, timeInForce }', response: '{ orderId, status, timestamp }' },
-        { method: 'DELETE', path: '/api/orders/:orderId', params: '', response: '{ status: cancelled, remainingQty }' },
-        { method: 'GET', path: '/api/orderbook/:symbol', params: 'depth=20', response: '{ bids[{price, qty}], asks[{price, qty}], lastPrice }' },
-        { method: 'WS', path: '/ws/marketdata', params: 'symbols[]', response: 'Stream: { symbol, lastPrice, bidPrice, askPrice, volume, trades[] }' },
-        { method: 'GET', path: '/api/trades', params: 'symbol, startTime, endTime, cursor', response: '{ trades[], nextCursor }' }
+        { method: 'POST', path: '/api/orders', params: '{ symbol, side: buy|sell, type: limit|market, quantity, price?, timeInForce }', response: '{ orderId, status, timestamp }', description: 'Submit a new order to the matching engine. Market orders execute immediately at the best available price; limit orders are placed in the order book at the specified price. The timeInForce parameter controls order lifetime: GTC (good-til-cancelled), IOC (immediate-or-cancel), FOK (fill-or-kill). Orders are validated for sufficient margin/balance before acceptance. The matching engine processes orders with sub-millisecond latency using an in-memory order book.' },
+        { method: 'DELETE', path: '/api/orders/:orderId', params: '', response: '{ status: cancelled, remainingQty }', description: 'Cancel an open order. Only the unfilled portion of a partially filled order can be cancelled -- the already-executed portion remains settled. The cancellation must reach the matching engine before the next fill occurs, so the response indicates the actual remainingQty at cancellation time. Cancel requests are prioritized in the matching engine queue to minimize the window for unwanted fills.' },
+        { method: 'GET', path: '/api/orderbook/:symbol', params: 'depth=20', response: '{ bids[{price, qty}], asks[{price, qty}], lastPrice }', description: 'Fetch a snapshot of the order book for a symbol at a given depth (number of price levels). Bids are sorted descending by price, asks ascending. The lastPrice reflects the most recent trade. This endpoint returns an aggregate view -- individual orders at the same price level are summed into total quantity. The snapshot is generated from an in-memory order book replica and served with minimal latency for algorithmic trading clients.' },
+        { method: 'WS', path: '/ws/marketdata', params: 'symbols[]', response: 'Stream: { symbol, lastPrice, bidPrice, askPrice, volume, trades[] }', description: 'Subscribe to real-time market data for one or more symbols. The server streams tick-by-tick updates including last trade price, best bid/ask (top of book), cumulative volume, and individual trade executions. Updates are pushed with microsecond timestamps for ordering. The feed uses binary encoding (e.g., Protocol Buffers) to minimize serialization overhead. Clients can subscribe to up to 100 symbols per connection.' },
+        { method: 'GET', path: '/api/trades', params: 'symbol, startTime, endTime, cursor', response: '{ trades[], nextCursor }', description: 'Query historical trade data for a symbol within a time range. Each trade record includes price, quantity, buyer/seller order IDs, and execution timestamp. This endpoint is used for charting, backtesting trading strategies, and regulatory audit trails. Data is served from a time-series database (e.g., TimescaleDB) optimized for range queries. Results are cursor-paginated since popular symbols can have millions of trades per day.' }
       ]
     },
 
@@ -2460,7 +2857,51 @@ order_events {
   event_type: enum(submitted, accepted, partially_filled, filled, cancelled, rejected)
   details: jsonb
   timestamp: timestamp (nanosecond precision)
+}`,
+        examples: [
+          {
+            table: 'orders',
+            label: 'Partially filled limit buy order',
+            json: `{
+  "id": 1840291038475,
+  "symbol": "AAPL",
+  "broker_id": 4021,
+  "side": "buy",
+  "type": "limit",
+  "price": 198.5000,
+  "quantity": 500,
+  "filled_quantity": 320,
+  "status": "partially_filled",
+  "time_in_force": "day",
+  "submitted_at": "2026-04-19T14:30:00.482917382Z",
+  "sequence_number": 8829104738291
 }`
+          },
+          {
+            table: 'trades',
+            label: 'Executed trade matching buy and sell',
+            json: `{
+  "id": 7291048362019,
+  "symbol": "AAPL",
+  "buy_order_id": 1840291038475,
+  "sell_order_id": 1840291038102,
+  "price": 198.5000,
+  "quantity": 200,
+  "executed_at": "2026-04-19T14:30:00.482921047Z"
+}`
+          },
+          {
+            table: 'order_events',
+            label: 'Audit log entry for partial fill',
+            json: `{
+  "sequence_id": 99201847382,
+  "order_id": 1840291038475,
+  "event_type": "partially_filled",
+  "details": {"fill_qty": 200, "fill_price": 198.5000, "trade_id": 7291048362019, "remaining_qty": 180},
+  "timestamp": "2026-04-19T14:30:00.482921047Z"
+}`
+          }
+        ]
     },
 
     basicImplementation: {
