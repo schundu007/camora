@@ -183,11 +183,11 @@ export function App() {
           <Route path="/premium" element={<PricingPage />} />
           <Route path="/download" element={<DownloadPage />} />
 
-          {/* ── Jobs: Apply (listing free, prep requires subscription) ── */}
+          {/* ── Jobs: Apply ──────────────────────────────── */}
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
-          <Route path="/jobs/:id/prepare" element={<PaidShellRoute feature="Job Prep Plan"><JobPrepPage /></PaidShellRoute>} />
+          <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
-          {/* ── Lumora: Live Interview (PAID — requires subscription) ── */}
+          {/* ── Lumora: Live Interview (PAID — the key premium product) ── */}
           <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
@@ -196,28 +196,28 @@ export function App() {
 
           {/* ── Also accessible via /app paths (PAID) ──────────── */}
           <Route path="/app" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/app/coding" element={<PaidRoute feature="Live Coding"><LumoraShellPage /></PaidRoute>} />
-          <Route path="/app/design" element={<PaidRoute feature="Live Design"><LumoraShellPage /></PaidRoute>} />
+          <Route path="/app/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/app/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
-          {/* ── Capra: Preparation (PAID — subscription required) ─────────────────────── */}
-          <Route path="/capra" element={<PaidShellRoute feature="Interview Dashboard"><CapraDashboard /></PaidShellRoute>} />
-          <Route path="/capra/coding" element={<PaidShellRoute feature="Coding Practice"><CapraDashboard /></PaidShellRoute>} />
-          <Route path="/capra/design" element={<PaidShellRoute feature="System Design"><CapraDashboard /></PaidShellRoute>} />
-          <Route path="/capra/prep" element={<PaidShellRoute feature="Interview Prep"><CapraDashboard /></PaidShellRoute>} />
-          <Route path="/capra/practice" element={<PaidShellRoute feature="Practice Problems"><CapraPractice /></PaidShellRoute>} />
-          <Route path="/capra/prepare/*" element={<PaidShellRoute feature="Study Materials"><CapraPrepare /></PaidShellRoute>} />
-          <Route path="/capra/plan" element={<PaidShellRoute feature="Interview Planning"><PrepPlanPage /></PaidShellRoute>} />
+          {/* ── Capra: Preparation (FREE to browse, backend limits solves) ── */}
+          <Route path="/capra" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/coding" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/design" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/prep" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
+          <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
+          <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
 
-          {/* ── Also accessible via old Capra paths (PAID) ────── */}
-          <Route path="/prepare/*" element={<PaidShellRoute feature="Study Materials"><CapraPrepare /></PaidShellRoute>} />
-          <Route path="/practice" element={<PaidShellRoute feature="Practice Problems"><CapraPractice /></PaidShellRoute>} />
-          <Route path="/handbook" element={<PaidShellRoute feature="Blind 75"><Blind75Page /></PaidShellRoute>} />
-          <Route path="/handbook/:id/practice" element={<PaidShellRoute feature="Blind 75 Practice"><Blind75PracticePage /></PaidShellRoute>} />
-          <Route path="/handbook/:id/solution" element={<PaidShellRoute feature="Blind 75 Solutions"><Blind75PracticePage /></PaidShellRoute>} />
-          <Route path="/problems/:slug" element={<PaidShellRoute feature="Problem Details"><CapraDashboard /></PaidShellRoute>} />
+          {/* ── Also accessible via old Capra paths ────── */}
+          <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
+          <Route path="/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
+          <Route path="/handbook" element={<ShellRoute><Blind75Page /></ShellRoute>} />
+          <Route path="/handbook/:id/practice" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
+          <Route path="/handbook/:id/solution" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
+          <Route path="/problems/:slug" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 
           {/* ── Referral ────────────────────────────── */}
@@ -232,8 +232,8 @@ export function App() {
           {/* ── Profile ──────────────────────────────── */}
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
-          {/* ── Analytics (PAID) ─────────────────────────────── */}
-          <Route path="/analytics" element={<PaidShellRoute feature="Analytics Dashboard"><AnalyticsPage /></PaidShellRoute>} />
+          {/* ── Analytics ─────────────────────────────── */}
+          <Route path="/analytics" element={<ShellRoute><AnalyticsPage /></ShellRoute>} />
 
           {/* ── Company Interview Questions ─────────────── */}
           <Route path="/interview-questions/:company" element={<InterviewQuestionsPage />} />
