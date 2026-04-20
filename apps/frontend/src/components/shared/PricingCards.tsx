@@ -220,48 +220,47 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
         })}
       </div>
 
-      {/* ── Desktop Download ── */}
-      <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)', color: 'var(--accent)' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe. Included in Winter Lover, Blizzard, Avalanche+ plans.</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => {
-              const pid = prices?.desktop_lifetime?.priceId || '';
-              if (pid) checkout(pid, 'Desktop Lifetime');
-              else navigate('/pricing');
-            }}
-            disabled={loading === 'Desktop Lifetime'}
-            className="px-3 py-1.5 text-[10px] font-semibold rounded-lg" style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-          >
-            Buy $99 Lifetime
-          </button>
-          <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-white text-[10px] font-semibold rounded-lg" style={{ background: 'var(--accent)' }}>
-            Download
-          </a>
-        </div>
-      </div>
-
-      {/* ── Top-Up Packs ── */}
+      {/* ── Desktop + Top-Ups — single row ── */}
       <div>
-        <h3 className="text-[10px] font-bold uppercase tracking-wider text-center mb-3" style={{ color: 'var(--text-muted)' }}>Top-Up Packs — for subscribers who exhaust monthly quota</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-center mb-3" style={{ color: 'var(--text-muted)' }}>Add-ons & Top-Ups</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Desktop App */}
+          <div className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)', color: 'var(--accent)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-semibold block" style={{ color: 'var(--text-primary)' }}>Desktop App</span>
+                <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <span className="text-sm font-bold" style={{ color: 'var(--accent)' }}>$99</span>
+              <button
+                onClick={() => {
+                  const pid = prices?.desktop_lifetime?.priceId || '';
+                  if (pid) checkout(pid, 'Desktop Lifetime');
+                  else navigate('/pricing');
+                }}
+                disabled={loading === 'Desktop Lifetime'}
+                className="px-2.5 py-1 text-white text-[9px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
+              >
+                {loading === 'Desktop Lifetime' ? '...' : 'Buy'}
+              </button>
+            </div>
+          </div>
+
+          {/* Top-Up Packs */}
           {TOPUPS.map(pack => {
             const pid = prices?.[pack.priceKey]?.priceId || '';
             return (
               <div key={pack.priceKey} className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <div>
-                  <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
-                  <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-semibold block" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
+                  <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
                   <span className="text-sm font-bold" style={{ color: 'var(--accent)' }}>{pack.price}</span>
                   <button
                     onClick={() => pid ? checkout(pid, pack.name) : navigate('/pricing')}
