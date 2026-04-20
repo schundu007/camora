@@ -946,8 +946,9 @@ export default function JobsPage() {
           className="sticky z-30"
           style={{
             top: 'var(--nav-h, 56px)',
-            background: 'var(--bg-surface)',
+            background: 'var(--bg-app)',
             borderBottom: '1px solid var(--border)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
           }}
         >
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
