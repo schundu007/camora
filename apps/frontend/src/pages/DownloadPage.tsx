@@ -295,7 +295,7 @@ export default function DownloadPage() {
       const mapped: Record<string, { priceId: string }> = {};
       for (const p of (data.plans || data || [])) {
         if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'monthly_pro') mapped.monthly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
         if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
         if (p.id === 'desktop_monthly') mapped.desktop_monthly = { priceId: p.stripe_price_id || p.priceId || '' };
         if (p.id === 'desktop_annual') mapped.desktop_annual = { priceId: p.stripe_price_id || p.priceId || '' };
@@ -311,7 +311,7 @@ export default function DownloadPage() {
     handleStripeCheckout(prices?.desktop_annual?.priceId || '', setAnnualLoading);
 
   const handleProCheckout = () =>
-    handleStripeCheckout(prices?.quarterly_pro?.priceId || '', setProLoading);
+    handleStripeCheckout(prices?.monthly_pro?.priceId || '', setProLoading);
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';

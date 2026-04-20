@@ -27,7 +27,7 @@ export async function subscriptionRequired(req, res, next) {
 
     // Check if user has active paid subscription OR active trial
     const isPaidPlan = subscription?.plan_type === 'monthly' ||
-                       subscription?.plan_type === 'quarterly_pro';
+                       subscription?.plan_type === 'quarterly_pro' || subscription?.plan_type === 'monthly_pro';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
@@ -76,7 +76,7 @@ export async function checkSubscription(req, res, next) {
 
     const subscription = result.rows[0];
     const isPaidPlan = subscription?.plan_type === 'monthly' ||
-                       subscription?.plan_type === 'quarterly_pro';
+                       subscription?.plan_type === 'quarterly_pro' || subscription?.plan_type === 'monthly_pro';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
