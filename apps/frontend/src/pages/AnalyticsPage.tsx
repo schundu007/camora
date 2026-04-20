@@ -185,7 +185,7 @@ export default function AnalyticsPage() {
 
   // Helper: determine user's effective plan category
   function getUserPlanCategory(u: User) {
-    const isPaid = u.sub_plan === 'monthly' || u.sub_plan === 'quarterly_pro';
+    const isPaid = u.sub_plan === 'monthly' || u.sub_plan === 'monthly_pro' || u.sub_plan === 'quarterly_pro';
     if (isPaid) return 'paid';
     if (u.is_challenger) return 'challenger';
     if (u.trial_ends_at && new Date(u.trial_ends_at) > new Date()) return 'trial';

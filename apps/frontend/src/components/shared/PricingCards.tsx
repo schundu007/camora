@@ -60,7 +60,7 @@ export const PLANS = [
     ],
     cta: 'Upgrade',
     popular: true,
-    priceKey: 'quarterly_pro',
+    priceKey: 'monthly_pro',
   },
   {
     name: 'Avalanche Maker',
@@ -91,9 +91,10 @@ export function usePlanPrices() {
       .then(data => {
         const mapped: Record<string, { priceId: string }> = {};
         for (const p of (data.plans || data || [])) {
-          if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
+          if (p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
+          if (p.id === 'monthly_pro') mapped.monthly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
+          if (p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
+          if (p.id === 'lifetime') mapped.lifetime = { priceId: p.stripe_price_id || p.priceId || '' };
         }
         setPrices(mapped);
       })

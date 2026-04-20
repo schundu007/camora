@@ -68,15 +68,15 @@ router.get('/prices', (_req, res) => {
         name: 'Starter',
         price: 2900,
         interval: 'month',
-        stripe_price_id: process.env.STRIPE_PRICE_MONTHLY || null,
+        stripe_price_id: process.env.STRIPE_PRICE_STARTER || process.env.STRIPE_PRICE_MONTHLY || null,
         features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations', 'Coding solutions'],
       },
       {
-        id: 'quarterly_pro',
+        id: 'monthly_pro',
         name: 'Pro',
         price: 4900,
         interval: 'month',
-        stripe_price_id: process.env.STRIPE_PRICE_QUARTERLY_PRO || null,
+        stripe_price_id: process.env.STRIPE_PRICE_MONTHLY || null,
         features: ['Everything in Starter', 'Unlimited live sessions', 'Company-specific prep', 'Desktop + Mobile app'],
       },
       {
@@ -84,26 +84,16 @@ router.get('/prices', (_req, res) => {
         name: 'Annual',
         price: 22800,
         interval: 'year',
-        stripe_price_id: process.env.STRIPE_PRICE_ANNUAL || null,
+        stripe_price_id: process.env.STRIPE_PRICE_YEARLY || null,
         features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'],
       },
       {
-        id: 'desktop_monthly',
-        name: 'Desktop App (Monthly)',
-        price: 2900,
-        interval: 'month',
-        addon: true,
-        stripe_price_id: process.env.STRIPE_PRICE_DESKTOP_MONTHLY || null,
-        features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance'],
-      },
-      {
-        id: 'desktop_annual',
-        name: 'Desktop App (Annual)',
+        id: 'lifetime',
+        name: '8-Pack',
         price: 9900,
-        interval: 'year',
-        addon: true,
-        stripe_price_id: process.env.STRIPE_PRICE_DESKTOP_ANNUAL || process.env.STRIPE_PRICE_DESKTOP || null,
-        features: ['Native macOS & Windows', 'Screen-share safe', '$99/year'],
+        interval: null,
+        stripe_price_id: process.env.STRIPE_PRICE_LIFETIME || null,
+        features: ['8 sessions (90 min each)', 'Never expires', 'All features included'],
       },
     ],
   });
@@ -131,13 +121,9 @@ router.post('/checkout', authenticate, async (req, res) => {
 
   const validPrices = [
     process.env.STRIPE_PRICE_MONTHLY,
-    process.env.STRIPE_PRICE_QUARTERLY_PRO,
-    process.env.STRIPE_PRICE_ANNUAL,
-    process.env.STRIPE_PRICE_DESKTOP_MONTHLY,
-    process.env.STRIPE_PRICE_DESKTOP_ANNUAL,
-    process.env.STRIPE_PRICE_DESKTOP,
-    PRICE_MONTHLY(),
-    PRICE_LIFETIME(),
+    process.env.STRIPE_PRICE_STARTER,
+    process.env.STRIPE_PRICE_YEARLY,
+    process.env.STRIPE_PRICE_LIFETIME,
   ].filter(Boolean);
   if (!validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
