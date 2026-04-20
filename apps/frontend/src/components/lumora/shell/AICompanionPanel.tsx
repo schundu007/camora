@@ -6,9 +6,9 @@ import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices
 
 /* White glass copilot — dark text */
 const C = {
-  base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: '#2D8CFF',
-  text: '#0F172A', muted: '#64748B', accent: '#2D8CFF',
-  accentBg: 'rgba(45,140,255,0.08)', border: 'rgba(0,0,0,0.15)',
+  base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: '#22D3EE',
+  text: '#0F172A', muted: '#64748B', accent: '#22D3EE',
+  accentBg: 'rgba(34,211,238,0.08)', border: 'rgba(0,0,0,0.15)',
 };
 
 /* ── Types ── */
@@ -97,7 +97,7 @@ function RichText({ text }: { text: string }) {
     return s
       .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
       .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);color:#0E7490;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid rgba(0,0,0,0.08)">$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#2D8CFF;text-decoration:underline">$1</a>');
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#22D3EE;text-decoration:underline">$1</a>');
   };
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
@@ -363,7 +363,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: '#2D8CFF', boxShadow: 'none' }}
+        style={{ background: '#22D3EE', boxShadow: 'none' }}
         title="Open Icicle"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
@@ -454,7 +454,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
-                  background: answerMode === mode ? '#2D8CFF' : 'transparent',
+                  background: answerMode === mode ? '#22D3EE' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -530,7 +530,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Satoshi', sans-serif", color: '#0F172A', fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#2D8CFF' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#22D3EE' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -542,7 +542,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#2D8CFF' }} title="Icicle">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#22D3EE' }} title="Icicle">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}
     </button>

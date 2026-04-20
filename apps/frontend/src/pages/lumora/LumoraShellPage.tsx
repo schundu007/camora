@@ -152,7 +152,7 @@ export function LumoraShellPage() {
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
-          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(45,140,255,0.08)', borderBottom: '1px solid rgba(45,140,255,0.15)' }}>
+          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(34,211,238,0.08)', borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
               <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
@@ -237,7 +237,7 @@ export function LumoraShellPage() {
 
       {/* Mobile bottom navigation — visible only on small screens */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 z-40 items-center justify-around"
-        style={{ background: '#2D8CFF', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+        style={{ background: '#22D3EE', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },

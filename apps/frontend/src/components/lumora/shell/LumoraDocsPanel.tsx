@@ -40,15 +40,15 @@ const INITIAL_STATE: PrepData = {
 };
 
 const SIDEBAR_SECTIONS = [
-  { id: 'input', label: 'Input Materials', color: '#2D8CFF' },
-  { id: 'jd-view', label: 'Job Description', color: '#2D8CFF' },
+  { id: 'input', label: 'Input Materials', color: '#22D3EE' },
+  { id: 'jd-view', label: 'Job Description', color: '#22D3EE' },
   { id: 'pitch', label: 'Elevator Pitch', color: '#ec4899' },
   { id: 'hr', label: 'HR Questions', color: '#f59e0b' },
   { id: 'hiring-manager', label: 'Hiring Manager', color: '#06b6d4' },
-  { id: 'coding', label: 'Coding', color: '#2D8CFF' },
-  { id: 'system-design', label: 'System Design', color: '#2D8CFF' },
-  { id: 'behavioral', label: 'Behavioral', color: '#2D8CFF' },
-  { id: 'techstack', label: 'Tech Stack', color: '#2D8CFF' },
+  { id: 'coding', label: 'Coding', color: '#22D3EE' },
+  { id: 'system-design', label: 'System Design', color: '#22D3EE' },
+  { id: 'behavioral', label: 'Behavioral', color: '#22D3EE' },
+  { id: 'techstack', label: 'Tech Stack', color: '#22D3EE' },
 ];
 
 /** Store prep content as JSON string for rich rendering */
@@ -73,8 +73,8 @@ function PrepContentRenderer({ content }: { content: string }) {
     <div className="space-y-4">
       {/* Summary */}
       {data.summary && (
-        <div className="rounded-lg p-4" style={{ background: '#2D8CFF08', border: '1px solid #e2e8f0' }}>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#2D8CFF' }}>Summary</div>
+        <div className="rounded-lg p-4" style={{ background: '#22D3EE08', border: '1px solid #e2e8f0' }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#22D3EE' }}>Summary</div>
           <p className="text-sm leading-relaxed" style={{ color: '#0f172a' }}>{data.summary}</p>
         </div>
       )}
@@ -87,7 +87,7 @@ function PrepContentRenderer({ content }: { content: string }) {
               <div className="px-4 py-2 flex items-center justify-between" style={{ background: '#f1f5f9' }}>
                 <span className="text-xs font-bold" style={{ color: '#0f172a' }}>{s.title}</span>
                 <div className="flex gap-2">
-                  {s.duration && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#2D8CFF08', color: '#2D8CFF' }}>{s.duration}</span>}
+                  {s.duration && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#22D3EE08', color: '#22D3EE' }}>{s.duration}</span>}
                   {s.context && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>{s.context}</span>}
                 </div>
               </div>
@@ -120,7 +120,7 @@ function PrepContentRenderer({ content }: { content: string }) {
           {data.questions.map((q: any, i: number) => (
             <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
               <div className="px-4 py-2 flex items-center gap-2" style={{ background: '#f1f5f9' }}>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#2D8CFF08', color: '#2D8CFF' }}>Q{i + 1}</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#22D3EE08', color: '#22D3EE' }}>Q{i + 1}</span>
                 <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>{q.question || q.title || q.text}</span>
               </div>
               <div className="px-4 py-3">
@@ -137,7 +137,7 @@ function PrepContentRenderer({ content }: { content: string }) {
       {/* Tech Stack */}
       {data.techStack && Array.isArray(data.techStack) && (
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#2D8CFF' }}>Tech Stack ({data.techStack.length})</div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#22D3EE' }}>Tech Stack ({data.techStack.length})</div>
           <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid #e2e8f0' }}>
             <table className="w-full text-xs">
               <thead><tr style={{ background: '#f1f5f9' }}>
@@ -148,7 +148,7 @@ function PrepContentRenderer({ content }: { content: string }) {
               </tr></thead>
               <tbody>{data.techStack.map((t: any, i: number) => (
                 <tr key={i} style={{ borderTop: '1px solid #e2e8f0' }}>
-                  <td className="px-3 py-2 font-semibold" style={{ color: '#2D8CFF' }}>{t.technology || t.name}</td>
+                  <td className="px-3 py-2 font-semibold" style={{ color: '#22D3EE' }}>{t.technology || t.name}</td>
                   <td className="px-3 py-2" style={{ color: '#94a3b8' }}>{t.category}</td>
                   <td className="px-3 py-2" style={{ color: '#475569' }}>{t.experience}</td>
                   <td className="px-3 py-2" style={{ color: '#475569' }}>{t.relevance}</td>
@@ -160,9 +160,9 @@ function PrepContentRenderer({ content }: { content: string }) {
       )}
 
       {/* Key Points */}
-      {data.keyPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#2D8CFF' }}>Key Points</div>
+      {data.keyPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#22D3EE' }}>Key Points</div>
         <ul className="space-y-1">{(Array.isArray(data.keyPoints) ? data.keyPoints : [data.keyPoints]).map((p: string, i: number) => (
-          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: '#475569' }}><span style={{ color: '#2D8CFF' }}>•</span>{p}</li>
+          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: '#475569' }}><span style={{ color: '#22D3EE' }}>•</span>{p}</li>
         ))}</ul></div>)}
 
       {/* Tips */}
@@ -182,14 +182,14 @@ function PrepContentRenderer({ content }: { content: string }) {
         ))}</div></div>)}
 
       {/* Talking Points */}
-      {data.talkingPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#2D8CFF' }}>Talking Points</div>
+      {data.talkingPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#22D3EE' }}>Talking Points</div>
         <ul className="space-y-1">{(Array.isArray(data.talkingPoints) ? data.talkingPoints : [data.talkingPoints]).map((p: string, i: number) => (
           <li key={i} className="text-sm" style={{ color: '#475569' }}>• {p}</li>
         ))}</ul></div>)}
 
       {/* Delivery Tips */}
-      {data.deliveryTips && (<div className="rounded-lg p-3" style={{ background: 'rgba(45,140,255,0.06)', border: '1px solid rgba(45,140,255,0.15)' }}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#2D8CFF' }}>Delivery Tips</div>
+      {data.deliveryTips && (<div className="rounded-lg p-3" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.15)' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#22D3EE' }}>Delivery Tips</div>
         <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{Array.isArray(data.deliveryTips) ? data.deliveryTips.join(' ') : data.deliveryTips}</p>
       </div>)}
     </div>
@@ -218,8 +218,8 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
 
   return (
     <div
-      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[#2D8CFF]' : ''}`}
-      style={{ background: value ? '#2D8CFF08' : '#f8fafc', border: `1px solid ${value ? '#2D8CFF' : '#e2e8f0'}` }}
+      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[#22D3EE]' : ''}`}
+      style={{ background: value ? '#22D3EE08' : '#f8fafc', border: `1px solid ${value ? '#22D3EE' : '#e2e8f0'}` }}
       onClick={() => ref.current?.click()}
       onDrop={handleDrop}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -229,10 +229,10 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ''; }} />
       {value ? (
         <>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: '#2D8CFF', color: '#fff' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: '#22D3EE', color: '#fff' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <span className="text-xs font-semibold" style={{ color: '#2D8CFF' }}>{fileName || 'Content added'}</span>
+          <span className="text-xs font-semibold" style={{ color: '#22D3EE' }}>{fileName || 'Content added'}</span>
           <span className="text-[10px] mt-1" style={{ color: '#94a3b8' }}>{value.length.toLocaleString()} characters</span>
         </>
       ) : (
@@ -301,8 +301,8 @@ function FormattedJD({ text }: { text: string }) {
       {sections.map((sec, i) => (
         <div key={i} className="rounded-xl overflow-hidden" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
           {sec.title && (
-            <div className="px-4 py-2.5" style={{ background: '#2D8CFF08', borderBottom: '1px solid #e2e8f0' }}>
-              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#2D8CFF' }}>{sec.title}</h4>
+            <div className="px-4 py-2.5" style={{ background: '#22D3EE08', borderBottom: '1px solid #e2e8f0' }}>
+              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#22D3EE' }}>{sec.title}</h4>
             </div>
           )}
           <div className="px-4 py-3 flex flex-col gap-1.5">
@@ -313,7 +313,7 @@ function FormattedJD({ text }: { text: string }) {
               }
               return (
                 <div key={j} className="flex gap-2 items-start">
-                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#2D8CFF' }} />
+                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#22D3EE' }} />
                   <span className="text-[13px] leading-relaxed" style={{ color: '#475569' }}>{item}</span>
                 </div>
               );
@@ -552,7 +552,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                     {prepData.companies.map(c => (
                       <button key={c} onClick={() => switchCompany(c)}
                         className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors"
-                        style={{ color: c === prepData.activeCompany ? '#2D8CFF' : '#475569', background: c === prepData.activeCompany ? '#2D8CFF08' : 'transparent' }}>
+                        style={{ color: c === prepData.activeCompany ? '#22D3EE' : '#475569', background: c === prepData.activeCompany ? '#22D3EE08' : 'transparent' }}>
                         <span className="truncate">{c}</span>
                         {prepData.companies.length > 1 && (
                           <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
@@ -563,7 +563,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                       </button>
                     ))}
                     <button onClick={() => { setShowDropdown(false); setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-                      className="w-full px-3 py-2 text-xs font-medium text-left" style={{ color: '#2D8CFF', borderTop: '1px solid #e2e8f0' }}>
+                      className="w-full px-3 py-2 text-xs font-medium text-left" style={{ color: '#22D3EE', borderTop: '1px solid #e2e8f0' }}>
                       + Add Company
                     </button>
                   </div>
@@ -577,13 +577,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
                 style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#0f172a' }} />
               <div className="flex gap-1.5">
-                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: '#2D8CFF', color: '#fff' }}>Create</button>
+                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: '#22D3EE', color: '#fff' }}>Create</button>
                 <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: '#94a3b8' }}>Cancel</button>
               </div>
             </div>
           ) : (
             <button onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: '#2D8CFF', color: '#fff' }}>
+              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: '#22D3EE', color: '#fff' }}>
               + Add Company
             </button>
           )}
@@ -596,9 +596,9 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <button key={s.id} onClick={() => setActiveSection(s.id)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
-                  background: isActive ? '#2D8CFF08' : 'transparent',
-                  color: isActive ? '#2D8CFF' : '#475569',
-                  borderLeft: isActive ? `3px solid #2D8CFF` : '3px solid transparent',
+                  background: isActive ? '#22D3EE08' : 'transparent',
+                  color: isActive ? '#22D3EE' : '#475569',
+                  borderLeft: isActive ? `3px solid #22D3EE` : '3px solid transparent',
                 }}>
                 {/* Status indicator */}
                 {sectionStatus[s.id] === 'generating' ? (
@@ -627,21 +627,21 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             <div className="mb-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[9px] font-medium" style={{ color: '#94a3b8' }}>{genProgress}</span>
-                <span className="text-[9px] font-bold" style={{ color: '#2D8CFF' }}>
+                <span className="text-[9px] font-bold" style={{ color: '#22D3EE' }}>
                   {Object.values(sectionStatus).filter(s => s === 'done').length}/{GENERATE_SECTIONS.length}
                 </span>
               </div>
               <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#f1f5f9' }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{
                   width: `${(Object.values(sectionStatus).filter(s => s === 'done').length / GENERATE_SECTIONS.length) * 100}%`,
-                  background: '#2D8CFF',
+                  background: '#22D3EE',
                 }} />
               </div>
             </div>
           )}
           <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: '#2D8CFF', color: '#fff' }}>
+            style={{ background: '#22D3EE', color: '#fff' }}>
             {generating ? 'Generating...' : `Generate (${GENERATE_SECTIONS.length})`}
           </button>
           {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: '#94a3b8' }}>Add JD & Resume to start</p>}
@@ -657,7 +657,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             {/* Materials */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: '#2D8CFF' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: '#22D3EE' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#475569' }}>Materials</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -679,7 +679,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             {/* Study Materials */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: '#2D8CFF' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: '#22D3EE' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#475569' }}>Study Materials</span>
               </div>
               <UploadZone label="Drop files or click" value={state.studyMaterials} fileName={state.studyMaterialsFile}
@@ -699,7 +699,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           <div className="flex-1 flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
               <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>Job Description</h3>
-              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: '#2D8CFF', background: '#2D8CFF08' }}>Edit</button>
+              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: '#22D3EE', background: '#22D3EE08' }}>Edit</button>
             </div>
             <div className="flex-1 overflow-auto p-6">
               <FormattedJD text={state.jd} />
@@ -714,7 +714,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               </h3>
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#2D8CFF08', color: '#2D8CFF' }}>Generated</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#22D3EE08', color: '#22D3EE' }}>Generated</span>
                 )}
                 {hasRequiredDocs && (
                   <button
@@ -735,14 +735,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             <div className="flex-1 overflow-auto p-6">
               {sectionStatus[activeSection] === 'generating' ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#2D8CFF08', border: '1px solid #e2e8f0' }}>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: '#2D8CFF' }} />
-                    <span className="text-xs font-medium" style={{ color: '#2D8CFF' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#22D3EE08', border: '1px solid #e2e8f0' }}>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: '#22D3EE' }} />
+                    <span className="text-xs font-medium" style={{ color: '#22D3EE' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
                   </div>
                   {streamingText && (
                     <div className="rounded-lg p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-[70vh]" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569' }}>
                       {streamingText}
-                      <span className="inline-block w-1.5 h-4 bg-[#2D8CFF] animate-pulse ml-0.5" />
+                      <span className="inline-block w-1.5 h-4 bg-[#22D3EE] animate-pulse ml-0.5" />
                     </div>
                   )}
                 </div>
