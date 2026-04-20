@@ -543,7 +543,15 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               </div>
             )}
             {showSolution && (
-              <div className="mt-2">
+              <div className="mt-2 relative group/sol">
+                <button
+                  onClick={() => { navigator.clipboard.writeText(problem.solution); }}
+                  className="absolute top-2 right-2 px-2 py-1 rounded text-[10px] font-semibold opacity-0 group-hover/sol:opacity-100 transition-opacity"
+                  style={{ background: 'var(--accent)', color: '#fff' }}
+                  title="Copy solution"
+                >
+                  Copy
+                </button>
                 <pre
                   className="text-xs text-[var(--accent)] bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.2)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
@@ -559,7 +567,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
         <div className="flex-1 flex flex-col min-w-0">
 
         {/* Code Editor */}
-        <div className="flex-shrink-0 border-b border-slate-200" style={{ height: '45%', minHeight: '180px' }}>
+        <div className="border-b border-slate-200 flex flex-col" style={{ flex: '1 1 45%', minHeight: '180px' }}>
           {/* Editor toolbar */}
           <div className="flex items-center justify-between px-4 py-2 bg-[#1e1e1e] border-b border-slate-700">
             <div className="flex items-center gap-2">
@@ -600,30 +608,32 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               </button>
             </div>
           </div>
-          <Suspense
-            fallback={
-              <div className="h-full bg-[#1e1e1e] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce [animation-delay:0ms]" />
-                    <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce [animation-delay:150ms]" />
-                    <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce [animation-delay:300ms]" />
+          <div className="flex-1 min-h-0">
+            <Suspense
+              fallback={
+                <div className="h-full bg-[#1e1e1e] flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce [animation-delay:0ms]" />
+                      <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce [animation-delay:150ms]" />
+                      <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce [animation-delay:300ms]" />
+                    </div>
+                    <span className="text-slate-500 text-xs">Loading editor...</span>
                   </div>
-                  <span className="text-slate-500 text-xs">Loading editor...</span>
                 </div>
-              </div>
-            }
-          >
-            <SharedCodeEditor
-              language="sql"
-              code={code}
-              onChange={setCode}
-              theme="vs-dark"
-              fontSize={13}
-              height="100%"
-              showLineNumbers
-            />
-          </Suspense>
+              }
+            >
+              <SharedCodeEditor
+                language="sql"
+                code={code}
+                onChange={setCode}
+                theme="vs-dark"
+                fontSize={13}
+                height="100%"
+                showLineNumbers
+              />
+            </Suspense>
+          </div>
         </div>
 
         {/* ── Bottom: Output / Expected ────────────────────────────── */}
