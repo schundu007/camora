@@ -328,7 +328,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-8 flex-wrap">
             {COMPANIES.map((c) => (
               <img key={c} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
-                alt={c} className="h-5 object-contain opacity-70 hover:opacity-100 transition-opacity" loading="lazy"
+                alt={c} className="h-5 object-contain" loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             ))}
           </div>
