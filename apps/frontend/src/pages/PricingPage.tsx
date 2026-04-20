@@ -167,7 +167,7 @@ export default function PricingPage() {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
 
       <SEO title="Pricing" description="Interview prep plans starting free. Monthly, Quarterly Pro, and Desktop Lifetime options." path="/pricing" />
-      <SiteNav />
+      <SiteNav variant="light" />
 
       {/* Header */}
       <section className="pt-24 pb-4 px-6 text-center">
@@ -396,7 +396,7 @@ export default function PricingPage() {
       </section>
 
 
-      <SiteFooter />
+      <SiteFooter variant="light" />
     </div>
   );
 }

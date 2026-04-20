@@ -5,7 +5,7 @@ import SiteNav from '../components/shared/SiteNav';
 export default function NotFoundPage() {
   return (
     <div className="min-h-screen text-gray-100" style={{ background: 'var(--bg-base)' }}>
-      <SiteNav />
+      <SiteNav variant="light" />
 
       {/* Content */}
       <div className="flex flex-col items-center justify-center min-h-screen px-6">

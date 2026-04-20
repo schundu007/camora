@@ -107,7 +107,7 @@ export default function PublicProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg-app)]">
-        <SiteNav />
+        <SiteNav variant="light" />
         <div className="flex items-center justify-center min-h-screen">
           <div className="w-12 h-12 border-4 border-[rgba(45,140,255,0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
@@ -118,7 +118,7 @@ export default function PublicProfilePage() {
   if (notFound || !profile) {
     return (
       <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
-        <SiteNav />
+        <SiteNav variant="light" />
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <CamoraLogo size={48} />
           <h1 className="mt-6 text-2xl font-bold text-[var(--text-primary)] tracking-tight">Profile Not Found</h1>
@@ -132,14 +132,14 @@ export default function PublicProfilePage() {
             Go to Camora
           </Link>
         </div>
-        <SiteFooter />
+        <SiteFooter variant="light" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
-      <SiteNav />
+      <SiteNav variant="light" />
 
       <main className="flex-1 w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 pt-24 pb-16">
         {/* Profile header */}
@@ -302,7 +302,7 @@ export default function PublicProfilePage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <SiteFooter variant="light" />
     </div>
   );
 }
