@@ -6,6 +6,7 @@ import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
@@ -430,104 +431,9 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
   );
 }
 
-/** Pricing cards — fetches price IDs from backend, zero hardcoded Stripe IDs */
-function PricingCards({ navigate, getAuthHeaders }) {
-  const [prices, setPrices] = useState(null);
-  useEffect(() => {
-    const BILLING_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-    fetch(`${BILLING_URL}/api/v1/billing/prices`).then(r => r.json()).then(data => {
-      // Map backend {plans: [{id, stripe_price_id}]} to {monthly: {priceId}}
-      const mapped = {};
-      for (const p of (data.plans || data || [])) {
-        if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
-      }
-      setPrices(mapped);
-    }).catch(() => {});
-  }, []);
-
-  const plans = [
-    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations', 'Coding solutions'], key: 'monthly' },
-    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Company-specific prep', 'Desktop + Mobile app', 'Speaker voice filtering'], popular: true, key: 'quarterly_pro' },
-    { name: 'Annual', price: '$19', period: '/mo', subtitle: 'Billed $228/year', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, key: 'annual' },
-    { name: 'Desktop App', price: '$29', period: '/mo', subtitle: 'Or $99/year', features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance', 'Always-on assistant'], addon: true, key: 'desktop_monthly' },
-  ];
-
-  const [checkoutLoading, setCheckoutLoading] = useState(null);
-  const handleCheckout = async (priceId, planName) => {
-    if (!priceId) {
-      // Price not loaded from backend — go to pricing page as fallback
-      navigate('/pricing');
-      return;
-    }
-    setCheckoutLoading(planName);
-    try {
-      const BILLING_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-      const resp = await fetch(`${BILLING_URL}/api/v1/billing/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ price_id: priceId, success_url: window.location.href, cancel_url: window.location.href }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        console.error('Checkout error:', err);
-        navigate('/pricing');
-        return;
-      }
-      const data = await resp.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        navigate('/pricing');
-      }
-    } catch (e) {
-      console.error('Checkout failed:', e);
-      navigate('/pricing');
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      {plans.map(plan => {
-        const priceId = prices?.[plan.key]?.priceId || '';
-        return (
-          <div key={plan.name} className="rounded-2xl p-5 flex flex-col" style={{
-            border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : plan.addon ? '2px solid #60A5FA' : '1.5px solid var(--border)',
-            background: 'white',
-            boxShadow: plan.popular ? '0 8px 32px rgba(16,185,129,0.15)' : plan.best ? '0 8px 32px rgba(245,158,11,0.15)' : plan.addon ? '0 8px 32px rgba(139,92,246,0.15)' : '0 4px 16px rgba(0,0,0,0.1)',
-          }}>
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
-              {plan.popular && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
-              {plan.best && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
-              {plan.addon && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #60A5FA, #2D8CFF)' }}>Add-on</span>}
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-extrabold text-[var(--text-primary)]">{plan.price}</span>
-              <span className="text-xs text-[var(--text-muted)]">{plan.period}</span>
-            </div>
-            {plan.subtitle && <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plan.subtitle}</p>}
-            <ul className="mt-3 space-y-1.5 flex-1">
-              {plan.features.map(f => (
-                <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]"><span className="text-[var(--accent)] flex-shrink-0 mt-0.5">✓</span>{f}</li>
-              ))}
-            </ul>
-            <button
-              onClick={() => handleCheckout(priceId, plan.name)}
-              disabled={checkoutLoading === plan.name}
-              className={`mt-3 w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all hover:opacity-90 disabled:opacity-50 ${plan.popular || plan.best || plan.addon ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
-              style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #60A5FA, #22D3EE)' } : {}}
-            >
-              {checkoutLoading === plan.name ? 'Loading...' : plan.addon ? 'Add Desktop App' : `Get ${plan.name}`}
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
+/** Pricing cards — uses shared PricingCards component */
+function PricingCards() {
+  return <SharedPricingCards variant="compact" showFree={false} />;
 }
 
 export default function TopicDetail({
@@ -1035,7 +941,7 @@ export default function TopicDetail({
                 <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1 landing-display">Upgrade to unlock all topics</h3>
                 <p className="text-xs text-[var(--text-muted)] landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
               </div>
-              <PricingCards navigate={navigate} getAuthHeaders={getAuthHeaders} activePage={activePage} />
+              <PricingCards />
             </div>
           </div>
         </div>

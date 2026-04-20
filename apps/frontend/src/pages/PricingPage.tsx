@@ -4,86 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
+import SharedPricingCards, { PLANS, usePlanPrices, useCheckout } from '../components/shared/PricingCards';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-const PLANS = [
-  {
-    name: 'Snowballs',
-    price: '$0',
-    period: '',
-    description: 'Play around a bit',
-    features: [
-      '3 live interview sessions',
-      'Browse all 300+ prep topics',
-      'System design, coding, behavioral',
-      'Voice transcription',
-      'No credit card required',
-    ],
-    cta: 'Try Snowballs',
-    ctaHref: '/lumora',
-    popular: false,
-    priceId: null,
-  },
-  {
-    name: 'Frost',
-    price: '$29',
-    period: '/mo',
-    description: 'Start the real deal',
-    features: [
-      'Unlimited prep and practice',
-      '10 live interview sessions/mo',
-      'AI-powered explanations',
-      'Mock interview simulator',
-      'System design diagrams',
-      'Code solutions with complexity',
-      'All programming languages',
-    ],
-    cta: 'Get Frost',
-    ctaHref: '/lumora',
-    popular: false,
-    priceId: '__MONTHLY__',
-  },
-  {
-    name: 'Winter Lover',
-    price: '$49',
-    period: '/mo',
-    description: 'Make your interviewers freeze',
-    features: [
-      'Everything in Frost',
-      'Unlimited live sessions',
-      'Job discovery and matching',
-      'Auto resume and cover letter',
-      'Auto job apply',
-      'Company-specific prep material',
-      'Speaker voice filtering',
-      'Priority AI responses',
-      'Desktop app included',
-      'Mobile app (iOS & Android)',
-    ],
-    cta: 'Upgrade',
-    ctaHref: '/lumora',
-    popular: true,
-    priceId: '__QUARTERLY_PRO__',
-  },
-  {
-    name: 'Avalanche Maker',
-    price: '$19',
-    period: '/mo',
-    description: 'It\'s your sandbox',
-    features: [
-      'Everything in Winter Lover',
-      'Save 61% vs monthly',
-      'Locked-in pricing',
-      'Priority support',
-      'Desktop app add-on: +$29/mo',
-    ],
-    cta: 'Go Avalanche',
-    ctaHref: '/lumora',
-    popular: false,
-    priceId: '__ANNUAL__',
-  },
-];
+// Plans imported from shared PricingCards component
 
 const COMPARISON = [
   { feature: 'Real-time AI during live interview', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
@@ -102,79 +27,10 @@ const COMPARISON = [
 ];
 
 export default function PricingPage() {
-  const { token } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState('');
-
-  const [backendPrices, setBackendPrices] = useState<any>(null);
-  useEffect(() => {
-    fetch(`${API_URL}/api/v1/billing/prices`)
-      .then(r => r.json())
-      .then(data => {
-        // Backend returns { plans: [{ id, stripe_price_id, ... }] }
-        // Map to { monthly: { priceId }, quarterly_pro: { priceId }, ... }
-        const mapped: Record<string, { priceId: string }> = {};
-        for (const p of (data.plans || data || [])) {
-          if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
-          if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
-        }
-        setBackendPrices(mapped);
-      })
-      .catch(err => console.error('Failed to load plans:', err));
-  }, []);
-
-  const plans = PLANS.map(p => ({
-    ...p,
-    priceId: p.priceId === '__MONTHLY__' ? (backendPrices?.monthly?.priceId || '')
-      : p.priceId === '__QUARTERLY_PRO__' ? (backendPrices?.quarterly_pro?.priceId || '')
-      : p.priceId === '__ANNUAL__' ? (backendPrices?.annual?.priceId || '')
-      : p.priceId,
-  }));
-
   useEffect(() => {
     document.title = 'Snow Passes | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
-
-  const handleCheckout = async (plan: typeof PLANS[number]) => {
-    // Free plan — go to prepare dashboard
-    if (!plan.priceId) { navigate('/capra/prepare'); return; }
-    // Not logged in — send to login first
-    if (!token) { navigate('/login'); return; }
-    setLoading(plan.name);
-    try {
-      const resp = await fetch(`${API_URL}/api/v1/billing/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          price_id: plan.priceId,
-          success_url: `${window.location.origin}/lumora?checkout=success`,
-          cancel_url: `${window.location.origin}/pricing`,
-        }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Checkout error:', err);
-        // If billing not configured, redirect to pricing with error
-        if (resp.status === 503 || resp.status === 400) {
-          alert('Payment service temporarily unavailable. Please try again.');
-          setLoading('');
-          return;
-        }
-        console.error('Checkout failed:', err.error || 'Unknown error');
-        setLoading('');
-        return;
-      }
-      const data = await resp.json();
-      if (data.url) window.location.href = data.url;
-      else { alert('Could not create checkout session. Please try again.'); }
-    } catch {
-      alert('Payment service error. Please try again later.');
-    } finally {
-      setLoading('');
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
@@ -191,77 +47,9 @@ export default function PricingPage() {
         <p className="mt-3 text-base" style={{ color: 'var(--text-secondary)' }}>Start free. Upgrade when you're ready.</p>
       </section>
 
-      {/* Plans */}
+      {/* Plans — shared component */}
       <section className="w-full lg:max-w-[85%] mx-auto px-6 pt-14 pb-20">
-        {/* Plans header removed — already in page header above */}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-start">
-          {plans.map((plan) => {
-            const isPro = plan.popular;
-            const isAnnual = plan.name === 'Avalanche Maker';
-            const isFree = plan.name === 'Snowballs';
-            const isStarter = plan.name === 'Frost';
-
-            const accent = isPro
-              ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent)', glow: 'rgba(34,211,238,0.4)', checkColor: '#60A5FA' }
-              : isAnnual
-              ? { from: 'var(--warning)', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
-              : isStarter
-              ? { from: 'var(--accent)', via: 'var(--accent)', to: '#60A5FA', glow: 'rgba(34,211,238,0.15)', checkColor: 'var(--accent)' }
-              : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
-
-            return (
-              <div key={plan.name} className="pricing-card group relative flex flex-col rounded-2xl h-full"
-                style={{
-                  background: '#FFFFFF',
-                  border: (isPro || isAnnual) ? '2px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: (isPro || isAnnual) ? '0 8px 32px rgba(34,211,238,0.2)' : 'var(--shadow-md)',
-                }}>
-                <div className="relative p-7 pb-0 flex flex-col flex-1">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: (isPro || isAnnual) ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
-                    {isPro && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)', color: '#fff' }}>Most Popular</span>}
-                    {isAnnual && <span className="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm" style={{ background: 'linear-gradient(135deg, var(--accent), #0891b2)', color: '#fff' }}>Best Value</span>}
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: '44px', color: 'var(--text-primary)' }}>{plan.price}</span>
-                    {plan.period && <span className="text-base font-medium" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>}
-                  </div>
-                  <p className="mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
-                  <div className="my-5 h-px" style={{ background: 'var(--border)' }} />
-                  <ul className="space-y-3 flex-1 mb-7">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-[13px] leading-snug">
-                        <svg className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 4L6 11L3 8" /></svg>
-                        <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="p-7 pt-0">
-                  <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name}
-                    className="pricing-cta w-full py-3.5 text-sm font-bold rounded-xl cursor-pointer transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={isPro
-                      ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(34,211,238,0.3)' }
-                      : { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
-                    }>
-                    {loading === plan.name ? (
-                      <span className="flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Processing...</span>
-                    ) : (
-                      <>{plan.cta} <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg></>
-                    )}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <style>{`
-          @keyframes borderShimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-          .pricing-card { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease; }
-          .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(34,211,238,0.15), 0 4px 12px rgba(0,0,0,0.06); }
-          .pricing-card:hover .pricing-cta { filter: brightness(1.1); }
-        `}</style>
+        <SharedPricingCards variant="full" />
       </section>
 
       {/* Competitor comparison — CSS Grid */}

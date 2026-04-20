@@ -6,6 +6,7 @@ import CamoraLogo from '../components/shared/CamoraLogo';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
+import SharedPricingCards from '../components/shared/PricingCards';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -270,18 +271,7 @@ export default function JobPrepPage() {
   const { isPaidUser } = useContentAccess();
   const [showPaywall, setShowPaywall] = useState(false);
 
-  const [prices, setPrices] = useState<any>(null);
   useEffect(() => {
-    const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-    fetch(`${API}/api/v1/billing/prices`).then(r => r.json()).then(data => {
-      const mapped: Record<string, { priceId: string }> = {};
-      for (const p of (data.plans || data || [])) {
-        if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
-      }
-      setPrices(mapped);
-    }).catch(() => {});
   }, []);
 
   const [job, setJob] = useState<Job | null>(null);
@@ -1087,55 +1077,8 @@ export default function JobPrepPage() {
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">Upgrade to Generate Prep Material</h3>
               <p className="text-sm text-[var(--text-muted)]">AI-powered interview prep tailored to this specific job</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-              {[
-                { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'], priceId: prices?.monthly?.priceId || '' },
-                { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true, priceId: prices?.quarterly_pro?.priceId || '' },
-                { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: prices?.annual?.priceId || '' },
-              ].map(plan => (
-                <div key={plan.name} className="rounded-2xl p-4 flex flex-col" style={{
-                  border: plan.popular ? '2px solid var(--accent)' : plan.best ? '2px solid var(--warning)' : '1.5px solid var(--border)',
-                  background: 'var(--bg-surface)',
-                }}>
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
-                    {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, var(--accent), #06b6d4)' }}>Popular</span>}
-                    {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, var(--warning), #d97706)' }}>Best Value</span>}
-                  </div>
-                  <div className="mt-1 flex items-baseline gap-0.5">
-                    <span className="text-2xl font-bold text-[var(--text-primary)]">{plan.price}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{plan.period}</span>
-                  </div>
-                  <ul className="mt-3 space-y-1.5 flex-1">
-                    {plan.features.map((f: string) => (
-                      <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]">
-                        <span className="text-[var(--accent)] mt-0.5 flex-shrink-0">✓</span>{f}
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const BILLING_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-                        if (!token) { navigate('/login'); return; }
-                        const resp = await fetch(`${BILLING_URL}/api/v1/billing/checkout`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                          body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.href, cancel_url: window.location.href }),
-                        });
-                        if (!resp.ok) { navigate('/pricing'); return; }
-                        const data = await resp.json();
-                        if (data.url) window.location.href = data.url;
-                        else navigate('/pricing');
-                      } catch { navigate('/pricing'); }
-                    }}
-                    className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-gray-300 hover:border-gray-400'}`}
-                    style={plan.popular ? { background: 'linear-gradient(135deg, var(--accent), #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, var(--warning), #d97706)' } : {}}
-                  >
-                    Get {plan.name}
-                  </button>
-                </div>
-              ))}
+            <div className="mb-6">
+              <SharedPricingCards variant="compact" showFree={false} />
             </div>
             <button onClick={() => setShowPaywall(false)} className="w-full text-center text-sm text-gray-400 hover:text-[var(--text-secondary)] transition-colors">
               Continue with free plan
