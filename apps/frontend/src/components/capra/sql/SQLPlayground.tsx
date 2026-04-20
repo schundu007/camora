@@ -428,10 +428,10 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
         ))}
       </div>
 
-      {/* ── Main Content ──────────────────────────────────────────────── */}
-      <div className="flex flex-col" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
-        {/* ── Top: Problem Description ─────────────────────────────── */}
-        <div className="flex-shrink-0 border-b border-slate-200 overflow-y-auto" style={{ maxHeight: '36%' }}>
+      {/* ── Main Content — side by side ─────────────────────────────── */}
+      <div className="flex flex-col md:flex-row" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
+        {/* ── Left: Problem Description ────────────────────────────── */}
+        <div className="w-full md:w-[42%] md:border-r border-b md:border-b-0 border-slate-200 overflow-y-auto">
           <div className="p-5">
             {/* Title + navigation */}
             <div className="flex items-center gap-3 mb-3">
@@ -555,8 +555,11 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
           </div>
         </div>
 
-        {/* ── Middle: Code Editor ──────────────────────────────────── */}
-        <div className="flex-shrink-0 border-b border-slate-200" style={{ height: '220px' }}>
+        {/* ── Right: Editor + Output ─────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Code Editor */}
+        <div className="flex-shrink-0 border-b border-slate-200" style={{ height: '45%', minHeight: '180px' }}>
           {/* Editor toolbar */}
           <div className="flex items-center justify-between px-4 py-2 bg-[#1e1e1e] border-b border-slate-700">
             <div className="flex items-center gap-2">
@@ -617,7 +620,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               onChange={setCode}
               theme="vs-dark"
               fontSize={13}
-              height="180px"
+              height="100%"
               showLineNumbers
             />
           </Suspense>
@@ -797,6 +800,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             )}
           </div>}
         </div>
+        </div>{/* end right panel */}
       </div>
     </div>
   );
