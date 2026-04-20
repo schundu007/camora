@@ -34,8 +34,8 @@ export default {
           muted: 'rgba(248,113,113,0.18)',
         },
         surface: {
-          DEFAULT: '#E8F1FC',
-          elevated: '#DDE9F7',
+          DEFAULT: '#FFFFFF',
+          elevated: '#F0F7FF',
         },
         frost: {
           50: '#F0F7FF',
