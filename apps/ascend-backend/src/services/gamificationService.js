@@ -12,16 +12,16 @@ const XP_VALUES = {
 const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2500, 4000, 6000, 10000];
 
 const BADGE_DEFINITIONS = [
-  { key: 'first_solve', title: 'First Blood', desc: 'Solve your first problem', icon: 'zap', check: (s) => s.problems_solved >= 1 },
-  { key: 'ten_solves', title: 'Problem Hunter', desc: 'Solve 10 problems', icon: 'target', check: (s) => s.problems_solved >= 10 },
-  { key: 'fifty_solves', title: 'Code Warrior', desc: 'Solve 50 problems', icon: 'trophy', check: (s) => s.problems_solved >= 50 },
-  { key: 'week_streak', title: 'On Fire', desc: '7-day practice streak', icon: 'flame', check: (s) => s.current_streak >= 7 },
-  { key: 'month_streak', title: 'Unstoppable', desc: '30-day practice streak', icon: 'rocket', check: (s) => s.current_streak >= 30 },
-  { key: 'system_design_5', title: 'Architect', desc: 'Complete 5 system designs', icon: 'layers', check: (s) => s.designs >= 5 },
-  { key: 'system_design_master', title: 'System Design Master', desc: 'Complete 20 system designs', icon: 'server', check: (s) => s.designs >= 20 },
-  { key: 'mock_interview_3', title: 'Interview Ready', desc: 'Complete 3 mock interviews', icon: 'mic', check: (s) => s.mocks >= 3 },
-  { key: 'company_prep_5', title: 'Target Acquired', desc: 'Prepare for 5 companies', icon: 'briefcase', check: (s) => s.preps >= 5 },
-  { key: 'referral_3', title: 'Community Builder', desc: 'Refer 3 friends', icon: 'users', check: (s) => s.referrals >= 3 },
+  { key: 'first_solve', title: 'First Frost', desc: 'Crack the ice — solve your first problem', icon: 'snowflake', check: (s) => s.problems_solved >= 1 },
+  { key: 'ten_solves', title: 'Frost Tracker', desc: 'Track down 10 frozen challenges', icon: 'compass', check: (s) => s.problems_solved >= 10 },
+  { key: 'fifty_solves', title: 'Blizzard Force', desc: 'Conquer 50 algorithmic storms', icon: 'trophy', check: (s) => s.problems_solved >= 50 },
+  { key: 'week_streak', title: 'Permafrost', desc: '7-day unbroken practice streak', icon: 'flame', check: (s) => s.current_streak >= 7 },
+  { key: 'month_streak', title: 'Eternal Winter', desc: '30-day relentless streak', icon: 'mountain', check: (s) => s.current_streak >= 30 },
+  { key: 'system_design_5', title: 'Glacier Architect', desc: 'Design 5 system blueprints', icon: 'layers', check: (s) => s.designs >= 5 },
+  { key: 'system_design_master', title: 'Aurora Engineer', desc: 'Master 20 system architectures', icon: 'aurora', check: (s) => s.designs >= 20 },
+  { key: 'mock_interview_3', title: 'Icebreaker', desc: 'Survive 3 mock interview blizzards', icon: 'mic', check: (s) => s.mocks >= 3 },
+  { key: 'company_prep_5', title: 'Summit Scout', desc: 'Prepare for 5 company expeditions', icon: 'flag', check: (s) => s.preps >= 5 },
+  { key: 'referral_3', title: 'Snowpack Alliance', desc: 'Recruit 3 fellow frost climbers', icon: 'users', check: (s) => s.referrals >= 3 },
 ];
 
 function getLevel(xp) {
