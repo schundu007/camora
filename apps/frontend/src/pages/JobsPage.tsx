@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -589,6 +589,7 @@ export default function JobsPage() {
     setError(null);
     setOffset(0);
     setHasMore(true);
+    // Don't clear jobs — show stale data during fetch for perceived speed
     try {
       const params = buildJobParams();
       const headers: Record<string, string> = {};
@@ -647,13 +648,20 @@ export default function JobsPage() {
     setPostedWithinFilter(''); setSalaryMinFilter(''); setSalaryMaxFilter('');
   };
 
-  /* ── Debounced fetch on filter change ── */
+  /* ── Fetch on filter change — debounce search text, instant for category clicks ── */
+  const prevRoleRef = useRef(role);
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const isRoleChange = prevRoleRef.current !== role;
+    prevRoleRef.current = role;
+    if (isRoleChange) {
+      // Category click — fetch immediately, no debounce
       fetchJobs();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchJobs]);
+    } else {
+      // Text/filter change — debounce 300ms
+      const timer = setTimeout(() => fetchJobs(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [fetchJobs, role]);
 
   /* ── Scroll to top on mount ── */
   useEffect(() => {
