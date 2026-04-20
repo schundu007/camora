@@ -255,6 +255,10 @@ export default function LandingPage() {
         .cm-glass:hover { border-color: #22D3EE; box-shadow: 0 4px 12px rgba(34,211,238,0.08); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .ice-shard { position: absolute; pointer-events: none; z-index: 2; opacity: 1; filter: drop-shadow(0 0 14px rgba(34,211,238,0.5)) drop-shadow(0 0 30px rgba(34,211,238,0.25)); }
+        .stats-frost-card { transition: box-shadow 0.4s ease, transform 0.4s ease; }
+        .stats-frost-card:hover { box-shadow: 0 12px 48px rgba(34,211,238,0.18), 0 4px 16px rgba(0,0,0,0.06); transform: translateY(-2px); }
+        .stats-shimmer { background: linear-gradient(110deg, transparent 25%, rgba(34,211,238,0.06) 37%, rgba(255,255,255,0.15) 50%, rgba(34,211,238,0.06) 63%, transparent 75%); background-size: 300% 100%; animation: frost-shimmer 6s ease-in-out infinite; pointer-events: none; }
+        @keyframes frost-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
       `}</style>
 
       <SiteNav variant="light" />
@@ -331,18 +335,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 3. STATS BAR ── */}
-      <section className="relative px-6 py-10">
+      {/* ── 3. STATS BAR — Frost Flower Hero Card ── */}
+      <section className="relative px-6 py-12">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
-            {STATS.map((s, i) => (
-              <Reveal key={s.label} delay={i * 0.06}>
-                <div className="text-center">
-                  <p className="text-3xl md:text-4xl font-bold" style={{ fontFamily: F.display }}>{s.value}</p>
-                  <p className="text-sm mt-1" style={{ color: L.muted }}>{s.label}</p>
-                </div>
-              </Reveal>
-            ))}
+          <div className="stats-frost-card relative overflow-hidden" style={{ borderRadius: '20px', border: '1px solid rgba(34,211,238,0.2)', boxShadow: '0 8px 32px rgba(34,211,238,0.12), 0 2px 8px rgba(0,0,0,0.04)' }}>
+            {/* Background image */}
+            <img src="/frost-flower.png" alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.35 }} />
+            {/* Frost glass overlay */}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(240,247,255,0.88) 0%, rgba(255,255,255,0.82) 40%, rgba(221,233,247,0.85) 100%)', backdropFilter: 'blur(2px)' }} />
+            {/* Animated shimmer */}
+            <div className="absolute inset-0 stats-shimmer" />
+            {/* Top frost accent line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent 0%, var(--accent) 30%, #67E8F9 50%, var(--accent) 70%, transparent 100%)' }} />
+
+            {/* Content */}
+            <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-10">
+              {STATS.map((s, i) => (
+                <Reveal key={s.label} delay={i * 0.08}>
+                  <div className="text-center group">
+                    <p className="text-4xl md:text-5xl font-extrabold tracking-tight transition-transform group-hover:scale-105" style={{ fontFamily: F.display, color: L.text, textShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>{s.value}</p>
+                    <p className="text-sm font-semibold mt-1.5 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: F.mono, fontSize: '11px' }}>{s.label}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+
+            {/* Bottom frost accent line */}
+            <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent 0%, var(--accent) 30%, #67E8F9 50%, var(--accent) 70%, transparent 100%)' }} />
           </div>
         </div>
       </section>
