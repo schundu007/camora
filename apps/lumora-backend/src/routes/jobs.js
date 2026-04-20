@@ -237,15 +237,19 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/filters', async (req, res, next) => {
   try {
-    const [sources, locations, departments] = await Promise.all([
-      queryJobs(`SELECT DISTINCT source FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true ORDER BY source LIMIT 50`),
-      queryJobs(`SELECT DISTINCT location FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true ORDER BY location LIMIT 100`),
-      queryJobs(`SELECT DISTINCT department FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true ORDER BY department LIMIT 50`),
+    const [sources, locations, departments, companies, salaryRange] = await Promise.all([
+      queryJobs(`SELECT source AS name, COUNT(*) AS count FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true GROUP BY source ORDER BY count DESC LIMIT 50`),
+      queryJobs(`SELECT location AS name, COUNT(*) AS count FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true GROUP BY location ORDER BY count DESC LIMIT 100`),
+      queryJobs(`SELECT department AS name, COUNT(*) AS count FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true GROUP BY department ORDER BY count DESC LIMIT 50`),
+      queryJobs(`SELECT c.name, COUNT(*) AS count FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.is_active = true GROUP BY c.name ORDER BY count DESC LIMIT 100`),
+      queryJobs(`SELECT MIN(salary_min) AS min, MAX(salary_max) AS max FROM jobs WHERE is_active = true AND salary_min IS NOT NULL`),
     ]);
     res.json({
-      sources: sources.rows.map(r => ({ value: r.source, label: r.source })),
-      locations: locations.rows.map(r => ({ value: r.location, label: r.location })),
-      departments: departments.rows.map(r => ({ value: r.department, label: r.department })),
+      sources: sources.rows.map(r => ({ name: r.name, count: parseInt(r.count, 10) })),
+      locations: locations.rows.map(r => ({ name: r.name, count: parseInt(r.count, 10) })),
+      departments: departments.rows.map(r => ({ name: r.name, count: parseInt(r.count, 10) })),
+      companies: companies.rows.map(r => ({ name: r.name, count: parseInt(r.count, 10) })),
+      salary_range: salaryRange.rows[0] ? { min: salaryRange.rows[0].min, max: salaryRange.rows[0].max } : { min: null, max: null },
     });
   } catch (err) {
     if (err.message === 'Jobs database not configured') {
