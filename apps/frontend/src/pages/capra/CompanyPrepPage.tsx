@@ -408,7 +408,7 @@ export default function CompanyPrepPage() {
 
     return (
       <div style={{ background: 'var(--bg-surface)', minHeight: '100vh' }}>
-        <SiteNav />
+        <SiteNav variant="light" />
 
         <div>
           {/* Header */}
@@ -534,7 +534,7 @@ export default function CompanyPrepPage() {
   return (
     <div className="company-prep-root" style={{ background: 'var(--bg-surface)', minHeight: '100vh' }}>
 
-      <SiteNav />
+      <SiteNav variant="light" />
 
       {/* ═══════════════════════ Main Content ═══════════════════════ */}
       <main>
@@ -821,7 +821,7 @@ export default function CompanyPrepPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <SiteFooter variant="light" />
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`

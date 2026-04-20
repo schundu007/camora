@@ -51,7 +51,7 @@ export default function InterviewQuestionsPage() {
   if (!company) {
     return (
       <div className="min-h-screen bg-[var(--bg-surface)]">
-        <SiteNav />
+        <SiteNav variant="light" />
         <div className="pt-20 text-center">
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Company not found</h1>
           <p className="mt-2 text-[var(--text-muted)]">We don't have interview data for this company yet.</p>
@@ -67,7 +67,7 @@ export default function InterviewQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-[#fafbfc] flex flex-col">
-      <SiteNav />
+      <SiteNav variant="light" />
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.06) 0%, rgba(45,140,255,0.03) 100%)' }}>
@@ -208,7 +208,7 @@ export default function InterviewQuestionsPage() {
         </section>
       </main>
 
-      <SiteFooter />
+      <SiteFooter variant="light" />
     </div>
   );
 }

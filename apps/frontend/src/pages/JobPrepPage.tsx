@@ -441,14 +441,14 @@ export default function JobPrepPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh' }}>
-        <SiteNav />
+        <SiteNav variant="light" />
         <div className="flex items-center justify-center">
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 py-16 text-center">
             <div style={{ width: '48px', height: '48px', border: '4px solid rgba(45,140,255,0.15)', borderTopColor: 'var(--accent)', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
             <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading preparation plan...</p>
           </div>
         </div>
-        <SiteFooter />
+        <SiteFooter variant="light" />
       </div>
     );
   }
@@ -457,7 +457,7 @@ export default function JobPrepPage() {
   if (error === 'not-found') {
     return (
       <div style={{ minHeight: '100vh' }}>
-        <SiteNav />
+        <SiteNav variant="light" />
         <div>
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
@@ -468,7 +468,7 @@ export default function JobPrepPage() {
             <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none' }}>Back to Jobs</Link>
           </div>
         </div>
-        <SiteFooter />
+        <SiteFooter variant="light" />
       </div>
     );
   }
@@ -477,7 +477,7 @@ export default function JobPrepPage() {
   if (error || !job) {
     return (
       <div style={{ minHeight: '100vh' }}>
-        <SiteNav />
+        <SiteNav variant="light" />
         <div>
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="var(--danger)" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
@@ -488,7 +488,7 @@ export default function JobPrepPage() {
             <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none' }}>Back to Jobs</Link>
           </div>
         </div>
-        <SiteFooter />
+        <SiteFooter variant="light" />
       </div>
     );
   }
@@ -499,7 +499,7 @@ export default function JobPrepPage() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <SiteNav />
+      <SiteNav variant="light" />
 
       {/* ── Page Content ── */}
       <div>
@@ -1136,7 +1136,7 @@ export default function JobPrepPage() {
           </div>
         </div>
       )}
-      <SiteFooter />
+      <SiteFooter variant="light" />
     </div>
   );
 }

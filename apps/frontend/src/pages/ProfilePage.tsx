@@ -366,7 +366,7 @@ export default function ProfilePage() {
         {activeTab === 'contributions' && <ContributionsTab />}
       </div>
 
-      <SiteFooter />
+      <SiteFooter variant="light" />
     </div>
   );
 }

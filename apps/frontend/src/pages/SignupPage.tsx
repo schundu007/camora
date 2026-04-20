@@ -13,7 +13,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen" style={{ background: 'transparent' }}>
       <SEO title="Sign Up" description="Create your free Camora account. Start preparing for technical interviews with AI." path="/signup" />
-      <SiteNav />
+      <SiteNav variant="light" />
 
       <div className="flex items-center justify-center px-4" style={{ minHeight: '100vh', paddingTop: '80px' }}>
         <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
