@@ -151,6 +151,7 @@ messages_search_index {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/slack/impl-basic.png',
       description: 'Clients connect via WebSocket to gateway servers. Messages are written to the database and fanned out to online channel members through their WebSocket connections. A message broker coordinates delivery across gateway servers.',
       problems: [
         'Single gateway server cannot hold millions of connections',
@@ -162,6 +163,7 @@ messages_search_index {
 
     advancedImplementation: {
       title: 'Scalable Architecture with Connection Gateway Layer',
+      diagramSrc: '/diagrams/slack/impl-advanced.png',
       description: 'A distributed WebSocket gateway tier sits behind load balancers. A pub/sub layer (Redis Pub/Sub or Kafka) routes messages to the correct gateway holding each recipient connection. Messages are persisted asynchronously in Cassandra (partitioned by channel_id + time bucket) and indexed in Elasticsearch for search.',
       keyPoints: [
         'WebSocket Gateway tier: stateful servers each holding ~500K connections, registered in a service registry',
@@ -376,6 +378,7 @@ video_embeddings (ML feature store) {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/tiktok/impl-basic.png',
       description: 'Users upload videos to application servers, which store them in blob storage and enqueue transcoding jobs. A simple recommendation engine ranks videos by popularity. Clients pull feeds and stream videos directly from storage.',
       problems: [
         'Popularity-based feed creates a "rich get richer" problem with no personalization',
@@ -387,6 +390,7 @@ video_embeddings (ML feature store) {
 
     advancedImplementation: {
       title: 'Distributed Architecture with ML-Powered Recommendations',
+      diagramSrc: '/diagrams/tiktok/impl-advanced.png',
       description: 'A multi-stage architecture: upload -> object storage -> transcoding pipeline (FFmpeg workers) -> CDN distribution. The recommendation system uses a two-tower neural network model: one tower encodes user interests from interaction history, the other encodes video features. Candidate generation narrows from millions of videos to ~1000, then a ranking model scores and re-ranks the final feed.',
       keyPoints: [
         'Video upload pipeline: chunked upload -> S3 -> SQS -> transcoding farm (FFmpeg) -> CDN push to edge',
@@ -624,6 +628,7 @@ votes {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/reddit/impl-basic.png',
       description: 'A monolithic application handles all requests. Posts are stored in a relational database, votes update counters directly, and feed ranking is computed on every read by sorting all posts in a subreddit by the hot algorithm.',
       problems: [
         'Computing hot ranking on every read is O(n log n) per request -- very expensive',
@@ -635,6 +640,7 @@ votes {
 
     advancedImplementation: {
       title: 'Distributed Architecture with Pre-Computed Rankings',
+      diagramSrc: '/diagrams/reddit/impl-advanced.png',
       description: 'Votes are buffered in Redis and periodically flushed to the database. A ranking worker continuously re-computes hot scores and maintains sorted feed caches per subreddit in Redis sorted sets. Comment trees use materialized path (ltree) for efficient subtree queries, with top-level comments pre-ranked and deeper levels loaded on demand.',
       keyPoints: [
         'Vote buffering: votes hit Redis INCR first, async worker flushes to DB every 5-10 seconds',
@@ -865,6 +871,7 @@ follows {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/twitch/impl-basic.png',
       description: 'Streamers send RTMP to a single ingest server, which transcodes and serves HLS segments to viewers. Chat uses a single WebSocket server broadcasting to all connected clients.',
       problems: [
         'Single ingest server cannot handle transcoding for many streams simultaneously',
@@ -876,6 +883,7 @@ follows {
 
     advancedImplementation: {
       title: 'Distributed Live Streaming Architecture',
+      diagramSrc: '/diagrams/twitch/impl-advanced.png',
       description: 'Streamers connect to the nearest ingest PoP, which transcodes into multiple quality levels (1080p, 720p, 480p, 160p) as HLS segments. Segments are pushed to a multi-tier CDN. Chat uses a clustered WebSocket tier with Redis Pub/Sub for cross-server message broadcasting. Separate IRC-like protocol for ultra-high-volume chat rooms.',
       keyPoints: [
         'Ingest PoPs in 20+ regions accept RTMP, transcode locally using GPU workers, push HLS segments to CDN',
@@ -1126,6 +1134,7 @@ email_search_index {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/gmail/impl-basic.png',
       description: 'A monolithic SMTP server receives emails, stores them in a relational database, and serves a web interface. Search is powered by SQL LIKE queries. Attachments stored as BLOBs in the database.',
       problems: [
         'SQL LIKE search across millions of emails is extremely slow',
@@ -1137,6 +1146,7 @@ email_search_index {
 
     advancedImplementation: {
       title: 'Distributed Email Architecture',
+      diagramSrc: '/diagrams/gmail/impl-advanced.png',
       description: 'Inbound email flows through MX servers -> spam/phishing filter pipeline -> delivery workers that write to Bigtable (partitioned by user_id). Email bodies and attachments are stored separately in blob storage. Elasticsearch provides per-user full-text search. Outbound email uses a queue with rate limiting and reputation management.',
       keyPoints: [
         'MX servers accept SMTP, validate SPF/DKIM/DMARC, and enqueue to Kafka for processing',
@@ -1388,6 +1398,7 @@ blobs {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/google-drive/impl-basic.png',
       description: 'Files uploaded to application servers, stored in a single object storage system with metadata in a relational database. Desktop clients poll for changes periodically.',
       problems: [
         'Polling wastes bandwidth and creates latency: changes not detected until next poll interval',
@@ -1399,6 +1410,7 @@ blobs {
 
     advancedImplementation: {
       title: 'Distributed Sync Architecture with Content-Addressable Storage',
+      diagramSrc: '/diagrams/google-drive/impl-advanced.png',
       description: 'Files are chunked (4MB blocks), each chunk stored by its content hash in blob storage (deduplication). A sync service maintains per-user change logs. Desktop clients maintain a local database of file states and use long-polling/WebSocket to receive real-time change notifications. Large file uploads use resumable, chunked protocols.',
       keyPoints: [
         'Content-addressable storage: chunks keyed by SHA-256 hash enable cross-user deduplication (~30% storage savings)',
@@ -1660,6 +1672,7 @@ inventory_levels {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/shopify/impl-basic.png',
       description: 'Shared application servers serve all stores. Requests are routed by domain to the correct store context. A single database stores all merchant data with store_id as a discriminator.',
       problems: [
         'Single database becomes a bottleneck: one slow query from one store affects all',
@@ -1671,6 +1684,7 @@ inventory_levels {
 
     advancedImplementation: {
       title: 'Multi-Tenant Architecture with Pod-Based Isolation',
+      diagramSrc: '/diagrams/shopify/impl-advanced.png',
       description: 'Stores are assigned to "pods" -- independent infrastructure units each containing application servers, database shards, and cache layers. Routing layer maps store domains to pods. High-traffic stores (Shopify Plus) get dedicated pods. Storefront rendering is edge-cached with CDN, and checkout uses a separate high-reliability service with distributed inventory reservations.',
       keyPoints: [
         'Pod architecture: each pod serves ~10K stores, has its own DB shard + cache + app servers',
@@ -1906,6 +1920,7 @@ user_sale_attempts {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/flash-sale/impl-basic.png',
       description: 'Standard e-commerce checkout: user clicks "Buy", application server checks inventory in database, decrements if available, processes payment. All behind a load balancer.',
       problems: [
         'Database becomes the bottleneck: 500K concurrent SELECT FOR UPDATE = instant deadlocks',
@@ -1917,6 +1932,7 @@ user_sale_attempts {
 
     advancedImplementation: {
       title: 'Queue-Based Architecture with Redis Atomic Counter',
+      diagramSrc: '/diagrams/flash-sale/impl-advanced.png',
       description: 'Traffic flows through a CDN-cached waiting room, then a rate-limited queue, then a Redis atomic counter for instant inventory decisions. Only successful reservations proceed to payment. The architecture is designed to reject 99%+ of requests at the cheapest layer possible.',
       keyPoints: [
         'Layer 1 - CDN/Edge: serve static waiting room page, absorb 90% of traffic before it hits origin',
@@ -2174,6 +2190,7 @@ linked_accounts {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/digital-wallet/impl-basic.png',
       description: 'A single database handles all transactions. P2P transfers use a database transaction to atomically decrement sender balance and increment receiver balance.',
       problems: [
         'Single database limits throughput: all transfers serialize on balance rows',
@@ -2185,6 +2202,7 @@ linked_accounts {
 
     advancedImplementation: {
       title: 'Event-Sourced Ledger Architecture',
+      diagramSrc: '/diagrams/digital-wallet/impl-advanced.png',
       description: 'An event-sourced ledger where every balance change is recorded as an immutable event. The wallet balance is derived from the sum of all ledger entries. P2P transfers are processed via a two-phase protocol: first reserve funds (debit sender), then credit receiver. External operations (top-up, withdrawal) use a saga pattern with compensating transactions.',
       keyPoints: [
         'Double-entry bookkeeping: every transaction produces exactly two ledger entries (debit + credit)',
@@ -2447,6 +2465,7 @@ order_events {
 
     basicImplementation: {
       title: 'Basic Matching Engine',
+      diagramSrc: '/diagrams/stock-exchange/impl-basic.png',
       description: 'A single-threaded matching engine maintains an in-memory order book per symbol. Incoming orders are matched against the opposite side of the book using price-time priority. Unmatched portions are added to the book.',
       problems: [
         'Single server limits total throughput across all symbols',
@@ -2458,6 +2477,7 @@ order_events {
 
     advancedImplementation: {
       title: 'Partitioned Matching with Replicated State Machine',
+      diagramSrc: '/diagrams/stock-exchange/impl-advanced.png',
       description: 'Each symbol (or group of symbols) is assigned to a dedicated matching engine instance. Orders are routed to the correct engine via a gateway. Each engine uses a replicated state machine (Raft consensus) for fault tolerance: the primary processes orders while secondaries maintain synchronized order book state. Market data is published to a separate multicast network for distribution.',
       keyPoints: [
         'Symbol partitioning: each matching engine handles a subset of symbols, single-threaded per symbol for correctness',
@@ -2689,6 +2709,7 @@ circuit:{upstream}:last_failure = timestamp`
 
     basicImplementation: {
       title: 'Basic Reverse Proxy Gateway',
+      diagramSrc: '/diagrams/api-gateway/impl-basic.png',
       description: 'An Nginx or HAProxy instance with static configuration files that route requests to backend services. Authentication and rate limiting are implemented as custom modules or Lua scripts.',
       problems: [
         'Configuration changes require reload/restart (brief connection drops)',
@@ -2700,6 +2721,7 @@ circuit:{upstream}:last_failure = timestamp`
 
     advancedImplementation: {
       title: 'Plugin-Based Gateway with Dynamic Configuration',
+      diagramSrc: '/diagrams/api-gateway/impl-advanced.png',
       description: 'A custom gateway built on an async framework (Envoy, or custom on top of Netty/Tokio) with a plugin architecture. Routing configuration is stored in a database and pushed to all gateway instances via a control plane. Rate limiting uses a distributed Redis counter. Circuit breakers use shared state. Service discovery integrates with Consul/Kubernetes for automatic backend registration.',
       keyPoints: [
         'Plugin pipeline: each request passes through an ordered chain of plugins (auth -> rate limit -> transform -> route -> circuit break)',
@@ -2955,6 +2977,7 @@ cluster_config {
 
     basicImplementation: {
       title: 'Basic Cache with Mod Hashing',
+      diagramSrc: '/diagrams/distributed-cache/impl-basic.png',
       description: 'Client uses modular hashing (key_hash % N) to determine which of N cache nodes holds a key. Each node stores data in an in-memory hash map with LRU eviction.',
       problems: [
         'Adding/removing a node remaps ~all keys (N-1/N keys move), causing a cache stampede',
@@ -2966,6 +2989,7 @@ cluster_config {
 
     advancedImplementation: {
       title: 'Consistent Hashing with Virtual Nodes and Replication',
+      diagramSrc: '/diagrams/distributed-cache/impl-advanced.png',
       description: 'Keys are distributed using consistent hashing with virtual nodes (each physical node owns multiple points on the hash ring). Data is replicated to N successor nodes on the ring. Clients connect to any node, which routes internally. Eviction uses a combination of LRU and TTL with lazy expiration.',
       keyPoints: [
         'Consistent hashing ring: each node has 100-200 virtual nodes for even distribution',
@@ -3217,6 +3241,7 @@ request_logs {
 
     basicImplementation: {
       title: 'Basic CDN with DNS-Based Routing',
+      diagramSrc: '/diagrams/cdn/impl-basic.png',
       description: 'DNS resolves the CDN domain to the IP of the nearest PoP (GeoDNS). Each PoP runs an Nginx reverse proxy that caches content from the origin server. Cache key is the full URL.',
       problems: [
         'DNS-based routing is coarse (GeoDNS latency measurements may be stale or inaccurate)',
@@ -3228,6 +3253,7 @@ request_logs {
 
     advancedImplementation: {
       title: 'Multi-Tier CDN with Origin Shield and Anycast Routing',
+      diagramSrc: '/diagrams/cdn/impl-advanced.png',
       description: 'Three-tier architecture: Edge PoPs (200+) -> Regional Shield PoPs (10-15) -> Origin Server. Anycast routing directs users to the nearest healthy Edge PoP automatically. Cache misses go to the regional shield (not origin), reducing origin load by 90%+. Cache invalidation uses a push-based fanout tree.',
       keyPoints: [
         'Anycast routing: all edge PoPs advertise the same IP prefix; BGP routes users to nearest PoP automatically',
@@ -3475,6 +3501,7 @@ data_chunks {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/object-storage/impl-basic.png',
       description: 'Objects stored as files on a distributed filesystem (e.g., HDFS). Metadata in a centralized database. Three-way replication for durability.',
       problems: [
         'Three-way replication has 200% storage overhead (3x the actual data)',
@@ -3486,6 +3513,7 @@ data_chunks {
 
     advancedImplementation: {
       title: 'Erasure-Coded Storage with Distributed Metadata',
+      diagramSrc: '/diagrams/object-storage/impl-advanced.png',
       description: 'Object data is split into fragments and encoded using Reed-Solomon erasure coding (e.g., 6 data + 3 parity fragments). This provides 11-nines durability with only 1.5x storage overhead (vs 3x for replication). Metadata is stored in a distributed, partitioned key-value store (like DynamoDB) with strong consistency via Paxos. Small objects are packed together into larger "log-structured" segments.',
       keyPoints: [
         'Erasure coding (6+3 Reed-Solomon): object survives loss of any 3 fragments; 1.5x overhead vs 3x for replication',
@@ -3734,6 +3762,7 @@ rollups {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/time-series-db/impl-basic.png',
       description: 'Data stored in a standard database (PostgreSQL) with a timestamp column and B-tree indexes. Queries use standard SQL with time-range WHERE clauses.',
       problems: [
         'B-tree indexes are write-amplified: every insert updates multiple index pages',
@@ -3745,6 +3774,7 @@ rollups {
 
     advancedImplementation: {
       title: 'LSM-Tree Based TSDB with Columnar Compression',
+      diagramSrc: '/diagrams/time-series-db/impl-advanced.png',
       description: 'Writes go to an in-memory buffer (WAL-backed), which is periodically flushed to immutable, time-partitioned, columnar files on disk (SST files). Gorilla-style compression encodes timestamps with delta-of-delta and values with XOR encoding, achieving 10-20x compression. Background compaction merges small files into larger ones. An inverted index on tags enables fast series lookup.',
       keyPoints: [
         'LSM-tree write path: append to WAL + in-memory buffer -> periodic flush to sorted SST files -> background compaction',
@@ -3993,6 +4023,7 @@ raft_state {
 
     basicImplementation: {
       title: 'Basic Lock with Redis SETNX',
+      diagramSrc: '/diagrams/distributed-lock/impl-basic.png',
       description: 'Use Redis SETNX (SET if Not eXists) to acquire a lock. SET key with TTL for auto-release. Delete key to release.',
       problems: [
         'Single Redis instance: if it crashes, all locks are lost',
@@ -4004,6 +4035,7 @@ raft_state {
 
     advancedImplementation: {
       title: 'Consensus-Based Lock Service (ZooKeeper / etcd)',
+      diagramSrc: '/diagrams/distributed-lock/impl-advanced.png',
       description: 'Lock state is stored in a Raft-replicated state machine. Lock acquisition is a Raft log entry that requires majority consensus. Fencing tokens are Raft log indices (monotonically increasing by design). Session-based locking with heartbeats: client maintains a session with the lock service, and locks are automatically released if the session expires (no heartbeat received).',
       keyPoints: [
         'Raft consensus ensures lock state survives minority failures (2 of 5 nodes can fail)',
@@ -4274,6 +4306,7 @@ task_dependencies {
 
     basicImplementation: {
       title: 'Basic Scheduler',
+      diagramSrc: '/diagrams/job-scheduler/impl-basic.png',
       description: 'A single scheduler process polls the database every second for tasks with next_fire_time <= now. It picks tasks and dispatches them to workers via a message queue.',
       problems: [
         'Single scheduler is a single point of failure',
@@ -4285,6 +4318,7 @@ task_dependencies {
 
     advancedImplementation: {
       title: 'Partitioned Scheduler with Time-Wheel and Exactly-Once Execution',
+      diagramSrc: '/diagrams/job-scheduler/impl-advanced.png',
       description: 'Multiple scheduler instances partition the task space by consistent hashing of task IDs. Each scheduler uses a hierarchical time wheel for efficient timer management. Tasks are dispatched to workers via a durable message queue with exactly-once semantics. Workers send heartbeats; if a worker dies, its tasks are re-dispatched to healthy workers.',
       keyPoints: [
         'Partitioned scheduling: tasks assigned to scheduler instances by consistent hash, avoiding duplicate dispatch',
@@ -4577,6 +4611,7 @@ secrets {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/ci-cd-pipeline/impl-basic.png',
       description: 'A scheduler picks up triggered pipelines, runs each stage sequentially on a shared build server. Logs are written to files and served via HTTP. Artifacts stored on local disk.',
       problems: [
         'Shared build server: no isolation between pipelines (one can affect another)',
@@ -4588,6 +4623,7 @@ secrets {
 
     advancedImplementation: {
       title: 'Container-Based Distributed Pipeline Engine',
+      diagramSrc: '/diagrams/ci-cd-pipeline/impl-advanced.png',
       description: 'Each pipeline stage runs in an isolated Docker container on a pool of worker nodes. A scheduler orchestrates stage execution based on the dependency DAG, dispatching to workers with available capacity. Build logs are streamed via WebSocket through a pub/sub system. Artifacts and dependency caches are stored in S3. Secrets are injected at runtime from a vault service, never stored in the build environment.',
       keyPoints: [
         'Container isolation: each stage runs in a fresh Docker container with defined resource limits (CPU, memory)',
@@ -4867,6 +4903,7 @@ freebusy_blocks {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/calendar-system/impl-basic.png',
       description: 'Events stored in a SQL database. Recurring events materialized as individual rows (one per instance). Calendar views query for events in a time range.',
       problems: [
         'Materializing recurring events creates massive data: daily event for 10 years = 3,650 rows',
@@ -4878,6 +4915,7 @@ freebusy_blocks {
 
     advancedImplementation: {
       title: 'RRULE-Based Events with Materialized Free/Busy',
+      diagramSrc: '/diagrams/calendar-system/impl-advanced.png',
       description: 'Recurring events stored as a single row with an RRULE string. Instances are computed on-the-fly when querying a time range. Exception instances (modified or deleted occurrences) are stored separately and merged during expansion. Free/busy blocks are pre-computed and materialized in a separate table for fast availability queries.',
       keyPoints: [
         'RRULE storage: one row per recurring series, not per instance (daily event = 1 row, not 3,650)',
@@ -5168,6 +5206,7 @@ seek_pool {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/online-chess/impl-basic.png',
       description: 'Players connect via WebSocket to an application server. The server maintains game state in memory, validates moves, and relays them to the opponent. Matchmaking uses a simple queue.',
       problems: [
         'Single server: game state lost if server crashes mid-game',
@@ -5179,6 +5218,7 @@ seek_pool {
 
     advancedImplementation: {
       title: 'Distributed Game Server Architecture',
+      diagramSrc: '/diagrams/online-chess/impl-advanced.png',
       description: 'Game state is managed by a Game Server tier where each game is assigned to a specific server via consistent hashing. WebSocket connections go through a gateway layer that routes messages to the correct game server. Game state is periodically checkpointed to Redis for crash recovery. Matchmaking uses a rating-bucketed pool with time-decay for wait time.',
       keyPoints: [
         'Game Server: maintains authoritative board state, validates moves, manages clocks; one server per game',
@@ -5475,6 +5515,7 @@ item_embeddings (feature store) {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/recommendation-engine/impl-basic.png',
       description: 'A single recommendation service computes suggestions by querying a database of user-item interactions, applying simple collaborative filtering (item-item similarity based on co-occurrence), and ranking by a weighted score. Models are retrained nightly in batch.',
       problems: [
         'Batch-only retraining means recommendations are stale for up to 24 hours',
@@ -5487,6 +5528,7 @@ item_embeddings (feature store) {
 
     advancedImplementation: {
       title: 'Multi-Stage Recommendation Pipeline with Real-Time Features',
+      diagramSrc: '/diagrams/recommendation-engine/impl-advanced.png',
       description: 'A three-stage pipeline: (1) Candidate Generation narrows millions of items to ~1000 using multiple retrieval strategies (collaborative ANN, content-based ANN, trending, social graph); (2) Ranking scores each candidate with a deep neural network using rich user/item/context features; (3) Re-ranking applies business rules (diversity, freshness boost, deduplication). A real-time feature pipeline via Kafka + Flink updates user signals within seconds.',
       keyPoints: [
         'Multiple candidate generators run in parallel: collaborative filtering ANN, content-based ANN, trending, editorial curated',
@@ -5774,6 +5816,7 @@ model_registry {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/chatgpt-llm-system/impl-basic.png',
       description: 'Requests hit an API gateway that routes to a pool of GPU servers, each running a single model instance. One request occupies one GPU until completion. Conversations are stored in a database and the full history is sent with each request.',
       problems: [
         'One-request-per-GPU utilization is extremely wasteful (GPU idle during I/O and between tokens)',
@@ -5786,6 +5829,7 @@ model_registry {
 
     advancedImplementation: {
       title: 'Optimized LLM Serving with Continuous Batching and KV-Cache Management',
+      diagramSrc: '/diagrams/chatgpt-llm-system/impl-advanced.png',
       description: 'An inference engine (like vLLM) implements continuous batching: new requests are inserted into a running batch as slots become available, maximizing GPU utilization. PagedAttention manages KV-cache memory like virtual memory pages, preventing fragmentation. A global scheduler routes requests to the optimal GPU based on model affinity, current load, and KV-cache availability. Tensor parallelism splits large models across multiple GPUs.',
       keyPoints: [
         'Continuous batching (iteration-level scheduling): unlike static batching, new requests join mid-batch as others complete, keeping GPUs saturated',
@@ -6088,6 +6132,7 @@ canary_metrics {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/deployment-system/impl-basic.png',
       description: 'A CI server builds container images on commit, pushes to a registry, and a deployment controller replaces all running instances with the new version. Health checks run after replacement. If health checks fail, the previous version is redeployed.',
       problems: [
         'All-at-once replacement causes downtime during the switch',
@@ -6100,6 +6145,7 @@ canary_metrics {
 
     advancedImplementation: {
       title: 'Progressive Delivery Platform with Automated Canary Analysis',
+      diagramSrc: '/diagrams/deployment-system/impl-advanced.png',
       description: 'A deployment controller manages progressive rollouts: canary (1% -> 5% -> 25% -> 100%) with automated statistical analysis at each stage. Traffic splitting is done at the service mesh level (Envoy/Istio) by adjusting routing weights. A canary analysis engine compares real-time metrics between the canary and baseline using statistical tests (Mann-Whitney U). Blue-green deployments maintain two full environments with instant traffic switch via DNS or load balancer.',
       keyPoints: [
         'Service mesh (Envoy/Istio) handles traffic splitting: route X% to canary pods based on weighted routing rules',
@@ -6407,6 +6453,7 @@ cluster_state {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/distributed-search/impl-basic.png',
       description: 'A single node maintains an inverted index in memory, accepts documents for indexing, and serves search queries. Documents are analyzed (tokenized, lowercased) and added to the inverted index. Queries look up terms in the index, intersect posting lists, and rank by TF-IDF.',
       problems: [
         'Single node limits both index size (memory) and query throughput',
@@ -6419,6 +6466,7 @@ cluster_state {
 
     advancedImplementation: {
       title: 'Distributed Search Cluster with Near-Real-Time Indexing',
+      diagramSrc: '/diagrams/distributed-search/impl-advanced.png',
       description: 'Documents are routed to shards by hash(doc_id) % num_shards. Each shard is a self-contained inverted index with a primary copy and N replicas. Writes go to the primary, which replicates to replicas before acknowledging. Queries are scattered to one copy of each shard (primary or replica), each shard returns its top-K results, and the coordinating node merges and re-ranks the final result. Near-real-time indexing uses an in-memory buffer that is periodically "refreshed" into a searchable segment.',
       keyPoints: [
         'Shard routing: hash(doc_id) % num_shards determines which shard stores a document',
@@ -6746,6 +6794,7 @@ chunk_placement {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/blob-store/impl-basic.png',
       description: 'Objects are stored as files on a distributed file system with 3-way replication. A centralized metadata service maps bucket+key to the file location. Clients upload to an API gateway which writes to the storage nodes and updates the metadata.',
       problems: [
         '3x replication wastes 200% extra storage (a 100PB system needs 300PB of disk)',
@@ -6758,6 +6807,7 @@ chunk_placement {
 
     advancedImplementation: {
       title: 'Distributed Object Storage with Erasure Coding and Tiered Metadata',
+      diagramSrc: '/diagrams/blob-store/impl-advanced.png',
       description: 'Objects are chunked (64-128MB per chunk), and each chunk is erasure-coded (e.g., 8+3 Reed-Solomon: 8 data fragments + 3 parity, tolerating any 3 node failures with only 1.375x storage overhead). The metadata layer is a distributed key-value store sharded by hash(bucket+key), with a separate partition index for LIST operations. Strong consistency is achieved via a consensus protocol on the metadata layer.',
       keyPoints: [
         'Erasure coding (8+3 RS): 11-nines durability with only 37.5% storage overhead vs 200% for 3-way replication',
@@ -7085,6 +7135,7 @@ task_metrics {
 
     basicImplementation: {
       title: 'Basic Architecture',
+      diagramSrc: '/diagrams/distributed-task-scheduler/impl-basic.png',
       description: 'Tasks are inserted into a database table. Workers poll the table for unclaimed tasks, lock a row using SELECT FOR UPDATE, process it, and update the status. A cron job checks for scheduled tasks whose time has arrived and moves them to the ready queue.',
       problems: [
         'Database polling is inefficient and adds latency (polling interval vs. task pickup speed)',
@@ -7097,6 +7148,7 @@ task_metrics {
 
     advancedImplementation: {
       title: 'Distributed Task Scheduler with Priority Queues and Exactly-Once Semantics',
+      diagramSrc: '/diagrams/distributed-task-scheduler/impl-advanced.png',
       description: 'Tasks are submitted to a partitioned queue (Kafka or Redis Streams) organized by priority. A scheduler service manages delayed and cron tasks using a time-ordered priority queue (backed by Redis sorted sets with score = scheduled_time). Workers pull tasks via a consumer group pattern with visibility timeouts. A lease-based protocol ensures at-most-one active execution: the worker must renew its lease periodically, and if it fails to do so, the task becomes available for another worker.',
       keyPoints: [
         'Priority queues: separate queues per priority level, workers always check critical before high before normal',
@@ -7424,12 +7476,14 @@ contest_rankings: contest_id, user_id, score, penalty_time, solved_count, rank`
     ],
     basicImplementation: {
       title: 'Basic Online Judge',
+      diagramSrc: '/diagrams/leetcode-online-judge/impl-basic.png',
       description: 'Synchronous execution with Docker containers and a simple queue',
       svgTemplate: null,
       problems: ['Single worker bottleneck during contests', 'Cold container starts add 2-3s latency', 'No plagiarism detection', 'No horizontal scaling for execution'],
     },
     advancedImplementation: {
       title: 'Production Online Judge',
+      diagramSrc: '/diagrams/leetcode-online-judge/impl-advanced.png',
       description: 'Distributed execution fleet with warm container pools, priority queues, and real-time leaderboards',
       svgTemplate: null,
       keyPoints: ['Auto-scaling worker fleet with pre-warmed containers', 'Priority queues separating contest vs practice submissions', 'Redis sorted sets for real-time leaderboard', 'AST-based plagiarism detection pipeline', 'gVisor/Firecracker for stronger sandbox isolation'],
@@ -7502,12 +7556,14 @@ feed_items: id, user_id, activity_id, created_at`
     ],
     basicImplementation: {
       title: 'Basic Fitness Tracker',
+      diagramSrc: '/diagrams/strava-fitness-tracking/impl-basic.png',
       description: 'Monolithic app with PostGIS for spatial queries and basic feed',
       svgTemplate: null,
       problems: ['Segment matching is O(N*M) scanning all segments', 'Feed generation requires expensive joins', 'No real-time tracking', 'GPS processing blocks the upload response'],
     },
     advancedImplementation: {
       title: 'Production Fitness Platform',
+      diagramSrc: '/diagrams/strava-fitness-tracking/impl-advanced.png',
       description: 'Event-driven pipeline with spatial indexing, hybrid fan-out feed, and real-time tracking',
       svgTemplate: null,
       keyPoints: ['S2 geometry spatial index for O(1) segment candidate lookup', 'Kafka pipeline for async GPS processing and segment matching', 'Hybrid push/pull fan-out for social feed', 'WebSocket + Redis pub/sub for live tracking', 'Tiered leaderboards: Redis for top-N, PostgreSQL for full history'],
@@ -7578,12 +7634,14 @@ payments: id, auction_id, buyer_id, seller_id, amount, platform_fee, status (pen
     ],
     basicImplementation: {
       title: 'Basic Auction Platform',
+      diagramSrc: '/diagrams/online-auction/impl-basic.png',
       description: 'Monolithic app with PostgreSQL row-level locking for bid serialization',
       svgTemplate: null,
       problems: ['Row-level locks create contention on hot auctions', 'Timer polling is imprecise', 'No proxy bidding', 'Notifications are delayed'],
     },
     advancedImplementation: {
       title: 'Production Auction Platform',
+      diagramSrc: '/diagrams/online-auction/impl-advanced.png',
       description: 'Distributed bidding engine with optimistic concurrency, real-time updates, and fraud detection',
       svgTemplate: null,
       keyPoints: ['Optimistic concurrency with version counters for bid atomicity', 'Redis sorted sets for auction timer management', 'WebSocket fan-out for real-time bid updates', 'Proxy bid engine with priority queue resolution', 'ML-based fraud detection pipeline'],
@@ -7655,12 +7713,14 @@ moderation_rules: stream_id, rule_type (word_filter|slow_mode|subscriber_only), 
     ],
     basicImplementation: {
       title: 'Basic Live Comments',
+      diagramSrc: '/diagrams/fb-live-comments/impl-basic.png',
       description: 'Single-server WebSocket with direct database writes',
       svgTemplate: null,
       problems: ['Single server limits to ~10K concurrent connections', 'Database writes bottleneck at high comment rates', 'No spam filtering', 'No sampling for high-volume streams'],
     },
     advancedImplementation: {
       title: 'Production Live Comment System',
+      diagramSrc: '/diagrams/fb-live-comments/impl-advanced.png',
       description: 'Hierarchical fan-out with edge servers, Kafka backbone, and ML-based moderation',
       svgTemplate: null,
       keyPoints: ['Hierarchical fan-out: Kafka → regional aggregators → edge servers', 'Client-guided comment sampling for high-volume streams', 'Aho-Corasick + ML pipeline for real-time spam filtering', 'Approximate ordering with Lamport timestamps and client-side buffering', 'Auto-scaling edge fleet based on live viewer count'],
@@ -7729,12 +7789,14 @@ typeahead_index: prefix, suggestions[] (query completions + entity matches), sco
     ],
     basicImplementation: {
       title: 'Basic Social Search',
+      diagramSrc: '/diagrams/fb-post-search/impl-basic.png',
       description: 'Elasticsearch cluster with post-query privacy filtering',
       svgTemplate: null,
       problems: ['Post-query privacy filtering wastes computation on filtered results', 'No social graph ranking', 'Full index rebuild needed for updates', 'Typeahead is slow without in-memory trie'],
     },
     advancedImplementation: {
       title: 'Production Social Search',
+      diagramSrc: '/diagrams/fb-post-search/impl-advanced.png',
       description: 'Sharded index with pre-computed privacy posting lists, social ranking, and near-real-time indexing',
       svgTemplate: null,
       keyPoints: ['Bloom filter-based privacy pre-filtering at index level', 'Learned-to-rank model with social distance and engagement features', 'FST-based in-memory typeahead trie on edge servers', 'Dual-path indexing: batch + real-time Kafka stream', 'Scatter-gather query across sharded index with result caching'],
@@ -7804,12 +7866,14 @@ crawl_jobs: id, product_id, scheduled_at, status (pending|running|completed|fail
     ],
     basicImplementation: {
       title: 'Basic Price Tracker',
+      diagramSrc: '/diagrams/price-tracking-service/impl-basic.png',
       description: 'Single crawler with cron job scheduling and email alerts',
       svgTemplate: null,
       problems: ['Single crawler cant scale to millions of products', 'Fixed schedule wastes resources on inactive products', 'Simple HTML parsing breaks when sites change', 'No proxy rotation leads to blocking'],
     },
     advancedImplementation: {
       title: 'Production Price Tracking Service',
+      diagramSrc: '/diagrams/price-tracking-service/impl-advanced.png',
       description: 'Distributed crawler fleet with priority scheduling, adaptive extraction, and multi-channel alerts',
       svgTemplate: null,
       keyPoints: ['Priority-based crawl scheduling with Redis sorted sets', 'Site-specific extractors with JSON-LD fallback and ML backup', 'Residential proxy rotation with per-domain rate limiting', 'Multi-channel alert delivery with deduplication and batching', 'Real-time deals pipeline aggregating price drops across all products'],
@@ -7883,12 +7947,14 @@ manipulation_flags: video_id, flag_type (bot_traffic|view_farm|click_fraud), con
     ],
     basicImplementation: {
       title: 'Basic Trending System',
+      diagramSrc: '/diagrams/youtube-top-k-trending/impl-basic.png',
       description: 'Batch processing with hourly aggregation and simple view counting',
       svgTemplate: null,
       problems: ['Hourly batch means trending is always stale', 'Simple view count favors established creators', 'No manipulation detection', 'Single global trending ignores regional preferences'],
     },
     advancedImplementation: {
       title: 'Production Trending System',
+      diagramSrc: '/diagrams/youtube-top-k-trending/impl-advanced.png',
       description: 'Real-time streaming pipeline with time-decay scoring, fraud detection, and regional computation',
       svgTemplate: null,
       keyPoints: ['Kafka + Flink streaming pipeline for real-time view aggregation', 'Exponential time-decay scoring with engagement multipliers', 'Count-Min Sketch for heavy hitter detection and approximate counting', 'Multi-signal fraud detection pipeline (traffic patterns, viewer profiles, watch duration)', 'Per-region trending computation with cross-region momentum boosting'],
