@@ -348,7 +348,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'low-level' ? [...lldTopics, ...lldProblems] :
       activePage === 'microservices' ? microservicesPatterns :
       activePage === 'databases' ? databaseTopics :
-      activePage === 'sql' ? [...databaseTopics, ...sqlTopics] :
+      activePage === 'sql' ? sqlTopics :
       activePage === 'projects' ? projectTopics :
       activePage === 'roadmaps' ? roadmapTopics :
       activePage === 'eng-blogs' ? engBlogTopics :
@@ -426,7 +426,8 @@ export default function DocsPage({ onBack }) {
     { id: 'coding', label: 'Data Structures & Algorithms', icon: 'code' },
     { id: 'system-design', label: 'System Design', icon: 'systemDesign' },
     { id: 'microservices', label: 'Microservices', icon: 'grid' },
-    { id: 'databases', label: 'Databases & SQL', icon: 'database' },
+    { id: 'databases', label: 'Databases', icon: 'database' },
+    { id: 'sql', label: 'SQL for Interviews', icon: 'database' },
     { id: 'low-level', label: 'Low Level Design', icon: 'puzzle' },
     { id: 'behavioral', label: 'Behavioral', icon: 'users' },
   ];
@@ -446,6 +447,7 @@ export default function DocsPage({ onBack }) {
       'behavioral': 'behavioral',
       'microservices': 'microservices',
       'databases': 'databases',
+      'sql': 'databases',
     };
     const key = pageToKey[page];
     if (!key) return null;
@@ -463,7 +465,8 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'low-level') topics = lldTopics;
     else if (activePage === 'behavioral') topics = behavioralTopics;
     else if (activePage === 'microservices') topics = microservicesPatterns;
-    else if (activePage === 'databases') topics = [...databaseTopics, ...sqlTopics];
+    else if (activePage === 'databases') topics = databaseTopics;
+    else if (activePage === 'sql') topics = sqlTopics;
     else if (activePage === 'projects') topics = projectTopics;
     else if (activePage === 'roadmaps') topics = roadmapTopics;
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
@@ -503,8 +506,8 @@ export default function DocsPage({ onBack }) {
       case 'low-level': return { title: 'Low Level Design', color: '#ec4899' };
       case 'behavioral': return { title: 'Behavioral Interviews', color: '#a855f7' };
       case 'microservices': return { title: 'Microservices Patterns', color: '#60A5FA' };
-      case 'databases': return { title: 'Databases & SQL', color: '#f59e0b' };
-      case 'sql': return { title: 'Databases & SQL', color: '#06b6d4' };
+      case 'databases': return { title: 'Databases', color: '#f59e0b' };
+      case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
       case 'projects': return { title: 'Projects', color: '#10b981' };
       case 'roadmaps': return { title: 'Roadmaps', color: '#2D8CFF' };
       case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
@@ -551,7 +554,8 @@ export default function DocsPage({ onBack }) {
       { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#2D8CFF', grad: 'linear-gradient(135deg, #2D8CFF, #60A5FA)', topics: codingTopics },
       { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
       { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#60A5FA', grad: 'linear-gradient(135deg, #60A5FA, #2D8CFF)', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: [...databaseTopics, ...sqlTopics] },
+      { id: 'databases', href: 'databases', title: 'Databases', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: databaseTopics },
+      { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', topics: sqlTopics },
       { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #60A5FA)', topics: projectTopics },
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#2D8CFF', grad: 'linear-gradient(135deg, #2D8CFF, #60A5FA)', topics: roadmapTopics },
@@ -761,7 +765,8 @@ export default function DocsPage({ onBack }) {
                       {/* Expedition Map — learning path */}
                       <div className="mb-8">
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Expedition Map</h2>
-                        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)' }}>
+                        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                          <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
                               { step: 1, title: 'Ice Crystals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu' },
@@ -773,6 +778,12 @@ export default function DocsPage({ onBack }) {
                                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
                                   <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
+                                {/* Arrow connector between steps */}
+                                {idx < 3 && (
+                                  <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-6 h-6 rounded-full items-center justify-center" style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(56,189,248,0.15)' }}>
+                                    <Icon name="chevronRight" size={12} style={{ color: 'var(--accent)' }} />
+                                  </div>
+                                )}
                                 <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-2" style={{ background: 'rgba(56,189,248,0.06)' }}>
                                   <Icon name={phase.icon} size={14} style={{ color: 'var(--accent)' }} />
                                 </div>
@@ -796,9 +807,10 @@ export default function DocsPage({ onBack }) {
                             <a
                               key={resource.title}
                               href={resource.href}
-                              className="group rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-                              style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}
+                              className="group rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                              style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
                             >
+                              <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
@@ -832,22 +844,23 @@ export default function DocsPage({ onBack }) {
                             <div
                               key={card.title}
                               className="rounded-2xl overflow-hidden"
-                              style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}
+                              style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
                             >
+                              <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
                                 <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
-                                  <Icon name={card.icon} size={18} style={{ color: card.color }} />
+                                  <Icon name={card.icon} size={18} style={{ color: 'var(--accent)' }} />
                                 </div>
                                 <div>
                                   <h3 className="landing-display text-sm font-bold text-[var(--text-primary)]">{card.title}</h3>
-                                  <span className="text-[10px] font-bold landing-mono px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>{card.step}</span>
+                                  <span className="text-[10px] font-bold landing-mono px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)' }}>{card.step}</span>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2.5">
                                 {card.items.map((item, idx) => (
                                   <label key={idx} className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)] landing-body cursor-pointer group/item hover:text-[var(--text-primary)] transition-colors">
-                                    <input type="checkbox" className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded" style={{ accentColor: card.color }} />
+                                    <input type="checkbox" className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded" style={{ accentColor: 'var(--accent)' }} />
                                     <span>{item}</span>
                                   </label>
                                 ))}
@@ -869,8 +882,9 @@ export default function DocsPage({ onBack }) {
                         if (recentItems.length === 0) return null;
                         return (
                           <div className="mb-8">
-                            <h2 className="section-label mb-3">Continue Where You Left Off</h2>
-                            <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)]" style={{ boxShadow: 'none' }}>
+                            <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Continue Where You Left Off</h2>
+                            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                              <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               {recentItems.map((topic) => (
                                 <a
                                   key={topic.id}
@@ -878,8 +892,8 @@ export default function DocsPage({ onBack }) {
                                   className="flex items-center justify-between px-5 py-3.5 hover:bg-[var(--bg-elevated)] transition-all border-b border-[var(--border)] last:border-0 group"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${topic.color}14` }}>
-                                      <Icon name={topic.icon} size={16} style={{ color: topic.color }} />
+                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                      <Icon name={topic.icon} size={16} style={{ color: 'var(--accent)' }} />
                                     </div>
                                     <span className="text-sm font-semibold text-[var(--text-primary)] landing-body group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                   </div>
@@ -910,16 +924,16 @@ export default function DocsPage({ onBack }) {
                   <div className="mb-4">
 
                       {/* SQL Playground toggle */}
-                      {activePage === 'databases' && (
+                      {(activePage === 'databases' || activePage === 'sql') && (
                         <div className="flex items-center gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
-                            style={!sqlPlaygroundOpen ? { background: '#2D8CFF', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
+                            style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
-                            style={sqlPlaygroundOpen ? { background: '#2D8CFF', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
+                            style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             SQL Playground
                           </button>
                         </div>
@@ -928,7 +942,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {/* SQL Playground — takes over entire content area */}
-                  {activePage === 'databases' && sqlPlaygroundOpen && (
+                  {(activePage === 'databases' || activePage === 'sql') && sqlPlaygroundOpen && (
                     <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
                       <div style={{ margin: '0 -24px', minHeight: 'calc(100vh - 200px)' }}>
                         <SQLPlayground />
@@ -1008,6 +1022,237 @@ export default function DocsPage({ onBack }) {
                     </div>
                     );
                   })()}
+
+                  {/* Category Introduction Heroes */}
+                  {activePage === 'coding' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="cpu" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Master the building blocks of technical interviews. From arrays and strings to trees, graphs, and dynamic programming — practice the patterns that top companies like Google, Meta, and Amazon test most frequently.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'system-design' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="systemDesign" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>System Design</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Learn to design scalable, reliable systems from the ground up. Study real-world architectures like URL shorteners, messaging platforms, and distributed databases — the exact problems asked at senior-level interviews.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'behavioral' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="users" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Behavioral Interviews</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Craft compelling stories using the STAR method. Prepare answers for leadership, conflict resolution, and teamwork questions — the human side that determines culture fit at every company from startups to FAANG.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'low-level' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="layers" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Deep-dive into object-oriented design, SOLID principles, and design patterns. Practice designing class hierarchies for parking lots, elevators, and chess games — the LLD round that separates mid from senior engineers.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'microservices' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="grid" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Understand distributed system patterns used by Netflix, Uber, and Spotify. Learn service discovery, circuit breakers, saga patterns, and event-driven architectures that power modern cloud-native applications.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'databases' && !selectedTopic && !sqlPlaygroundOpen && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="database" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Database Internals</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Go beyond SELECT queries. Understand indexing strategies, replication, partitioning, and consistency models. Know when to choose SQL vs NoSQL, and how databases like PostgreSQL, MongoDB, and Redis work under the hood.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'SQL vs NoSQL', 'Query Optimization'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'sql' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="database" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>SQL for Interviews</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Master the SQL questions asked at data-heavy companies. Practice window functions, CTEs, complex joins, and aggregation patterns — the exact query types tested in coding rounds at Meta, Amazon, and top fintech firms.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Window Functions', 'CTEs', 'Complex Joins', 'Subqueries', 'Aggregations', 'Performance Tuning'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'projects' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="code" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Build impressive projects that showcase real engineering skills. From full-stack web apps to CLI tools and API services — create the portfolio pieces that make hiring managers take notice.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'roadmaps' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="trendingUp" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Follow structured learning paths tailored to your target role. Whether you're aiming for frontend, backend, DevOps, or ML engineering — get a clear roadmap from where you are to where you want to be.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'eng-blogs' && !selectedTopic && (
+                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <Icon name="bookOpen" size={28} style={{ color: 'var(--accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                              Learn from the engineers who built the systems you'll be asked about. Curated posts from Netflix, Uber, Stripe, and more — real-world context that elevates your system design answers beyond textbook theory.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Gradient Divider */}
                   {activePage !== 'overview' && !(activePage === 'databases' && sqlPlaygroundOpen) && <div className="h-px bg-[var(--border)] mb-6" />}
