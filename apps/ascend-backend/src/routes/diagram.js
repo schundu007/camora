@@ -255,20 +255,30 @@ router.post('/lookup', async (req, res) => {
     const { question, cloudProvider = 'auto', detailLevel = 'overview', direction = 'TB' } = req.body;
     if (!question) return res.status(400).json({ error: 'Question required' });
 
-    // Exact match: same question + provider + direction + detailLevel
-    const exactHash = hashProblem(`${question}::${cloudProvider}::${direction}::${detailLevel}`);
+    // Try multiple hash combinations — pre-gen uses 'auto' provider and 'LR'/'TB' directions
+    const providers = [cloudProvider, 'auto'];
+    const directions = [direction, direction === 'TB' ? 'LR' : 'TB'];
+    const tried = new Set();
 
-    const exact = await query(
-      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
-      [exactHash]
-    );
+    for (const p of providers) {
+      for (const d of directions) {
+        const hash = hashProblem(`${question}::${p}::${d}::${detailLevel}`);
+        if (tried.has(hash)) continue;
+        tried.add(hash);
 
-    if (exact.rows.length > 0) {
-      console.log(`[DiagramLookup] Exact cache hit for: ${question.slice(0, 50)} (${direction}/${detailLevel})`);
-      if (exact.rows[0].mermaid_code) {
-        return res.json({ success: true, type: 'mermaid', mermaid_code: exact.rows[0].mermaid_code, cached: true });
+        const result = await query(
+          'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
+          [hash]
+        );
+
+        if (result.rows.length > 0) {
+          console.log(`[DiagramLookup] Cache hit for: ${question.slice(0, 50)} (${p}/${d}/${detailLevel})`);
+          if (result.rows[0].mermaid_code) {
+            return res.json({ success: true, type: 'mermaid', mermaid_code: result.rows[0].mermaid_code, cached: true });
+          }
+          return res.json({ success: true, image_url: result.rows[0].image_url, cached: true });
+        }
       }
-      return res.json({ success: true, image_url: exact.rows[0].image_url, cached: true });
     }
 
     console.log(`[DiagramLookup] No cache for: ${question.slice(0, 50)}`);

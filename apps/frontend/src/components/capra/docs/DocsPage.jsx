@@ -543,25 +543,39 @@ export default function DocsPage({ onBack }) {
       setDiagramData(diagramCache[cacheKey]);
       return;
     }
-    // Auto-lookup from backend cache (no generation, cache-only)
+    // Auto-lookup from backend cache — try multiple question formats
+    // Cache keys vary: topic ID, title-provider, Design title, etc.
     if (selectedTopic && topicDetails?.title) {
-      const question = `Design ${topicDetails.title}`;
-      fetch(`${API_URL}/api/diagram/lookup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ question, cloudProvider: diagramCloudProvider, detailLevel: diagramDetailLevel }),
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.success) {
-            const result = data.image_url ? { imageUrl: data.image_url } : data.mermaid_code ? { mermaidCode: data.mermaid_code } : null;
-            if (result) {
-              setDiagramData(result);
-              setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
+      const provider = diagramCloudProvider;
+      const candidates = [
+        selectedTopic,
+        `${topicDetails.title}-${provider}`,
+        topicDetails.title,
+        `Design ${topicDetails.title}`,
+        `Design a ${topicDetails.title}`,
+      ];
+      let cancelled = false;
+      (async () => {
+        for (const question of candidates) {
+          if (cancelled) break;
+          try {
+            const res = await fetch(`${API_URL}/api/diagram/lookup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+              body: JSON.stringify({ question, cloudProvider: provider, detailLevel: diagramDetailLevel }),
+            });
+            const data = await res.json();
+            if (data.success && !cancelled) {
+              const result = data.image_url ? { imageUrl: data.image_url } : data.mermaid_code ? { mermaidCode: data.mermaid_code } : null;
+              if (result) {
+                cancelled = true;
+                setDiagramData(result);
+                setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
+              }
             }
-          }
-        })
-        .catch(() => { /* silent — diagram is optional */ });
+          } catch { /* silent */ }
+        }
+      })();
     }
   }, [selectedTopic, topicDetails?.title]);
 
