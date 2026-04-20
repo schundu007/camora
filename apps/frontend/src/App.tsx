@@ -190,7 +190,7 @@ export function App() {
           <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
-          <Route path="/capra/achievements" element={<ShellRoute><AchievementsPage /></ShellRoute>} />
+          <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
 
           {/* ── Also accessible via old Capra paths ────── */}
           <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />

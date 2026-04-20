@@ -5,11 +5,15 @@ import { getAuthHeaders } from '../utils/authHeaders';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import ReferralDashboard from '../components/capra/features/ReferralDashboard';
+import GamificationWidget from '../components/capra/features/GamificationWidget';
+import BadgeGrid from '../components/capra/features/BadgeGrid';
+import Leaderboard from '../components/capra/features/Leaderboard';
 
 const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const TABS = [
   { key: 'general', label: 'General' },
+  { key: 'achievements', label: 'Achievements' },
   { key: 'referrals', label: 'Referrals' },
   { key: 'contributions', label: 'Contributions' },
 ];
@@ -320,6 +324,14 @@ export default function ProfilePage() {
             <SubscriptionCard />
             <ProfileSettings />
             <DeleteAccount />
+          </div>
+        )}
+
+        {activeTab === 'achievements' && (
+          <div className="space-y-6">
+            <GamificationWidget />
+            <BadgeGrid />
+            <Leaderboard />
           </div>
         )}
 
