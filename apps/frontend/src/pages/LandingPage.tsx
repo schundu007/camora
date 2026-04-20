@@ -180,14 +180,14 @@ export default function LandingPage() {
 
       <SiteNav variant="light" />
 
-      {/* ── 1. HERO — Forest road background ── */}
+      {/* ── 1. HERO — Frost crystal background ── */}
       <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6 overflow-hidden">
 
-        {/* Hero background — dark with subtle image overlay */}
+        {/* Hero background — light frost crystal overlay */}
         <div className="absolute inset-0 z-0">
-          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.75) 50%, #FFFFFF 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.04) 0%, transparent 40%)' }} />
+          <img src="/hero-frost.png" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.12 }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.85) 50%, #FFFFFF 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.03) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(34,211,238,0.08) 0%, transparent 70%)' }} />
