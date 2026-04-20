@@ -566,7 +566,8 @@ export default function DocsPage({ onBack }) {
             });
             const data = await res.json();
             if (data.success && !cancelled) {
-              const result = data.image_url ? { imageUrl: data.image_url } : data.mermaid_code ? { mermaidCode: data.mermaid_code } : null;
+              const imgUrl = data.image_url ? (data.image_url.startsWith('http') ? data.image_url : `${API_URL}${data.image_url}`) : null;
+              const result = imgUrl ? { imageUrl: imgUrl } : data.mermaid_code ? { mermaidCode: data.mermaid_code } : null;
               if (result) {
                 cancelled = true;
                 setDiagramData(result);

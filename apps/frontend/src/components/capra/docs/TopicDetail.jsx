@@ -1006,13 +1006,13 @@ export default function TopicDetail({
           })()}
 
           {/* Fade-out + paywall */}
-          <div className="relative rounded-xl overflow-hidden">
+          <div className="relative rounded-xl">
             <div className="space-y-3 filter blur-sm pointer-events-none select-none" aria-hidden="true">
               <div className="rounded-lg bg-[var(--bg-elevated)] h-20 w-full" />
               <div className="rounded-lg bg-[var(--bg-elevated)] h-28 w-full" />
             </div>
 
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-app) 40%)' }}>
+            <div className="absolute inset-x-0 top-0 flex items-start justify-center pt-4" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-app) 40%)' }}>
               <div className="max-w-2xl w-full px-4">
                 <div className="text-center mb-5">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #60A5FA)' }}>
