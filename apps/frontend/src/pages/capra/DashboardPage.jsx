@@ -115,7 +115,7 @@ MONITORING: CloudWatch, X-Ray, Centralized logging, Alerting.`;
 // ============================================================================
 // Main App Component
 // ============================================================================
-export default function DashboardPage() {
+export default function DashboardPage({ mode: modeProp } = {}) {
   useEffect(() => {
     document.title = 'Dashboard | Camora';
     return () => { document.title = 'Camora'; };
@@ -139,7 +139,9 @@ export default function DashboardPage() {
   const routerLocation = useLocation();
   const navigate = useNavigate();
   const currentPath = routerLocation.pathname;
-  const appModeFromPath = currentPath === '/capra/design' ? 'system-design'
+  const appModeFromPath = modeProp
+    ? modeProp
+    : currentPath === '/capra/design' ? 'system-design'
     : currentPath === '/capra/prep' ? 'behavioral'
     : 'coding';
 
