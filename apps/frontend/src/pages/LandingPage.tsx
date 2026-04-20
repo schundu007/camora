@@ -219,7 +219,7 @@ function IceShard({ style, size = 48, variant = 0, flip = false }: { style: Reac
           </linearGradient>
         </defs>
         {/* Outer crystal body */}
-        <path d={s.outer} fill={`url(#${uid}a)`} opacity="0.7" />
+        <path d={s.outer} fill={`url(#${uid}a)`} />
         {/* Internal facets — each face slightly different shade */}
         {s.facets.map((f, i) => (
           <path key={i} d={f} fill={i % 2 === 0 ? `url(#${uid}b)` : 'rgba(34,211,238,0.15)'} stroke="rgba(165,243,252,0.5)" strokeWidth="0.4" />
@@ -254,7 +254,7 @@ export default function LandingPage() {
         .cm-glass { background: #FFFFFF; border: 1px solid ${L.border}; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .cm-glass:hover { border-color: #22D3EE; box-shadow: 0 4px 12px rgba(34,211,238,0.08); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ice-shard { position: absolute; pointer-events: none; z-index: 2; opacity: 0.55; filter: drop-shadow(0 0 14px rgba(34,211,238,0.5)) drop-shadow(0 0 30px rgba(34,211,238,0.25)); }
+        .ice-shard { position: absolute; pointer-events: none; z-index: 2; opacity: 1; filter: drop-shadow(0 0 14px rgba(34,211,238,0.5)) drop-shadow(0 0 30px rgba(34,211,238,0.25)); }
       `}</style>
 
       <SiteNav variant="light" />
