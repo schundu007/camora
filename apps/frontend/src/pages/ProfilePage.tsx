@@ -9,6 +9,7 @@ import GamificationWidget from '../components/capra/features/GamificationWidget'
 import BadgeGrid from '../components/capra/features/BadgeGrid';
 import Leaderboard from '../components/capra/features/Leaderboard';
 
+const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const TABS = [
@@ -98,7 +99,7 @@ function SubscriptionCard() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${CAPRA_API}/api/billing/subscription`, { headers: getAuthHeaders() });
+        const res = await fetch(`${BILLING_API}/api/v1/billing/subscription`, { headers: getAuthHeaders() });
         if (res.ok) setSub(await res.json());
       } catch { /* ignore */ }
       setLoading(false);
@@ -107,7 +108,7 @@ function SubscriptionCard() {
 
   const openPortal = async () => {
     try {
-      const res = await fetch(`${CAPRA_API}/api/billing/portal`, {
+      const res = await fetch(`${BILLING_API}/api/v1/billing/portal`, {
         method: 'POST',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnUrl: window.location.href }),

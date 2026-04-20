@@ -144,7 +144,14 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       );
     }
 
-    // All three plans (Interview Ready, FAANG Track, Elite) are monthly subscriptions
+    // Determine purchase type for metadata
+    let purchaseType = 'subscription';
+    const isDesktopAddon = [STRIPE_PRICES.DESKTOP_MONTHLY, STRIPE_PRICES.DESKTOP_ANNUAL, STRIPE_PRICES.DESKTOP_LIFETIME].includes(priceId);
+    if (isDesktopAddon) {
+      purchaseType = priceId === STRIPE_PRICES.DESKTOP_ANNUAL || priceId === STRIPE_PRICES.DESKTOP_LIFETIME
+        ? 'desktop_annual' : 'desktop_monthly';
+    }
+
     const isOneTime = purchaseType === 'desktop_annual';
 
     // For subscriptions, don't allow if already subscribed
@@ -161,14 +168,6 @@ router.post('/checkout', jwtAuth, async (req, res) => {
           code: 'ALREADY_SUBSCRIBED',
         });
       }
-    }
-
-    // Determine purchase type for metadata
-    let purchaseType = 'subscription';
-    const isDesktopAddon = [STRIPE_PRICES.DESKTOP_MONTHLY, STRIPE_PRICES.DESKTOP_ANNUAL, STRIPE_PRICES.DESKTOP_LIFETIME].includes(priceId);
-    if (isDesktopAddon) {
-      purchaseType = priceId === STRIPE_PRICES.DESKTOP_ANNUAL || priceId === STRIPE_PRICES.DESKTOP_LIFETIME
-        ? 'desktop_annual' : 'desktop_monthly';
     }
 
     // Create checkout session

@@ -273,7 +273,15 @@ export default function JobPrepPage() {
   const [prices, setPrices] = useState<any>(null);
   useEffect(() => {
     const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-    fetch(`${API}/api/v1/billing/prices`).then(r => r.json()).then(setPrices).catch(() => {});
+    fetch(`${API}/api/v1/billing/prices`).then(r => r.json()).then(data => {
+      const mapped: Record<string, { priceId: string }> = {};
+      for (const p of (data.plans || data || [])) {
+        if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'quarterly_pro') mapped.quarterly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
+        if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
+      }
+      setPrices(mapped);
+    }).catch(() => {});
   }, []);
 
   const [job, setJob] = useState<Job | null>(null);
@@ -1108,12 +1116,11 @@ export default function JobPrepPage() {
                   <button
                     onClick={async () => {
                       try {
-                        const API = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-                        const authToken = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('cariara_sso='))?.split('=')[1];
-                        if (!authToken) { navigate('/login'); return; }
-                        const resp = await fetch(`${API}/api/v1/billing/checkout`, {
+                        const BILLING_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+                        if (!token) { navigate('/login'); return; }
+                        const resp = await fetch(`${BILLING_URL}/api/v1/billing/checkout`, {
                           method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                           body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.href, cancel_url: window.location.href }),
                         });
                         if (!resp.ok) { navigate('/pricing'); return; }

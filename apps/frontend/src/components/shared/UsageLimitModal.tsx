@@ -68,8 +68,8 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
       });
       if (!res.ok) throw new Error('Failed to create checkout session');
       const data = await res.json();
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+      if (data.checkout_url || data.url) {
+        window.location.href = data.checkout_url || data.url;
       }
     } catch {
       // Silently fail — user can retry
