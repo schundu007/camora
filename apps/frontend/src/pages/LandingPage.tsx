@@ -20,10 +20,10 @@ const L = {
   bg: '#FFFFFF', surface: '#F7F8FA', elevated: '#EEF0F4',
   border: '#E2E5EB', text: '#1A1D23', secondary: '#4A5568',
   muted: '#8C95A6', dimmed: '#C8CDD6',
-  gradient: 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
-  primary: '#2D8CFF', accent: '#2D8CFF', radius: '12px',
-  glow: '0 0 60px rgba(45,140,255,0.08)',
-  glowStrong: '0 0 80px rgba(45,140,255,0.15)',
+  gradient: 'linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%)',
+  primary: '#22D3EE', accent: '#22D3EE', radius: '12px',
+  glow: '0 0 60px rgba(34,211,238,0.08)',
+  glowStrong: '0 0 80px rgba(34,211,238,0.15)',
 };
 
 /* ── APPA Steps ───────────────────────────────────────── */
@@ -170,11 +170,11 @@ export default function LandingPage() {
       <style>{`
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
-        .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(45,140,255,0.2); }
+        .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(34,211,238,0.2); }
         .cm-outline-btn { border: 1.5px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
-        .cm-outline-btn:hover { border-color: #2D8CFF; background: rgba(45,140,255,0.04); color: #2D8CFF; }
+        .cm-outline-btn:hover { border-color: #22D3EE; background: rgba(34,211,238,0.04); color: #22D3EE; }
         .cm-glass { background: #FFFFFF; border: 1px solid ${L.border}; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-        .cm-glass:hover { border-color: #2D8CFF; box-shadow: 0 4px 12px rgba(45,140,255,0.08); }
+        .cm-glass:hover { border-color: #22D3EE; box-shadow: 0 4px 12px rgba(34,211,238,0.08); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
 
@@ -187,10 +187,10 @@ export default function LandingPage() {
         <div className="absolute inset-0 z-0">
           <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.75) 50%, #FFFFFF 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.04) 0%, transparent 40%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.04) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(45,140,255,0.08) 0%, transparent 70%)' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(34,211,238,0.08) 0%, transparent 70%)' }} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase"
@@ -293,7 +293,7 @@ export default function LandingPage() {
                     <div className="flex-1 flex flex-col lg:flex-row gap-6">
                       <div className="lg:w-[45%]">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] uppercase px-3 py-1 mb-4"
-                          style={{ borderRadius: '6px', background: 'rgba(45,140,255,0.08)', color: L.primary, fontFamily: F.mono }}>
+                          style={{ borderRadius: '6px', background: 'rgba(34,211,238,0.08)', color: L.primary, fontFamily: F.mono }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                             {i === 0 && <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></>}
                             {i === 1 && <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>}
@@ -311,7 +311,7 @@ export default function LandingPage() {
                       </div>
                       <div className="lg:w-[55%] p-6 cm-glass" style={{ borderRadius: '16px' }}>
                         <div className="flex items-center gap-2 mb-4">
-                          <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(45,140,255,0.1)', color: L.primary }}>{step.icon}</div>
+                          <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(34,211,238,0.1)', color: L.primary }}>{step.icon}</div>
                           <span className="text-sm font-bold" style={{ fontFamily: F.display }}>{step.label}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -456,7 +456,7 @@ export default function LandingPage() {
                 <div className="p-6 h-full cm-glass" style={{ borderRadius: '16px' }}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.03)', color: L.secondary }}>{f.icon}</div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: 'rgba(45,140,255,0.06)', color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: 'rgba(34,211,238,0.06)', color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
                   </div>
                   <h3 className="text-base font-bold mb-2" style={{ fontFamily: F.display }}>{f.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: L.secondary }}>{f.desc}</p>
@@ -473,7 +473,7 @@ export default function LandingPage() {
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(0,0,0,0.05)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(45,140,255,0.04) 0%, transparent 60%)' }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(34,211,238,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
                 Ready to <span className="cm-gradient-text">freeze the competition?</span>
