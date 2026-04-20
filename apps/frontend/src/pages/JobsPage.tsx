@@ -968,7 +968,7 @@ export default function JobsPage() {
                 gap: '4px',
                 overflowX: 'auto',
                 paddingTop: '12px',
-                paddingBottom: '0',
+                paddingBottom: '12px',
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
               }}
