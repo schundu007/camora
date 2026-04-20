@@ -203,7 +203,7 @@ export default function LandingPage() {
           <motion.h1 className="mt-8 font-bold tracking-[-0.03em]" style={{ fontFamily: F.display }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
             <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08]">Your career,</span>
-            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">Cleared for takeoff.</span>
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">Cold as ice, sharp as frost.</span>
           </motion.h1>
 
           <motion.p className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ color: L.secondary }}
@@ -214,7 +214,7 @@ export default function LandingPage() {
           <motion.div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-7 py-3.5 text-[15px] font-semibold text-white" style={{ borderRadius: L.radius }}>
-              {isAuthenticated ? 'Enter Cockpit' : 'Get Your Boarding Pass'}
+              {isAuthenticated ? 'Enter the Blizzard' : 'Start Your Avalanche'}
             </Link>
             <Link to="/download" className="cm-outline-btn px-7 py-3.5 text-[15px] font-semibold" style={{ borderRadius: L.radius }}>
               Download Cockpit App
@@ -277,7 +277,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
-              Your flight plan to the offer.
+              Your frostbite formula to the offer.
             </h2>
           </Reveal>
 
@@ -305,7 +305,7 @@ export default function LandingPage() {
                         <h3 className="text-xl lg:text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: F.display }}>{step.headline}</h3>
                         <p className="text-sm leading-relaxed mb-5" style={{ color: L.secondary }}>{step.desc}</p>
                         <Link to={step.href} className="inline-flex items-center gap-2 text-sm font-semibold transition-all hover:gap-3" style={{ color: L.primary }}>
-                          Board {step.label}
+                          Explore {step.label}
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </Link>
                       </div>
@@ -400,7 +400,7 @@ export default function LandingPage() {
               Cockpit AI
             </span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
-              Your co-pilot in the cockpit.
+              Your ice breaker in the storm.
             </h2>
           </Reveal>
 
@@ -448,7 +448,7 @@ export default function LandingPage() {
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
               style={{ borderRadius: '999px', background: L.primary, border: '1px solid var(--border)', color: '#FFFFFF', fontFamily: F.mono }}>Club Members Only</span>
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Arctic-grade features. Zero meltdown.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {UNIQUE_FEATURES.map((f, i) => (
@@ -476,12 +476,12 @@ export default function LandingPage() {
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(45,140,255,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
-                Ready for <span className="cm-gradient-text">liftoff?</span>
+                Ready to <span className="cm-gradient-text">freeze the competition?</span>
               </h2>
               <p className="mt-5 text-base md:text-lg" style={{ color: L.secondary }}>Apply. Prepare. Practice. Attend. Your mission control for interviews.</p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-8 py-4 text-base font-semibold text-white" style={{ borderRadius: L.radius }}>
-                  {isAuthenticated ? 'Enter Cockpit' : 'Board Free — No Credit Card'}
+                  {isAuthenticated ? 'Enter the Blizzard' : 'Start Free — No Credit Card'}
                 </Link>
                 <Link to="/pricing" className="cm-outline-btn px-8 py-4 text-base font-semibold" style={{ borderRadius: L.radius }}>View Tickets</Link>
               </div>
