@@ -9,10 +9,10 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 
 const PLANS = [
   {
-    name: 'Day Pass',
+    name: 'Snowballs',
     price: '$0',
     period: '',
-    description: 'Board with no ticket — explore the cockpit',
+    description: 'Play around a bit',
     features: [
       '3 live interview sessions',
       'Browse all 300+ prep topics',
@@ -20,16 +20,16 @@ const PLANS = [
       'Voice transcription',
       'No credit card required',
     ],
-    cta: 'Get Day Pass',
+    cta: 'Try Snowballs',
     ctaHref: '/lumora',
     popular: false,
     priceId: null,
   },
   {
-    name: 'Economy',
+    name: 'Frost',
     price: '$29',
     period: '/mo',
-    description: 'Your boarding pass to interview prep',
+    description: 'Start the real deal',
     features: [
       'Unlimited prep and practice',
       '10 live interview sessions/mo',
@@ -39,18 +39,18 @@ const PLANS = [
       'Code solutions with complexity',
       'All programming languages',
     ],
-    cta: 'Board Economy',
+    cta: 'Get Frost',
     ctaHref: '/lumora',
     popular: false,
     priceId: '__MONTHLY__',
   },
   {
-    name: 'Frequent Flier',
+    name: 'Winter Lover',
     price: '$49',
     period: '/mo',
-    description: 'Full cockpit access — unlimited everything',
+    description: 'Make your interviewers freeze',
     features: [
-      'Everything in Economy',
+      'Everything in Frost',
       'Unlimited live sessions',
       'Job discovery and matching',
       'Auto resume and cover letter',
@@ -67,18 +67,18 @@ const PLANS = [
     priceId: '__QUARTERLY_PRO__',
   },
   {
-    name: 'Club Member',
+    name: 'Avalanche Maker',
     price: '$19',
     period: '/mo',
-    description: 'Annual pass — billed $228/year',
+    description: 'It\'s your sandbox',
     features: [
-      'Everything in Frequent Flier',
+      'Everything in Winter Lover',
       'Save 61% vs monthly',
       'Locked-in pricing',
       'Priority support',
       'Desktop app add-on: +$29/mo',
     ],
-    cta: 'Join Club',
+    cta: 'Go Avalanche',
     ctaHref: '/lumora',
     popular: false,
     priceId: '__ANNUAL__',
@@ -185,9 +185,9 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
           {plans.map((plan) => {
             const isPro = plan.popular;
-            const isAnnual = plan.name === 'Club Member';
-            const isFree = plan.name === 'Day Pass';
-            const isStarter = plan.name === 'Economy';
+            const isAnnual = plan.name === 'Avalanche Maker';
+            const isFree = plan.name === 'Snowballs';
+            const isStarter = plan.name === 'Frost';
 
             const accent = isPro
               ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent)', glow: 'rgba(45,140,255,0.4)', checkColor: '#60A5FA' }
