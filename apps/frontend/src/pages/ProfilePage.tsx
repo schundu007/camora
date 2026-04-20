@@ -103,10 +103,19 @@ function SubscriptionCard() {
 
   const openPortal = async () => {
     try {
-      const res = await fetch(`${CAPRA_API}/api/billing/portal`, { method: 'POST', headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+      const res = await fetch(`${CAPRA_API}/api/billing/portal`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnUrl: window.location.href }),
+      });
       if (res.ok) {
         const { url } = await res.json();
         window.location.href = url;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (data.error === 'No billing account found') {
+          window.location.href = '/pricing';
+        }
       }
     } catch { /* ignore */ }
   };
