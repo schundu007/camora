@@ -29,7 +29,7 @@ const PAGES: SearchResult[] = [
   { id: 'page-live', title: 'Live Interview', path: '/lumora', category: 'Pages', icon: 'mic' },
   { id: 'page-pricing', title: 'Pricing', path: '/pricing', category: 'Pages', icon: 'tag' },
   { id: 'page-blind75', title: 'Blind 75', path: '/handbook', category: 'Pages', icon: 'list' },
-  { id: 'page-achievements', title: 'Achievements', path: '/capra/achievements', category: 'Pages', icon: 'trophy' },
+  { id: 'page-achievements', title: 'Achievements', path: '/profile?tab=achievements', category: 'Pages', icon: 'trophy' },
 ];
 
 /* ── Build searchable items from topic data ──────────────────── */
