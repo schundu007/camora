@@ -624,9 +624,14 @@ export default function JobsPage() {
       if (!res.ok) throw new Error(`Failed to load more jobs`);
       const data: JobsResponse = await res.json();
       const fetched = data.jobs || [];
-      setJobs((prev) => [...prev, ...fetched]);
+      const newTotal = data.total || 0;
+      setTotal(newTotal);
+      setJobs((prev) => {
+        const next = [...prev, ...fetched];
+        setHasMore(next.length < newTotal);
+        return next;
+      });
       setOffset((prev) => prev + fetched.length);
-      setHasMore(offset + fetched.length < (data.total || 0));
     } catch {
       // silently fail — user can retry
     } finally {
