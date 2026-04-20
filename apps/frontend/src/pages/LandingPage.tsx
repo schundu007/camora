@@ -155,6 +155,40 @@ function Reveal({ children, className = '', delay = 0 }: { children: React.React
 }
 
 
+/* ── Ice Shard SVG shapes (inspired by cyan crystal reference) ── */
+const SHARD_PATHS = [
+  // Tall narrow shard
+  'M12 2L8 14L4 28L12 44L16 30L20 14Z',
+  // Wide faceted crystal
+  'M16 0L6 12L0 28L10 40L22 38L30 24L28 10Z',
+  // Small diamond shard
+  'M10 0L2 16L10 32L18 16Z',
+  // Irregular jagged shard
+  'M14 0L4 10L0 24L8 36L18 34L24 20L22 8Z',
+  // Thin spike
+  'M6 0L2 18L0 38L6 48L10 36L12 18Z',
+];
+
+function IceShard({ style, size = 48, variant = 0, flip = false }: { style: React.CSSProperties; size?: number; variant?: number; flip?: boolean }) {
+  const path = SHARD_PATHS[variant % SHARD_PATHS.length];
+  const viewBoxes = ['0 0 24 46', '0 0 30 40', '0 0 20 32', '0 0 24 36', '0 0 12 48'];
+  return (
+    <div className="ice-shard" style={{ width: size, height: size * 1.6, transform: flip ? 'scaleX(-1)' : undefined, ...style }}>
+      <svg viewBox={viewBoxes[variant % 5]} fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+        <defs>
+          <linearGradient id={`ig${variant}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#67E8F9" />
+            <stop offset="50%" stopColor="#22D3EE" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+        </defs>
+        <path d={path} fill={`url(#ig${variant})`} opacity="0.6" />
+        <path d={path} fill="none" stroke="#A5F3FC" strokeWidth="0.5" opacity="0.8" />
+      </svg>
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
@@ -176,6 +210,8 @@ export default function LandingPage() {
         .cm-glass { background: #FFFFFF; border: 1px solid ${L.border}; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .cm-glass:hover { border-color: #22D3EE; box-shadow: 0 4px 12px rgba(34,211,238,0.08); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ice-shard { position: absolute; pointer-events: none; z-index: 1; opacity: 0.18; filter: drop-shadow(0 0 8px rgba(34,211,238,0.4)); }
+        .ice-shard img { width: 100%; height: 100%; object-fit: contain; }
       `}</style>
 
       <SiteNav variant="light" />
@@ -189,6 +225,11 @@ export default function LandingPage() {
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.45) 60%, #FFFFFF 100%)' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.04) 0%, transparent 50%)' }} />
         </div>
+        {/* Ice shards in hero */}
+        <IceShard style={{ top: '15%', left: '3%', rotate: '-25deg' }} size={46} variant={1} />
+        <IceShard style={{ top: '30%', right: '4%', rotate: '30deg' }} size={38} variant={3} flip />
+        <IceShard style={{ bottom: '10%', left: '8%', rotate: '12deg' }} size={28} variant={4} />
+        <IceShard style={{ bottom: '20%', right: '6%', rotate: '-42deg' }} size={34} variant={0} />
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(34,211,238,0.08) 0%, transparent 70%)' }} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center relative z-10">
@@ -258,6 +299,9 @@ export default function LandingPage() {
 
       {/* ── 3. STATS BAR ── */}
       <section className="relative px-6 py-10">
+        {/* Ice shards */}
+        <IceShard style={{ top: -18, left: '5%', rotate: '25deg' }} size={32} variant={0} />
+        <IceShard style={{ bottom: -12, right: '8%', rotate: '-15deg' }} size={28} variant={2} flip />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
             {STATS.map((s, i) => (
@@ -274,6 +318,11 @@ export default function LandingPage() {
 
       {/* ── 4. APPA — Flight Path Timeline ── */}
       <section className="px-6 py-10 md:py-14 relative">
+        {/* Ice shards scattered around APPA cards */}
+        <IceShard style={{ top: 30, left: '2%', rotate: '-20deg' }} size={40} variant={1} />
+        <IceShard style={{ top: '40%', right: '3%', rotate: '35deg' }} size={36} variant={3} flip />
+        <IceShard style={{ bottom: 20, left: '12%', rotate: '10deg' }} size={24} variant={4} />
+        <IceShard style={{ top: '60%', right: '10%', rotate: '-40deg' }} size={30} variant={0} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -336,6 +385,8 @@ export default function LandingPage() {
 
       {/* ── 6. JOB URL ANALYSIS ── */}
       <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
+        <IceShard style={{ top: 15, right: '4%', rotate: '18deg' }} size={38} variant={2} />
+        <IceShard style={{ bottom: 30, left: '3%', rotate: '-28deg' }} size={34} variant={1} flip />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -392,6 +443,9 @@ export default function LandingPage() {
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
       <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
+        <IceShard style={{ top: -10, left: '6%', rotate: '40deg' }} size={26} variant={4} />
+        <IceShard style={{ top: '50%', right: '2%', rotate: '-12deg' }} size={44} variant={3} />
+        <IceShard style={{ bottom: -8, left: '15%', rotate: '22deg' }} size={20} variant={0} flip />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
@@ -444,6 +498,10 @@ export default function LandingPage() {
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
       <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
+        <IceShard style={{ top: 20, left: '1%', rotate: '-30deg' }} size={42} variant={1} />
+        <IceShard style={{ top: '30%', right: '2%', rotate: '45deg' }} size={30} variant={4} flip />
+        <IceShard style={{ bottom: '20%', left: '4%', rotate: '15deg' }} size={36} variant={2} />
+        <IceShard style={{ bottom: 10, right: '7%', rotate: '-22deg' }} size={28} variant={3} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
@@ -470,6 +528,9 @@ export default function LandingPage() {
 
       {/* ── 12. FINAL CTA ── */}
       <section className="relative px-6 py-14 md:py-20">
+        <IceShard style={{ top: 10, left: '5%', rotate: '32deg' }} size={34} variant={0} />
+        <IceShard style={{ top: '40%', right: '3%', rotate: '-18deg' }} size={40} variant={2} flip />
+        <IceShard style={{ bottom: 15, left: '8%', rotate: '-35deg' }} size={22} variant={4} />
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(0,0,0,0.05)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
