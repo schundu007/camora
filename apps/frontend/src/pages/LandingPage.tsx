@@ -321,16 +321,12 @@ export default function LandingPage() {
           <p className="text-center text-sm font-medium mb-4" style={{ color: L.secondary }}>
             85% of our users conquer offers at these companies
           </p>
-          <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7">
-              {COMPANIES.map((c) => (
-                <div key={c} className="flex items-center justify-center py-3 px-3 transition-all hover:bg-black/[0.02]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
-                  <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                    alt={c} className="h-6 object-contain" loading="lazy"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                </div>
-              ))}
-            </div>
+          <div className="flex items-center justify-center gap-6 flex-wrap">
+            {COMPANIES.map((c) => (
+              <img key={c} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
+                alt={c} className="h-5 object-contain opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            ))}
           </div>
         </div>
       </section>
