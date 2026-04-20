@@ -3,7 +3,22 @@ import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const STORAGE_KEY = 'camora_topics_read';
-const FREE_TOPICS_PER_CATEGORY = 1;
+const FREE_LIMITS: Record<string, number> = {
+  'coding': 3,
+  'system-design': 2,
+  'low-level': 2,
+  'behavioral': 2,
+  'microservices': 2,
+  'databases': 2,
+  'sql': 2,
+  'projects': 2,
+  'roadmaps': 2,
+  'eng-blogs': 2,
+};
+const DEFAULT_FREE_LIMIT = 2;
+function getFreeLimitForCategory(category: string): number {
+  return FREE_LIMITS[category] ?? DEFAULT_FREE_LIMIT;
+}
 
 type Category = string;
 
@@ -71,7 +86,7 @@ export function useContentAccess() {
     ensureLoaded(category);
     const readList = topicsMap[category] || [];
     if (readList.includes(topicId)) return true;
-    return readList.length < FREE_TOPICS_PER_CATEGORY;
+    return readList.length < getFreeLimitForCategory(category);
   }, [isPaidUser, topicsMap, ensureLoaded]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
@@ -85,7 +100,7 @@ export function useContentAccess() {
     setTopicsMap(prev => {
       const list = prev[category] || [];
       if (list.includes(topicId)) return prev;
-      if (list.length >= FREE_TOPICS_PER_CATEGORY) return prev; // at limit
+      if (list.length >= getFreeLimitForCategory(category)) return prev; // at limit
       const updated = { ...prev, [category]: [...list, topicId] };
       saveCachedTopics(updated);
       return updated;
@@ -110,6 +125,7 @@ export function useContentAccess() {
     markTopicRead,
     getReadCount,
     getReadTopicIds,
-    FREE_TOPICS_PER_CATEGORY,
+    FREE_LIMITS,
+    getFreeLimitForCategory,
   };
 }
