@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { lazy, Suspense, useEffect } from 'react';
 import SiteNav from './components/shared/SiteNav';
 import RootShell from './components/layout/RootShell';
+import { PaywallGate } from './components/shared/ui/PaywallGate';
 import { usePageTracker } from './hooks/usePageTracker';
 
 // ── Shared pages ────────────────────────────────────────
@@ -138,6 +139,14 @@ function ShellRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PaidRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <PaywallGate feature="Lumora Live Interview">{children}</PaywallGate>
+    </ProtectedRoute>
+  );
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
@@ -168,15 +177,15 @@ export function App() {
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
           <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
-          {/* ── Lumora: Live Interview (Zoom-style shell — all tabs share one layout) ── */}
-          <Route path="/lumora" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
-          <Route path="/lumora/coding" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
-          <Route path="/lumora/design" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
-          <Route path="/lumora/prepkit" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
-          <Route path="/lumora/calendar" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          {/* ── Lumora: Live Interview (PAID — requires subscription) ── */}
+          <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/prepkit" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/calendar" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
           {/* ── Also accessible via /app paths ──────────── */}
-          <Route path="/app" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/app" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/app/coding" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/app/design" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
 
