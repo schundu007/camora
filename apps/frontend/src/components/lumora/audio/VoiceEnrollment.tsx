@@ -223,9 +223,9 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
             border: '1px solid var(--border)',
           } : {
             fontSize: '11px',
-            color: isRecording ? '#fff' : 'rgba(255,255,255,0.6)',
-            background: isRecording ? 'rgba(255,255,255,0.08)' : 'transparent',
-            border: '1px solid rgba(255,255,255,0.08)',
+            color: isRecording ? 'var(--accent)' : 'var(--text-muted)',
+            background: isRecording ? 'var(--accent-subtle)' : 'transparent',
+            border: '1px solid var(--border)',
           }}
           title="Enroll your voice so the app can filter it out during interviews"
         >
@@ -271,9 +271,9 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         } : {
           fontSize: '11px',
           padding: '4px 8px',
-          color: voiceFilterEnabled ? '#67E8F9' : 'rgba(255,255,255,0.6)',
-          background: voiceFilterEnabled ? 'rgba(34,211,238,0.08)' : 'transparent',
-          border: '1px solid rgba(255,255,255,0.08)',
+          color: voiceFilterEnabled ? 'var(--accent)' : 'var(--text-muted)',
+          background: voiceFilterEnabled ? 'var(--accent-subtle)' : 'transparent',
+          border: '1px solid var(--border)',
         }}
         title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}
       >
@@ -293,8 +293,8 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         } : {
           fontSize: '12px',
           padding: '4px 6px',
-          color: 'rgba(255,255,255,0.8)',
-          border: '1px solid rgba(107,114,128,1)',
+          color: 'var(--text-secondary)',
+          border: '1px solid var(--border)',
         }}
         title="Remove voice enrollment"
       >
