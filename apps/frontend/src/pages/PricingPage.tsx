@@ -213,11 +213,9 @@ export default function PricingPage() {
             return (
               <div key={plan.name} className="pricing-card group relative flex flex-col rounded-2xl h-full"
                 style={{
-                  zIndex: (isPro || isAnnual) ? 2 : 1,
                   background: '#FFFFFF',
                   border: (isPro || isAnnual) ? '2px solid var(--accent)' : '1px solid var(--border)',
                   boxShadow: (isPro || isAnnual) ? '0 8px 32px rgba(34,211,238,0.2)' : 'var(--shadow-md)',
-                  transform: (isPro || isAnnual) ? 'scale(1.03)' : 'none',
                 }}>
                 <div className="relative p-7 pb-0 flex flex-col flex-1">
                   <div className="flex items-center justify-between mb-5">
@@ -260,8 +258,8 @@ export default function PricingPage() {
         </div>
         <style>{`
           @keyframes borderShimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-          .pricing-card { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
-          .pricing-card:hover { transform: translateY(-8px); }
+          .pricing-card { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease; }
+          .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(34,211,238,0.15), 0 4px 12px rgba(0,0,0,0.06); }
           .pricing-card:hover .pricing-cta { filter: brightness(1.1); }
         `}</style>
       </section>
