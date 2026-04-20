@@ -31,8 +31,7 @@ export async function subscriptionRequired(req, res, next) {
                        subscription?.plan_type === 'monthly_pro' ||
                        subscription?.plan_type === 'quarterly_pro' ||
                        subscription?.plan_type === 'annual' ||
-                       subscription?.plan_type === 'annual_desktop' ||
-                       subscription?.plan_type === 'desktop_lifetime';
+                       subscription?.plan_type === 'annual_desktop';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
@@ -85,8 +84,7 @@ export async function checkSubscription(req, res, next) {
                        subscription?.plan_type === 'monthly_pro' ||
                        subscription?.plan_type === 'quarterly_pro' ||
                        subscription?.plan_type === 'annual' ||
-                       subscription?.plan_type === 'annual_desktop' ||
-                       subscription?.plan_type === 'desktop_lifetime';
+                       subscription?.plan_type === 'annual_desktop';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
