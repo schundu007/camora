@@ -10,7 +10,7 @@
     /* Backgrounds — Icy Frost: cool blue-white tones */
     --bg-base: #F0F7FF;
     --bg-app: #F0F7FF;
-    --bg-surface: #E8F1FC;
+    --bg-surface: #FFFFFF;
     --bg-elevated: #DDE9F7;
     --bg-overlay: rgba(10,30,60,0.35);
 
@@ -101,7 +101,7 @@
   /* Light theme — opt-in via class on body or root container */
   .light-theme {
     --bg-app: #F0F7FF;
-    --bg-surface: #E8F1FC;
+    --bg-surface: #FFFFFF;
     --bg-elevated: #DDE9F7;
     --border: #C4D9F2;
     --border-hover: #A8C8EB;
