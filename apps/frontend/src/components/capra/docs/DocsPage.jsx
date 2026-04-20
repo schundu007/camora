@@ -1292,6 +1292,7 @@ export default function DocsPage({ onBack }) {
                       const catId = codingCategoryMap[topic.id];
                       const category = codingCategories.find(c => c.id === catId);
                       const isFirstInCategory = idx === 0 || codingCategoryMap[filteredTopics[idx-1]?.id] !== catId;
+                      const codingLocked = contentAccess.isTopicLocked(activePage, topic.id);
                       return (
                         <div key={topic.id}>
                           {isFirstInCategory && category && (() => {
@@ -1312,14 +1313,14 @@ export default function DocsPage({ onBack }) {
                           })()}
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                            className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${codingLocked ? 'opacity-60' : ''}`}
                             style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
-                              <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                              <span className={`text-sm landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               {topic.commonProblems && (() => {
@@ -1470,30 +1471,33 @@ export default function DocsPage({ onBack }) {
                           </div>
                           {/* Topics in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
-                            {categoryTopics.map((topic) => (
+                            {categoryTopics.map((topic) => {
+                              const locked = contentAccess.isTopicLocked(activePage, topic.id);
+                              return (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || topic.questions || 0}Q
+                                    {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -1540,10 +1544,11 @@ export default function DocsPage({ onBack }) {
                             {categoryDesigns.map((design) => {
                               const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
+                              const designLocked = contentAccess.isTopicLocked(activePage, design.id);
                               return (
                                 <div
                                   key={design.id}
-                                  className="group rounded-xl p-3 flex items-center justify-between transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-0 overflow-hidden"
+                                  className={`group rounded-xl p-3 flex items-center justify-between transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-0 overflow-hidden ${designLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div
@@ -1952,30 +1957,33 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
-                            {categoryTopics.map((topic) => (
+                            {categoryTopics.map((topic) => {
+                              const locked = contentAccess.isTopicLocked(activePage, topic.id);
+                              return (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || topic.questions || 0}Q
+                                    {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -2367,30 +2375,33 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
-                            {categoryTopics.map((topic) => (
+                            {categoryTopics.map((topic) => {
+                              const locked = contentAccess.isTopicLocked(activePage, topic.id);
+                              return (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || topic.questions || 0}Q
+                                    {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -2410,30 +2421,33 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
-                            {categoryTopics.map((topic) => (
+                            {categoryTopics.map((topic) => {
+                              const locked = contentAccess.isTopicLocked(activePage, topic.id);
+                              return (
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || topic.questions || 0}Q
+                                    {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );
