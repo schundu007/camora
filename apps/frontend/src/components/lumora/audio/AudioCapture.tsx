@@ -352,13 +352,13 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   return (
     <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
       {/* Mode Selector — unified monochrome */}
-      <div className="flex items-center rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex items-center rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid var(--border)' }}>
         <button
           onClick={() => { if (!continuousMode) handleModeToggle(); }}
           className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
           style={continuousMode
-            ? { background: 'rgba(255,255,255,0.1)', color: '#fff' }
-            : { color: 'rgba(255,255,255,0.35)' }}
+            ? { background: 'var(--accent-subtle)', color: 'var(--accent)' }
+            : { color: 'var(--text-muted)' }}
           title="Live: always listening, auto-restarts"
         >
           <LiveIcon isActive={continuousMode} />
@@ -368,8 +368,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           onClick={() => { if (continuousMode) handleModeToggle(); }}
           className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
           style={!continuousMode
-            ? { background: 'rgba(255,255,255,0.1)', color: '#fff', borderLeft: '1px solid rgba(255,255,255,0.12)' }
-            : { color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.12)' }}
+            ? { background: 'var(--accent-subtle)', color: 'var(--accent)', borderLeft: '1px solid var(--border)' }
+            : { color: 'var(--text-muted)', borderLeft: '1px solid var(--border)' }}
           title="Manual: press Cmd+M to start/stop"
         >
           <MicIcon isActive={!continuousMode && storeIsRecording} />
@@ -393,8 +393,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           onClick={handleToggle}
           className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
           style={storeIsRecording
-            ? { background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
-            : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
+            ? { background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--border)' }
+            : { background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
           title={storeIsRecording ? 'Pause (⌘M)' : 'Record (⌘M)'}
         >
           {storeIsRecording ? (
@@ -507,8 +507,8 @@ export function SystemAudioButton({ onTranscription, disabled }: { onTranscripti
         disabled={disabled}
         className="hidden sm:flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0 disabled:opacity-50"
         style={capturing
-          ? { background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }
-          : { color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
+          ? { background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--border)' }
+          : { color: 'var(--text-muted)', border: '1px solid var(--border)' }}
         title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio — share a browser tab with Zoom/Meet'}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
