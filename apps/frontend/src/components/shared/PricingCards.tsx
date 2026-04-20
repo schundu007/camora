@@ -168,38 +168,38 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
               key={plan.name}
               className="group flex flex-col rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               style={{
-                background: 'var(--bg-surface)',
-                border: (isPro || isBest) ? '2px solid var(--accent)' : '1px solid var(--border)',
+                background: (isPro || isBest) ? '#98C6E0' : 'var(--bg-surface)',
+                border: (isPro || isBest) ? '2px solid #7AB4D4' : '1px solid var(--border)',
               }}
             >
               <div className="p-3 flex flex-col flex-1">
                 {/* Badge */}
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-[10px] font-bold uppercase tracking-wider" style={{ color: (isPro || isBest) ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
-                  {isPro && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: 'var(--accent)' }}>Popular</span>}
-                  {isBest && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: 'var(--warning)' }}>Best</span>}
+                  <h3 className="text-[10px] font-bold uppercase tracking-wider" style={{ color: (isPro || isBest) ? '#1A4D6E' : 'var(--text-muted)' }}>{plan.name}</h3>
+                  {isPro && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: '#1A4D6E' }}>Popular</span>}
+                  {isBest && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: '#1A4D6E' }}>Best</span>}
                 </div>
 
                 {/* Price */}
                 <div className="flex items-baseline gap-0.5 mb-1">
-                  <span className="text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>{plan.price}</span>
-                  {plan.period && <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>}
+                  <span className="text-xl font-extrabold" style={{ color: (isPro || isBest) ? '#0F3A54' : 'var(--text-primary)' }}>{plan.price}</span>
+                  {plan.period && <span className="text-[10px]" style={{ color: (isPro || isBest) ? '#1A4D6E' : 'var(--text-muted)' }}>{plan.period}</span>}
                 </div>
-                {(plan as any).subtitle && <p className="text-[9px] mb-1" style={{ color: 'var(--text-muted)' }}>{(plan as any).subtitle}</p>}
+                {(plan as any).subtitle && <p className="text-[9px] mb-1" style={{ color: (isPro || isBest) ? '#1A4D6E' : 'var(--text-muted)' }}>{(plan as any).subtitle}</p>}
 
                 {/* Features */}
                 <ul className="space-y-1 flex-1 mb-3">
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-1 text-[10px] leading-tight">
-                      <svg className="w-3 h-3 mt-px shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
+                      <svg className="w-3 h-3 mt-px shrink-0" viewBox="0 0 16 16" fill="none" stroke={(isPro || isBest) ? '#0F3A54' : 'var(--accent)'} strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <span style={{ color: (isPro || isBest) ? '#0F3A54' : 'var(--text-secondary)' }}>{f}</span>
                     </li>
                   ))}
                 </ul>
 
                 {/* Upgrade note */}
                 {(plan as any).upgrade_note && (
-                  <p className="text-[8px] mb-2" style={{ color: 'var(--warning)' }}>{(plan as any).upgrade_note}</p>
+                  <p className="text-[8px] mb-2" style={{ color: (isPro || isBest) ? '#0F3A54' : 'var(--warning)' }}>{(plan as any).upgrade_note}</p>
                 )}
               </div>
 
@@ -209,8 +209,8 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
                   onClick={() => plan.priceKey ? checkout(priceId, plan.name) : navigate('/capra/prepare')}
                   disabled={loading === plan.name}
                   className="w-full py-2 text-[11px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50"
-                  style={isPro
-                    ? { background: 'var(--accent)', color: '#fff' }
+                  style={(isPro || isBest)
+                    ? { background: '#0F3A54', color: '#fff' }
                     : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
                   }
                 >
