@@ -12,6 +12,7 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import TopBar from '../../components/layout/TopBar';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 
 // Lazy load heavy layouts — only mounted on first tab activation
@@ -145,8 +146,12 @@ export function LumoraShellPage() {
 
       {/* Center main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar with audio controls */}
-        <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        {/* Top bar — standard nav on home, audio controls on coding/design */}
+        {(activeTab === 'coding' || activeTab === 'design') ? (
+          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        ) : (
+          <TopBar onToggleSidebar={() => {}} sidebarOpen={false} />
+        )}
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
