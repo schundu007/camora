@@ -197,10 +197,12 @@ function SidebarSection({
   section,
   pathname,
   collapsed,
+  onItemClick,
 }: {
   section: NavSection;
   pathname: string;
   collapsed: boolean;
+  onItemClick?: () => void;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -276,6 +278,7 @@ function SidebarSection({
                     href={item.path}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={onItemClick}
                     className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                     style={linkStyles}
                     title={collapsed ? item.label : undefined}
@@ -291,6 +294,7 @@ function SidebarSection({
               <li key={item.path}>
                 <Link
                   to={item.path}
+                  onClick={onItemClick}
                   className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                   style={linkStyles}
                   title={collapsed ? item.label : undefined}
@@ -338,47 +342,50 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const sidebarWidth = collapsed ? '56px' : '240px';
 
-  const sidebarContent = (
+  const renderSidebarContent = (isCollapsed: boolean, onItemClick?: () => void) => (
     <div className="flex flex-col h-full">
       {/* Scrollable nav */}
-      <nav className={`flex-1 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
+      <nav className={`flex-1 overflow-y-auto ${isCollapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
         {sections.map((section) => (
           <SidebarSection
             key={section.title}
             section={section}
             pathname={pathname}
-            collapsed={collapsed}
+            collapsed={isCollapsed}
+            onItemClick={onItemClick}
           />
         ))}
       </nav>
 
       {/* Bottom section */}
       <div
-        className={`${collapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center`}
+        className={`${isCollapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center`}
         style={{ borderTop: '1px solid var(--border)' }}
       >
-        {/* Expand/Collapse toggle */}
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          className="sidebar-item flex items-center justify-center rounded-md"
-          style={{
-            width: collapsed ? '36px' : '100%',
-            height: '32px',
-            color: 'rgba(255,255,255,0.7)',
-            background: 'none',
-            border: '1px solid var(--border)',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 500,
-          }}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}>
-            <path d="M6 3l5 5-5 5" />
-          </svg>
-          {!collapsed && <span className="ml-2">Collapse</span>}
-        </button>
-        {!collapsed && (
+        {/* Expand/Collapse toggle — desktop only */}
+        {!onItemClick && (
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="sidebar-item flex items-center justify-center rounded-md"
+            style={{
+              width: isCollapsed ? '36px' : '100%',
+              height: '32px',
+              color: 'rgba(255,255,255,0.7)',
+              background: 'none',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+            }}
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}>
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+            {!isCollapsed && <span className="ml-2">Collapse</span>}
+          </button>
+        )}
+        {!isCollapsed && (
           <span className="px-2.5 block" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>
             &copy; 2026 Cariara
           </span>
@@ -399,7 +406,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           borderRight: '1px solid rgba(255,255,255,0.15)',
         }}
       >
-        {sidebarContent}
+        {renderSidebarContent(collapsed)}
       </aside>
 
       {/* ── Mobile overlay ──────────────────────────────────── */}
@@ -413,7 +420,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             aria-hidden="true"
           />
 
-          {/* Drawer */}
+          {/* Drawer — always expanded with labels on mobile */}
           <aside
             className="fixed top-0 left-0 z-50 flex flex-col md:hidden"
             style={{
@@ -425,7 +432,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
             }}
           >
-            {sidebarContent}
+            {renderSidebarContent(false, onClose)}
           </aside>
         </>
       )}
