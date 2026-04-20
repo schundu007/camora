@@ -26684,6 +26684,7 @@ For very large meetings (webinars):
       deepDiveTopics: [
         {
           topic: 'SFU Selective Forwarding and Simulcast',
+          diagramSrc: '/diagrams/zoom/deep-dive-sfu.svg',
           detail: `The SFU is the core innovation that makes large video meetings possible.
 
 **Selective forwarding:** Each participant uploads ONE stream to the SFU. The SFU forwards copies to other participants without decoding or re-encoding, using minimal CPU. This is fundamentally different from an MCU which mixes all streams into one composite.
@@ -26694,6 +26695,7 @@ For very large meetings (webinars):
         },
         {
           topic: 'Cascaded SFU Architecture for Global Meetings',
+          diagramSrc: '/diagrams/zoom/deep-dive-cascaded-sfu.svg',
           detail: `A single SFU cannot serve a meeting spanning US, Europe, and Asia with <150ms latency.
 
 **Cascaded SFUs:** Deploy regional SFU clusters (US-West, US-East, EU, Asia). Participants connect to the nearest SFU. SFUs relay streams between each other over dedicated backbone links with <50ms inter-SFU latency.
@@ -26704,6 +26706,7 @@ For very large meetings (webinars):
         },
         {
           topic: 'Adaptive Bitrate and Congestion Control',
+          diagramSrc: '/diagrams/zoom/simulcast-flow.svg',
           detail: `Network conditions change constantly during a meeting. The system must adapt in real-time.
 
 **Google Congestion Control (GCC):** WebRTC's built-in algorithm estimates available bandwidth by monitoring packet loss and round-trip time. When congestion is detected, the encoder reduces bitrate within 1-2 seconds.
@@ -26716,6 +26719,7 @@ For very large meetings (webinars):
         },
         {
           topic: 'Recording Architecture',
+          diagramSrc: '/diagrams/zoom/video-stream-flow.svg',
           detail: `Cloud recording requires a "ghost participant" that captures all streams.
 
 **Recording bot:** A headless client joins the meeting as a participant, receiving all audio/video streams from the SFU. It records the raw RTP packets to a local buffer.
@@ -26728,6 +26732,7 @@ For very large meetings (webinars):
         },
         {
           topic: 'NAT Traversal with STUN/TURN',
+          diagramSrc: '/diagrams/zoom/deep-dive-nat-traversal.svg',
           detail: `~85% of users are behind NAT (Network Address Translation) and cannot receive direct UDP connections.
 
 **STUN (Session Traversal Utilities for NAT):** Helps the client discover its public IP and port. Works for most NATs by exchanging probes with a STUN server. Lightweight -- just a few UDP packets during setup.
@@ -26789,6 +26794,7 @@ For very large meetings (webinars):
           id: 'join-meeting-flow',
           title: 'Join Meeting Flow',
           description: 'Complete flow from clicking join to seeing video',
+          src: '/diagrams/zoom/join-meeting-flow.svg',
           steps: [
             { step: 1, label: 'Click Join', detail: 'User enters meeting ID + password' },
             { step: 2, label: 'API Lookup', detail: 'Meeting service finds which SFU cluster hosts this meeting' },
@@ -26804,6 +26810,7 @@ For very large meetings (webinars):
           id: 'simulcast-selection',
           title: 'Simulcast Layer Selection',
           description: 'How the SFU selects quality layers for each recipient',
+          src: '/diagrams/zoom/simulcast-flow.svg',
           steps: [
             { step: 1, label: 'Sender Encodes', detail: 'Client encodes 3 simultaneous layers: 1080p, 480p, 180p' },
             { step: 2, label: 'Upload to SFU', detail: 'All 3 layers sent to SFU (total ~3 Mbps upload)' },
@@ -26817,6 +26824,7 @@ For very large meetings (webinars):
           id: 'recording-flow',
           title: 'Cloud Recording Pipeline',
           description: 'How meetings are recorded, stored, and made available',
+          src: '/diagrams/zoom/video-stream-flow.svg',
           steps: [
             { step: 1, label: 'Start Recording', detail: 'Host clicks record -- notification shown to all participants' },
             { step: 2, label: 'Bot Joins', detail: 'Headless recording client joins the SFU as a participant' },
@@ -26950,6 +26958,17 @@ For very large meetings (webinars):
           purpose: 'Provides meeting features beyond audio/video including chat, reactions, screen sharing, and breakout rooms.',
           components: ['Chat service', 'Screen share handler', 'Breakout room manager', 'Polling/reactions service']
         }
+      ],
+
+      staticDiagrams: [
+        { id: 'zoom-problem-def', title: 'Problem Definition', description: 'Zoom system scope, scale, and key challenges', src: '/diagrams/zoom/problem-definition.svg', type: 'overview' },
+        { id: 'zoom-capacity', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for Zoom scale', src: '/diagrams/zoom/capacity-estimation.svg', type: 'estimation' },
+        { id: 'zoom-video-stream', title: 'Video Stream Flow', description: 'Camera capture through encoding, encryption, SFU forwarding to participant rendering', src: '/diagrams/zoom/video-stream-flow.svg', type: 'flow' },
+        { id: 'zoom-join-meeting', title: 'Join Meeting Flow', description: 'Complete flow from clicking Join to seeing video in gallery/speaker view', src: '/diagrams/zoom/join-meeting-flow.svg', type: 'flow' },
+        { id: 'zoom-simulcast', title: 'Simulcast Layer Selection', description: 'How the SFU selects quality layers for each recipient based on role and bandwidth', src: '/diagrams/zoom/simulcast-flow.svg', type: 'flow' },
+        { id: 'zoom-sfu-vs-mcu', title: 'SFU vs MCU Architecture', description: 'Side-by-side comparison of Selective Forwarding Unit vs Multipoint Control Unit', src: '/diagrams/zoom/deep-dive-sfu.svg', type: 'deep-dive' },
+        { id: 'zoom-cascaded-sfu', title: 'Cascaded SFU Architecture', description: 'Regional SFU clusters connected via backbone for global meetings', src: '/diagrams/zoom/deep-dive-cascaded-sfu.svg', type: 'deep-dive' },
+        { id: 'zoom-nat-traversal', title: 'NAT Traversal (STUN/TURN)', description: 'How clients behind NAT discover public IPs and relay media through TURN', src: '/diagrams/zoom/deep-dive-nat-traversal.svg', type: 'deep-dive' },
       ]
     },
     {
