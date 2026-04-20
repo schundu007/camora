@@ -93,7 +93,7 @@ export default function AppShell() {
         )}
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto min-w-0">
+        <div className="flex-1 overflow-auto min-w-0" style={{ background: 'var(--bg-app)' }}>
           <Outlet />
         </div>
       </div>
