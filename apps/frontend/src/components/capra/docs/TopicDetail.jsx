@@ -2249,7 +2249,7 @@ export default function TopicDetail({
                     {topicDetails.deepDiveTopics.map((item, i) => (
                       <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
                         <div className="p-3 bg-[rgba(45,140,255,0.04)]">
-                          <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{item.topic}</h4>
+                          <h4 className="text-sm font-bold text-[var(--accent)] mb-1 landing-display">{item.topic}</h4>
                           <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
                             <FormattedContent content={item.detail} color="blue" />
                           </div>
