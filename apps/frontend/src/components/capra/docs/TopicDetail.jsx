@@ -2548,7 +2548,11 @@ export default function TopicDetail({
                       </div>
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
-                        {topicDetails.basicImplementation.svgTemplate && <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />}
+                        {topicDetails.basicImplementation.diagramSrc ? (
+                          <img src={topicDetails.basicImplementation.diagramSrc} alt={topicDetails.basicImplementation.title || 'Basic Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
+                        ) : topicDetails.basicImplementation.svgTemplate ? (
+                          <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />
+                        ) : null}
                         {topicDetails.basicImplementation.problems && (
                           <div>
                             <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
@@ -2573,7 +2577,11 @@ export default function TopicDetail({
                       </div>
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
-                        {topicDetails.advancedImplementation.svgTemplate && <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />}
+                        {topicDetails.advancedImplementation.diagramSrc ? (
+                          <img src={topicDetails.advancedImplementation.diagramSrc} alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'} className="w-full rounded-lg mb-3" loading="lazy" />
+                        ) : topicDetails.advancedImplementation.svgTemplate ? (
+                          <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />
+                        ) : null}
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-3">
                             <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>

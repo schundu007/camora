@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Generate basic/advanced implementation diagrams for system design topics."""
+import graphviz, os
+
+BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
+
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.4', margin='0.12,0.06')
+EDGE = dict(fontname='Helvetica Neue', fontsize='9', penwidth='1.5')
+C = {
+    'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
+    'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
+    'pink': ('#fce7f3','#ec4899','#9d174d'), 'orange': ('#ffedd5','#f97316','#9a3412'),
+    'teal': ('#ccfbf1','#14b8a6','#115e59'), 'gray': ('#f3f4f6','#6b7280','#374151'),
+    'red': ('#fee2e2','#ef4444','#991b1b'), 'cyan': ('#cffafe','#06b6d4','#155e75'),
+}
+def n(g, nm, label, c): g.node(nm, label, fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2], **NODE)
+def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
+def mk(out, name, title, **kw):
+    os.makedirs(out, exist_ok=True)
+    g = graphviz.Digraph(format='png')
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.5', ranksep='0.6', splines='spline',
+           label=f'  {title}  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b', **kw)
+    return g, os.path.join(out, name)
+
+# ═══ ZOOM ═══
+def zoom_basic():
+    OUT = os.path.join(BASE, 'zoom')
+    g, path = mk(OUT, 'impl-basic', 'Simple Video Call (P2P)', rankdir='LR')
+    n(g, 'a', 'User A\n(camera +\nmicrophone)', 'blue')
+    n(g, 'stun', 'STUN/TURN\nServer\n(NAT traversal)', 'gray')
+    n(g, 'sig', 'Signaling\nServer\n(SDP exchange)', 'purple')
+    n(g, 'b', 'User B\n(camera +\nmicrophone)', 'blue')
+    e(g, 'a', 'stun', 'discover\npublic IP', '#6b7280')
+    e(g, 'b', 'stun', 'discover\npublic IP', '#6b7280')
+    e(g, 'a', 'sig', 'SDP offer', '#6366f1')
+    e(g, 'sig', 'b', 'SDP answer', '#6366f1')
+    e(g, 'a', 'b', 'direct P2P\nmedia stream\n(WebRTC)', '#3b82f6', 'bold')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+def zoom_advanced():
+    OUT = os.path.join(BASE, 'zoom')
+    g, path = mk(OUT, 'impl-advanced', 'Production Video Conferencing (SFU)', rankdir='TB')
+    # Media plane
+    with g.subgraph(name='cluster_media') as s:
+        s.attr(label='MEDIA PLANE', style='rounded,filled', color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#1e40af')
+        s.node('userA', 'User A\n(send 3 layers)', fillcolor=C['blue'][0], color=C['blue'][1], fontcolor=C['blue'][2], **NODE)
+        s.node('sfu', 'SFU\n(selective\nforward)', fillcolor=C['orange'][0], color=C['orange'][1], fontcolor=C['orange'][2], **NODE)
+        s.node('router', 'Media Router\n(quality\nselection)', fillcolor=C['teal'][0], color=C['teal'][1], fontcolor=C['teal'][2], **NODE)
+        s.node('simulcast', 'Simulcast\n(1080p/480p/\n180p)', fillcolor=C['yellow'][0], color=C['yellow'][1], fontcolor=C['yellow'][2], **NODE)
+        s.node('users', 'Users B,C,D\n(receive\nadaptive)', fillcolor=C['blue'][0], color=C['blue'][1], fontcolor=C['blue'][2], **NODE)
+    # Signaling
+    with g.subgraph(name='cluster_signal') as s:
+        s.attr(label='SIGNALING & CONTROL', style='rounded,filled', color='#6366f1', fillcolor='#eef2ff', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#3730a3')
+        s.node('webrtc', 'WebRTC\nSignaling', fillcolor=C['purple'][0], color=C['purple'][1], fontcolor=C['purple'][2], **NODE)
+        s.node('meeting', 'Meeting\nService', fillcolor=C['purple'][0], color=C['purple'][1], fontcolor=C['purple'][2], **NODE)
+        s.node('auth', 'Auth\nService', fillcolor=C['green'][0], color=C['green'][1], fontcolor=C['green'][2], **NODE)
+        s.node('record', 'Recording', fillcolor=C['gray'][0], color=C['gray'][1], fontcolor=C['gray'][2], **NODE)
+        s.node('chat', 'Chat', fillcolor=C['cyan'][0], color=C['cyan'][1], fontcolor=C['cyan'][2], **NODE)
+        s.node('screen', 'Screen\nShare', fillcolor=C['pink'][0], color=C['pink'][1], fontcolor=C['pink'][2], **NODE)
+    # Infrastructure
+    with g.subgraph(name='cluster_infra') as s:
+        s.attr(label='INFRASTRUCTURE', style='rounded,filled', color='#f97316', fillcolor='#fff7ed', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#9a3412')
+        s.node('pops', 'Global PoPs\n(edge nodes)', fillcolor=C['orange'][0], color=C['orange'][1], fontcolor=C['orange'][2], **NODE)
+        s.node('cloud', 'AWS/Oracle\nCloud', fillcolor=C['gray'][0], color=C['gray'][1], fontcolor=C['gray'][2], **NODE)
+        s.node('transcode', 'Transcoding\n(recording)', fillcolor=C['yellow'][0], color=C['yellow'][1], fontcolor=C['yellow'][2], **NODE)
+        s.node('e2ee', 'E2EE\n(encryption)', fillcolor=C['red'][0], color=C['red'][1], fontcolor=C['red'][2], **NODE)
+    e(g, 'userA', 'sfu', 'upload\n3 layers', '#3b82f6')
+    e(g, 'sfu', 'router', 'select\nquality', '#14b8a6')
+    e(g, 'router', 'simulcast', 'adapt\nbitrate', '#f59e0b')
+    e(g, 'simulcast', 'users', 'forward\nper bandwidth', '#3b82f6')
+    e(g, 'webrtc', 'sfu', 'ICE/SDP', '#6366f1', 'dashed')
+    e(g, 'meeting', 'auth', 'validate', '#22c55e', 'dashed')
+    e(g, 'sfu', 'record', 'capture', '#6b7280', 'dashed')
+    e(g, 'pops', 'sfu', 'route', '#f97316', 'dashed')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+# ═══ WHATSAPP ═══
+def whatsapp_basic():
+    OUT = os.path.join(BASE, 'whatsapp')
+    g, path = mk(OUT, 'impl-basic', 'Basic Chat Architecture', rankdir='LR')
+    n(g, 'sender', 'Sender\nApp', 'blue')
+    n(g, 'server', 'Chat Server\n(single node)', 'purple')
+    n(g, 'db', 'Database\n(PostgreSQL)', 'teal')
+    n(g, 'receiver', 'Receiver\nApp', 'blue')
+    e(g, 'sender', 'server', 'send\nmessage', '#3b82f6')
+    e(g, 'server', 'db', 'persist', '#14b8a6')
+    e(g, 'server', 'receiver', 'deliver\n(if online)', '#3b82f6')
+    e(g, 'receiver', 'server', 'poll for\nmessages', '#6b7280', 'dashed')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+def whatsapp_advanced():
+    OUT = os.path.join(BASE, 'whatsapp')
+    g, path = mk(OUT, 'impl-advanced', 'Production Chat Architecture', rankdir='LR')
+    n(g, 'sender', 'Sender\nDevice', 'blue')
+    n(g, 'lb', 'Load\nBalancer', 'gray')
+    n(g, 'gateway', 'WebSocket\nGateway\n(stateful)', 'purple')
+    n(g, 'chat', 'Chat\nService\n(stateless)', 'teal')
+    n(g, 'kafka', 'Kafka\n(message\nqueue)', 'orange')
+    n(g, 'cassandra', 'Cassandra\n(message\nstore)', 'green')
+    n(g, 'presence', 'Presence\nService\n(Redis)', 'pink')
+    n(g, 'push', 'Push\nService\n(APNs/FCM)', 'yellow')
+    n(g, 'receiver', 'Receiver\nDevice', 'blue')
+    e(g, 'sender', 'lb', 'WS', '#3b82f6')
+    e(g, 'lb', 'gateway', 'route', '#6b7280')
+    e(g, 'gateway', 'chat', 'process', '#14b8a6')
+    e(g, 'chat', 'kafka', 'publish', '#f97316')
+    e(g, 'kafka', 'cassandra', 'persist', '#22c55e')
+    e(g, 'chat', 'presence', 'check\nonline?', '#ec4899')
+    e(g, 'presence', 'gateway', 'route to\ngateway', '#ec4899', 'dashed')
+    e(g, 'gateway', 'receiver', 'deliver\nvia WS', '#3b82f6')
+    e(g, 'chat', 'push', 'if offline', '#f59e0b', 'dashed')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+# ═══ TWITTER ═══
+def twitter_basic():
+    OUT = os.path.join(BASE, 'twitter')
+    g, path = mk(OUT, 'impl-basic', 'Basic Fan-out on Write', rankdir='LR')
+    n(g, 'user', 'User\nposts tweet', 'blue')
+    n(g, 'server', 'App Server', 'gray')
+    n(g, 'db', 'Tweet DB\n(single)', 'purple')
+    n(g, 'fanout', 'Fan-out\n(push to ALL\nfollowers)', 'orange')
+    n(g, 'feeds', 'Follower\nFeeds\n(in-memory)', 'green')
+    e(g, 'user', 'server', 'POST', '#3b82f6')
+    e(g, 'server', 'db', 'persist', '#6366f1')
+    e(g, 'db', 'fanout', 'trigger', '#f97316')
+    e(g, 'fanout', 'feeds', 'push to\neach follower', '#22c55e')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+def twitter_advanced():
+    OUT = os.path.join(BASE, 'twitter')
+    g, path = mk(OUT, 'impl-advanced', 'Hybrid Fan-out (Twitter)', rankdir='LR')
+    n(g, 'user', 'User\nposts', 'blue')
+    n(g, 'api', 'API +\nSnowflake ID', 'gray')
+    n(g, 'db', 'Tweet DB\n(MySQL\nsharded)', 'purple')
+    n(g, 'fanout', 'Fan-out\nService\n(<10K: push)', 'orange')
+    n(g, 'redis', 'Redis\nTimelines\n(sorted sets)', 'red')
+    n(g, 'merge', 'Timeline\nMerge\n(celebs: pull)', 'teal')
+    n(g, 'rank', 'ML Ranker\n(relevance)', 'yellow')
+    n(g, 'reader', 'Reader\nGET /feed', 'blue')
+    e(g, 'user', 'api', 'POST', '#3b82f6')
+    e(g, 'api', 'db', 'persist', '#6366f1')
+    e(g, 'db', 'fanout', 'if <10K\nfollowers', '#f97316')
+    e(g, 'fanout', 'redis', 'push IDs', '#ef4444')
+    e(g, 'reader', 'redis', 'GET feed', '#ef4444')
+    e(g, 'redis', 'merge', 'add celeb\ntweets', '#14b8a6')
+    e(g, 'merge', 'rank', 'rank', '#f59e0b')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+# ═══ INSTAGRAM ═══
+def instagram_basic():
+    OUT = os.path.join(BASE, 'instagram')
+    g, path = mk(OUT, 'impl-basic', 'Basic Instagram Architecture', rankdir='LR')
+    n(g, 'user', 'User\nuploads', 'pink')
+    n(g, 'server', 'App Server', 'gray')
+    n(g, 'storage', 'File Storage\n(local disk)', 'purple')
+    n(g, 'db', 'Database\n(PostgreSQL)', 'teal')
+    n(g, 'feed', 'Feed\n(query on\neach load)', 'green')
+    e(g, 'user', 'server', 'upload', '#ec4899')
+    e(g, 'server', 'storage', 'save photo', '#6366f1')
+    e(g, 'server', 'db', 'save post\nmetadata', '#14b8a6')
+    e(g, 'db', 'feed', 'SELECT *\nFROM posts\nWHERE ...', '#22c55e')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+def instagram_advanced():
+    OUT = os.path.join(BASE, 'instagram')
+    g, path = mk(OUT, 'impl-advanced', 'Production Instagram Architecture', rankdir='LR')
+    n(g, 'user', 'User\nuploads', 'pink')
+    n(g, 'api', 'API Gateway\n(rate limit)', 'gray')
+    n(g, 'media', 'Media\nService\n(resize, CDN)', 'blue')
+    n(g, 'cassandra', 'Cassandra\n(posts)', 'purple')
+    n(g, 'fanout', 'Fan-out\nService\n(push to\nfollower feeds)', 'orange')
+    n(g, 'redis', 'Redis\nFeed Cache', 'red')
+    n(g, 'ml', 'ML Ranker\n(interest,\nrecency)', 'yellow')
+    n(g, 'cdn', 'CDN\n(CloudFront)', 'teal')
+    n(g, 'search', 'Elasticsearch\n(explore)', 'green')
+    e(g, 'user', 'api', 'POST', '#ec4899')
+    e(g, 'api', 'media', 'process\nmedia', '#3b82f6')
+    e(g, 'media', 'cdn', 'push to\nedge', '#14b8a6')
+    e(g, 'api', 'cassandra', 'persist\npost', '#6366f1')
+    e(g, 'cassandra', 'fanout', 'trigger', '#f97316')
+    e(g, 'fanout', 'redis', 'push to\nfeeds', '#ef4444')
+    e(g, 'redis', 'ml', 'rank on\nread', '#f59e0b')
+    e(g, 'cassandra', 'search', 'index for\nexplore', '#22c55e', 'dashed')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+# ═══ TINDER ═══
+def tinder_basic():
+    OUT = os.path.join(BASE, 'tinder')
+    g, path = mk(OUT, 'impl-basic', 'Basic Dating App', rankdir='LR')
+    n(g, 'user', 'User\nswipes', 'pink')
+    n(g, 'server', 'App Server', 'gray')
+    n(g, 'postgis', 'PostgreSQL\n+ PostGIS\n(geo queries)', 'purple')
+    n(g, 'match', 'Match Check\n(DB lookup\nper swipe)', 'orange')
+    e(g, 'user', 'server', 'swipe', '#ec4899')
+    e(g, 'server', 'postgis', 'find nearby\nusers', '#6366f1')
+    e(g, 'server', 'match', 'check if\nmutual', '#f97316')
+    e(g, 'match', 'postgis', 'query', '#6366f1', 'dashed')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+def tinder_advanced():
+    OUT = os.path.join(BASE, 'tinder')
+    g, path = mk(OUT, 'impl-advanced', 'Production Dating App', rankdir='LR')
+    n(g, 'user', 'User\nApp', 'pink')
+    n(g, 'api', 'API Gateway', 'gray')
+    n(g, 's2', 'S2 Geo\nIndex\n(cell-based)', 'blue')
+    n(g, 'redis', 'Redis\n(like sets +\nrec stacks)', 'red')
+    n(g, 'ml', 'ML Ranker\n(ELO +\ndiversity)', 'yellow')
+    n(g, 'cassandra', 'Cassandra\n(swipe log)', 'purple')
+    n(g, 'bloom', 'Bloom Filter\n(dedup)', 'teal')
+    n(g, 'cdn', 'CDN\n(photos)', 'green')
+    n(g, 'ws', 'WebSocket\n(chat)', 'orange')
+    e(g, 'user', 'api', 'request', '#ec4899')
+    e(g, 'api', 's2', 'geo query', '#3b82f6')
+    e(g, 's2', 'bloom', 'filter\nseen', '#14b8a6')
+    e(g, 'bloom', 'ml', 'rank\ncandidates', '#f59e0b')
+    e(g, 'ml', 'redis', 'cache\ntop 100', '#ef4444')
+    e(g, 'api', 'redis', 'swipe +\nmatch check', '#ef4444')
+    e(g, 'redis', 'cassandra', 'persist', '#6366f1', 'dashed')
+    e(g, 'api', 'cdn', 'photos', '#22c55e', 'dashed')
+    e(g, 'api', 'ws', 'chat', '#f97316', 'dashed')
+    g.render(path, cleanup=True)
+    print(f'  OK {path}.png')
+
+if __name__ == '__main__':
+    print('Generating implementation diagrams...')
+    zoom_basic(); zoom_advanced()
+    whatsapp_basic(); whatsapp_advanced()
+    twitter_basic(); twitter_advanced()
+    instagram_basic(); instagram_advanced()
+    tinder_basic(); tinder_advanced()
+    print('Done! 10 diagrams generated.')

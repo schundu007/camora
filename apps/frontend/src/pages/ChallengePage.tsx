@@ -138,7 +138,7 @@ export default function ChallengePage() {
   const timerRef = useRef<any>(null);
 
   useEffect(() => {
-    document.title = 'The Camora Challenge | Camora';
+    document.title = 'The Camora Avalanche | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 
@@ -252,7 +252,7 @@ export default function ChallengePage() {
      ══════════════════════════════════════════════════════════════════ */
   return (
     <div className="ch-root">
-      <SEO title="The Camora Challenge" description="Find bugs, build features, win $21,812 in prizes. Join the founding engineering team." path="/challenge" />
+      <SEO title="The Camora Avalanche" description="Find bugs, build features, win $21,812 in prizes. Join the founding engineering team." path="/challenge" />
       <SiteNav />
 
       {/* ═══ HERO — Dark gradient mesh with floating orbs ═══ */}
@@ -267,11 +267,11 @@ export default function ChallengePage() {
           {/* Badge */}
           <div className="ch-badge">
             <span className="ch-badge-dot" />
-            Bug Bounty + Hiring Challenge
+            Bug Bounty + Hiring Avalanche
           </div>
 
           <h1 className="ch-hero-title">
-            The Camora <span className="ch-hero-gradient-text">Challenge</span>
+            The Camora <span className="ch-hero-gradient-text">Avalanche</span>
           </h1>
           <p className="mt-5 text-xl text-white/50" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
             Find bugs. Build features. Win prizes. Join the founding team.

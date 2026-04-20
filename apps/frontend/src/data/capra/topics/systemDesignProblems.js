@@ -1440,6 +1440,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       advancedImplementation: {
         title: 'Hybrid Fan-out (Twitter\'s Approach)',
         description: 'Fan-out on write for <10K followers, celebrity tweets merged on read from cache',
+        diagramSrc: '/diagrams/twitter/impl-advanced.png',
         svgTemplate: 'hybridFanout',
         keyPoints: [
           'Follower threshold (e.g., 10K) determines fan-out strategy',
@@ -4874,6 +4875,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/instagram/impl-advanced.png',
         svgTemplate: 'instagramAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -15390,6 +15392,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
 
       advancedImplementation: {
         title: 'Production Architecture',
+        diagramSrc: '/diagrams/tinder/impl-advanced.png',
         svgTemplate: 'tinderAdvanced',
         keyPoints: [
           'Pre-computed recommendations: Redis sorted sets per user',
@@ -26551,6 +26554,7 @@ For very large meetings (webinars):
       basicImplementation: {
         title: 'Simple Video Call',
         description: 'Peer-to-peer for 2 participants',
+        diagramSrc: '/diagrams/zoom/impl-basic.png',
         svgTemplate: 'zoom',
         architecture: `
 ┌─────────────────────────────────────────────────────────────┐
@@ -26579,6 +26583,7 @@ For very large meetings (webinars):
 
       advancedImplementation: {
         title: 'Production Video Conferencing',
+        diagramSrc: '/diagrams/zoom/impl-advanced.png',
         svgTemplate: 'zoomAdvanced',
         architecture: `
 ┌─────────────────────────────────────────────────────────────────────────────┐
