@@ -115,7 +115,7 @@ MONITORING: CloudWatch, X-Ray, Centralized logging, Alerting.`;
 // ============================================================================
 // Main App Component
 // ============================================================================
-export default function DashboardPage({ mode: modeProp } = {}) {
+export default function DashboardPage({ mode: modeProp, embedded = false } = {}) {
   useEffect(() => {
     document.title = 'Dashboard | Camora';
     return () => { document.title = 'Camora'; };
@@ -737,7 +737,8 @@ export default function DashboardPage({ mode: modeProp } = {}) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mode selector + Assistant toggle — compact bar, no duplicate header */}
+        {/* Mode selector + Assistant toggle — hidden when embedded in PracticePage */}
+        {!embedded && (
         <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
           <AscendModeSelector mode={ascendMode} onModeChange={handleModeChange} />
           <button onClick={() => setShowAscendAssistant(!showAscendAssistant)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showAscendAssistant ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'}`}>
@@ -745,6 +746,7 @@ export default function DashboardPage({ mode: modeProp } = {}) {
             <span className="hidden sm:inline">Assistant</span>
           </button>
         </div>
+        )}
 
         {/* Quick Nav Pills — mobile only */}
         {isMobile && (
