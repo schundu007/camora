@@ -733,7 +733,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   // Main App Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={`h-screen flex overflow-hidden landing-root text-[var(--text-primary)]`} style={{ background: 'transparent', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
+    <div className={`${embedded ? 'h-full' : 'h-screen'} flex overflow-hidden landing-root text-[var(--text-primary)]`} style={{ background: 'transparent', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
