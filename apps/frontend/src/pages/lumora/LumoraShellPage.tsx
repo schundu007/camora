@@ -11,6 +11,8 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import TopBar from '../../components/layout/TopBar';
+import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 
 // Lazy load heavy layouts — only mounted on first tab activation
@@ -126,11 +128,13 @@ export function LumoraShellPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: 'transparent' }}>
-      {/* Audio controls bar — only on coding/design tabs */}
-      {(activeTab === 'coding' || activeTab === 'design') && (
-        <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
-      )}
+    <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
+      {/* Left icon rail */}
+      <LumoraIconRail
+        activeTab={activeTab}
+        sessionsOpen={sessionsOpen}
+        onToggleSessions={() => setSessionsOpen(prev => !prev)}
+      />
 
       {/* Sessions sidebar */}
       <SessionSidebar
@@ -140,7 +144,13 @@ export function LumoraShellPage() {
       />
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
+        {/* Top bar — standard nav on home, audio controls on coding/design */}
+        {(activeTab === 'coding' || activeTab === 'design') ? (
+          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        ) : (
+          <TopBar onToggleSidebar={() => {}} sidebarOpen={false} />
+        )}
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
