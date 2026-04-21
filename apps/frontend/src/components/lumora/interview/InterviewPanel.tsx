@@ -167,9 +167,9 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const COPILOTS = [
-    { name: 'Interview', desc: 'A real-time interview co-pilot that helps you answer faster and more confidently.', icon: '💬', onClick: () => onSwitchToCoding?.() },
-    { name: 'System Design', desc: 'Architecture diagrams and system design answers in real-time.', icon: '🏗️', onClick: () => onSwitchToDesign?.() },
-    { name: 'Behavioral', desc: 'STAR method answers for behavioral and leadership questions.', icon: '🎯', onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
+    { name: 'Interview', desc: 'A real-time interview co-pilot that helps you answer faster and more confidently.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>, onClick: () => onSwitchToCoding?.() },
+    { name: 'System Design', desc: 'Architecture diagrams and system design answers in real-time.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>, onClick: () => onSwitchToDesign?.() },
+    { name: 'Behavioral', desc: 'STAR method answers for behavioral and leadership questions.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>, onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
   ];
 
   const QUICK_PROMPTS = [
@@ -208,8 +208,8 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {COPILOTS.map(cp => (
             <button key={cp.name} onClick={cp.onClick} className="group text-left p-5 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{cp.icon}</span>
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(41,181,232,0.1)' }}>{cp.icon}</div>
                 <span className="text-sm font-bold" style={{ color: '#0F172A' }}>{cp.name}</span>
               </div>
               <p className="text-xs leading-relaxed mb-3" style={{ color: '#64748B' }}>{cp.desc}</p>
