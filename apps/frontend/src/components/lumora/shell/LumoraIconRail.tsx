@@ -48,22 +48,29 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
     background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
   });
 
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <nav className="hidden md:flex flex-col w-[200px] shrink-0 py-3" style={{ background: '#0e7490', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+    <nav
+      className="hidden md:flex flex-col shrink-0 py-3 transition-all duration-200"
+      style={{ width: expanded ? 200 : 60, background: '#0e7490', borderRight: '1px solid rgba(255,255,255,0.1)' }}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+    >
       {/* Logo */}
-      <Link to="/" className="flex items-center gap-2.5 px-4 mb-5" title="Camora">
-        <CamoraLogo size={28} />
-        <span className="text-sm font-bold text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Camora</span>
+      <Link to="/" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Camora">
+        <CamoraLogo size={expanded ? 28 : 24} />
+        {expanded && <span className="text-sm font-bold text-white whitespace-nowrap" style={{ fontFamily: "'Clash Display', sans-serif" }}>Camora</span>}
       </Link>
 
       {/* Main nav */}
-      <div className="flex flex-col gap-0.5 px-2">
+      <div className="flex flex-col gap-0.5 px-1.5">
         {MAIN_ITEMS.map(item => {
           const active = isActive(item.id);
           return (
-            <Link key={item.id} to={item.path} className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all" style={itemStyle(active)}>
+            <Link key={item.id} to={item.path} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all`} style={itemStyle(active)} title={expanded ? undefined : item.label}>
               {item.icon}
-              {item.label}
+              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
             </Link>
           );
         })}
@@ -73,17 +80,17 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       <div className="mx-4 my-3 h-px" style={{ background: 'rgba(255,255,255,0.12)' }} />
 
       {/* More section */}
-      <div className="px-2">
-        <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>More</p>
+      <div className="px-1.5">
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>More</p>}
         {/* Account dropdown */}
-        <button onClick={() => setAccountOpen(!accountOpen)} className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-[13px] font-medium transition-all" style={{ color: 'rgba(255,255,255,0.7)' }}>
+        <button onClick={() => setAccountOpen(!accountOpen)} className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-all`} style={{ color: 'rgba(255,255,255,0.7)' }} title={expanded ? undefined : 'Account'}>
           <div className="flex items-center gap-3">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-            Account
+            {expanded && 'Account'}
           </div>
-          <svg className={`w-3.5 h-3.5 transition-transform ${accountOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+          {expanded && <svg className={`w-3.5 h-3.5 transition-transform ${accountOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>}
         </button>
-        {accountOpen && (
+        {accountOpen && expanded && (
           <div className="ml-5 flex flex-col gap-0.5">
             {MORE_ITEMS.map(item => (
               <a key={item.id} href={item.path} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}
@@ -102,38 +109,26 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
 
       {/* Bottom items */}
       <div className="flex flex-col gap-0.5 px-2">
-        {/* Go Invisible */}
-        <button onClick={() => {
-          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', metaKey: true }));
-        }} className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full" style={{ color: 'rgba(255,255,255,0.6)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-          Go Invisible
-        </button>
-        {/* Audio Check */}
-        <button onClick={() => {
-          navigator.mediaDevices?.getUserMedia({ audio: true })
-            .then(stream => { stream.getTracks().forEach(t => t.stop()); alert('Microphone is working! Audio check passed.'); })
-            .catch(() => alert('Microphone access denied. Please allow microphone access in your browser settings.'));
-        }} className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full" style={{ color: 'rgba(255,255,255,0.6)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
-          Audio Check
-        </button>
-        <button onClick={() => alert('Help: Visit camora.cariara.com for documentation and support.\n\nKeyboard shortcuts:\n⌘K — Focus input\n⌘M — Toggle microphone\n⌘B — Blank screen\n⌘S — Search')}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full" style={{ color: 'rgba(255,255,255,0.6)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-          Help
-        </button>
+        {[
+          { label: 'Go Invisible', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>,
+            onClick: () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', metaKey: true })) },
+          { label: 'Audio Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>,
+            onClick: () => navigator.mediaDevices?.getUserMedia({ audio: true }).then(s => { s.getTracks().forEach(t => t.stop()); alert('Microphone working!'); }).catch(() => alert('Microphone access denied.')) },
+          { label: 'Help', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
+            onClick: () => alert('Shortcuts: ⌘K focus · ⌘M mic · ⌘B blank · ⌘S search') },
+        ].map(item => (
+          <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full`} style={{ color: 'rgba(255,255,255,0.6)' }} title={expanded ? undefined : item.label}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
+            {item.icon}
+            {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+          </button>
+        ))}
       </div>
 
       {/* User */}
-      <div className="px-3 pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <UserDropdown variant="dark" showName position="above-left" />
+      <div className="px-1.5 pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <UserDropdown variant="dark" showName={expanded} compact={!expanded} position="above-left" />
       </div>
     </nav>
   );
