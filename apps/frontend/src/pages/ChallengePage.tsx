@@ -724,47 +724,20 @@ export default function ChallengePage() {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
-          background: var(--bg-app);
-          color: var(--text-primary);
-          font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+          background: #FFFFFF;
+          color: #0F172A;
+          font-family: 'Clash Display', 'Satoshi', system-ui, sans-serif;
           overflow-x: hidden;
         }
 
         /* ── Hero ── */
         .ch-hero {
           position: relative;
-          min-height: 85vh;
+          padding: 140px 0 80px;
           overflow: hidden;
+          background: linear-gradient(180deg, #EBF8FF 0%, #FFFFFF 100%);
         }
-        .ch-hero-mesh {
-          position: absolute; inset: 0;
-          background:
-            radial-gradient(ellipse 80% 60% at 20% 30%, rgba(34,211,238,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 50% at 80% 20%, rgba(56,189,248,0.06) 0%, transparent 60%),
-            radial-gradient(ellipse 50% 40% at 50% 80%, rgba(34,211,238,0.05) 0%, transparent 60%),
-            radial-gradient(ellipse 40% 30% at 90% 70%, rgba(56,189,248,0.04) 0%, transparent 60%);
-          animation: mesh-shift 12s ease-in-out infinite alternate;
-        }
-        @keyframes mesh-shift {
-          0% { transform: scale(1) translate(0, 0); }
-          100% { transform: scale(1.05) translate(-2%, 1%); }
-        }
-        .ch-hero-orb {
-          position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
-        }
-        .ch-orb-1 { width: 400px; height: 400px; top: 10%; left: -5%; background: rgba(34,211,238,0.1); animation: orb-float 8s ease-in-out infinite; }
-        .ch-orb-2 { width: 350px; height: 350px; top: 60%; right: -8%; background: rgba(56,189,248,0.08); animation: orb-float 10s ease-in-out infinite reverse; }
-        .ch-orb-3 { width: 250px; height: 250px; bottom: 5%; left: 30%; background: rgba(34,211,238,0.06); animation: orb-float 7s ease-in-out infinite 2s; }
-        @keyframes orb-float {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-30px) scale(1.08); }
-        }
-        .ch-hero-grid {
-          position: absolute; inset: 0;
-          background-image: linear-gradient(rgba(34,211,238,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.06) 1px, transparent 1px);
-          background-size: 48px 48px;
-          mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
-        }
+        .ch-hero-mesh, .ch-hero-orb, .ch-hero-grid { display: none; }
 
         .ch-badge {
           display: inline-flex; align-items: center; gap: 8px;
@@ -787,15 +760,16 @@ export default function ChallengePage() {
         }
 
         .ch-hero-title {
-          font-size: clamp(3rem, 8vw, 7rem);
-          font-weight: 900;
+          font-size: clamp(2.5rem, 6vw, 5rem);
+          font-weight: 800;
           letter-spacing: -0.04em;
           line-height: 1.05;
-          color: var(--text-primary);
-          white-space: nowrap;
+          color: #0F172A;
+          text-transform: uppercase;
+          letter-spacing: -0.02em;
         }
         .ch-hero-gradient-text {
-          background: linear-gradient(135deg, var(--accent), #06B6D4, #0891B2, #fbbf24);
+          background: linear-gradient(135deg, #29B5E8, #06B6D4);
           background-size: 300% 300%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -882,11 +856,12 @@ export default function ChallengePage() {
         }
 
         /* ── Sections ── */
-        .ch-section { padding: 56px 0; position: relative; }
-        .ch-section-head { text-align: center; margin-bottom: 40px; }
-        .ch-section-tag { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; }
-        .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-top: 6px; }
-        .ch-section-sub { font-size: 16px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; }
+        .ch-section { padding: 100px 0; position: relative; }
+        .ch-section:nth-child(even) { background: #F8FAFC; }
+        .ch-section-head { text-align: center; margin-bottom: 56px; }
+        .ch-section-tag { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.2em; font-family: 'JetBrains Mono', monospace; }
+        .ch-section-title { font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800; color: #0F172A; letter-spacing: -0.02em; margin-top: 12px; text-transform: uppercase; }
+        .ch-section-sub { font-size: 16px; color: #475569; margin-top: 10px; line-height: 1.6; }
 
         /* ── Glass card ── */
         .ch-glass-card {
