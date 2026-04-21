@@ -58,8 +58,12 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 function normalizeValue(v: unknown): string {
-  if (v === null || v === undefined) return 'null';
-  return String(v).trim().toLowerCase();
+  if (v === null || v === undefined || v === '') return 'null';
+  const s = String(v).trim();
+  // Normalize numbers: "1.0" → "1", "2.00" → "2", but keep "1.5"
+  const num = Number(s);
+  if (!isNaN(num) && s !== '') return String(num);
+  return s.toLowerCase();
 }
 
 function rowToKey(row: (string | number | null)[]): string {
@@ -84,11 +88,8 @@ function rowsMatch(
 }
 
 function columnsMatch(actual: string[], expected: string[]): boolean {
-  if (actual.length !== expected.length) return false;
-  for (let i = 0; i < actual.length; i++) {
-    if (actual[i].trim().toLowerCase() !== expected[i].trim().toLowerCase()) return false;
-  }
-  return true;
+  // Only check column count — ignore names since aliases may differ
+  return actual.length === expected.length;
 }
 
 // ─── Result Table ───────────────────────────────────────────────────────────
