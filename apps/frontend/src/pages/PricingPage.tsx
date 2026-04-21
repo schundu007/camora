@@ -68,7 +68,7 @@ export default function PricingPage() {
 
       {/* ═══════════ COMPARISON TABLE ═══════════ */}
       <section className="px-6 py-24" style={{ background: '#F8FAFC' }}>
-        <div className="max-w-5xl mx-auto">
+        <div className="w-full max-w-[95%] lg:max-w-[90%] mx-auto">
           <div className="text-center mb-14">
             <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>COMPARISON</span>
             <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
@@ -96,7 +96,7 @@ export default function PricingPage() {
               <div className="rounded-xl overflow-x-auto" style={{ border: '1px solid #E2E8F0' }}>
                 <div style={{ minWidth: '900px' }}>
                 {/* Header */}
-                <div className="grid" style={{ gridTemplateColumns: `minmax(200px, 2fr) repeat(${competitors.length}, minmax(80px, 1fr))` }}>
+                <div className="grid" style={{ gridTemplateColumns: `minmax(180px, 2fr) repeat(${competitors.length}, minmax(70px, 1fr))` }}>
                   <div className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider sticky left-0 z-10" style={{ color: '#94A3B8', fontFamily: F.mono, background: '#FFFFFF', borderBottom: '2px solid #E2E8F0' }}>
                     Feature
                   </div>
@@ -113,7 +113,7 @@ export default function PricingPage() {
 
                 {/* Rows */}
                 {COMPARISON.map((row, ri) => (
-                  <div key={ri} className="grid" style={{ gridTemplateColumns: `minmax(200px, 2fr) repeat(${competitors.length}, minmax(80px, 1fr))`, borderBottom: ri < COMPARISON.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                  <div key={ri} className="grid" style={{ gridTemplateColumns: `minmax(180px, 2fr) repeat(${competitors.length}, minmax(70px, 1fr))`, borderBottom: ri < COMPARISON.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
                     <div className="px-5 py-3 text-[12px] flex items-center sticky left-0 z-10" style={{ color: row.unique ? accent : '#334155', fontWeight: row.unique ? 600 : 400, background: ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
                       {row.feature}
                     </div>
