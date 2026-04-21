@@ -180,6 +180,25 @@ export default function AnalyticsPage() {
     setGranting(null);
   }
 
+  // Delete user with confirmation
+  async function deleteUser(userId: number) {
+    const user = users.find(u => u.id === userId);
+    if (!confirm(`Are you sure you want to DELETE ${user?.name || user?.email}?\n\nThis will permanently remove the user and ALL their data. This cannot be undone.`)) return;
+    if (!confirm(`FINAL CONFIRMATION: Delete ${user?.email}?`)) return;
+
+    try {
+      const r = await fetch(`${API}/api/admin/delete-user/${userId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Failed to delete user');
+      setUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err: any) {
+      alert(`Failed to delete user: ${err.message}`);
+    }
+  }
+
   // Plan filter from summary cards
   const [planFilter, setPlanFilter] = useState<string>('');
 
@@ -475,7 +494,7 @@ export default function AnalyticsPage() {
                             {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 items-center">
                               {[3, 7, 14].map(d => (
                                 <button
                                   key={d}
@@ -486,6 +505,13 @@ export default function AnalyticsPage() {
                                   {granting === u.id ? '...' : `${d}d`}
                                 </button>
                               ))}
+                              <button
+                                onClick={() => deleteUser(u.id)}
+                                className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-all ml-1"
+                                title={`Delete ${u.email}`}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                              </button>
                             </div>
                           </td>
                         </tr>
