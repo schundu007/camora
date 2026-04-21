@@ -634,7 +634,7 @@ export default function PracticePage() {
         {activeView === 'code-solver' && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-              <DashboardPage mode="coding" />
+              <DashboardPage mode="coding" embedded />
             </Suspense>
           </div>
         )}
@@ -643,7 +643,7 @@ export default function PracticePage() {
         {activeView === 'design-solver' && (
           <div className="flex-1 min-h-0 overflow-hidden">
             <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-              <DashboardPage mode="system-design" />
+              <DashboardPage mode="system-design" embedded />
             </Suspense>
           </div>
         )}
