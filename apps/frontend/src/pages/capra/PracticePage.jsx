@@ -314,8 +314,16 @@ export default function PracticePage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
-  // Top-level tab: practice | code-solver | design-solver
-  const [activeView, setActiveView] = useState('practice');
+  // Top-level tab: practice | code-solver | design-solver — persist in URL
+  const urlView = new URLSearchParams(window.location.search).get('view');
+  const [activeView, setActiveViewState] = useState(urlView || 'practice');
+  const setActiveView = (view) => {
+    setActiveViewState(view);
+    const url = new URL(window.location);
+    if (view === 'practice') url.searchParams.delete('view');
+    else url.searchParams.set('view', view);
+    window.history.replaceState({}, '', url);
+  };
 
   // Stats
   const [stats, setStats] = useState(getStats);
@@ -590,62 +598,63 @@ export default function PracticePage() {
   const finalAvgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
   return (
-    <div className="practice-root" style={{ background: 'transparent', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="practice-root" style={{ background: 'transparent', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* ═══════════ Main Content ═══════════ */}
-      <div>
-        <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
-
-          {/* ── View Tabs: Practice / Code Solver / Design Solver ── */}
-          <div style={{ marginBottom: 24 }}>
-            <h1 className="practice-display" style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Practice</h1>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6 }}>Mock interviews, code solver, and design solver — all in one place.</p>
-
-            <div style={{ display: 'flex', gap: 4, marginTop: 16, padding: 4, background: 'var(--bg-elevated)', borderRadius: 12, border: '1px solid var(--border)', width: 'fit-content' }}>
-              {[
-                { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={14} /> },
-                { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={14} /> },
-                { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={14} /> },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveView(tab.key)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 600,
-                    background: activeView === tab.key ? 'var(--accent)' : 'transparent',
-                    color: activeView === tab.key ? '#fff' : 'var(--text-secondary)',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* ── View Tabs — compact bar ── */}
+        <div className="flex items-center gap-4 px-4 sm:px-6 py-2 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)', flexShrink: 0 }}>
+          <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Practice</h1>
+          <div style={{ display: 'flex', gap: 2, padding: 2, background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
+            {[
+              { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
+              { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
+              { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={12} /> },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveView(tab.key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600,
+                  background: activeView === tab.key ? 'var(--accent)' : 'transparent',
+                  color: activeView === tab.key ? '#fff' : 'var(--text-secondary)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* ── Code Solver View ── */}
-          {activeView === 'code-solver' && (
-            <div style={{ margin: '0 -16px', minHeight: 'calc(100vh - 200px)' }}>
-              <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-                <DashboardPage mode="coding" />
-              </Suspense>
-            </div>
-          )}
+        {/* ── Code Solver View — fills remaining height ── */}
+        {activeView === 'code-solver' && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+              <DashboardPage mode="coding" />
+            </Suspense>
+          </div>
+        )}
 
-          {/* ── Design Solver View ── */}
-          {activeView === 'design-solver' && (
-            <div style={{ margin: '0 -16px', minHeight: 'calc(100vh - 200px)' }}>
-              <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-                <DashboardPage mode="system-design" />
-              </Suspense>
-            </div>
-          )}
+        {/* ── Design Solver View — fills remaining height ── */}
+        {activeView === 'design-solver' && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+              <DashboardPage mode="system-design" />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ── Mock Interview content — scrollable ── */}
+        {activeView === 'practice' && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
           {/* ── SETUP PHASE (Mock Interview) ── */}
-          {activeView === 'practice' && phase === 'setup' && (
+          {phase === 'setup' && (
             <>
 
               {/* Readiness — compact inline */}
@@ -840,7 +849,7 @@ export default function PracticePage() {
           )}
 
           {/* ── ACTIVE PHASE ── */}
-          {activeView === 'practice' && phase === 'active' && questions[currentIdx] && (
+          {phase === 'active' && questions[currentIdx] && (
             <div>
               {/* Timer bar + progress dots */}
               <div style={{ marginBottom: 20 }}>
@@ -1220,7 +1229,7 @@ export default function PracticePage() {
           )}
 
           {/* ── RESULTS PHASE ── */}
-          {activeView === 'practice' && phase === 'results' && (() => {
+          {phase === 'results' && (() => {
             const passed = scores.filter(s => s >= 60).length;
             const total = scores.length;
             const grade = finalAvgScore >= 90 ? 'A+' : finalAvgScore >= 80 ? 'A' : finalAvgScore >= 70 ? 'B' : finalAvgScore >= 60 ? 'C' : finalAvgScore >= 40 ? 'D' : 'F';
@@ -1383,7 +1392,10 @@ export default function PracticePage() {
             );
           })()}
 
-        </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* ═══════════ Styles ═══════════ */}
