@@ -666,6 +666,17 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 } catch {}
               }
             }
+            // Process remaining buffer — the done event often lands here
+            if (buffer.trim()) {
+              const t = buffer.trim();
+              if (t.startsWith('data: ')) {
+                try {
+                  const parsed = JSON.parse(t.slice(6));
+                  if (parsed.done && parsed.result) { result = parsed.result; }
+                  else if (parsed.chunk) { chunks += parsed.chunk; }
+                } catch {}
+              }
+            }
           }
           const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : { summary: 'Generation completed but no content received' });
           setStreamingText('');
@@ -719,6 +730,17 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 if (parsed.error) { chunks = `Error: ${parsed.error}`; setStreamingText(chunks); }
                 else if (parsed.done && parsed.result) { result = parsed.result; }
                 else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
+              } catch {}
+            }
+          }
+          // Process remaining buffer — done event often lands here
+          if (buffer.trim()) {
+            const t = buffer.trim();
+            if (t.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(t.slice(6));
+                if (parsed.done && parsed.result) { result = parsed.result; }
+                else if (parsed.chunk) { chunks += parsed.chunk; }
               } catch {}
             }
           }
