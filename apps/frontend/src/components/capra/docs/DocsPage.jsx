@@ -37,7 +37,7 @@ import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capr
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
 const codingTopics = [..._codingTopics, ...extraCodingTopics];
-const systemDesignProblemCategories = [..._sdProblemCategories, ...extraSystemDesignProblemCategories];
+const systemDesignProblemCategories = [..._sdProblemCategories, ...extraSystemDesignProblemCategories.filter(c => !_sdProblemCategories.some(p => p.id === c.id))];
 const systemDesignProblemCategoryMap = { ..._sdProblemCategoryMap, ...extraSystemDesignProblemCategoryMap };
 const systemDesigns = [..._systemDesigns, ...extraSystemDesigns];
 const lldProblemCategoryMap = { ..._lldProblemCategoryMap, ...extraLldProblemCategoryMap };
