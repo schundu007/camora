@@ -1919,21 +1919,30 @@ export default function TopicDetail({
                 <div id="architecture" className="scroll-mt-24">
                   <button
                     onClick={() => setDiagramPanelOpen(true)}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:-translate-y-0.5"
-                    style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)' }}
+                    className="w-full flex items-center justify-between px-5 py-4 rounded-xl transition-all hover:-translate-y-1 hover:shadow-lg group"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(6,182,212,0.08) 100%)',
+                      border: '2px solid var(--accent)',
+                      boxShadow: '0 4px 16px rgba(34,211,238,0.15)',
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff' }}>
-                        <Icon name="layers" size={18} />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(34,211,238,0.3)' }}>
+                        <Icon name="layers" size={22} />
                       </div>
                       <div className="text-left">
-                        <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Architecture Diagram</span>
-                        <span className="block text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                          {diagramData?.imageUrl ? 'View cached diagram' : 'Open diagram panel'} · AWS / GCP / Azure
+                        <span className="text-base font-bold block" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Architecture Diagram</span>
+                        <span className="text-xs mt-0.5 block" style={{ color: 'var(--accent)' }}>
+                          {diagramData?.imageUrl ? 'View diagram' : 'Open diagram'} · AWS / GCP / Azure
                         </span>
                       </div>
                     </div>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                    <div className="flex items-center gap-2">
+                      <span className="hidden sm:inline text-xs font-semibold px-3 py-1.5 rounded-lg group-hover:bg-[var(--accent)] group-hover:text-white transition-all" style={{ background: 'rgba(34,211,238,0.1)', color: 'var(--accent)' }}>
+                        Open Panel
+                      </span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                    </div>
                   </button>
                 </div>
               )}
@@ -3126,7 +3135,7 @@ export default function TopicDetail({
           <div className="fixed inset-0 z-50 bg-black/30" onClick={() => setDiagramPanelOpen(false)} />
 
           {/* Panel */}
-          <div className="fixed top-0 right-0 z-50 h-full flex flex-col" style={{ width: 'min(600px, 50vw)', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', boxShadow: '-8px 0 32px rgba(0,0,0,0.1)' }}>
+          <div className="fixed top-0 right-0 z-50 h-full flex flex-col" style={{ width: 'min(900px, 65vw)', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', boxShadow: '-8px 0 32px rgba(0,0,0,0.1)' }}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
               <div className="flex items-center gap-3">
