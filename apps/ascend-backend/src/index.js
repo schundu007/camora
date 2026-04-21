@@ -590,6 +590,47 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
   }
 });
 
+// Admin: delete a user and all associated data
+app.delete('/api/admin/delete-user/:userId', authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+
+    // Prevent self-deletion
+    if (parseInt(userId) === req.user.id) return res.status(400).json({ error: 'Cannot delete your own account' });
+
+    const user = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
+    if (!user.rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const { email, name } = user.rows[0];
+
+    // Delete all associated data (order matters for foreign keys)
+    const tables = [
+      'ascend_badges', 'ascend_credits', 'ascend_credit_transactions',
+      'ascend_free_usage', 'ascend_subscriptions', 'ascend_stripe_events',
+      'ascend_prep_progress', 'ascend_prep_plans', 'ascend_topic_comments',
+      'ascend_gamification', 'ascend_referrals',
+      'lumora_conversations', 'lumora_messages', 'lumora_usage_logs',
+      'lumora_bookmarks', 'lumora_quotas', 'coding_usage',
+    ];
+    for (const table of tables) {
+      try { await query(`DELETE FROM ${table} WHERE user_id = $1`, [userId]); } catch { /* table may not exist */ }
+    }
+
+    // Delete the user record
+    await query('DELETE FROM users WHERE id = $1', [userId]);
+
+    console.log(`[Admin DeleteUser] Deleted user ${userId} (${email})`);
+    res.json({ ok: true, email, name });
+  } catch (err) {
+    console.error('[Admin DeleteUser] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/extension', extensionRouter);
 
