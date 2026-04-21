@@ -249,7 +249,7 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
 }
 
 /* ═══ Icicle Panel ═══ */
-export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
+export function AICompanionPanel({ isOpen, onClose, initialQuestion }: AICompanionPanelProps & { initialQuestion?: string }) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -268,6 +268,22 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const initialQuestionSent = useRef(false);
+
+  // Handle initial question from behavioral button
+  useEffect(() => {
+    if (initialQuestion && !initialQuestionSent.current) {
+      initialQuestionSent.current = true;
+      setMinimized(false);
+      // Small delay to let panel render before sending
+      setTimeout(() => ask(initialQuestion), 300);
+    }
+  }, [initialQuestion]);
+
+  // Reset when question changes
+  useEffect(() => {
+    if (!initialQuestion) initialQuestionSent.current = false;
+  }, [initialQuestion]);
 
   // Drag handlers for floating window
   useEffect(() => {
