@@ -55,19 +55,80 @@ const SIDEBAR_SECTIONS = [
 function formatPrepContent(content: any): string {
   if (!content) return JSON.stringify({ summary: 'No content generated' });
   if (typeof content === 'string') {
-    let cleaned = content.replace(/^```json\s*/m, '').replace(/```\s*$/m, '').replace(/^RAWCONTENT:\s*/m, '').replace(/^data:\s*/gm, '').trim();
+    // Aggressively strip markdown fences, data prefixes, and whitespace
+    let cleaned = content
+      .replace(/^```(?:json)?\s*/gm, '')
+      .replace(/```\s*$/gm, '')
+      .replace(/^RAWCONTENT:\s*/m, '')
+      .replace(/^data:\s*/gm, '')
+      .trim();
+    // Try to find JSON object in the string (may have leading text)
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart >= 0 && jsonEnd > jsonStart) {
+      try {
+        const parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+        return JSON.stringify(parsed);
+      } catch {}
+    }
+    // Try full string as JSON
     try { const parsed = JSON.parse(cleaned); return JSON.stringify(parsed); } catch {}
+    // Fallback: wrap plain text as summary
     return JSON.stringify({ summary: cleaned });
   }
-  // content is already an object — stringify it
   try { return JSON.stringify(content); } catch { return JSON.stringify({ summary: String(content) }); }
 }
 
 /** Rich content renderer for prep sections */
 function PrepContentRenderer({ content }: { content: string }) {
   let data: any;
-  try { data = JSON.parse(content); } catch { return <div className="text-sm whitespace-pre-wrap" style={{ color: '#475569' }}>{content}</div>; }
-  if (!data || typeof data !== 'object') return <div className="text-sm" style={{ color: '#475569' }}>{String(data)}</div>;
+  try {
+    data = JSON.parse(content);
+  } catch {
+    // Try to extract JSON from the string
+    const jsonStart = content.indexOf('{');
+    const jsonEnd = content.lastIndexOf('}');
+    if (jsonStart >= 0 && jsonEnd > jsonStart) {
+      try { data = JSON.parse(content.slice(jsonStart, jsonEnd + 1)); } catch {}
+    }
+    if (!data) return <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: '#475569' }}>{content}</div>;
+  }
+  if (!data || typeof data !== 'object') return <div className="text-sm leading-relaxed" style={{ color: '#475569' }}>{String(data)}</div>;
+
+  // If the data has no recognized keys, render all values as readable text
+  const knownKeys = ['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'techStack', 'keyPoints', 'tips', 'talkingPoints', 'deliveryTips', 'abbreviations', 'recentNews', 'whyTheyAsk', 'suggestedAnswer'];
+  const hasKnownKeys = Object.keys(data).some(k => knownKeys.includes(k));
+  if (!hasKnownKeys) {
+    // Fallback: render all key-value pairs as readable sections
+    return (
+      <div className="space-y-4">
+        {Object.entries(data).map(([key, val]) => (
+          <div key={key} className="rounded-lg p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#29B5E8' }}>{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+            {typeof val === 'string' ? (
+              <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{val}</p>
+            ) : Array.isArray(val) ? (
+              <ul className="space-y-1">{val.map((item: any, i: number) => (
+                <li key={i} className="text-sm" style={{ color: '#475569' }}>
+                  {typeof item === 'string' ? `• ${item}` : typeof item === 'object' ? (
+                    <div className="rounded-lg p-3 mb-1" style={{ background: '#fff', border: '1px solid #E2E8F0' }}>
+                      {Object.entries(item).map(([k, v]) => (
+                        <p key={k} className="text-sm mb-1"><strong className="text-xs uppercase" style={{ color: '#94A3B8' }}>{k}: </strong><span style={{ color: '#475569' }}>{String(v)}</span></p>
+                      ))}
+                    </div>
+                  ) : String(item)}
+                </li>
+              ))}</ul>
+            ) : typeof val === 'object' && val ? (
+              <div className="space-y-1">{Object.entries(val).map(([k, v]) => (
+                <p key={k} className="text-sm"><strong style={{ color: '#64748B' }}>{k}: </strong><span style={{ color: '#475569' }}>{typeof v === 'string' ? v : JSON.stringify(v)}</span></p>
+              ))}</div>
+            ) : <p className="text-sm" style={{ color: '#475569' }}>{String(val)}</p>}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -734,16 +795,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             </div>
             <div className="flex-1 overflow-auto p-6">
               {sectionStatus[activeSection] === 'generating' ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#22D3EE08', border: '1px solid #e2e8f0' }}>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: '#22D3EE' }} />
-                    <span className="text-xs font-medium" style={{ color: '#22D3EE' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
-                  </div>
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: '#22D3EE', borderTopColor: 'transparent' }} />
+                  <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}</p>
+                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>AI is crafting personalized content based on your resume and JD...</p>
                   {streamingText && (
-                    <div className="rounded-lg p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-[70vh]" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569' }}>
-                      {streamingText}
-                      <span className="inline-block w-1.5 h-4 bg-[#22D3EE] animate-pulse ml-0.5" />
-                    </div>
+                    <p className="text-[10px] mt-3 px-3 py-1 rounded-full" style={{ background: '#F1F5F9', color: '#64748B' }}>
+                      {Math.round(streamingText.length / 10)} tokens generated
+                    </p>
                   )}
                 </div>
               ) : state.sections[activeSection] ? (
