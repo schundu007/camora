@@ -13,17 +13,19 @@ const F = {
 };
 
 const COMPARISON = [
-  { feature: 'Real-time AI during live interview', camora: true, finalround: true, lockedin: true, solver: true, sensei: true },
-  { feature: 'Job discovery and matching', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Auto resume and cover letter', camora: true, finalround: false, lockedin: true, solver: false, sensei: false },
-  { feature: '800+ interview prep topics', camora: true, finalround: false, lockedin: false, solver: false, sensei: false },
-  { feature: 'System design with diagrams', camora: true, finalround: false, lockedin: false, solver: false, sensei: false },
-  { feature: 'Mock interview simulator', camora: true, finalround: true, lockedin: true, solver: false, sensei: true },
-  { feature: 'Coding solutions with complexity', camora: true, finalround: true, lockedin: true, solver: true, sensei: true },
-  { feature: 'Speaker voice filtering', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Combined prep + live tool', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Desktop app', camora: true, finalround: true, lockedin: true, solver: true, sensei: false },
-  { feature: 'Mobile app', camora: true, finalround: true, lockedin: false, solver: false, sensei: false },
+  { feature: 'Real-time AI during live interview', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
+  { feature: 'Job discovery and matching', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: false, parakeet: false, unique: true },
+  { feature: 'Auto resume and cover letter', camora: true, finalround: false, lockedin: true, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: false },
+  { feature: 'Auto job apply', camora: true, finalround: false, lockedin: true, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: false, parakeet: false },
+  { feature: '800+ interview prep topics', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: true, algomaster: true, designgurus: true, aiapply: false, offergoose: false, parakeet: false },
+  { feature: 'System design with diagrams', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: 'Partial', algomaster: true, designgurus: true, aiapply: false, offergoose: false, parakeet: false },
+  { feature: 'Mock interview simulator', camora: true, finalround: true, lockedin: true, solver: false, sensei: true, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: false },
+  { feature: 'Coding solutions with complexity', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: true, algomaster: true, designgurus: true, aiapply: false, offergoose: false, parakeet: 'Partial' },
+  { feature: 'Speaker voice filtering', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: false, offergoose: false, parakeet: false, unique: true },
+  { feature: 'Combined prep + live tool', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: 'Partial', offergoose: 'Partial', parakeet: false, unique: true },
+  { feature: 'Voice transcription', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
+  { feature: 'Desktop app', camora: true, finalround: true, lockedin: true, solver: true, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
+  { feature: 'Mobile app (iOS & Android)', camora: true, finalround: true, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: false, parakeet: false },
 ];
 
 const FAQS = [
@@ -79,53 +81,61 @@ export default function PricingPage() {
               { n: 'Camora', p: 'Free to start' },
               { n: 'Final Round', p: '$100/mo' },
               { n: 'LockedIn', p: '$55-120/mo' },
-              { n: 'Interview Solver', p: '$39/mo' },
-              { n: 'Sensei AI', p: '$24-89/mo' },
+              { n: 'Solver', p: '$39/mo' },
+              { n: 'Sensei', p: '$24-89/mo' },
+              { n: 'TechPrep', p: '$39/mo' },
+              { n: 'AlgoMaster', p: '$29/mo' },
+              { n: 'DesignGurus', p: '$98-197/yr' },
+              { n: 'AIApply', p: '$29-200/mo' },
+              { n: 'OfferGoose', p: '$89-200/mo' },
+              { n: 'Parakeet', p: '$100-200/mo' },
             ];
-            const keys = ['camora', 'finalround', 'lockedin', 'solver', 'sensei'];
+            const keys = ['camora', 'finalround', 'lockedin', 'solver', 'sensei', 'techprep', 'algomaster', 'designgurus', 'aiapply', 'offergoose', 'parakeet'];
 
             return (
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+              <div className="rounded-xl overflow-x-auto" style={{ border: '1px solid #E2E8F0' }}>
+                <div style={{ minWidth: '900px' }}>
                 {/* Header */}
-                <div className="grid" style={{ gridTemplateColumns: `2fr repeat(${competitors.length}, 1fr)` }}>
-                  <div className="px-5 py-4 text-xs font-bold uppercase tracking-wider" style={{ color: '#94A3B8', fontFamily: F.mono, background: '#FFFFFF', borderBottom: '2px solid #E2E8F0' }}>
+                <div className="grid" style={{ gridTemplateColumns: `minmax(200px, 2fr) repeat(${competitors.length}, minmax(80px, 1fr))` }}>
+                  <div className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider sticky left-0 z-10" style={{ color: '#94A3B8', fontFamily: F.mono, background: '#FFFFFF', borderBottom: '2px solid #E2E8F0' }}>
                     Feature
                   </div>
                   {competitors.map((c, i) => (
-                    <div key={c.n} className="px-3 py-4 text-center" style={{
+                    <div key={c.n} className="px-2 py-4 text-center" style={{
                       background: i === 0 ? accent : '#FFFFFF',
                       borderBottom: i === 0 ? `2px solid ${accent}` : '2px solid #E2E8F0',
                     }}>
-                      <div className="text-xs font-bold" style={{ color: i === 0 ? '#FFFFFF' : '#0F172A' }}>{c.n}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: i === 0 ? 'rgba(255,255,255,0.8)' : '#94A3B8' }}>{c.p}</div>
+                      <div className="text-[10px] font-bold" style={{ color: i === 0 ? '#FFFFFF' : '#0F172A' }}>{c.n}</div>
+                      <div className="text-[9px] mt-0.5" style={{ color: i === 0 ? 'rgba(255,255,255,0.8)' : '#94A3B8' }}>{c.p}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Rows */}
                 {COMPARISON.map((row, ri) => (
-                  <div key={ri} className="grid" style={{ gridTemplateColumns: `2fr repeat(${competitors.length}, 1fr)`, borderBottom: ri < COMPARISON.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
-                    <div className="px-5 py-3.5 text-sm flex items-center" style={{ color: row.unique ? accent : '#334155', fontWeight: row.unique ? 600 : 400, background: ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
+                  <div key={ri} className="grid" style={{ gridTemplateColumns: `minmax(200px, 2fr) repeat(${competitors.length}, minmax(80px, 1fr))`, borderBottom: ri < COMPARISON.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                    <div className="px-5 py-3 text-[12px] flex items-center sticky left-0 z-10" style={{ color: row.unique ? accent : '#334155', fontWeight: row.unique ? 600 : 400, background: ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
                       {row.feature}
                     </div>
                     {keys.map((k, ci) => {
                       const val = (row as any)[k];
                       return (
-                        <div key={k} className="px-3 py-3.5 flex items-center justify-center" style={{ background: ci === 0 ? 'rgba(41,181,232,0.04)' : ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
+                        <div key={k} className="px-2 py-3 flex items-center justify-center" style={{ background: ci === 0 ? 'rgba(41,181,232,0.04)' : ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
                           {val === true ? (
                             ci === 0
-                              ? <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: accent }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
-                              : <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>
+                              ? <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: accent }}><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
+                              : <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>
                           ) : val === false ? (
-                            <span style={{ color: '#CBD5E1' }}>—</span>
+                            <span style={{ color: '#E2E8F0', fontSize: 12 }}>—</span>
                           ) : (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded" style={{ background: '#FEF3C7', color: '#92400E' }}>{val}</span>
+                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#FEF3C7', color: '#92400E' }}>{val}</span>
                           )}
                         </div>
                       );
                     })}
                   </div>
                 ))}
+                </div>
               </div>
             );
           })()}
