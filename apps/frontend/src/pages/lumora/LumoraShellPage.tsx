@@ -448,30 +448,24 @@ export function LumoraShellPage() {
   );
 }
 
-/* ── Assistants Page ── */
+/* ── Assistants Page — Role + Resume + JD based ── */
 interface Assistant {
   id: string;
   name: string;
-  type: 'coding' | 'system-design' | 'behavioral';
+  role: string;
+  company: string;
   model: string;
-  company?: string;
-  role?: string;
-  notes?: string;
+  resume: string;
+  jobDescription: string;
   createdAt: string;
 }
 
 const AI_MODELS = [
-  { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', desc: 'Fast, balanced', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg> },
-  { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', desc: 'Most capable', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg> },
-  { value: 'gpt-4o', label: 'GPT-4o', provider: 'OpenAI', desc: 'Fast multimodal', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12l2 2 4-4" /></svg> },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'OpenAI', desc: 'Most powerful GPT', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12l2 2 4-4" /></svg> },
-  { value: 'o3-mini', label: 'o3-mini', provider: 'OpenAI', desc: 'Reasoning model', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12l2 2 4-4" /></svg> },
-];
-
-const ASSISTANT_TYPES = [
-  { value: 'coding', label: 'Coding Interview', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
-  { value: 'system-design', label: 'System Design', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
-  { value: 'behavioral', label: 'Behavioral / HR', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg> },
+  { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', color: '#D97706' },
+  { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', color: '#D97706' },
+  { value: 'gpt-4o', label: 'GPT-4o', provider: 'OpenAI', color: '#10B981' },
+  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'OpenAI', color: '#10B981' },
+  { value: 'o3-mini', label: 'o3-mini', provider: 'OpenAI', color: '#10B981' },
 ];
 
 function AssistantsPage() {
@@ -479,134 +473,88 @@ function AssistantsPage() {
     try { return JSON.parse(localStorage.getItem('lumora_assistants') || '[]'); } catch { return []; }
   });
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', type: 'coding', model: 'claude-sonnet', company: '', role: '', notes: '' });
-
-  const save = (list: Assistant[]) => {
-    setAssistants(list);
-    localStorage.setItem('lumora_assistants', JSON.stringify(list));
-  };
-
+  const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
+  const save = (list: Assistant[]) => { setAssistants(list); localStorage.setItem('lumora_assistants', JSON.stringify(list)); };
   const create = () => {
-    if (!form.name.trim()) return;
-    const assistant: Assistant = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      type: form.type as Assistant['type'],
-      model: form.model,
-      company: form.company.trim() || undefined,
-      role: form.role.trim() || undefined,
-      notes: form.notes.trim() || undefined,
-      createdAt: new Date().toISOString(),
-    };
-    save([assistant, ...assistants]);
-    setForm({ name: '', type: 'coding', model: 'claude-sonnet', company: '', role: '', notes: '' });
+    if (!form.company.trim() && !form.role.trim()) return;
+    save([{ id: Date.now().toString(), name: form.name.trim() || (form.company || 'Interview') + ' — ' + (form.role || 'General'), role: form.role.trim(), company: form.company.trim(), model: form.model, resume: form.resume.trim(), jobDescription: form.jobDescription.trim(), createdAt: new Date().toISOString() }, ...assistants]);
+    setForm({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
     setShowCreate(false);
   };
-
-  const remove = (id: string) => {
-    if (!confirm('Delete this assistant?')) return;
-    save(assistants.filter(a => a.id !== id));
-  };
-
+  const remove = (id: string) => { if (confirm('Delete this assistant?')) save(assistants.filter(a => a.id !== id)); };
+  const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
   return (
     <div className="max-w-3xl mx-auto px-6 py-8 w-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Assistants</h2>
-          <p className="text-sm" style={{ color: '#64748B' }}>Create and manage AI assistants for your interviews.</p>
-        </div>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Interview Assistants</h2>
         <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-          New Assistant
+          New
         </button>
       </div>
-
-      {/* Create form */}
+      <p className="text-sm mb-6" style={{ color: '#64748B' }}>Add your resume and job description so AI personalizes answers to your background during live interviews.</p>
       {showCreate && (
         <div className="mb-6 p-5 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: '#0F172A' }}>Create Assistant</h3>
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Assistant name (e.g. Google L5 Prep)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
-            <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none', background: '#fff' }}>
-              {ASSISTANT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Company" className="px-3 py-2 rounded-lg text-sm" style={iS} />
+            <input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Role" className="px-3 py-2 rounded-lg text-sm" style={iS} />
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Name (auto)" className="px-3 py-2 rounded-lg text-sm" style={iS} />
           </div>
-
-          {/* AI Model selector */}
           <div className="mb-3">
-            <label className="text-[10px] font-bold uppercase tracking-wider mb-2 block" style={{ color: '#94A3B8' }}>AI Model</label>
-            <div className="grid grid-cols-5 gap-2">
-              {AI_MODELS.map(m => (
-                <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))}
-                  className="p-2.5 rounded-lg text-left transition-all"
-                  style={{
-                    border: form.model === m.value ? '2px solid #29B5E8' : '1px solid #E2E8F0',
-                    background: form.model === m.value ? 'rgba(41,181,232,0.04)' : '#fff',
-                  }}>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    {m.icon}
-                    <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>{m.label}</span>
-                  </div>
-                  <p className="text-[9px]" style={{ color: '#94A3B8' }}>{m.provider} · {m.desc}</p>
-                </button>
-              ))}
-            </div>
+            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: '#94A3B8' }}>AI Model</label>
+            <div className="flex gap-2">{AI_MODELS.map(m => (
+              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid #E2E8F0', color: form.model === m.value ? m.color : '#64748B', background: form.model === m.value ? m.color + '08' : '#fff' }}>{m.label}</button>
+            ))}</div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Target company (optional)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
-            <input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Target role (optional)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
+          <div className="mb-3">
+            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: '#94A3B8' }}>Your Resume</label>
+            <textarea value={form.resume} onChange={e => setForm(f => ({ ...f, resume: e.target.value }))} placeholder="Paste resume text. AI will reference your experience to craft personalized answers." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
           </div>
-          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notes, focus areas, or custom instructions..." rows={2} className="w-full px-3 py-2 rounded-lg text-sm mb-3" style={{ border: '1px solid #E2E8F0', outline: 'none', resize: 'none' }} />
+          <div className="mb-4">
+            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: '#94A3B8' }}>Job Description</label>
+            <textarea value={form.jobDescription} onChange={e => setForm(f => ({ ...f, jobDescription: e.target.value }))} placeholder="Paste the JD. AI will tailor answers to match role requirements." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
+          </div>
           <div className="flex gap-2">
-            <button onClick={create} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>Create</button>
+            <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: '#29B5E8' }}>Create</button>
             <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color: '#64748B', border: '1px solid #E2E8F0' }}>Cancel</button>
           </div>
         </div>
       )}
-
-      {/* Assistant list */}
-      {assistants.length === 0 ? (
+      {assistants.length === 0 && !showCreate ? (
         <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed #E2E8F0' }}>
-          <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+          <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
           <p className="text-sm font-medium" style={{ color: '#0F172A' }}>No assistants yet</p>
-          <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>Create one to save your interview setup and reuse it anytime.</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: '#94A3B8' }}>Add your resume + job description for personalized AI answers.</p>
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>Create Your First Assistant</button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {assistants.map(a => {
-            const typeInfo = ASSISTANT_TYPES.find(t => t.value === a.type);
-            return (
-              <div key={a.id} className="flex items-center justify-between p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(41,181,232,0.1)', color: '#29B5E8' }}>
-                    {typeInfo?.icon}
+        <div className="space-y-3">{assistants.map(a => {
+          const mi = AI_MODELS.find(m => m.value === a.model);
+          return (
+            <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: '#fff', border: '1px solid #E2E8F0' }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(41,181,232,0.1)' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: '#F1F5F9', color: '#64748B' }}>
-                        {AI_MODELS.find(m => m.value === a.model)?.label || a.model}
-                      </span>
-                    </div>
-                    <p className="text-[11px]" style={{ color: '#94A3B8' }}>
-                      {typeInfo?.label}{a.company ? ` · ${a.company}` : ''}{a.role ? ` · ${a.role}` : ''}
-                    </p>
+                    <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
+                    <p className="text-[11px]" style={{ color: '#94A3B8' }}>{a.company}{a.company && a.role ? ' · ' : ''}{a.role}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link to={a.type === 'coding' ? '/lumora/coding' : a.type === 'system-design' ? '/lumora/design' : '/lumora'}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg" style={{ background: '#29B5E8', color: '#fff' }}>
-                    Launch
-                  </Link>
-                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg transition-colors hover:bg-red-50" style={{ color: '#94A3B8' }} title="Delete">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-                  </button>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: (mi?.color || '#29B5E8') + '10', color: mi?.color || '#29B5E8' }}>{mi?.label || a.model}</span>
+                  <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: '#29B5E8' }}>Launch</Link>
+                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: '#94A3B8' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
-            );
-          })}
-        </div>
+              {(a.resume || a.jobDescription) && <div className="flex gap-3 mt-2">
+                {a.resume && <div className="flex-1 px-3 py-2 rounded-lg text-[11px]" style={{ background: '#F8FAFC', color: '#64748B' }}><span className="text-[9px] font-bold uppercase tracking-wider block mb-1" style={{ color: '#94A3B8' }}>Resume</span>{a.resume.slice(0, 100)}{a.resume.length > 100 ? '...' : ''}</div>}
+                {a.jobDescription && <div className="flex-1 px-3 py-2 rounded-lg text-[11px]" style={{ background: '#F8FAFC', color: '#64748B' }}><span className="text-[9px] font-bold uppercase tracking-wider block mb-1" style={{ color: '#94A3B8' }}>JD</span>{a.jobDescription.slice(0, 100)}{a.jobDescription.length > 100 ? '...' : ''}</div>}
+              </div>}
+            </div>
+          );
+        })}</div>
       )}
     </div>
   );
