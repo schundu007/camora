@@ -140,22 +140,22 @@ function PrepContentRenderer({ content }: { content: string }) {
         </div>
       )}
 
-      {/* Pitch Sections */}
+      {/* Pitch Sections — numbered circles with duration */}
       {(data.pitchSections || data.chSections) && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {(data.pitchSections || data.chSections).map((s: any, i: number) => (
-            <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
-              <div className="px-4 py-2 flex items-center justify-between" style={{ background: '#f1f5f9' }}>
-                <span className="text-xs font-bold" style={{ color: '#0f172a' }}>{s.title}</span>
-                <div className="flex gap-2">
-                  {s.duration && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#22D3EE08', color: '#22D3EE' }}>{s.duration}</span>}
-                  {s.context && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>{s.context}</span>}
-                </div>
-              </div>
-              <div className="px-4 py-3 space-y-1.5">
-                {s.bullets?.map((b: string, j: number) => (
-                  <p key={j} className="text-sm leading-relaxed" style={{ color: '#475569' }}>{b}</p>
-                ))}
+            <div key={i} className="flex gap-3">
+              <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: '#10b981', color: '#fff', boxShadow: '0 2px 4px rgba(16,185,129,0.3)' }}>{i + 1}</span>
+              <div className="flex-1 pt-0.5">
+                <p className="text-sm leading-relaxed" style={{ color: '#0f172a' }}>
+                  {(s.bullets || []).map((b: string, j: number) => (
+                    <span key={j}>
+                      {j === 0 ? <><strong style={{ color: '#1e40af' }}>{String(b).split(' ').slice(0, 3).join(' ')}</strong> {String(b).split(' ').slice(3).join(' ')}</> : ` ${b}`}
+                    </span>
+                  ))}
+                  {s.title && !s.bullets?.length && <>{s.title}</>}
+                </p>
+                {s.duration && <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded" style={{ background: '#f1f5f9', color: '#64748b' }}>{s.duration}</span>}
               </div>
             </div>
           ))}
@@ -174,21 +174,70 @@ function PrepContentRenderer({ content }: { content: string }) {
         </div>
       )}
 
-      {/* Questions */}
+      {/* Questions — with STAR support for behavioral */}
       {data.questions?.length > 0 && (
-        <div className="space-y-3">
-          <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#f59e0b' }}>Questions ({data.questions.length})</div>
+        <div className="space-y-4">
           {data.questions.map((q: any, i: number) => (
-            <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
-              <div className="px-4 py-2 flex items-center gap-2" style={{ background: '#f1f5f9' }}>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#22D3EE08', color: '#22D3EE' }}>Q{i + 1}</span>
-                <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>{q.question || q.title || q.text}</span>
+            <div key={i} className="rounded-xl overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
+              <div className="px-5 py-3 flex items-start gap-3" style={{ background: '#f8fafc' }}>
+                <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: '#eff6ff', color: '#1e40af' }}>{i + 1}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold leading-snug" style={{ color: '#0f172a' }}>{q.question || q.title || q.text}</p>
+                  {q.whyTheyAsk && <p className="text-xs mt-1 italic" style={{ color: '#f59e0b' }}>Why Asked: {q.whyTheyAsk}</p>}
+                  {q.whyThisCompanyAsks && <p className="text-xs mt-1 italic" style={{ color: '#f59e0b' }}>Why Asked: {q.whyThisCompanyAsks}</p>}
+                  {q.companyConnection && <p className="text-xs mt-1 italic" style={{ color: '#06b6d4' }}>Connect to: {q.companyConnection}</p>}
+                </div>
               </div>
-              <div className="px-4 py-3">
-                {q.answer && <p className="text-sm leading-relaxed mb-2" style={{ color: '#475569' }}>{q.answer}</p>}
-                {q.sampleAnswer && <p className="text-sm leading-relaxed mb-2" style={{ color: '#475569' }}>{q.sampleAnswer}</p>}
-                {q.tips && <div className="text-[10px] mt-2 p-2 rounded" style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>Tip: {Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</div>}
-                {q.followUp && <div className="text-[10px] mt-1 italic" style={{ color: '#94a3b8' }}>Follow-up: {q.followUp}</div>}
+              <div className="px-5 py-4">
+                {/* Regular answer */}
+                {(q.answer || q.sampleAnswer || q.suggestedAnswer) && (
+                  <p className="text-sm leading-relaxed mb-3" style={{ color: '#475569' }}>{q.answer || q.sampleAnswer || q.suggestedAnswer}</p>
+                )}
+                {/* STAR format — behavioral */}
+                {(q.situation || q.task || q.action || q.result) && (
+                  <div className="space-y-3">
+                    {q.category && <span className="inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ background: '#eff6ff', color: '#1e40af' }}>{q.category}</span>}
+                    {q.situation && (
+                      <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                        <div className="flex items-center gap-1.5 text-xs font-bold mb-2" style={{ color: '#166534' }}>
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                          SITUATION
+                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: '#166534' }}>{q.situation}</p>
+                      </div>
+                    )}
+                    {q.task && (
+                      <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                        <div className="flex items-center gap-1.5 text-xs font-bold mb-2" style={{ color: '#1e40af' }}>
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" /></svg>
+                          TASK
+                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: '#1e40af' }}>{q.task}</p>
+                      </div>
+                    )}
+                    {q.action && (
+                      <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        <div className="flex items-center gap-1.5 text-xs font-bold mb-2" style={{ color: '#92400e' }}>
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+                          ACTION
+                        </div>
+                        <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#92400e' }}>{q.action}</p>
+                      </div>
+                    )}
+                    {q.result && (
+                      <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                        <div className="flex items-center gap-1.5 text-xs font-bold mb-2" style={{ color: '#059669' }}>
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                          RESULT
+                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: '#059669' }}>{q.result}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Tips */}
+                {q.tips && <div className="text-xs mt-3 p-3 rounded-lg italic" style={{ background: 'rgba(245,158,11,0.06)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.1)' }}>💡 {Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</div>}
+                {q.followUp && <p className="text-xs mt-2 italic" style={{ color: '#94a3b8' }}>Follow-up: {q.followUp}</p>}
               </div>
             </div>
           ))}
