@@ -147,6 +147,12 @@
     min-width: 0;
   }
 
+  /* Lock body scroll when app shell is active (RootShell adds this class) */
+  body.shell-active {
+    overflow: hidden;
+    height: 100%;
+  }
+
   /* Winter Kei for all headings and important text */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
