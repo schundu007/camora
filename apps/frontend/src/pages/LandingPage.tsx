@@ -54,11 +54,14 @@ const STATS = [
   { value: '50+', label: 'Languages' },
 ];
 
-/* ── Company logos (logo.dev) ───────────────────── */
-const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
-const COMPANIES = [
-  'google', 'amazon', 'meta', 'apple', 'netflix', 'microsoft',
-  'uber', 'stripe', 'airbnb', 'nvidia', 'spotify', 'salesforce',
+/* ── Company logos ───────────────────── */
+const COMPANY_LOGOS = [
+  { name: 'Google', src: 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_160x56dp.png' },
+  { name: 'Amazon', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/320px-Amazon_logo.svg.png' },
+  { name: 'Meta', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Meta_Platforms_Inc._logo.svg/320px-Meta_Platforms_Inc._logo.svg.png' },
+  { name: 'Microsoft', src: 'https://img.logo.dev/microsoft.com?token=pk_VzK1OM-OQSCUuysDpOCzKw&size=120&format=png' },
+  { name: 'Netflix', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/320px-Netflix_2015_logo.svg.png' },
+  { name: 'Stripe', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/320px-Stripe_Logo%2C_revised_2016.svg.png' },
 ];
 
 /* ── Top 4 Features ─────────────────────────────────── */
@@ -171,12 +174,13 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ 2. COMPANY LOGOS ═══════════ */}
-      <section className="px-6 py-16" style={{ background: '#FFFFFF' }}>
+      <section className="px-6 py-14" style={{ background: '#FFFFFF' }}>
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-12 flex-wrap">
-            {COMPANIES.map((c) => (
-              <img key={c} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=60&format=png`}
-                alt={c} className="h-8 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" loading="lazy"
+          <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-8" style={{ color: '#94A3B8' }}>Trusted by engineers at</p>
+          <div className="flex items-center justify-center gap-10 md:gap-14">
+            {COMPANY_LOGOS.map((c) => (
+              <img key={c.name} src={c.src}
+                alt={c.name} className="h-6 md:h-7 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             ))}
           </div>
