@@ -295,23 +295,7 @@ export function LumoraShellPage() {
           {/* Assistants page */}
           {activeTab === 'assistants' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
-              <div className="max-w-3xl mx-auto px-6 py-8 w-full">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Assistants</h2>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Manage and create AI assistants for your interviews.</p>
-                  </div>
-                  <button className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--accent)' }}>
-                    + New Assistant
-                  </button>
-                </div>
-                <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed var(--border)' }}>
-                  <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Ready to create your first assistant?</p>
-                  <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Pick a co-pilot, add your data and meeting details, save it, and reuse anytime.</p>
-                  <button className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--accent)' }}>Create Assistant</button>
-                </div>
-              </div>
+              <AssistantsPage />
             </div>
           )}
 
@@ -364,6 +348,133 @@ export function LumoraShellPage() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/* ── Assistants Page ── */
+interface Assistant {
+  id: string;
+  name: string;
+  type: 'coding' | 'system-design' | 'behavioral';
+  company?: string;
+  role?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+const ASSISTANT_TYPES = [
+  { value: 'coding', label: 'Coding Interview', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
+  { value: 'system-design', label: 'System Design', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
+  { value: 'behavioral', label: 'Behavioral / HR', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg> },
+];
+
+function AssistantsPage() {
+  const [assistants, setAssistants] = useState<Assistant[]>(() => {
+    try { return JSON.parse(localStorage.getItem('lumora_assistants') || '[]'); } catch { return []; }
+  });
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ name: '', type: 'coding', company: '', role: '', notes: '' });
+
+  const save = (list: Assistant[]) => {
+    setAssistants(list);
+    localStorage.setItem('lumora_assistants', JSON.stringify(list));
+  };
+
+  const create = () => {
+    if (!form.name.trim()) return;
+    const assistant: Assistant = {
+      id: Date.now().toString(),
+      name: form.name.trim(),
+      type: form.type as Assistant['type'],
+      company: form.company.trim() || undefined,
+      role: form.role.trim() || undefined,
+      notes: form.notes.trim() || undefined,
+      createdAt: new Date().toISOString(),
+    };
+    save([assistant, ...assistants]);
+    setForm({ name: '', type: 'coding', company: '', role: '', notes: '' });
+    setShowCreate(false);
+  };
+
+  const remove = (id: string) => {
+    if (!confirm('Delete this assistant?')) return;
+    save(assistants.filter(a => a.id !== id));
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto px-6 py-8 w-full">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Assistants</h2>
+          <p className="text-sm" style={{ color: '#64748B' }}>Create and manage AI assistants for your interviews.</p>
+        </div>
+        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+          New Assistant
+        </button>
+      </div>
+
+      {/* Create form */}
+      {showCreate && (
+        <div className="mb-6 p-5 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+          <h3 className="text-sm font-bold mb-4" style={{ color: '#0F172A' }}>Create Assistant</h3>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Assistant name (e.g. Google L5 Prep)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
+            <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none', background: '#fff' }}>
+              {ASSISTANT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Target company (optional)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
+            <input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Target role (optional)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
+          </div>
+          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notes, focus areas, or custom instructions..." rows={2} className="w-full px-3 py-2 rounded-lg text-sm mb-3" style={{ border: '1px solid #E2E8F0', outline: 'none', resize: 'none' }} />
+          <div className="flex gap-2">
+            <button onClick={create} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>Create</button>
+            <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color: '#64748B', border: '1px solid #E2E8F0' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Assistant list */}
+      {assistants.length === 0 ? (
+        <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed #E2E8F0' }}>
+          <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+          <p className="text-sm font-medium" style={{ color: '#0F172A' }}>No assistants yet</p>
+          <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>Create one to save your interview setup and reuse it anytime.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {assistants.map(a => {
+            const typeInfo = ASSISTANT_TYPES.find(t => t.value === a.type);
+            return (
+              <div key={a.id} className="flex items-center justify-between p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(41,181,232,0.1)', color: '#29B5E8' }}>
+                    {typeInfo?.icon}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
+                    <p className="text-[11px]" style={{ color: '#94A3B8' }}>
+                      {typeInfo?.label}{a.company ? ` · ${a.company}` : ''}{a.role ? ` · ${a.role}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link to={a.type === 'coding' ? '/lumora/coding' : a.type === 'system-design' ? '/lumora/design' : '/lumora'}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg" style={{ background: '#29B5E8', color: '#fff' }}>
+                    Launch
+                  </Link>
+                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg transition-colors hover:bg-red-50" style={{ color: '#94A3B8' }} title="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
