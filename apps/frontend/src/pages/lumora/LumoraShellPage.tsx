@@ -28,7 +28,7 @@ export function LumoraShellPage() {
   const [docsOpen, setDocsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
-  // copilotViewIdx removed — copilot now manages its own state
+  const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, vadThreshold } = useInterviewStore();
@@ -181,7 +181,7 @@ export function LumoraShellPage() {
           <div style={{ display: activeTab === 'interview' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
             <ErrorBoundary>
               <InterviewPanel
-                onAskQuestion={handleSubmit}
+                onAskQuestion={(q) => { setCopilotQuestion(q); }}
                 focusedEntry={focusedEntry}
                 onClearFocus={() => setFocusedEntry(null)}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
@@ -245,6 +245,7 @@ export function LumoraShellPage() {
       <AICompanionPanel
         isOpen={true}
         onClose={() => {}}
+        initialQuestion={copilotQuestion}
       />
 
       {/* Mobile bottom navigation — visible only on small screens */}
