@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
 import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
@@ -12,7 +11,6 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
-import TopBar from '../../components/layout/TopBar';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 
 // Lazy load heavy layouts — only mounted on first tab activation
@@ -46,12 +44,6 @@ export function LumoraShellPage() {
     location.pathname.includes('/design') ? 'design' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' : 'interview';
-
-  // Lock body scroll
-  useEffect(() => {
-    document.body.classList.add('shell-active');
-    return () => document.body.classList.remove('shell-active');
-  }, []);
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
@@ -127,20 +119,18 @@ export function LumoraShellPage() {
   // Blank screen (Cmd+B)
   if (blanked) {
     return (
-      <div className="fixed inset-0 w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
+      <div className="absolute inset-0 z-50 w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
         <div className="opacity-10"><CamoraLogo size={24} /></div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
-      {/* Left icon rail */}
-      <LumoraIconRail
-        activeTab={activeTab}
-        sessionsOpen={sessionsOpen}
-        onToggleSessions={() => setSessionsOpen(prev => !prev)}
-      />
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: 'transparent' }}>
+      {/* Audio controls bar — only on coding/design tabs */}
+      {(activeTab === 'coding' || activeTab === 'design') && (
+        <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+      )}
 
       {/* Sessions sidebar */}
       <SessionSidebar
@@ -149,15 +139,8 @@ export function LumoraShellPage() {
         onSelectEntry={(idx) => setFocusedEntry(idx)}
       />
 
-
-      {/* Center main area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar — standard nav on home, audio controls on coding/design */}
-        {(activeTab === 'coding' || activeTab === 'design') ? (
-          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
-        ) : (
-          <TopBar onToggleSidebar={() => {}} sidebarOpen={false} />
-        )}
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0">
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (

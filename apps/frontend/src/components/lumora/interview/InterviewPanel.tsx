@@ -180,6 +180,8 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       label: 'System Design', onClick: () => onSwitchToDesign?.() },
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
       label: 'Prep Kit', onClick: () => { window.location.href = '/lumora/prepkit'; } },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /><path d="M12 14v4" /></svg>,
+      label: 'Behavioral', onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
   ];
 
   const PROMPTS = [
@@ -198,16 +200,21 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   ];
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 select-none overflow-auto">
-      {/* Large clock */}
-      <div className="text-center mb-10">
-        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", fontWeight: 700, letterSpacing: '-0.03em', color: '#0F172A' }}>
-          {timeStr}
-        </h1>
-        <p className="text-sm mt-2 font-medium" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{dateStr}</p>
+    <div className="flex-1 flex flex-col px-6 select-none overflow-auto">
+      {/* Compact clock + date — top right */}
+      <div className="flex items-center justify-end py-4 px-2">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-bold tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.02em', color: '#0F172A' }}>
+            {timeStr}
+          </span>
+          <span className="text-xs font-medium" style={{ color: '#94A3B8' }}>{dateStr}</span>
+        </div>
       </div>
 
-      {/* Action buttons — all use single accent color */}
+      {/* Center content */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+
+      {/* Action buttons — 4 tiles */}
       <div className="flex items-center gap-6 mb-10">
         {ACTIONS.map((action) => (
           <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2.5 group">
@@ -218,14 +225,6 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{action.label}</span>
           </button>
         ))}
-      </div>
-
-      {/* Icicle hint for non-technical rounds */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-8" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-        <span className="text-xs" style={{ color: '#0369A1' }}>
-          For <strong>HR, Hiring Manager & Behavioral</strong> rounds — use the <strong>Icicle</strong> copilot (bottom-right ★ icon)
-        </span>
       </div>
 
       {/* Divider */}
@@ -254,6 +253,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘S</kbd> search</span>
       </div>
 
+      </div>{/* end center content */}
     </div>
   );
 }
