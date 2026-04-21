@@ -61,6 +61,11 @@ function formatPrepContent(content: any): any {
       const parsed = extractJSON(content.rawContent);
       if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 1) return parsed;
     }
+    // Summary contains raw JSON from a previous failed parse — extract it
+    if (content.summary && typeof content.summary === 'string' && content.summary.trim().startsWith('{') && Object.keys(content).length === 1) {
+      const parsed = extractJSON(content.summary);
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 1) return parsed;
+    }
     return content;
   }
   if (typeof content === 'string') {
