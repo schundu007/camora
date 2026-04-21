@@ -145,11 +145,9 @@ export function LumoraShellPage() {
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar — standard nav on home, audio controls on coding/design */}
-        {(activeTab === 'coding' || activeTab === 'design') ? (
+        {/* Top bar — audio controls on coding/design only */}
+        {(activeTab === 'coding' || activeTab === 'design') && (
           <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
-        ) : (
-          <TopBar onToggleSidebar={() => {}} sidebarOpen={false} />
         )}
 
         {/* Settings hint for uncalibrated users */}
