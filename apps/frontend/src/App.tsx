@@ -187,17 +187,17 @@ export function App() {
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
           <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
-          {/* ── Lumora: Live Interview (PAID — the key premium product) ── */}
-          <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/lumora/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/lumora/prepkit" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/lumora/calendar" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          {/* ── Lumora: Live Interview (PAID — uses standard shell) ── */}
+          <Route path="/lumora" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
+          <Route path="/lumora/coding" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
+          <Route path="/lumora/design" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
+          <Route path="/lumora/prepkit" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
+          <Route path="/lumora/calendar" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
 
           {/* ── Also accessible via /app paths (PAID) ──────────── */}
-          <Route path="/app" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/app/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/app/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/app" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
+          <Route path="/app/coding" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
+          <Route path="/app/design" element={<PaidShellRoute feature="Lumora Live Interview"><LumoraShellPage /></PaidShellRoute>} />
 
           {/* ── Capra: Preparation (FREE to browse, backend limits solves) ── */}
           <Route path="/capra" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
