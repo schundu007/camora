@@ -329,18 +329,16 @@ function isActive(itemPath: string, currentPath: string): boolean {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('camora-sidebar-collapsed') !== 'false';
-    }
-    return true; // collapsed by default
-  });
+  const [pinned, setPinned] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
+  // Collapse when navigating to a different page
   useEffect(() => {
-    localStorage.setItem('camora-sidebar-collapsed', String(collapsed));
-  }, [collapsed]);
+    setPinned(false);
+  }, [pathname]);
 
-  const sidebarWidth = collapsed ? '56px' : '240px';
+  const expanded = pinned || hovered;
+  const sidebarWidth = expanded ? '240px' : '56px';
 
   const renderSidebarContent = (isCollapsed: boolean, onItemClick?: () => void) => (
     <div className="flex flex-col h-full overflow-hidden">
@@ -362,27 +360,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         className={`${isCollapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center shrink-0`}
         style={{ borderTop: '1px solid var(--border)' }}
       >
-        {/* Expand/Collapse toggle — desktop only */}
-        {!onItemClick && (
+        {/* Pin/Unpin toggle — desktop only */}
+        {!onItemClick && !isCollapsed && (
           <button
-            onClick={() => setCollapsed(c => !c)}
-            className="sidebar-item flex items-center justify-center rounded-md"
+            onClick={() => setPinned(p => !p)}
+            className="sidebar-item flex items-center justify-center gap-2 rounded-md"
             style={{
-              width: isCollapsed ? '36px' : '100%',
+              width: '100%',
               height: '32px',
-              color: 'rgba(255,255,255,0.7)',
-              background: 'none',
+              color: pinned ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+              background: pinned ? 'rgba(255,255,255,0.15)' : 'none',
               border: '1px solid var(--border)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 500,
             }}
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={pinned ? 'Unpin sidebar' : 'Pin sidebar open'}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}>
-              <path d="M6 3l5 5-5 5" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: pinned ? 'rotate(0deg)' : 'rotate(45deg)', transition: 'transform 0.2s' }}>
+              <path d="M12 17v5M9 2h6l-1 7h4l-7 8 1-5H8l1-10z" />
             </svg>
-            {!isCollapsed && <span className="ml-2">Collapse</span>}
+            <span>{pinned ? 'Pinned' : 'Pin Open'}</span>
           </button>
         )}
         {!isCollapsed && (
@@ -399,6 +397,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* ── Desktop sidebar ─────────────────────────────────── */}
       <aside
         className="hidden md:flex flex-col shrink-0"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           width: sidebarWidth,
           height: '100%',
@@ -408,7 +408,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           overflow: 'hidden',
         }}
       >
-        {renderSidebarContent(collapsed)}
+        {renderSidebarContent(!expanded)}
       </aside>
 
       {/* ── Mobile overlay ──────────────────────────────────── */}
