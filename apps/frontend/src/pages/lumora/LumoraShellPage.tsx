@@ -462,13 +462,13 @@ function FormatTextPreview({ text, label }: { text: string; label: string }) {
         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#475569' }}>{label}</span>
         <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#E0F2FE', color: '#0284C7' }}>{lines.length} lines</span>
       </div>
-      <div className="px-4 py-3 max-h-[300px] overflow-auto text-[12px] leading-[1.7]" style={{ color: '#334155' }}>
+      <div className="px-4 py-3 max-h-[500px] overflow-auto text-[13px] leading-[1.8]" style={{ color: '#334155' }}>
         {sections.map((section, si) => (
           <div key={si} className={si > 0 ? 'mt-4' : ''}>
             {section.title && (
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1 h-4 rounded-full" style={{ background: '#22D3EE' }} />
-                <h4 className="text-[13px] font-bold uppercase tracking-wide" style={{ color: '#0F172A' }}>{section.title}</h4>
+                <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#0F172A' }}>{section.title}</h4>
               </div>
             )}
             {section.items.map((item, ii) => {
@@ -695,7 +695,7 @@ function AssistantsPage() {
   const remove = (id: string) => { if (confirm('Delete this assistant?')) save(assistants.filter(a => a.id !== id)); };
   const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8 w-full">
+    <div className="max-w-5xl mx-auto px-6 py-8 w-full">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Interview Assistants</h2>
         <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>
@@ -787,7 +787,7 @@ function AssistantsPage() {
                   <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: '#94A3B8' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
-              {(a.resume || a.jobDescription) && <div className="grid grid-cols-2 gap-3 mt-2">
+              {(a.resume || a.jobDescription) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
                 {a.resume && <FormatTextPreview text={a.resume} label="Resume" />}
                 {a.jobDescription && <FormatTextPreview text={a.jobDescription} label="Job Description" />}
               </div>}
