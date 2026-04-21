@@ -55,13 +55,12 @@ const STATS = [
 ];
 
 /* ── Company logos ───────────────────── */
+const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 const COMPANY_LOGOS = [
-  { name: 'Google', src: 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_160x56dp.png' },
-  { name: 'Amazon', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/320px-Amazon_logo.svg.png' },
-  { name: 'Meta', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Meta_Platforms_Inc._logo.svg/320px-Meta_Platforms_Inc._logo.svg.png' },
-  { name: 'Microsoft', src: 'https://img.logo.dev/microsoft.com?token=pk_VzK1OM-OQSCUuysDpOCzKw&size=120&format=png' },
-  { name: 'Netflix', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/320px-Netflix_2015_logo.svg.png' },
-  { name: 'Stripe', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/320px-Stripe_Logo%2C_revised_2016.svg.png' },
+  'google', 'amazon', 'meta', 'apple', 'netflix', 'microsoft',
+  'uber', 'stripe', 'airbnb', 'nvidia', 'spotify', 'salesforce',
+  'adobe', 'oracle', 'intel', 'ibm', 'twitter', 'linkedin',
+  'tesla', 'paypal', 'shopify', 'atlassian', 'databricks', 'snowflake',
 ];
 
 /* ── Top 4 Features ─────────────────────────────────── */
@@ -124,6 +123,7 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col" style={{ fontFamily: F.body, color: '#0F172A', background: '#FFFFFF' }}>
       <SEO path="/" />
 
+      <style>{`@keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
       <SiteNav variant="light" />
 
       {/* ═══════════ 1. HERO ═══════════ */}
@@ -173,14 +173,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 2. COMPANY LOGOS ═══════════ */}
-      <section className="px-6 py-14" style={{ background: '#FFFFFF' }}>
-        <div className="max-w-5xl mx-auto">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-8" style={{ color: '#94A3B8' }}>Trusted by engineers at</p>
-          <div className="flex items-center justify-center gap-10 md:gap-14">
-            {COMPANY_LOGOS.map((c) => (
-              <img key={c.name} src={c.src}
-                alt={c.name} className="h-6 md:h-7 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" loading="lazy"
+      {/* ═══════════ 2. COMPANY LOGOS — Scrolling ═══════════ */}
+      <section className="py-10 overflow-hidden" style={{ background: '#FFFFFF' }}>
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: '#94A3B8' }}>Trusted by frost engineers at</p>
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to right, #FFFFFF, transparent)' }} />
+          <div className="absolute right-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to left, #FFFFFF, transparent)' }} />
+          <div className="flex" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
+            {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
+              <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
+                alt={c} className="h-5 object-contain opacity-30 mx-6 shrink-0" loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             ))}
           </div>
