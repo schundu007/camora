@@ -269,12 +269,13 @@ export function LumoraShellPage() {
         </div>
       </div>
 
-      {/* AI Copilot — always-visible right sidebar (like Zoom AI Companion) */}
-      <AICompanionPanel
-        isOpen={true}
-        onClose={() => {}}
-        initialQuestion={copilotQuestion}
-      />
+      {/* AI Copilot — floating popup, hidden when fullscreen behavioral is open */}
+      {!copilotFullscreen && (
+        <AICompanionPanel
+          isOpen={true}
+          onClose={() => {}}
+        />
+      )}
 
       {/* Mobile bottom navigation — visible only on small screens */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 z-40 items-center justify-around"
