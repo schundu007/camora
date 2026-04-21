@@ -249,7 +249,7 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
 }
 
 /* ═══ Icicle Panel ═══ */
-export function AICompanionPanel({ isOpen, onClose, initialQuestion }: AICompanionPanelProps & { initialQuestion?: string }) {
+export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -373,8 +373,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion }: AICompani
     if (input.trim()) { ask(input); setInput(''); }
   }, [input, ask]);
 
+  // Embedded mode = render inline, skip minimized/floating
+  if (embedded) {
+    setMinimized(false);
+  }
+
   // Minimized = floating icon button
-  if (minimized) {
+  if (minimized && !embedded) {
     return (
       <button
         onClick={() => setMinimized(false)}
@@ -394,8 +399,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion }: AICompani
 
   return (
     <div
-      className="fixed z-50 flex flex-col"
-      style={{
+      className={embedded ? "flex flex-col h-full w-full" : "fixed z-50 flex flex-col"}
+      style={embedded ? { background: '#FFFFFF', borderRadius: 0 } : {
         width: maximized ? 'calc(100vw - 80px)' : panelWidth,
         height: maximized ? '100vh' : panelHeight,
         right: maximized ? 0 : `calc(24px - ${position.x}px)`,

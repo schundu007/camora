@@ -29,6 +29,7 @@ export function LumoraShellPage() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
+  const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, vadThreshold } = useInterviewStore();
@@ -181,7 +182,7 @@ export function LumoraShellPage() {
           <div style={{ display: activeTab === 'interview' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
             <ErrorBoundary>
               <InterviewPanel
-                onAskQuestion={(q) => { setCopilotQuestion(q); }}
+                onAskQuestion={(q) => { setCopilotQuestion(q); setCopilotFullscreen(true); }}
                 focusedEntry={focusedEntry}
                 onClearFocus={() => setFocusedEntry(null)}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
@@ -236,6 +237,25 @@ export function LumoraShellPage() {
           {activeTab === 'calendar' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#FFFFFF' }}>
               <LumoraCalendar onClose={() => navigate('/lumora')} />
+            </div>
+          )}
+
+          {/* Icicle AI — fullscreen mode (behavioral / ask questions) */}
+          {copilotFullscreen && (
+            <div className="absolute inset-0 z-20 flex flex-col" style={{ background: '#FFFFFF' }}>
+              <div className="flex items-center justify-between px-4 h-10 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                  <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Icicle AI</span>
+                </div>
+                <button onClick={() => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  Close
+                </button>
+              </div>
+              <div className="flex-1 min-h-0">
+                <AICompanionPanel isOpen={true} onClose={() => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }} initialQuestion={copilotQuestion} embedded />
+              </div>
             </div>
           )}
         </div>
