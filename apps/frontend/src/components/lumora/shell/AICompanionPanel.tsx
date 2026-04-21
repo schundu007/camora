@@ -374,9 +374,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   }, [input, ask]);
 
   // Embedded mode = render inline, skip minimized/floating
-  if (embedded) {
-    setMinimized(false);
-  }
+  useEffect(() => {
+    if (embedded) setMinimized(false);
+  }, [embedded]);
 
   // Minimized = floating icon button
   if (minimized && !embedded) {
