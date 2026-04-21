@@ -146,21 +146,33 @@ export function LumoraShellPage() {
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar — mode tabs + audio controls on coding/design */}
-        <div className="flex items-center justify-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-          {/* Tab pills — centered */}
-          <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        {/* Top bar — single row: audio controls (left) + tab pills (right) */}
+        <div className="flex items-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+          {/* Audio controls — left side, only on coding/design */}
+          <div className="flex-1">
+            {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
+              <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} inline />
+            )}
+          </div>
+
+          {/* Tab pills — right side */}
+          <div className="flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
               { id: 'design', label: 'Design', path: '/lumora/design' },
-              { id: 'behavioral', label: 'Behavioral' },
+              { id: 'behavioral', label: 'Behavioral', path: '/lumora' },
             ].map(tab => {
               const isBehavioral = tab.id === 'behavioral';
-              const isActive = isBehavioral ? copilotFullscreen : activeTab === tab.id;
+              const isActive = isBehavioral
+                ? copilotFullscreen
+                : !copilotFullscreen && activeTab === tab.id;
               return (
-                <Link key={tab.id} to={tab.path || '#'}
-                  onClick={isBehavioral ? (e) => { e.preventDefault(); setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); } : () => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }}
+                <Link key={tab.id} to={tab.path!}
+                  onClick={isBehavioral
+                    ? () => { setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); }
+                    : () => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }
+                  }
                   className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
                   style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
                   {tab.label}
@@ -169,10 +181,6 @@ export function LumoraShellPage() {
             })}
           </div>
         </div>
-        {/* Audio controls bar — only on coding/design */}
-        {(activeTab === 'coding' || activeTab === 'design') && (
-          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
-        )}
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
