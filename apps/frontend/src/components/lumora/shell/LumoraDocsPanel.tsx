@@ -71,6 +71,46 @@ function formatPrepContent(content: any): any {
   return { summary: String(content) };
 }
 
+/** Repair truncated JSON by closing open strings, arrays, and objects */
+function repairJSON(s: string): any {
+  let str = s.trim();
+  const start = str.indexOf('{');
+  if (start < 0) return null;
+  str = str.slice(start);
+
+  // Close any unterminated string
+  let inStr = false, esc = false;
+  for (let i = 0; i < str.length; i++) {
+    if (esc) { esc = false; continue; }
+    if (str[i] === '\\') { esc = true; continue; }
+    if (str[i] === '"') inStr = !inStr;
+  }
+  if (inStr) str += '"';
+
+  // Remove trailing partial key-value or comma
+  str = str.replace(/,\s*"[^"]*"?\s*:?\s*$/, '');
+  str = str.replace(/,\s*$/, '');
+
+  // Count and close open brackets/braces (outside strings)
+  let braces = 0, brackets = 0;
+  inStr = false; esc = false;
+  for (let i = 0; i < str.length; i++) {
+    if (esc) { esc = false; continue; }
+    if (str[i] === '\\') { esc = true; continue; }
+    if (str[i] === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (str[i] === '{') braces++;
+    else if (str[i] === '}') braces--;
+    else if (str[i] === '[') brackets++;
+    else if (str[i] === ']') brackets--;
+  }
+  while (brackets > 0) { str += ']'; brackets--; }
+  while (braces > 0) { str += '}'; braces--; }
+
+  try { const p = JSON.parse(str); if (p && typeof p === 'object') return p; } catch {}
+  return null;
+}
+
 /** Aggressively extract a JSON object from any string */
 function extractJSON(raw: string): any {
   if (!raw || typeof raw !== 'string') return null;
@@ -87,14 +127,9 @@ function extractJSON(raw: string): any {
   }
   // Try double-parse (content was double-stringified)
   try { const inner = JSON.parse(s); if (typeof inner === 'string') return extractJSON(inner); } catch {}
-  // Try parsing as { "summary": stringContent } where stringContent itself is JSON
-  try {
-    const p = JSON.parse(s);
-    if (p?.summary && typeof p.summary === 'string' && p.summary.trim().startsWith('{')) {
-      const inner = extractJSON(p.summary);
-      if (inner && Object.keys(inner).length > 1) return inner;
-    }
-  } catch {}
+  // Try repairing truncated JSON (model hit token limit mid-response)
+  const repaired = repairJSON(s);
+  if (repaired && Object.keys(repaired).length > 0) return repaired;
   return null;
 }
 
