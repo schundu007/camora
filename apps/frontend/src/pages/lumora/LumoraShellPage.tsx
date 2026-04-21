@@ -47,6 +47,12 @@ export function LumoraShellPage() {
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' : 'interview';
 
+  // Lock body scroll
+  useEffect(() => {
+    document.body.classList.add('shell-active');
+    return () => document.body.classList.remove('shell-active');
+  }, []);
+
   // Lazy-mount tabs on first activation
   useEffect(() => {
     if (!mountedTabs.has(activeTab)) {
@@ -121,14 +127,14 @@ export function LumoraShellPage() {
   // Blank screen (Cmd+B)
   if (blanked) {
     return (
-      <div className="h-screen w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
+      <div className="fixed inset-0 w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
         <div className="opacity-10"><CamoraLogo size={24} /></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
+    <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}
