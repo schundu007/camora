@@ -201,18 +201,16 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
   return (
     <div className="flex-1 flex flex-col px-6 select-none overflow-auto">
-      {/* Compact clock + date — top right */}
-      <div className="flex items-center justify-end py-4 px-2">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.02em', color: '#0F172A' }}>
-            {timeStr}
-          </span>
-          <span className="text-xs font-medium" style={{ color: '#94A3B8' }}>{dateStr}</span>
-        </div>
-      </div>
-
       {/* Center content */}
       <div className="flex-1 flex flex-col items-center justify-center">
+
+      {/* Clock + date — centered */}
+      <div className="text-center mb-8">
+        <div className="text-6xl font-extrabold tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.03em', color: '#0F172A' }}>
+          {timeStr}
+        </div>
+        <div className="text-sm font-medium mt-2" style={{ color: '#94A3B8' }}>{dateStr}</div>
+      </div>
 
       {/* Action buttons — 4 tiles */}
       <div className="flex items-center gap-6 mb-10">
