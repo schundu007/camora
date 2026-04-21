@@ -425,53 +425,36 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         </>
       )}
 
-      {/* Header — draggable */}
+      {/* Header — single row: actions + title + mode toggle + window controls */}
       <div
-        className="flex items-center justify-between h-11 px-3 shrink-0 cursor-move select-none"
-        style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', borderRadius: maximized ? 0 : '16px 16px 0 0' }}
+        className="flex items-center gap-2 h-10 px-3 shrink-0 cursor-move select-none"
+        style={{ borderBottom: '1px solid #E2E8F0', borderRadius: maximized ? 0 : '16px 16px 0 0' }}
         onMouseDown={startDrag}
       >
-        <div className="flex items-center gap-1">
+        {/* Left: clear + new */}
+        <div className="flex items-center gap-0.5">
           <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
             className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Clear history">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
           </button>
           <button onClick={() => setMessages([])}
             className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="New chat">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
           </button>
         </div>
-        <span className="text-xs font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: '#0F172A' }}>Icicle</span>
-        <div className="flex items-center gap-0.5">
-          <button onClick={() => setMinimized(true)}
-            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Minimize">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
-          </button>
-          <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title={maximized ? 'Restore' : 'Maximize'}>
-            {maximized ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
-            )}
-          </button>
-        </div>
-      </div>
 
-
-
-      {/* Answer Mode Toggle — Short / Detailed */}
-      <div className="flex items-center px-3 py-1.5 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center w-full rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
+        {/* Center: title + mode toggle */}
+        <div className="flex-1 flex items-center justify-center gap-2">
+          <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Icicle</span>
+          <div className="flex items-center rounded-md p-0.5" style={{ background: '#F1F5F9' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
                 key={mode}
-                onClick={() => setAnswerMode(mode)}
-                className="flex-1 py-1.5 text-center rounded-md transition-all"
+                onClick={(e) => { e.stopPropagation(); setAnswerMode(mode); }}
+                className="px-2.5 py-0.5 rounded transition-all"
                 style={{
-                  fontSize: '10px',
+                  fontSize: '9px',
                   fontWeight: 700,
-                  fontFamily: "'Clash Display', sans-serif",
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
@@ -482,6 +465,23 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Right: minimize + maximize */}
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => setMinimized(true)}
+            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Minimize">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
+          </button>
+          <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
+            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title={maximized ? 'Restore' : 'Maximize'}>
+            {maximized ? (
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
+            ) : (
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Chat */}
