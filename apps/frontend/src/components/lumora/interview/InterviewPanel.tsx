@@ -167,7 +167,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const COPILOTS = [
-    { name: 'Interview', desc: 'A real-time interview co-pilot that helps you answer faster and more confidently.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>, onClick: () => onSwitchToCoding?.() },
+    { name: 'Coding', desc: 'Real-time coding solutions with multi-approach answers and complexity analysis.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>, onClick: () => onSwitchToCoding?.() },
     { name: 'System Design', desc: 'Architecture diagrams and system design answers in real-time.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>, onClick: () => onSwitchToDesign?.() },
     { name: 'Behavioral', desc: 'STAR method answers for behavioral and leadership questions.', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>, onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
   ];
