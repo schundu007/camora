@@ -29,7 +29,7 @@ export default function RootShell({ children }: RootShellProps) {
   }, [sidebarOpen]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden">
       <TopBar
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
         sidebarOpen={sidebarOpen}
