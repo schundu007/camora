@@ -11,7 +11,7 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
-import UserDropdown from '../../components/shared/UserDropdown';
+// UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 
@@ -146,21 +146,29 @@ export function LumoraShellPage() {
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar — nav links on home, audio controls on coding/design */}
-        {(activeTab === 'coding' || activeTab === 'design') ? (
-          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
-        ) : (
-          <div className="flex items-center justify-between h-10 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
-            <div className="flex items-center gap-4">
-              <Link to="/capra/prepare" className="flex items-center gap-1.5 text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                Dashboard
+        {/* Top bar — mode tabs + audio controls on coding/design */}
+        <div className="flex items-center h-11 px-4 shrink-0 gap-1" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+          {/* Tab pills */}
+          <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            {[
+              { id: 'interview', label: 'Home', path: '/lumora' },
+              { id: 'coding', label: 'Coding', path: '/lumora/coding' },
+              { id: 'design', label: 'Design', path: '/lumora/design' },
+              { id: 'behavioral', label: 'Behavioral' },
+            ].map(tab => (
+              <Link key={tab.id} to={tab.path || '#'}
+                onClick={tab.id === 'behavioral' ? (e) => { e.preventDefault(); setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); } : undefined}
+                className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
+                style={activeTab === tab.id ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
+                {tab.label}
               </Link>
-              <Link to="/" className="text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>Home</Link>
-              <Link to="/pricing" className="text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>Pricing</Link>
-            </div>
-            <UserDropdown variant="light" />
+            ))}
           </div>
+
+        </div>
+        {/* Audio controls bar — only on coding/design */}
+        {(activeTab === 'coding' || activeTab === 'design') && (
+          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
         )}
 
         {/* Settings hint for uncalibrated users */}
