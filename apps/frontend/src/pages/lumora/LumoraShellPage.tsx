@@ -147,24 +147,27 @@ export function LumoraShellPage() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
         {/* Top bar — mode tabs + audio controls on coding/design */}
-        <div className="flex items-center h-11 px-4 shrink-0 gap-1" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-          {/* Tab pills */}
+        <div className="flex items-center justify-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+          {/* Tab pills — centered */}
           <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
               { id: 'design', label: 'Design', path: '/lumora/design' },
               { id: 'behavioral', label: 'Behavioral' },
-            ].map(tab => (
-              <Link key={tab.id} to={tab.path || '#'}
-                onClick={tab.id === 'behavioral' ? (e) => { e.preventDefault(); setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); } : undefined}
-                className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
-                style={activeTab === tab.id ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
-                {tab.label}
-              </Link>
-            ))}
+            ].map(tab => {
+              const isBehavioral = tab.id === 'behavioral';
+              const isActive = isBehavioral ? copilotFullscreen : activeTab === tab.id;
+              return (
+                <Link key={tab.id} to={tab.path || '#'}
+                  onClick={isBehavioral ? (e) => { e.preventDefault(); setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); } : () => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }}
+                  className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
+                  style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
+                  {tab.label}
+                </Link>
+              );
+            })}
           </div>
-
         </div>
         {/* Audio controls bar — only on coding/design */}
         {(activeTab === 'coding' || activeTab === 'design') && (
