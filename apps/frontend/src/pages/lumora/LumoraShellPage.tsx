@@ -465,6 +465,29 @@ export function LumoraShellPage() {
   );
 }
 
+/* ── File text extractor — handles .txt, .docx, .pdf ── */
+async function extractTextFromFile(file: File): Promise<string> {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.txt')) {
+    return (await file.text()).trim();
+  }
+  if (name.endsWith('.docx')) {
+    // DOCX = ZIP containing word/document.xml
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(file);
+    const docXml = await zip.file('word/document.xml')?.async('text');
+    if (!docXml) throw new Error('Invalid DOCX');
+    // Strip XML tags, keep text
+    return docXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  if (name.endsWith('.pdf')) {
+    // PDF: read as text and strip non-printable chars (basic extraction)
+    const raw = await file.text();
+    return raw.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  return (await file.text()).trim();
+}
+
 /* ── Assistants Page — Role + Resume + JD based ── */
 interface Assistant {
   id: string;
@@ -529,13 +552,12 @@ function AssistantsPage() {
               <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
-                <input type="file" accept=".txt,.pdf,.doc,.docx" className="hidden" onChange={async (e) => {
+                <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
                   const file = e.target.files?.[0]; if (!file) return;
-                  if (file.name.endsWith('.pdf')) {
-                    const text = await file.text(); setForm(f => ({ ...f, resume: text.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim() }));
-                  } else {
-                    const text = await file.text(); setForm(f => ({ ...f, resume: text.trim() }));
-                  }
+                  try {
+                    const text = await extractTextFromFile(file);
+                    setForm(f => ({ ...f, resume: text }));
+                  } catch { alert('Could not read file. Please paste text directly.'); }
                   e.target.value = '';
                 }} />
               </label>
@@ -548,13 +570,12 @@ function AssistantsPage() {
               <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
-                <input type="file" accept=".txt,.pdf,.doc,.docx" className="hidden" onChange={async (e) => {
+                <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
                   const file = e.target.files?.[0]; if (!file) return;
-                  if (file.name.endsWith('.pdf')) {
-                    const text = await file.text(); setForm(f => ({ ...f, jobDescription: text.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim() }));
-                  } else {
-                    const text = await file.text(); setForm(f => ({ ...f, jobDescription: text.trim() }));
-                  }
+                  try {
+                    const text = await extractTextFromFile(file);
+                    setForm(f => ({ ...f, jobDescription: text }));
+                  } catch { alert('Could not read file. Please paste text directly.'); }
                   e.target.value = '';
                 }} />
               </label>
