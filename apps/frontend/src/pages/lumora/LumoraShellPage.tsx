@@ -435,26 +435,66 @@ export function LumoraShellPage() {
 /* ── Format plain text into readable HTML ── */
 function FormatTextPreview({ text, label }: { text: string; label: string }) {
   if (!text) return null;
-  // Split on newlines OR pipe separators, clean up
+  // Parse text into structured sections
   const raw = text.replace(/\s*\|\s*/g, '\n').replace(/\t+/g, '\n');
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // Group lines into sections
+  const sections: { title: string; items: string[] }[] = [];
+  let currentSection: { title: string; items: string[] } = { title: '', items: [] };
+
+  lines.forEach(line => {
+    const isHeader = (line === line.toUpperCase() && line.length < 80 && line.length > 2 && /[A-Z]{2}/.test(line))
+      || (line.endsWith(':') && line.length < 50)
+      || /^(EXPERIENCE|EDUCATION|SKILLS|SUMMARY|OBJECTIVE|PROJECTS|CERTIFICATIONS|ABOUT|REQUIREMENTS|RESPONSIBILITIES|QUALIFICATIONS|BENEFITS|DESCRIPTION|OVERVIEW)/i.test(line);
+    if (isHeader) {
+      if (currentSection.title || currentSection.items.length) sections.push(currentSection);
+      currentSection = { title: line.replace(/:$/, ''), items: [] };
+    } else {
+      currentSection.items.push(line);
+    }
+  });
+  if (currentSection.title || currentSection.items.length) sections.push(currentSection);
+
   return (
-    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
-      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>{label}</div>
-      <div className="px-3 py-2 text-[11px] leading-relaxed max-h-[250px] overflow-auto" style={{ color: '#334155' }}>
-        {lines.map((line, i) => {
-          const trimmed = line.trim();
-          // Headers: ALL CAPS (short), or ending with :
-          const isHeader = (trimmed === trimmed.toUpperCase() && trimmed.length < 60 && trimmed.length > 2 && /[A-Z]/.test(trimmed)) || (trimmed.endsWith(':') && trimmed.length < 50);
-          // Bullets
-          const isBullet = /^[-•●○▪▸►✓✔]/.test(trimmed) || /^\d+[.)]/.test(trimmed);
-          // Key: Value pairs
-          const kvMatch = trimmed.match(/^([A-Za-z\s&/]+?):\s+(.+)$/);
-          if (isHeader) return <p key={i} className="font-bold mt-3 mb-1 text-xs" style={{ color: '#0F172A' }}>{trimmed}</p>;
-          if (isBullet) return <div key={i} className="flex gap-1.5 ml-2 mb-0.5"><span className="shrink-0" style={{ color: '#22D3EE' }}>•</span><span>{trimmed.replace(/^[-•●○▪▸►✓✔]\s*/, '').replace(/^\d+[.)]\s*/, '')}</span></div>;
-          if (kvMatch && kvMatch[1].length < 25) return <div key={i} className="mb-0.5"><span className="font-semibold" style={{ color: '#0F172A' }}>{kvMatch[1]}:</span> {kvMatch[2]}</div>;
-          return <p key={i} className="mb-1">{trimmed}</p>;
-        })}
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+      <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #F8FAFC, #EFF6FF)', borderBottom: '1px solid #E2E8F0' }}>
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#475569' }}>{label}</span>
+        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#E0F2FE', color: '#0284C7' }}>{lines.length} lines</span>
+      </div>
+      <div className="px-4 py-3 max-h-[300px] overflow-auto text-[12px] leading-[1.7]" style={{ color: '#334155' }}>
+        {sections.map((section, si) => (
+          <div key={si} className={si > 0 ? 'mt-4' : ''}>
+            {section.title && (
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1 h-4 rounded-full" style={{ background: '#22D3EE' }} />
+                <h4 className="text-[13px] font-bold uppercase tracking-wide" style={{ color: '#0F172A' }}>{section.title}</h4>
+              </div>
+            )}
+            {section.items.map((item, ii) => {
+              const isBullet = /^[-•●○▪▸►✓✔★]/.test(item) || /^\d+[.)]/.test(item);
+              const kvMatch = item.match(/^([A-Za-z\s&/,()]+?):\s+(.+)$/);
+              const cleaned = item.replace(/^[-•●○▪▸►✓✔★]\s*/, '').replace(/^\d+[.)]\s*/, '');
+
+              if (isBullet) return (
+                <div key={ii} className="flex gap-2 ml-3 mb-1">
+                  <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#22D3EE' }} />
+                  <span>{cleaned}</span>
+                </div>
+              );
+              if (kvMatch && kvMatch[1].length < 30) return (
+                <div key={ii} className="mb-1 ml-3">
+                  <span className="font-semibold" style={{ color: '#0F172A' }}>{kvMatch[1]}:</span>
+                  <span className="ml-1">{kvMatch[2]}</span>
+                </div>
+              );
+              // Regular paragraph — check if it looks like a job title or company
+              const isTitle = item.length < 60 && /\b(Engineer|Manager|Developer|Director|Lead|Senior|Junior|Intern|Analyst|Designer|Architect)\b/i.test(item);
+              if (isTitle) return <p key={ii} className="font-semibold mt-2 mb-0.5" style={{ color: '#0F172A' }}>{item}</p>;
+              return <p key={ii} className="mb-1">{item}</p>;
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );
