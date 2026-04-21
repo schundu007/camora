@@ -193,6 +193,8 @@ export function App() {
           <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/prepkit" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/calendar" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/sessions" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/assistants" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
           {/* ── Also accessible via /app paths (PAID) ──────────── */}
           <Route path="/app" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
