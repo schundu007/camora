@@ -53,7 +53,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
-  const { question, use_search: useSearch = false } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -109,6 +109,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       useSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
+      systemContext: systemContext || null,
     })) {
       if (clientDisconnected) break;
 
@@ -201,7 +202,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { question, use_search: useSearch = false } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -251,6 +252,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       useSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
+      systemContext: systemContext || null,
     })) {
       if (clientDisconnected) break;
 

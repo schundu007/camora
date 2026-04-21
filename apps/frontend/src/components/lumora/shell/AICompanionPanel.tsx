@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
@@ -261,6 +261,31 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const [panelHeight, setPanelHeight] = useState(560);
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh'>(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
+
+  // Load active assistant context (resume + JD) — falls back to no context if none created
+  const activeAssistant = useMemo(() => {
+    try {
+      const stored = localStorage.getItem('lumora_assistants');
+      const list = stored ? JSON.parse(stored) : [];
+      return list[0] || null; // Use most recently created assistant
+    } catch { return null; }
+  }, []);
+
+  const systemContext = useMemo(() => {
+    if (!activeAssistant) return undefined;
+    const parts: string[] = [];
+    if (activeAssistant.company || activeAssistant.role) {
+      parts.push(`The candidate is interviewing for: ${activeAssistant.role || 'a role'} at ${activeAssistant.company || 'a company'}.`);
+    }
+    if (activeAssistant.resume) {
+      parts.push(`CANDIDATE RESUME:\n${activeAssistant.resume}`);
+    }
+    if (activeAssistant.jobDescription) {
+      parts.push(`JOB DESCRIPTION:\n${activeAssistant.jobDescription}`);
+    }
+    if (parts.length === 0) return undefined;
+    return parts.join('\n\n') + '\n\nUse this context to personalize all answers. Reference the candidate\'s actual experience from their resume. Tailor technical depth to match the job requirements.';
+  }, [activeAssistant]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
@@ -347,6 +372,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         question: modePrefix + question.trim(),
         token,
         useSearch: false,
+        systemContext,
         onToken: (data) => {
           if (data.t) setStreamText(prev => prev + data.t);
         },
@@ -367,7 +393,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       setStreamText('');
       setStreaming(false);
     }
-  }, [token, streaming, answerMode]);
+  }, [token, streaming, answerMode, systemContext]);
 
   const handleSubmit = useCallback(() => {
     if (input.trim()) { ask(input); setInput(''); }
@@ -451,6 +477,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Center: title + mode toggle */}
         <div className="flex-1 flex items-center justify-center gap-2">
           <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Icicle</span>
+          {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#F0FDF4', color: '#16A34A' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
           <div className="flex items-center rounded-md p-0.5" style={{ background: '#F1F5F9' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
