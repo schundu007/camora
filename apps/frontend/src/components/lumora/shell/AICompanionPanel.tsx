@@ -553,11 +553,21 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             ) : (
               <div className="space-y-4">
                 {messages.filter(m => m.role === 'ai').map((msg, i) => (
-                  <div key={i}><RichText text={msg.text} /></div>
+                  <div key={i} className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#29B5E8' }}>Answer</span>
+                    </div>
+                    <RichText text={msg.text} />
+                  </div>
                 ))}
                 {streaming && (
-                  <div>
-                    {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#22D3EE' }} /></>
+                  <div className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" className="animate-pulse"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#29B5E8' }}>Answering...</span>
+                    </div>
+                    {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#29B5E8' }} /></>
                       : <span className="animate-pulse text-xs" style={{ color: '#94A3B8' }}>Thinking...</span>}
                   </div>
                 )}
