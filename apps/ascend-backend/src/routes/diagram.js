@@ -205,13 +205,38 @@ router.post('/generate', async (req, res, next) => {
       console.warn('[Diagram] Python generation failed, trying Mermaid fallback:', pythonError);
     }
 
-    // Python failed — return error (no mermaid fallback)
+    // Python failed — try Mermaid fallback
     if (!pythonResult) {
-      console.error('[Diagram] Python generation failed:', pythonError);
+      console.warn('[Diagram] Python failed, trying Mermaid fallback:', pythonError);
+      try {
+        const { default: claude } = await import('../services/claude.js');
+        const mermaidPrompt = `Generate a Mermaid.js architecture diagram for: ${question}
+Provider: ${provider === 'auto' ? 'generic cloud' : provider}
+Detail: ${detailLevel}
+Direction: ${direction}
+
+Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" or "flowchart ${direction}". No markdown fences, no explanation. Use short node labels.`;
+        const mermaidCode = await claude.generateText(mermaidPrompt, { maxTokens: 2000 });
+        if (mermaidCode && mermaidCode.trim().length > 20) {
+          // Cache the mermaid code
+          try {
+            await query(
+              `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, mermaid_code, description)
+               VALUES ($1, $2, $3, $4, $5, $6)
+               ON CONFLICT (problem_hash) DO UPDATE SET mermaid_code = $5`,
+              [problemHash, detailLevel, provider, direction, mermaidCode.trim(), (cacheKey || question).slice(0, 500)]
+            );
+          } catch { /* ignore cache error */ }
+          return res.json({ success: true, type: 'mermaid', mermaid_code: mermaidCode.trim(), cloud_provider: provider, cached: false });
+        }
+      } catch (mermaidErr) {
+        console.error('[Diagram] Mermaid fallback also failed:', mermaidErr.message);
+      }
+      // Both failed
       throw new AppError(
-        pythonError || 'Python diagram generation failed on server',
+        pythonError || 'Diagram generation failed',
         ErrorCode.EXTERNAL_API_ERROR,
-        'Check Railway logs for Python/graphviz errors'
+        'Python and Mermaid fallback both failed'
       );
     }
 
