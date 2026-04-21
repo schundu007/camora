@@ -595,19 +595,25 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 </div>
               ) : (
-                <div key={i} className="flex gap-1.5 items-start">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                  <div className="flex-1 min-w-0"><RichText text={msg.text} /></div>
+                <div key={i} className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Icicle</span>
+                  </div>
+                  <div className="min-w-0"><RichText text={msg.text} /></div>
                 </div>
               ))}
               {streaming && (
-                <div className="flex gap-1.5 items-start">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5 animate-pulse">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                  <div className="flex-1">
+                <div className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="animate-pulse">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Icicle</span>
+                  </div>
+                  <div>
                     {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
                       : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
                   </div>
