@@ -11,6 +11,7 @@ import { useWhiteboardState } from '../../hooks/useWhiteboardState';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
+const SQLPlayground = lazy(() => import('../../components/capra/sql/SQLPlayground'));
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -610,6 +611,7 @@ export default function PracticePage() {
               { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
               { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={12} /> },
+              { key: 'sql-editor', label: 'SQL Editor', icon: <Icon name="database" size={12} /> },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -629,7 +631,7 @@ export default function PracticePage() {
             ))}
           </div>
           {/* Reset button — clears problem + solution from localStorage */}
-          {(activeView === 'code-solver' || activeView === 'design-solver') && (
+          {(activeView === 'code-solver' || activeView === 'design-solver' || activeView === 'sql-editor') && (
             <button
               onClick={() => {
                 ['chundu_current_problem', 'chundu_loaded_problem', 'chundu_current_solution', 'chundu_eraser_diagram'].forEach(k => localStorage.removeItem(k));
@@ -659,6 +661,15 @@ export default function PracticePage() {
           <div className="flex-1 min-h-0 overflow-hidden">
             <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
               <DashboardPage mode="system-design" embedded />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ── SQL Editor View — fills remaining height ── */}
+        {activeView === 'sql-editor' && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+              <SQLPlayground />
             </Suspense>
           </div>
         )}
