@@ -11,6 +11,7 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import { useAuth } from '../../contexts/AuthContext';
 import SharedPricingCards from '../../components/shared/PricingCards';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
@@ -334,41 +335,7 @@ export function LumoraShellPage() {
           {/* Profile page */}
           {activeTab === 'profile' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
-              <div className="max-w-2xl mx-auto px-6 py-8 w-full">
-                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Profile</h2>
-                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Your Lumora account settings.</p>
-                <div className="space-y-4">
-                  <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
-                    <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Account</h3>
-                    <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</span>
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{useInterviewStore.getState().question || 'Loading...'}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Plan</span>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,211,238,0.1)', color: 'var(--accent)' }}>Active</span>
-                    </div>
-                  </div>
-                  <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
-                    <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Preferences</h3>
-                    <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>AI Model</span>
-                      <select className="text-xs px-2 py-1 rounded-lg" style={{ border: '1px solid var(--border)' }}>
-                        <option>Auto (Recommended)</option>
-                        <option>Claude Sonnet</option>
-                        <option>Claude Haiku</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Answer Mode</span>
-                      <select className="text-xs px-2 py-1 rounded-lg" style={{ border: '1px solid var(--border)' }}>
-                        <option>Short</option>
-                        <option>Detailed</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <LumoraProfilePage />
             </div>
           )}
 
@@ -468,20 +435,24 @@ export function LumoraShellPage() {
 /* ── Format plain text into readable HTML ── */
 function FormatTextPreview({ text, label }: { text: string; label: string }) {
   if (!text) return null;
-  // Convert plain text to structured HTML: detect sections, bullets, etc.
-  const lines = text.split('\n').filter(l => l.trim());
+  // Split on newlines OR pipe separators, clean up
+  const raw = text.replace(/\s*\|\s*/g, '\n').replace(/\t+/g, '\n');
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   return (
-    <div className="mt-2 rounded-lg overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
       <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>{label}</div>
-      <div className="px-3 py-2 text-xs leading-relaxed max-h-[200px] overflow-auto" style={{ color: '#334155' }}>
+      <div className="px-3 py-2 text-[11px] leading-relaxed max-h-[250px] overflow-auto" style={{ color: '#334155' }}>
         {lines.map((line, i) => {
           const trimmed = line.trim();
-          // Detect headers (ALL CAPS, short lines, or lines ending with :)
-          const isHeader = (trimmed === trimmed.toUpperCase() && trimmed.length < 60 && trimmed.length > 2) || trimmed.endsWith(':');
-          // Detect bullet points
-          const isBullet = /^[-•●○▪▸►]/.test(trimmed) || /^\d+[.)]/.test(trimmed);
-          if (isHeader) return <p key={i} className="font-bold mt-2 mb-0.5" style={{ color: '#0F172A', fontSize: '12px' }}>{trimmed}</p>;
-          if (isBullet) return <p key={i} className="ml-3 flex gap-1.5"><span style={{ color: '#22D3EE' }}>•</span><span>{trimmed.replace(/^[-•●○▪▸►]\s*/, '').replace(/^\d+[.)]\s*/, '')}</span></p>;
+          // Headers: ALL CAPS (short), or ending with :
+          const isHeader = (trimmed === trimmed.toUpperCase() && trimmed.length < 60 && trimmed.length > 2 && /[A-Z]/.test(trimmed)) || (trimmed.endsWith(':') && trimmed.length < 50);
+          // Bullets
+          const isBullet = /^[-•●○▪▸►✓✔]/.test(trimmed) || /^\d+[.)]/.test(trimmed);
+          // Key: Value pairs
+          const kvMatch = trimmed.match(/^([A-Za-z\s&/]+?):\s+(.+)$/);
+          if (isHeader) return <p key={i} className="font-bold mt-3 mb-1 text-xs" style={{ color: '#0F172A' }}>{trimmed}</p>;
+          if (isBullet) return <div key={i} className="flex gap-1.5 ml-2 mb-0.5"><span className="shrink-0" style={{ color: '#22D3EE' }}>•</span><span>{trimmed.replace(/^[-•●○▪▸►✓✔]\s*/, '').replace(/^\d+[.)]\s*/, '')}</span></div>;
+          if (kvMatch && kvMatch[1].length < 25) return <div key={i} className="mb-0.5"><span className="font-semibold" style={{ color: '#0F172A' }}>{kvMatch[1]}:</span> {kvMatch[2]}</div>;
           return <p key={i} className="mb-1">{trimmed}</p>;
         })}
       </div>
@@ -527,6 +498,110 @@ async function extractTextFromFile(file: File): Promise<string> {
     return raw.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim();
   }
   return (await file.text()).trim();
+}
+
+/* ── Lumora Profile Page ── */
+function LumoraProfilePage() {
+  const { user, subscription, logout } = useAuth();
+  const plan = subscription?.plan || 'free';
+  const planLabel = plan === 'free' ? 'Free' : plan.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  return (
+    <div className="max-w-2xl mx-auto px-6 py-8 w-full">
+      {/* User header */}
+      <div className="flex items-center gap-4 mb-8">
+        {user?.image ? (
+          <img src={user.image} alt="" className="w-16 h-16 rounded-2xl object-cover" referrerPolicy="no-referrer" />
+        ) : (
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: '#22D3EE' }}>
+            {(user?.name || user?.email || '?')[0].toUpperCase()}
+          </div>
+        )}
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>{user?.name || 'User'}</h2>
+          <p className="text-sm" style={{ color: '#64748B' }}>{user?.email}</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {/* Account */}
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>Account</div>
+          <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs" style={{ color: '#64748B' }}>Email</span>
+              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>{user?.email || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs" style={{ color: '#64748B' }}>Name</span>
+              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>{user?.name || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs" style={{ color: '#64748B' }}>Plan</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(34,211,238,0.1)', color: plan === 'free' ? '#64748B' : '#22D3EE' }}>{planLabel}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs" style={{ color: '#64748B' }}>Status</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#F0FDF4', color: '#16A34A' }}>{subscription?.status || 'Active'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Preferences */}
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>Preferences</div>
+          <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <span className="text-xs font-medium block" style={{ color: '#0F172A' }}>AI Model</span>
+                <span className="text-[10px]" style={{ color: '#94A3B8' }}>Model used for real-time answers</span>
+              </div>
+              <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid #E2E8F0', background: '#fff' }}>
+                <option>Auto (Recommended)</option>
+                <option>Claude Sonnet 4</option>
+                <option>Claude Opus 4</option>
+                <option>Claude Haiku</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <span className="text-xs font-medium block" style={{ color: '#0F172A' }}>Answer Mode</span>
+                <span className="text-[10px]" style={{ color: '#94A3B8' }}>Short for live interviews, detailed for practice</span>
+              </div>
+              <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid #E2E8F0', background: '#fff' }}>
+                <option>Short</option>
+                <option>Detailed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick links */}
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>Quick Links</div>
+          <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+            <Link to="/lumora/pricing" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Manage Subscription</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
+            </Link>
+            <Link to="/lumora/credits" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Credits & Usage</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
+            </Link>
+            <Link to="/lumora/assistants" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Interview Assistants</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
+            </Link>
+          </div>
+        </div>
+
+        {/* Sign out */}
+        <button onClick={logout} className="w-full text-center py-3 text-xs font-semibold rounded-xl transition-colors hover:bg-red-50" style={{ color: '#EF4444', border: '1px solid #FEE2E2' }}>
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /* ── Assistants Page — Role + Resume + JD based ── */
