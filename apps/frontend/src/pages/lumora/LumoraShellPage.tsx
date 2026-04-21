@@ -125,16 +125,17 @@ export function LumoraShellPage() {
     }
   }, [handleSubmit, activeTab]);
 
-  // Blank screen (Cmd+B)
-  if (blanked) {
-    return (
-      <div className="absolute inset-0 z-50 w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
-        <div className="opacity-10"><CamoraLogo size={24} /></div>
-      </div>
-    );
-  }
-
   return (
+    <>
+    {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
+    {blanked && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
+        <div className="text-center">
+          <div className="opacity-5 mb-4"><CamoraLogo size={24} /></div>
+          <p className="text-[10px] opacity-10 text-white">Press ⌘B or click to return</p>
+        </div>
+      </div>
+    )}
     <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
       {/* Left icon rail */}
       <LumoraIconRail
@@ -188,6 +189,16 @@ export function LumoraShellPage() {
               );
             })}
           </div>
+
+          {/* Go Invisible button */}
+          <button onClick={() => setBlanked(true)} className="ml-auto px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[#0F172A] hover:text-white flex items-center gap-1.5" style={{ color: '#64748B', border: '1px solid #E2E8F0' }} title="Go invisible (⌘B) — hides UI, audio keeps running">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+              <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+            Invisible
+          </button>
         </div>
 
         {/* Settings hint for uncalibrated users */}
@@ -433,6 +444,7 @@ export function LumoraShellPage() {
         })}
       </div>
     </div>
+    </>
   );
 }
 
