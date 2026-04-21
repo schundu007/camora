@@ -1,0 +1,108 @@
+name: Desktop App Build & Release
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.0.1)'
+        required: false
+        default: ''
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build macOS (ARM64 + x64)
+        working-directory: apps/desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:mac
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-builds
+          path: |
+            apps/desktop/build/*.dmg
+          retention-days: 30
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build Windows (x64)
+        working-directory: apps/desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:win
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: |
+            apps/desktop/build/*.exe
+          retention-days: 30
+
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/desktop-v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Camora Desktop v${{ steps.version.outputs.VERSION }}"
+          body: |
+            ## Camora Desktop v${{ steps.version.outputs.VERSION }}
+
+            ### Downloads
+            - **macOS Apple Silicon (M1/M2/M3):** `Camora-${{ steps.version.outputs.VERSION }}-arm64.dmg`
+            - **macOS Intel:** `Camora-${{ steps.version.outputs.VERSION }}-x64.dmg`
+            - **Windows:** `Camora-${{ steps.version.outputs.VERSION }}-Setup.exe`
+
+            ### What's New
+            - Real-time AI interview assistant
+            - Stealth mode (screen-share safe)
+            - System audio capture
+            - Auto-update support
+          files: |
+            artifacts/mac-builds/*.dmg
+            artifacts/windows-builds/*.exe
+          draft: false
+          prerelease: false

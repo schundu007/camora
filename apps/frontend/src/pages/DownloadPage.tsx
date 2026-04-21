@@ -6,9 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
    CONSTANTS
    ══════════════════════════════════════════════════════════════ */
 
-const RELEASES = 'https://github.com/schundu007/camora/releases/latest';
 const GITHUB_REPO = 'https://github.com/schundu007/camora';
-const APP_VERSION = '1.0.0';
+const RELEASES_API = 'https://api.github.com/repos/schundu007/camora/releases/latest';
 
 type OSType = 'mac-arm' | 'mac-intel' | 'windows' | 'linux';
 
@@ -22,35 +21,38 @@ interface PlatformInfo {
   icon: 'apple' | 'windows';
 }
 
-const PLATFORMS: PlatformInfo[] = [
-  {
-    id: 'mac-arm',
-    label: 'macOS Apple Silicon',
-    arch: 'ARM64 (M1/M2/M3/M4)',
-    size: '~102 MB',
-    fileType: 'DMG',
-    url: `${RELEASES}/download/Camora-${APP_VERSION}-arm64.dmg`,
-    icon: 'apple',
-  },
-  {
-    id: 'mac-intel',
-    label: 'macOS Intel',
-    arch: 'x64 (Intel)',
-    size: '~107 MB',
-    fileType: 'DMG',
-    url: `${RELEASES}/download/Camora-${APP_VERSION}-x64.dmg`,
-    icon: 'apple',
-  },
-  {
-    id: 'windows',
-    label: 'Windows',
-    arch: 'x64 (64-bit)',
-    size: '~83 MB',
-    fileType: 'EXE',
-    url: `${RELEASES}/download/Camora-${APP_VERSION}-Setup.exe`,
-    icon: 'windows',
-  },
-];
+function getPlatforms(version: string): PlatformInfo[] {
+  const base = `${GITHUB_REPO}/releases/download/desktop-v${version}`;
+  return [
+    {
+      id: 'mac-arm',
+      label: 'macOS Apple Silicon',
+      arch: 'ARM64 (M1/M2/M3/M4)',
+      size: '~102 MB',
+      fileType: 'DMG',
+      url: `${base}/Camora-${version}-arm64.dmg`,
+      icon: 'apple',
+    },
+    {
+      id: 'mac-intel',
+      label: 'macOS Intel',
+      arch: 'x64 (Intel)',
+      size: '~107 MB',
+      fileType: 'DMG',
+      url: `${base}/Camora-${version}-x64.dmg`,
+      icon: 'apple',
+    },
+    {
+      id: 'windows',
+      label: 'Windows',
+      arch: 'x64 (64-bit)',
+      size: '~83 MB',
+      fileType: 'EXE',
+      url: `${base}/Camora-${version}-Setup.exe`,
+      icon: 'windows',
+    },
+  ];
+}
 
 const FEATURES = [
   {
@@ -254,7 +256,19 @@ export default function DownloadPage() {
   const navigate = useNavigate();
   const [detectedOS, setDetectedOS] = useState<OSType>('mac-arm');
   const [addonLoading, setAddonLoading] = useState(false);
+  const [appVersion, setAppVersion] = useState('1.0.0');
   const { subscription, subscriptionLoading, isAuthenticated, token } = useAuth();
+
+  // Fetch latest version from GitHub releases
+  useEffect(() => {
+    fetch(RELEASES_API).then(r => r.json()).then(data => {
+      const tag = data.tag_name || '';
+      const ver = tag.replace('desktop-v', '').replace('v', '');
+      if (ver) setAppVersion(ver);
+    }).catch(() => {});
+  }, []);
+
+  const PLATFORMS = getPlatforms(appVersion);
 
   const plan = subscription?.plan || 'free';
   const hasDesktopAccess = subscription?.hasDesktopAccess ?? false;
@@ -361,7 +375,7 @@ export default function DownloadPage() {
             <span>camora.cariara.com</span>
           </Link>
           <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            v{APP_VERSION}
+            v{appVersion}
           </span>
         </div>
       </nav>
@@ -442,7 +456,7 @@ export default function DownloadPage() {
                     Download for {primary.label}
                   </a>
                   <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                    v{APP_VERSION} &middot; {primary.fileType} &middot; {primary.size}
+                    v{appVersion} &middot; {primary.fileType} &middot; {primary.size}
                   </span>
                 </>
               ) : isAnnualWithoutAddon ? (
