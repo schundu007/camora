@@ -51,49 +51,55 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#22D3EE' },
 ];
 
-/** Store prep content as JSON string for rich rendering */
+/** Store prep content — keep as-is if already valid JSON string, otherwise normalize */
 function formatPrepContent(content: any): string {
   if (!content) return JSON.stringify({ summary: 'No content generated' });
-  if (typeof content === 'string') {
-    // Aggressively strip markdown fences, data prefixes, and whitespace
-    let cleaned = content
-      .replace(/^```(?:json)?\s*/gm, '')
-      .replace(/```\s*$/gm, '')
-      .replace(/^RAWCONTENT:\s*/m, '')
-      .replace(/^data:\s*/gm, '')
-      .trim();
-    // Try to find JSON object in the string (may have leading text)
-    const jsonStart = cleaned.indexOf('{');
-    const jsonEnd = cleaned.lastIndexOf('}');
-    if (jsonStart >= 0 && jsonEnd > jsonStart) {
-      try {
-        const parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
-        return JSON.stringify(parsed);
-      } catch {}
-    }
-    // Try full string as JSON
-    try { const parsed = JSON.parse(cleaned); return JSON.stringify(parsed); } catch {}
-    // Fallback: wrap plain text as summary
-    return JSON.stringify({ summary: cleaned });
+  if (typeof content === 'object') {
+    try { return JSON.stringify(content); } catch { return JSON.stringify({ summary: String(content) }); }
   }
-  try { return JSON.stringify(content); } catch { return JSON.stringify({ summary: String(content) }); }
+  if (typeof content === 'string') {
+    // Try to extract valid JSON using our robust extractor
+    const parsed = extractJSON(content);
+    if (parsed) return JSON.stringify(parsed);
+    // Fallback: wrap plain text as summary (don't double-stringify)
+    return JSON.stringify({ summary: content.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').trim() });
+  }
+  return JSON.stringify({ summary: String(content) });
+}
+
+/** Aggressively extract a JSON object from any string */
+function extractJSON(raw: string): any {
+  if (!raw || typeof raw !== 'string') return null;
+  // Strip markdown fences
+  let s = raw.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').replace(/^data:\s*/gm, '').trim();
+  // Try direct parse
+  try { const p = JSON.parse(s); if (p && typeof p === 'object') return p; } catch {}
+  // Try extracting { ... } from the string
+  const i = s.indexOf('{'), j = s.lastIndexOf('}');
+  if (i >= 0 && j > i) {
+    try { const p = JSON.parse(s.slice(i, j + 1)); if (p && typeof p === 'object') return p; } catch {}
+  }
+  // Try double-parse (content was double-stringified)
+  try { const inner = JSON.parse(s); if (typeof inner === 'string') return extractJSON(inner); } catch {}
+  // Try parsing as { "summary": stringContent } where stringContent itself is JSON
+  try {
+    const p = JSON.parse(s);
+    if (p?.summary && typeof p.summary === 'string' && p.summary.trim().startsWith('{')) {
+      const inner = extractJSON(p.summary);
+      if (inner && Object.keys(inner).length > 1) return inner;
+    }
+  } catch {}
+  return null;
 }
 
 /** Rich content renderer for prep sections */
 function PrepContentRenderer({ content }: { content: string }) {
-  let data: any;
-  try {
-    data = JSON.parse(content);
-  } catch {
-    // Try to extract JSON from the string
-    const jsonStart = content.indexOf('{');
-    const jsonEnd = content.lastIndexOf('}');
-    if (jsonStart >= 0 && jsonEnd > jsonStart) {
-      try { data = JSON.parse(content.slice(jsonStart, jsonEnd + 1)); } catch {}
-    }
-    if (!data) return <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: '#475569' }}>{content}</div>;
+  const data = extractJSON(content);
+  if (!data) {
+    // Last resort: render as readable text, not raw JSON
+    const text = content.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    return <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: '#475569' }}>{text}</div>;
   }
-  if (!data || typeof data !== 'object') return <div className="text-sm leading-relaxed" style={{ color: '#475569' }}>{String(data)}</div>;
 
   // If the data has no recognized keys, render all values as readable text
   const knownKeys = ['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'techStack', 'keyPoints', 'tips', 'talkingPoints', 'deliveryTips', 'abbreviations', 'recentNews', 'whyTheyAsk', 'suggestedAnswer'];
