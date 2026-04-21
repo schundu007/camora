@@ -170,18 +170,27 @@ export function LumoraShellPage() {
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
               { id: 'design', label: 'Design', path: '/lumora/design' },
-              { id: 'behavioral', label: 'Behavioral', path: '/lumora' },
+              { id: 'behavioral', label: 'Behavioral' },
             ].map(tab => {
               const isBehavioral = tab.id === 'behavioral';
               const isActive = isBehavioral
                 ? copilotFullscreen
                 : !copilotFullscreen && activeTab === tab.id;
+
+              if (isBehavioral) {
+                return (
+                  <button key={tab.id}
+                    onClick={() => { setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); }}
+                    className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
+                    style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
+                    {tab.label}
+                  </button>
+                );
+              }
+
               return (
                 <Link key={tab.id} to={tab.path!}
-                  onClick={isBehavioral
-                    ? () => { setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); }
-                    : () => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }
-                  }
+                  onClick={() => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }}
                   className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
                   style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
                   {tab.label}
