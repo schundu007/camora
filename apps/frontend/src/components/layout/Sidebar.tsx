@@ -343,9 +343,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const sidebarWidth = collapsed ? '56px' : '240px';
 
   const renderSidebarContent = (isCollapsed: boolean, onItemClick?: () => void) => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Scrollable nav */}
-      <nav className={`flex-1 overflow-y-auto ${isCollapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
+      <nav className={`flex-1 min-h-0 overflow-y-auto ${isCollapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
         {sections.map((section) => (
           <SidebarSection
             key={section.title}
@@ -357,9 +357,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Bottom section */}
+      {/* Bottom section — always visible */}
       <div
-        className={`${isCollapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center`}
+        className={`${isCollapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center shrink-0`}
         style={{ borderTop: '1px solid var(--border)' }}
       >
         {/* Expand/Collapse toggle — desktop only */}
@@ -398,12 +398,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* ── Desktop sidebar ─────────────────────────────────── */}
       <aside
-        className="hidden md:flex flex-col shrink-0 h-full"
+        className="hidden md:flex flex-col shrink-0"
         style={{
           width: sidebarWidth,
+          height: '100%',
           transition: 'width 0.2s ease-out',
           background: '#22D3EE',
           borderRight: '1px solid rgba(255,255,255,0.15)',
+          overflow: 'hidden',
         }}
       >
         {renderSidebarContent(collapsed)}
