@@ -357,11 +357,20 @@ interface Assistant {
   id: string;
   name: string;
   type: 'coding' | 'system-design' | 'behavioral';
+  model: string;
   company?: string;
   role?: string;
   notes?: string;
   createdAt: string;
 }
+
+const AI_MODELS = [
+  { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', desc: 'Fast, balanced', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg> },
+  { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', desc: 'Most capable', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg> },
+  { value: 'gpt-4o', label: 'GPT-4o', provider: 'OpenAI', desc: 'Fast multimodal', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12l2 2 4-4" /></svg> },
+  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'OpenAI', desc: 'Most powerful GPT', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12l2 2 4-4" /></svg> },
+  { value: 'o3-mini', label: 'o3-mini', provider: 'OpenAI', desc: 'Reasoning model', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12l2 2 4-4" /></svg> },
+];
 
 const ASSISTANT_TYPES = [
   { value: 'coding', label: 'Coding Interview', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
@@ -374,7 +383,7 @@ function AssistantsPage() {
     try { return JSON.parse(localStorage.getItem('lumora_assistants') || '[]'); } catch { return []; }
   });
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', type: 'coding', company: '', role: '', notes: '' });
+  const [form, setForm] = useState({ name: '', type: 'coding', model: 'claude-sonnet', company: '', role: '', notes: '' });
 
   const save = (list: Assistant[]) => {
     setAssistants(list);
@@ -387,13 +396,14 @@ function AssistantsPage() {
       id: Date.now().toString(),
       name: form.name.trim(),
       type: form.type as Assistant['type'],
+      model: form.model,
       company: form.company.trim() || undefined,
       role: form.role.trim() || undefined,
       notes: form.notes.trim() || undefined,
       createdAt: new Date().toISOString(),
     };
     save([assistant, ...assistants]);
-    setForm({ name: '', type: 'coding', company: '', role: '', notes: '' });
+    setForm({ name: '', type: 'coding', model: 'claude-sonnet', company: '', role: '', notes: '' });
     setShowCreate(false);
   };
 
@@ -425,6 +435,28 @@ function AssistantsPage() {
               {ASSISTANT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
+
+          {/* AI Model selector */}
+          <div className="mb-3">
+            <label className="text-[10px] font-bold uppercase tracking-wider mb-2 block" style={{ color: '#94A3B8' }}>AI Model</label>
+            <div className="grid grid-cols-5 gap-2">
+              {AI_MODELS.map(m => (
+                <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))}
+                  className="p-2.5 rounded-lg text-left transition-all"
+                  style={{
+                    border: form.model === m.value ? '2px solid #29B5E8' : '1px solid #E2E8F0',
+                    background: form.model === m.value ? 'rgba(41,181,232,0.04)' : '#fff',
+                  }}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {m.icon}
+                    <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>{m.label}</span>
+                  </div>
+                  <p className="text-[9px]" style={{ color: '#94A3B8' }}>{m.provider} · {m.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3 mb-3">
             <input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Target company (optional)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
             <input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Target role (optional)" className="px-3 py-2 rounded-lg text-sm" style={{ border: '1px solid #E2E8F0', outline: 'none' }} />
@@ -455,7 +487,12 @@ function AssistantsPage() {
                     {typeInfo?.icon}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: '#F1F5F9', color: '#64748B' }}>
+                        {AI_MODELS.find(m => m.value === a.model)?.label || a.model}
+                      </span>
+                    </div>
                     <p className="text-[11px]" style={{ color: '#94A3B8' }}>
                       {typeInfo?.label}{a.company ? ` · ${a.company}` : ''}{a.role ? ` · ${a.role}` : ''}
                     </p>
