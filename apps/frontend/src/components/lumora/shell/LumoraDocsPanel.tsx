@@ -587,8 +587,6 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     GENERATE_SECTIONS.forEach(s => { initStatus[s] = 'pending'; });
     setSectionStatus(initStatus);
 
-    const newSections: Record<string, any> = {};
-
     for (let i = 0; i < GENERATE_SECTIONS.length; i++) {
       const section = GENERATE_SECTIONS[i];
       const label = SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section;
@@ -631,17 +629,17 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           }
           const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : { summary: 'Generation completed but no content received' });
           setStreamingText('');
-          newSections[section] = displayText;
           setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
           // Save progressively so user can see completed sections
           setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         } else {
+          const errMsg = `Error ${res.status}: ${res.statusText || 'Failed to generate'}`;
           setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
-          newSections[section] = `Error: ${res.status}`;
+          setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: errMsg } } }));
         }
       } catch (err) {
         setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
-        newSections[section] = `Error generating ${section}`;
+        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error generating ${label}` } } }));
       }
     }
 
@@ -690,10 +688,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
       } else {
+        const errMsg = `Error ${res.status}: ${res.statusText || 'Failed to generate'}`;
         setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: errMsg } } }));
       }
     } catch {
       setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+      setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: 'Error generating section' } } }));
     }
   }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
 
@@ -903,14 +904,20 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             </div>
             <div className="flex-1 overflow-auto p-6">
               {sectionStatus[activeSection] === 'generating' ? (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: '#22D3EE', borderTopColor: 'transparent' }} />
-                  <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}</p>
-                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>AI is crafting personalized content based on your resume and JD...</p>
-                  {streamingText && (
-                    <p className="text-[10px] mt-3 px-3 py-1 rounded-full" style={{ background: '#F1F5F9', color: '#64748B' }}>
-                      {Math.round(streamingText.length / 10)} tokens generated
-                    </p>
+                <div>
+                  <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#22D3EE', borderTopColor: 'transparent' }} />
+                    <span className="text-xs font-semibold" style={{ color: '#0F172A' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
+                    {streamingText && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full ml-auto" style={{ background: '#F1F5F9', color: '#64748B' }}>
+                        {Math.round(streamingText.length / 10)} tokens
+                      </span>
+                    )}
+                  </div>
+                  {streamingText ? (
+                    <pre className="text-xs leading-relaxed whitespace-pre-wrap break-words font-sans" style={{ color: '#475569' }}>{streamingText}</pre>
+                  ) : (
+                    <p className="text-xs" style={{ color: '#94A3B8' }}>Waiting for AI response...</p>
                   )}
                 </div>
               ) : state.sections[activeSection] ? (
