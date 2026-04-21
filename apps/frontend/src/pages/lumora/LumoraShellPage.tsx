@@ -11,7 +11,7 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
-import TopBar from '../../components/layout/TopBar';
+import UserDropdown from '../../components/shared/UserDropdown';
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 
@@ -145,9 +145,21 @@ export function LumoraShellPage() {
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar — audio controls on coding/design only */}
-        {(activeTab === 'coding' || activeTab === 'design') && (
+        {/* Top bar — nav links on home, audio controls on coding/design */}
+        {(activeTab === 'coding' || activeTab === 'design') ? (
           <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        ) : (
+          <div className="flex items-center justify-between h-10 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-4">
+              <Link to="/capra/prepare" className="flex items-center gap-1.5 text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                Dashboard
+              </Link>
+              <Link to="/" className="text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>Home</Link>
+              <Link to="/pricing" className="text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>Pricing</Link>
+            </div>
+            <UserDropdown variant="light" />
+          </div>
         )}
 
         {/* Settings hint for uncalibrated users */}
