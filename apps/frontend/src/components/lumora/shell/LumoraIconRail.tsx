@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 
-export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar';
+export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants';
 
 interface LumoraIconRailProps {
   activeTab: LumoraTab;
@@ -15,15 +15,15 @@ interface LumoraIconRailProps {
 /* ── Sidebar items ── */
 const MAIN_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
-  { id: 'assistants', label: 'Assistants', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
-  { id: 'sessions', label: 'Sessions', action: 'sessions', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
+  { id: 'assistants', label: 'Assistants', path: '/lumora/assistants', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
+  { id: 'sessions', label: 'Sessions', path: '/lumora/sessions', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
   { id: 'documents', label: 'Documents', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
 ];
 
 const MORE_ITEMS = [
-  { id: 'profile', label: 'Profile', path: '/profile' },
-  { id: 'credits', label: 'Credits', path: '/profile?tab=achievements' },
-  { id: 'pricing', label: 'Pricing', path: '/pricing' },
+  { id: 'profile', label: 'Profile', path: '/lumora' },
+  { id: 'credits', label: 'Credits', path: '/lumora' },
+  { id: 'pricing', label: 'Pricing', path: '/lumora' },
 ];
 
 const BOTTOM_ITEMS = [
@@ -36,9 +36,9 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   const location = useLocation();
 
   const isActive = (id: string) => {
-    if (id === 'dashboard') return activeTab === 'interview' && !sessionsOpen;
-    if (id === 'assistants') return false; // Will be its own page later
-    if (id === 'sessions') return sessionsOpen;
+    if (id === 'dashboard') return activeTab === 'interview';
+    if (id === 'assistants') return activeTab === 'assistants';
+    if (id === 'sessions') return activeTab === 'sessions';
     if (id === 'documents') return activeTab === 'prepkit';
     return false;
   };
@@ -60,13 +60,8 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       <div className="flex flex-col gap-0.5 px-2">
         {MAIN_ITEMS.map(item => {
           const active = isActive(item.id);
-          return (item as any).action === 'sessions' ? (
-            <button key={item.id} onClick={onToggleSessions} className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full" style={itemStyle(active)}>
-              {item.icon}
-              {item.label}
-            </button>
-          ) : (
-            <Link key={item.id} to={item.path!} className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all" style={itemStyle(active)}>
+          return (
+            <Link key={item.id} to={item.path} className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all" style={itemStyle(active)}>
               {item.icon}
               {item.label}
             </Link>

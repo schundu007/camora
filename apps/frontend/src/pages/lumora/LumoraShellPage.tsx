@@ -46,7 +46,9 @@ export function LumoraShellPage() {
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
-    location.pathname.includes('/calendar') ? 'calendar' : 'interview';
+    location.pathname.includes('/calendar') ? 'calendar' :
+    location.pathname.includes('/sessions') ? 'sessions' :
+    location.pathname.includes('/assistants') ? 'assistants' : 'interview';
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
@@ -137,12 +139,14 @@ export function LumoraShellPage() {
         onToggleSessions={() => setSessionsOpen(prev => !prev)}
       />
 
-      {/* Sessions sidebar */}
-      <SessionSidebar
-        isOpen={sessionsOpen}
-        onClose={() => setSessionsOpen(false)}
-        onSelectEntry={(idx) => setFocusedEntry(idx)}
-      />
+      {/* Sessions sidebar — only when on interview tab */}
+      {activeTab === 'interview' && sessionsOpen && (
+        <SessionSidebar
+          isOpen={true}
+          onClose={() => setSessionsOpen(false)}
+          onSelectEntry={(idx) => setFocusedEntry(idx)}
+        />
+      )}
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
@@ -256,6 +260,58 @@ export function LumoraShellPage() {
           {activeTab === 'calendar' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#FFFFFF' }}>
               <LumoraCalendar onClose={() => navigate('/lumora')} />
+            </div>
+          )}
+
+          {/* Sessions page */}
+          {activeTab === 'sessions' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+              <div className="max-w-3xl mx-auto px-6 py-8 w-full">
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sessions</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Your interview session history.</p>
+                {history.length === 0 ? (
+                  <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
+                    <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    <p className="text-sm font-medium">No sessions yet</p>
+                    <p className="text-xs mt-1">Start an interview to see your history here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {history.slice().reverse().map((entry: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <div>
+                          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{entry.question}</p>
+                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{new Date(entry.timestamp).toLocaleString()}</p>
+                        </div>
+                        <button onClick={() => { setFocusedEntry(history.length - 1 - idx); navigate('/lumora'); }} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--accent)', border: '1px solid var(--border)' }}>View</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Assistants page */}
+          {activeTab === 'assistants' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+              <div className="max-w-3xl mx-auto px-6 py-8 w-full">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Assistants</h2>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Manage and create AI assistants for your interviews.</p>
+                  </div>
+                  <button className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--accent)' }}>
+                    + New Assistant
+                  </button>
+                </div>
+                <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed var(--border)' }}>
+                  <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Ready to create your first assistant?</p>
+                  <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Pick a co-pilot, add your data and meeting details, save it, and reuse anytime.</p>
+                  <button className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--accent)' }}>Create Assistant</button>
+                </div>
+              </div>
             </div>
           )}
 
