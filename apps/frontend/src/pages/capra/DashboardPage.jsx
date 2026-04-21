@@ -737,14 +737,10 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mode selector + Assistant toggle — hidden when embedded in PracticePage */}
+        {/* Mode selector — hidden when embedded in PracticePage */}
         {!embedded && (
-        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
+        <div className="flex items-center px-4 py-2 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
           <AscendModeSelector mode={ascendMode} onModeChange={handleModeChange} />
-          <button onClick={() => setShowAscendAssistant(!showAscendAssistant)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showAscendAssistant ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'}`}>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            <span className="hidden sm:inline">Assistant</span>
-          </button>
         </div>
         )}
 
@@ -823,8 +819,8 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
                 onExplanationsUpdate={(explanations) => setSolution(prev => prev ? { ...prev, explanations } : null)}
                 codeDisplayRef={codeDisplayRef}
                 editorSettings={editorSettings}
-                showAscendAssistant={showAscendAssistant}
-                onCloseAscendAssistant={() => setShowAscendAssistant(false)}
+                showAscendAssistant={false}
+                onCloseAscendAssistant={() => {}}
                 provider={provider}
                 model={model}
                 isMobile={isMobile}
@@ -843,8 +839,8 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
         <MobileBottomNav
           ascendMode={ascendMode}
           onModeChange={handleModeChange}
-          showAscendAssistant={showAscendAssistant}
-          onAssistantClick={() => setShowAscendAssistant(!showAscendAssistant)}
+          showAscendAssistant={false}
+          onAssistantClick={() => {}}
           onSettingsClick={() => setShowSettings(true)}
         />
       )}
@@ -976,10 +972,6 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
 
       {/* Right: action buttons */}
       <div className="flex items-center gap-1 sm:gap-2">
-        <button onClick={onAssistantClick} aria-label="Toggle interview assistant" className={`flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-w-[36px] min-h-[36px] justify-center ${showAscendAssistant ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'}`}>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-          <span className="hidden sm:inline">Assistant</span>
-        </button>
         <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">
           {user?.image ? (
             <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
