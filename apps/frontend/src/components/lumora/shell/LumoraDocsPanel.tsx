@@ -571,8 +571,6 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const [prepData, setPrepData] = useState<PrepData>(loadPrepData);
   const [activeSection, setActiveSection] = useState('input');
   const [generating, setGenerating] = useState(false);
-  const [streamingText, setStreamingText] = useState('');
-  const [genProgress, setGenProgress] = useState('');
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'generating' | 'done' | 'error'>>({});
   const [showNewCompany, setShowNewCompany] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
@@ -650,147 +648,90 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
 
   const GENERATE_SECTIONS = ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'];
 
+  /** Read SSE stream and return parsed result — pure function, no shared state */
+  const readSSE = async (response: Response): Promise<any> => {
+    const reader = response.body?.getReader();
+    if (!reader) return null;
+    const decoder = new TextDecoder();
+    let result: any = null;
+    let chunks = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data: ')) continue;
+        try {
+          const parsed = JSON.parse(t.slice(6));
+          if (parsed.done && parsed.result) result = parsed.result;
+          else if (parsed.chunk) chunks += parsed.chunk;
+          else if (parsed.error) chunks = `Error: ${parsed.error}`;
+        } catch {}
+      }
+    }
+    // Process remaining buffer — done event often lands here
+    if (buffer.trim().startsWith('data: ')) {
+      try {
+        const parsed = JSON.parse(buffer.trim().slice(6));
+        if (parsed.done && parsed.result) result = parsed.result;
+        else if (parsed.chunk) chunks += parsed.chunk;
+      } catch {}
+    }
+
+    if (result) return formatPrepContent(result);
+    if (chunks) { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } }
+    return null;
+  };
+
+  /** Generate a single section — fully isolated, no shared state */
+  const generateOneSection = useCallback(async (section: string) => {
+    if (!state.jd.trim() || !state.resume.trim() || !token) return;
+    const label = SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section;
+    setSectionStatus(prev => ({ ...prev, [section]: 'generating' }));
+
+    try {
+      const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
+      });
+
+      if (!res.ok) {
+        setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error ${res.status}: ${res.statusText || 'Failed'}` } } }));
+        return;
+      }
+
+      const content = await readSSE(res);
+      setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: content || { summary: `No content received for ${label}` } } }));
+      setSectionStatus(prev => ({ ...prev, [section]: content ? 'done' : 'error' }));
+    } catch {
+      setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+      setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error generating ${label}` } } }));
+    }
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
+
+  /** Generate ALL sections in parallel — each runs independently */
   const handleGenerate = useCallback(async () => {
     if (!state.jd.trim() || !state.resume.trim() || !token) return;
     setGenerating(true);
-
-    // Initialize all sections as pending
     const initStatus: Record<string, 'pending' | 'generating' | 'done' | 'error'> = {};
-    GENERATE_SECTIONS.forEach(s => { initStatus[s] = 'pending'; });
+    GENERATE_SECTIONS.forEach(s => { initStatus[s] = 'generating'; });
     setSectionStatus(initStatus);
 
-    for (let i = 0; i < GENERATE_SECTIONS.length; i++) {
-      const section = GENERATE_SECTIONS[i];
-      const label = SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section;
-      setGenProgress(`${i + 1}/${GENERATE_SECTIONS.length} — ${label}`);
-      setSectionStatus(prev => ({ ...prev, [section]: 'generating' }));
-
-      try {
-        const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
-        });
-        if (res.ok) {
-          // Stream SSE in real-time
-          const reader = res.body?.getReader();
-          const decoder = new TextDecoder();
-          let result: any = null;
-          let chunks = '';
-          let buffer = '';
-          setStreamingText('');
-          setActiveSection(section); // Show the section being generated
-
-          if (reader) {
-            while (true) {
-              const { done: rdone, value } = await reader.read();
-              if (rdone) break;
-              buffer += decoder.decode(value, { stream: true });
-              const lines = buffer.split('\n');
-              buffer = lines.pop() || '';
-              for (const line of lines) {
-                const t = line.trim();
-                if (!t.startsWith('data: ')) continue;
-                try {
-                  const parsed = JSON.parse(t.slice(6));
-                  if (parsed.error) { chunks = `Error: ${parsed.error}`; setStreamingText(chunks); }
-                  else if (parsed.done && parsed.result) { result = parsed.result; }
-                  else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
-                } catch {}
-              }
-            }
-            // Process remaining buffer — the done event often lands here
-            if (buffer.trim()) {
-              const t = buffer.trim();
-              if (t.startsWith('data: ')) {
-                try {
-                  const parsed = JSON.parse(t.slice(6));
-                  if (parsed.done && parsed.result) { result = parsed.result; }
-                  else if (parsed.chunk) { chunks += parsed.chunk; }
-                } catch {}
-              }
-            }
-          }
-          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : { summary: 'Generation completed but no content received' });
-          setStreamingText('');
-          setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
-          // Save progressively so user can see completed sections
-          setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
-        } else {
-          const errMsg = `Error ${res.status}: ${res.statusText || 'Failed to generate'}`;
-          setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
-          setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: errMsg } } }));
-        }
-      } catch (err) {
-        setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
-        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error generating ${label}` } } }));
-      }
-    }
-
+    await Promise.allSettled(GENERATE_SECTIONS.map(s => generateOneSection(s)));
     setGenerating(false);
-    setGenProgress('');
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token, generateOneSection]);
 
-  // Re-generate a single section
+  /** Re-generate a single section */
   const regenerateSection = useCallback(async (section: string) => {
-    if (!state.jd.trim() || !state.resume.trim() || !token) return;
-    setSectionStatus(prev => ({ ...prev, [section]: 'generating' }));
-    try {
-      const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
-      });
-      if (res.ok) {
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder();
-        let result: any = null;
-        let chunks = '';
-        let buffer = '';
-        setStreamingText('');
-
-        if (reader) {
-          while (true) {
-            const { done: rdone, value } = await reader.read();
-            if (rdone) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-              const t = line.trim();
-              if (!t.startsWith('data: ')) continue;
-              try {
-                const parsed = JSON.parse(t.slice(6));
-                if (parsed.error) { chunks = `Error: ${parsed.error}`; setStreamingText(chunks); }
-                else if (parsed.done && parsed.result) { result = parsed.result; }
-                else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
-              } catch {}
-            }
-          }
-          // Process remaining buffer — done event often lands here
-          if (buffer.trim()) {
-            const t = buffer.trim();
-            if (t.startsWith('data: ')) {
-              try {
-                const parsed = JSON.parse(t.slice(6));
-                if (parsed.done && parsed.result) { result = parsed.result; }
-                else if (parsed.chunk) { chunks += parsed.chunk; }
-              } catch {}
-            }
-          }
-        }
-        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : { summary: 'No content received' });
-        setStreamingText('');
-        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
-        setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
-      } else {
-        const errMsg = `Error ${res.status}: ${res.statusText || 'Failed to generate'}`;
-        setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
-        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: errMsg } } }));
-      }
-    } catch {
-      setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
-      setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: 'Error generating section' } } }));
-    }
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
+    await generateOneSection(section);
+  }, [generateOneSection]);
 
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
 
@@ -890,7 +831,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           {generating && (
             <div className="mb-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] font-medium" style={{ color: '#94a3b8' }}>{genProgress}</span>
+                <span className="text-[9px] font-medium" style={{ color: '#94a3b8' }}>Generating all sections...</span>
                 <span className="text-[9px] font-bold" style={{ color: '#22D3EE' }}>
                   {Object.values(sectionStatus).filter(s => s === 'done').length}/{GENERATE_SECTIONS.length}
                 </span>
@@ -998,21 +939,10 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             </div>
             <div className="flex-1 overflow-auto p-6">
               {sectionStatus[activeSection] === 'generating' ? (
-                <div>
-                  <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#22D3EE', borderTopColor: 'transparent' }} />
-                    <span className="text-xs font-semibold" style={{ color: '#0F172A' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
-                    {streamingText && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full ml-auto" style={{ background: '#F1F5F9', color: '#64748B' }}>
-                        {Math.round(streamingText.length / 10)} tokens
-                      </span>
-                    )}
-                  </div>
-                  {streamingText ? (
-                    <pre className="text-xs leading-relaxed whitespace-pre-wrap break-words font-sans" style={{ color: '#475569' }}>{streamingText}</pre>
-                  ) : (
-                    <p className="text-xs" style={{ color: '#94A3B8' }}>Waiting for AI response...</p>
-                  )}
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: '#22D3EE', borderTopColor: 'transparent' }} />
+                  <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</p>
+                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>Each section generates independently</p>
                 </div>
               ) : state.sections[activeSection] ? (
                 <PrepContentRenderer content={state.sections[activeSection]} />
