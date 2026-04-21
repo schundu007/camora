@@ -51,20 +51,16 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#22D3EE' },
 ];
 
-/** Store prep content — keep as-is if already valid JSON string, otherwise normalize */
-function formatPrepContent(content: any): string {
-  if (!content) return JSON.stringify({ summary: 'No content generated' });
-  if (typeof content === 'object') {
-    try { return JSON.stringify(content); } catch { return JSON.stringify({ summary: String(content) }); }
-  }
+/** Normalize prep content into a clean object (never stringify) */
+function formatPrepContent(content: any): any {
+  if (!content) return { summary: 'No content generated' };
+  if (typeof content === 'object' && !Array.isArray(content)) return content;
   if (typeof content === 'string') {
-    // Try to extract valid JSON using our robust extractor
     const parsed = extractJSON(content);
-    if (parsed) return JSON.stringify(parsed);
-    // Fallback: wrap plain text as summary (don't double-stringify)
-    return JSON.stringify({ summary: content.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').trim() });
+    if (parsed) return parsed;
+    return { summary: content.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').trim() };
   }
-  return JSON.stringify({ summary: String(content) });
+  return { summary: String(content) };
 }
 
 /** Aggressively extract a JSON object from any string */
@@ -92,14 +88,20 @@ function extractJSON(raw: string): any {
   return null;
 }
 
-/** Rich content renderer for prep sections */
-function PrepContentRenderer({ content }: { content: string }) {
-  const data = extractJSON(content);
-  if (!data) {
-    // Last resort: render as readable text, not raw JSON
-    const text = content.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\\"/g, '"');
-    return <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: '#475569' }}>{text}</div>;
+/** Rich content renderer for prep sections — accepts string or object */
+function PrepContentRenderer({ content }: { content: any }) {
+  // If content is already an object, use it directly (like capra does)
+  let data: any = null;
+  if (content && typeof content === 'object' && !Array.isArray(content)) {
+    data = content;
+  } else if (typeof content === 'string') {
+    data = extractJSON(content);
+    if (!data) {
+      const text = content.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      return <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: '#475569' }}>{text}</div>;
+    }
   }
+  if (!data) return <div className="text-sm" style={{ color: '#94A3B8' }}>No content available</div>;
 
   // If the data has no recognized keys, render all values as readable text
   const knownKeys = ['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'techStack', 'keyPoints', 'tips', 'talkingPoints', 'deliveryTips', 'abbreviations', 'recentNews', 'whyTheyAsk', 'suggestedAnswer'];
@@ -576,7 +578,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               }
             }
           }
-          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : JSON.stringify({ summary: 'Generation completed but no content received' }));
+          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : { summary: 'Generation completed but no content received' });
           setStreamingText('');
           newSections[section] = displayText;
           setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
@@ -632,7 +634,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             }
           }
         }
-        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : JSON.stringify({ summary: 'No content received' }));
+        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : { summary: 'No content received' });
         setStreamingText('');
         setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
