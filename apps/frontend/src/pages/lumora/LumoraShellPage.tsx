@@ -465,6 +465,47 @@ export function LumoraShellPage() {
   );
 }
 
+/* ── Format plain text into readable HTML ── */
+function FormatTextPreview({ text, label }: { text: string; label: string }) {
+  if (!text) return null;
+  // Convert plain text to structured HTML: detect sections, bullets, etc.
+  const lines = text.split('\n').filter(l => l.trim());
+  return (
+    <div className="mt-2 rounded-lg overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
+      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>{label}</div>
+      <div className="px-3 py-2 text-xs leading-relaxed max-h-[200px] overflow-auto" style={{ color: '#334155' }}>
+        {lines.map((line, i) => {
+          const trimmed = line.trim();
+          // Detect headers (ALL CAPS, short lines, or lines ending with :)
+          const isHeader = (trimmed === trimmed.toUpperCase() && trimmed.length < 60 && trimmed.length > 2) || trimmed.endsWith(':');
+          // Detect bullet points
+          const isBullet = /^[-•●○▪▸►]/.test(trimmed) || /^\d+[.)]/.test(trimmed);
+          if (isHeader) return <p key={i} className="font-bold mt-2 mb-0.5" style={{ color: '#0F172A', fontSize: '12px' }}>{trimmed}</p>;
+          if (isBullet) return <p key={i} className="ml-3 flex gap-1.5"><span style={{ color: '#22D3EE' }}>•</span><span>{trimmed.replace(/^[-•●○▪▸►]\s*/, '').replace(/^\d+[.)]\s*/, '')}</span></p>;
+          return <p key={i} className="mb-1">{trimmed}</p>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Editable text field with preview toggle ── */
+function TextFieldWithPreview({ value, onChange, placeholder, label }: { value: string; onChange: (v: string) => void; placeholder: string; label: string }) {
+  const [previewing, setPreviewing] = useState(false);
+  const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
+  return previewing && value ? (
+    <div>
+      <button onClick={() => setPreviewing(false)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>Edit</button>
+      <FormatTextPreview text={value} label={label} />
+    </div>
+  ) : (
+    <div>
+      {value && <button onClick={() => setPreviewing(true)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>Preview</button>}
+      <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
+    </div>
+  );
+}
+
 /* ── File text extractor — handles .txt, .docx, .pdf ── */
 async function extractTextFromFile(file: File): Promise<string> {
   const name = file.name.toLowerCase();
@@ -562,7 +603,7 @@ function AssistantsPage() {
                 }} />
               </label>
             </div>
-            <textarea value={form.resume} onChange={e => setForm(f => ({ ...f, resume: e.target.value }))} placeholder="Paste resume text or upload a file. AI will reference your experience to craft personalized answers." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
+            <TextFieldWithPreview value={form.resume} onChange={v => setForm(f => ({ ...f, resume: v }))} placeholder="Paste resume text or upload a file. AI will reference your experience to craft personalized answers." label="Resume Preview" />
           </div>
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
@@ -580,7 +621,7 @@ function AssistantsPage() {
                 }} />
               </label>
             </div>
-            <textarea value={form.jobDescription} onChange={e => setForm(f => ({ ...f, jobDescription: e.target.value }))} placeholder="Paste the JD or upload a file. AI will tailor answers to match role requirements." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
+            <TextFieldWithPreview value={form.jobDescription} onChange={v => setForm(f => ({ ...f, jobDescription: v }))} placeholder="Paste the JD or upload a file. AI will tailor answers to match role requirements." label="Job Description Preview" />
           </div>
           <div className="flex gap-2">
             <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: '#29B5E8' }}>Create</button>
@@ -616,9 +657,9 @@ function AssistantsPage() {
                   <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: '#94A3B8' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
-              {(a.resume || a.jobDescription) && <div className="flex gap-3 mt-2">
-                {a.resume && <div className="flex-1 px-3 py-2 rounded-lg text-[11px]" style={{ background: '#F8FAFC', color: '#64748B' }}><span className="text-[9px] font-bold uppercase tracking-wider block mb-1" style={{ color: '#94A3B8' }}>Resume</span>{a.resume.slice(0, 100)}{a.resume.length > 100 ? '...' : ''}</div>}
-                {a.jobDescription && <div className="flex-1 px-3 py-2 rounded-lg text-[11px]" style={{ background: '#F8FAFC', color: '#64748B' }}><span className="text-[9px] font-bold uppercase tracking-wider block mb-1" style={{ color: '#94A3B8' }}>JD</span>{a.jobDescription.slice(0, 100)}{a.jobDescription.length > 100 ? '...' : ''}</div>}
+              {(a.resume || a.jobDescription) && <div className="grid grid-cols-2 gap-3 mt-2">
+                {a.resume && <FormatTextPreview text={a.resume} label="Resume" />}
+                {a.jobDescription && <FormatTextPreview text={a.jobDescription} label="Job Description" />}
               </div>}
             </div>
           );
