@@ -195,6 +195,9 @@ export function App() {
           <Route path="/lumora/calendar" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/sessions" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/assistants" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/pricing" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
           {/* ── Also accessible via /app paths (PAID) ──────────── */}
           <Route path="/app" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />

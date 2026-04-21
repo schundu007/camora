@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 
-export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants';
+export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits' | 'pricing';
 
 interface LumoraIconRailProps {
   activeTab: LumoraTab;
@@ -21,9 +21,9 @@ const MAIN_ITEMS = [
 ];
 
 const MORE_ITEMS = [
-  { id: 'profile', label: 'Profile', path: '/profile' },
-  { id: 'credits', label: 'Credits', path: '/profile?tab=achievements' },
-  { id: 'pricing', label: 'Pricing', path: '/pricing' },
+  { id: 'profile', label: 'Profile', path: '/lumora/profile' },
+  { id: 'credits', label: 'Credits', path: '/lumora/credits' },
+  { id: 'pricing', label: 'Pricing', path: '/lumora/pricing' },
 ];
 
 const BOTTOM_ITEMS = [
@@ -93,12 +93,11 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {accountOpen && expanded && (
           <div className="ml-5 flex flex-col gap-0.5">
             {MORE_ITEMS.map(item => (
-              <a key={item.id} href={item.path} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}
+              <Link key={item.id} to={item.path} className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all" style={{ color: 'rgba(255,255,255,0.6)' }}
                 onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
                 onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
                 {item.label}
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
-              </a>
+              </Link>
             ))}
           </div>
         )}

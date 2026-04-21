@@ -11,6 +11,7 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import SharedPricingCards from '../../components/shared/PricingCards';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
@@ -48,7 +49,10 @@ export function LumoraShellPage() {
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
     location.pathname.includes('/sessions') ? 'sessions' :
-    location.pathname.includes('/assistants') ? 'assistants' : 'interview';
+    location.pathname.includes('/assistants') ? 'assistants' :
+    location.pathname.includes('/profile') ? 'profile' :
+    location.pathname.includes('/credits') ? 'credits' :
+    location.pathname.includes('/pricing') ? 'pricing' : 'interview';
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
@@ -296,6 +300,98 @@ export function LumoraShellPage() {
           {activeTab === 'assistants' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
               <AssistantsPage />
+            </div>
+          )}
+
+          {/* Profile page */}
+          {activeTab === 'profile' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+              <div className="max-w-2xl mx-auto px-6 py-8 w-full">
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Profile</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Your Lumora account settings.</p>
+                <div className="space-y-4">
+                  <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
+                    <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Account</h3>
+                    <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</span>
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{useInterviewStore.getState().question || 'Loading...'}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Plan</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,211,238,0.1)', color: 'var(--accent)' }}>Active</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
+                    <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Preferences</h3>
+                    <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>AI Model</span>
+                      <select className="text-xs px-2 py-1 rounded-lg" style={{ border: '1px solid var(--border)' }}>
+                        <option>Auto (Recommended)</option>
+                        <option>Claude Sonnet</option>
+                        <option>Claude Haiku</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Answer Mode</span>
+                      <select className="text-xs px-2 py-1 rounded-lg" style={{ border: '1px solid var(--border)' }}>
+                        <option>Short</option>
+                        <option>Detailed</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Credits page */}
+          {activeTab === 'credits' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+              <div className="max-w-2xl mx-auto px-6 py-8 w-full">
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Credits & Usage</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Track your AI usage and remaining credits.</p>
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[
+                    { label: 'Sessions Used', value: String(history.length), sub: 'this month' },
+                    { label: 'AI Questions', value: String(history.filter((e: any) => e.question).length), sub: 'total asked' },
+                    { label: 'Plan', value: 'Active', sub: 'subscription' },
+                  ].map(s => (
+                    <div key={s.label} className="rounded-xl p-4 text-center" style={{ border: '1px solid var(--border)' }}>
+                      <div className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>{s.value}</div>
+                      <div className="text-[10px] font-medium mt-1" style={{ color: 'var(--text-primary)' }}>{s.label}</div>
+                      <div className="text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.sub}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
+                  <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Recent Usage</h3>
+                  {history.length === 0 ? (
+                    <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>No usage yet. Start an interview to see activity.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {history.slice(-10).reverse().map((e: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between py-1.5 text-xs" style={{ borderBottom: '1px solid var(--border)' }}>
+                          <span className="truncate max-w-[200px]" style={{ color: 'var(--text-primary)' }}>{e.question}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>{new Date(e.timestamp).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pricing page */}
+          {activeTab === 'pricing' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+              <div className="max-w-3xl mx-auto px-6 py-8 w-full">
+                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Pricing</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Manage your subscription and top-ups.</p>
+                <Suspense fallback={<div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+                  <SharedPricingCards />
+                </Suspense>
+              </div>
             </div>
           )}
 
