@@ -25,9 +25,9 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
 
   const isLight = variant === 'light';
   const navBg = isLight
-    ? 'rgba(232,241,252,0.88)'
+    ? 'rgba(255,255,255,0.95)'
     : 'rgba(11,17,32,0.92)';
-  const borderClass = isLight ? 'border-b border-[#C4D9F2]' : 'border-b border-white/[0.12]';
+  const borderClass = isLight ? 'border-b border-[#E2E8F0]' : 'border-b border-white/[0.12]';
   const textColor = isLight ? '#0F172A' : '#FFFFFF';
   const textMuted = isLight ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.85)';
   const hoverBg = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)';
