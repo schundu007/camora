@@ -491,60 +491,105 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         )}
       </div>
 
-      {/* Chat */}
-      <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3">
-        {messages.length === 0 && !streaming ? (
-          <div className="flex flex-col items-center justify-center h-full py-6">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1" className="mb-4 opacity-40">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            <p className="text-[9px] mb-3 text-center" style={{ color: C.muted }}>
-              {answerMode === 'short' ? 'Short mode — concise bullet points for live interviews' : 'Detailed mode — comprehensive explanations with code'}
-            </p>
-            <div className="grid grid-cols-2 gap-1.5 w-full">
-              {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
-                <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
-                  style={{ border: '1px solid rgba(0,0,0,0.08)', fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: '#64748B', lineHeight: '1.4' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
-                  {s}
-                </button>
+      {/* Chat — side-by-side when embedded, top-to-bottom when floating */}
+      {embedded ? (
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+          {/* Left: questions */}
+          <div className="w-[280px] shrink-0 overflow-auto border-r" style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}>
+            <div className="p-3 space-y-1.5">
+              {messages.filter(m => m.role === 'user').length === 0 && !streaming && (
+                <div className="py-6 text-center">
+                  <p className="text-[10px] mb-3" style={{ color: '#94A3B8' }}>Ask a question to get started</p>
+                  <div className="space-y-1.5">
+                    {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
+                      <button key={s} onClick={() => ask(s)} className="w-full text-left px-3 py-2 rounded-lg text-[11px] transition-all" style={{ border: '1px solid #E2E8F0', color: '#475569' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#22D3EE'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#E2E8F0'; }}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {messages.filter(m => m.role === 'user').map((msg, i) => (
+                <div key={i} className="px-3 py-2 rounded-lg text-[11px] font-medium" style={{ background: '#fff', border: '1px solid #E2E8F0', color: '#0F172A' }}>
+                  <p>{msg.text}</p>
+                  <span className="text-[8px] mt-1 block" style={{ color: '#94A3B8' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
               ))}
             </div>
           </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {messages.map((msg, i) => msg.role === 'user' ? (
-              <div key={i} className="flex flex-col items-end">
-                <div className="rounded-xl px-2.5 py-1.5 max-w-[90%]" style={{ background: C.accentBg }}>
-                  <p style={{ fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: C.text }}>{msg.text}</p>
-                </div>
-                <span className="text-[8px] mt-0.5 mr-1" style={{ color: C.muted }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          {/* Right: answers */}
+          <div ref={scrollRef} className="flex-1 overflow-auto p-4">
+            {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
+              <div className="flex items-center justify-center h-full" style={{ color: '#94A3B8' }}>
+                <p className="text-xs">Answers will appear here</p>
               </div>
             ) : (
-              <div key={i} className="flex gap-1.5 items-start">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                <div className="flex-1 min-w-0"><RichText text={msg.text} /></div>
-              </div>
-            ))}
-
-            {/* Streaming */}
-            {streaming && (
-              <div className="flex gap-1.5 items-start">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5 animate-pulse">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                <div className="flex-1">
-                  {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
-                    : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
-                </div>
+              <div className="space-y-4">
+                {messages.filter(m => m.role === 'ai').map((msg, i) => (
+                  <div key={i}><RichText text={msg.text} /></div>
+                ))}
+                {streaming && (
+                  <div>
+                    {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#22D3EE' }} /></>
+                      : <span className="animate-pulse text-xs" style={{ color: '#94A3B8' }}>Thinking...</span>}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3">
+          {messages.length === 0 && !streaming ? (
+            <div className="flex flex-col items-center justify-center h-full py-6">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1" className="mb-4 opacity-40">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <p className="text-[9px] mb-3 text-center" style={{ color: C.muted }}>
+                {answerMode === 'short' ? 'Short mode — concise bullet points' : 'Detailed mode — comprehensive explanations'}
+              </p>
+              <div className="grid grid-cols-2 gap-1.5 w-full">
+                {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
+                  <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
+                    style={{ border: '1px solid rgba(0,0,0,0.08)', fontSize: '10px', color: '#64748B' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {messages.map((msg, i) => msg.role === 'user' ? (
+                <div key={i} className="flex flex-col items-end">
+                  <div className="rounded-xl px-2.5 py-1.5 max-w-[90%]" style={{ background: C.accentBg }}>
+                    <p style={{ fontSize: '10px', color: C.text }}>{msg.text}</p>
+                  </div>
+                </div>
+              ) : (
+                <div key={i} className="flex gap-1.5 items-start">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <div className="flex-1 min-w-0"><RichText text={msg.text} /></div>
+                </div>
+              ))}
+              {streaming && (
+                <div className="flex gap-1.5 items-start">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5 animate-pulse">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <div className="flex-1">
+                    {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
+                      : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 shrink-0 flex flex-col items-center gap-2">
