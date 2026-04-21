@@ -450,6 +450,7 @@ export default function TopicDetail({
   const { user } = useAuth();
   const isAdmin = user?.email === 'chundubabu@gmail.com';
   const [adminRegenStatus, setAdminRegenStatus] = useState('');
+  const [diagramPanelOpen, setDiagramPanelOpen] = useState(false);
 
   if (!topicDetails) return null;
 
@@ -1913,80 +1914,27 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 5. Architecture Diagram — THEN immediately show System Flows + Flowcharts */}
+              {/* 5. Architecture Diagram — open in side panel */}
               {isSDStyle && topicDetails && (
-                <div id="architecture" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-3 py-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon name="layers" size={14} className="text-white" />
-                      <h3 className="text-[15px] font-bold text-white landing-display">Architecture Diagram</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* Cloud Provider Selector */}
-                      <div className="flex items-center gap-1 mr-2 px-1 py-0.5 rounded-lg bg-[var(--bg-elevated)]">
-                        {[
-                          { id: 'aws', label: 'AWS', color: '#ff9900' },
-                          { id: 'gcp', label: 'GCP', color: '#4285f4' },
-                          { id: 'azure', label: 'Azure', color: '#0078d4' },
-                        ].map(p => (
-                          <button
-                            key={p.id}
-                            onClick={() => {
-                              setDiagramCloudProvider(p.id);
-                              generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, p.id);
-                            }}
-                            className="px-2 py-0.5 text-xs font-medium rounded transition-all landing-mono"
-                            style={{
-                              background: diagramCloudProvider === p.id ? `${p.color}30` : 'transparent',
-                              color: diagramCloudProvider === p.id ? p.color : '#9ca3af',
-                              border: diagramCloudProvider === p.id ? `1px solid ${p.color}50` : '1px solid transparent',
-                            }}
-                          >
-                            {p.label}
-                          </button>
-                        ))}
+                <div id="architecture" className="scroll-mt-24">
+                  <button
+                    onClick={() => setDiagramPanelOpen(true)}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:-translate-y-0.5"
+                    style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff' }}>
+                        <Icon name="layers" size={18} />
+                      </div>
+                      <div className="text-left">
+                        <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Architecture Diagram</span>
+                        <span className="block text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                          {diagramData?.imageUrl ? 'View cached diagram' : 'Open diagram panel'} · AWS / GCP / Azure
+                        </span>
                       </div>
                     </div>
-                    {/* Admin-only: Regenerate controls */}
-                    {isAdmin && (
-                      <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[var(--border)]">
-                        <button
-                          onClick={() => handleAdminRegen('python')}
-                          className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--accent)]/15 hover:text-[var(--accent)] transition-colors border border-[var(--border)]"
-                          title="Regenerate using Python diagrams library"
-                        >
-                          Python
-                        </button>
-                        <button
-                          onClick={() => handleAdminRegen('eraser')}
-                          className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-blue-100 hover:text-blue-700 transition-colors border border-[var(--border)]"
-                          title="Regenerate using Eraser.io API"
-                        >
-                          Eraser
-                        </button>
-                        {adminRegenStatus && (
-                          <span className="text-[10px] font-mono font-bold" style={{ color: adminRegenStatus.includes('done') ? 'var(--success)' : adminRegenStatus.includes('fail') ? 'var(--danger)' : 'var(--text-primary)' }}>{adminRegenStatus}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    {/* Show pre-generated static diagram if available, otherwise fall back to API */}
-                    {(() => {
-                      const staticSrc = `/diagrams/${selectedTopic}/eraser-${diagramCloudProvider}.png`;
-                      return (
-                        <StaticCloudDiagram
-                          topicId={selectedTopic}
-                          provider={diagramCloudProvider}
-                          staticSrc={staticSrc}
-                          diagramData={diagramData}
-                          generatingDiagram={generatingDiagram}
-                          diagramError={diagramError}
-                          onGenerate={() => generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, diagramCloudProvider)}
-                        />
-                      );
-                    })()}
-                  </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                  </button>
                 </div>
               )}
 
@@ -3170,6 +3118,85 @@ export default function TopicDetail({
         </div>
       )}
       </div>
+
+      {/* ── Diagram Side Panel (Railway-style slide-out) ── */}
+      {diagramPanelOpen && isSDStyle && (
+        <>
+          {/* Backdrop */}
+          <div className="fixed inset-0 z-50 bg-black/30" onClick={() => setDiagramPanelOpen(false)} />
+
+          {/* Panel */}
+          <div className="fixed top-0 right-0 z-50 h-full flex flex-col" style={{ width: 'min(600px, 50vw)', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', boxShadow: '-8px 0 32px rgba(0,0,0,0.1)' }}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff' }}>
+                  <Icon name="layers" size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Architecture Diagram</h3>
+                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{topicDetails?.title}</p>
+                </div>
+              </div>
+              <button onClick={() => setDiagramPanelOpen(false)} className="p-2 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors" style={{ color: 'var(--text-muted)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {/* Cloud Provider Tabs */}
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--border)]">
+              {[
+                { id: 'aws', label: 'AWS', color: '#ff9900' },
+                { id: 'gcp', label: 'GCP', color: '#4285f4' },
+                { id: 'azure', label: 'Azure', color: '#0078d4' },
+              ].map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setDiagramCloudProvider(p.id);
+                    generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, p.id);
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                  style={{
+                    background: diagramCloudProvider === p.id ? `${p.color}15` : 'transparent',
+                    color: diagramCloudProvider === p.id ? p.color : 'var(--text-muted)',
+                    border: diagramCloudProvider === p.id ? `1.5px solid ${p.color}40` : '1.5px solid var(--border)',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+
+              {/* Admin regen */}
+              {isAdmin && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <button onClick={() => handleAdminRegen('python')} className="px-2 py-1 text-[10px] font-mono font-bold rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>Python</button>
+                  <button onClick={() => handleAdminRegen('eraser')} className="px-2 py-1 text-[10px] font-mono font-bold rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>Eraser</button>
+                  {adminRegenStatus && <span className="text-[10px] font-mono" style={{ color: adminRegenStatus.includes('done') ? 'var(--success)' : 'var(--text-primary)' }}>{adminRegenStatus}</span>}
+                </div>
+              )}
+            </div>
+
+            {/* Diagram Content */}
+            <div className="flex-1 overflow-auto p-5">
+              {(() => {
+                const staticSrc = `/diagrams/${selectedTopic}/eraser-${diagramCloudProvider}.png`;
+                return (
+                  <StaticCloudDiagram
+                    topicId={selectedTopic}
+                    provider={diagramCloudProvider}
+                    staticSrc={staticSrc}
+                    diagramData={diagramData}
+                    generatingDiagram={generatingDiagram}
+                    diagramError={diagramError}
+                    onGenerate={() => generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, diagramCloudProvider)}
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
