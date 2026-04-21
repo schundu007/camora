@@ -507,12 +507,42 @@ function AssistantsPage() {
             ))}</div>
           </div>
           <div className="mb-3">
-            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: '#94A3B8' }}>Your Resume</label>
-            <textarea value={form.resume} onChange={e => setForm(f => ({ ...f, resume: e.target.value }))} placeholder="Paste resume text. AI will reference your experience to craft personalized answers." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Your Resume</label>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+                Upload
+                <input type="file" accept=".txt,.pdf,.doc,.docx" className="hidden" onChange={async (e) => {
+                  const file = e.target.files?.[0]; if (!file) return;
+                  if (file.name.endsWith('.pdf')) {
+                    const text = await file.text(); setForm(f => ({ ...f, resume: text.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim() }));
+                  } else {
+                    const text = await file.text(); setForm(f => ({ ...f, resume: text.trim() }));
+                  }
+                  e.target.value = '';
+                }} />
+              </label>
+            </div>
+            <textarea value={form.resume} onChange={e => setForm(f => ({ ...f, resume: e.target.value }))} placeholder="Paste resume text or upload a file. AI will reference your experience to craft personalized answers." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
           </div>
           <div className="mb-4">
-            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: '#94A3B8' }}>Job Description</label>
-            <textarea value={form.jobDescription} onChange={e => setForm(f => ({ ...f, jobDescription: e.target.value }))} placeholder="Paste the JD. AI will tailor answers to match role requirements." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Job Description</label>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+                Upload
+                <input type="file" accept=".txt,.pdf,.doc,.docx" className="hidden" onChange={async (e) => {
+                  const file = e.target.files?.[0]; if (!file) return;
+                  if (file.name.endsWith('.pdf')) {
+                    const text = await file.text(); setForm(f => ({ ...f, jobDescription: text.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s+/g, ' ').trim() }));
+                  } else {
+                    const text = await file.text(); setForm(f => ({ ...f, jobDescription: text.trim() }));
+                  }
+                  e.target.value = '';
+                }} />
+              </label>
+            </div>
+            <textarea value={form.jobDescription} onChange={e => setForm(f => ({ ...f, jobDescription: e.target.value }))} placeholder="Paste the JD or upload a file. AI will tailor answers to match role requirements." rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
           </div>
           <div className="flex gap-2">
             <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: '#29B5E8' }}>Create</button>
