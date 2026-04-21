@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_prep_v7'; // v7: handle SSE error events
+const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface DocState {
@@ -19,7 +19,7 @@ interface DocState {
   prepMaterialsFile?: string;
   studyMaterials: string;
   studyMaterialsFile?: string;
-  sections: Record<string, string>;
+  sections: Record<string, any>;
 }
 
 interface PrepData {
@@ -51,10 +51,18 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#22D3EE' },
 ];
 
-/** Normalize prep content into a clean object (never stringify) */
+/** Normalize prep content into a clean object (never stringify).
+ *  Backend wraps failed JSON parsing in { rawContent: string } — unwrap it here. */
 function formatPrepContent(content: any): any {
   if (!content) return { summary: 'No content generated' };
-  if (typeof content === 'object' && !Array.isArray(content)) return content;
+  if (typeof content === 'object' && !Array.isArray(content)) {
+    // Backend wraps unparsed AI output in rawContent — try to extract the real JSON
+    if (content.rawContent && typeof content.rawContent === 'string' && Object.keys(content).length <= 2) {
+      const parsed = extractJSON(content.rawContent);
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 1) return parsed;
+    }
+    return content;
+  }
   if (typeof content === 'string') {
     const parsed = extractJSON(content);
     if (parsed) return parsed;
@@ -66,8 +74,10 @@ function formatPrepContent(content: any): any {
 /** Aggressively extract a JSON object from any string */
 function extractJSON(raw: string): any {
   if (!raw || typeof raw !== 'string') return null;
-  // Strip markdown fences
+  // Strip markdown fences and leading "json" tag
   let s = raw.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').replace(/^data:\s*/gm, '').trim();
+  // Strip leading "json" word (model sometimes prefixes JSON with the word "json")
+  if (/^json\s*\{/i.test(s)) s = s.replace(/^json\s*/i, '');
   // Try direct parse
   try { const p = JSON.parse(s); if (p && typeof p === 'object') return p; } catch {}
   // Try extracting { ... } from the string
@@ -104,7 +114,7 @@ function PrepContentRenderer({ content }: { content: any }) {
   if (!data) return <div className="text-sm" style={{ color: '#94A3B8' }}>No content available</div>;
 
   // If the data has no recognized keys, render all values as readable text
-  const knownKeys = ['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'techStack', 'keyPoints', 'tips', 'talkingPoints', 'deliveryTips', 'abbreviations', 'recentNews', 'whyTheyAsk', 'suggestedAnswer'];
+  const knownKeys = ['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'techStack', 'keyPoints', 'tips', 'talkingPoints', 'deliveryTips', 'abbreviations', 'recentNews', 'whyTheyAsk', 'suggestedAnswer', 'interviewFormat', 'culture', 'values', 'salaryNegotiation', 'questionsToAsk', 'keyTopics', 'rawContent'];
   const hasKnownKeys = Object.keys(data).some(k => knownKeys.includes(k));
   if (!hasKnownKeys) {
     // Fallback: render all key-value pairs as readable sections
@@ -310,12 +320,53 @@ function PrepContentRenderer({ content }: { content: any }) {
         <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#22D3EE' }}>Delivery Tips</div>
         <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{Array.isArray(data.deliveryTips) ? data.deliveryTips.join(' ') : data.deliveryTips}</p>
       </div>)}
+
+      {/* Recent News */}
+      {data.recentNews && (<div className="rounded-lg p-3" style={{ background: '#f0fdf4', border: '1px solid rgba(16,185,129,0.15)' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#10b981' }}>Recent News</div>
+        <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{data.recentNews}</p>
+      </div>)}
+
+      {/* Questions to Ask */}
+      {data.questionsToAsk?.length > 0 && (<div>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#8b5cf6' }}>Questions to Ask</div>
+        <ul className="space-y-2">{(Array.isArray(data.questionsToAsk) ? data.questionsToAsk : [data.questionsToAsk]).map((q: any, i: number) => (
+          <li key={i} className="text-sm rounded-lg p-3" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569' }}>
+            {typeof q === 'string' ? q : q.question || q.text || JSON.stringify(q)}
+          </li>
+        ))}</ul></div>)}
+
+      {/* Salary Negotiation */}
+      {data.salaryNegotiation && (<div className="rounded-lg p-4" style={{ background: '#fefce8', border: '1px solid rgba(245,158,11,0.2)' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#f59e0b' }}>Salary Negotiation</div>
+        {typeof data.salaryNegotiation === 'string' ? (
+          <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{data.salaryNegotiation}</p>
+        ) : (
+          <div className="space-y-2">{Object.entries(data.salaryNegotiation).map(([k, v]) => (
+            <p key={k} className="text-sm"><strong className="text-xs uppercase" style={{ color: '#94a3b8' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: '#475569' }}>{typeof v === 'string' ? v : Array.isArray(v) ? (v as string[]).join(', ') : JSON.stringify(v)}</span></p>
+          ))}</div>
+        )}
+      </div>)}
     </div>
   );
 }
 
 function loadPrepData(): PrepData {
-  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : INITIAL_STATE; } catch { return INITIAL_STATE; }
+  try {
+    const r = localStorage.getItem(STORAGE_KEY);
+    if (!r) return INITIAL_STATE;
+    const data = JSON.parse(r) as PrepData;
+    // Clean up any rawContent wrappers from previously cached data
+    for (const company of Object.keys(data.data || {})) {
+      const sections = data.data[company]?.sections;
+      if (sections) {
+        for (const key of Object.keys(sections)) {
+          sections[key] = formatPrepContent(sections[key]);
+        }
+      }
+    }
+    return data;
+  } catch { return INITIAL_STATE; }
 }
 function savePrepData(s: PrepData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
@@ -536,7 +587,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     GENERATE_SECTIONS.forEach(s => { initStatus[s] = 'pending'; });
     setSectionStatus(initStatus);
 
-    const newSections: Record<string, string> = {};
+    const newSections: Record<string, any> = {};
 
     for (let i = 0; i < GENERATE_SECTIONS.length; i++) {
       const section = GENERATE_SECTIONS[i];
