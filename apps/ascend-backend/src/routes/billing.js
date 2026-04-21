@@ -309,7 +309,7 @@ router.get('/download-access', jwtAuth, async (req, res) => {
     // Get download links from environment or use defaults
     const version = process.env.DESKTOP_VERSION || '1.0.0';
     const baseUrl = process.env.DESKTOP_DOWNLOAD_URL ||
-      'https://github.com/schundu007/capra/releases/download';
+      'https://github.com/schundu007/camora/releases/download';
 
     res.json({
       hasAccess: true,
@@ -318,21 +318,21 @@ router.get('/download-access', jwtAuth, async (req, res) => {
       downloads: {
         mac: {
           arm64: {
-            url: `${baseUrl}/v${version}/Ascend-${version}-arm64.dmg`,
+            url: `${baseUrl}/v${version}/Camora-${version}-arm64.dmg`,
             label: 'Mac (Apple Silicon)',
-            size: '~120 MB'
+            size: '~102 MB'
           },
           x64: {
-            url: `${baseUrl}/v${version}/Ascend-${version}-x64.dmg`,
+            url: `${baseUrl}/v${version}/Camora-${version}-x64.dmg`,
             label: 'Mac (Intel)',
-            size: '~125 MB'
+            size: '~107 MB'
           }
         },
         windows: {
           x64: {
-            url: `${baseUrl}/v${version}/Ascend-${version}-Setup.exe`,
+            url: `${baseUrl}/v${version}/Camora-${version}-Setup.exe`,
             label: 'Windows (64-bit)',
-            size: '~100 MB'
+            size: '~83 MB'
           }
         }
       }
