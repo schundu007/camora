@@ -14,7 +14,7 @@ interface LumoraIconRailProps {
 
 /* ── Sidebar items ── */
 const MAIN_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', path: '/capra/prepare', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+  { id: 'dashboard', label: 'Dashboard', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
   { id: 'assistants', label: 'Assistants', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
   { id: 'sessions', label: 'Sessions', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
   { id: 'documents', label: 'Documents', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
@@ -28,7 +28,7 @@ const MORE_ITEMS = [
 
 const BOTTOM_ITEMS = [
   { id: 'audio-check', label: 'Audio Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
-  { id: 'help', label: 'Help', path: '/pricing', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
+  { id: 'help', label: 'Help', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
 ];
 
 export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {
@@ -36,7 +36,8 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   const location = useLocation();
 
   const isActive = (id: string) => {
-    if (id === 'assistants') return activeTab === 'interview';
+    if (id === 'dashboard') return activeTab === 'interview' && !sessionsOpen;
+    if (id === 'assistants') return false; // Will be its own page later
     if (id === 'sessions') return sessionsOpen;
     if (id === 'documents') return activeTab === 'prepkit';
     return false;
@@ -122,7 +123,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
 
       {/* User */}
       <div className="px-3 pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <UserDropdown variant="dark" showName />
+        <UserDropdown variant="dark" showName position="above-left" />
       </div>
     </nav>
   );
