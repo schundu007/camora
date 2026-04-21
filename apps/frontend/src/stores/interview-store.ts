@@ -219,7 +219,6 @@ export const useInterviewStore = create<InterviewState>()(
         voiceEnrolled: state.voiceEnrolled,
       }),
       migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
-      skipHydration: true,
     }
   )
 );
