@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
 import { AnswerBlocks } from './AnswerBlocks';
@@ -155,113 +156,95 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   );
 }
 
-/* ─── Zoom-style Empty State ─────────────────────────────── */
+/* ─── Lumora Dashboard ─────────────────────────────── */
 function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
 }) {
-  const [time, setTime] = useState(new Date());
+  const { user } = useAuth();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-  const dateStr = time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-
-  const accent = '#22D3EE';
-
-  const ACTIONS = [
-    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
-      label: 'Coding', onClick: () => onSwitchToCoding?.() },
-    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-      label: 'System Design', onClick: () => onSwitchToDesign?.() },
-    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
-      label: 'Prep Kit', onClick: () => { window.location.href = '/lumora/prepkit'; } },
-    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /><path d="M12 14v4" /></svg>,
-      label: 'Behavioral', onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
+  const COPILOTS = [
+    { name: 'Interview', desc: 'A real-time interview co-pilot that helps you answer faster and more confidently.', icon: '💬', onClick: () => onSwitchToCoding?.() },
+    { name: 'System Design', desc: 'Architecture diagrams and system design answers in real-time.', icon: '🏗️', onClick: () => onSwitchToDesign?.() },
+    { name: 'Behavioral', desc: 'STAR method answers for behavioral and leadership questions.', icon: '🎯', onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
   ];
 
-  const PROMPTS = [
-    // System Design — open in Design tab
-    { text: 'Design a rate limiter for an API gateway', type: 'design' },
-    { text: 'Design a notification system like WhatsApp', type: 'design' },
-    { text: 'Design a URL shortener like bit.ly', type: 'design' },
-    // Coding — open in Coding tab
-    { text: 'Implement LRU cache from scratch', type: 'coding' },
-    { text: 'Find the longest substring without repeating characters', type: 'coding' },
-    { text: 'Reverse a linked list iteratively and recursively', type: 'coding' },
-    // Behavioral — ask AI on home tab
-    { text: 'Tell me about a time you disagreed with your manager', type: 'behavioral' },
-    { text: 'Walk me through how you handle a conflict with a teammate', type: 'behavioral' },
-    { text: 'Describe a time you failed and what you learned', type: 'behavioral' },
+  const QUICK_PROMPTS = [
+    { text: 'Design a rate limiter for an API gateway', type: 'design' as const },
+    { text: 'Implement LRU cache from scratch', type: 'coding' as const },
+    { text: 'Tell me about a time you disagreed with your manager', type: 'behavioral' as const },
+    { text: 'Design a URL shortener like bit.ly', type: 'design' as const },
+    { text: 'Reverse a linked list iteratively and recursively', type: 'coding' as const },
+    { text: 'Describe a time you failed and what you learned', type: 'behavioral' as const },
   ];
 
-  const handlePromptClick = (prompt: typeof PROMPTS[number]) => {
-    if (prompt.type === 'coding') {
-      onSwitchToCoding?.(prompt.text);
-    } else if (prompt.type === 'design') {
-      onSwitchToDesign?.(prompt.text);
-    } else {
-      onAskQuestion?.(prompt.text);
-    }
+  const handlePromptClick = (prompt: typeof QUICK_PROMPTS[number]) => {
+    if (prompt.type === 'coding') onSwitchToCoding?.(prompt.text);
+    else if (prompt.type === 'design') onSwitchToDesign?.(prompt.text);
+    else onAskQuestion?.(prompt.text);
   };
 
   return (
-    <div className="flex-1 flex flex-col px-6 select-none overflow-auto">
-      {/* Center content */}
-      <div className="flex-1 flex flex-col items-center justify-center">
-
-      {/* Clock + date — centered */}
-      <div className="text-center mb-8">
-        <div className="text-6xl font-extrabold tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.03em', color: '#0F172A' }}>
-          {timeStr}
-        </div>
-        <div className="text-sm font-medium mt-2" style={{ color: '#94A3B8' }}>{dateStr}</div>
-      </div>
-
-      {/* Action buttons — 4 tiles */}
-      <div className="flex items-center gap-6 mb-10">
-        {ACTIONS.map((action) => (
-          <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2.5 group">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-105"
-              style={{ background: accent }}>
-              {action.icon}
-            </div>
-            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{action.label}</span>
-          </button>
-        ))}
+    <div className="flex-1 overflow-auto px-8 py-6">
+      {/* Greeting */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold" style={{ color: '#0F172A' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+        <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>Launch an AI assistant for your next interview.</p>
       </div>
 
       {/* Divider */}
-      <div className="w-full max-w-2xl h-px mb-8" style={{ background: '#E2E8F0' }} />
+      <div className="h-px mb-6" style={{ background: '#E2E8F0' }} />
 
-      {/* Quick-start prompts */}
-      <div className="w-full max-w-2xl">
-        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94A3B8' }}>Try asking</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {PROMPTS.map((prompt) => (
-            <button key={prompt.text} onClick={() => handlePromptClick(prompt)}
-              className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
-              style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid rgba(34,211,238,0.25)', color: '#475569', borderRadius: '10px' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.borderColor = 'rgba(34,211,238,0.5)'; e.currentTarget.style.background = 'rgba(34,211,238,0.04)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = 'rgba(34,211,238,0.25)'; e.currentTarget.style.background = 'transparent'; }}>
-              {prompt.text}
+      {/* Launch Now */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="1.5"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+          <span className="text-sm font-bold" style={{ color: '#0F172A' }}>Launch Now</span>
+        </div>
+        <p className="text-xs mb-4" style={{ color: '#94A3B8' }}>Start fast with ready-to-use interview co-pilots.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {COPILOTS.map(cp => (
+            <button key={cp.name} onClick={cp.onClick} className="group text-left p-5 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">{cp.icon}</span>
+                <span className="text-sm font-bold" style={{ color: '#0F172A' }}>{cp.name}</span>
+              </div>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: '#64748B' }}>{cp.desc}</p>
+              <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: '#22D3EE' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                Launch
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick prompts */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+          <span className="text-sm font-bold" style={{ color: '#0F172A' }}>Try Asking</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          {QUICK_PROMPTS.map(p => (
+            <button key={p.text} onClick={() => handlePromptClick(p)} className="text-left px-4 py-3 rounded-xl text-[12px] leading-snug transition-all" style={{ border: '1px solid rgba(34,211,238,0.2)', color: '#475569' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.5)'; e.currentTarget.style.background = 'rgba(34,211,238,0.04)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.2)'; e.currentTarget.style.background = 'transparent'; }}>
+              {p.text}
             </button>
           ))}
         </div>
       </div>
 
       {/* Keyboard hints */}
-      <div className="mt-8 flex items-center justify-center gap-4 text-[10px]" style={{ fontFamily: 'var(--font-code)', color: '#94A3B8' }}>
+      <div className="flex items-center gap-4 text-[10px]" style={{ color: '#94A3B8' }}>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘K</kbd> focus</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘M</kbd> mic</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘S</kbd> search</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘B</kbd> blank screen</span>
       </div>
-
-      </div>{/* end center content */}
     </div>
   );
 }
