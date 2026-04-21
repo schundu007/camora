@@ -39,7 +39,7 @@ const CATEGORIES = [
   { title: 'UX / Design', color: '#2D8CFF', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
   { title: 'Performance', color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
   { title: 'Infrastructure', color: '#06b6d4', glow: 'rgba(6,182,212,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: 'var(--accent)', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+  { title: 'New Features', color: '#29B5E8', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -56,8 +56,8 @@ const TECH_STACK = [
 ];
 
 const STEPS = [
-  { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: 'var(--accent)' },
-  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: 'var(--accent)' },
+  { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: '#29B5E8' },
+  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: '#29B5E8' },
   { num: '03', title: 'Find & build', desc: 'Hunt bugs, fix issues, build features.', color: '#2D8CFF' },
   { num: '04', title: 'Submit findings', desc: 'Detailed docs with your work.', color: '#2D8CFF' },
   { num: '05', title: 'Team review', desc: 'Top submissions reviewed by founders.', color: '#f59e0b' },
@@ -70,7 +70,7 @@ const SCORING = [
   { category: 'UX / Design', points: '5 pts', color: '#2D8CFF' },
   { category: 'Performance', points: '5 pts', color: '#f59e0b' },
   { category: 'Infrastructure', points: '5 pts', color: '#06b6d4' },
-  { category: 'Features', points: '3-10 pts', color: 'var(--accent)' },
+  { category: 'Features', points: '3-10 pts', color: '#29B5E8' },
 ];
 
 const FAQS = [
@@ -108,10 +108,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   return (
     <div className="ch-glass-card" style={{ borderColor: open ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)' }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-4 text-left" aria-expanded={open}>
-        <span className="text-base font-semibold text-[var(--text-primary)]">{q}</span>
-        <svg className={`w-4 h-4 text-[var(--accent)]/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+        <span className="text-base font-semibold text-[#0F172A]">{q}</span>
+        <svg className={`w-4 h-4 text-[#29B5E8]/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
       </button>
-      {open && <div className="px-5 pb-4 text-base text-[var(--text-muted)] leading-relaxed">{a}</div>}
+      {open && <div className="px-5 pb-4 text-base text-[#64748B] leading-relaxed">{a}</div>}
     </div>
   );
 }
@@ -263,29 +263,29 @@ export default function ChallengePage() {
         <div className="ch-hero-orb ch-orb-3" />
         <div className="ch-hero-grid" />
 
-        <div className="relative z-10 w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: 'calc(85vh - 82px)', paddingTop: 48, paddingBottom: 48 }}>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
           {/* Badge */}
           <div className="ch-badge">
             <span className="ch-badge-dot" />
-            Bug Bounty + Hiring Avalanche
+            BUG BOUNTY + HIRING CHALLENGE
           </div>
 
           <h1 className="ch-hero-title">
-            The Camora <span className="ch-hero-gradient-text">Avalanche</span>
+            THE CAMORA <span className="ch-hero-gradient-text">AVALANCHE</span>
           </h1>
-          <p className="mt-5 text-xl text-[var(--text-muted)]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-            Find bugs. Build features. Win prizes. Join the founding team.
+          <p className="mt-5 text-lg" style={{ color: '#475569' }}>
+            Find bugs. Build features. Win $21,812 in prizes. Join the founding team.
           </p>
 
           {/* Countdown */}
           <div className="mt-10 flex items-center gap-4">
             {challengeEnded ? (
-              <p className="text-base font-semibold text-[var(--text-muted)]">Challenge ended. Winners announced October 22.</p>
+              <p className="text-base font-semibold text-[#64748B]">Challenge ended. Winners announced October 22.</p>
             ) : challengeActive ? (
-              <p className="text-base font-bold text-[var(--accent)]">Challenge is LIVE. Submit findings now.</p>
+              <p className="text-base font-bold text-[#29B5E8]">Challenge is LIVE. Submit findings now.</p>
             ) : (
               <>
-                <span className="text-base font-bold text-[var(--text-dimmed)] uppercase tracking-[0.15em] mr-3">Starts in</span>
+                <span className="text-base font-bold text-[#94A3B8] uppercase tracking-[0.15em] mr-3">Starts in</span>
                 {[
                   { val: countdown.days, label: 'DAYS' },
                   { val: countdown.hours, label: 'HRS' },
@@ -303,7 +303,7 @@ export default function ChallengePage() {
 
           {/* Prize pool — glowing */}
           <div className="ch-prize-pool-badge">
-            <span className="text-base text-[var(--text-muted)] uppercase tracking-widest font-bold">Total Prize Pool</span>
+            <span className="text-base text-[#64748B] uppercase tracking-widest font-bold">Total Prize Pool</span>
             <span className="ch-prize-amount">$21,812</span>
           </div>
 
@@ -322,35 +322,35 @@ export default function ChallengePage() {
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6">
           {!isAuthenticated ? (
             <div className="ch-glass-card text-center py-12 px-6">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--success)' } as any}>
-                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#22C55E' } as any}>
+                <svg className="w-6 h-6 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Ready to participate?</h3>
-              <p className="text-base text-[var(--text-muted)] mb-6">Create a free account to take the qualification quiz.</p>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-2">Ready to participate?</h3>
+              <p className="text-base text-[#64748B] mb-6">Create a free account to take the qualification quiz.</p>
               <Link to="/login?redirect=/challenge" className="ch-cta-primary inline-block" style={{ textDecoration: 'none' }}>Sign Up Free</Link>
             </div>
           ) : challengeStatus?.isChallenger ? (
             <div className="ch-glass-card p-6">
               <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="ch-glow-icon" style={{ '--glow': 'var(--success)' } as any}>
-                    <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="ch-glow-icon" style={{ '--glow': '#22C55E' } as any}>
+                    <svg className="w-5 h-5 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <span className="text-base font-bold text-[var(--accent)]">Qualified Challenger</span>
-                    <span className="text-base text-[var(--text-dimmed)] ml-2">Score: {challengeStatus.quizScore}%</span>
+                    <span className="text-base font-bold text-[#29B5E8]">Qualified Challenger</span>
+                    <span className="text-base text-[#94A3B8] ml-2">Score: {challengeStatus.quizScore}%</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-base text-[var(--text-dimmed)]">Credits:</span>
-                  <div className="w-32 h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? 'var(--success)' : challengeStatus.creditsRemaining > 20 ? 'var(--warning)' : 'var(--danger)', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? 'var(--success)' : challengeStatus.creditsRemaining > 20 ? 'var(--warning)' : 'var(--danger)'}` }} />
+                  <span className="text-base text-[#94A3B8]">Credits:</span>
+                  <div className="w-32 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? '#22C55E' : challengeStatus.creditsRemaining > 20 ? '#F59E0B' : '#EF4444', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? '#22C55E' : challengeStatus.creditsRemaining > 20 ? '#F59E0B' : '#EF4444'}` }} />
                   </div>
-                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? 'var(--success)' : challengeStatus.creditsRemaining > 20 ? 'var(--warning)' : 'var(--danger)' }}>{challengeStatus.creditsRemaining}/100</span>
+                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? '#22C55E' : challengeStatus.creditsRemaining > 20 ? '#F59E0B' : '#EF4444' }}>{challengeStatus.creditsRemaining}/100</span>
                 </div>
               </div>
-              <div className="border-t border-[var(--border)] pt-5">
-                <h4 className="text-base font-bold text-[var(--text-primary)] mb-3">Submit a Finding</h4>
+              <div className="border-t border-[#E2E8F0] pt-5">
+                <h4 className="text-base font-bold text-[#0F172A] mb-3">Submit a Finding</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                   <input value={submitForm.title} onChange={e => setSubmitForm(f => ({ ...f, title: e.target.value }))} placeholder="Title" className="ch-input" />
                   <select value={submitForm.category} onChange={e => setSubmitForm(f => ({ ...f, category: e.target.value }))} className="ch-input">
@@ -369,7 +369,7 @@ export default function ChallengePage() {
                   <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="ch-cta-primary" style={{ padding: '12px 28px', fontSize: 16 }}>
                     {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Finding'}
                   </button>
-                  {submitStatus === 'success' && <span className="text-base text-[var(--success)] font-medium">Submitted!</span>}
+                  {submitStatus === 'success' && <span className="text-base text-[#22C55E] font-medium">Submitted!</span>}
                   {submitStatus === 'error' && <span className="text-base text-red-400 font-medium">Failed. Try again.</span>}
                 </div>
               </div>
@@ -379,17 +379,17 @@ export default function ChallengePage() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   {quizQuestions.map((_, i) => (
-                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? 'var(--success)' : i === quizIdx ? 'var(--success)' : 'rgba(255,255,255,0.08)', boxShadow: i <= quizIdx ? '0 0 6px var(--success)' : 'none' }} />
+                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? '#22C55E' : i === quizIdx ? '#22C55E' : 'rgba(255,255,255,0.08)', boxShadow: 'none' }} />
                   ))}
                 </div>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--success)' : quizTimeLeft > 120 ? 'var(--warning)' : 'var(--danger)', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--success)' : quizTimeLeft > 120 ? 'var(--warning)' : 'var(--danger)'}` }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444'}` }}>
                   {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
                 </span>
               </div>
               <div className="p-5 rounded-xl mb-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                <span className="text-base font-bold text-[var(--accent)] uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
-                <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">{quizQuestions[quizIdx]?.q}</h3>
-                <p className="text-base text-[var(--text-muted)] mt-1">{quizQuestions[quizIdx]?.desc}</p>
+                <span className="text-base font-bold text-[#29B5E8] uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                <h3 className="text-lg font-bold text-[#0F172A] mt-1">{quizQuestions[quizIdx]?.q}</h3>
+                <p className="text-base text-[#64748B] mt-1">{quizQuestions[quizIdx]?.desc}</p>
               </div>
               <textarea
                 value={quizAnswers[quizIdx]}
@@ -407,34 +407,34 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'passed' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--success)', width: 56, height: 56 } as any}>
-                <svg className="w-7 h-7 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#22C55E', width: 56, height: 56 } as any}>
+                <svg className="w-7 h-7 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">You're Qualified!</h3>
-              <p className="text-base text-[var(--text-muted)] mb-6">100 credits granted. Start submitting.</p>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-2">You're Qualified!</h3>
+              <p className="text-base text-[#64748B] mb-6">100 credits granted. Start submitting.</p>
               <button onClick={() => setChallengeStatus({ ...challengeStatus, isChallenger: true, creditsRemaining: 100 })} className="ch-cta-primary">Start Submitting</button>
             </div>
           ) : quizPhase === 'failed' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--danger)', width: 56, height: 56 } as any}>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#EF4444', width: 56, height: 56 } as any}>
                 <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Not Quite Yet</h3>
-              <p className="text-base text-[var(--text-muted)] mb-6">Below 60%. Retry in 24 hours.</p>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-2">Not Quite Yet</h3>
+              <p className="text-base text-[#64748B] mb-6">Below 60%. Retry in 24 hours.</p>
               <button onClick={() => setQuizPhase('idle')} className="ch-cta-secondary">Back to Challenge</button>
             </div>
           ) : quizPhase === 'evaluating' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="w-12 h-12 border-3 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
-              <p className="text-base text-[var(--text-muted)]">Evaluating your answers...</p>
+              <div className="w-12 h-12 border-3 border-[#29B5E8]/20 border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
+              <p className="text-base text-[#64748B]">Evaluating your answers...</p>
             </div>
           ) : (
             <div className="ch-glass-card text-center py-12 px-6">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--accent)' } as any}>
-                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#29B5E8' } as any}>
+                <svg className="w-6 h-6 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Qualification Quiz</h3>
-              <p className="text-base text-[var(--text-muted)] mb-6">5 coding questions, 10 minutes. Score 60%+ to unlock.</p>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-2">Qualification Quiz</h3>
+              <p className="text-base text-[#64748B] mb-6">5 coding questions, 10 minutes. Score 60%+ to unlock.</p>
               {challengeStatus?.lastAttempt && new Date(challengeStatus.lastAttempt).getTime() > Date.now() - 86400000 && (
                 <p className="text-base text-amber-400/80 mb-4">Retry available after 24 hours.</p>
               )}
@@ -458,9 +458,9 @@ export default function ChallengePage() {
                 <div className="ch-prize-card-inner">
                   <div className="ch-prize-rank" style={{ background: p.gradient }}>{p.place}</div>
                   <div className="ch-prize-amount-card">{p.amount}</div>
-                  <div className="text-base font-bold text-[var(--text-secondary)] mb-1">{p.title}</div>
-                  {p.winners && <div className="text-base text-[var(--text-dimmed)]">({p.winners} winners)</div>}
-                  <div className="text-base text-[var(--text-muted)] mt-2">{p.desc}</div>
+                  <div className="text-base font-bold text-[#475569] mb-1">{p.title}</div>
+                  {p.winners && <div className="text-base text-[#94A3B8]">({p.winners} winners)</div>}
+                  <div className="text-base text-[#64748B] mt-2">{p.desc}</div>
                 </div>
               </div>
             ))}
@@ -472,7 +472,7 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: 'var(--accent)' }}>Opportunity</span>
+            <span className="ch-section-tag" style={{ color: '#29B5E8' }}>Opportunity</span>
             <h2 className="ch-section-title">Join the Founding Team</h2>
             <p className="ch-section-sub">Top performers get founding or core engineer offers.</p>
           </div>
@@ -480,44 +480,44 @@ export default function ChallengePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="ch-glow-icon" style={{ '--glow': 'var(--success)' } as any}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                <div className="ch-glow-icon" style={{ '--glow': '#22C55E' } as any}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[var(--text-primary)]">Founding Engineers</h3>
-                  <span className="text-base text-[var(--accent)] font-bold">5 positions</span>
+                  <h3 className="text-base font-bold text-[#0F172A]">Founding Engineers</h3>
+                  <span className="text-base text-[#29B5E8] font-bold">5 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + significant equity', 'Remote-first, async culture', 'Build core platform from day one', 'Direct product influence', 'Full AI/ML stack'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-base text-[var(--text-muted)]"><span className="text-[var(--accent)] mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-[#64748B]"><span className="text-[#29B5E8] mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(45,140,255,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                <div className="ch-glow-icon" style={{ '--glow': '#29B5E8' } as any}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[var(--text-primary)]">Core Engineers</h3>
-                  <span className="text-base text-[var(--accent)] font-bold">10 positions</span>
+                  <h3 className="text-base font-bold text-[#0F172A]">Core Engineers</h3>
+                  <span className="text-base text-[#29B5E8] font-bold">10 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + stock options', 'Mentorship from founding team', 'Clear growth trajectory', 'Remote-first, flexible hours', 'Growth potential'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-base text-[var(--text-muted)]"><span className="text-[var(--accent)] mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-[#64748B]"><span className="text-[#29B5E8] mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
           </div>
 
           <div className="ch-glass-card p-5">
-            <h3 className="text-base font-bold text-[var(--text-secondary)] mb-3 uppercase tracking-wider">Benefits</h3>
+            <h3 className="text-base font-bold text-[#475569] mb-3 uppercase tracking-wider">Benefits</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {BENEFITS.map((b) => (
-                <div key={b} className="flex items-center gap-2 text-base text-[var(--text-muted)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" style={{ boxShadow: '0 0 4px var(--accent)' }} />{b}
+                <div key={b} className="flex items-center gap-2 text-base text-[#64748B]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#29B5E8] shrink-0" style={{ boxShadow: 'none' }} />{b}
                 </div>
               ))}
             </div>
@@ -539,11 +539,11 @@ export default function ChallengePage() {
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${c.color}15`, border: `1px solid ${c.color}30` }}>
                     <img src={c.logo} alt={c.title} width={20} height={20} style={{ objectFit: 'contain' }} />
                   </div>
-                  <h3 className="text-base font-bold text-[var(--text-primary)]">{c.title}</h3>
+                  <h3 className="text-base font-bold text-[#0F172A]">{c.title}</h3>
                 </div>
                 <div className="space-y-1.5">
                   {c.examples.map((e) => (
-                    <p key={e} className="text-base text-[var(--text-muted)] flex items-center gap-2">
+                    <p key={e} className="text-base text-[#64748B] flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.color, boxShadow: `0 0 4px ${c.color}` }} />{e}
                     </p>
                   ))}
@@ -553,14 +553,14 @@ export default function ChallengePage() {
 
             {/* Scoring */}
             <div className="ch-glass-card p-5">
-              <h3 className="text-base font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
+              <h3 className="text-base font-bold text-[#0F172A] mb-3 flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
                 Scoring
               </h3>
               <div className="space-y-2.5">
                 {SCORING.map((s) => (
                   <div key={s.category} className="flex items-center justify-between">
-                    <span className="text-base text-[var(--text-muted)]">{s.category}</span>
+                    <span className="text-base text-[#64748B]">{s.category}</span>
                     <span className="text-base font-bold px-2 py-0.5 rounded" style={{ background: `${s.color}18`, color: s.color, boxShadow: `0 0 6px ${s.color}30` }}>{s.points}</span>
                   </div>
                 ))}
@@ -584,8 +584,8 @@ export default function ChallengePage() {
                   <span>{s.num}</span>
                 </div>
                 {i < STEPS.length - 1 && <div className="ch-timeline-line" style={{ background: `linear-gradient(to right, ${s.color}40, ${STEPS[i+1].color}40)` }} />}
-                <h3 className="text-base font-bold text-[var(--text-primary)] mt-3 mb-0.5">{s.title}</h3>
-                <p className="text-base text-[var(--text-dimmed)] leading-snug">{s.desc}</p>
+                <h3 className="text-base font-bold text-[#0F172A] mt-3 mb-0.5">{s.title}</h3>
+                <p className="text-base text-[#94A3B8] leading-snug">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -600,7 +600,7 @@ export default function ChallengePage() {
             {TECH_STACK.map((t) => (
               <div key={t.name} className="ch-tech-pill">
                 <img src={t.logo} alt={t.name} width={20} height={20} style={{ objectFit: 'contain' }} />
-                <span className="text-base font-medium text-[var(--text-muted)]">{t.name}</span>
+                <span className="text-base font-medium text-[#64748B]">{t.name}</span>
               </div>
             ))}
           </div>
@@ -611,25 +611,25 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: 'var(--warning)' }}>Rankings</span>
+            <span className="ch-section-tag" style={{ color: '#F59E0B' }}>Rankings</span>
             <h2 className="ch-section-title">Leaderboard</h2>
             <p className="ch-section-sub">{challengeActive ? 'Live standings.' : challengeEnded ? 'Final standings.' : 'Rankings appear when the challenge starts May 7, 2026.'}</p>
           </div>
           <div className="ch-glass-card overflow-hidden p-0">
-            <div className="grid grid-cols-12 gap-2 px-5 py-3 text-base font-bold text-[var(--text-dimmed)] uppercase tracking-wider border-b border-[var(--border)]">
+            <div className="grid grid-cols-12 gap-2 px-5 py-3 text-base font-bold text-[#94A3B8] uppercase tracking-wider border-b border-[#E2E8F0]">
               <div className="col-span-1">#</div>
               <div className="col-span-5">Challenger</div>
               <div className="col-span-3 text-center">Findings</div>
               <div className="col-span-3 text-right">Score</div>
             </div>
             {[1, 2, 3, 4, 5].map((rank) => (
-              <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-elevated)] transition-colors">
+              <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-[#E2E8F0] last:border-0 hover:bg-[#F1F5F9] transition-colors">
                 <div className="col-span-1">
                   <span className="text-base font-bold" style={{ color: rank === 1 ? '#fbbf24' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
                 </div>
                 <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
                 <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
-                <div className="col-span-3 flex justify-end"><span className="text-base font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-dimmed)' }}>Pending</span></div>
+                <div className="col-span-3 flex justify-end"><span className="text-base font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#F1F5F9', color: '#94A3B8' }}>Pending</span></div>
               </div>
             ))}
           </div>
@@ -645,17 +645,17 @@ export default function ChallengePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { title: 'Eligibility', color: 'var(--success)', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
-              { title: 'Submissions', color: 'var(--accent)', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
-              { title: 'Timeline', color: 'var(--warning)', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
-              { title: 'Judging', color: 'var(--danger)', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
+              { title: 'Eligibility', color: '#22C55E', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
+              { title: 'Submissions', color: '#29B5E8', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
+              { title: 'Timeline', color: '#F59E0B', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
+              { title: 'Judging', color: '#EF4444', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
             ].map((r) => (
               <div key={r.title} className="ch-glass-card p-5">
-                <h3 className="text-base font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#0F172A] mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ background: r.color, boxShadow: `0 0 6px ${r.color}` }} />{r.title}
                 </h3>
                 <ul className="space-y-1.5">
-                  {r.items.map((item) => <li key={item} className="text-base text-[var(--text-muted)]">{item}</li>)}
+                  {r.items.map((item) => <li key={item} className="text-base text-[#64748B]">{item}</li>)}
                 </ul>
               </div>
             ))}
@@ -681,7 +681,7 @@ export default function ChallengePage() {
         <section className="ch-section">
           <div className="w-full lg:max-w-[50%] mx-auto px-4 sm:px-6">
             <div className="ch-section-head">
-              <span className="ch-section-tag" style={{ color: 'var(--accent)' }}>Spread the Word</span>
+              <span className="ch-section-tag" style={{ color: '#29B5E8' }}>Spread the Word</span>
               <h2 className="ch-section-title">Refer Friends, Earn Credits</h2>
               <p className="ch-section-sub">Share the challenge and earn credits when friends join.</p>
             </div>
@@ -697,19 +697,19 @@ export default function ChallengePage() {
         <div className="ch-hero-orb ch-orb-1" style={{ opacity: 0.3 }} />
         <div className="ch-hero-orb ch-orb-2" style={{ opacity: 0.2 }} />
         <div className="relative z-10 w-full lg:max-w-[60%] mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Ready to take the challenge?</h2>
-          <p className="mt-3 text-base text-[var(--text-dimmed)]">$21,812 in prizes + founding team spots.</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">Ready to take the challenge?</h2>
+          <p className="mt-3 text-base text-[#94A3B8]">$21,812 in prizes + founding team spots.</p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="ch-cta-primary text-base px-8 py-3.5">
               {isAuthenticated ? 'Go to Dashboard' : 'Create Free Account'}
             </Link>
           </div>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <span className="text-base text-[var(--text-dimmed)]">Share:</span>
-            <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('The Camora Challenge — $21,812 in prizes + founding team offers!')}&url=${encodeURIComponent('https://camora.cariara.com/challenge')}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-dimmed)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors" aria-label="Share on Twitter">
+            <span className="text-base text-[#94A3B8]">Share:</span>
+            <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('The Camora Challenge — $21,812 in prizes + founding team offers!')}&url=${encodeURIComponent('https://camora.cariara.com/challenge')}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9] transition-colors" aria-label="Share on Twitter">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             </a>
-            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://camora.cariara.com/challenge')}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-dimmed)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors" aria-label="Share on LinkedIn">
+            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://camora.cariara.com/challenge')}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9] transition-colors" aria-label="Share on LinkedIn">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
             </a>
           </div>
@@ -733,7 +733,7 @@ export default function ChallengePage() {
         /* ── Hero ── */
         .ch-hero {
           position: relative;
-          padding: 140px 0 80px;
+          padding: 100px 0 60px;
           overflow: hidden;
           background: linear-gradient(180deg, #EBF8FF 0%, #FFFFFF 100%);
         }
@@ -841,9 +841,9 @@ export default function ChallengePage() {
         }
 
         /* ── Sections ── */
-        .ch-section { padding: 100px 0; position: relative; }
+        .ch-section { padding: 60px 0; position: relative; }
         .ch-section:nth-child(even) { background: #F8FAFC; }
-        .ch-section-head { text-align: center; margin-bottom: 56px; }
+        .ch-section-head { text-align: center; margin-bottom: 32px; }
         .ch-section-tag { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.2em; font-family: 'JetBrains Mono', monospace; }
         .ch-section-title { font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800; color: #0F172A; letter-spacing: -0.02em; margin-top: 12px; text-transform: uppercase; }
         .ch-section-sub { font-size: 16px; color: #475569; margin-top: 10px; line-height: 1.6; }
