@@ -61,6 +61,14 @@ export function LumoraShellPage() {
     }
   }, [activeTab, mountedTabs]);
 
+  // Close behavioral fullscreen when navigating to any other tab
+  useEffect(() => {
+    if (activeTab !== 'interview') {
+      setCopilotFullscreen(false);
+      setCopilotQuestion(undefined);
+    }
+  }, [activeTab]);
+
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
     if (activeTab === 'coding' || activeTab === 'design') {
