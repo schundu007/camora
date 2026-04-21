@@ -12,10 +12,15 @@ export default function RootShell({ children }: RootShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
 
+  // Lock body scroll when shell is mounted
+  useEffect(() => {
+    document.body.classList.add('shell-active');
+    return () => document.body.classList.remove('shell-active');
+  }, []);
+
   // Scroll to top on route change
   useEffect(() => {
     if (mainRef.current) mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [pathname]);
 
   // Lock body scroll when mobile sidebar is open
