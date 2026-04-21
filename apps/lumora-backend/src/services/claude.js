@@ -289,6 +289,7 @@ export async function* streamResponse(question, history, options = {}) {
     useSearch = false,
     resumeContext = null,
     technicalContext = null,
+    systemContext = null,
   } = options;
 
   const startTime = performance.now();
@@ -300,9 +301,9 @@ export async function* streamResponse(question, history, options = {}) {
   const isDesign = isDesignQuestion(cleanQuestion);
   const isCoding = !isDesign && isCodingQuestion(cleanQuestion);
 
-  // Resolve context
-  const resume = resumeContext || getDefaultResumeContext();
-  const technical = technicalContext || getDefaultTechnicalContext();
+  // Resolve context — custom assistant context takes priority over defaults
+  const resume = systemContext || resumeContext || getDefaultResumeContext();
+  const technical = systemContext ? '' : (technicalContext || getDefaultTechnicalContext());
 
   // Select system prompt and max_tokens
   let systemPrompt;

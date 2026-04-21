@@ -10,6 +10,7 @@ export interface StreamOptions {
   conversationId?: string;
   question: string;
   useSearch?: boolean;
+  systemContext?: string;
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
@@ -29,6 +30,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     conversationId,
     question,
     useSearch = false,
+    systemContext,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -60,6 +62,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
       body: JSON.stringify({
         question,
         use_search: useSearch,
+        ...(systemContext ? { system_context: systemContext } : {}),
       }),
       signal: abortController.signal,
     });
