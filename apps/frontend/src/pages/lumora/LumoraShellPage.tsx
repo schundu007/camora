@@ -147,16 +147,16 @@ export function LumoraShellPage() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
         {/* Top bar — single row: audio controls (left) + tab pills (right) */}
-        <div className="flex items-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+        <div className="flex items-center justify-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
           {/* Audio controls — left side, only on coding/design */}
-          <div className="flex-1">
-            {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
+          {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
+            <div className="mr-auto">
               <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} inline />
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Tab pills — right side */}
-          <div className="flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {/* Tab pills — centered */}
+          <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
