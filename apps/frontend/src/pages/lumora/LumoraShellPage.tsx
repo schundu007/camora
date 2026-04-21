@@ -435,8 +435,8 @@ export function LumoraShellPage() {
 /* ── Format plain text into readable HTML ── */
 function FormatTextPreview({ text, label }: { text: string; label: string }) {
   if (!text) return null;
-  // Parse text into structured sections
-  const raw = text.replace(/\s*\|\s*/g, '\n').replace(/\t+/g, '\n');
+  // Clean up and parse text into structured sections
+  const raw = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/\s*\|\s*/g, '\n').replace(/\t+/g, '\n');
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
   // Group lines into sections
@@ -524,13 +524,28 @@ async function extractTextFromFile(file: File): Promise<string> {
     return (await file.text()).trim();
   }
   if (name.endsWith('.docx')) {
-    // DOCX = ZIP containing word/document.xml
+    // DOCX = ZIP containing word/document.xml with <w:p> paragraphs and <w:t> text runs
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(file);
     const docXml = await zip.file('word/document.xml')?.async('text');
     if (!docXml) throw new Error('Invalid DOCX');
-    // Strip XML tags, keep text
-    return docXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    // Extract text preserving paragraph structure
+    const paragraphs: string[] = [];
+    // Split on paragraph tags <w:p ...> ... </w:p>
+    const pMatches = docXml.match(/<w:p[\s>][\s\S]*?<\/w:p>/g) || [];
+    for (const p of pMatches) {
+      // Extract all <w:t> text content within this paragraph
+      const texts: string[] = [];
+      const tMatches = p.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g) || [];
+      for (const t of tMatches) {
+        const content = t.replace(/<[^>]+>/g, '');
+        if (content) texts.push(content);
+      }
+      const line = texts.join('').trim();
+      if (line) paragraphs.push(line);
+    }
+    // Decode HTML entities
+    return paragraphs.join('\n').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
   }
   if (name.endsWith('.pdf')) {
     // PDF: read as text and strip non-printable chars (basic extraction)
