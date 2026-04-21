@@ -185,19 +185,29 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   ];
 
   const PROMPTS = [
-    // System Design
-    'Design a rate limiter for an API gateway',
-    'Design a notification system like WhatsApp',
-    'Design a URL shortener like bit.ly',
-    // Coding
-    'Implement LRU cache from scratch',
-    'Find the longest substring without repeating characters',
-    'Reverse a linked list iteratively and recursively',
-    // Behavioral
-    'Tell me about a time you disagreed with your manager',
-    'Walk me through how you handle a conflict with a teammate',
-    'Describe a time you failed and what you learned',
+    // System Design — open in Design tab
+    { text: 'Design a rate limiter for an API gateway', type: 'design' },
+    { text: 'Design a notification system like WhatsApp', type: 'design' },
+    { text: 'Design a URL shortener like bit.ly', type: 'design' },
+    // Coding — open in Coding tab
+    { text: 'Implement LRU cache from scratch', type: 'coding' },
+    { text: 'Find the longest substring without repeating characters', type: 'coding' },
+    { text: 'Reverse a linked list iteratively and recursively', type: 'coding' },
+    // Behavioral — ask AI on home tab
+    { text: 'Tell me about a time you disagreed with your manager', type: 'behavioral' },
+    { text: 'Walk me through how you handle a conflict with a teammate', type: 'behavioral' },
+    { text: 'Describe a time you failed and what you learned', type: 'behavioral' },
   ];
+
+  const handlePromptClick = (prompt: typeof PROMPTS[number]) => {
+    if (prompt.type === 'coding') {
+      onSwitchToCoding?.(prompt.text);
+    } else if (prompt.type === 'design') {
+      onSwitchToDesign?.(prompt.text);
+    } else {
+      onAskQuestion?.(prompt.text);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col px-6 select-none overflow-auto">
@@ -233,12 +243,12 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94A3B8' }}>Try asking</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {PROMPTS.map((prompt) => (
-            <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
+            <button key={prompt.text} onClick={() => handlePromptClick(prompt)}
               className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
               style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid rgba(34,211,238,0.25)', color: '#475569', borderRadius: '10px' }}
               onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.borderColor = 'rgba(34,211,238,0.5)'; e.currentTarget.style.background = 'rgba(34,211,238,0.04)'; }}
               onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = 'rgba(34,211,238,0.25)'; e.currentTarget.style.background = 'transparent'; }}>
-              {prompt}
+              {prompt.text}
             </button>
           ))}
         </div>
