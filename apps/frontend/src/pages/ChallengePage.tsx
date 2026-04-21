@@ -742,21 +742,16 @@ export default function ChallengePage() {
         .ch-badge {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 20px; border-radius: 999px;
-          font-size: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-          color: var(--accent);
-          background: rgba(16,185,129,0.08);
-          border: 1px solid rgba(16,185,129,0.15);
+          font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+          color: #64748B;
+          background: transparent;
+          border: none;
           margin-bottom: 24px;
+          font-family: 'JetBrains Mono', monospace;
         }
         .ch-badge-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: var(--accent);
-          box-shadow: 0 0 8px var(--accent);
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        @keyframes pulse-glow {
-          0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
-          50% { opacity: 0.5; box-shadow: 0 0 16px var(--accent), 0 0 32px var(--accent)50; }
+          background: #29B5E8;
         }
 
         .ch-hero-title {
@@ -788,71 +783,61 @@ export default function ChallengePage() {
         .ch-countdown-num {
           width: 64px; height: 64px;
           display: flex; align-items: center; justify-content: center;
-          border-radius: 14px;
-          font-family: 'Space Mono', monospace;
+          border-radius: 12px;
+          font-family: 'JetBrains Mono', monospace;
           font-size: 28px; font-weight: 700;
-          color: var(--text-primary);
-          background: rgba(255,255,255,0.75);
-          border: 1px solid rgba(56,189,248,0.12);
-          backdrop-filter: blur(12px);
-          box-shadow: 0 2px 8px rgba(56,189,248,0.08);
+          color: #0F172A;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
         }
         .ch-countdown-label {
-          margin-top: 6px; font-size: 16px; font-weight: 700;
-          color: var(--text-muted); letter-spacing: 0.12em;
+          margin-top: 6px; font-size: 10px; font-weight: 700;
+          color: #94A3B8; letter-spacing: 0.15em; text-transform: uppercase;
         }
 
         /* ── Prize pool badge ── */
         .ch-prize-pool-badge {
           margin-top: 32px;
           display: flex; flex-direction: column; align-items: center; gap: 6px;
-          padding: 20px 40px; border-radius: 16px;
-          background: rgba(255,255,255,0.75);
-          border: 1px solid rgba(56,189,248,0.12);
-          backdrop-filter: blur(12px);
-          box-shadow: 0 2px 8px rgba(56,189,248,0.06);
+          padding: 20px 40px; border-radius: 12px;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
         }
         .ch-prize-amount {
-          font-family: 'Space Mono', monospace;
-          font-size: 42px; font-weight: 700;
-          background: linear-gradient(135deg, #fbbf24, #f59e0b, var(--accent));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          text-shadow: none;
-          filter: drop-shadow(0 0 20px rgba(251,191,36,0.3));
+          font-family: 'Clash Display', sans-serif;
+          font-size: 48px; font-weight: 800;
+          color: #29B5E8;
         }
 
         /* ── CTAs ── */
         .ch-cta-primary {
           display: inline-flex; align-items: center; justify-content: center;
-          padding: 14px 32px; border-radius: 12px;
-          font-size: 16px; font-weight: 700; color: #fff;
-          background: linear-gradient(135deg, var(--accent), #2D8CFF);
+          padding: 14px 32px; border-radius: 999px;
+          font-size: 14px; font-weight: 700; color: #fff;
+          background: #29B5E8;
           border: none; cursor: pointer;
-          box-shadow: 0 0 24px rgba(16,185,129,0.25), 0 4px 12px rgba(0,0,0,0.3);
           transition: all 0.2s;
           text-decoration: none;
+          text-transform: uppercase; letter-spacing: 0.08em;
         }
         .ch-cta-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 0 32px rgba(16,185,129,0.4), 0 8px 24px rgba(0,0,0,0.4);
+          opacity: 0.9;
+          transform: translateY(-1px);
         }
         .ch-cta-secondary {
           display: inline-flex; align-items: center; justify-content: center;
-          padding: 14px 32px; border-radius: 12px;
-          font-size: 16px; font-weight: 700;
-          color: var(--text-secondary);
-          background: rgba(255,255,255,0.75);
-          border: 1px solid var(--border);
+          padding: 14px 32px; border-radius: 999px;
+          font-size: 14px; font-weight: 700;
+          color: #0F172A;
+          background: transparent;
+          border: 1.5px solid #CBD5E1;
           cursor: pointer; transition: all 0.2s;
           text-decoration: none;
-          backdrop-filter: blur(8px);
+          text-transform: uppercase; letter-spacing: 0.08em;
         }
         .ch-cta-secondary:hover {
-          background: rgba(255,255,255,0.9);
-          color: var(--text-primary);
-          border-color: var(--accent);
-          transform: translateY(-1px);
+          border-color: #29B5E8;
+          color: #29B5E8;
         }
 
         /* ── Sections ── */
@@ -865,90 +850,78 @@ export default function ChallengePage() {
 
         /* ── Glass card ── */
         .ch-glass-card {
-          background: rgba(255,255,255,0.75);
-          border: 1px solid rgba(56,189,248,0.12);
-          border-radius: 16px;
-          backdrop-filter: blur(12px);
-          box-shadow: 0 1px 4px rgba(56,189,248,0.06);
-          transition: border-color 0.3s, box-shadow 0.3s;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 8px;
+          transition: border-color 0.2s;
         }
-        .ch-glass-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(34,211,238,0.1); }
+        .ch-glass-card:hover { border-color: #29B5E8; }
 
         /* ── Inputs ── */
         .ch-input {
-          padding: 12px 16px; border-radius: 10px;
-          font-size: 16px; color: var(--text-primary);
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
+          padding: 12px 16px; border-radius: 8px;
+          font-size: 15px; color: #0F172A;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
           outline: none; transition: border-color 0.2s;
         }
-        .ch-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.12); }
-        .ch-input::placeholder { color: var(--text-muted); }
+        .ch-input:focus { border-color: #29B5E8; }
+        .ch-input::placeholder { color: #94A3B8; }
 
         .ch-code-editor {
-          min-height: 180px; padding: 16px; border-radius: 12px;
-          font-family: 'Space Mono', 'IBM Plex Mono', monospace;
-          font-size: 16px; line-height: 1.6;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          color: var(--text-primary); outline: none; resize: vertical;
+          min-height: 180px; padding: 16px; border-radius: 8px;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 14px; line-height: 1.6;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          color: #0F172A; outline: none; resize: vertical;
         }
 
         /* ── Glow icon ── */
         .ch-glow-icon {
           width: 44px; height: 44px;
-          border-radius: 12px;
+          border-radius: 8px;
           display: flex; align-items: center; justify-content: center;
-          background: color-mix(in srgb, var(--glow, var(--accent)) 8%, transparent);
-          border: 1px solid color-mix(in srgb, var(--glow, var(--accent)) 20%, transparent);
-          box-shadow: 0 0 12px color-mix(in srgb, var(--glow, var(--accent)) 15%, transparent);
+          background: #F8FAFC;
+          border: 1px solid #E2E8F0;
         }
 
         /* ── Prize cards ── */
         .ch-prize-card {
-          position: relative; border-radius: 20px; padding: 2px;
-          background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(34,211,238,0.06));
-          transition: all 0.3s;
+          position: relative; border-radius: 12px;
+          border: 1px solid #E2E8F0;
+          background: #FFFFFF;
+          transition: all 0.2s;
         }
-        .ch-prize-card::before {
-          content: ''; position: absolute; inset: -1px; border-radius: 21px;
-          background: linear-gradient(135deg, var(--prize-glow, var(--accent)) 0%, transparent 60%);
-          opacity: 0; transition: opacity 0.4s;
-          z-index: -1; filter: blur(12px);
-        }
-        .ch-prize-card:hover { transform: translateY(-4px); }
-        .ch-prize-card:hover::before { opacity: 0.3; }
+        .ch-prize-card::before { display: none; }
+        .ch-prize-card:hover { transform: translateY(-2px); border-color: #29B5E8; }
         .ch-prize-card-inner {
-          background: rgba(255,255,255,0.85);
-          border-radius: 18px;
-          padding: 28px; text-align: center;
-          backdrop-filter: blur(12px);
+          background: #FFFFFF;
+          border-radius: 12px;
+          padding: 32px; text-align: center;
         }
         .ch-prize-rank {
           display: inline-block;
-          padding: 5px 16px; border-radius: 8px;
-          font-size: 16px; font-weight: 800; color: #fff;
-          text-transform: uppercase; letter-spacing: 0.08em;
+          padding: 5px 16px; border-radius: 999px;
+          font-size: 11px; font-weight: 800; color: #fff;
+          text-transform: uppercase; letter-spacing: 0.1em;
           margin-bottom: 12px;
         }
         .ch-prize-amount-card {
-          font-family: 'Space Mono', monospace;
-          font-size: 36px; font-weight: 700; color: var(--text-primary);
+          font-family: 'Clash Display', sans-serif;
+          font-size: 36px; font-weight: 800; color: #0F172A;
           margin-bottom: 4px;
         }
 
         /* ── Category cards ── */
         .ch-category-card {
-          padding: 20px; border-radius: 16px;
-          background: rgba(255,255,255,0.75);
-          border: 1px solid rgba(56,189,248,0.12);
-          backdrop-filter: blur(12px);
-          box-shadow: 0 1px 4px rgba(56,189,248,0.06);
-          transition: all 0.3s;
+          padding: 24px; border-radius: 8px;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          transition: all 0.2s;
         }
         .ch-category-card:hover {
-          border-color: var(--cat-color);
-          box-shadow: 0 0 24px var(--cat-glow);
+          border-color: var(--cat-color, #29B5E8);
           transform: translateY(-2px);
         }
 
@@ -970,39 +943,34 @@ export default function ChallengePage() {
         .ch-timeline-node {
           width: 36px; height: 36px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-family: 'Space Mono', monospace;
-          font-size: 16px; font-weight: 700; color: #0a0a0f;
-          background: var(--node-color, var(--accent));
-          box-shadow: 0 0 16px color-mix(in srgb, var(--node-color, var(--accent)) 40%, transparent);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 14px; font-weight: 700; color: #FFFFFF;
+          background: var(--node-color, #29B5E8);
           position: relative; z-index: 2;
         }
         .ch-timeline-line {
           position: absolute; top: 18px; left: calc(50% + 18px); right: calc(-50% + 18px);
-          height: 2px; z-index: 1;
+          height: 2px; z-index: 1; background: #E2E8F0;
         }
 
         /* ── Tech pills ── */
         .ch-tech-pill {
           display: flex; align-items: center; gap: 8px;
-          padding: 8px 14px; border-radius: 10px;
-          background: rgba(255,255,255,0.75);
-          border: 1px solid rgba(56,189,248,0.12);
-          backdrop-filter: blur(8px);
+          padding: 8px 14px; border-radius: 8px;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
           transition: all 0.2s;
         }
         .ch-tech-pill:hover {
-          background: rgba(255,255,255,0.9);
-          border-color: var(--accent);
+          border-color: #29B5E8;
           transform: translateY(-1px);
         }
 
-        /* ── Referral wrapper — frost styling ── */
+        /* ── Referral wrapper ── */
         .ch-referral-wrapper > div {
-          background: rgba(255,255,255,0.75) !important;
-          border-color: rgba(56,189,248,0.12) !important;
-          border-radius: 16px;
-          backdrop-filter: blur(12px);
-          box-shadow: 0 1px 4px rgba(56,189,248,0.06);
+          background: #FFFFFF !important;
+          border-color: #E2E8F0 !important;
+          border-radius: 8px;
         }
       `}</style>
     </div>
