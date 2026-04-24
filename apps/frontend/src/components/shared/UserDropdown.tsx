@@ -65,6 +65,9 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 rounded-lg transition-colors px-1.5 py-1"
         style={{ color: textColor }}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Account menu"
         onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
@@ -91,7 +94,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`absolute ${positionStyles[position]} w-52 rounded-xl overflow-hidden z-50`} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+          <div role="menu" aria-label="Account menu" className={`absolute ${positionStyles[position]} w-52 rounded-xl overflow-hidden z-50`} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
             {/* User info header */}
             <div className="px-3 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
               <p className="text-xs font-bold truncate" style={{ color: '#0F172A' }}>{user.name || 'User'}</p>
