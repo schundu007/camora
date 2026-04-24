@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
+import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE — Snowflake-inspired clean design
@@ -359,36 +360,10 @@ export default function LandingPage() {
       <section className="px-6 py-28" style={{ background: '#F8FAFC' }}>
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Left: demo */}
-            <div className="lg:w-[55%]">
+            {/* Left: animated demo */}
+            <div className="lg:w-[55%] w-full">
               <Reveal>
-                <div className="rounded-xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-                  <div className="px-6 py-5" style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-                      <svg width="14" height="14" fill="none" stroke="#94A3B8" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
-                      <span className="text-sm truncate flex-1" style={{ color: '#94A3B8', fontFamily: F.mono }}>nvidia.wd5.myworkdayjobs.com/.../Senior-DevOps</span>
-                      <span className="px-4 py-1.5 text-xs font-bold text-white rounded-md" style={{ background: accent }}>Analyze</span>
-                    </div>
-                  </div>
-                  <div className="px-6 py-5">
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Coding', items: ['Graph Algorithms', 'Scripting', 'Automation'] },
-                        { label: 'System Design', items: ['CI/CD Pipeline', 'Containers', 'Monitoring'] },
-                        { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'] },
-                      ].map(col => (
-                        <div key={col.label}>
-                          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#94A3B8', fontFamily: F.mono }}>{col.label}</p>
-                          <div className="flex flex-col gap-1">
-                            {col.items.map(item => (
-                              <span key={item} className="text-xs px-2.5 py-1.5 rounded-md" style={{ color: '#475569', background: '#F8FAFC', border: '1px solid #F1F5F9' }}>{item}</span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <JobUrlAnalysisDemo />
               </Reveal>
             </div>
 
