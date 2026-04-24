@@ -16,6 +16,7 @@ interface ArchitectureDiagramProps {
 export function ArchitectureDiagram({ question, className = '' }: ArchitectureDiagramProps) {
   const { token } = useAuth();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [mermaidCode, setMermaidCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +83,14 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
           if (data.success && data.image_url) {
             const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
             setImageUrl(url);
+            setMermaidCode(null);
             setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
+            resetView();
+          } else if (data.success && data.type === 'mermaid' && data.mermaid_code) {
+            // Python service was down at cache time — surface the cached Mermaid
+            // as readable source (not rendered, per 'No Mermaid Diagrams' rule)
+            setImageUrl(null);
+            setMermaidCode(data.mermaid_code);
             resetView();
           } else {
             setNoCache(true);
@@ -113,8 +121,13 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       if (data.success && data.image_url) {
         const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
         setImageUrl(url);
+        setMermaidCode(null);
         const key = getCacheKey(question, cloudProvider, detailLevel, direction);
         setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
+        resetView();
+      } else if (data.success && data.type === 'mermaid' && data.mermaid_code) {
+        setImageUrl(null);
+        setMermaidCode(data.mermaid_code);
         resetView();
       } else {
         setError(data.error || 'Generation failed');
@@ -219,6 +232,31 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
               maxWidth: 'none',
               height: 'auto',
             }} />
+        </div>
+      )}
+
+      {/* Mermaid fallback — cached when Python was down. Rendered as source (not
+          as a rendered diagram, per the 'No Mermaid Diagrams' rule) so the
+          candidate still has a text architecture to talk through. */}
+      {mermaidCode && !imageUrl && !loading && !generating && (
+        <div className="rounded-lg p-3" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#B45309' }}>Text architecture (diagram service unavailable)</span>
+            <button onClick={handleGenerate}
+              className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded hover:bg-amber-100"
+              style={{ color: '#B45309', border: '1px solid #FCD34D' }}>
+              Retry diagram
+            </button>
+          </div>
+          <pre className="text-[11px] leading-[1.5] overflow-auto p-2 rounded font-mono whitespace-pre"
+            style={{ background: '#F8FAFC', border: '1px solid var(--border)', color: '#334155', maxHeight: '600px' }}>
+            {mermaidCode}
+          </pre>
         </div>
       )}
     </div>
