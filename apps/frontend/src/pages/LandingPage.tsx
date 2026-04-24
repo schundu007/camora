@@ -191,7 +191,7 @@ export default function LandingPage() {
 
       {/* ═══════════ 3. STATS ═══════════ */}
       <section className="relative px-6 py-24 overflow-hidden" style={{ background: '#F8FAFC' }}>
-        <div className="absolute inset-0" style={{ backgroundImage: 'url(/snowflake-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
+        <div className="absolute inset-0" style={{ backgroundImage: 'url(/grass-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
         <div className="relative max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((s, i) => (
