@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
+import { dialogConfirm } from '../../components/shared/Dialog';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import { Icon } from '../../components/shared/Icons.jsx';
@@ -813,8 +814,14 @@ export default function PracticePage() {
                         </div>
                       )}
                       <button
-                        onClick={() => {
-                          if (window.confirm('Reset all challenge history? This cannot be undone.')) {
+                        onClick={async () => {
+                          const ok = await dialogConfirm({
+                            title: 'Reset challenge history?',
+                            message: 'Clears every past challenge score and streak. This cannot be undone.',
+                            confirmLabel: 'Reset',
+                            tone: 'danger',
+                          });
+                          if (ok) {
                             localStorage.removeItem('camora_challenge_stats');
                             setStats(getStats());
                           }
