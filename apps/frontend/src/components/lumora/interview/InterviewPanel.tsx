@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
@@ -51,22 +50,11 @@ interface InterviewPanelProps {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
-  focusedEntry?: number | null;
-  onClearFocus?: () => void;
-  /** Called when user clicks a history entry — opens copilot with that answer */
+  /** Called when user clicks a history entry — opens the history viewer with that answer */
   onViewAnswer?: (idx: number) => void;
 }
 
-export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, focusedEntry, onClearFocus, onViewAnswer }: InterviewPanelProps) {
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (focusedEntry !== null && focusedEntry !== undefined) {
-      setExpandedIdx(focusedEntry);
-      onClearFocus?.();
-    }
-  }, [focusedEntry, onClearFocus]);
-
+export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onViewAnswer }: InterviewPanelProps) {
   const {
     question,
     isStreaming,
@@ -92,7 +80,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
               <button
-                onClick={() => onViewAnswer ? onViewAnswer(idx) : setExpandedIdx(expandedIdx === idx ? null : idx)}
+                onClick={() => onViewAnswer?.(idx)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group"
                 style={{ background: 'transparent', border: '1px solid transparent' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
