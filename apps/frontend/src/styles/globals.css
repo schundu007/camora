@@ -22,23 +22,27 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds — white app surface, subtle elevated tint for chips */
-    --bg-base: #F0F7FF;
+    /* Backgrounds — pure white everywhere; elevated is a subtle neutral gray */
+    --bg-base: #FFFFFF;
     --bg-app: #FFFFFF;
     --bg-surface: #FFFFFF;
-    --bg-elevated: #DDE9F7;
+    --bg-elevated: #F1F5F9;
     --bg-overlay: rgba(10,30,60,0.35);
 
-    /* Borders — frosty blue edges */
-    --border: #C4D9F2;
-    --border-hover: #A8C8EB;
+    /* Borders — neutral slate edges */
+    --border: #E2E8F0;
+    --border-hover: #CBD5E1;
     --border-focus: #38BDF8;
 
-    /* Text — dark navy on frost */
+    /* Text — WCAG-AA compliant on white
+       primary    #0F172A   19:1   AAA
+       secondary  #334155   11:1   AAA
+       muted      #64748B   4.9:1  AA  (was #7096BF = 3.5:1, failed)
+       dimmed     #94A3B8   3.2:1  large text only  */
     --text-primary: #0F172A;
     --text-secondary: #334155;
-    --text-muted: #7096BF;
-    --text-dimmed: #B0CBE6;
+    --text-muted: #64748B;
+    --text-dimmed: #94A3B8;
 
     /* Accent — Icy cyan-blue (matches logo) */
     --accent: #22D3EE;

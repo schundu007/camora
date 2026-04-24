@@ -35,108 +35,187 @@ function cleanTags(text: string): string {
   return text.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
-/* ── SonaAvatar — polished face icon for the AI assistant ──
-   Refined composition: gradient head with inner depth, soft specular
-   highlight, chromed over-ear headphones with active-state ring pulse.
-   Built for crisp rendering from 14px all the way to 64px.
+/* ── SonaAvatar — Sona portrait icon ──
+   Refined illustrative portrait: warm-olive skin tone, long dark hair
+   flowing past the shoulders, large almond eyes with subtle liner and
+   lashes, softly arched brows, gentle pink lips, a small bindi, and
+   delicate gold stud earrings. Built as pure SVG with radial + linear
+   gradients so it reads with depth from 14 px to 64 px.
    Props:
      size   — px square dimension
-     active — pulse ring + breathing highlight while streaming */
+     active — soft cyan glow ring + blink cycle while Sona is streaming */
 let SONA_AVATAR_SEED = 0;
 function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boolean }) {
-  // Unique gradient ids so multiple SVG instances don't share defs
   const id = useMemo(() => `sona-${++SONA_AVATAR_SEED}`, []);
   const g = {
-    head: `${id}-head`,
-    band: `${id}-band`,
-    cup: `${id}-cup`,
+    skin: `${id}-skin`,
+    hair: `${id}-hair`,
+    hairShine: `${id}-hair-shine`,
+    lips: `${id}-lips`,
+    cheek: `${id}-cheek`,
     shine: `${id}-shine`,
     ring: `${id}-ring`,
+    neck: `${id}-neck`,
+    frame: `${id}-frame`,
   };
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgba(14,116,144,0.18))' }}>
+    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block', filter: 'drop-shadow(0 1px 3px rgba(68,35,15,0.18))' }}>
       <defs>
-        {/* Head: light top-left → deep cyan bottom-right, gives volume */}
-        <radialGradient id={g.head} cx="38%" cy="34%" r="70%">
-          <stop offset="0%" stopColor="#A5F3FC" />
-          <stop offset="45%" stopColor="#22D3EE" />
-          <stop offset="100%" stopColor="#0E7490" />
+        {/* Warm olive / tan skin — light top-left → deeper lower-right */}
+        <radialGradient id={g.skin} cx="42%" cy="38%" r="65%">
+          <stop offset="0%" stopColor="#F2CBA5" />
+          <stop offset="55%" stopColor="#D79D6E" />
+          <stop offset="100%" stopColor="#9C6438" />
         </radialGradient>
-        {/* Headphone band: metallic cyan → deeper base for solidity */}
-        <linearGradient id={g.band} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#E0F7FB" />
-          <stop offset="100%" stopColor="#0891B2" />
+        {/* Neck — slightly deeper than face shadow */}
+        <linearGradient id={g.neck} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#B8834D" />
+          <stop offset="100%" stopColor="#8B5A2E" />
         </linearGradient>
-        {/* Ear cup: darker, slightly desaturated for contrast against head */}
-        <linearGradient id={g.cup} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0891B2" />
-          <stop offset="100%" stopColor="#164E63" />
+        {/* Hair — rich espresso with warm undertones */}
+        <linearGradient id={g.hair} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3D1F10" />
+          <stop offset="60%" stopColor="#2A140A" />
+          <stop offset="100%" stopColor="#180904" />
         </linearGradient>
-        {/* Top specular highlight on the head */}
-        <radialGradient id={g.shine} cx="35%" cy="22%" r="30%">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.7" />
+        {/* Hair highlight band — soft sheen */}
+        <linearGradient id={g.hairShine} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#6B3A1F" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#6B3A1F" stopOpacity="0" />
+        </linearGradient>
+        {/* Lips — warm rose with depth */}
+        <linearGradient id={g.lips} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#C76A6E" />
+          <stop offset="100%" stopColor="#94424A" />
+        </linearGradient>
+        {/* Cheek blush */}
+        <radialGradient id={g.cheek} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#E88AA0" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#E88AA0" stopOpacity="0" />
+        </radialGradient>
+        {/* Forehead highlight */}
+        <radialGradient id={g.shine} cx="40%" cy="22%" r="28%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
         </radialGradient>
-        {/* Active-state ring — soft cyan glow, no solid edge */}
+        {/* Active-state soft glow ring */}
         <radialGradient id={g.ring} cx="50%" cy="50%" r="50%">
           <stop offset="80%" stopColor="#22D3EE" stopOpacity="0" />
-          <stop offset="95%" stopColor="#22D3EE" stopOpacity="0.55" />
+          <stop offset="95%" stopColor="#22D3EE" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#22D3EE" stopOpacity="0" />
         </radialGradient>
+        {/* Subtle cyan frame ring around the whole avatar */}
+        <linearGradient id={g.frame} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#22D3EE" stopOpacity="0.05" />
+        </linearGradient>
       </defs>
 
-      {/* Active pulse — breathing glow ring behind everything */}
+      {/* Active-state pulse ring */}
       {active && (
-        <>
-          <circle cx="32" cy="32" r="30" fill={`url(#${g.ring})`}>
-            <animate attributeName="r" values="28;32;28" dur="1.8s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.9;0.35;0.9" dur="1.8s" repeatCount="indefinite" />
-          </circle>
-        </>
+        <circle cx="32" cy="32" r="30" fill={`url(#${g.ring})`}>
+          <animate attributeName="r" values="28;32;28" dur="1.8s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.9;0.35;0.9" dur="1.8s" repeatCount="indefinite" />
+        </circle>
       )}
 
-      {/* Headphone band — sits behind the head, arcs over the top */}
-      <path d="M13 30 Q13 11 32 11 Q51 11 51 30" fill="none" stroke={`url(#${g.band})`} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Band screws / accents */}
-      <circle cx="13" cy="30" r="1.6" fill="#0E7490" />
-      <circle cx="51" cy="30" r="1.6" fill="#0E7490" />
+      {/* Circular frame — clips the portrait to a clean avatar shape */}
+      <clipPath id={`${id}-clip`}>
+        <circle cx="32" cy="32" r="29" />
+      </clipPath>
+      <circle cx="32" cy="32" r="29" fill="#FEF3E7" />
 
-      {/* Head — the main face shape */}
-      <circle cx="32" cy="34" r="19" fill={`url(#${g.head})`} />
-      {/* Inner rim shadow to read as sphere */}
-      <circle cx="32" cy="34" r="19" fill="none" stroke="#0E7490" strokeWidth="0.6" opacity="0.35" />
-      {/* Specular highlight */}
-      <circle cx="32" cy="34" r="19" fill={`url(#${g.shine})`} />
+      <g clipPath={`url(#${id}-clip)`}>
+        {/* Back hair — long flowing strands behind shoulders */}
+        <path
+          d="M12 30 Q8 44 10 58 Q14 64 22 64 Q18 54 18 44 Q18 32 22 24 Q16 24 12 30 Z"
+          fill={`url(#${g.hair})`}
+        />
+        <path
+          d="M52 30 Q56 44 54 58 Q50 64 42 64 Q46 54 46 44 Q46 32 42 24 Q48 24 52 30 Z"
+          fill={`url(#${g.hair})`}
+        />
 
-      {/* Ear cups — chunky rounded pills with highlight stripe */}
-      <g>
-        <rect x="9" y="28" width="7.5" height="11" rx="3.2" fill={`url(#${g.cup})`} />
-        <rect x="10.2" y="29.2" width="1.2" height="4.5" rx="0.6" fill="#67E8F9" opacity="0.65" />
-        <rect x="47.5" y="28" width="7.5" height="11" rx="3.2" fill={`url(#${g.cup})`} />
-        <rect x="52.6" y="29.2" width="1.2" height="4.5" rx="0.6" fill="#67E8F9" opacity="0.65" />
+        {/* Neck + shoulders */}
+        <path d="M26 46 L38 46 L38 54 Q38 56 36 56 L28 56 Q26 56 26 54 Z" fill={`url(#${g.neck})`} />
+        <path d="M14 58 Q18 52 26 52 L38 52 Q46 52 50 58 L50 64 L14 64 Z" fill="#164E63" />
+        {/* Collar hint */}
+        <path d="M20 58 Q26 56 32 56 Q38 56 44 58" fill="none" stroke="#0E7490" strokeWidth="0.8" opacity="0.6" />
+
+        {/* Face — soft oval */}
+        <ellipse cx="32" cy="31" rx="14" ry="16" fill={`url(#${g.skin})`} />
+        <ellipse cx="32" cy="26" rx="14" ry="10" fill={`url(#${g.shine})`} />
+
+        {/* Hair front — middle part cascading down the sides of the face */}
+        <path
+          d="M18 20 Q20 12 32 10 Q44 12 46 20 Q46 26 44 30 Q42 21 40 20 Q36 22 32 22 Q28 22 24 20 Q22 21 20 30 Q18 26 18 20 Z"
+          fill={`url(#${g.hair})`}
+        />
+        {/* Hair sheen */}
+        <path d="M23 14 Q27 11 32 11 Q37 11 41 14 Q38 13 32 13 Q26 13 23 14 Z" fill={`url(#${g.hairShine})`} />
+        {/* Side strands softly framing the face */}
+        <path d="M18 22 Q16 34 18 44 Q20 36 22 30 Q20 26 18 22 Z" fill={`url(#${g.hair})`} />
+        <path d="M46 22 Q48 34 46 44 Q44 36 42 30 Q44 26 46 22 Z" fill={`url(#${g.hair})`} />
+
+        {/* Eyebrows — gently arched, thin */}
+        <path d="M21.5 26 Q25.5 24 29 25.5" fill="none" stroke="#2A140A" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M35 25.5 Q38.5 24 42.5 26" fill="none" stroke="#2A140A" strokeWidth="1.1" strokeLinecap="round" />
+
+        {/* Eyes — whites */}
+        <g fill="#FFFFFF">
+          <ellipse cx="26" cy="30" rx="2.7" ry="2.1" />
+          <ellipse cx="38" cy="30" rx="2.7" ry="2.1" />
+        </g>
+        {/* Iris */}
+        <g fill="#3A1E0E">
+          <ellipse cx="26" cy="30.2" rx="1.8" ry="1.9">
+            {active && <animate attributeName="ry" values="1.9;0.3;1.9" keyTimes="0;0.06;0.12" dur="5s" repeatCount="indefinite" />}
+          </ellipse>
+          <ellipse cx="38" cy="30.2" rx="1.8" ry="1.9">
+            {active && <animate attributeName="ry" values="1.9;0.3;1.9" keyTimes="0;0.06;0.12" dur="5s" repeatCount="indefinite" />}
+          </ellipse>
+        </g>
+        {/* Pupil */}
+        <g fill="#0E0A05">
+          <circle cx="26" cy="30.3" r="0.75" />
+          <circle cx="38" cy="30.3" r="0.75" />
+        </g>
+        {/* Catchlight */}
+        <circle cx="26.5" cy="29.6" r="0.5" fill="#FFFFFF" />
+        <circle cx="38.5" cy="29.6" r="0.5" fill="#FFFFFF" />
+        {/* Eyeliner flicks */}
+        <path d="M23.3 29.8 Q23 30.6 24 31.2" fill="none" stroke="#1A0E08" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M40.7 29.8 Q41 30.6 40 31.2" fill="none" stroke="#1A0E08" strokeWidth="0.6" strokeLinecap="round" />
+        {/* Lashes — tiny strokes above outer eye */}
+        <path d="M24 28.3 L23.3 27.6 M25.5 28 L25.2 27.1 M27 28 L27.3 27.1" stroke="#1A0E08" strokeWidth="0.45" strokeLinecap="round" fill="none" />
+        <path d="M40 28.3 L40.7 27.6 M38.5 28 L38.8 27.1 M37 28 L36.7 27.1" stroke="#1A0E08" strokeWidth="0.45" strokeLinecap="round" fill="none" />
+
+        {/* Nose — minimal: a soft highlight + shadow for shape */}
+        <path d="M32 32 Q31.5 35 32 37" fill="none" stroke="#A87145" strokeWidth="0.6" strokeLinecap="round" opacity="0.55" />
+        <path d="M31 38 Q32 38.6 33 38" fill="none" stroke="#8A5A32" strokeWidth="0.5" strokeLinecap="round" opacity="0.6" />
+
+        {/* Bindi — small maroon-red dot between the brows */}
+        <circle cx="32" cy="23.5" r="1" fill="#9D0011" />
+        <circle cx="31.7" cy="23.2" r="0.3" fill="#FF6B6B" opacity="0.5" />
+
+        {/* Cheek blush */}
+        <ellipse cx="24" cy="34.5" rx="2.3" ry="1.4" fill={`url(#${g.cheek})`} />
+        <ellipse cx="40" cy="34.5" rx="2.3" ry="1.4" fill={`url(#${g.cheek})`} />
+
+        {/* Lips — gentle smile, upper + lower lip shapes */}
+        <path d="M28 41 Q30 40 32 40.3 Q34 40 36 41 Q34 40.5 32 40.8 Q30 40.5 28 41 Z" fill={`url(#${g.lips})`} />
+        <path d="M28 41 Q32 43.6 36 41 Q34 42.2 32 42.3 Q30 42.2 28 41 Z" fill={`url(#${g.lips})`} />
+        <path d="M28 41 Q32 41.6 36 41" fill="none" stroke="#6B2A32" strokeWidth="0.5" strokeLinecap="round" opacity="0.6" />
+
+        {/* Earrings — small gold studs peeking through the hair */}
+        <circle cx="17" cy="36" r="1.3" fill="#F5C542" />
+        <circle cx="17" cy="36" r="0.5" fill="#FFF3A0" />
+        <circle cx="47" cy="36" r="1.3" fill="#F5C542" />
+        <circle cx="47" cy="36" r="0.5" fill="#FFF3A0" />
       </g>
 
-      {/* Eyes — almond shapes with a tiny highlight; slight inward angle */}
-      <g fill="#FFFFFF">
-        <ellipse cx="25.5" cy="33" rx="2.4" ry="2.9" />
-        <ellipse cx="38.5" cy="33" rx="2.4" ry="2.9" />
-      </g>
-      <g fill="#0E2A33">
-        <ellipse cx="25.8" cy="33.6" rx="1.2" ry="1.6">
-          {active && <animate attributeName="ry" values="1.6;0.4;1.6" keyTimes="0;0.06;0.12" dur="4.8s" repeatCount="indefinite" />}
-        </ellipse>
-        <ellipse cx="38.2" cy="33.6" rx="1.2" ry="1.6">
-          {active && <animate attributeName="ry" values="1.6;0.4;1.6" keyTimes="0;0.06;0.12" dur="4.8s" repeatCount="indefinite" />}
-        </ellipse>
-      </g>
-      {/* Catchlight on each eye */}
-      <circle cx="26.3" cy="32.6" r="0.55" fill="#FFFFFF" />
-      <circle cx="38.7" cy="32.6" r="0.55" fill="#FFFFFF" />
-
-      {/* Smile — gentle confident curve with subtle blush */}
-      <ellipse cx="27.5" cy="41.5" rx="2.2" ry="0.8" fill="#F0ABFC" opacity="0.22" />
-      <ellipse cx="36.5" cy="41.5" rx="2.2" ry="0.8" fill="#F0ABFC" opacity="0.22" />
-      <path d="M26 40.5 Q32 45 38 40.5" fill="none" stroke="#0E2A33" strokeWidth="1.6" strokeLinecap="round" />
+      {/* Outer frame ring — discrete cyan edge ties her to Lumora palette */}
+      <circle cx="32" cy="32" r="29" fill="none" stroke={`url(#${g.frame})`} strokeWidth="1.4" />
     </svg>
   );
 }
