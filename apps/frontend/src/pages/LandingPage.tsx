@@ -7,6 +7,7 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim } from '../components/landing/CardAnimations';
+import LiveAIDemoCard from '../components/landing/LiveAIDemoCard';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE — Snowflake-inspired clean design
@@ -282,42 +283,10 @@ export default function LandingPage() {
               </Reveal>
             </div>
 
-            {/* Right: demo card */}
+            {/* Right: animated live AI demo card */}
             <div className="lg:w-[55%]">
               <Reveal delay={0.12}>
-                <div className="rounded-xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-                  <div className="px-6 py-5" style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#EF4444', fontFamily: F.mono }}>Transcribing</span>
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: '#0F172A' }}>
-                      "Design a distributed rate limiter that can handle millions of requests per second across multiple data centers..."
-                    </p>
-                  </div>
-                  <div className="px-6 py-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="w-2 h-2 rounded-full" style={{ background: accent }} />
-                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: accent, fontFamily: F.mono }}>AI Response</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Architecture', items: ['Token Bucket', 'Redis Cluster', 'Sliding Window'] },
-                        { label: 'Components', items: ['API Gateway', 'Rate Limiter', 'Config Store'] },
-                        { label: 'Trade-offs', items: ['Consistency', 'Memory', 'Latency'] },
-                      ].map(col => (
-                        <div key={col.label}>
-                          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#94A3B8', fontFamily: F.mono }}>{col.label}</p>
-                          <div className="flex flex-col gap-1">
-                            {col.items.map(item => (
-                              <span key={item} className="text-xs px-2.5 py-1.5 rounded-md" style={{ color: '#475569', background: '#F8FAFC', border: '1px solid #F1F5F9' }}>{item}</span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <LiveAIDemoCard />
               </Reveal>
             </div>
           </div>
