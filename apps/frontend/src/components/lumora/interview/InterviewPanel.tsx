@@ -136,6 +136,22 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
             </div>
           )}
 
+          {/* Live streaming answer — renders tokens as they arrive so the
+              candidate sees the solution building up in real time instead
+              of staring at "generating…" for 10-15 s until the full
+              response completes. StreamingAnswer parses partial blocks
+              (HEADLINE, CODE, ANSWER, COMPLEXITY, etc.) and shows each
+              section as soon as it becomes available. */}
+          {isStreaming && streamChunks && streamChunks.length > 0 && (
+            <div className="shrink-0 mt-1">
+              <StreamingAnswer
+                chunks={streamChunks}
+                isDesign={isDesignQuestion}
+                isCoding={isCodingQuestion}
+              />
+            </div>
+          )}
+
           {/* Cross-sell */}
           {history.length > 0 && history.length % 3 === 0 && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>

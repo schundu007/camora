@@ -200,6 +200,109 @@ function extractTagMap(raw: string): Record<string, string> {
   return byType;
 }
 
+/**
+ * Turn a partial streaming buffer (JSON, tags, or raw prose) into
+ * human-readable JSX while it's still arriving. Runs in the
+ * <isLoading && !sd> preview zone so the candidate sees motion and
+ * meaningful content from the first token, not a 15-second spinner.
+ *
+ * Handles three shapes:
+ *   1. Tagged blocks  — [HEADLINE]…[/HEADLINE], [REQUIREMENTS]…[/…]
+ *                       (even if the closing tag hasn't arrived yet,
+ *                       we show the text between the open tag and the
+ *                       current end-of-buffer).
+ *   2. JSON object    — `{"overview":"...","requirements":{…}}` —
+ *                       scrapes completed "key": "value" pairs and
+ *                       renders them as labeled lines.
+ *   3. Free prose     — nothing structural detected, show as-is.
+ */
+function extractReadableProse(raw: string): React.ReactNode[] {
+  if (!raw) return [];
+  const lines: React.ReactNode[] = [];
+
+  // Strip an opening ```json fence if present.
+  let txt = raw.trim();
+  if (txt.startsWith('```')) {
+    const nl = txt.indexOf('\n');
+    if (nl > 0) txt = txt.substring(nl + 1);
+    const closeFence = txt.lastIndexOf('```');
+    if (closeFence > 0) txt = txt.substring(0, closeFence);
+  }
+
+  // Shape 1 — tagged blocks (closed OR still-open).
+  // Match both [TAG]...[/TAG] and lingering [TAG]… (no close yet).
+  const tagBlocks: Array<{ name: string; body: string }> = [];
+  const tagPat = /\[(HEADLINE|ANSWER|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|FOLLOWUP|CODE)\](\n?)([\s\S]*?)(?:\[\/\1\]|$)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = tagPat.exec(txt)) !== null) {
+    const name = m[1].toUpperCase();
+    const body = (m[3] || '').trim();
+    if (body) tagBlocks.push({ name, body });
+  }
+  if (tagBlocks.length > 0) {
+    tagBlocks.forEach((b, i) => {
+      lines.push(
+        <div key={`tag-${i}`} className="mt-3 first:mt-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{b.name.replace(/_/g, ' ')}</div>
+          <div className="mt-1 whitespace-pre-wrap">{b.body}</div>
+        </div>
+      );
+    });
+    return lines;
+  }
+
+  // Shape 2 — JSON-ish (has a leading brace). Scrape the
+  // `"key": "value"` pairs that have fully closed quotes so far.
+  const firstBrace = txt.indexOf('{');
+  if (firstBrace >= 0) {
+    const body = txt.substring(firstBrace);
+    const pairPat = /"([A-Za-z][A-Za-z0-9_]*)"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+    const pairs: Array<{ key: string; value: string }> = [];
+    let pm: RegExpExecArray | null;
+    while ((pm = pairPat.exec(body)) !== null) {
+      const key = pm[1];
+      const value = pm[2].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      // Skip tiny framing keys like "type", "id" — not prose
+      if (value.length >= 2) pairs.push({ key, value });
+    }
+    if (pairs.length > 0) {
+      pairs.forEach((p, i) => {
+        const label = p.key
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/^./, (c) => c.toUpperCase());
+        lines.push(
+          <div key={`k-${i}`} className="mt-3 first:mt-0">
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{label}</div>
+            <div className="mt-1 whitespace-pre-wrap">{p.value}</div>
+          </div>
+        );
+      });
+      // Show the trailing unfinished key/value if any (user sees
+      // "Requirements:" typing out before the value completes).
+      const tail = body.match(/"([A-Za-z][A-Za-z0-9_]*)"\s*:\s*"((?:\\.|[^"\\])*)$/);
+      if (tail && tail[2] && tail[2].length > 0) {
+        const tailLabel = tail[1]
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/^./, (c) => c.toUpperCase());
+        lines.push(
+          <div key="tail" className="mt-3">
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{tailLabel}</div>
+            <div className="mt-1 whitespace-pre-wrap">{tail[2]}</div>
+          </div>
+        );
+      }
+      return lines;
+    }
+  }
+
+  // Shape 3 — no structure detected; show the text verbatim (minus
+  // any leading fence/brace). Keeps the user looking at motion.
+  lines.push(
+    <div key="prose" className="whitespace-pre-wrap">{txt}</div>
+  );
+  return lines;
+}
+
 /** Extract a numeric value and unit from a scale estimate string */
 function parseMetricHighlight(value: string): { number: string; rest: string } | null {
   const match = value.match(/^([\d,.]+\s*[KMBTPG]?[B]?)\s*(.*)/i);
@@ -609,7 +712,54 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         onToken: (data) => {
           if (data.t) {
             chunks.push(data.t);
-            setStreamingText(prev => prev + data.t);
+            const accumulated = chunks.join('');
+            setStreamingText(accumulated);
+
+            // Progressive section parsing — every ~15 tokens, try to
+            // parse what we have so far and populate any newly-closed
+            // sections into `result`. That way "Overview", "Functional
+            // Requirements", etc. render as soon as their JSON /
+            // tag block completes, instead of the user staring at a
+            // spinner for 10-15 s waiting for the whole response.
+            if (chunks.length % 15 === 0) {
+              try {
+                // Try tag-map partial parse first (tolerant to
+                // incomplete tail).
+                const tagMap = extractTagMap(accumulated);
+                if (Object.keys(tagMap).length > 0) {
+                  const partial = parseTagsToDesign(tagMap);
+                  if (partial?.systemDesign) {
+                    setResult((prev) => partial);
+                    return;
+                  }
+                }
+                // Try JSON partial parse — trim to last balanced
+                // closing brace so we never feed invalid JSON.
+                let txt = accumulated.trim();
+                if (txt.startsWith('```')) {
+                  const nl = txt.indexOf('\n');
+                  const last = txt.lastIndexOf('```');
+                  txt = txt.substring(nl + 1, last > nl ? last : undefined).trim();
+                }
+                const brace = txt.indexOf('{');
+                if (brace >= 0) {
+                  // Find the last closing brace that yields a valid parse
+                  let candidate = txt.substring(brace);
+                  const closeIdx = candidate.lastIndexOf('}');
+                  if (closeIdx > 0) candidate = candidate.substring(0, closeIdx + 1);
+                  try {
+                    const obj = JSON.parse(candidate);
+                    if (obj?.systemDesign) {
+                      setResult((prev) => obj);
+                    }
+                  } catch {
+                    /* incomplete JSON — fine, wait for more tokens */
+                  }
+                }
+              } catch {
+                /* partial-parse is best-effort, never block streaming */
+              }
+            }
           }
         },
         onAnswer: (data: any) => {
@@ -1059,9 +1209,28 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="absolute inset-0 border-2 rounded-full" style={{ borderColor: t.cardBorder }} />
                   <div className="absolute inset-0 border-2 border-transparent rounded-full animate-spin" style={{ borderTopColor: t.dotColor }} />
                 </div>
-                <span className="text-xs font-semibold" style={{ color: t.headerText }}>Analyzing and designing system architecture...</span>
+                <span className="text-xs font-semibold" style={{ color: t.headerText }}>
+                  {streamingText ? 'Streaming architecture…' : 'Analyzing and designing system architecture…'}
+                </span>
+                {streamingText && (
+                  <span className="ml-auto text-[10px] font-mono" style={{ color: t.textDim }}>
+                    {streamingText.length.toLocaleString()} chars
+                  </span>
+                )}
               </div>
-              {/* No raw stream preview — wait for the parsed structure. */}
+
+              {/* Live readable preview — strips JSON structure and shows
+                  human-readable values as they stream. Users see motion
+                  immediately (within ~200 ms of first token) instead of
+                  waiting 10-15 s for the fully parsed card layout. */}
+              {streamingText && (
+                <div className="flex-1 overflow-auto rounded-xl p-4 text-sm leading-relaxed"
+                  style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}`, color: t.text }}>
+                  {extractReadableProse(streamingText)}
+                  <span className="inline-block w-1.5 h-4 ml-1 animate-pulse rounded-sm align-text-bottom"
+                    style={{ background: t.dotColor }} />
+                </div>
+              )}
             </div>
           )}
 
