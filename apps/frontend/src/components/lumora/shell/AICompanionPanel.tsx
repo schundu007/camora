@@ -35,6 +35,112 @@ function cleanTags(text: string): string {
   return text.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/* ── SonaAvatar — polished face icon for the AI assistant ──
+   Refined composition: gradient head with inner depth, soft specular
+   highlight, chromed over-ear headphones with active-state ring pulse.
+   Built for crisp rendering from 14px all the way to 64px.
+   Props:
+     size   — px square dimension
+     active — pulse ring + breathing highlight while streaming */
+let SONA_AVATAR_SEED = 0;
+function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boolean }) {
+  // Unique gradient ids so multiple SVG instances don't share defs
+  const id = useMemo(() => `sona-${++SONA_AVATAR_SEED}`, []);
+  const g = {
+    head: `${id}-head`,
+    band: `${id}-band`,
+    cup: `${id}-cup`,
+    shine: `${id}-shine`,
+    ring: `${id}-ring`,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgba(14,116,144,0.18))' }}>
+      <defs>
+        {/* Head: light top-left → deep cyan bottom-right, gives volume */}
+        <radialGradient id={g.head} cx="38%" cy="34%" r="70%">
+          <stop offset="0%" stopColor="#A5F3FC" />
+          <stop offset="45%" stopColor="#22D3EE" />
+          <stop offset="100%" stopColor="#0E7490" />
+        </radialGradient>
+        {/* Headphone band: metallic cyan → deeper base for solidity */}
+        <linearGradient id={g.band} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#E0F7FB" />
+          <stop offset="100%" stopColor="#0891B2" />
+        </linearGradient>
+        {/* Ear cup: darker, slightly desaturated for contrast against head */}
+        <linearGradient id={g.cup} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0891B2" />
+          <stop offset="100%" stopColor="#164E63" />
+        </linearGradient>
+        {/* Top specular highlight on the head */}
+        <radialGradient id={g.shine} cx="35%" cy="22%" r="30%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </radialGradient>
+        {/* Active-state ring — soft cyan glow, no solid edge */}
+        <radialGradient id={g.ring} cx="50%" cy="50%" r="50%">
+          <stop offset="80%" stopColor="#22D3EE" stopOpacity="0" />
+          <stop offset="95%" stopColor="#22D3EE" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#22D3EE" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Active pulse — breathing glow ring behind everything */}
+      {active && (
+        <>
+          <circle cx="32" cy="32" r="30" fill={`url(#${g.ring})`}>
+            <animate attributeName="r" values="28;32;28" dur="1.8s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.9;0.35;0.9" dur="1.8s" repeatCount="indefinite" />
+          </circle>
+        </>
+      )}
+
+      {/* Headphone band — sits behind the head, arcs over the top */}
+      <path d="M13 30 Q13 11 32 11 Q51 11 51 30" fill="none" stroke={`url(#${g.band})`} strokeWidth="3.5" strokeLinecap="round" />
+      {/* Band screws / accents */}
+      <circle cx="13" cy="30" r="1.6" fill="#0E7490" />
+      <circle cx="51" cy="30" r="1.6" fill="#0E7490" />
+
+      {/* Head — the main face shape */}
+      <circle cx="32" cy="34" r="19" fill={`url(#${g.head})`} />
+      {/* Inner rim shadow to read as sphere */}
+      <circle cx="32" cy="34" r="19" fill="none" stroke="#0E7490" strokeWidth="0.6" opacity="0.35" />
+      {/* Specular highlight */}
+      <circle cx="32" cy="34" r="19" fill={`url(#${g.shine})`} />
+
+      {/* Ear cups — chunky rounded pills with highlight stripe */}
+      <g>
+        <rect x="9" y="28" width="7.5" height="11" rx="3.2" fill={`url(#${g.cup})`} />
+        <rect x="10.2" y="29.2" width="1.2" height="4.5" rx="0.6" fill="#67E8F9" opacity="0.65" />
+        <rect x="47.5" y="28" width="7.5" height="11" rx="3.2" fill={`url(#${g.cup})`} />
+        <rect x="52.6" y="29.2" width="1.2" height="4.5" rx="0.6" fill="#67E8F9" opacity="0.65" />
+      </g>
+
+      {/* Eyes — almond shapes with a tiny highlight; slight inward angle */}
+      <g fill="#FFFFFF">
+        <ellipse cx="25.5" cy="33" rx="2.4" ry="2.9" />
+        <ellipse cx="38.5" cy="33" rx="2.4" ry="2.9" />
+      </g>
+      <g fill="#0E2A33">
+        <ellipse cx="25.8" cy="33.6" rx="1.2" ry="1.6">
+          {active && <animate attributeName="ry" values="1.6;0.4;1.6" keyTimes="0;0.06;0.12" dur="4.8s" repeatCount="indefinite" />}
+        </ellipse>
+        <ellipse cx="38.2" cy="33.6" rx="1.2" ry="1.6">
+          {active && <animate attributeName="ry" values="1.6;0.4;1.6" keyTimes="0;0.06;0.12" dur="4.8s" repeatCount="indefinite" />}
+        </ellipse>
+      </g>
+      {/* Catchlight on each eye */}
+      <circle cx="26.3" cy="32.6" r="0.55" fill="#FFFFFF" />
+      <circle cx="38.7" cy="32.6" r="0.55" fill="#FFFFFF" />
+
+      {/* Smile — gentle confident curve with subtle blush */}
+      <ellipse cx="27.5" cy="41.5" rx="2.2" ry="0.8" fill="#F0ABFC" opacity="0.22" />
+      <ellipse cx="36.5" cy="41.5" rx="2.2" ry="0.8" fill="#F0ABFC" opacity="0.22" />
+      <path d="M26 40.5 Q32 45 38 40.5" fill="none" stroke="#0E2A33" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* ── Archetype parser — pulls leading "ARCHETYPE: X" line off a behavioral answer ── */
 const ARCHETYPES = ['Conflict', 'Leadership', 'Failure', 'Ambiguity', 'Influence', 'Innovation', 'Collaboration', 'Growth', 'Career', 'Fit'] as const;
 type Archetype = typeof ARCHETYPES[number];
@@ -714,12 +820,10 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: '#22D3EE', boxShadow: 'none' }}
-        title="Open Assistant"
+        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(34,211,238,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
+        title="Open Sona"
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
+        <SonaAvatar size={44} />
         {messages.length > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">{messages.filter(m => m.role === 'user').length}</span>
         )}
@@ -780,7 +884,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
         {/* Center: title + mode toggle */}
         <div className="flex-1 flex items-center justify-center gap-2">
-          <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Assistant</span>
+          <SonaAvatar size={18} />
+          <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Sona</span>
           {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#F0FDF4', color: '#16A34A' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
           <div className="flex items-center rounded-md p-0.5" style={{ background: '#F1F5F9' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
@@ -867,18 +972,18 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               <div className="space-y-4">
                 {messages.filter(m => m.role === 'ai').map((msg, i) => (
                   <div key={i} className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#29B5E8' }}>Answer</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <SonaAvatar size={18} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#0E7490' }}>Sona</span>
                     </div>
                     <AnswerView text={msg.text} />
                   </div>
                 ))}
                 {streaming && (
                   <div className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" className="animate-pulse"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#29B5E8' }}>Answering...</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <SonaAvatar size={18} active />
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#0E7490' }}>Sona is answering…</span>
                     </div>
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#29B5E8' }} /></>
                       : <span className="animate-pulse text-xs" style={{ color: '#94A3B8' }}>Thinking...</span>}
@@ -920,10 +1025,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               ) : (
                 <div key={i} className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Assistant</span>
+                    <SonaAvatar size={14} />
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
                   </div>
                   <div className="min-w-0"><AnswerView text={msg.text} /></div>
                 </div>
@@ -931,10 +1034,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               {streaming && (
                 <div className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="animate-pulse">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Assistant</span>
+                    <SonaAvatar size={14} active />
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
                   </div>
                   <div>
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
