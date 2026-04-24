@@ -47,12 +47,13 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 shrink-0 z-50 no-scrollbar"
+        className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
-          height: 'var(--topbar-height, 48px)',
-          background: 'var(--bg-surface)',
+          height: 56,
+          background: '#FFFFFF',
           borderBottom: '1px solid var(--border)',
           color: 'var(--text-primary)',
+          fontFamily: 'var(--font-sans)',
         }}
       >
         {/* -- Left: mobile hamburger + logo ---------------------- */}
@@ -61,7 +62,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="md:hidden flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
             style={{ color: 'var(--text-primary)' }}
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
@@ -77,8 +78,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center no-underline">
-            <CamoraLogo size={28} />
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
+            <CamoraLogo size={32} />
           </Link>
 
           {/* Nav links — desktop only (hide Pricing & Challenge in app shell) */}
@@ -87,9 +88,10 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors no-underline"
+                className="px-3 py-1.5 text-[13px] rounded-lg transition-colors no-underline"
                 style={{
                   color: isNavActive(link.href) ? 'var(--accent)' : 'var(--text-secondary)',
+                  fontWeight: isNavActive(link.href) ? 700 : 600,
                   background: isNavActive(link.href) ? 'var(--accent-subtle)' : 'transparent',
                 }}
               >

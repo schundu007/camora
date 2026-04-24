@@ -24,21 +24,20 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const navHeight = showTicker ? 56 + TICKER_HEIGHT : 56;
 
   const isLight = variant === 'light';
-  const navBg = isLight
-    ? 'rgba(255,255,255,0.95)'
-    : 'rgba(11,17,32,0.92)';
-  const borderClass = isLight ? 'border-b border-[#E2E8F0]' : 'border-b border-white/[0.12]';
-  const textColor = isLight ? '#0F172A' : '#FFFFFF';
-  const textMuted = isLight ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.85)';
-  const hoverBg = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)';
-  const activeBg = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.10)';
+  // Solid surfaces (no blur) so SiteNav visually matches the app-shell TopBar
+  const navBg = isLight ? '#FFFFFF' : '#0B1120';
+  const borderClass = isLight ? 'border-b border-[var(--border)]' : 'border-b border-white/[0.08]';
+  const textColor = isLight ? 'var(--text-primary)' : '#FFFFFF';
+  const textMuted = isLight ? 'var(--text-secondary)' : 'rgba(255,255,255,0.75)';
+  const activeBg = isLight ? 'var(--accent-subtle)' : 'rgba(255,255,255,0.10)';
+  const activeColor = isLight ? 'var(--accent)' : '#FFFFFF';
 
   const nav = (
-    <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl ${borderClass}`} style={{ background: navBg, fontFamily: "var(--font-sans)" }}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 ${borderClass}`} style={{ background: navBg, fontFamily: 'var(--font-sans)' }}>
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <CamoraLogo size={36} />
+          <CamoraLogo size={32} />
         </Link>
 
         {/* Desktop links */}
@@ -47,10 +46,10 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             <Link
               key={link.label}
               to={link.href}
-              className="px-3 py-1.5 text-[13px] rounded-lg transition-all"
+              className="px-3 py-1.5 text-[13px] rounded-lg transition-colors"
               style={{
-                color: isActive(link.href) ? textColor : textMuted,
-                fontWeight: isActive(link.href) ? 800 : 700,
+                color: isActive(link.href) ? activeColor : textMuted,
+                fontWeight: isActive(link.href) ? 700 : 600,
                 background: isActive(link.href) ? activeBg : 'transparent',
               }}
             >

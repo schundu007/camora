@@ -428,7 +428,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             style={{
               width: '280px',
               height: '100vh',
-              paddingTop: 'var(--topbar-height, 48px)',
+              paddingTop: 'var(--topbar-height, 56px)',
               background: '#22D3EE',
               borderRight: '1px solid rgba(255,255,255,0.15)',
               boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
