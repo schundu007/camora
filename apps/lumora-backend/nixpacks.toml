@@ -1,6 +1,6 @@
 [phases.setup]
 nixPkgs = [
-  "nodejs_20", "ffmpeg",
+  "nodejs_20", "ffmpeg", "curl",
   # Languages
   "python3", "ruby", "gcc", "openjdk17", "go", "rustc",
   "php", "perl", "lua", "bash",
@@ -14,16 +14,21 @@ nixPkgs = [
   "swift",         # Swift
   "mono",          # C# (mcs + mono)
   "tcl",           # Tcl
-  # "julia",       # Disabled: current nixpkgs snapshot has no cached Julia
-  #                # binary and the source build fails on ittapi's
-  #                # cmake_minimum_required(<3.5). Re-add when Railway's
-  #                # Nix snapshot ships a prebuilt julia again, or install
-  #                # via juliaup in the install phase.
+  # Julia is installed via juliaup in [phases.install] — the current
+  # nixpkgs snapshot has no cached julia binary and its source build
+  # fails on ittapi's cmake_minimum_required(<3.5).
   "clojure",       # Clojure
 ]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = [
+  "npm install",
+  # Install Julia via juliaup (outside Nix)
+  "curl -fsSL https://install.julialang.org | sh -s -- --yes -p /opt/juliaup --default-channel release",
+  "ln -sf /opt/juliaup/bin/julia /usr/local/bin/julia",
+  "ln -sf /opt/juliaup/bin/juliaup /usr/local/bin/juliaup",
+  "julia --version",
+]
 
 [phases.build]
 cmds = ["echo 'build complete'"]
