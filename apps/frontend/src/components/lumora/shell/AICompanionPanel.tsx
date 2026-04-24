@@ -35,6 +35,32 @@ function cleanTags(text: string): string {
   return text.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/* ── Archetype parser — pulls leading "ARCHETYPE: X" line off a behavioral answer ── */
+const ARCHETYPES = ['Conflict', 'Leadership', 'Failure', 'Ambiguity', 'Influence', 'Innovation', 'Collaboration', 'Growth', 'Career', 'Fit'] as const;
+type Archetype = typeof ARCHETYPES[number];
+
+function extractArchetype(text: string): { archetype: Archetype | null; stripped: string } {
+  if (!text) return { archetype: null, stripped: text };
+  const m = text.match(/^\s*ARCHETYPE\s*:\s*([A-Za-z\/ -]+)\s*\n/);
+  if (!m) return { archetype: null, stripped: text };
+  const raw = m[1].trim();
+  const found = ARCHETYPES.find(a => a.toLowerCase() === raw.toLowerCase()) || null;
+  return { archetype: found, stripped: text.slice(m[0].length).trimStart() };
+}
+
+const ARCHETYPE_HINT: Record<Archetype, string> = {
+  Conflict: 'Disagreement with peer / manager',
+  Leadership: 'Led team, drove initiative',
+  Failure: 'Own the mistake, show learning',
+  Ambiguity: 'Unclear goals, incomplete info',
+  Influence: 'Persuaded without authority',
+  Innovation: 'Creative solve, novel approach',
+  Collaboration: 'Worked across teams',
+  Growth: 'Skill gap, stretch assignment',
+  Career: 'Tell me about yourself',
+  Fit: 'Why this company / role',
+};
+
 /* ── STAR detector — returns sections if the answer is behavioral STAR ── */
 const STAR_LABELS = ['SITUATION', 'TASK', 'ACTION', 'RESULT'] as const;
 type StarLabel = typeof STAR_LABELS[number];
@@ -164,11 +190,46 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
   );
 }
 
+/* ── ArchetypeBadge — question-type pill shown above behavioral answers ── */
+function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
+  return (
+    <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg"
+      style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)' }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#0E7490', fontFamily: "'Clash Display', sans-serif" }}>
+        {archetype} Question
+      </span>
+      <span className="text-[10px]" style={{ color: '#64748B' }}>· {ARCHETYPE_HINT[archetype]}</span>
+    </div>
+  );
+}
+
 /* ── AnswerView — picks STAR cards for behavioral, RichText otherwise ── */
 function AnswerView({ text, streaming }: { text: string; streaming?: boolean }) {
-  const star = useMemo(() => parseStar(text), [text]);
-  if (star) return <StarAnswer sections={star.sections} streaming={streaming} />;
-  return <RichText text={text} />;
+  const { archetype, stripped } = useMemo(() => extractArchetype(text), [text]);
+  const star = useMemo(() => parseStar(stripped), [stripped]);
+  if (star) {
+    return (
+      <div>
+        {archetype && <ArchetypeBadge archetype={archetype} />}
+        <StarAnswer sections={star.sections} streaming={streaming} />
+      </div>
+    );
+  }
+  // Archetype present but STAR not yet parsed (early streaming): show badge + raw text
+  if (archetype) {
+    return (
+      <div>
+        <ArchetypeBadge archetype={archetype} />
+        <RichText text={stripped} />
+      </div>
+    );
+  }
+  return <RichText text={stripped} />;
 }
 
 /* ── RichText — renders markdown with proper code blocks ── */
