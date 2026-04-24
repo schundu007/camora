@@ -387,7 +387,7 @@ export function LumoraShellPage() {
             </div>
           )}
 
-          {/* Icicle AI — fullscreen mode (behavioral / ask questions) */}
+          {/* AI Assistant — fullscreen mode (behavioral / ask questions) */}
           {copilotFullscreen && (
             <div className="absolute inset-0 z-20 flex flex-col" style={{ background: '#FFFFFF' }}>
               <AICompanionPanel isOpen={true} onClose={() => navigate('/lumora')} initialQuestion={copilotQuestion} embedded />

@@ -7,23 +7,23 @@ import { useIsMobile } from '../../../hooks/capra/useIsMobile.js';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const PREPARE_ITEMS = [
-  { id: 'overview', label: 'Base Camp', icon: 'home', href: '/capra/prepare' },
-  { id: 'coding', label: 'Ice Crystals', icon: 'cpu', href: '/capra/prepare/coding' },
-  { id: 'system-design', label: 'Glacier Design', icon: 'systemDesign', href: '/capra/prepare/system-design' },
-  { id: 'microservices', label: 'Snowflake Patterns', icon: 'grid', href: '/capra/prepare/microservices' },
-  { id: 'databases', label: 'Permafrost Storage', icon: 'database', href: '/capra/prepare/databases' },
-  { id: 'low-level', label: 'Frost Blueprints', icon: 'layers', href: '/capra/prepare/low-level-design' },
-  { id: 'projects', label: 'Ice Forge', icon: 'code', href: '/capra/prepare/projects' },
-  { id: 'roadmaps', label: 'Expedition Maps', icon: 'trendingUp', href: '/capra/prepare/roadmaps' },
-  { id: 'eng-blogs', label: 'Arctic Dispatches', icon: 'bookOpen', href: '/capra/prepare/eng-blogs' },
-  { id: 'behavioral', label: 'Northern Lights', icon: 'users', href: '/capra/prepare/behavioral' },
-  { id: 'resume', label: 'Ice Shield', icon: 'fileText', href: '/capra/prepare/resume' },
+  { id: 'overview', label: 'Overview', icon: 'home', href: '/capra/prepare' },
+  { id: 'coding', label: 'Coding', icon: 'cpu', href: '/capra/prepare/coding' },
+  { id: 'system-design', label: 'System Design', icon: 'systemDesign', href: '/capra/prepare/system-design' },
+  { id: 'microservices', label: 'Microservices', icon: 'grid', href: '/capra/prepare/microservices' },
+  { id: 'databases', label: 'Databases', icon: 'database', href: '/capra/prepare/databases' },
+  { id: 'low-level', label: 'Low-Level Design', icon: 'layers', href: '/capra/prepare/low-level-design' },
+  { id: 'projects', label: 'Projects', icon: 'code', href: '/capra/prepare/projects' },
+  { id: 'roadmaps', label: 'Roadmaps', icon: 'trendingUp', href: '/capra/prepare/roadmaps' },
+  { id: 'eng-blogs', label: 'Engineering Blogs', icon: 'bookOpen', href: '/capra/prepare/eng-blogs' },
+  { id: 'behavioral', label: 'Behavioral', icon: 'users', href: '/capra/prepare/behavioral' },
+  { id: 'resume', label: 'Resume', icon: 'fileText', href: '/capra/prepare/resume' },
 ];
 
 const PRACTICE_ITEMS = [
-  { id: 'practice', label: 'Thaw', icon: 'code', href: '/capra/practice' },
-  { id: 'plan', label: 'Ice Path', icon: 'calendar', href: '/capra/plan' },
-  { id: 'achievements', label: 'Frost Badges', icon: 'trophy', href: '/profile?tab=achievements' },
+  { id: 'practice', label: 'Practice', icon: 'code', href: '/capra/practice' },
+  { id: 'plan', label: 'Study Plan', icon: 'calendar', href: '/capra/plan' },
+  { id: 'achievements', label: 'Achievements', icon: 'trophy', href: '/profile?tab=achievements' },
 ];
 
 /**
@@ -94,10 +94,10 @@ export default function ShellSidebar() {
           <>
             <div className="flex flex-wrap gap-1.5 px-2 mb-3">
               {[
-                { label: 'Summit', href: '/jobs', icon: 'briefcase' },
-                { label: 'Thaw', href: '/capra/practice', icon: 'code' },
-                { label: 'Blizzard', href: '/lumora', icon: 'microphone' },
-                { label: 'Avalanche', href: '/challenge', icon: 'trophy' },
+                { label: 'Apply', href: '/jobs', icon: 'briefcase' },
+                { label: 'Practice', href: '/capra/practice', icon: 'code' },
+                { label: 'Attend', href: '/lumora', icon: 'microphone' },
+                { label: 'Challenge', href: '/challenge', icon: 'trophy' },
               ].map(link => (
                 <Link
                   key={link.label}
@@ -118,7 +118,7 @@ export default function ShellSidebar() {
         )}
 
         {/* Prepare */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Frost Prep</div>}
+        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Prepare</div>}
         {PREPARE_ITEMS.map((item) => {
           const isActive = isOnPrepare && activeSection === item.id;
           return (
@@ -144,7 +144,7 @@ export default function ShellSidebar() {
         <div className={`h-px bg-[var(--bg-elevated)] my-3 ${isCollapsed ? 'mx-1' : 'mx-4'}`} />
 
         {/* Practice */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Thaw</div>}
+        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Practice</div>}
         {PRACTICE_ITEMS.map((item) => {
           const isActive = isPracticeActive(item.href);
           return (

@@ -554,7 +554,7 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
   );
 }
 
-/* ═══ Icicle Panel ═══ */
+/* ═══ Assistant Panel ═══ */
 export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) {
   const { token } = useAuth();
 
@@ -715,7 +715,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
         style={{ background: '#22D3EE', boxShadow: 'none' }}
-        title="Open Icicle"
+        title="Open Assistant"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -780,7 +780,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
         {/* Center: title + mode toggle */}
         <div className="flex-1 flex items-center justify-center gap-2">
-          <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Icicle</span>
+          <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Assistant</span>
           {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#F0FDF4', color: '#16A34A' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
           <div className="flex items-center rounded-md p-0.5" style={{ background: '#F1F5F9' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
@@ -923,7 +923,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Icicle</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Assistant</span>
                   </div>
                   <div className="min-w-0"><AnswerView text={msg.text} /></div>
                 </div>
@@ -934,7 +934,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="animate-pulse">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Icicle</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Assistant</span>
                   </div>
                   <div>
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
@@ -971,7 +971,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#22D3EE' }} title="Icicle">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#22D3EE' }} title="Assistant">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}
     </button>

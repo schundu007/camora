@@ -8,9 +8,10 @@ import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim } from '../components/landing/CardAnimations';
 import LiveAIDemoCard from '../components/landing/LiveAIDemoCard';
+import CapabilityDeck from '../components/landing/CapabilityDeck';
 
 /* ══════════════════════════════════════════════════════════════
-   CAMORA LANDING PAGE — Snowflake-inspired clean design
+   CAMORA LANDING PAGE
    ══════════════════════════════════════════════════════════════ */
 
 const F = {

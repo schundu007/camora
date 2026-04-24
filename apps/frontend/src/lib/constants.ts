@@ -60,12 +60,12 @@ export const INPUT_LIMITS = {
 
 /** Shared navigation links used by SiteNav and SiteFooter */
 export const NAV_LINKS = [
-  { label: 'Summit', href: '/jobs' },
-  { label: 'Frost Prep', href: '/capra/prepare' },
-  { label: 'Thaw', href: '/capra/practice' },
-  { label: 'Blizzard', href: '/lumora' },
+  { label: 'Apply', href: '/jobs' },
+  { label: 'Prepare', href: '/capra/prepare' },
+  { label: 'Practice', href: '/capra/practice' },
+  { label: 'Attend', href: '/lumora' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Avalanche', href: '/challenge' },
+  { label: 'Challenge', href: '/challenge' },
 ];
 
 /** Challenge campaign dates */

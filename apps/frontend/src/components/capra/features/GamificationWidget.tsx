@@ -3,7 +3,7 @@ import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-/* Mini frost badge icons for the widget strip */
+/* Mini badge icons for the widget strip */
 const MINI_ICONS: Record<string, JSX.Element> = {
   snowflake: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" /></svg>,
   compass: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88" /></svg>,

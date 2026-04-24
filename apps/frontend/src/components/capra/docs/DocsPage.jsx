@@ -707,7 +707,7 @@ export default function DocsPage({ onBack }) {
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
                     <>
-                      {/* Hero Banner — frosted glass, single cyan tone */}
+                      {/* Hero Banner */}
                       <div className="relative mb-8 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
                         <div className="rounded-[15px] p-6 md:p-8" style={{ background: 'rgba(240,247,255,0.94)', }}>
                           <div>
@@ -741,9 +741,9 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Category Cards Grid — modern frost cards with gradient borders */}
+                      {/* Category Cards Grid */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Frost Zones</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Topic Categories</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {overviewCategories.map(cat => {
                             const radius = 20;
@@ -792,16 +792,16 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Expedition Map — learning path */}
+                      {/* Learning Path */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Expedition Map</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Learning Path</h2>
                         <div className="rounded overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid var(--border)', boxShadow: 'none' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
-                              { step: 1, title: 'Ice Crystals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu' },
-                              { step: 2, title: 'Glacier Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign' },
-                              { step: 3, title: 'Frost Blueprints', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
-                              { step: 4, title: 'Northern Lights', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
+                              { step: 1, title: 'Coding', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu' },
+                              { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign' },
+                              { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
+                              { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
                             ].map((phase, idx) => (
                               <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-5 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
                                 <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
@@ -824,14 +824,14 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Interview Resources — frost glass cards */}
+                      {/* Interview Resources */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Frost Arsenal</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { href: '/capra/prepare?page=coding', icon: 'checklist', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
                             { href: '/handbook', icon: 'code', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Thaw' },
+                            { href: '/capra/practice', icon: 'behavioral', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
