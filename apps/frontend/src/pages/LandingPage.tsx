@@ -74,28 +74,28 @@ const FEATURES = [
     title: 'Real-time AI during interviews',
     desc: 'Voice transcription captures the question. AI generates instant answers in seconds — no other tool does this.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" strokeLinecap="round" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" strokeLinecap="round" /></svg>,
-    image: '/feature-live-ai.png',
+    image: '/feature-live-ai.jpg',
   },
   {
     label: 'JOB MATCHING',
     title: 'AI-powered job discovery',
     desc: '1,000+ roles matched to your skills. Auto-generate tailored resumes and cover letters for every application.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
-    image: '/feature-job-matching.png',
+    image: '/feature-job-matching.jpg',
   },
   {
     label: 'PREP',
     title: '800+ topics with diagrams',
     desc: 'System design, DSA, behavioral, databases — each with AI explanations, architecture diagrams, and company-specific prep.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
-    image: '/feature-prep.png',
+    image: '/feature-prep.jpg',
   },
   {
     label: 'MOCK INTERVIEWS',
     title: 'AI-scored practice sessions',
     desc: 'Timed mock interviews with instant feedback. Scored on communication, accuracy, and code quality.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
-    image: '/feature-mock.png',
+    image: '/feature-mock.jpg',
   },
 ];
 
