@@ -70,12 +70,11 @@ function LoginPage() {
 
       {/* ── Centered card ─────────────────────────────── */}
       <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
-        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
 
-          {/* Header — Camora logo centered */}
-          <div className="flex justify-center mb-2">
-            <img src="/camora-logo.png" alt="Camora" style={{ width: 48, height: 48, objectFit: 'contain' }} />
-          </div>
+          {/* Header */}
+          <h1 className="text-center text-xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Welcome back</h1>
+          <p className="text-center text-sm text-[var(--text-secondary)] mt-1">Sign in to continue to Camora</p>
 
           {/* Social login buttons */}
           <div className="mt-6 space-y-3">

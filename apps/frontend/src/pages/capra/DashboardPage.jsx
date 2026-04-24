@@ -941,16 +941,10 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
         borderBottom: '1px solid #e3e8ee',
       }}
     >
-      {/* Left: Camora logo + brand */}
-      <div className="flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-2">
-          <CamoraLogo size={36} />
-        </Link>
-        <div className="w-px h-5 bg-gray-200 hidden sm:block" />
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
-        </div>
+      {/* Left: mode indicator (logo lives in the parent shell TopBar) */}
+      <div className="flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
+        <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
       </div>
 
       {/* Center: APPA tabs */}

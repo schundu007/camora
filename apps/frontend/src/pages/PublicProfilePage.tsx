@@ -120,8 +120,7 @@ export default function PublicProfilePage() {
       <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
         <SiteNav variant="light" />
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <CamoraLogo size={48} />
-          <h1 className="mt-6 text-2xl font-bold text-[var(--text-primary)] tracking-tight">Profile Not Found</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Profile Not Found</h1>
           <p className="mt-2 text-sm text-[var(--text-muted)] text-center max-w-sm">
             This user profile does not exist or has not been made public.
           </p>
