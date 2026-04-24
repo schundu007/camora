@@ -862,10 +862,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       {/* Main content - vertical on mobile, horizontal on desktop */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
         {/* Left: Problem Input - full width on mobile */}
-        <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r border-[var(--border)] design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
+        <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
           {/* Input Tab Header */}
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-            <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: '#f1f5f9' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+            <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: t.inputBg }}>
               {(['text', 'url', 'image'] as const).map(tab => (
                 <button
                   key={tab}
@@ -898,7 +898,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
                 className="w-full h-[80px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
-                style={{ background: '#ffffff', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
               />
             )}
             {inputTab === 'url' && (
@@ -909,7 +909,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
                   className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
-                  style={{ background: '#ffffff', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
                 />
                 <button
                   onClick={async () => {
@@ -943,7 +943,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   if (file && file.type.startsWith('image/')) handleImageUpload(file);
                 }}
                 className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-all"
-                style={{ borderColor: '#d1d5db', background: '#fafafa' }}
+                style={{ borderColor: t.inputBorder, background: t.sectionBg }}
               >
                 <input
                   ref={imageInputRef}
@@ -1010,10 +1010,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(34,211,238,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 hover:bg-[rgba(34,211,238,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
+          style={{ background: t.sectionBg }}
         >
-          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
+          <div className="w-0.5 h-8 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.cardBorder }} />
         </div>
 
         {/* Right: Design Result — light panel when standalone, themed when embedded */}
