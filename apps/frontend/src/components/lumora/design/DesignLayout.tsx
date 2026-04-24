@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
+import { getSystemContext } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { StreamingAnswer } from '@/components/lumora/interview/StreamingAnswer';
@@ -431,6 +432,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       await streamResponse({
         question: `[SYSTEM DESIGN] ${text.trim()}`,
         useSearch: false,
+        systemContext: getSystemContext(),
         token,
         onToken: (data) => {
           if (data.t) {

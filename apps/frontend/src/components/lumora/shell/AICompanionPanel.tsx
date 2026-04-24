@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
+import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
@@ -262,30 +263,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh'>(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
 
-  // Load active assistant context (resume + JD) — falls back to no context if none created
-  const activeAssistant = useMemo(() => {
-    try {
-      const stored = localStorage.getItem('lumora_assistants');
-      const list = stored ? JSON.parse(stored) : [];
-      return list[0] || null; // Use most recently created assistant
-    } catch { return null; }
-  }, []);
-
-  const systemContext = useMemo(() => {
-    if (!activeAssistant) return undefined;
-    const parts: string[] = [];
-    if (activeAssistant.company || activeAssistant.role) {
-      parts.push(`The candidate is interviewing for: ${activeAssistant.role || 'a role'} at ${activeAssistant.company || 'a company'}.`);
-    }
-    if (activeAssistant.resume) {
-      parts.push(`CANDIDATE RESUME:\n${activeAssistant.resume}`);
-    }
-    if (activeAssistant.jobDescription) {
-      parts.push(`JOB DESCRIPTION:\n${activeAssistant.jobDescription}`);
-    }
-    if (parts.length === 0) return undefined;
-    return parts.join('\n\n') + '\n\nUse this context to personalize all answers. Reference the candidate\'s actual experience from their resume. Tailor technical depth to match the job requirements.';
-  }, [activeAssistant]);
+  // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
+  const activeAssistant = useMemo(() => getActiveAssistant(), []);
+  const systemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
