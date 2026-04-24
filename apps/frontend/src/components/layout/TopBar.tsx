@@ -81,7 +81,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             <CamoraLogo size={28} />
           </Link>
 
-          {/* Nav links — desktop only (hide Pricing & Avalanche in app shell) */}
+          {/* Nav links — desktop only (hide Pricing & Challenge in app shell) */}
           <nav className="hidden lg:flex items-center gap-1 ml-4">
             {NAV_LINKS.filter(l => l.href !== '/pricing' && l.href !== '/challenge').map((link) => (
               <Link

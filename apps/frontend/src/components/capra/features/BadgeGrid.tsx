@@ -12,7 +12,7 @@ interface Badge {
   earned_at: string | null;
 }
 
-/* Frost-themed SVG icons for each badge */
+/* SVG icons for each badge */
 const BADGE_ICONS: Record<string, (color: string) => JSX.Element> = {
   snowflake: (c) => (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -151,7 +151,7 @@ export default function BadgeGrid() {
   return (
     <div className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
       <div>
-        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Frost Badges</h3>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Badges</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">
           {badges.filter((b) => b.earned).length} of {badges.length} earned
         </p>
