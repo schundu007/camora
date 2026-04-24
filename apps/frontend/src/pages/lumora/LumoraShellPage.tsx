@@ -36,14 +36,16 @@ export function LumoraShellPage() {
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, vadThreshold } = useInterviewStore();
   const [settingsDismissed, setSettingsDismissed] = useState(false);
-  const showSettingsHint = !settingsDismissed && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
 
   // Track which tabs have been activated (for lazy mounting)
   const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['interview']));
 
   useLumoraTour();
 
-  // Derive active tab from URL
+  // Derive active tab from URL (must be declared before any reader below —
+  // `const` has TDZ, so moving the showSettingsHint line down fixes a runtime
+  // 'Cannot access M before initialization' crash when vadThreshold rehydrates
+  // from persisted localStorage as a number ≤ 0.015 and the && stops short-circuiting).
   const activeTab: LumoraTab =
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
@@ -55,6 +57,8 @@ export function LumoraShellPage() {
     location.pathname.includes('/profile') ? 'profile' :
     location.pathname.includes('/credits') ? 'credits' :
     location.pathname.includes('/pricing') ? 'pricing' : 'interview';
+
+  const showSettingsHint = !settingsDismissed && typeof vadThreshold === 'number' && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
