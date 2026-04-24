@@ -2,10 +2,10 @@ import React from 'react';
 
 // Color theme
 const COLORS = {
-  primary: '#2D8CFF',
-  secondary: '#6366F1',
-  accent: '#2D8CFF',
-  warning: '#F59E0B',
+  primary: 'var(--accent)',
+  secondary: 'var(--accent)',
+  accent: 'var(--accent)',
+  warning: 'var(--text-muted)',
   error: '#EF4444',
   cyan: '#06b6d4',
   gray: '#64748b',

@@ -6,8 +6,8 @@ import { getAuthHeaders as getBaseAuthHeaders } from '../../utils/authHeaders.js
 const ROLES = ['user', 'developer', 'manager', 'admin'];
 
 const ROLE_COLORS = {
-  user: { bg: '#eff6ff', color: '#3b82f6', border: '#bfdbfe' },
-  developer: { bg: '#ecfdf5', color: '#10b981', border: '#a7f3d0' },
+  user: { bg: '#eff6ff', color: 'var(--accent)', border: '#bfdbfe' },
+  developer: { bg: '#F8FAFC', color: 'var(--accent)', border: '#a7f3d0' },
   manager: { bg: '#fef9c3', color: '#ca8a04', border: '#fde047' },
   admin: { bg: '#fef2f2', color: '#ef4444', border: '#fecaca' },
 };
@@ -151,7 +151,7 @@ export default function AdminPanel({ token, onClose }) {
             style={{
               background: activeTab === 'pending' ? 'transparent' : 'transparent',
               color: activeTab === 'pending' ? '#333333' : '#999999',
-              border: activeTab === 'pending' ? '1px dashed #10b981' : '1px solid transparent',
+              border: activeTab === 'pending' ? '1px dashed var(--accent)' : '1px solid transparent',
               borderBottom: 'none',
               marginBottom: '-1px',
             }}
@@ -169,7 +169,7 @@ export default function AdminPanel({ token, onClose }) {
             style={{
               background: activeTab === 'all' ? 'transparent' : 'transparent',
               color: activeTab === 'all' ? '#333333' : '#999999',
-              border: activeTab === 'all' ? '1px dashed #10b981' : '1px solid transparent',
+              border: activeTab === 'all' ? '1px dashed var(--accent)' : '1px solid transparent',
               borderBottom: 'none',
               marginBottom: '-1px',
             }}
@@ -185,8 +185,8 @@ export default function AdminPanel({ token, onClose }) {
           </div>
         )}
         {success && (
-          <div className="mx-6 mt-4 p-3 rounded" style={{ background: '#ecfdf5', border: '1px solid #a7f3d0' }}>
-            <p className="text-sm" style={{ color: '#10b981' }}>{success}</p>
+          <div className="mx-6 mt-4 p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #a7f3d0' }}>
+            <p className="text-sm" style={{ color: 'var(--accent)' }}>{success}</p>
           </div>
         )}
 
@@ -194,7 +194,7 @@ export default function AdminPanel({ token, onClose }) {
         <div className="p-6 overflow-y-auto max-h-[60vh]" style={{ background: 'var(--bg-elevated)' }}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid #e5e5e5', borderTopColor: '#10b981' }} />
+              <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid #e5e5e5', borderTopColor: 'var(--accent)' }} />
             </div>
           ) : activeTab === 'pending' ? (
             // Pending Users
@@ -225,7 +225,7 @@ export default function AdminPanel({ token, onClose }) {
                       <button
                         onClick={() => handleApproveUser(user.username)}
                         className="px-4 py-2 text-sm font-medium rounded transition-colors"
-                        style={{ background: '#10b981', color: '#ffffff' }}
+                        style={{ background: 'var(--accent)', color: '#ffffff' }}
                       >
                         Approve
                       </button>

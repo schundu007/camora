@@ -19,8 +19,60 @@ const router = Router();
 // Constants
 // ---------------------------------------------------------------------------
 
-const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '8192', 10);
+// 16k default — 8k sometimes truncated 3-solution JSON mid-field (explanations + traces)
+// leaving the frontend with un-parseable preamble + open braces.
+const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16000', 10);
 const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
+
+// ── Reliability config ────────────────────────────────────────────────
+//
+// Live interviews can't tolerate a failed solve. The /solve handler
+// therefore performs automatic recovery *before* surfacing any error:
+//
+//   1. Transient transport errors (529 overloaded / 503 / network / timeout):
+//      retry the stream up to CLAUDE_MAX_TRANSPORT_RETRIES times with
+//      500 ms + 1500 ms back-off. User never sees a 529.
+//
+//   2. Stream completes but output is empty or not parseable as JSON:
+//      re-issue the request ONCE in non-streaming mode with a stricter
+//      "return ONLY valid JSON, no prose" reminder prepended. The JSON
+//      extractor already tolerates truncation via brace stitching, so
+//      this second pass covers the remaining "model prefixed prose"
+//      and "model stopped mid-field" cases.
+//
+//   3. If the strict-reminder retry *also* fails to parse, fall back
+//      to the other tier model (Sonnet <-> Haiku) for one final
+//      non-streaming attempt. Better a slightly weaker answer than
+//      no answer on interview day.
+//
+// Backoff is intentionally tight so the whole recovery path stays
+// within the ~15 s hard budget (8 s happy path + up to 7 s recovery).
+const CLAUDE_MAX_TRANSPORT_RETRIES = 2;
+const CLAUDE_TRANSPORT_BACKOFFS_MS = [500, 1500]; // per reinforcement note
+const FALLBACK_MODEL_PAID = 'claude-haiku-4-5-20251001';
+const FALLBACK_MODEL_FREE = 'claude-sonnet-4-20250514';
+
+function isRetryableClaudeError(err) {
+  if (!err) return false;
+  const status = err.status || err.statusCode || err?.response?.status;
+  if (status === 529 || status === 503 || status === 502 || status === 504 || status === 429) return true;
+  const msg = (err.message || '').toLowerCase();
+  return /overloaded|timeout|timed out|econnreset|fetch failed|socket hang up|network/.test(msg);
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+/**
+ * Tag-truncate raw model output for server logs. Keeps individual log
+ * lines under ~2 KB per the telemetry spec.
+ */
+function truncateForLog(text, max = 2048) {
+  if (!text) return '';
+  const s = String(text);
+  return s.length > max ? s.slice(0, max) + `…(+${s.length - max} chars)` : s;
+}
 
 /**
  * Select the Claude model based on the user's subscription plan.
@@ -30,6 +82,18 @@ function getModelForUser(req) {
   const plan = req.user?.plan_type || 'free';
   if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
   return process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
+}
+
+/**
+ * Opposite-tier model used as the final fallback when the primary model
+ * has failed JSON validation twice. Paid users running Sonnet fall back
+ * to Haiku (faster, usually still correct); free users on Haiku fall
+ * back to Sonnet (more capable, acceptable one-off cost when Haiku
+ * couldn't produce parseable JSON even with a strict reminder).
+ */
+function fallbackModelFor(primaryModel) {
+  if (!primaryModel) return FALLBACK_MODEL_PAID;
+  return primaryModel.includes('haiku') ? FALLBACK_MODEL_FREE : FALLBACK_MODEL_PAID;
 }
 
 /**
@@ -248,7 +312,8 @@ Rules:
 
 /**
  * Try to extract a JSON object from Claude's response text.
- * Mirrors the Python `extract_json_from_text()` with 4 strategies.
+ * Runs multiple tolerant strategies so preambles, code fences, trailing prose, and
+ * truncation don't silently produce a blank solution card on the frontend.
  */
 function extractJsonFromText(text) {
   if (!text || !text.trim()) return null;
@@ -265,7 +330,7 @@ function extractJsonFromText(text) {
     const candidate = text.slice(firstBrace);
     try { return JSON.parse(candidate); } catch { /* continue */ }
 
-    // Try balanced-brace extraction
+    // Try balanced-brace extraction — find matching top-level close brace
     let depth = 0;
     let inString = false;
     let escapeNext = false;
@@ -283,6 +348,23 @@ function extractJsonFromText(text) {
         }
       }
     }
+
+    // Strategy 2b: truncated mid-JSON — repair by closing open braces/brackets.
+    // Prior commits (see 8beab95) showed truncated JSON being a frequent failure
+    // mode; rather than giving up we stitch the tail closed and try again.
+    try {
+      let repaired = candidate;
+      // Strip trailing comma before adding close chars
+      repaired = repaired.replace(/[,\s]+$/, '');
+      // Close any open string
+      const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
+      if (quoteCount % 2 !== 0) repaired += '"';
+      const openBraces = (repaired.match(/\{/g) || []).length - (repaired.match(/\}/g) || []).length;
+      const openBrackets = (repaired.match(/\[/g) || []).length - (repaired.match(/\]/g) || []).length;
+      if (openBrackets > 0) repaired += ']'.repeat(openBrackets);
+      if (openBraces > 0) repaired += '}'.repeat(openBraces);
+      return JSON.parse(repaired);
+    } catch { /* continue */ }
   }
 
   // Strategy 3: try full text as-is
@@ -442,73 +524,248 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     content: `Solve this coding problem in ${lang}:\n\n${problem}`,
   });
 
-  // ── Call Claude with streaming ──────────────────────────────────────────
+  // ── Call Claude with layered reliability ────────────────────────────────
+  //
+  // Flow:
+  //   Pass 1: streaming, primary model, normal prompt.
+  //     - Transport errors (529/503/network): retry in-place with 500 ms
+  //       then 1500 ms back-off (2 retries). User never sees a 529.
+  //     - JSON parse fails or empty: fall through to Pass 2.
+  //   Pass 2: non-streaming, primary model, strict JSON reminder.
+  //     - Covers "model returned prose before/after JSON" and "model
+  //       truncated mid-field" cases. Single attempt.
+  //   Pass 3: non-streaming, *fallback* model, strict JSON reminder.
+  //     - Last-resort. Paid Sonnet users drop to Haiku, free Haiku
+  //       users jump to Sonnet. Still better than a dead-state error.
+  //
+  // Telemetry: every failure mode is logged server-side with model,
+  // duration, raw-head/tail (truncated to ~2 KB), user-agent, and
+  // parse error so we can diagnose recurring failure patterns.
   const client = new Anthropic();
   const startTime = performance.now();
-  const chunks = [];
+  const userAgent = req.get?.('user-agent') || req.headers?.['user-agent'] || 'unknown';
+  const primaryModel = getModelForUser(req);
+
+  let rawAnswer = '';
   let inputTokens = 0;
   let outputTokens = 0;
+  let modelUsed = primaryModel;
+  let terminalFailure = null; // { msg, category } when all passes give up
+  let passTag = 'primary_stream';
 
-  try {
-    const stream = await client.messages.stream({
-      model: getModelForUser(req),
-      max_tokens: MAX_TOKENS,
-      system: buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined),
-      messages,
-    });
+  const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined);
+  const STRICT_JSON_REMINDER =
+    'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 3 complete solution objects.';
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-        const token = event.delta.text;
-        chunks.push(token);
-        sendEvent('token', { t: token });
+  // ── Pass 1: streaming primary attempt with transport-error retries ──────
+  let transportAttempt = 0;
+  while (true) {
+    try {
+      const passStart = performance.now();
+      const chunks = [];
+      const stream = await client.messages.stream({
+        model: primaryModel,
+        max_tokens: MAX_TOKENS,
+        system: systemPrompt,
+        messages,
+      });
+
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+          const token = event.delta.text;
+          chunks.push(token);
+          sendEvent('token', { t: token });
+        }
       }
-    }
 
-    // Collect usage from the final message
-    const finalMessage = await stream.finalMessage();
-    if (finalMessage.usage) {
-      inputTokens = finalMessage.usage.input_tokens;
-      outputTokens = finalMessage.usage.output_tokens;
+      const finalMessage = await stream.finalMessage();
+      if (finalMessage.usage) {
+        inputTokens = finalMessage.usage.input_tokens;
+        outputTokens = finalMessage.usage.output_tokens;
+      }
+      rawAnswer = chunks.join('');
+      modelUsed = primaryModel;
+      console.log(
+        `[coding/solve] pass=primary_stream model=${primaryModel} attempt=${transportAttempt + 1} ok=true ` +
+        `rawLen=${rawAnswer.length} tokens=${inputTokens}+${outputTokens} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+      );
+      break; // stream succeeded, fall through to parse
+    } catch (err) {
+      const retryable = isRetryableClaudeError(err);
+      const status = err?.status || err?.statusCode || err?.response?.status || 'unknown';
+      console.error(
+        `[coding/solve] pass=primary_stream model=${primaryModel} attempt=${transportAttempt + 1} ok=false ` +
+        `status=${status} retryable=${retryable} msg=${JSON.stringify(err?.message || String(err))} ua=${JSON.stringify(userAgent)}`,
+      );
+      if (retryable && transportAttempt < CLAUDE_MAX_TRANSPORT_RETRIES) {
+        const delay = CLAUDE_TRANSPORT_BACKOFFS_MS[transportAttempt] ?? 1500;
+        transportAttempt++;
+        sendEvent('status', {
+          state: 'warn',
+          msg: `Recovering — retry ${transportAttempt}/${CLAUDE_MAX_TRANSPORT_RETRIES}…`,
+        });
+        await sleep(delay);
+        continue;
+      }
+      // Transport failure is terminal for Pass 1. Pass 2 will try
+      // non-streaming which sometimes succeeds where streaming doesn't
+      // (different upstream edge), using the same model, strict prompt.
+      rawAnswer = '';
+      terminalFailure = {
+        msg: err?.message || 'Claude API error',
+        category: retryable ? 'overloaded' : 'api_error',
+      };
+      break;
     }
-  } catch (err) {
-    console.error('Claude stream error:', err);
-    sendEvent('error', { msg: err.message || 'Claude API error' });
-    return res.end();
   }
 
-  // ── Parse accumulated response ──────────────────────────────────────────
-  const rawAnswer = chunks.join('');
+  // ── Parse Pass 1 output ─────────────────────────────────────────────────
+  let parsedJson = null;
+  if (rawAnswer && rawAnswer.trim()) {
+    parsedJson = extractJsonFromText(rawAnswer);
+    if (!parsedJson || (!parsedJson.code && !parsedJson.solutions)) {
+      console.error(
+        `[coding/solve] parse_failed pass=primary_stream model=${primaryModel} rawLen=${rawAnswer.length} ` +
+        `head=${JSON.stringify(truncateForLog(rawAnswer.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(rawAnswer.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
+      );
+      parsedJson = null; // force fallthrough to Pass 2
+    }
+  }
+
+  // ── Pass 2: non-streaming primary model with strict reminder ────────────
+  if (!parsedJson) {
+    passTag = 'primary_strict';
+    sendEvent('status', { state: 'warn', msg: 'Polishing solution — one more moment…' });
+    const passStart = performance.now();
+    try {
+      const strictMessages = [
+        ...messages,
+        { role: 'assistant', content: rawAnswer || '(no output)' },
+        { role: 'user', content: STRICT_JSON_REMINDER },
+      ];
+      const resp = await client.messages.create({
+        model: primaryModel,
+        max_tokens: MAX_TOKENS,
+        system: systemPrompt,
+        messages: strictMessages,
+      });
+      const strictRaw = resp.content?.map(b => b.text || '').join('') || '';
+      if (resp.usage) {
+        inputTokens += resp.usage.input_tokens || 0;
+        outputTokens += resp.usage.output_tokens || 0;
+      }
+      const strictParsed = extractJsonFromText(strictRaw);
+      console.log(
+        `[coding/solve] pass=primary_strict model=${primaryModel} ok=${!!(strictParsed && (strictParsed.code || strictParsed.solutions))} ` +
+        `rawLen=${strictRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+      );
+      if (strictParsed && (strictParsed.code || strictParsed.solutions)) {
+        parsedJson = strictParsed;
+        rawAnswer = strictRaw;
+        modelUsed = primaryModel;
+        terminalFailure = null;
+      } else {
+        console.error(
+          `[coding/solve] parse_failed pass=primary_strict model=${primaryModel} rawLen=${strictRaw.length} ` +
+          `head=${JSON.stringify(truncateForLog(strictRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(strictRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
+        );
+      }
+    } catch (err) {
+      console.error(
+        `[coding/solve] pass=primary_strict model=${primaryModel} ok=false ` +
+        `msg=${JSON.stringify(err?.message || String(err))} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+      );
+    }
+  }
+
+  // ── Pass 3: fallback-tier model with strict reminder ────────────────────
+  if (!parsedJson) {
+    passTag = 'fallback_model';
+    const fbModel = fallbackModelFor(primaryModel);
+    sendEvent('status', { state: 'warn', msg: 'Switching to backup model…' });
+    const passStart = performance.now();
+    try {
+      const fbMessages = [
+        ...messages,
+        { role: 'user', content: STRICT_JSON_REMINDER },
+      ];
+      const resp = await client.messages.create({
+        model: fbModel,
+        max_tokens: MAX_TOKENS,
+        system: systemPrompt,
+        messages: fbMessages,
+      });
+      const fbRaw = resp.content?.map(b => b.text || '').join('') || '';
+      if (resp.usage) {
+        inputTokens += resp.usage.input_tokens || 0;
+        outputTokens += resp.usage.output_tokens || 0;
+      }
+      const fbParsed = extractJsonFromText(fbRaw);
+      console.log(
+        `[coding/solve] pass=fallback_model model=${fbModel} ok=${!!(fbParsed && (fbParsed.code || fbParsed.solutions))} ` +
+        `rawLen=${fbRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+      );
+      if (fbParsed && (fbParsed.code || fbParsed.solutions)) {
+        parsedJson = fbParsed;
+        rawAnswer = fbRaw;
+        modelUsed = fbModel;
+        terminalFailure = null;
+      } else {
+        console.error(
+          `[coding/solve] parse_failed pass=fallback_model model=${fbModel} rawLen=${fbRaw.length} ` +
+          `head=${JSON.stringify(truncateForLog(fbRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(fbRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
+        );
+        terminalFailure = {
+          msg: "Couldn't generate a structured solution. Tap retry to try again.",
+          category: 'parse_failure',
+        };
+      }
+    } catch (err) {
+      console.error(
+        `[coding/solve] pass=fallback_model model=${fbModel} ok=false ` +
+        `msg=${JSON.stringify(err?.message || String(err))} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+      );
+      terminalFailure = {
+        msg: err?.message || 'Fallback model also failed. Tap retry to try again.',
+        category: isRetryableClaudeError(err) ? 'overloaded' : 'api_error',
+      };
+    }
+  }
+
   const latencyMs = Math.round(performance.now() - startTime);
 
-  if (!rawAnswer.trim()) {
-    sendEvent('error', { msg: 'Empty response from model' });
+  // ── Terminal failure path ───────────────────────────────────────────────
+  if (!parsedJson) {
+    const msg = terminalFailure?.msg || "Couldn't generate a solution. Please tap retry.";
+    console.error(
+      `[coding/solve] TERMINAL_FAILURE lang=${lang} model=${modelUsed} pass=${passTag} ` +
+      `durMs=${latencyMs} category=${terminalFailure?.category || 'unknown'} ua=${JSON.stringify(userAgent)}`,
+    );
+    sendEvent('error', {
+      msg,
+      retryable: true,
+      parse_failure: terminalFailure?.category === 'parse_failure',
+      category: terminalFailure?.category || 'unknown',
+    });
+    sendEvent('done', { ok: false });
     return res.end();
   }
 
-  const jsonParsed = extractJsonFromText(rawAnswer);
-  let parsed;
-
-  if (jsonParsed && (jsonParsed.code || jsonParsed.solutions)) {
-    // Ensure code fields are strings
-    if (jsonParsed.code && typeof jsonParsed.code !== 'string') {
-      jsonParsed.code = String(jsonParsed.code);
-    }
-    for (const sol of jsonParsed.solutions || []) {
-      if (sol.code && typeof sol.code !== 'string') {
-        sol.code = String(sol.code);
-      }
-    }
-    // Set top-level code from first solution for backwards compat
-    if (!jsonParsed.code && jsonParsed.solutions?.length) {
-      jsonParsed.code = jsonParsed.solutions[0].code || '';
-    }
-
-    parsed = { json: jsonParsed, format: 'ascend_json' };
-  } else {
-    // Return raw text when JSON extraction fails
-    parsed = { raw: rawAnswer, format: 'raw' };
+  // ── Success path — normalize and emit answer ────────────────────────────
+  // Ensure code fields are strings
+  if (parsedJson.code && typeof parsedJson.code !== 'string') {
+    parsedJson.code = String(parsedJson.code);
   }
+  for (const sol of parsedJson.solutions || []) {
+    if (sol.code && typeof sol.code !== 'string') {
+      sol.code = String(sol.code);
+    }
+  }
+  // Set top-level code from first solution for backwards compat
+  if (!parsedJson.code && parsedJson.solutions?.length) {
+    parsedJson.code = parsedJson.solutions[0].code || '';
+  }
+  const parsed = { json: parsedJson, format: 'ascend_json' };
 
   sendEvent('answer', {
     question: problem.slice(0, 100),
@@ -519,6 +776,8 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     latency_ms: latencyMs,
+    model_used: modelUsed,
+    recovery_pass: passTag,
   });
 
   // ── Persist to database (fire-and-forget) ───────────────────────────────
@@ -541,9 +800,14 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   }
 
   console.log(
-    `Coding solution done lang=${lang} tokens=${inputTokens}+${outputTokens} latency=${latencyMs}ms`,
+    `[coding/solve] done lang=${lang} model=${modelUsed} pass=${passTag} ` +
+    `tokens=${inputTokens}+${outputTokens} latencyMs=${latencyMs}`,
   );
 
+  // Terminal done event — gives the SSE client a reliable signal to flip
+  // isStreaming=false even if the stream socket lingers. Matches the fix
+  // pattern from commit 8beab95 on the prep pipeline.
+  sendEvent('done', { ok: true });
   res.end();
 });
 

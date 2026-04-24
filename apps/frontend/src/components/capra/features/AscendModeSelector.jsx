@@ -49,7 +49,7 @@ export default function AscendModeSelector({
           onClick={() => setShowLanguageModal(true)}
           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all hover:scale-[1.02] min-h-[36px] touch:min-h-[40px]"
           style={{
-            background: '#10b981',
+            background: 'var(--accent)',
             color: 'white',
             border: '1px solid var(--border)',
           }}
@@ -73,7 +73,7 @@ export default function AscendModeSelector({
             onClick={() => onCodingDetailLevelChange('basic')}
             className="px-2 sm:px-3 py-1.5 text-xs font-semibold transition-all rounded-md min-h-[32px] touch:min-h-[36px]"
             style={{
-              background: codingDetailLevel === 'basic' ? '#10b981' : 'transparent',
+              background: codingDetailLevel === 'basic' ? 'var(--accent)' : 'transparent',
               color: codingDetailLevel === 'basic' ? '#ffffff' : 'var(--text-muted)',
                           }}
             title="Basic solution with essential explanation"
@@ -85,7 +85,7 @@ export default function AscendModeSelector({
             onClick={() => onCodingDetailLevelChange('detailed')}
             className="px-2 sm:px-3 py-1.5 text-xs font-semibold transition-all rounded-md min-h-[32px] touch:min-h-[36px]"
             style={{
-              background: codingDetailLevel === 'detailed' ? '#10b981' : 'transparent',
+              background: codingDetailLevel === 'detailed' ? 'var(--accent)' : 'transparent',
               color: codingDetailLevel === 'detailed' ? '#ffffff' : 'var(--text-muted)',
               boxShadow: codingDetailLevel === 'detailed' ? '0 2px 6px rgba(16, 185, 129, 0.4)' : 'none',
             }}
@@ -123,7 +123,7 @@ export default function AscendModeSelector({
             onClick={() => onDetailLevelChange('basic')}
             className="px-3 py-1 text-xs font-semibold transition-all rounded-full"
             style={{
-              background: designDetailLevel === 'basic' ? '#10b981' : 'transparent',
+              background: designDetailLevel === 'basic' ? 'var(--accent)' : 'transparent',
               color: designDetailLevel === 'basic' ? '#ffffff' : 'var(--text-muted)',
               boxShadow: designDetailLevel === 'basic' ? '0 1px 3px rgba(16, 185, 129, 0.3)' : 'none',
             }}
@@ -136,7 +136,7 @@ export default function AscendModeSelector({
             onClick={() => onDetailLevelChange('full')}
             className="px-3 py-1 text-xs font-semibold transition-all rounded-full"
             style={{
-              background: designDetailLevel === 'full' ? '#10b981' : 'transparent',
+              background: designDetailLevel === 'full' ? 'var(--accent)' : 'transparent',
               color: designDetailLevel === 'full' ? '#ffffff' : 'var(--text-muted)',
               boxShadow: designDetailLevel === 'full' ? '0 1px 3px rgba(16, 185, 129, 0.3)' : 'none',
             }}
@@ -152,9 +152,9 @@ export default function AscendModeSelector({
           onClick={() => onAutoGenerateEraserChange(!autoGenerateEraser)}
           className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
           style={{
-            background: autoGenerateEraser ? '#2D8CFF' : 'transparent',
-            color: autoGenerateEraser ? '#ffffff' : '#2D8CFF',
-            border: '1px solid #2D8CFF',
+            background: autoGenerateEraser ? 'var(--accent)' : 'transparent',
+            color: autoGenerateEraser ? '#ffffff' : 'var(--accent)',
+            border: '1px solid var(--accent)',
           }}
           title={autoGenerateEraser ? 'Pro diagram will auto-generate (uses Eraser API credits)' : 'Pro diagram disabled - click Generate manually'}
         >

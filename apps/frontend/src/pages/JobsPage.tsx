@@ -73,7 +73,7 @@ function getCompanyLogoPath(companyName: string): string | null {
 
 /** Generate a deterministic color from company name for the initial fallback */
 function getCompanyColor(name: string): string {
-  const colors = ['var(--accent)', 'var(--accent)', '#3b82f6', '#06b6d4', '#ec4899', 'var(--accent)', 'var(--success)', 'var(--danger)', 'var(--warning)', '#a855f7'];
+  const colors = ['var(--accent)', 'var(--accent)', 'var(--accent)', '#06b6d4', 'var(--text-muted)', 'var(--accent)', 'var(--success)', 'var(--danger)', 'var(--warning)', 'var(--accent)'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -123,28 +123,28 @@ const CATEGORY_COLORS: Record<string, string> = {
   devops: '#06b6d4',
   backend: 'var(--success)',
   frontend: 'var(--accent)',
-  fullstack: '#3b82f6',
+  fullstack: 'var(--accent)',
   data: 'var(--warning)',
-  ml: '#ec4899',
+  ml: 'var(--text-muted)',
   security: 'var(--danger)',
   mobile: 'var(--accent)',
-  ios: '#a855f7',
-  android: '#22c55e',
+  ios: 'var(--accent)',
+  android: 'var(--accent)',
   qa: '#84cc16',
   sre: '#e11d48',
-  platform: '#14b8a6',
+  platform: 'var(--accent)',
   cloud: 'var(--accent)',
   network: '#0ea5e9',
   blockchain: 'var(--warning)',
-  game_dev: '#f43f5e',
+  game_dev: 'var(--text-muted)',
   tech_lead: 'var(--accent)',
-  staff: '#7c3aed',
+  staff: 'var(--accent)',
   principal: '#6d28d9',
   em: '#0891b2',
   architect: '#2563eb',
-  tpm: '#0d9488',
+  tpm: 'var(--accent)',
   product_manager: '#d946ef',
-  embedded: '#a855f7',
+  embedded: 'var(--accent)',
 };
 
 const DEFAULT_COLOR = '#6b7280';
@@ -1037,11 +1037,11 @@ export default function JobsPage() {
               { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: 'var(--success)' },
               { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: 'var(--warning)' },
               { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: 'var(--accent)' },
-              { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: '#3b82f6' },
-              { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: '#ec4899' },
+              { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: 'var(--accent)' },
+              { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: 'var(--text-muted)' },
               { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: '#06b6d4' },
-              { val: salaryMinFilter, set: setSalaryMinFilter, label: `Min $${Math.round(Number(salaryMinFilter) / 1000)}K`, color: '#14b8a6' },
-              { val: salaryMaxFilter, set: setSalaryMaxFilter, label: `Max $${Math.round(Number(salaryMaxFilter) / 1000)}K`, color: '#14b8a6' },
+              { val: salaryMinFilter, set: setSalaryMinFilter, label: `Min $${Math.round(Number(salaryMinFilter) / 1000)}K`, color: 'var(--accent)' },
+              { val: salaryMaxFilter, set: setSalaryMaxFilter, label: `Max $${Math.round(Number(salaryMaxFilter) / 1000)}K`, color: 'var(--accent)' },
             ].filter(f => f.val).map((f, i) => (
               <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, color: f.color, background: `${f.color}15`, borderRadius: '6px', border: `1px solid ${f.color}30` }}>
                 {f.label}

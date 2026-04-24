@@ -24,8 +24,8 @@ function scoreBgColor(score: number): string {
 }
 
 function scoreRingColor(score: number): string {
-  if (score >= 70) return '#10b981';
-  if (score >= 40) return '#f59e0b';
+  if (score >= 70) return 'var(--accent)';
+  if (score >= 40) return 'var(--text-muted)';
   return '#ef4444';
 }
 

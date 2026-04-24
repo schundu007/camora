@@ -44,36 +44,41 @@
     --text-muted: #1E293B;
     --text-dimmed: #334155;
 
-    /* Accent — Icy cyan-blue (matches logo) */
-    --accent: #22D3EE;
+    /* Accent — Snowflake cyan, aligned with the landing page hex */
+    --accent: #29B5E8;
     --accent-hover: #06B6D4;
-    --accent-subtle: rgba(34,211,238,0.10);
+    --accent-subtle: rgba(41,181,232,0.10);
     --accent-text: #0891B2;
 
-    /* Semantic — frost-compatible */
-    --success: #34D399;
-    --warning: #FBBF24;
-    --danger: #F87171;
-    --info: #38BDF8;
+    /* Semantic — Snowflake palette: cyan for positive, red for errors.
+       Warning + info fold onto cyan so the UI never shows amber/yellow
+       or an off-brand blue. */
+    --success: #29B5E8;
+    --warning: #29B5E8;
+    --danger: #EF4444;
+    --info: #29B5E8;
 
-    /* Difficulty (unified across all pages) */
-    --easy: #34D399;
-    --easy-bg: rgba(52,211,153,0.10);
-    --easy-border: rgba(52,211,153,0.25);
-    --medium: #FBBF24;
-    --medium-bg: rgba(251,191,36,0.10);
-    --medium-border: rgba(251,191,36,0.25);
-    --hard: #F87171;
-    --hard-bg: rgba(248,113,113,0.10);
-    --hard-border: rgba(248,113,113,0.25);
+    /* Difficulty — rank by weight in the chip, not by hue. Values below
+       are back-compat shims for any code that reads them directly. */
+    --easy: #64748B;
+    --easy-bg: rgba(100,116,139,0.10);
+    --easy-border: rgba(100,116,139,0.25);
+    --medium: #0F172A;
+    --medium-bg: rgba(15,23,42,0.06);
+    --medium-border: rgba(15,23,42,0.15);
+    --hard: #29B5E8;
+    --hard-bg: rgba(41,181,232,0.10);
+    --hard-border: rgba(41,181,232,0.25);
 
-    /* Category — icy blue spectrum */
-    --cat-primary: #38BDF8;
-    --cat-primary-bg: rgba(56,189,248,0.10);
-    --cat-secondary: #818CF8;
-    --cat-secondary-bg: rgba(129,140,248,0.10);
-    --cat-tertiary: #22D3EE;
-    --cat-tertiary-bg: rgba(34,211,238,0.10);
+    /* Category — single accent plus two neutral slate shades. Pages
+       with multiple categories side-by-side distinguish via typography
+       and icons rather than color. */
+    --cat-primary: #29B5E8;
+    --cat-primary-bg: rgba(41,181,232,0.10);
+    --cat-secondary: #334155;
+    --cat-secondary-bg: rgba(51,65,85,0.06);
+    --cat-tertiary: #64748B;
+    --cat-tertiary-bg: rgba(100,116,139,0.08);
 
     /* Fonts — Adobe Source family (display + mono) + Inter (body/UI) */
     --font-sans: 'Inter', 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

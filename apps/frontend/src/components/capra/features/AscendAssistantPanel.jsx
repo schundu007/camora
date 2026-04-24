@@ -14,7 +14,7 @@ function renderMarkdown(text) {
     str = str.replace(/__(.+?)__/g, '<strong style="color: #f1f5f9; font-weight: 600;">$1</strong>');
     str = str.replace(/\*(.+?)\*/g, '<em>$1</em>');
     str = str.replace(/_(.+?)_/g, '<em>$1</em>');
-    str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(16, 185, 129, 0.15); border-radius: 2px; color: #10b981; font-family: monospace; font-size: 10px;">$1</code>');
+    str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(16, 185, 129, 0.15); border-radius: 2px; color: var(--accent); font-family: monospace; font-size: 10px;">$1</code>');
     return str;
   };
 
@@ -1238,7 +1238,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       >
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{
-            background: isSpeaking ? '#10b981' : isRecording ? '#ef4444' : '#10b981'
+            background: isSpeaking ? 'var(--accent)' : isRecording ? '#ef4444' : 'var(--accent)'
           }}>
             <svg className="w-2.5 h-2.5" style={{ color: '#0c1322' }} fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -1262,7 +1262,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
-            style={{ color: showHistory ? '#10b981' : '#94a3b8' }}
+            style={{ color: showHistory ? 'var(--accent)' : '#94a3b8' }}
             title="Conversation History"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1604,7 +1604,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                     className="h-full transition-all duration-75 rounded-full"
                     style={{
                       width: `${Math.min(audioLevel * 100 * 3, 100)}%`,
-                      background: isSpeaking ? 'linear-gradient(90deg, #10b981, #2D8CFF)' : '#64748b'
+                      background: isSpeaking ? 'linear-gradient(90deg, var(--accent), var(--accent))' : '#64748b'
                     }}
                   />
                 </div>

@@ -660,7 +660,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           <pre
             className="px-3 py-1.5 text-xs font-mono overflow-auto select-text scrollbar-thin cursor-pointer bg-[var(--bg-elevated)]"
             style={{
-              color: output.success ? '#10b981' : '#f87171',
+              color: output.success ? 'var(--accent)' : '#f87171',
               height: `${outputHeight}px`,
               minHeight: '50px',
               maxHeight: '200px',
@@ -730,7 +730,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 {/* Output Content */}
                 <pre
                   className="flex-1 py-3 px-4 select-text leading-5"
-                  style={{ color: output.success ? '#10b981' : '#f87171' }}
+                  style={{ color: output.success ? 'var(--accent)' : '#f87171' }}
                 >
                   {output.success ? output.output : (output.error || output.stderr || output.output)}
                 </pre>

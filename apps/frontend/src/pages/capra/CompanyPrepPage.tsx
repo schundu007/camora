@@ -273,10 +273,10 @@ const COMPANIES: Record<string, CompanyData> = {
 /* ──────────────────────────────── Helpers ────────────────────────────── */
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: '#ecfdf5', text: 'var(--accent)', border: '#a7f3d0' },
-  Medium: { bg: '#fffbeb', text: '#d97706', border: '#fde68a' },
+  Easy: { bg: '#F8FAFC', text: 'var(--accent)', border: '#a7f3d0' },
+  Medium: { bg: '#fffbeb', text: '#d97706', border: '#F8FAFC' },
   Hard: { bg: '#fef2f2', text: '#0B5CFF', border: '#fecaca' },
-  'Medium-Hard': { bg: '#fff7ed', text: '#ea580c', border: '#BFDBFE' },
+  'Medium-Hard': { bg: '#fff7ed', text: 'var(--text-muted)', border: '#BFDBFE' },
 };
 
 function getDifficultyStyle(difficulty: string) {
@@ -385,7 +385,7 @@ export default function CompanyPrepPage() {
       {
         title: 'System Design Questions',
         icon: 'architecture' as const,
-        color: '#3b82f6',
+        color: 'var(--accent)',
         description: 'Learn to design scalable distributed systems, from fundamentals to real-world architectures.',
         link: '/capra/prepare?page=system-design',
         linkLabel: 'Study System Design',

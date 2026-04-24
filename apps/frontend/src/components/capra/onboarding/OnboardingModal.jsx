@@ -103,9 +103,9 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       content: (
         <div className="space-y-4">
           {[
-            { num: 1, color: '#2D8CFF', title: 'Input Your Problem', desc: 'Paste code, upload screenshots, or share URLs from LeetCode, HackerRank, and more.' },
-            { num: 2, color: '#2D8CFF', title: 'Get AI-Powered Solutions', desc: 'Receive optimized code solutions with detailed explanations and complexity analysis.' },
-            { num: 3, color: '#2D8CFF', title: 'Practice & Improve', desc: 'Use follow-up questions, run code, and track your progress across sessions.' },
+            { num: 1, color: 'var(--accent)', title: 'Input Your Problem', desc: 'Paste code, upload screenshots, or share URLs from LeetCode, HackerRank, and more.' },
+            { num: 2, color: 'var(--accent)', title: 'Get AI-Powered Solutions', desc: 'Receive optimized code solutions with detailed explanations and complexity analysis.' },
+            { num: 3, color: 'var(--accent)', title: 'Practice & Improve', desc: 'Use follow-up questions, run code, and track your progress across sessions.' },
           ].map((step, idx) => (
             <div
               key={idx}
@@ -351,9 +351,9 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
                 onClick={() => setCurrentStep(index)}
                 className="w-2 h-2 rounded-full transition-all duration-300"
                 style={{
-                  background: index === currentStep ? '#2D8CFF' : '#e5e7eb',
+                  background: index === currentStep ? 'var(--accent)' : '#e5e7eb',
                   transform: index === currentStep ? 'scale(1.5)' : 'scale(1)',
-                  boxShadow: index === currentStep ? '0 0 8px #2D8CFF' : 'none',
+                  boxShadow: index === currentStep ? '0 0 8px var(--accent)' : 'none',
                 }}
               />
             ))}

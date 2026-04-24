@@ -941,12 +941,12 @@ export default function PracticePage() {
 
               {category === 'system-design' && !inlineEval && (() => {
                 const SD_SECTIONS = [
-                  { label: 'Functional Req.', icon: 'clipboard', color: '#3b82f6', placeholder: 'List core functional requirements...' },
+                  { label: 'Functional Req.', icon: 'clipboard', color: 'var(--accent)', placeholder: 'List core functional requirements...' },
                   { label: 'Non-Functional Req.', icon: 'shield', color: 'var(--accent)', placeholder: 'Latency, availability, consistency, scale...' },
                   { label: 'Components', icon: 'layers', color: 'var(--success)', placeholder: 'Key services, databases, caches...' },
                   { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
-                  { label: 'Layered Design', icon: 'server', color: '#f59e0b', placeholder: 'API layer, business logic, storage...' },
-                  { label: 'Scalability', icon: 'trendingUp', color: '#ec4899', placeholder: 'Sharding, replication, CDN, load balancing...' },
+                  { label: 'Layered Design', icon: 'server', color: 'var(--text-muted)', placeholder: 'API layer, business logic, storage...' },
+                  { label: 'Scalability', icon: 'trendingUp', color: 'var(--text-muted)', placeholder: 'Sharding, replication, CDN, load balancing...' },
                   { label: 'Trade-offs', icon: 'scale', color: 'var(--danger)', placeholder: 'CAP, consistency vs availability...' },
                 ];
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
@@ -1152,7 +1152,7 @@ export default function PracticePage() {
                   {['Situation', 'Task', 'Action', 'Result'].map((section, si) => {
                     const parts = (answers[currentIdx] || '').split('---STAR---');
                     const val = parts[si] || '';
-                    const colors = { Situation: '#3b82f6', Task: 'var(--accent)', Action: 'var(--success)', Result: 'var(--warning)' };
+                    const colors = { Situation: 'var(--accent)', Task: 'var(--accent)', Action: 'var(--success)', Result: 'var(--warning)' };
                     return (
                       <div key={section}>
                         <label style={{ fontSize: 11, fontWeight: 600, color: colors[section], marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -1197,10 +1197,10 @@ export default function PracticePage() {
                   {/* Improvement tips */}
                   {inlineEval.improvementTips && inlineEval.improvementTips.length > 0 && (
                     <div style={{ marginTop: 14, padding: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 10, border: '1px solid rgba(245,158,11,0.25)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
                       {inlineEval.improvementTips.map((tip, ti) => (
                         <div key={ti} style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 2 }}>
-                          <span style={{ color: '#f59e0b', flexShrink: 0 }}>-</span>
+                          <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>-</span>
                           {tip}
                         </div>
                       ))}
@@ -1309,7 +1309,7 @@ export default function PracticePage() {
                   <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
-                  <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: 'var(--accent)', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
                     Practice Weak Areas
                   </button>
                 </div>
@@ -1340,13 +1340,13 @@ export default function PracticePage() {
               {/* ── Improvement Tips ── */}
               {aiModelAnswers.some(a => a.improvementTips && a.improvementTips.length > 0) && (
                 <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 16, padding: '18px 22px', marginBottom: 20 }}>
-                  <h3 className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="lightbulb" size={15} style={{ color: '#f59e0b' }} />
+                  <h3 className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="lightbulb" size={15} style={{ color: 'var(--text-muted)' }} />
                     Focus Areas
                   </h3>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[...new Set(aiModelAnswers.flatMap(a => a.improvementTips || []))].slice(0, 5).map((tip, i) => (
-                      <span key={i} style={{ fontSize: 12, color: '#fbbf24', padding: '5px 12px', borderRadius: 99, background: 'rgba(245,158,11,0.12)', fontWeight: 500 }}>
+                      <span key={i} style={{ fontSize: 12, color: 'var(--text-muted)', padding: '5px 12px', borderRadius: 99, background: 'rgba(245,158,11,0.12)', fontWeight: 500 }}>
                         {tip}
                       </span>
                     ))}

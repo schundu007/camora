@@ -88,7 +88,7 @@ export function InterviewTimer({
         ? 'bg-amber-50 border-amber-200'
         : 'bg-red-50 border-red-200';
   const ringStroke =
-    percent > 50 ? '#2D8CFF' : percent > 20 ? '#f59e0b' : '#ef4444';
+    percent > 50 ? 'var(--accent)' : percent > 20 ? 'var(--text-muted)' : '#ef4444';
 
   const togglePause = useCallback(() => {
     setPaused(p => !p);

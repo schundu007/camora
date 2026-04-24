@@ -201,7 +201,7 @@ function buildStudyPath(job: any): StudyRound[] {
     rounds.push({
       title: 'System Design Round',
       icon: '\u{1F3D7}',
-      color: '#3b82f6',
+      color: 'var(--accent)',
       estimate: `${Math.min(designItems.length, 3)} scenarios`,
       items: [...new Map(designItems.map(i => [i.label, i])).values()].slice(0, 5),
     });
@@ -250,12 +250,12 @@ function slugifyCompany(name: string): string {
 
 const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
   'Coding': { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
-  'System Design': { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
-  'Database': { bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
+  'System Design': { bg: '#F8FAFC', text: '#92400e', border: 'var(--text-muted)' },
+  'Database': { bg: '#F8FAFC', text: '#065f46', border: '#a7f3d0' },
   'Architecture': { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
   'DevOps': { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe' },
   'API': { bg: '#fff7ed', text: '#9a3412', border: '#93C5FD' },
-  'Data': { bg: '#f0fdf4', text: '#166534', border: '#86efac' },
+  'Data': { bg: '#F8FAFC', text: '#166534', border: 'var(--accent)' },
 };
 
 function getCategoryStyle(category: string) {
@@ -619,11 +619,11 @@ export default function JobPrepPage() {
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {urlAnalysis.coding_focus?.length > 0 && (
-                  <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '12px' }}>
                     <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.coding_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#F8FAFC', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
@@ -643,7 +643,7 @@ export default function JobPrepPage() {
                     <p style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#92400e', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: '#92400e', background: '#F8FAFC', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
@@ -1071,7 +1071,7 @@ export default function JobPrepPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
           <div className="bg-[var(--bg-surface)] rounded-3xl shadow-2xl max-w-2xl w-full mx-4 p-8" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--success), #3b82f6, var(--accent))' }}>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--success), var(--accent), var(--accent))' }}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">Upgrade to Generate Prep Material</h3>
@@ -1143,10 +1143,10 @@ const S = {
   p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
   li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
-  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? '#3b82f6' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
+  callout: (color: string) => ({ background: color === 'green' ? '#F8FAFC' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? 'var(--accent)' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'Source Code Pro', monospace" },
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#F8FAFC', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
@@ -1401,7 +1401,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                 {q.capacityEstimation.calculations && (
                   <div style={{ margin: '8px 20px', overflow: 'auto' }}>
                     <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
-                      <thead><tr style={{ background: '#f0fdf4' }}>
+                      <thead><tr style={{ background: '#F8FAFC' }}>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Metric</th>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Result</th>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Calculation</th>

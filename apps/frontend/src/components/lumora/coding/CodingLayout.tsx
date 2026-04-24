@@ -193,7 +193,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks } = useInterviewStore();
+  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError } = useInterviewStore();
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -584,6 +584,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     if (!problemText.trim()) { setError('Please enter a problem first'); return; }
     // Clear entire previous session
     setError(null);
+    setStreamError(null);
     setTestResults([]);
     setTestCases([]);
     setOutput('');
@@ -918,6 +919,30 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             {/* ═══ SOLUTION TAB — AI-Inspired Modern Display ═══ */}
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
+                {/* Stream/parse error — visible retry card instead of blank state.
+                    Backend emits `error` events for 529/overloaded, parse failures,
+                    and empty responses. We surface those here with a retry button. */}
+                {streamError && !isStreaming && !sd && (
+                  <div className="p-3 rounded-xl mb-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.35)' }}>
+                    <div className="flex items-start gap-2">
+                      <svg className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#ef4444' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold mb-0.5" style={{ color: '#ef4444' }}>Couldn't generate solution</div>
+                        <div className="text-[11px] leading-relaxed" style={{ color: t.textMuted }}>{streamError}</div>
+                        <button
+                          onClick={() => { setStreamError(null); handleGenerateSolution(); }}
+                          disabled={!problemText.trim() || isLoading}
+                          className="mt-2 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors disabled:opacity-50"
+                          style={{ background: '#22D3EE', color: '#000' }}
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* Streaming state — spinner + skeleton cards. We never dump the
                     raw JSON stream to screen; users only see parsed cards once
                     the solution has been structured. */}

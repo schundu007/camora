@@ -207,6 +207,10 @@ export function useStreamingInterview() {
           setError(errorMsg);
           setStatus('error', errorMsg);
           stopAnswerTimer();
+          // Ensure skeleton/spinner clears even if the backend closes the socket
+          // without the SSE reader seeing a clean `done`. onComplete still runs
+          // when the stream fully closes, but calling it here is idempotent.
+          setIsStreaming(false);
         },
         onComplete: () => {
           setIsStreaming(false);

@@ -393,7 +393,7 @@ export default function DownloadPage() {
                   width: 80,
                   height: 80,
                   borderRadius: 20,
-                  background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 50%, #10b981 100%)',
+                  background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 50%, var(--accent) 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -439,7 +439,7 @@ export default function DownloadPage() {
                     href={primary.url}
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
                     style={{
-                      background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 100%)',
+                      background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                       color: '#ffffff',
                       boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
@@ -467,7 +467,7 @@ export default function DownloadPage() {
                       disabled={addonLoading}
                       className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
                       style={{
-                        background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 100%)',
+                        background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                         color: '#ffffff',
                         boxShadow: 'none',
                       }}
@@ -484,7 +484,7 @@ export default function DownloadPage() {
                       disabled={annualLoading}
                       className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
                       style={{
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                        background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                         color: '#ffffff',
                         boxShadow: '0 4px 24px rgba(139,92,246,0.35)',
                       }}
@@ -507,7 +507,7 @@ export default function DownloadPage() {
                     to="/login?redirect=/download"
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 no-underline"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #2D8CFF 100%)',
+                      background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                       color: '#ffffff',
                       boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
@@ -534,7 +534,7 @@ export default function DownloadPage() {
                     disabled={proLoading}
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #2D8CFF 100%)',
+                      background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                       color: '#ffffff',
                       border: '1px solid var(--border)',
                       cursor: proLoading ? 'wait' : 'pointer',
@@ -610,7 +610,7 @@ export default function DownloadPage() {
                       <div
                         className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold"
                         style={{
-                          background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)',
+                          background: 'linear-gradient(135deg, var(--accent), var(--accent))',
                           color: '#fff',
                           boxShadow: 'none',
                         }}
@@ -620,7 +620,7 @@ export default function DownloadPage() {
                     )}
 
                     {/* OS icon */}
-                    <div className="mt-2 mb-4" style={{ color: isRecommended ? '#2D8CFF' : 'rgba(255,255,255,0.5)' }}>
+                    <div className="mt-2 mb-4" style={{ color: isRecommended ? 'var(--accent)' : 'rgba(255,255,255,0.5)' }}>
                       {p.icon === 'apple' ? <AppleLogo size={36} /> : <WindowsLogo size={36} />}
                     </div>
 
@@ -645,7 +645,7 @@ export default function DownloadPage() {
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                         style={{
                           background: isRecommended
-                            ? 'linear-gradient(135deg, #2D8CFF, #2D8CFF)'
+                            ? 'linear-gradient(135deg, var(--accent), var(--accent))'
                             : 'rgba(255,255,255,0.06)',
                           color: isRecommended ? '#fff' : 'rgba(255,255,255,0.7)',
                           border: isRecommended
@@ -672,12 +672,12 @@ export default function DownloadPage() {
                       <div className="flex items-center gap-2">
                         <button onClick={handleMonthlyAddon} disabled={addonLoading}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                          style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff' }}>
+                          style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff' }}>
                           <DownloadIcon size={12} />$29/mo
                         </button>
                         <button onClick={handleAnnualAddon} disabled={annualLoading}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                          style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}>
+                          style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff' }}>
                           <DownloadIcon size={12} />$99/yr
                         </button>
                       </div>
@@ -776,7 +776,7 @@ export default function DownloadPage() {
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                     style={{
                       background: 'rgba(45,140,255,0.1)',
-                      color: '#2D8CFF',
+                      color: 'var(--accent)',
                     }}
                   >
                     {f.icon}

@@ -42,13 +42,13 @@ const cacheDiagramImages = async (content) => {
 
 // Section definitions with unique icons and colors
 const ALL_SECTIONS = [
-  { id: 'pitch', name: 'Elevator Pitch', description: '2-3 minute interview pitch', icon: 'rocket', color: '#f59e0b' },
-  { id: 'hr', name: 'HR Questions', description: 'Salary, culture, availability', icon: 'users', color: '#ec4899' },
-  { id: 'hiring-manager', name: 'Hiring Manager', description: 'Role-specific questions', icon: 'briefcase', color: '#10b981' },
+  { id: 'pitch', name: 'Elevator Pitch', description: '2-3 minute interview pitch', icon: 'rocket', color: 'var(--text-muted)' },
+  { id: 'hr', name: 'HR Questions', description: 'Salary, culture, availability', icon: 'users', color: 'var(--text-muted)' },
+  { id: 'hiring-manager', name: 'Hiring Manager', description: 'Role-specific questions', icon: 'briefcase', color: 'var(--accent)' },
   { id: 'rrk', name: 'RRK (Google)', description: 'Role Related Knowledge round', companyFilter: 'google', icon: 'academic', color: '#4285f4' },
-  { id: 'coding', name: 'Coding', description: 'Algorithm & coding challenges', icon: 'code', color: '#10b981' },
-  { id: 'system-design', name: 'System Design', description: 'Architecture questions', icon: 'cube', color: '#3b82f6' },
-  { id: 'behavioral', name: 'Behavioral', description: 'STAR method questions', icon: 'chat', color: '#2D8CFF' },
+  { id: 'coding', name: 'Coding', description: 'Algorithm & coding challenges', icon: 'code', color: 'var(--accent)' },
+  { id: 'system-design', name: 'System Design', description: 'Architecture questions', icon: 'cube', color: 'var(--accent)' },
+  { id: 'behavioral', name: 'Behavioral', description: 'STAR method questions', icon: 'chat', color: 'var(--accent)' },
   { id: 'techstack', name: 'Tech Stack', description: 'Technology-specific questions', icon: 'stack', color: '#06b6d4' },
 ];
 
@@ -1266,7 +1266,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg transition-colors"
                   style={{
                     background: accountLinked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                    color: accountLinked ? '#10b981' : '#3b82f6',
+                    color: accountLinked ? 'var(--accent)' : 'var(--accent)',
                     border: `1px solid ${accountLinked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
                   }}
                   title={accountLinked ? 'Cloud sync enabled - click to unlink' : 'Link account for cloud sync'}
@@ -1347,7 +1347,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   setShowCompanyDropdown(true);
                 }}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium"
-                style={{ background: '#10b981', color: '#ffffff', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+                style={{ background: 'var(--accent)', color: '#ffffff', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1437,7 +1437,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                         onClick={() => handleCreateCompany(newCompanyName)}
                         disabled={!newCompanyName.trim()}
                         className="flex-1 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ background: '#10b981', color: '#ffffff' }}
+                        style={{ background: 'var(--accent)', color: '#ffffff' }}
                       >
                         Create
                       </button>
@@ -1457,7 +1457,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   <button
                     onClick={() => setShowNewCompanyInput(true)}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm"
-                    style={{ color: '#10b981' }}
+                    style={{ color: 'var(--accent)' }}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1476,7 +1476,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   className="h-full rounded-full transition-all duration-300"
                   style={{
                     width: `${(completedSections / sections.length) * 100}%`,
-                    background: 'linear-gradient(90deg, #10b981 0%, #2D8CFF 100%)'
+                    background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent) 100%)'
                   }}
                 />
               </div>
@@ -1519,7 +1519,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   className="prep-nav-icon"
                   style={{
                     background: 'rgba(59, 130, 246, 0.12)',
-                    color: inputs.jobDescription?.trim() ? '#3b82f6' : undefined,
+                    color: inputs.jobDescription?.trim() ? 'var(--accent)' : undefined,
                   }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1527,12 +1527,12 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm" style={{ color: inputs.jobDescription?.trim() ? '#3b82f6' : undefined }}>
+                  <div className="font-semibold text-sm" style={{ color: inputs.jobDescription?.trim() ? 'var(--accent)' : undefined }}>
                     Job Description
                   </div>
                 </div>
                 {inputs.jobDescription?.trim() && (
-                  <svg className="w-4 h-4" style={{ color: '#3b82f6' }} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4" style={{ color: 'var(--accent)' }} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 )}
@@ -1589,7 +1589,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               {customSections.length > 0 && (
                 <>
                   <div className="my-2 mx-4 flex items-center gap-2" style={{ borderTop: '1px solid rgba(16, 185, 129, 0.15)', paddingTop: '8px' }}>
-                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#10b981', opacity: 0.8 }}>Custom</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)', opacity: 0.8 }}>Custom</span>
                   </div>
                   {customSections.map((section) => {
                     const isActive = activeTab === section.id;
@@ -1606,7 +1606,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                         >
                           <div className="prep-nav-icon">
                             {isCurrentlyGenerating ? (
-                              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#10b981', borderTopColor: 'transparent' }} />
+                              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
                             ) : isComplete ? (
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -1648,7 +1648,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   disabled={isGenerating || !hasInputs || completedSections === sections.length}
                   className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${completedSections === sections.length ? 'completed' : ''}`}
                   style={{
-                    background: completedSections === sections.length ? '#10b981' : '#10b981',
+                    background: completedSections === sections.length ? 'var(--accent)' : 'var(--accent)',
                     color: '#ffffff',
                     boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)',
                   }}
@@ -1782,7 +1782,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             {/* Gradient Header Bar - Draggable */}
             <div
               className="h-2 cursor-move"
-              style={{ background: 'linear-gradient(90deg, #10b981 0%, #2D8CFF 50%, #06b6d4 100%)' }}
+              style={{ background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent) 50%, #06b6d4 100%)' }}
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsDraggingJD(true);
@@ -1803,7 +1803,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               <div className="flex items-center gap-4">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #2D8CFF 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)' }}
                 >
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1812,7 +1812,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 <div>
                   <h2 className="text-xl font-bold text-[var(--text-primary)] landing-display">Job Description</h2>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent)' }}>
                       {activeCompany || 'No company'}
                     </span>
                     {inputs.jobDescription?.trim() && (
@@ -1855,7 +1855,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                       className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
                       style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)' }}
                     >
-                      <svg className="w-10 h-10" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-10 h-10" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
@@ -1866,7 +1866,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                     <button
                       onClick={() => { setShowJDPopup(false); setActiveTab('input'); }}
                       className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 landing-body"
-                      style={{ background: 'linear-gradient(135deg, #10b981 0%, #2D8CFF 100%)' }}
+                      style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)' }}
                     >
                       Add Job Description
                     </button>

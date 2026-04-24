@@ -171,7 +171,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
         style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
+          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
           <span style={{
             fontSize: '0.875rem',
             fontWeight: 600,
@@ -186,8 +186,8 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           <span style={{
             fontSize: '0.875rem',
             padding: '2px 8px',
-            background: '#dcfce7',
-            color: '#16a34a',
+            background: '#F8FAFC',
+            color: 'var(--accent)',
             borderRadius: '4px',
             fontWeight: 500
           }}>
@@ -210,11 +210,11 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 key={field.id}
                 className="rounded-lg transition-all cursor-pointer"
                 style={{
-                  background: hasContent ? '#dcfce7' : 'var(--bg-surface)',
+                  background: hasContent ? '#F8FAFC' : 'var(--bg-surface)',
                   border: isDragging
-                    ? '2px dashed #10b981'
+                    ? '2px dashed var(--accent)'
                     : hasContent
-                      ? '1px solid #86efac'
+                      ? '1px solid var(--accent)'
                       : '1px solid #e5e5e5',
                   padding: '16px',
                   minHeight: '100px',
@@ -238,20 +238,20 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   <>
                     <div
                       className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mb-2"
-                      style={{ borderColor: '#10b981', borderTopColor: 'transparent' }}
+                      style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }}
                     />
-                    <span style={{ fontSize: '0.875rem', color: '#10b981' }}>Processing...</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--accent)' }}>Processing...</span>
                   </>
                 ) : hasContent ? (
                   <>
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
-                      style={{ background: '#bbf7d0', color: '#16a34a' }}
+                      style={{ background: '#bbf7d0', color: 'var(--accent)' }}
                     >
                       {ICONS.check}
                     </div>
                     <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--content-text)' }}>{field.label}</span>
-                    <span style={{ fontSize: '0.875rem', color: '#16a34a', marginTop: '2px' }}>{wordCount.toLocaleString()} words</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--accent)', marginTop: '2px' }}>{wordCount.toLocaleString()} words</span>
                     <button
                       className="mt-2 px-3 py-1 rounded text-xs transition-all hover:bg-[var(--bg-elevated)]/50"
                       style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--text-secondary)' }}
@@ -292,11 +292,11 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           <div
             className="rounded-lg transition-all"
             style={{
-              background: inputs.documentation?.length > 0 ? '#f0fdf4' : 'var(--bg-surface)',
+              background: inputs.documentation?.length > 0 ? '#F8FAFC' : 'var(--bg-surface)',
               border: dragOver === 'documentation'
-                ? '2px dashed #10b981'
+                ? '2px dashed var(--accent)'
                 : inputs.documentation?.length > 0
-                  ? '1px solid #86efac'
+                  ? '1px solid var(--accent)'
                   : '1px dashed #d1d5db',
               padding: '12px',
             }}
@@ -319,9 +319,9 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
               <div className="flex items-center justify-center py-4">
                 <div
                   className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2"
-                  style={{ borderColor: '#10b981', borderTopColor: 'transparent' }}
+                  style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }}
                 />
-                <span style={{ fontSize: '0.875rem', color: '#10b981' }}>Processing...</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--accent)' }}>Processing...</span>
               </div>
             ) : inputs.documentation?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -347,7 +347,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 <button
                   onClick={() => docFileInputRef.current?.click()}
                   className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
-                  style={{ background: '#10b981', color: '#ffffff' }}
+                  style={{ background: 'var(--accent)', color: '#ffffff' }}
                 >
                   {ICONS.plus}
                   <span>Add</span>
@@ -389,8 +389,8 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
         <div className="flex items-center justify-center gap-2">
           {hasInputs ? (
             <>
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#10b981' }} />
-              <span style={{ fontSize: '0.875rem', color: '#10b981' }}>Select a section to generate</span>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+              <span style={{ fontSize: '0.875rem', color: 'var(--accent)' }}>Select a section to generate</span>
             </>
           ) : (
             <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Add JD & Resume to start</span>
@@ -462,7 +462,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   setEditText('');
                 }}
                 className="px-4 py-2 rounded text-sm text-[var(--text-primary)]"
-                style={{ background: '#10b981' }}
+                style={{ background: 'var(--accent)' }}
                 disabled={!editText.trim()}
               >
                 Save
