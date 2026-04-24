@@ -104,10 +104,10 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                     e.stopPropagation();
                     if (confirm('Delete this session?')) removeHistoryEntry(idx);
                   }}
-                  className="flex items-center justify-center w-6 h-6 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                  style={{ color: '#94A3B8' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; }}
+                  className="flex items-center justify-center w-7 h-7 rounded-md shrink-0 transition-colors hover:bg-red-50"
+                  style={{ color: '#94A3B8', border: '1px solid #E2E8F0' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FCA5A5'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
