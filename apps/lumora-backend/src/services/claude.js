@@ -426,10 +426,14 @@ IMPORTANT CODE FORMATTING RULE:
   try {
     const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isShortMode ? 'behavioral' : 'general');
     const chosenModel = selectModel(plan, questionType);
+    // Prompt caching — wraps the large system prompt with an ephemeral
+    // cache control so the second-and-beyond request in a 5-minute window
+    // hits the cache and TTFT drops ~50-70%. No output change; full prompt
+    // and full response are preserved.
     const stream = client.messages.stream({
       model: chosenModel,
       max_tokens: maxTokens,
-      system: systemPrompt,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages,
     });
 
