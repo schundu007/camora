@@ -63,9 +63,9 @@ Output ONLY the optimized resume text, ready to copy. No commentary.`;
   } catch (err) {
     console.error('[Resume] Optimize error:', err.message);
     if (!res.headersSent) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: 'Resume processing failed' });
     } else {
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: 'Resume processing failed' })}\n\n`);
       res.end();
     }
   }
@@ -129,9 +129,9 @@ Output ONLY the cover letter text, ready to copy. No commentary.`;
   } catch (err) {
     console.error('[Resume] Cover letter error:', err.message);
     if (!res.headersSent) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: 'Resume processing failed' });
     } else {
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: 'Resume processing failed' })}\n\n`);
       res.end();
     }
   }
@@ -178,8 +178,8 @@ Return this exact JSON format:
       res.json({ score: 0, error: 'Failed to parse ATS analysis', raw: text });
     }
   } catch (err) {
-    console.error('[Resume] ATS score error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('[Resume] ATS score error:', err);
+    res.status(500).json({ error: 'ATS analysis failed' });
   }
 });
 

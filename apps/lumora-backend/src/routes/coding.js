@@ -911,8 +911,8 @@ IMPORTANT:
       return res.json({ code: fixedCode.trim(), explanation: '' });
     }
   } catch (err) {
-    console.error('Auto-fix error:', err.message);
-    return res.status(500).json({ error: 'Auto-fix failed: ' + err.message });
+    console.error('Auto-fix error:', err);
+    return res.status(500).json({ error: 'Auto-fix failed' });
   }
 });
 
@@ -967,8 +967,8 @@ Respond with ONLY the translated code inside a single \`\`\`${target} code block
 
     return res.json({ code: translated, language: target });
   } catch (err) {
-    console.error('Translate error:', err.message);
-    return res.status(500).json({ error: 'Translation failed: ' + err.message });
+    console.error('Translate error:', err);
+    return res.status(500).json({ error: 'Translation failed' });
   }
 });
 

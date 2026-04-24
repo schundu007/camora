@@ -309,7 +309,8 @@ router.post('/lookup', async (req, res) => {
     console.log(`[DiagramLookup] No cache for: ${question.slice(0, 50)}`);
     res.json({ success: false, cached: false });
   } catch (err) {
-    res.json({ success: false, error: err.message });
+    console.error('[DiagramLookup] error:', err);
+    res.json({ success: false, error: 'Diagram lookup failed' });
   }
 });
 
@@ -330,7 +331,8 @@ router.get('/cache-stats', async (req, res) => {
     `);
     res.json({ count: stats.rows.length, diagrams: stats.rows });
   } catch (err) {
-    res.json({ error: err.message });
+    console.error('[DiagramCacheStats] error:', err);
+    res.json({ error: 'Cache stats unavailable' });
   }
 });
 
