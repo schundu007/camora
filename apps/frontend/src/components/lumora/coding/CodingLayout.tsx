@@ -110,6 +110,8 @@ interface CodingLayoutProps {
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
+  /** Ref to drop captured/screenshot problem text in WITHOUT auto-submitting — review first */
+  onCapturedProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -149,7 +151,7 @@ function useTheme(dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded, onVoiceProblemRef }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded, onVoiceProblemRef, onCapturedProblemRef }: CodingLayoutProps) {
   const { token } = useAuth();
   const t = useTheme(!!embedded);
 
@@ -619,6 +621,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
   }, [onVoiceProblemRef, language, onSubmit, clearStreamChunks, setParsedBlocks]);
+
+  // Register screenshot-captured problem handler — drops text into the problem
+  // box on the description tab so the user can review/edit before submitting.
+  useEffect(() => {
+    if (onCapturedProblemRef) {
+      onCapturedProblemRef.current = (text: string) => {
+        setProblemText(text);
+        setProblemTab('description');
+      };
+    }
+    return () => { if (onCapturedProblemRef) onCapturedProblemRef.current = null; };
+  }, [onCapturedProblemRef]);
 
   const handleFetchFromUrl = async () => {
     if (!problemUrl.trim()) { setError('Please enter a URL'); return; }

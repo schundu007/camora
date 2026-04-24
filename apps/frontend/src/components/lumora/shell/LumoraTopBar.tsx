@@ -3,6 +3,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { LumoraSettings } from './LumoraSettings';
+import ScreenCaptureButton from '@/components/lumora/shared/ScreenCaptureButton';
 import type { LumoraTab } from './LumoraIconRail';
 
 /* ── Color tokens (standardized) ── */
@@ -20,12 +21,18 @@ const C = {
 interface LumoraTopBarProps {
   activeTab: LumoraTab;
   onTranscription?: (text: string) => void;
+  /** Called when a screenshot capture yields problem text — routed to the
+      current tab's problem input WITHOUT auto-submit (user reviews first). */
+  onCapturedProblem?: (text: string) => void;
   inline?: boolean;
 }
 
-export function LumoraTopBar({ activeTab, onTranscription, inline = false }: LumoraTopBarProps) {
+export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, inline = false }: LumoraTopBarProps) {
   const { status } = useInterviewStore();
   const [showSettings, setShowSettings] = useState(false);
+
+  const captureKind: 'coding' | 'design' = activeTab === 'design' ? 'design' : 'coding';
+  const canCapture = activeTab === 'coding' || activeTab === 'design';
 
   if (inline) {
     // Inline mode: just the audio controls, no wrapper header
@@ -35,6 +42,12 @@ export function LumoraTopBar({ activeTab, onTranscription, inline = false }: Lum
           <AudioCapture onTranscription={onTranscription} />
           <div className="w-px h-5 mx-1" style={{ background: C.border }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
+          {canCapture && onCapturedProblem && (
+            <>
+              <div className="w-px h-5 mx-1" style={{ background: C.border }} />
+              <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="icon" />
+            </>
+          )}
         </div>
         <VoiceEnrollment disabled={false} />
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium" style={{ background: C.elevated, border: `1px solid ${C.border}`, color: C.muted }}>
@@ -60,6 +73,12 @@ export function LumoraTopBar({ activeTab, onTranscription, inline = false }: Lum
           <AudioCapture onTranscription={onTranscription} />
           <div className="w-px h-5 mx-1" style={{ background: C.border }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
+          {canCapture && onCapturedProblem && (
+            <>
+              <div className="w-px h-5 mx-1" style={{ background: C.border }} />
+              <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="icon" />
+            </>
+          )}
         </div>
       </div>
 
