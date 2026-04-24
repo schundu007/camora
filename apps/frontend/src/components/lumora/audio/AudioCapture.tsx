@@ -427,10 +427,8 @@ function UnifiedMicButton({
           type="button"
           onClick={handleToggle}
           disabled={continuousMode}
-          className="relative flex items-center justify-center rounded-full transition-all select-none"
+          className="relative flex items-center justify-center rounded-full transition-all select-none w-10 h-10 sm:w-8 sm:h-8"
           style={{
-            width: 32,
-            height: 32,
             background: isLive || isRec ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
             border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
             color: isLive || isRec ? 'var(--accent)' : 'var(--text-muted)',
@@ -489,7 +487,7 @@ function UnifiedMicButton({
       <button
         type="button"
         onClick={handleModeToggle}
-        className="text-[9px] font-bold uppercase tracking-[0.16em] px-2 py-1 rounded transition-colors"
+        className="text-[10px] sm:text-[9px] font-bold uppercase tracking-[0.16em] px-3 py-2 sm:px-2 sm:py-1 rounded transition-colors"
         style={{
           color: isLive ? 'var(--accent)' : 'var(--text-muted)',
           background: isLive ? 'var(--accent-subtle)' : 'var(--bg-elevated)',

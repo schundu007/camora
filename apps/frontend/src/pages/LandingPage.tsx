@@ -196,8 +196,8 @@ export default function LandingPage() {
       <section className="py-10 overflow-hidden" style={{ background: '#FFFFFF' }}>
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: '#94A3B8' }}>Trusted by frost engineers at</p>
         <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to right, #FFFFFF, transparent)' }} />
-          <div className="absolute right-0 top-0 bottom-0 w-20 z-10" style={{ background: 'linear-gradient(to left, #FFFFFF, transparent)' }} />
+          <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, #FFFFFF, transparent)' }} />
+          <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to left, #FFFFFF, transparent)' }} />
           <div className="flex" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
             {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
               <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}

@@ -1399,7 +1399,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                   <ul style={S.ul}>{q.capacityEstimation.assumptions.map((a: string, j: number) => <li key={j} style={{ ...S.li, fontSize: '13px', color: 'var(--text-muted)' }}>{a}</li>)}</ul>
                 )}
                 {q.capacityEstimation.calculations && (
-                  <div style={{ margin: '8px 20px', overflow: 'auto' }}>
+                  <div style={{ margin: '8px 0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                     <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
                       <thead><tr style={{ background: '#F8FAFC' }}>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Metric</th>
