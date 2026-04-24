@@ -2279,7 +2279,7 @@ export default function TopicDetail({
 
               {/* 11. Visual Assets — comparisons, cheat sheets, charts, evolution */}
               {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
-                <div className={`grid grid-cols-1 gap-2 ${topicDetails.comparisonTables.length >= 2 ? 'lg:grid-cols-2' : ''}`}>
+                <div className="grid grid-cols-1 gap-4">
                   {topicDetails.comparisonTables.map((comp) => (
                     <ComparisonCard key={comp.id} comparison={comp} />
                   ))}
@@ -2287,7 +2287,7 @@ export default function TopicDetail({
               )}
 
               {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
-                <div className={`grid grid-cols-1 gap-2 ${topicDetails.visualCards.length >= 3 ? 'lg:grid-cols-3' : topicDetails.visualCards.length === 2 ? 'lg:grid-cols-2' : ''}`}>
+                <div className={`grid grid-cols-1 gap-3 [&>*]:min-w-0 ${topicDetails.visualCards.length >= 3 ? 'lg:grid-cols-3' : topicDetails.visualCards.length === 2 ? 'lg:grid-cols-2' : ''}`}>
                   {topicDetails.visualCards.map((card) => (
                     <CheatSheetCard key={card.id} card={card} />
                   ))}

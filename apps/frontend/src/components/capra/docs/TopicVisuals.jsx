@@ -55,12 +55,10 @@ export function ComparisonCard({ comparison }) {
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{title}</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#e3e8ee]">
-        <div className="p-3">
+        <div className="p-4 min-w-0">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${left.color}15` }}>
-              <Icon name={left.icon} size={14} style={{ color: left.color }} />
-            </div>
-            <h4 className="text-sm font-bold landing-display" style={{ color: left.color }}>{left.title}</h4>
+            <Icon name={left.icon} size={14} className="text-[var(--text-muted)]" />
+            <h4 className="text-sm font-semibold landing-display text-[var(--text-primary)]">{left.title}</h4>
           </div>
           <div className="space-y-2">
             {left.items.map((item, i) => (
@@ -71,12 +69,10 @@ export function ComparisonCard({ comparison }) {
             ))}
           </div>
         </div>
-        <div className="p-3">
+        <div className="p-4 min-w-0">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${right.color}15` }}>
-              <Icon name={right.icon} size={14} style={{ color: right.color }} />
-            </div>
-            <h4 className="text-sm font-bold landing-display" style={{ color: right.color }}>{right.title}</h4>
+            <Icon name={right.icon} size={14} className="text-[var(--text-muted)]" />
+            <h4 className="text-sm font-semibold landing-display text-[var(--text-primary)]">{right.title}</h4>
           </div>
           <div className="space-y-2">
             {right.items.map((item, i) => (
@@ -100,10 +96,10 @@ export function CheatSheetCard({ card }) {
   const hasBarData = card.items?.[0]?.bar !== undefined;
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-      <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2" style={{ background: `${cardColor}08` }}>
-        {card.icon && <Icon name={card.icon} size={14} style={{ color: cardColor }} />}
+      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+        {card.icon && <Icon name={card.icon} size={14} className="text-[var(--text-muted)]" />}
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{card.title}</h3>
-        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{card.items?.length || 0} items</span>
+        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{card.items?.length || 0}</span>
       </div>
       <div className="p-3 space-y-1.5">
         {(card.items || []).map((item, i) => (
@@ -112,11 +108,8 @@ export function CheatSheetCard({ card }) {
               <span className="text-xs text-[var(--text-secondary)] landing-body w-[45%] flex-shrink-0 truncate" title={item.label}>{item.label}</span>
               <div className="flex-1 h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden relative">
                 <div
-                  className="h-full rounded-full transition-all duration-500 ease-out"
-                  style={{
-                    width: `${Math.max(item.bar || 0, 3)}%`,
-                    background: `linear-gradient(90deg, ${cardColor}40, ${cardColor})`
-                  }}
+                  className="h-full rounded-full transition-all duration-500 ease-out bg-[var(--accent)]"
+                  style={{ width: `${Math.max(item.bar || 0, 3)}%` }}
                 />
               </div>
               <span className="text-[10px] landing-mono font-semibold text-[var(--text-muted)] w-[25%] flex-shrink-0 text-right">{item.value}</span>
@@ -155,11 +148,8 @@ export function EvolutionTimeline({ steps }) {
         <div className="flex items-center gap-0 relative">
           <div className="absolute top-[14px] left-4 right-4 h-0.5 bg-[var(--bg-elevated)] z-0" />
           <div
-            className="absolute top-[14px] left-4 h-0.5 z-[1] transition-all duration-300"
-            style={{
-              width: `${(activeStep / Math.max(steps.length - 1, 1)) * (100 - (8 / steps.length))}%`,
-              background: stepColor
-            }}
+            className="absolute top-[14px] left-4 h-0.5 z-[1] transition-all duration-300 bg-[var(--accent)]"
+            style={{ width: `${(activeStep / Math.max(steps.length - 1, 1)) * (100 - (8 / steps.length))}%` }}
           />
           {steps.map((s, i) => (
             <button
@@ -170,8 +160,8 @@ export function EvolutionTimeline({ steps }) {
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2"
                 style={{
-                  background: i <= activeStep ? (s.color || 'var(--accent)') : '#f7f8f9',
-                  borderColor: i <= activeStep ? (s.color || 'var(--accent)') : '#e3e8ee',
+                  background: i <= activeStep ? 'var(--accent)' : '#f7f8f9',
+                  borderColor: i <= activeStep ? 'var(--accent)' : '#e3e8ee',
                   transform: i === activeStep ? 'scale(1.2)' : 'scale(1)'
                 }}
               >
@@ -196,7 +186,7 @@ export function EvolutionTimeline({ steps }) {
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: `${stepColor}15`, color: stepColor }}>
+              <span className="text-[10px] font-bold landing-mono px-1.5 py-0.5 rounded uppercase tracking-[0.14em] text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]">
                 Stage {current.step || activeStep + 1}
               </span>
               <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display">{current.title}</h4>
@@ -277,17 +267,14 @@ export function PatternCard({ pattern }) {
       className="rounded-lg p-2.5 border border-[var(--border)] hover:border-[var(--border)] transition-all bg-[var(--bg-surface)] hover:shadow-sm group"
     >
       <div className="flex items-start gap-2.5">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: `${pattern.color}12` }}
-        >
-          <Icon name={pattern.icon} size={16} style={{ color: pattern.color }} />
+        <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
+          <Icon name={pattern.icon} size={16} className="text-[var(--text-muted)]" />
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display mb-0.5">{pattern.name}</h4>
           <p className="text-xs text-[var(--text-muted)] landing-body mb-1.5">{pattern.description}</p>
           <div className="flex flex-wrap gap-1">
-            <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
+            <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-[0.1em]">
               Use when: {pattern.useWhen}
             </span>
           </div>
