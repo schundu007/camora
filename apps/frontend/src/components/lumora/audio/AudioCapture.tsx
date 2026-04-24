@@ -361,17 +361,13 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 /**
  * Single mic control replacing the old Live/Manual mode selector.
  *
- *   Short tap   → one-shot recording (start / stop)
- *   Long press  → toggle continuous "Auto" listening (Sona keeps
- *                 listening, filters non-questions automatically,
- *                 fires the LLM only on real interview questions)
+ *   Mic button  → one-shot recording toggle (tap to start, tap to stop)
+ *   AUTO pill   → continuous-listening toggle (one click to turn on,
+ *                 one click to turn off — Sona keeps listening and fires
+ *                 only on real interview questions)
  *
- * Visual states:
- *   idle        — hollow mic, muted color
- *   one-shot    — filled mic, accent color, pulsing ring
- *   auto on     — filled mic + "AUTO" pill, accent color, steady glow
- *   long-press  — ring fills around the button while held
- */
+ * No long-press, no hold-to-activate — every action is a single click
+ * so it works reliably across mice, trackpads, and touch. */
 function UnifiedMicButton({
   continuousMode, storeIsRecording, audioLevel,
   handleToggle, handleModeToggle,
@@ -382,126 +378,18 @@ function UnifiedMicButton({
   handleToggle: () => void;
   handleModeToggle: () => void;
 }) {
-  const LONG_PRESS_MS = 600;
-  const pressStartRef = useRef<number | null>(null);
-  const longPressFiredRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const [pressProgress, setPressProgress] = useState(0); // 0..1 while held
-
-  // Latest handler refs so the setTimeout callback never sees a stale closure.
-  const handleModeToggleRef = useRef(handleModeToggle);
-  const handleToggleRef = useRef(handleToggle);
-  const continuousModeRef = useRef(continuousMode);
-  useEffect(() => { handleModeToggleRef.current = handleModeToggle; }, [handleModeToggle]);
-  useEffect(() => { handleToggleRef.current = handleToggle; }, [handleToggle]);
-  useEffect(() => { continuousModeRef.current = continuousMode; }, [continuousMode]);
-
-  const clearTimers = useCallback(() => {
-    if (rafRef.current != null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    if (timeoutRef.current != null) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
-
-  const beginPress = useCallback(() => {
-    longPressFiredRef.current = false;
-    pressStartRef.current = performance.now();
-    setPressProgress(0);
-    clearTimers();
-
-    // Progress ring rAF loop
-    const tick = () => {
-      if (pressStartRef.current == null) return;
-      const elapsed = performance.now() - pressStartRef.current;
-      const p = Math.min(1, elapsed / LONG_PRESS_MS);
-      setPressProgress(p);
-      if (p < 1) rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-
-    // Long-press threshold — fire the mode toggle
-    timeoutRef.current = window.setTimeout(() => {
-      timeoutRef.current = null;
-      // pressStartRef still set means the user is still holding.
-      if (pressStartRef.current != null) {
-        longPressFiredRef.current = true;
-        handleModeToggleRef.current();
-      }
-    }, LONG_PRESS_MS);
-  }, [clearTimers]);
-
-  const endPress = useCallback(() => {
-    clearTimers();
-    const wasLongPress = longPressFiredRef.current;
-    pressStartRef.current = null;
-    setPressProgress(0);
-    // Short tap handling:
-    //   - If long-press already fired, we're done (it's a long-press cycle).
-    //   - If we're currently in continuous mode, short taps do nothing;
-    //     the user has to long-press to turn Auto off.
-    //   - Otherwise, toggle one-shot recording.
-    if (!wasLongPress && !continuousModeRef.current) {
-      handleToggleRef.current();
-    }
-  }, [clearTimers]);
-
-  // Cancel only on true abort signals (pointercancel / window blur), NOT
-  // on small mouse movements — the old onMouseLeave was firing on
-  // sub-pixel drift and wiping out legitimate long-presses.
-  const cancelPress = useCallback(() => {
-    clearTimers();
-    pressStartRef.current = null;
-    setPressProgress(0);
-  }, [clearTimers]);
-
-  useEffect(() => () => clearTimers(), [clearTimers]);
-
   const isLive = continuousMode;
   const isRec = !continuousMode && storeIsRecording;
 
   return (
     <div className="flex items-center gap-2 shrink-0">
-      {/* The button itself */}
+      {/* Mic button — single click toggles one-shot recording */}
       <div className="relative inline-flex">
-        {/* Long-press progress ring */}
-        {pressProgress > 0 && (
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            width="32" height="32" viewBox="0 0 32 32"
-          >
-            <circle
-              cx="16" cy="16" r="14.5"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="1.5"
-              strokeDasharray={2 * Math.PI * 14.5}
-              strokeDashoffset={(1 - pressProgress) * 2 * Math.PI * 14.5}
-              transform="rotate(-90 16 16)"
-              style={{ transition: 'none' }}
-            />
-          </svg>
-        )}
-
         <button
-          ref={buttonRef}
           type="button"
-          onPointerDown={(e) => {
-            // Capture the pointer so drift during the press (finger
-            // wiggle, mouse tremor) stays with this button and doesn't
-            // bubble elsewhere or fire cancel events.
-            try { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); } catch { /* older browsers */ }
-            beginPress();
-          }}
-          onPointerUp={() => endPress()}
-          onPointerCancel={() => cancelPress()}
-          onContextMenu={(e) => e.preventDefault()} /* don't show touch context menu on long-press */
-          className="relative flex items-center justify-center rounded-full transition-all select-none touch-none"
+          onClick={handleToggle}
+          disabled={continuousMode}
+          className="relative flex items-center justify-center rounded-full transition-all select-none"
           style={{
             width: 32,
             height: 32,
@@ -509,14 +397,16 @@ function UnifiedMicButton({
             border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
             color: isLive || isRec ? 'var(--accent)' : 'var(--text-muted)',
             boxShadow: isLive ? '0 0 0 3px rgba(41,181,232,0.18)' : 'none',
+            opacity: continuousMode ? 0.5 : 1,
+            cursor: continuousMode ? 'not-allowed' : 'pointer',
           }}
-          aria-pressed={isLive || isRec}
+          aria-pressed={isRec}
           title={
             isLive
-              ? 'Sona is listening — long-press to stop Auto'
+              ? 'Auto is on — mic is controlled by Sona. Click AUTO to turn off.'
               : isRec
-                ? 'Recording — tap to stop · long-press for Auto'
-                : 'Tap to record one answer · long-press for Auto (always listening)'
+                ? 'Recording — click to stop'
+                : 'Click to record one answer'
           }
         >
           {isLive ? (
@@ -557,21 +447,24 @@ function UnifiedMicButton({
         </button>
       </div>
 
-      {/* AUTO badge — only while continuous mode is on */}
-      {isLive && (
-        <span
-          className="text-[9px] font-bold uppercase tracking-[0.16em] px-1.5 py-0.5 rounded"
-          style={{
-            color: 'var(--accent)',
-            background: 'var(--accent-subtle)',
-            border: '1px solid var(--accent)',
-            fontFamily: 'var(--font-mono)',
-          }}
-          title="Auto mode — Sona listens continuously and answers every detected question. Long-press mic to turn off."
-        >
-          AUTO
-        </span>
-      )}
+      {/* AUTO toggle — one click turns continuous listening on, one click turns it off */}
+      <button
+        type="button"
+        onClick={handleModeToggle}
+        className="text-[9px] font-bold uppercase tracking-[0.16em] px-2 py-1 rounded transition-colors"
+        style={{
+          color: isLive ? 'var(--accent)' : 'var(--text-muted)',
+          background: isLive ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+          border: `1px solid ${isLive ? 'var(--accent)' : 'var(--border)'}`,
+          fontFamily: 'var(--font-mono)',
+        }}
+        title={isLive
+          ? 'Auto is ON — Sona is listening continuously and answering every detected question. Click to stop.'
+          : 'Turn on Auto — Sona will listen continuously and answer each question as it is asked.'}
+        aria-pressed={isLive}
+      >
+        {isLive ? '● AUTO' : 'AUTO'}
+      </button>
 
       {/* Audio-level bars */}
       <div className="flex items-center gap-0.5 shrink-0" aria-hidden="true">
