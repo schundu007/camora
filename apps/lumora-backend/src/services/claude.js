@@ -319,6 +319,9 @@ export async function* streamResponse(question, history, options = {}) {
     systemContext = null,
     detailLevel = null,
     plan = 'free',
+    // Optional AbortSignal passed from the route so a client disconnect can tear
+    // down the Anthropic stream instead of letting it burn tokens to completion.
+    signal = null,
   } = options;
 
   const startTime = performance.now();
@@ -435,15 +438,18 @@ IMPORTANT CODE FORMATTING RULE:
       max_tokens: maxTokens,
       system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages,
-    });
+    }, signal ? { signal } : undefined);
 
     for await (const event of stream) {
+      if (signal?.aborted) { try { stream.controller?.abort(); } catch {} break; }
       if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
         const token = event.delta.text;
         chunks.push(token);
         yield { event: 'token', data: { t: token } };
       }
     }
+
+    if (signal?.aborted) return;
 
     // Get final message for usage info
     const finalMessage = await stream.finalMessage();

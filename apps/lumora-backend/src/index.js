@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { config } from './config/index.js';
-import { query } from './config/database.js';
+import { query, closePool } from './config/database.js';
 import { ensureUsageTable } from './services/usage.js';
 
 dotenv.config();
@@ -172,14 +172,22 @@ runMigrations().then(() => {
     console.log(`Lumora backend running on port ${PORT}`);
   });
 
-  // Graceful shutdown
+  // Graceful shutdown — stop accepting connections, drain, close the DB pool,
+  // exit. Previously exit happened before closePool so in-flight queries could
+  // be severed and sockets leaked on deploy.
+  let shuttingDown = false;
   const shutdown = async (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(`${signal} received, shutting down gracefully...`);
-    server.close(() => {
+    const forceTimer = setTimeout(() => { console.error('Forced shutdown'); process.exit(1); }, 15_000);
+    server.close(async () => {
       console.log('HTTP server closed');
+      try { await closePool(); console.log('DB pool closed'); }
+      catch (err) { console.error('closePool failed:', err?.message); }
+      clearTimeout(forceTimer);
       process.exit(0);
     });
-    setTimeout(() => { console.error('Forced shutdown'); process.exit(1); }, 10000);
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
