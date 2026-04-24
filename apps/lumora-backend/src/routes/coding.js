@@ -631,6 +631,62 @@ IMPORTANT:
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /translate — Translate a single solution to another language
+// ---------------------------------------------------------------------------
+
+router.post('/translate', authenticate, async (req, res) => {
+  const { code, fromLanguage, toLanguage, problem } = req.body;
+
+  if (!code || !toLanguage) {
+    return res.status(400).json({ error: 'Missing code or toLanguage' });
+  }
+  const target = toLanguage.toLowerCase();
+  if (!SUPPORTED_LANGUAGES.includes(target)) {
+    return res.status(400).json({
+      error: `Unsupported target language: ${toLanguage}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
+    });
+  }
+
+  const problemContext = problem ? `\nORIGINAL PROBLEM:\n${problem.slice(0, 2000)}\n` : '';
+  const fromHint = fromLanguage ? ` from ${fromLanguage}` : '';
+
+  const systemPrompt = `You translate interview code${fromHint} to ${target}.
+
+Rules:
+- Preserve algorithmic approach and complexity exactly — do NOT change the strategy
+- Use the LATEST modern idioms and built-in features of ${target}
+- Keep it minimal (10-30 lines typical, 40 lines max)
+- NO comments, NO debug prints, NO main/test blocks
+- Include necessary imports for ${target}
+- The translated code must compile and produce identical output for the same inputs
+
+Respond with ONLY the translated code inside a single \`\`\`${target} code block — no prose before or after.`;
+
+  try {
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: getModelForUser(req),
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{
+        role: 'user',
+        content: `${problemContext}\nORIGINAL CODE (${fromLanguage || 'source'}):\n\`\`\`\n${code}\n\`\`\`\n\nTranslate the code above to ${target}.`,
+      }],
+    });
+
+    const text = msg.content?.map(b => b.text).join('') || '';
+    const m = text.match(/```(?:\w+)?\n?([\s\S]*?)```/);
+    const translated = m ? m[1].trim() : text.trim();
+    if (!translated) return res.status(502).json({ error: 'Translator returned empty output' });
+
+    return res.json({ code: translated, language: target });
+  } catch (err) {
+    console.error('Translate error:', err.message);
+    return res.status(500).json({ error: 'Translation failed: ' + err.message });
+  }
+});
+
 /**
  * POST /fetch-problem
  * Fetch a coding problem from a URL (LeetCode, HackerRank, etc.)

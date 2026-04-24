@@ -506,9 +506,45 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
   // ── Actions ─────────────────────────────────────────────────────────────
 
-  const handleLanguageChange = (newLang: string) => {
+  const [isTranslating, setIsTranslating] = useState(false);
+  const translateAbortRef = useRef<AbortController | null>(null);
+
+  const handleLanguageChange = async (newLang: string) => {
+    const prevLang = language;
     setLanguage(newLang);
-    if (!code || code === getDefaultCode(language)) setCode(getDefaultCode(newLang));
+    // No solution yet → fall back to language template
+    if (!jsonSolution || !code || code === getDefaultCode(prevLang)) {
+      if (!code || code === getDefaultCode(prevLang)) setCode(getDefaultCode(newLang));
+      return;
+    }
+    // Translate the active solution to the new language instead of regenerating all 3
+    translateAbortRef.current?.abort();
+    const controller = new AbortController();
+    translateAbortRef.current = controller;
+    setIsTranslating(true);
+    try {
+      const r = await fetch(`${API_BASE_URL}/api/v1/coding/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+        body: JSON.stringify({
+          code,
+          fromLanguage: prevLang,
+          toLanguage: newLang,
+          problem: problemText,
+        }),
+      });
+      const data = await r.json();
+      if (r.ok && data.code) {
+        setCode(data.code);
+      } else if (data.error) {
+        setError(data.error);
+      }
+    } catch (e: any) {
+      if (e.name !== 'AbortError') setError(e.message || 'Translation failed');
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleReset = useCallback(() => {
@@ -1172,9 +1208,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           <div className="flex items-center justify-between px-3 py-1.5" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-2">
               <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
-                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer" style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
+                disabled={isTranslating}
+                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer disabled:opacity-60" style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
+              {isTranslating && (
+                <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#22D3EE' }}>
+                  <div className="w-3 h-3 border-2 border-[rgba(34,211,238,0.3)] border-t-[#22D3EE] rounded-full animate-spin" />
+                  Translating…
+                </span>
+              )}
               <button onClick={handleRun} disabled={isRunning}
                 className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#22D3EE' }}
                 title="Run (Ctrl+Enter)">
