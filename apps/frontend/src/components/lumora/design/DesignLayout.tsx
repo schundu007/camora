@@ -1102,13 +1102,24 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {sd.followups.map((f, i) => (
-                        <div key={i} className="rounded-lg p-2.5" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
+                        <button
+                          key={i}
+                          onClick={() => handleSubmit(f.question)}
+                          disabled={isLoading}
+                          className="rounded-lg p-2.5 text-left transition-all hover:shadow-sm disabled:opacity-60"
+                          style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+                          title="Click to re-stream a focused answer to this follow-up"
+                          onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = '#22D3EE'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.cardBorder; }}>
                           <div className="flex items-start gap-1.5 mb-1">
                             <span className="text-xs font-mono font-bold shrink-0" style={{ color: t.headerText }}>Q{i + 1}</span>
-                            <span className="text-xs font-semibold" style={{ color: t.text }}>{f.question}</span>
+                            <span className="text-xs font-semibold flex-1" style={{ color: t.text }}>{f.question}</span>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: '#22D3EE' }}>
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
                           </div>
                           <p className="text-xs leading-relaxed pl-5" style={{ color: t.textMuted }}>{f.answer}</p>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
