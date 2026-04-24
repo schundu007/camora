@@ -35,6 +35,98 @@ function cleanTags(text: string): string {
   return text.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/* ── STAR detector — returns sections if the answer is behavioral STAR ── */
+const STAR_LABELS = ['SITUATION', 'TASK', 'ACTION', 'RESULT'] as const;
+type StarLabel = typeof STAR_LABELS[number];
+
+function parseStar(text: string): { sections: { label: StarLabel; body: string }[] } | null {
+  if (!text) return null;
+  // Line-level parse: collect each labeled block until the next label or end
+  const lines = text.split('\n');
+  const found: { label: StarLabel; startLine: number }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const stripped = lines[i].trim().replace(/^\*+\s*/, '').replace(/\*+$/, '');
+    const m = stripped.match(/^(SITUATION|TASK|ACTION|RESULT)\s*[:\-—]/i);
+    if (m) found.push({ label: m[1].toUpperCase() as StarLabel, startLine: i });
+  }
+  // Require at least Situation + Action + Result to treat as STAR (Task is often collapsed into Situation)
+  const labels = new Set(found.map(f => f.label));
+  if (!labels.has('SITUATION') || !labels.has('ACTION') || !labels.has('RESULT')) return null;
+
+  const sections: { label: StarLabel; body: string }[] = [];
+  for (let k = 0; k < found.length; k++) {
+    const { label, startLine } = found[k];
+    const endLine = k + 1 < found.length ? found[k + 1].startLine : lines.length;
+    // Strip the label off the first line
+    const firstLine = lines[startLine].replace(/^\s*\*?\*?\s*(SITUATION|TASK|ACTION|RESULT)\s*[:\-—]\s*/i, '');
+    const body = [firstLine, ...lines.slice(startLine + 1, endLine)].join('\n').trim();
+    sections.push({ label, body });
+  }
+  // Enforce canonical order S → T → A → R for display
+  const order: Record<StarLabel, number> = { SITUATION: 0, TASK: 1, ACTION: 2, RESULT: 3 };
+  sections.sort((a, b) => order[a.label] - order[b.label]);
+  return { sections };
+}
+
+/* ── StarAnswer — renders a behavioral STAR answer as 4 scannable cards ── */
+function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; body: string }[]; streaming?: boolean }) {
+  const labelCopy: Record<StarLabel, { short: string; hint: string }> = {
+    SITUATION: { short: 'Situation', hint: 'Set the scene' },
+    TASK: { short: 'Task', hint: 'Your responsibility' },
+    ACTION: { short: 'Action', hint: 'What you did' },
+    RESULT: { short: 'Result', hint: 'Measurable outcome' },
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      {sections.map((s, i) => (
+        <div key={s.label} className="rounded-lg overflow-hidden"
+          style={{
+            background: 'rgba(34,211,238,0.04)',
+            border: '1px solid rgba(34,211,238,0.18)',
+            borderLeft: '3px solid #22D3EE',
+          }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(34,211,238,0.06)', borderBottom: '1px solid rgba(34,211,238,0.1)' }}>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
+                style={{ background: '#22D3EE', color: '#FFFFFF', fontFamily: "'Clash Display', sans-serif" }}>
+                {s.label[0]}
+              </span>
+              <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: '#0E7490', fontFamily: "'Clash Display', sans-serif" }}>
+                {labelCopy[s.label].short}
+              </span>
+              <span className="text-[10px]" style={{ color: '#64748B' }}>· {labelCopy[s.label].hint}</span>
+            </div>
+            <button
+              onClick={() => navigator.clipboard.writeText(s.body)}
+              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-colors"
+              style={{ color: '#64748B' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+              Copy
+            </button>
+          </div>
+          <div className="px-3 py-2">
+            <RichText text={s.body} />
+          </div>
+        </div>
+      ))}
+      {streaming && sections.length < 4 && (
+        <div className="text-[10px] px-2 py-1 flex items-center gap-1.5" style={{ color: '#64748B' }}>
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22D3EE' }} />
+          Generating remaining STAR sections…
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── AnswerView — picks STAR cards for behavioral, RichText otherwise ── */
+function AnswerView({ text, streaming }: { text: string; streaming?: boolean }) {
+  const star = useMemo(() => parseStar(text), [text]);
+  if (star) return <StarAnswer sections={star.sections} streaming={streaming} />;
+  return <RichText text={text} />;
+}
+
 /* ── RichText — renders markdown with proper code blocks ── */
 function RichText({ text }: { text: string }) {
   if (!text) return null;
@@ -538,7 +630,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                       <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#29B5E8' }}>Answer</span>
                     </div>
-                    <RichText text={msg.text} />
+                    <AnswerView text={msg.text} />
                   </div>
                 ))}
                 {streaming && (
@@ -547,7 +639,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5" className="animate-pulse"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                       <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#29B5E8' }}>Answering...</span>
                     </div>
-                    {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#29B5E8' }} /></>
+                    {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#29B5E8' }} /></>
                       : <span className="animate-pulse text-xs" style={{ color: '#94A3B8' }}>Thinking...</span>}
                   </div>
                 )}
@@ -592,7 +684,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     </svg>
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Icicle</span>
                   </div>
-                  <div className="min-w-0"><RichText text={msg.text} /></div>
+                  <div className="min-w-0"><AnswerView text={msg.text} /></div>
                 </div>
               ))}
               {streaming && (
@@ -604,7 +696,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Icicle</span>
                   </div>
                   <div>
-                    {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
+                    {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
                       : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
                   </div>
                 </div>
