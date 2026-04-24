@@ -322,6 +322,10 @@ export async function* streamResponse(question, history, options = {}) {
   const resume = systemContext || resumeContext || getDefaultResumeContext();
   const technical = systemContext ? '' : (technicalContext || getDefaultTechnicalContext());
 
+  // Company culture frame — pulled from the systemContext (JD + company fields)
+  const { getCultureFrame } = await import('./companyCulture.js');
+  const cultureFrame = getCultureFrame(systemContext || '');
+
   // Select system prompt and max_tokens
   let systemPrompt;
   let maxTokens;
@@ -346,6 +350,7 @@ ABSOLUTE RULES:
 
 ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
+${cultureFrame}
 
 Think: What would fit on a sticky note that helps someone ace this question?`;
     // Raised from 600 → 1200: 600 truncated full STAR answers (Action = 3 bullets +
