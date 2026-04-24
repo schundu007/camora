@@ -15,6 +15,11 @@ import { checkUsage } from '../middleware/usageLimits.js';
 
 const router = Router();
 
+// Single Anthropic client shared across requests. The SDK has its own
+// connection pool + rate-limit handling; creating a new client per request
+// (5× in this file before this change) defeats that pooling.
+const anthropicClient = new Anthropic();
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -541,10 +546,20 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   // Telemetry: every failure mode is logged server-side with model,
   // duration, raw-head/tail (truncated to ~2 KB), user-agent, and
   // parse error so we can diagnose recurring failure patterns.
-  const client = new Anthropic();
+  const client = anthropicClient;
   const startTime = performance.now();
   const userAgent = req.get?.('user-agent') || req.headers?.['user-agent'] || 'unknown';
   const primaryModel = getModelForUser(req);
+
+  // Wire client disconnect to an AbortController so the Anthropic stream tears
+  // down immediately instead of burning through 15s+ of tokens the browser will
+  // never see. Checked at stream-loop boundaries below.
+  const abortController = new AbortController();
+  let clientDisconnected = false;
+  req.on('close', () => {
+    clientDisconnected = true;
+    try { abortController.abort(); } catch {}
+  });
 
   let rawAnswer = '';
   let inputTokens = 0;
@@ -568,15 +583,17 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
         max_tokens: MAX_TOKENS,
         system: systemPrompt,
         messages,
-      });
+      }, { signal: abortController.signal });
 
       for await (const event of stream) {
+        if (clientDisconnected) { try { stream.controller?.abort(); } catch {} break; }
         if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
           const token = event.delta.text;
           chunks.push(token);
           sendEvent('token', { t: token });
         }
       }
+      if (clientDisconnected) return;
 
       const finalMessage = await stream.finalMessage();
       if (finalMessage.usage) {
@@ -848,7 +865,7 @@ router.post('/fix', authenticate, async (req, res) => {
   const model = getModelForUser(req);
 
   try {
-    const client = new Anthropic();
+    const client = anthropicClient;
     const response = await client.messages.create({
       model,
       max_tokens: 2048,
@@ -932,7 +949,7 @@ Rules:
 Respond with ONLY the translated code inside a single \`\`\`${target} code block — no prose before or after.`;
 
   try {
-    const client = new Anthropic();
+    const client = anthropicClient;
     const msg = await client.messages.create({
       model: getModelForUser(req),
       max_tokens: 2000,
@@ -987,7 +1004,7 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     }
 
     // Use Claude to clean and extract just the problem description
-    const client = new Anthropic();
+    const client = anthropicClient;
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1000,
@@ -1036,7 +1053,7 @@ router.post('/capture', authenticate, async (req, res) => {
       ? `Extract the SYSTEM DESIGN interview question from this screenshot. Return ONLY the problem statement — the company/platform asking, the product or system to design, any scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary. If the screenshot does not contain a system design question, reply with exactly: NO_PROBLEM_FOUND.`
       : `Extract the CODING interview problem from this screenshot. Return the full problem statement exactly: description, input format, output format, constraints, and all example cases (input / output / explanation). Preserve code blocks, example formatting, and math/exponent notation. Do not solve it, do not add commentary or headers like "Problem:". If the screenshot does not contain a coding problem, reply with exactly: NO_PROBLEM_FOUND.`;
 
-    const client = new Anthropic();
+    const client = anthropicClient;
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 2000,

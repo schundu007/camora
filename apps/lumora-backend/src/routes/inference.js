@@ -99,9 +99,13 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 
     let finalAnswer = null;
     let clientDisconnected = false;
+    const abortController = new AbortController();
 
     req.on('close', () => {
       clientDisconnected = true;
+      // Tear down the Anthropic stream immediately so we stop getting billed
+      // for tokens the user will never see.
+      try { abortController.abort(); } catch {}
     });
 
     // Stream tokens
@@ -112,6 +116,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
       plan: userPlan,
+      signal: abortController.signal,
     })) {
       if (clientDisconnected) break;
 
