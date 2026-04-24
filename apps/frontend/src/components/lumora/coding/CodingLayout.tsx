@@ -918,22 +918,33 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             {/* ═══ SOLUTION TAB — AI-Inspired Modern Display ═══ */}
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
-                {/* Streaming state */}
+                {/* Streaming state — spinner + skeleton cards. We never dump the
+                    raw JSON stream to screen; users only see parsed cards once
+                    the solution has been structured. */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid #BFDBFE' }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(34,211,238,0.08)', border: `1px solid ${t.cardBorder}` }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
                       </div>
-                      <span className="text-xs font-semibold text-[var(--accent)]">Generating solution...</span>
+                      <span className="text-xs font-semibold" style={{ color: t.headerText }}>Generating solution...</span>
                     </div>
-                    {/* Live streaming preview */}
-                    {streamingSolution && (
-                      <div className="rounded-xl p-4 overflow-auto max-h-[60vh] text-xs leading-relaxed font-mono whitespace-pre-wrap" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155' }}>
-                        {streamingSolution}
-                        <span className="inline-block w-1.5 h-4 bg-[var(--accent)] animate-pulse ml-0.5" />
-                      </div>
-                    )}
+                    {/* Skeleton cards — give the user a sense of progress without exposing raw JSON */}
+                    <div className="space-y-2">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                          <div className="h-8 px-3 flex items-center gap-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                            <div className="w-5 h-5 rounded-md animate-pulse" style={{ background: t.badgeBg }} />
+                            <div className="h-3 rounded animate-pulse" style={{ width: `${40 + i * 15}%`, background: t.surfaceBg }} />
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <div className="h-2.5 rounded animate-pulse" style={{ width: '85%', background: t.surfaceBg }} />
+                            <div className="h-2.5 rounded animate-pulse" style={{ width: '70%', background: t.surfaceBg }} />
+                            <div className="h-2.5 rounded animate-pulse" style={{ width: '60%', background: t.surfaceBg }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
