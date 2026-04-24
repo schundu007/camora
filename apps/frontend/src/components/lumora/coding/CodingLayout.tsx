@@ -891,8 +891,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     {sd.solutions?.length > 1 && (
                       <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: t.sectionBg }}>
                         {sd.solutions.map((sol: any, i: number) => {
-                          const solColors = ['blue', 'blue', 'blue', 'blue', 'blue'];
-                          const c = solColors[i % solColors.length];
+                          // Brute → Optimized → Most Optimal difficulty progression.
+                          // Same cyan family, stepped intensity so the tabs read as a progression
+                          // (not rainbow — keeps Lumora Sharp Palette coherent).
+                          const tierAccents = ['#94A3B8', '#22D3EE', '#0891B2'];
+                          const accentColor = tierAccents[i] || '#22D3EE';
                           return (
                             <button key={i}
                               onClick={() => {
@@ -904,9 +907,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                               className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-all text-center ${
                                 activeSolutionIdx === i ? 'shadow-sm' : ''
                               }`}
-                              style={activeSolutionIdx === i ? { background: t.inputBg, color: t.text } : { color: t.textMuted }}
+                              style={activeSolutionIdx === i
+                                ? { background: t.inputBg, color: t.text, borderTop: `2px solid ${accentColor}` }
+                                : { color: t.textMuted, borderTop: `2px solid transparent` }}
                             >
-                              <div className="truncate">{sol.name || `Solution ${i + 1}`}</div>
+                              <div className="truncate flex items-center justify-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accentColor }} />
+                                {sol.name || `Solution ${i + 1}`}
+                              </div>
                               {sol.complexity && (
                                 <div className="text-[9px] font-mono mt-0.5" style={{ color: t.textDim }}>
                                   {sol.complexity.time}
