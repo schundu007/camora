@@ -807,7 +807,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               </div>
             )}
             <button
-              onClick={handleSubmit}
+              onClick={() => handleSubmit()}
               disabled={!problemText.trim() || isLoading}
               className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #22D3EE, #22D3EE)', borderRadius: '10px' }}
             >
