@@ -131,8 +131,8 @@ function CapacityPlanningGrid({ estimation }) {
                       <td className="px-3 py-2.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
                       <td className="px-3 py-2.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)] whitespace-nowrap">{row.value}</td>
                       <td className="px-3 py-2.5 border-b border-[var(--border)] hidden lg:table-cell">
-                        <div className="h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}50, ${color})` }} />
+                        <div className="h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-700 bg-[var(--accent)]" style={{ width: `${pct}%` }} />
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden md:table-cell">{row.detail}</td>
@@ -753,10 +753,10 @@ export default function TopicDetail({
               <h1 className="text-xl font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h1>
               {topicDetails.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold">NEW</span>}
               {topicDetails.difficulty && (
-                <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border ${
-                  topicDetails.difficulty === 'Easy' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20' :
-                  topicDetails.difficulty === 'Medium' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' :
-                  'bg-red-500/10 text-red-400 border-red-500/20'
+                <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-white ${
+                  topicDetails.difficulty === 'Easy' ? 'font-medium text-[var(--text-muted)]' :
+                  topicDetails.difficulty === 'Medium' ? 'font-semibold text-[var(--text-primary)]' :
+                  'font-bold text-[var(--accent)]'
                 }`}>
                   {topicDetails.difficulty}
                 </span>
@@ -1012,7 +1012,7 @@ export default function TopicDetail({
           {topicDetails.introduction && (
             <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
               <div className="px-4 py-2.5 border-b border-[var(--border)] bg-white flex items-center gap-2">
-                <Icon name="bookOpen" size={14} style={{ color: topicDetails.color || '#ef4444' }} />
+                <Icon name="bookOpen" size={14} className="text-[var(--text-muted)]" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h3>
                 <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.articles?.length || topicDetails.questions} articles</span>
               </div>
@@ -1211,10 +1211,10 @@ export default function TopicDetail({
             <div className="p-4">
               {/* Difficulty + Time badges */}
               <div className="flex items-center gap-2 flex-wrap mb-3">
-                <span className={`text-xs landing-mono px-2 py-1 rounded-full font-bold ${
-                  topicDetails.difficulty === 'beginner' ? 'bg-[var(--accent)]/15 text-[var(--accent)]' :
-                  topicDetails.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)]' :
-                  'bg-red-500/10 text-red-400'
+                <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-2 py-0.5 rounded border border-[var(--border)] bg-white ${
+                  topicDetails.difficulty === 'beginner' ? 'font-medium text-[var(--text-muted)]' :
+                  topicDetails.difficulty === 'intermediate' ? 'font-semibold text-[var(--text-primary)]' :
+                  'font-bold text-[var(--accent)]'
                 }`}>{topicDetails.difficulty}</span>
                 {topicDetails.estimatedTime && (
                   <span className="text-xs landing-mono text-[var(--text-muted)] flex items-center gap-1">
@@ -1309,8 +1309,7 @@ export default function TopicDetail({
           <div id="generate-tutorial" className="scroll-mt-24">
             <button
               onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #10b981, #2D8CFF)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded text-sm font-semibold text-white transition-all hover:opacity-90 bg-[var(--accent)]"
             >
               <Icon name="zap" size={14} />
               Generate Tutorial
@@ -1480,7 +1479,7 @@ export default function TopicDetail({
               <div className="px-4 py-2.5 bg-[#1e1e2e] flex items-center gap-2">
                 <Icon name="code" size={14} className="text-[var(--accent)]" />
                 <h3 className="text-sm font-bold text-[#e2e8f0] landing-display">Code Example</h3>
-                <span className="text-[10px] landing-mono text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-700/50 ml-1">Python</span>
+                <span className="text-[10px] landing-mono text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded uppercase tracking-[0.12em] ml-1">Python</span>
                 <button
                   className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1"
                   onClick={() => { navigator.clipboard.writeText(topicDetails.codeExample); setCopiedCodeIdx('single'); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
@@ -1537,7 +1536,7 @@ export default function TopicDetail({
                             })}
                           </div>
                         ) : (
-                          <span className="text-[10px] landing-mono text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-700/50 ml-1 flex-shrink-0">{activeEx.language || 'Python'}</span>
+                          <span className="text-[10px] landing-mono text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded uppercase tracking-[0.12em] ml-1 flex-shrink-0">{activeEx.language || 'Python'}</span>
                         )}
                         <button
                           className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1 flex-shrink-0"
@@ -1579,9 +1578,9 @@ export default function TopicDetail({
               </div>
               <div className="p-3 grid grid-cols-1 gap-1.5">
                 {topicDetails.commonMistakes.map((mistake, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-red-500/5 border border-red-500/15 hover:shadow-md hover:border-red-500/30 transition-all">
-                    <span className="w-5 h-5 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-red-500 text-xs font-bold leading-none">&#10005;</span>
+                  <div key={i} className="flex items-start gap-3 py-2 border-b border-[var(--border)] last:border-b-0">
+                    <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums flex-shrink-0 mt-1">
+                      {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{mistake}</span>
                   </div>
@@ -1721,10 +1720,8 @@ export default function TopicDetail({
                   </div>
                 ))}
                 {topicDetails.interviewTips && topicDetails.interviewTips.map((tip, i) => (
-                  <div key={`itip-${i}`} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-amber-50/50 transition-all">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon name="lightbulb" size={10} className="text-[var(--text-secondary)]" />
-                    </span>
+                  <div key={`itip-${i}`} className="flex items-start gap-3 p-2 rounded transition-all hover:bg-[var(--bg-elevated)]/60">
+                    <Icon name="lightbulb" size={12} className="text-[var(--text-muted)] flex-shrink-0 mt-1" />
                     <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{tip}</span>
                   </div>
                 ))}
@@ -1754,7 +1751,7 @@ export default function TopicDetail({
                           <div className="flex flex-wrap gap-4 mb-4">
                             {topicDetails.productMeta.stats.map((stat, i) => (
                               <div key={i} className="text-center">
-                                <div className="text-lg font-bold landing-mono" style={{ color: topicDetails.color }}>{stat.value}</div>
+                                <div className="text-lg font-bold landing-mono text-[var(--text-primary)]">{stat.value}</div>
                                 <div className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono">{stat.label}</div>
                               </div>
                             ))}
@@ -1917,16 +1914,11 @@ export default function TopicDetail({
                 <div id="architecture" className="scroll-mt-24">
                   <button
                     onClick={() => setDiagramPanelOpen(true)}
-                    className="w-full flex items-center justify-between px-5 py-4 rounded-xl transition-all hover:-translate-y-1 hover:shadow-lg group"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(6,182,212,0.08) 100%)',
-                      border: '2px solid var(--accent)',
-                      boxShadow: '0 4px 16px rgba(34,211,238,0.15)',
-                    }}
+                    className="w-full flex items-center justify-between px-5 py-4 rounded border border-[var(--border)] bg-white transition-all hover:border-[var(--accent)] group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(34,211,238,0.3)' }}>
-                        <Icon name="layers" size={22} />
+                      <div className="w-11 h-11 rounded flex items-center justify-center bg-[var(--bg-elevated)] border border-[var(--border)]">
+                        <Icon name="layers" size={20} className="text-[var(--text-muted)]" />
                       </div>
                       <div className="text-left">
                         <span className="text-base font-bold block" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Architecture Diagram</span>
@@ -2027,11 +2019,11 @@ export default function TopicDetail({
                         ) : null}
                         {topicDetails.basicImplementation.problems && (
                           <div>
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 flex items-center gap-2 landing-display uppercase tracking-wider"><Icon name="alertTriangle" size={12} className="text-red-500" />Issues</h4>
+                            <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-1.5 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues</h4>
                             <div className="grid grid-cols-1 gap-0.5">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
-                                  <span className="text-red-400 mt-px flex-shrink-0">✕</span>
+                                <div key={i} className="flex items-start gap-2 px-1 py-1 text-xs landing-body">
+                                  <span className="text-[var(--text-muted)] mt-px flex-shrink-0">—</span>
                                   <span className="text-[var(--text-secondary)]">{problem}</span>
                                 </div>
                               ))}
@@ -2151,11 +2143,11 @@ export default function TopicDetail({
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
                             <div key={i} className="rounded-xl p-3.5 border border-[var(--border)] hover:shadow-md hover:border-[var(--border-hover,var(--border))] hover:-translate-y-0.5 transition-all">
                               <div className="flex items-center gap-2.5 mb-2">
-                                <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
-                                  endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20' :
-                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                                  'bg-red-500/10 text-red-400 border border-red-500/20'
+                                <span className={`text-[10px] landing-mono px-2 py-0.5 rounded border border-[var(--border)] bg-white uppercase tracking-[0.14em] ${
+                                  endpoint.method === 'GET' ? 'font-medium text-[var(--text-muted)]' :
+                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'font-semibold text-[var(--text-primary)]' :
+                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'font-semibold text-[var(--text-primary)]' :
+                                  'font-bold text-[var(--accent)]'
                                 }`}>{endpoint.method}</span>
                                 <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
                               </div>
@@ -2379,18 +2371,18 @@ export default function TopicDetail({
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.edgeCases.map((ec, i) => (
-                      <div key={i} className="rounded-xl border border-[var(--border)] bg-white hover:border-red-500/30 transition-all overflow-hidden">
+                      <div key={i} className="rounded border border-[var(--border)] bg-white transition-all overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-1.5">
-                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-500/10 border border-red-500/20">
-                              <span className="text-[10px] font-bold text-red-400 landing-mono">{i + 1}</span>
+                            <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
+                              <span className="text-[10px] font-bold text-[var(--text-muted)] landing-mono">{i + 1}</span>
                             </span>
                             <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
                           </div>
                           <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
-                          <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                            <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Mitigation</span>
-                            <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
+                          <div className="ml-8 mt-2 pl-3 py-1 border-l-2 border-[var(--accent)]">
+                            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.14em] landing-mono">Mitigation</span>
+                            <p className="text-[var(--text-secondary)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
                           </div>
                         </div>
                       </div>
@@ -2767,8 +2759,8 @@ export default function TopicDetail({
                 <div className="p-5">
                   {quoteMatch ? (
                     <>
-                      <div className="p-3.5 rounded-xl mb-3" style={{ background: `${topicDetails.color}06`, borderLeft: `4px solid ${topicDetails.color}` }}>
-                        <p className="text-[15px] font-semibold text-[var(--text-primary)] italic landing-body leading-relaxed">"{quoteMatch[1]}"</p>
+                      <div className="pl-4 border-l-2 border-[var(--accent)] mb-3">
+                        <p className="text-[15px] font-medium text-[var(--text-primary)] italic landing-body leading-relaxed">"{quoteMatch[1]}"</p>
                       </div>
                       <p className="text-[var(--text-secondary)] text-[15px] leading-relaxed landing-body">{quoteMatch[2].trim()}</p>
                     </>
@@ -2918,8 +2910,8 @@ export default function TopicDetail({
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
                         className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
                       >
-                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0" style={{ background: topicDetails.color }}>
-                          {index + 1}
+                        <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0 landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] tabular-nums">
+                          {String(index + 1).padStart(2, '0')}
                         </span>
                         <h4 className="text-[var(--text-primary)] font-semibold text-sm leading-snug landing-display flex-1">{item.question}</h4>
                         <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2928,12 +2920,10 @@ export default function TopicDetail({
                       </button>
                       {/* Answer body — expanded content with block parsing */}
                       {isExpanded && (
-                        <div className="px-4 py-3 text-sm text-[var(--text-muted)] leading-relaxed landing-body border-t border-[var(--border)] space-y-2">
+                        <div className="px-4 py-4 text-sm text-[var(--text-secondary)] leading-relaxed landing-body border-t border-[var(--border)]">
                           {(() => {
-                            const starColors = { Situation: '#3b82f6', Task: '#f59e0b', Action: '#10b981', Result: '#ef4444' };
                             const lines = item.answer.split('\n').map(l => l.trim());
 
-                            // Group lines into blocks: each header starts a new block with its child content
                             const blocks = [];
                             let current = null;
                             lines.forEach(t => {
@@ -2942,7 +2932,6 @@ export default function TopicDetail({
                               const isStarHeader = t.match(/^\*\*STAR/i);
                               const isBoldHeader = (t.startsWith('**') && t.endsWith('**')) || t.match(/^\*\*\d+\.\s/);
                               const isHeader = isStar || isStarHeader || isBoldHeader;
-
                               if (isHeader) {
                                 if (current) blocks.push(current);
                                 current = { header: t, children: [], type: isStar ? 'star' : isStarHeader ? 'star-header' : 'section' };
@@ -2954,27 +2943,44 @@ export default function TopicDetail({
                             if (current) blocks.push(current);
 
                             const renderLine = (t, i) => {
-                              if (t.startsWith('\u2705') || t.startsWith('\u274C')) {
-                                const ok = t.startsWith('\u2705');
-                                return <div key={i} className="flex items-start gap-2 mb-1"><span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${ok ? 'bg-[var(--accent)]/15' : 'bg-red-100'}`}><svg className={`w-2.5 h-2.5 ${ok ? 'text-[var(--accent)]' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>{ok ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />}</svg></span><span className="text-sm landing-body">{t.substring(2).trim()}</span></div>;
+                              if (t.startsWith('✅') || t.startsWith('❌')) {
+                                const ok = t.startsWith('✅');
+                                return <div key={i} className="flex items-start gap-2 mb-1">
+                                  <span className="text-[var(--text-muted)] landing-mono text-[11px] mt-0.5 flex-shrink-0">{ok ? '✓' : '✕'}</span>
+                                  <span className="text-sm landing-body">{t.substring(2).trim()}</span>
+                                </div>;
                               }
                               if (t.startsWith('"') && t.endsWith('"')) {
-                                return <div key={i} className="pl-3 py-1 text-sm italic text-[var(--text-muted)] rounded-r landing-body" style={{ borderLeft: `2px solid ${topicDetails.color}30` }}>{t.slice(1, -1)}</div>;
+                                return <div key={i} className="pl-3 py-1 text-sm italic text-[var(--text-muted)] border-l-2 border-[var(--border)] landing-body">{t.slice(1, -1)}</div>;
                               }
-                              if (t.startsWith('- ') || t.startsWith('\u2022 ')) {
-                                return <div key={i} className="flex items-start gap-2 mb-1"><span className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ background: topicDetails.color }} /><span className="text-sm landing-body">{t.substring(2)}</span></div>;
+                              if (t.startsWith('- ') || t.startsWith('• ')) {
+                                return <div key={i} className="flex items-start gap-2.5 mb-1">
+                                  <span className="w-1 h-1 rounded-full bg-[var(--text-muted)] mt-2 flex-shrink-0 opacity-60" />
+                                  <span className="text-sm landing-body">{t.substring(2)}</span>
+                                </div>;
                               }
                               if (/^\d+\./.test(t)) {
                                 const num = t.match(/^(\d+)\./)[1];
-                                return <div key={i} className="flex items-start gap-2 mb-1"><span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 landing-mono" style={{ background: `${topicDetails.color}15`, color: topicDetails.color }}>{num}</span><span className="text-sm landing-body">{t.replace(/^\d+\.\s*/, '')}</span></div>;
+                                return <div key={i} className="flex items-start gap-3 mb-1">
+                                  <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums mt-1 flex-shrink-0">{num.padStart(2, '0')}</span>
+                                  <span className="text-sm landing-body">{t.replace(/^\d+\.\s*/, '')}</span>
+                                </div>;
                               }
                               if (t.includes('**')) {
                                 const parts = t.split('**');
-                                return <p key={i} className="mb-1 text-sm landing-body">{parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-[var(--text-primary)]">{part}</strong> : <span key={j}>{part}</span>)}</p>;
+                                return <p key={i} className="mb-1 text-sm landing-body">
+                                  {parts.map((part, j) => j % 2 === 1
+                                    ? <strong key={j} className="font-semibold text-[var(--text-primary)]">{part}</strong>
+                                    : <span key={j}>{part}</span>
+                                  )}
+                                </p>;
                               }
                               if (t.match(/^(Example|Key insight|Key learning|Key takeaway|Pro tip|Tip|Note):/i)) {
                                 const label = t.match(/^([^:]+):/)[1];
-                                return <div key={i} className="p-2.5 rounded-lg text-sm landing-body" style={{ background: `${topicDetails.color}08`, borderLeft: `3px solid ${topicDetails.color}40` }}><span className="font-bold landing-mono" style={{ color: topicDetails.color }}>{label}:</span> {t.substring(label.length + 1).trim()}</div>;
+                                return <div key={i} className="pl-3 py-1 border-l-2 border-[var(--accent)] text-sm landing-body my-2">
+                                  <span className="text-[10px] font-bold landing-mono uppercase tracking-[0.14em] text-[var(--text-muted)] block">{label}</span>
+                                  <span className="text-[var(--text-secondary)]">{t.substring(label.length + 1).trim()}</span>
+                                </div>;
                               }
                               return <p key={i} className="mb-1 text-sm leading-relaxed landing-body">{t}</p>;
                             };
@@ -2982,49 +2988,36 @@ export default function TopicDetail({
                             const renderBlock = (block, bi) => {
                               const h = block.header;
                               if (!h && block.children.length > 0) {
-                                return <div key={bi}>{block.children.map((c, ci) => renderLine(c, ci))}</div>;
+                                return <div key={bi} className="space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>;
                               }
-                              // STAR keyword block — colored card with label
                               if (block.type === 'star') {
                                 const sm = h.match(/^\*\*(?:[STAR]\s*[-–—]\s*)?(Situation|Task|Action|Result)\*\*\s*[:–—-]?\s*(.*)/i) || h.match(/^(Situation|Task|Action|Result)\s*[:–—-]\s*(.*)/i);
                                 if (sm) {
                                   const kw = sm[1].charAt(0).toUpperCase() + sm[1].slice(1).toLowerCase();
-                                  const sc = starColors[kw] || topicDetails.color;
-                                  const starBgs = { Situation: 'rgba(59,130,246,0.08)', Task: 'rgba(139,92,246,0.08)', Action: 'rgba(45,140,255,0.08)', Result: 'rgba(245,158,11,0.08)' };
-                                  const starBorders = { Situation: 'rgba(59,130,246,0.2)', Task: 'rgba(139,92,246,0.2)', Action: 'rgba(16,185,129,0.2)', Result: 'rgba(245,158,11,0.2)' };
-                                  const headerRest = (sm[2] || '').replace(/^["\u201C\s\u2014\u2013-]+|["\u201D\s]+$/g, '').trim();
-                                  return <div key={bi} className="rounded-xl overflow-hidden" style={{ background: starBgs[kw] || `${sc}08`, border: `1px solid ${starBorders[kw] || `${sc}20`}`, borderLeftWidth: '4px', borderLeftColor: sc }}>
-                                    <div className="px-4 py-3">
-                                      <div className="flex items-center gap-2.5">
-                                        <span className="w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-extrabold text-white flex-shrink-0 landing-mono shadow-sm" style={{ background: sc }}>{kw.charAt(0)}</span>
-                                        <span className="text-sm font-bold landing-display" style={{ color: sc }}>{kw}</span>
-                                      </div>
-                                      {headerRest && <p className="text-sm text-[var(--text-secondary)] mt-2 ml-9 landing-body leading-relaxed">{headerRest}</p>}
-                                      {block.children.length > 0 && <div className="mt-2 ml-9 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
-                                    </div>
+                                  const headerRest = (sm[2] || '').replace(/^["“\s—–-]+|["”\s]+$/g, '').trim();
+                                  return <div key={bi} className="mt-4 first:mt-0">
+                                    <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] landing-mono mb-1">{kw}</div>
+                                    {headerRest && <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{headerRest}</p>}
+                                    {block.children.length > 0 && <div className="mt-1 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
                                   </div>;
                                 }
                               }
-                              // STAR Example header
                               if (block.type === 'star-header') {
-                                return <div key={bi} className="flex items-center gap-2 mt-2 mb-1">
-                                  <span className="text-[10px] font-bold text-white px-2.5 py-1 rounded-md landing-mono shadow-sm" style={{ background: `linear-gradient(135deg, ${topicDetails.color}, ${topicDetails.color}cc)` }}>STAR</span>
-                                  <span className="text-sm font-bold text-[var(--text-primary)] landing-display">Example Response</span>
+                                return <div key={bi} className="mt-4 first:mt-0 pb-1 border-b border-[var(--border)]">
+                                  <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] landing-mono">STAR</div>
+                                  <div className="text-sm font-semibold text-[var(--text-primary)] landing-display">Example Response</div>
                                 </div>;
                               }
-                              // Numbered step or section header
                               const numMatch = h.replace(/\*\*/g, '').match(/^(\d+)\.\s*(.*)/);
                               const sectionTitle = h.replace(/\*\*/g, '').replace(/:$/, '');
-                              return <div key={bi} className="rounded-xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--border)', borderLeft: `4px solid ${topicDetails.color}` }}>
-                                <div className="px-4 py-3">
-                                  <div className="flex items-center gap-2.5">
-                                    {numMatch
-                                      ? <><span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 landing-mono shadow-sm" style={{ background: topicDetails.color }}>{numMatch[1]}</span><span className="text-sm font-bold text-[var(--text-primary)] landing-display">{numMatch[2].replace(/:$/, '')}</span></>
-                                      : <><span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: topicDetails.color }} /><span className="text-sm font-bold text-[var(--text-primary)] landing-display">{sectionTitle}</span></>
-                                    }
-                                  </div>
-                                  {block.children.length > 0 && <div className="mt-2 ml-8 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
+                              return <div key={bi} className="mt-4 first:mt-0">
+                                <div className="flex items-baseline gap-3 pb-1 border-b border-[var(--border)]">
+                                  {numMatch && <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums">{numMatch[1].padStart(2, '0')}</span>}
+                                  <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">
+                                    {numMatch ? numMatch[2].replace(/:$/, '') : sectionTitle}
+                                  </span>
                                 </div>
+                                {block.children.length > 0 && <div className="mt-2 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
                               </div>;
                             };
 
