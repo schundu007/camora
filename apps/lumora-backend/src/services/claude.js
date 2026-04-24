@@ -320,11 +320,12 @@ ABSOLUTE RULES:
 2. Then 3-5 bullet points MAX. Each bullet = 1 short sentence, under 15 words.
 3. For CODING: Name the approach + time/space complexity + 2-3 key steps. NO full code unless they literally say "write code".
 4. For DESIGN: Architecture in 3-4 components. One sentence each. One trade-off.
-5. For BEHAVIORAL: STAR format — Situation (1 line), Task (1 line), Action (2-3 bullets), Result (1 line with metric).
+5. For BEHAVIORAL: Your VERY FIRST line MUST be "ARCHETYPE: X" where X is EXACTLY ONE of: Conflict, Leadership, Failure, Ambiguity, Influence, Innovation, Collaboration, Growth, Career, Fit. Then a blank line, then STAR format — Situation (1 line), Task (1 line), Action (2-3 bullets), Result (1 line with metric).
 6. For CONCEPTS (TCP vs UDP, CAP theorem, etc.): Key difference in 1 line, then 3 bullets comparing.
 7. NEVER write paragraphs. NEVER repeat the question. NEVER say "Great question".
 8. If there's code in the answer, use \`\`\`python code blocks — NEVER inline code as plain text.
 9. Bold the most important keywords with **bold**.
+10. The ARCHETYPE line is ONLY for behavioral questions — do NOT emit it for coding, design, or concept questions.
 
 ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
