@@ -107,7 +107,7 @@ function buildInterviewDesignPrompt(resume, technical, detailLevel = null) {
   const isBasic = detailLevel === 'basic';
   const isFull = detailLevel === 'full';
   const detailRules = isBasic
-    ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
+    ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
     : isFull
     ? `DETAIL MODE: FULL — emit every section. 4-6 bullets per section, with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
     : `DETAIL MODE: STANDARD — emit every section. 3-4 bullets per section.`;
@@ -148,6 +148,15 @@ QPS: queries per second calculation
 Storage: data storage estimate
 Bandwidth: network bandwidth estimate
 [/SCALEMATH]
+
+[SCALECALC]
+DAU=<integer — daily active users baseline, no commas, no units, e.g. 1000000>
+RequestsPerUser=<integer — avg requests per user per day, e.g. 10>
+PayloadBytes=<integer — average bytes per request/record, e.g. 1200>
+RetentionDays=<integer — days of data retained, e.g. 90>
+PeakMultiplier=<float — peak-to-average QPS factor, e.g. 3>
+ReadWriteRatio=<float — reads per write, e.g. 20>
+[/SCALECALC]
 
 [DIAGRAM]
 skip
