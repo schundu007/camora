@@ -156,7 +156,7 @@ export default function LandingPage() {
 
           <motion.h1 className="mt-6" style={{ fontFamily: F.display }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-[48px] sm:text-[60px] md:text-[72px] font-bold leading-[1.05] tracking-tight uppercase">
+            <span className="block text-[36px] sm:text-[52px] md:text-[72px] font-bold leading-[1.05] tracking-tight uppercase">
               ALL YOUR PREP.
             </span>
             <span className="block text-[48px] sm:text-[60px] md:text-[72px] font-bold leading-[1.05] tracking-tight uppercase" style={{ color: accent }}>

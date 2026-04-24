@@ -903,11 +903,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     <div
       className={embedded ? "flex flex-col h-full w-full" : "fixed z-50 flex flex-col"}
       style={embedded ? { background: '#FFFFFF', borderRadius: 0 } : {
-        width: maximized ? 'calc(100vw - 80px)' : panelWidth,
-        height: maximized ? '100vh' : panelHeight,
+        // On mobile the LumoraIconRail is hidden, so maximized must start at left:0
+        // and span the full viewport width. md+ keeps the 80px rail offset.
+        width: maximized ? `calc(100vw - var(--lumora-rail-offset, 0px))` : panelWidth,
+        height: maximized ? '100dvh' : panelHeight,
         right: maximized ? 0 : `calc(24px - ${position.x}px)`,
         bottom: maximized ? 0 : `calc(24px - ${position.y}px)`,
-        left: maximized ? '80px' : undefined,
+        left: maximized ? 'var(--lumora-rail-offset, 0px)' : undefined,
         top: maximized ? 0 : undefined,
         borderRadius: maximized ? 0 : '16px',
         background: 'rgba(255,255,255,0.92)',

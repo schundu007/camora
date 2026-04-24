@@ -65,8 +65,8 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-dialog-title"
-        className="bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden w-full mx-6 border border-[var(--border)]/60"
-        style={{ maxWidth: '640px', maxHeight: '90vh' }}
+        className="bg-[var(--bg-surface)] rounded-2xl shadow-2xl overflow-hidden w-full mx-3 sm:mx-6 border border-[var(--border)]/60"
+        style={{ maxWidth: '640px', maxHeight: '90dvh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

@@ -680,7 +680,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           onClick={() => setOutputExpanded(false)}
         >
           <div
-            className="w-full max-w-4xl max-h-[80vh] mx-4 sm:mx-auto bg-[var(--bg-elevated)] rounded-2xl border border-[var(--border)] shadow-2xl overflow-hidden animate-scale-in"
+            className="w-full max-w-4xl max-h-[90dvh] sm:max-h-[80vh] mx-2 sm:mx-auto bg-[var(--bg-elevated)] rounded-2xl border border-[var(--border)] shadow-2xl overflow-hidden animate-scale-in"
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}

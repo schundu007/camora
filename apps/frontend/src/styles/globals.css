@@ -622,6 +622,11 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
   .design-left-panel { width: var(--left-w, 42%) !important; min-width: 360px; max-width: 60vw; }
 }
 
+/* Lumora icon-rail offset — 0 on mobile (rail hidden), 80px on md+ (rail visible).
+   Consumed by AICompanionPanel maximized mode so it doesn't sit off-screen. */
+:root { --lumora-rail-offset: 0px; }
+@media (min-width: 768px) { :root { --lumora-rail-offset: 80px; } }
+
 /* Grid overflow prevention */
 .grid > * { min-width: 0; }
 table { max-width: 100%; overflow-x: auto; display: block; }

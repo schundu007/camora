@@ -191,8 +191,8 @@ export function LumoraShellPage() {
         />
       )}
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
+      {/* Main area — bottom padding accounts for fixed mobile nav + iOS home indicator */}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
         {/* Top bar — single row: audio controls (left) + tab pills (right) */}
         <div className="flex items-center justify-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
           {/* Audio controls — left side, only on coding/design */}
@@ -202,8 +202,8 @@ export function LumoraShellPage() {
             </div>
           )}
 
-          {/* Tab pills — centered */}
-          <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {/* Tab pills — centered (hidden on mobile where the bottom nav owns tab switching) */}
+          <div className="hidden md:flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
@@ -221,14 +221,14 @@ export function LumoraShellPage() {
             })}
           </div>
 
-          {/* Go Invisible button */}
-          <button onClick={() => setBlanked(true)} className="ml-auto px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[#0F172A] hover:text-white flex items-center gap-1.5" style={{ color: '#64748B', border: '1px solid #E2E8F0' }} title="Go invisible (⌘B) — hides UI, audio keeps running">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {/* Go Invisible button — icon-only on mobile to save horizontal room */}
+          <button onClick={() => setBlanked(true)} className="ml-auto p-2 md:px-3 md:py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[#0F172A] hover:text-white flex items-center gap-1.5" style={{ color: '#64748B', border: '1px solid #E2E8F0' }} title="Go invisible (⌘B) — hides UI, audio keeps running" aria-label="Go invisible">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
               <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
               <line x1="1" y1="1" x2="23" y2="23" />
             </svg>
-            Invisible
+            <span className="hidden md:inline">Invisible</span>
           </button>
         </div>
 
@@ -482,8 +482,8 @@ export function LumoraShellPage() {
       )}
 
       {/* Mobile bottom navigation — visible only on small screens */}
-      <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 z-40 items-center justify-around"
-        style={{ background: '#22D3EE', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+      <div className="flex md:hidden fixed bottom-0 left-0 right-0 z-40 items-center justify-around"
+        style={{ background: '#22D3EE', borderTop: '1px solid rgba(255,255,255,0.2)', height: 'calc(64px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
@@ -493,10 +493,11 @@ export function LumoraShellPage() {
         ].map(tab => {
           const isActive = activeTab === tab.id;
           return (
-            <Link key={tab.id} to={tab.path} className="flex flex-col items-center justify-center gap-1 flex-1 py-1"
+            <Link key={tab.id} to={tab.path} className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1"
               style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }}>
               {tab.icon}
               <span className="text-[11px] font-bold">{tab.label}</span>
+              {isActive && <span aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b" style={{ background: '#FFFFFF' }} />}
             </Link>
           );
         })}
