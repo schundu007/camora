@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 
-export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits' | 'pricing';
+export type LumoraTab = 'interview' | 'coding' | 'design' | 'behavioral' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits' | 'pricing';
 
 interface LumoraIconRailProps {
   activeTab: LumoraTab;

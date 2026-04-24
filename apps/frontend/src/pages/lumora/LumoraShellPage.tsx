@@ -47,6 +47,7 @@ export function LumoraShellPage() {
   const activeTab: LumoraTab =
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
+    location.pathname.includes('/behavioral') ? 'behavioral' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
     location.pathname.includes('/sessions') ? 'sessions' :
@@ -62,13 +63,20 @@ export function LumoraShellPage() {
     }
   }, [activeTab, mountedTabs]);
 
-  // Close behavioral fullscreen when navigating to any other tab
+  // Sync behavioral fullscreen to URL:
+  //   /lumora/behavioral       → open (starter question if none set)
+  //   /lumora/behavioral?q=... → open with that question
+  //   anywhere else            → close
   useEffect(() => {
-    if (activeTab !== 'interview') {
+    if (activeTab === 'behavioral') {
+      const q = new URLSearchParams(location.search).get('q') || undefined;
+      setCopilotQuestion(q);
+      setCopilotFullscreen(true);
+    } else {
       setCopilotFullscreen(false);
       setCopilotQuestion(undefined);
     }
-  }, [activeTab]);
+  }, [activeTab, location.search]);
 
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
@@ -85,6 +93,7 @@ export function LumoraShellPage() {
       interview: 'Live Interview | Camora',
       coding: 'Coding Interview | Camora',
       design: 'Design Interview | Camora',
+      behavioral: 'Behavioral Interview | Camora',
       prepkit: 'Prep Kit | Camora',
       calendar: 'Calendar | Camora',
     };
@@ -179,27 +188,11 @@ export function LumoraShellPage() {
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
               { id: 'design', label: 'Design', path: '/lumora/design' },
-              { id: 'behavioral', label: 'Behavioral' },
+              { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
             ].map(tab => {
-              const isBehavioral = tab.id === 'behavioral';
-              const isActive = isBehavioral
-                ? copilotFullscreen
-                : !copilotFullscreen && activeTab === tab.id;
-
-              if (isBehavioral) {
-                return (
-                  <button key={tab.id}
-                    onClick={() => { setCopilotQuestion('Tell me about yourself'); setCopilotFullscreen(true); }}
-                    className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
-                    style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
-                    {tab.label}
-                  </button>
-                );
-              }
-
+              const isActive = activeTab === tab.id;
               return (
-                <Link key={tab.id} to={tab.path!}
-                  onClick={() => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }}
+                <Link key={tab.id} to={tab.path}
                   className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
                   style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
                   {tab.label}
@@ -238,7 +231,7 @@ export function LumoraShellPage() {
           <div style={{ display: activeTab === 'interview' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
             <ErrorBoundary>
               <InterviewPanel
-                onAskQuestion={(q) => { setCopilotQuestion(q); setCopilotFullscreen(true); }}
+                onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}
                 focusedEntry={focusedEntry}
                 onClearFocus={() => setFocusedEntry(null)}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
@@ -393,7 +386,7 @@ export function LumoraShellPage() {
           {/* Icicle AI — fullscreen mode (behavioral / ask questions) */}
           {copilotFullscreen && (
             <div className="absolute inset-0 z-20 flex flex-col" style={{ background: '#FFFFFF' }}>
-              <AICompanionPanel isOpen={true} onClose={() => { setCopilotFullscreen(false); setCopilotQuestion(undefined); }} initialQuestion={copilotQuestion} embedded />
+              <AICompanionPanel isOpen={true} onClose={() => navigate('/lumora')} initialQuestion={copilotQuestion} embedded />
             </div>
           )}
         </div>
