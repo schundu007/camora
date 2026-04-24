@@ -552,7 +552,7 @@ export default function ResumeOptimizer() {
               borderRadius: '10px',
               background: loading
                 ? 'var(--bg-elevated)'
-                : 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
+                : 'linear-gradient(135deg, var(--accent) 0%, #0B5CFF 100%)',
               color: '#ffffff',
               fontSize: '14px',
               fontWeight: 600,

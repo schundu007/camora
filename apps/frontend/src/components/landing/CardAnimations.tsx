@@ -116,8 +116,8 @@ export function ApplyAnim() {
                 fontWeight: 800,
                 padding: '2px 6px',
                 borderRadius: 3,
-                background: '#DCFCE7',
-                color: '#16A34A',
+                background: '#F8FAFC',
+                color: 'var(--accent)',
                 fontFamily: MONO,
               }}
             >
@@ -168,11 +168,11 @@ export function PrepareAnim() {
    ───────────────────────────────────────────────────────────────── */
 export function PracticeAnim() {
   const lines: Array<{ text: string; color: string }> = [
-    { text: 'function twoSum(nums, target) {', color: '#C084FC' },
+    { text: 'function twoSum(nums, target) {', color: 'var(--accent)' },
     { text: '  const seen = new Map();', color: '#94A3B8' },
     { text: '  for (let i = 0; i < nums.length; i++) {', color: '#94A3B8' },
-    { text: '    if (seen.has(target - nums[i]))', color: '#F59E0B' },
-    { text: '      return [seen.get(target - nums[i]), i];', color: '#10B981' },
+    { text: '    if (seen.has(target - nums[i]))', color: 'var(--text-muted)' },
+    { text: '      return [seen.get(target - nums[i]), i];', color: 'var(--accent)' },
     { text: '  }', color: '#94A3B8' },
     { text: '}', color: '#94A3B8' },
   ];
@@ -180,8 +180,8 @@ export function PracticeAnim() {
     <div style={{ ...base, background: '#0F172A', padding: '10px 12px', fontFamily: MONO }}>
       <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#EF4444' }} />
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#F59E0B' }} />
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981' }} />
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--text-muted)' }} />
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
       </div>
       <div style={{ fontSize: 8.5, lineHeight: 1.55 }}>
         {lines.map((l, i) => (
@@ -201,7 +201,7 @@ export function PracticeAnim() {
         <div
           style={{
             marginTop: 5,
-            color: '#10B981',
+            color: 'var(--accent)',
             display: 'flex',
             alignItems: 'center',
             gap: 5,
@@ -217,7 +217,7 @@ export function PracticeAnim() {
               width: 4,
               height: 10,
               marginLeft: 2,
-              background: '#10B981',
+              background: 'var(--accent)',
               animation: 'card-cursor-blink 1s steps(1) infinite',
             }}
           />
@@ -507,8 +507,8 @@ export function FeatureJobMatchAnim() {
                 fontWeight: 800,
                 padding: '1px 5px',
                 borderRadius: 3,
-                background: '#DCFCE7',
-                color: '#16A34A',
+                background: '#F8FAFC',
+                color: 'var(--accent)',
               }}
             >
               {c.match}%

@@ -169,6 +169,12 @@ function handleEvent(
     case 'error':
       callbacks.onError?.(data);
       break;
+    case 'done':
+      // Terminal event — backend signals it's finished. The reader loop will
+      // also see `done` from the stream closing, but handling this event
+      // explicitly lets us flip isStreaming=false even when the connection
+      // lingers briefly after the final SSE frame.
+      break;
     default:
       break;
   }

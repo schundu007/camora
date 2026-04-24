@@ -70,7 +70,7 @@ export default function ApiKeyInput({
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{config.name}</span>
         {hasKey && !isEditing && (
-          <span className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} title="Configured" />
+          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} title="Configured" />
         )}
       </div>
 
@@ -112,7 +112,7 @@ export default function ApiKeyInput({
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-medium"
-              style={{ color: '#10b981' }}
+              style={{ color: 'var(--accent)' }}
             >
               Get key →
             </a>
@@ -131,7 +131,7 @@ export default function ApiKeyInput({
                 onClick={handleValidateAndSave}
                 disabled={!key.trim() || validating}
                 className="px-3 py-1 text-xs font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: '#10b981', color: '#ffffff' }}
+                style={{ background: 'var(--accent)', color: '#ffffff' }}
               >
                 {validating ? '...' : 'Save'}
               </button>

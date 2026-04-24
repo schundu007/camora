@@ -29,15 +29,15 @@ const CHALLENGE_START = new Date('2026-05-07T00:00:00Z');
 const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
 
 const PRIZES = [
-  { place: '1st', title: 'Grand Champion', amount: '$11,116', glow: '#fbbf24', gradient: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', desc: 'Best overall contributor.' },
+  { place: '1st', title: 'Grand Champion', amount: '$11,116', glow: 'var(--text-muted)', gradient: 'linear-gradient(135deg, var(--text-muted), var(--text-muted), #d97706)', desc: 'Best overall contributor.' },
   { place: '2nd', title: 'Runner Up', amount: '$5,116', glow: '#94a3b8', gradient: 'linear-gradient(135deg, #e2e8f0, #94a3b8, #64748b)', desc: 'Outstanding contributions.' },
   { place: '3rd-7th', title: 'Top Contributor', amount: '$1,116 ea.', glow: '#d97706', gradient: 'linear-gradient(135deg, #d97706, #b45309, #92400e)', desc: '5 winners for meaningful contributions.', winners: 5 },
 ];
 
 const CATEGORIES = [
   { title: 'Bug Hunting', color: '#ef4444', glow: 'rgba(239,68,68,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
-  { title: 'UX / Design', color: '#2D8CFF', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
-  { title: 'Performance', color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
+  { title: 'UX / Design', color: 'var(--accent)', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
+  { title: 'Performance', color: 'var(--text-muted)', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
   { title: 'Infrastructure', color: '#06b6d4', glow: 'rgba(6,182,212,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
   { title: 'New Features', color: '#29B5E8', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
@@ -58,17 +58,17 @@ const TECH_STACK = [
 const STEPS = [
   { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: '#29B5E8' },
   { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: '#29B5E8' },
-  { num: '03', title: 'Find & build', desc: 'Hunt bugs, fix issues, build features.', color: '#2D8CFF' },
-  { num: '04', title: 'Submit findings', desc: 'Detailed docs with your work.', color: '#2D8CFF' },
-  { num: '05', title: 'Team review', desc: 'Top submissions reviewed by founders.', color: '#f59e0b' },
-  { num: '06', title: 'Win & join', desc: 'Prizes + founding team offers.', color: '#f59e0b' },
+  { num: '03', title: 'Find & build', desc: 'Hunt bugs, fix issues, build features.', color: 'var(--accent)' },
+  { num: '04', title: 'Submit findings', desc: 'Detailed docs with your work.', color: 'var(--accent)' },
+  { num: '05', title: 'Team review', desc: 'Top submissions reviewed by founders.', color: 'var(--text-muted)' },
+  { num: '06', title: 'Win & join', desc: 'Prizes + founding team offers.', color: 'var(--text-muted)' },
 ];
 
 const SCORING = [
   { category: 'Critical Bugs', points: '10 pts', color: '#ef4444' },
-  { category: 'Security Issues', points: '8 pts', color: '#2D8CFF' },
-  { category: 'UX / Design', points: '5 pts', color: '#2D8CFF' },
-  { category: 'Performance', points: '5 pts', color: '#f59e0b' },
+  { category: 'Security Issues', points: '8 pts', color: 'var(--accent)' },
+  { category: 'UX / Design', points: '5 pts', color: 'var(--accent)' },
+  { category: 'Performance', points: '5 pts', color: 'var(--text-muted)' },
   { category: 'Infrastructure', points: '5 pts', color: '#06b6d4' },
   { category: 'Features', points: '3-10 pts', color: '#29B5E8' },
 ];
@@ -322,7 +322,7 @@ export default function ChallengePage() {
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6">
           {!isAuthenticated ? (
             <div className="ch-glass-card text-center py-12 px-6">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#22C55E' } as any}>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--accent)' } as any}>
                 <svg className="w-6 h-6 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[#0F172A] mb-2">Ready to participate?</h3>
@@ -333,7 +333,7 @@ export default function ChallengePage() {
             <div className="ch-glass-card p-6">
               <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="ch-glow-icon" style={{ '--glow': '#22C55E' } as any}>
+                  <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
                     <svg className="w-5 h-5 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
@@ -344,9 +344,9 @@ export default function ChallengePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-base text-[#94A3B8]">Credits:</span>
                   <div className="w-32 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? '#22C55E' : challengeStatus.creditsRemaining > 20 ? '#F59E0B' : '#EF4444', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? '#22C55E' : challengeStatus.creditsRemaining > 20 ? '#F59E0B' : '#EF4444'}` }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : '#EF4444', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : '#EF4444'}` }} />
                   </div>
-                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? '#22C55E' : challengeStatus.creditsRemaining > 20 ? '#F59E0B' : '#EF4444' }}>{challengeStatus.creditsRemaining}/100</span>
+                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : '#EF4444' }}>{challengeStatus.creditsRemaining}/100</span>
                 </div>
               </div>
               <div className="border-t border-[#E2E8F0] pt-5">
@@ -369,7 +369,7 @@ export default function ChallengePage() {
                   <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="ch-cta-primary" style={{ padding: '12px 28px', fontSize: 16 }}>
                     {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Finding'}
                   </button>
-                  {submitStatus === 'success' && <span className="text-base text-[#22C55E] font-medium">Submitted!</span>}
+                  {submitStatus === 'success' && <span className="text-base text-[var(--accent)] font-medium">Submitted!</span>}
                   {submitStatus === 'error' && <span className="text-base text-red-400 font-medium">Failed. Try again.</span>}
                 </div>
               </div>
@@ -379,10 +379,10 @@ export default function ChallengePage() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   {quizQuestions.map((_, i) => (
-                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? '#22C55E' : i === quizIdx ? '#22C55E' : 'rgba(255,255,255,0.08)', boxShadow: 'none' }} />
+                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? 'var(--accent)' : i === quizIdx ? 'var(--accent)' : 'rgba(255,255,255,0.08)', boxShadow: 'none' }} />
                   ))}
                 </div>
-                <span style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444'}` }}>
+                <span style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : '#EF4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : '#EF4444'}` }}>
                   {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
                 </span>
               </div>
@@ -407,8 +407,8 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'passed' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#22C55E', width: 56, height: 56 } as any}>
-                <svg className="w-7 h-7 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--accent)', width: 56, height: 56 } as any}>
+                <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[#0F172A] mb-2">You're Qualified!</h3>
               <p className="text-base text-[#64748B] mb-6">100 credits granted. Start submitting.</p>
@@ -480,7 +480,7 @@ export default function ChallengePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="ch-glow-icon" style={{ '--glow': '#22C55E' } as any}>
+                <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 </div>
                 <div>
@@ -611,7 +611,7 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: '#F59E0B' }}>Rankings</span>
+            <span className="ch-section-tag" style={{ color: 'var(--text-muted)' }}>Rankings</span>
             <h2 className="ch-section-title">Leaderboard</h2>
             <p className="ch-section-sub">{challengeActive ? 'Live standings.' : challengeEnded ? 'Final standings.' : 'Rankings appear when the challenge starts May 7, 2026.'}</p>
           </div>
@@ -625,7 +625,7 @@ export default function ChallengePage() {
             {[1, 2, 3, 4, 5].map((rank) => (
               <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-[#E2E8F0] last:border-0 hover:bg-[#F1F5F9] transition-colors">
                 <div className="col-span-1">
-                  <span className="text-base font-bold" style={{ color: rank === 1 ? '#fbbf24' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
+                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--text-muted)' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
                 </div>
                 <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
                 <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
@@ -645,9 +645,9 @@ export default function ChallengePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { title: 'Eligibility', color: '#22C55E', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
+              { title: 'Eligibility', color: 'var(--accent)', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
               { title: 'Submissions', color: '#29B5E8', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
-              { title: 'Timeline', color: '#F59E0B', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
+              { title: 'Timeline', color: 'var(--text-muted)', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
               { title: 'Judging', color: '#EF4444', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
             ].map((r) => (
               <div key={r.title} className="ch-glass-card p-5">

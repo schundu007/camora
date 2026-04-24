@@ -52,9 +52,9 @@ export default function SetupWizard({ onComplete }) {
 
         {/* Progress */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-3 h-3 rounded-full" style={{ background: step >= 1 ? '#10b981' : '#e5e5e5' }} />
-          <div className="w-24 h-1 rounded-full" style={{ background: step >= 2 ? '#10b981' : '#e5e5e5' }} />
-          <div className="w-3 h-3 rounded-full" style={{ background: step >= 2 ? '#10b981' : '#e5e5e5' }} />
+          <div className="w-3 h-3 rounded-full" style={{ background: step >= 1 ? 'var(--accent)' : '#e5e5e5' }} />
+          <div className="w-24 h-1 rounded-full" style={{ background: step >= 2 ? 'var(--accent)' : '#e5e5e5' }} />
+          <div className="w-3 h-3 rounded-full" style={{ background: step >= 2 ? 'var(--accent)' : '#e5e5e5' }} />
         </div>
 
         {/* Content */}
@@ -94,7 +94,7 @@ export default function SetupWizard({ onComplete }) {
                   onClick={() => setStep(2)}
                   disabled={!hasAtLeastOneKey}
                   className="px-6 py-3 text-sm font-semibold rounded transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: '#10b981', color: '#ffffff' }}
+                  style={{ background: 'var(--accent)', color: '#ffffff' }}
                 >
                   Continue
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,8 +108,8 @@ export default function SetupWizard({ onComplete }) {
           {step === 2 && (
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: '#ecfdf5' }}>
-                  <svg className="w-8 h-8" style={{ color: '#10b981' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: '#F8FAFC' }}>
+                  <svg className="w-8 h-8" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -121,15 +121,15 @@ export default function SetupWizard({ onComplete }) {
                 <h3 className="font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Quick Tips</h3>
                 <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold" style={{ color: '#10b981' }}>1.</span>
+                    <span className="font-bold" style={{ color: 'var(--accent)' }}>1.</span>
                     <span>Paste a problem description, screenshot, or URL to get started</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold" style={{ color: '#10b981' }}>2.</span>
+                    <span className="font-bold" style={{ color: 'var(--accent)' }}>2.</span>
                     <span>Toggle between Claude and GPT models in the header</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold" style={{ color: '#10b981' }}>3.</span>
+                    <span className="font-bold" style={{ color: 'var(--accent)' }}>3.</span>
                     <span>Access settings anytime from the sidebar</span>
                   </li>
                 </ul>
@@ -149,7 +149,7 @@ export default function SetupWizard({ onComplete }) {
                 <button
                   onClick={handleComplete}
                   className="px-6 py-3 text-sm font-semibold rounded transition-all flex items-center gap-2"
-                  style={{ background: '#10b981', color: '#ffffff' }}
+                  style={{ background: 'var(--accent)', color: '#ffffff' }}
                 >
                   Start Using Capra
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +163,7 @@ export default function SetupWizard({ onComplete }) {
 
         {/* Footer */}
         <div className="mt-6 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
-          Need help? Visit our <a href="https://github.com/your-repo/chundu" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981' }}>documentation</a>
+          Need help? Visit our <a href="https://github.com/your-repo/chundu" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>documentation</a>
         </div>
       </div>
     </div>

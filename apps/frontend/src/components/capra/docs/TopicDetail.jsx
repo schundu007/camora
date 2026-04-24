@@ -818,7 +818,7 @@ export default function TopicDetail({
             <div className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-white border border-[var(--border)]">
               <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
                 <circle cx="10" cy="10" r="8" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                <circle cx="10" cy="10" r="8" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"
+                <circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 8}`}
                   strokeDashoffset={`${2 * Math.PI * 8 * (1 - progressInfo.percent / 100)}`}
                 />
@@ -1496,7 +1496,7 @@ export default function TopicDetail({
                               return (
                                 <button key={lang} onClick={() => setCodeLanguage(lang)}
                                   className={`text-[10px] landing-mono px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${isActive ? `text-${c}-300 bg-${c}-900/50 border-${c}-700/50` : 'text-[var(--text-muted)] bg-transparent border-gray-700 hover:text-gray-300'}`}
-                                  style={isActive ? { color: c === 'yellow' ? '#fde68a' : undefined, background: c === 'yellow' ? 'rgba(161,98,7,0.3)' : undefined } : {}}
+                                  style={isActive ? { color: c === 'yellow' ? '#F8FAFC' : undefined, background: c === 'yellow' ? 'rgba(161,98,7,0.3)' : undefined } : {}}
                                 >{lang.charAt(0).toUpperCase() + lang.slice(1)}</button>
                               );
                             })}
@@ -2506,7 +2506,7 @@ export default function TopicDetail({
                             <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                           </button>
                           {isOpen && (
-                            <div className="px-4 pb-4 pt-1 border-t border-[var(--border)]" style={{ borderLeft: '3px solid #2D8CFF' }}>
+                            <div className="px-4 pb-4 pt-1 border-t border-[var(--border)]" style={{ borderLeft: '3px solid var(--accent)' }}>
                               <div className="pl-9 text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
                                 <FormattedContent content={q.answer} color="blue" />
                               </div>

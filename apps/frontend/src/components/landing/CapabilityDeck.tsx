@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const ACCENT = '#29B5E8';
 const DANGER = '#EF4444';
-const SUCCESS = '#4ADE80';
+const SUCCESS = 'var(--accent)';
 const MONO = "'Source Code Pro', monospace";
 const DISPLAY = "'Source Sans 3', sans-serif";
 
@@ -274,25 +274,25 @@ function SceneCompany() {
 function SceneCode() {
   const APPROACHES = [
     { label: 'Brute Force',   cx: 'O(n²)',  lines: [
-      { t: 'def two_sum(nums, target):', c: '#C4B5FD' },
+      { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
       { t: '  for i in range(len(nums)):', c: '#E2E8F0' },
       { t: '    for j in range(i+1, len(nums)):', c: '#E2E8F0' },
-      { t: '      if nums[i] + nums[j] == target:', c: '#FCD34D' },
+      { t: '      if nums[i] + nums[j] == target:', c: 'var(--text-muted)' },
       { t: '        return [i, j]', c: SUCCESS },
     ]},
     { label: 'Optimal · Hash', cx: 'O(n)',  lines: [
-      { t: 'def two_sum(nums, target):', c: '#C4B5FD' },
+      { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
       { t: '  seen = {}', c: '#E2E8F0' },
       { t: '  for i, n in enumerate(nums):', c: '#E2E8F0' },
-      { t: '    if target - n in seen:', c: '#FCD34D' },
+      { t: '    if target - n in seen:', c: 'var(--text-muted)' },
       { t: '      return [seen[target - n], i]', c: SUCCESS },
       { t: '    seen[n] = i', c: '#E2E8F0' },
     ]},
     { label: 'Space-Tight',    cx: 'O(n log n)', lines: [
-      { t: 'def two_sum(nums, target):', c: '#C4B5FD' },
+      { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
       { t: '  idx = sorted(range(len(nums)), key=lambda i: nums[i])', c: '#E2E8F0' },
       { t: '  l, r = 0, len(nums) - 1', c: '#E2E8F0' },
-      { t: '  while l < r:', c: '#FCD34D' },
+      { t: '  while l < r:', c: 'var(--text-muted)' },
       { t: '    s = nums[idx[l]] + nums[idx[r]]', c: '#E2E8F0' },
       { t: '    if s == target: return [idx[l], idx[r]]', c: SUCCESS },
     ]},

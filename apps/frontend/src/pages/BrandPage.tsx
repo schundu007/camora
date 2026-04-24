@@ -5,10 +5,10 @@ import SiteNav from '../components/shared/SiteNav';
 
 /* ── APPA Colors ─────────────────────────────────────────── */
 const C = {
-  accent: '#60A5FA',
-  indigo: '#2D8CFF',
+  accent: 'var(--accent)',
+  indigo: 'var(--accent)',
   cyan: '#38bdf8',
-  amber: '#fbbf24',
+  amber: 'var(--text-muted)',
   dark: '#0a0b14',
   light: '#ffffff',
 };
@@ -186,9 +186,9 @@ function Wordmark1({ dark = true }: { dark?: boolean }) {
       <div className={`${textColor} tracking-[-0.04em] leading-none`}
            style={{ fontFamily: "'Inter', sans-serif", fontSize: 32, fontWeight: 800 }}>
         <span style={{ color: C.accent }}>C</span>
-        <span style={{ color: dark ? C.accent : '#2D8CFF' }}>a</span>
+        <span style={{ color: dark ? C.accent : 'var(--accent)' }}>a</span>
         mor
-        <span style={{ color: dark ? C.accent : '#2D8CFF' }}>a</span>
+        <span style={{ color: dark ? C.accent : 'var(--accent)' }}>a</span>
       </div>
       <div className={`${subColor} mt-1.5`}
            style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>

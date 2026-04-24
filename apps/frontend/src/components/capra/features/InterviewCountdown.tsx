@@ -110,7 +110,7 @@ export default function InterviewCountdown() {
             />
             <circle
               cx="36" cy="36" r={radius}
-              fill="none" stroke="#10b981" strokeWidth="5"
+              fill="none" stroke="var(--accent)" strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}

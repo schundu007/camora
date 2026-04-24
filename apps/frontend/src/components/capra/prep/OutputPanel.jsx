@@ -522,7 +522,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Difficulty & Frequency */}
                         {(q.difficulty || q.frequency) && (
                           <p className="text-xs mb-2" style={{ color: colors.textMuted }}>
-                            {q.difficulty && <span className="px-1.5 py-0.5 rounded mr-2" style={{ background: q.difficulty === 'Hard' ? '#FEE2E2' : q.difficulty === 'Medium' ? '#FEF3C7' : '#D1FAE5' }}>{q.difficulty}</span>}
+                            {q.difficulty && <span className="px-1.5 py-0.5 rounded mr-2" style={{ background: q.difficulty === 'Hard' ? '#FEE2E2' : q.difficulty === 'Medium' ? '#F8FAFC' : '#D1FAE5' }}>{q.difficulty}</span>}
                             {q.frequency}
                           </p>
                         )}
@@ -550,7 +550,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {safeArray(q.approaches).length > 0 && (
                           <div className="space-y-4">
                             {safeArray(q.approaches).filter(approach => approach && typeof approach === 'object').map((approach, j) => (
-                              <div key={j} className="pl-3" style={{ borderLeft: '3px solid #10b981' }}>
+                              <div key={j} className="pl-3" style={{ borderLeft: '3px solid var(--accent)' }}>
                                 <p className="font-semibold" style={{ color: '#047857' }}>{approach.name}</p>
                                 <p className="text-xs mb-2" style={{ color: colors.textMuted }}>
                                   Time: {approach.timeComplexity} | Space: {approach.spaceComplexity}
@@ -631,7 +631,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             )}
                             {safeArray(q.requirements.nonFunctional).length > 0 && (
                               <div>
-                                <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: '#10b981' }}>Non-Functional</p>
+                                <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--accent)' }}>Non-Functional</p>
                                 {safeArray(q.requirements.nonFunctional).filter(r => r != null).map((r, j) => (
                                   <p key={j} className="text-xs" style={{ color: colors.text }}>✓ {String(r)}</p>
                                 ))}
@@ -642,7 +642,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Capacity Estimation */}
                         {q.capacityEstimation && typeof q.capacityEstimation === 'object' && (
-                          <div className="mt-3 p-3 rounded" style={{ background: '#F0FDF4' }}>
+                          <div className="mt-3 p-3 rounded" style={{ background: '#F8FAFC' }}>
                             <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#047857' }}>Capacity Estimation</p>
                             {safeArray(q.capacityEstimation.calculations).filter(calc => calc && typeof calc === 'object').map((calc, j) => (
                               <p key={j} className="text-xs font-mono">{calc?.metric || ''}: {calc?.result || ''}</p>
@@ -664,7 +664,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                   onError={() => !q.diagramBase64 && handleDiagramError(i)}
                                 />
                                 {q.diagramBase64 && (
-                                  <p className="text-xs p-2 flex items-center gap-1" style={{ background: '#f0fdf4', color: '#15803d' }}>
+                                  <p className="text-xs p-2 flex items-center gap-1" style={{ background: '#F8FAFC', color: 'var(--accent)' }}>
                                     <span>✓</span> Cached locally
                                   </p>
                                 )}
@@ -754,7 +754,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             )}
                             <div className="space-y-3">
                               {q.situation && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #F8FAFC 0%, #F8FAFC 100%)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                                   <div className="prep-star-label situation">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                                     Situation
@@ -772,7 +772,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 </div>
                               )}
                               {q.action && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #fefce8 0%, #F8FAFC 100%)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                                   <div className="prep-star-label action">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
                                     Action
@@ -781,12 +781,12 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 </div>
                               )}
                               {q.result && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #F8FAFC 0%, #d1fae5 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                                   <div className="prep-star-label result">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                     Result
                                   </div>
-                                  <p className="text-sm leading-relaxed" style={{ color: '#2D8CFF' }}>{safeStr(q.result).trim()}</p>
+                                  <p className="text-sm leading-relaxed" style={{ color: 'var(--accent)' }}>{safeStr(q.result).trim()}</p>
                                 </div>
                               )}
                             </div>
@@ -826,7 +826,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Header */}
                         <div className="prep-content-card-header">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#10b981' }}>
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                               </svg>
@@ -848,7 +848,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                           <div className="mb-3">
                             <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: colors.accent }}>Core Concepts</p>
                             {safeArray(tech.conceptsToKnow).filter(c => c && typeof c === 'object').map((c, j) => (
-                              <div key={j} className="mb-3 pl-2" style={{ borderLeft: '2px solid #10b981' }}>
+                              <div key={j} className="mb-3 pl-2" style={{ borderLeft: '2px solid var(--accent)' }}>
                                 <p className="font-semibold text-sm">{c?.concept || ''}</p>
                                 {c?.explanation && (
                                   <div className="text-xs mt-1" style={{ color: colors.textMuted }}>
@@ -1033,7 +1033,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     ) : (
                       <div className="space-y-2">
                         {safeArray(displayContent.practiceRecommendations).filter(rec => rec && typeof rec === 'object').map((rec, i) => (
-                          <div key={i} className="p-2 rounded" style={{ background: '#F0FDF4' }}>
+                          <div key={i} className="p-2 rounded" style={{ background: '#F8FAFC' }}>
                             <span className="font-semibold" style={{ color: '#047857' }}>{rec?.platform || ''}</span>
                             {safeArray(rec?.problems).length > 0 && (
                               <p className="text-xs mt-1">{safeArray(rec.problems).join(', ')}</p>
@@ -1048,7 +1048,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                 {/* Interview Tips */}
                 {safeArray(displayContent.interviewTips).length > 0 && (
-                  <div className="p-3 rounded" style={{ background: '#ECFDF5', border: '1px solid #A7F3D0' }}>
+                  <div className="p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #A7F3D0' }}>
                     <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#047857' }}>Interview Tips</p>
                     {safeArray(displayContent.interviewTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
@@ -1058,7 +1058,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                 {/* General Tips (system design) */}
                 {safeArray(displayContent.generalTips).length > 0 && (
-                  <div className="p-3 rounded" style={{ background: '#ECFDF5', border: '1px solid #A7F3D0' }}>
+                  <div className="p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #A7F3D0' }}>
                     <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#047857' }}>Tips</p>
                     {safeArray(displayContent.generalTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
@@ -1160,7 +1160,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             }
                             if (item.type === 'concept') {
                               return (
-                                <div key={i} className="mb-3 pl-2" style={{ borderLeft: '2px solid #10b981' }}>
+                                <div key={i} className="mb-3 pl-2" style={{ borderLeft: '2px solid var(--accent)' }}>
                                   <p className="font-semibold text-sm">{item.concept}</p>
                                   <div className="text-xs mt-1" style={{ color: colors.textMuted }}>{renderMarkdown(item.explanation.replace(/\\n/g, '\n'))}</div>
                                 </div>
@@ -1168,14 +1168,14 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             }
                             if (item.type === 'sd-question') {
                               return (
-                                <div key={i} className="p-3 rounded-lg" style={{ background: '#f0fdf4', border: '1px solid #86efac' }}>
+                                <div key={i} className="p-3 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid var(--accent)' }}>
                                   <span className="font-bold text-base" style={{ color: '#166534' }}>{item.title}</span>
                                 </div>
                               );
                             }
                             if (item.type === 'diagram') {
                               return (
-                                <div key={i} className="p-3 rounded-lg" style={{ background: '#fef3c7', border: '1px solid #fcd34d' }}>
+                                <div key={i} className="p-3 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid var(--text-muted)' }}>
                                   <p className="text-sm" style={{ color: '#92400e' }}>{item.description}</p>
                                 </div>
                               );

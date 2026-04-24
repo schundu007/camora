@@ -916,8 +916,8 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
   // ---- Desktop Header — with APPA nav tabs ----
   const modeConfig = {
     coding: { label: 'Coding', color: 'var(--accent)' },
-    'system-design': { label: 'System Design', color: '#3b82f6' },
-    behavioral: { label: 'Interview Prep', color: '#f59e0b' },
+    'system-design': { label: 'System Design', color: 'var(--accent)' },
+    behavioral: { label: 'Interview Prep', color: 'var(--text-muted)' },
   };
   const currentMode = modeConfig[ascendMode] || modeConfig.coding;
 
@@ -1113,7 +1113,7 @@ function CodingLayout({
       <div className="flex-shrink-0">
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-[var(--border)] gap-2 min-h-[48px] flex-wrap" style={{ background: 'var(--bg-surface)' }}>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ background: ascendMode === 'system-design' ? '#3b82f6' : 'var(--accent)' }} />
+            <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ background: ascendMode === 'system-design' ? 'var(--accent)' : 'var(--accent)' }} />
             <h2 className="landing-display text-sm font-bold truncate text-[var(--text-primary)]">{ascendMode === 'system-design' ? 'System Design' : 'Problem'}</h2>
             {ascendMode === 'system-design' && (
               <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
