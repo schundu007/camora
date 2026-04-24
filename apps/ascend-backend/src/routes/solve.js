@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'node:crypto';
 import * as claude from '../services/claude.js';
 import * as openai from '../services/openai.js';
 import { validate } from '../middleware/validators.js';
@@ -15,6 +16,32 @@ const router = Router();
 
 // Daily solve cap for paid users to prevent abuse
 const PAID_DAILY_LIMIT = 15;
+
+// ──────────────────────────────────────────────────────────────────
+// Redis-backed full-answer cache
+//
+// Keyed by a hash of (problem, language, ascendMode, detailLevel) —
+// intentionally NOT by model, so a sonnet-quality answer generated
+// once gets served to every subsequent caller (including free-plan
+// haiku users). TTL 30 days; rewritten on every miss.
+//
+// A separate offline precompute script can populate this cache with
+// the top 100 interview problems so cold-start hits are near-instant
+// for the most common questions. Same key format.
+// ──────────────────────────────────────────────────────────────────
+const ANSWER_CACHE_TTL_SEC = 30 * 24 * 60 * 60;
+const ANSWER_CACHE_PREFIX = 'solve:answer:v1:';
+
+function answerCacheKey({ problem, language, ascendMode, detailLevel, designDetailLevel }) {
+  const normalized = [
+    (problem || '').trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 2000),
+    (language || 'auto').toLowerCase(),
+    ascendMode || 'coding',
+    ascendMode === 'system-design' ? (designDetailLevel || 'basic') : (detailLevel || 'detailed'),
+  ].join('::');
+  const hash = crypto.createHash('sha256').update(normalized).digest('hex').slice(0, 24);
+  return `${ANSWER_CACHE_PREFIX}${hash}`;
+}
 
 async function checkDailySolveLimit(userId) {
   const today = new Date().toISOString().slice(0, 10);
@@ -189,6 +216,49 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
     res.setHeader('X-Accel-Buffering', 'no');
     req.setTimeout(120000);
 
+    // ── Answer-cache lookup ───────────────────────────────────────
+    // If this exact question (same language / mode / detailLevel) has
+    // been solved before, we skip the LLM entirely and replay the
+    // full cached structured answer. We still deduct usage so the
+    // paywall/limit accounting stays correct.
+    const cacheKey = answerCacheKey({ problem, language, ascendMode, detailLevel, designDetailLevel });
+    try {
+      const cached = await cacheGet(cacheKey);
+      if (cached && typeof cached === 'object' && (cached.code || cached.approaches || cached.systemDesign)) {
+        logger.info({ cacheKey }, 'solve/stream cache HIT — serving precomputed answer');
+        // Emit a single synthetic chunk so the frontend's progress UI
+        // doesn't flicker, then the final done event with the full
+        // parsed result. No tokens are streamed char-by-char because
+        // we have the whole answer already.
+        res.write(`data: ${JSON.stringify({ chunk: '', partial: true, provider: 'cache' })}\n\n`);
+        res.write(`data: ${JSON.stringify({ done: true, result: cached, fromCache: true })}\n\n`);
+
+        // Still deduct usage — hitting cache does not grant free solves.
+        if (webappUserId) {
+          try {
+            const featureType = ascendMode === 'system-design' ? 'design' : 'coding';
+            const subStatus = await freeUsageService.getSubscriptionStatus(webappUserId);
+            if (subStatus.hasSubscription) {
+              if (ascendMode === 'system-design') await usageService.useSystemDesign(webappUserId);
+              else await usageService.useCoding(webappUserId);
+            } else {
+              await freeUsageService.useFreeAllowance(webappUserId, featureType);
+            }
+          } catch (usageErr) {
+            logger.warn({ error: usageErr.message }, 'cache-hit usage deduction failed (non-fatal)');
+          }
+          awardXP(webappUserId, 'coding_solve').catch(() => {});
+        }
+
+        res.end();
+        return;
+      }
+    } catch (cacheErr) {
+      // Cache failure should never block the request — fall through
+      // to normal generation.
+      logger.warn({ error: cacheErr.message }, 'answer cache read failed; proceeding with live generation');
+    }
+
     // Helper to stream from a provider
     async function streamFromProvider(service, providerName) {
       let fullText = '';
@@ -353,6 +423,18 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
       }
 
       if (webappUserId) awardXP(webappUserId, 'coding_solve').catch(() => {});
+
+      // Write-through: persist the fully parsed answer so the next
+      // caller asking the same question gets an instant cache hit.
+      // Any Redis failure is logged and ignored.
+      try {
+        if (result && typeof result === 'object') {
+          await cacheSet(cacheKey, result, ANSWER_CACHE_TTL_SEC);
+          logger.debug({ cacheKey }, 'answer cached');
+        }
+      } catch (cacheWriteErr) {
+        logger.warn({ error: cacheWriteErr.message }, 'answer cache write failed (non-fatal)');
+      }
 
       res.write(`data: ${JSON.stringify({ done: true, result })}\n\n`);
     } catch (parseErr) {
