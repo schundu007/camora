@@ -517,12 +517,13 @@ export default function JobPrepPage() {
             </div>
 
             <h1 style={{
-              fontSize: '28px',
+              fontSize: 'clamp(20px, 5vw, 28px)',
               fontWeight: 700,
               color: 'var(--text-primary)',
               letterSpacing: '-0.02em',
               margin: 0,
               fontFamily: "'Inter', system-ui, sans-serif",
+              wordBreak: 'break-word',
             }}>
               {job.company_name} &mdash; {job.title}
             </h1>

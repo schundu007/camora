@@ -600,7 +600,7 @@ export default function PracticePage() {
   const finalAvgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
   return (
-    <div className="practice-root" style={{ background: 'transparent', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="practice-root" style={{ background: 'transparent', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* ═══════════ Main Content ═══════════ */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -1101,7 +1101,7 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ height: 'calc(100vh - 280px)', minHeight: 420, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <div style={{ height: 'calc(100dvh - 280px)', minHeight: 360, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
                       <Allotment defaultSizes={[45, 55]}>
                         {/* Left: Excalidraw Whiteboard */}
                         <Allotment.Pane minSize={320}>
