@@ -150,7 +150,7 @@ router.post(
 
       // ── Speaker diarization / verification (optional) ─────────────────
       if (filterUserVoice) {
-        console.log(`[VoiceFilter] Checking voice for user ${req.user.email}, audio size: ${file.buffer.length}`);
+        console.log(`[VoiceFilter] user=${req.user.id} audio=${file.buffer.length}B`);
         const diarization = await diarizeSpeaker(
           String(req.user.id),
           file.buffer,
@@ -161,7 +161,7 @@ router.post(
         if (!diarization.should_transcribe) {
           const ratio = diarization.interviewer_ratio ?? diarization.similarity ?? 0;
           console.info(
-            `Skipped transcription for user ${req.user.email}: ` +
+            `Skipped transcription user=${req.user.id}: ` +
             `candidate voice detected (interviewer_ratio=${(ratio).toFixed(3)})`,
           );
           return res.json({
@@ -203,7 +203,7 @@ router.post(
       }
 
       console.info(
-        `Transcribed audio for user ${req.user.email}: ` +
+        `Transcribed audio user=${req.user.id}: ` +
         `${trimmed.length} chars in ${latencyMs}ms`,
       );
 
