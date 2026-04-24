@@ -87,8 +87,8 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
         {/* Voice enrollment / filter toggle */}
         <VoiceEnrollment disabled={false} />
 
-        {/* Status */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
+        {/* Status — compact dot on mobile, full pill on lg+ */}
+        <div className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-lg" style={{ background: C.elevated, border: `1px solid ${C.border}` }} title={status.message}>
           <div className={`w-2 h-2 rounded-full ${
             status.state === 'ready' ? 'bg-[var(--accent)]' :
             status.state === 'error' ? 'bg-red-400' :
@@ -96,7 +96,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
             (status.state === 'listen' || status.state === 'write') ? 'bg-[var(--accent)] animate-pulse' :
             ''
           }`} />
-          <span className="text-xs font-bold" style={{ fontFamily: "'Inter', sans-serif", color: C.muted }}>{status.message}</span>
+          <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "'Inter', sans-serif", color: C.muted }}>{status.message}</span>
         </div>
 
         {/* Settings gear */}

@@ -432,7 +432,7 @@ export function LumoraShellPage() {
                     <div className="space-y-1.5">
                       {history.slice(-10).reverse().map((e: any, i: number) => (
                         <div key={i} className="flex items-center justify-between py-1.5 text-xs" style={{ borderBottom: '1px solid var(--border)' }}>
-                          <span className="truncate max-w-[200px]" style={{ color: 'var(--text-primary)' }}>{e.question}</span>
+                          <span className="truncate min-w-0 flex-1" style={{ color: 'var(--text-primary)' }}>{e.question}</span>
                           <span style={{ color: 'var(--text-muted)' }}>{new Date(e.timestamp).toLocaleString()}</span>
                         </div>
                       ))}

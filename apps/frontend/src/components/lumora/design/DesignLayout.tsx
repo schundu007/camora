@@ -1032,7 +1032,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       {/* Main content - vertical on mobile, horizontal on desktop */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
         {/* Left: Problem Input - full width on mobile */}
-        <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
+        <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[45dvh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
           {/* Input Tab Header */}
           <div className="flex items-center justify-between px-3 py-1.5" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: t.inputBg }}>
