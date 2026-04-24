@@ -103,12 +103,19 @@ RULES:
 - Use my real experience from resume when available`;
 }
 
-function buildInterviewDesignPrompt(resume, technical) {
+function buildInterviewDesignPrompt(resume, technical, detailLevel = null) {
+  const isBasic = detailLevel === 'basic';
+  const isFull = detailLevel === 'full';
+  const detailRules = isBasic
+    ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
+    : isFull
+    ? `DETAIL MODE: FULL — emit every section. 4-6 bullets per section, with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
+    : `DETAIL MODE: STANDARD — emit every section. 3-4 bullets per section.`;
   return `You are a LIVE interview copilot for a SYSTEM DESIGN question. The candidate is in an active interview and needs concise, glanceable answers.
 CRITICAL RULES:
-- MAXIMUM 3-4 bullets per section. No exceptions.
+- ${detailRules}
 - Each bullet: ONE short sentence (under 15 words).
-- Include ALL sections below but keep them SHORT.
+- ${isBasic ? 'Only include the sections listed above in DETAIL MODE' : 'Include ALL sections below'} but keep them SHORT.
 - Total answer must be readable in under 30 seconds.
 
 === MY BACKGROUND ===
@@ -290,6 +297,7 @@ export async function* streamResponse(question, history, options = {}) {
     resumeContext = null,
     technicalContext = null,
     systemContext = null,
+    detailLevel = null,
   } = options;
 
   const startTime = performance.now();
@@ -344,7 +352,7 @@ IMPORTANT CODE FORMATTING RULE:
 - Separate explanatory text from code blocks clearly.`;
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
-    systemPrompt = buildInterviewDesignPrompt(resume, technical);
+    systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
     systemPrompt = buildGeneralPrompt(resume, technical) + `

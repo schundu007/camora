@@ -434,6 +434,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         question: `[SYSTEM DESIGN] ${text.trim()}`,
         useSearch: false,
         systemContext: getSystemContext(),
+        detailLevel,
         token,
         onToken: (data) => {
           if (data.t) {

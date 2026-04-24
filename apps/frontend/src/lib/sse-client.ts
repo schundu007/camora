@@ -11,6 +11,7 @@ export interface StreamOptions {
   question: string;
   useSearch?: boolean;
   systemContext?: string;
+  detailLevel?: 'basic' | 'full';
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
@@ -31,6 +32,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     question,
     useSearch = false,
     systemContext,
+    detailLevel,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -63,6 +65,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         question,
         use_search: useSearch,
         ...(systemContext ? { system_context: systemContext } : {}),
+        ...(detailLevel ? { detail_level: detailLevel } : {}),
       }),
       signal: abortController.signal,
     });
