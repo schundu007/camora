@@ -3,6 +3,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse, streamCodingResponse } from '@/lib/sse-client';
 import { activityTracker } from '@/lib/activity-tracker';
+import { getSystemContext } from '@/lib/lumora-assistant';
 
 import { INPUT_LIMITS } from '@/lib/constants';
 
@@ -90,6 +91,7 @@ export function useStreamingInterview() {
         conversationId: conversationId || undefined,
         question: finalQuestion,
         useSearch,
+        systemContext: getSystemContext(),
         token,
         signal: controller.signal,
         onStreamStart: (data: any) => {
@@ -174,6 +176,7 @@ export function useStreamingInterview() {
         problem: trimmedProblem,
         language,
         token,
+        systemContext: getSystemContext(),
         signal: controller.signal,
         onStreamStart: (data: any) => {
           setIsCodingQuestion(true);

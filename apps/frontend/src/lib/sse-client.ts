@@ -175,6 +175,7 @@ export interface CodingStreamOptions {
   problem: string;
   language: string;
   token: string;
+  systemContext?: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
   onToken?: (data: TokenEvent) => void;
@@ -193,6 +194,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     problem,
     language,
     token,
+    systemContext,
     signal: externalSignal,
     onStreamStart,
     onToken,
@@ -218,6 +220,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
       body: JSON.stringify({
         problem,
         language,
+        ...(systemContext ? { system_context: systemContext } : {}),
       }),
       signal: abortController.signal,
     });

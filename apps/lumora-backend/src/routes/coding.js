@@ -56,8 +56,22 @@ const SUPPORTED_LANGUAGES = [
  * Build the coding system prompt for a given language.
  * Directly ported from Python `build_coding_system_prompt()`.
  */
-function buildCodingSystemPrompt(language) {
+function buildCodingSystemPrompt(language, systemContext) {
+  const contextBlock = systemContext
+    ? `\n##############################################################################
+# CANDIDATE CONTEXT
+##############################################################################
+${systemContext}
+
+When generating the solution, align variable naming, idioms, and trade-off
+framing with the candidate's resume experience and the target role above.
+Reference specific tech from their resume where genuinely relevant — never
+fabricate. Keep the correctness rules below absolute; context only personalizes.
+
+`
+    : '';
   return `You are an expert coding interview assistant.
+${contextBlock}
 
 ##############################################################################
 # RULE #0: CODE MUST BE 100% CORRECT - NO BUGS ALLOWED
@@ -316,7 +330,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res, n
 });
 
 router.post('/solve', authenticate, checkUsage('questions'), async (req, res) => {
-  const { problem, language, conversationHistory } = req.body;
+  const { problem, language, conversationHistory, system_context: systemContext } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
   if (!problem || typeof problem !== 'string') {
@@ -427,7 +441,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     const stream = await client.messages.stream({
       model: getModelForUser(req),
       max_tokens: MAX_TOKENS,
-      system: buildCodingSystemPrompt(lang),
+      system: buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined),
       messages,
     });
 
