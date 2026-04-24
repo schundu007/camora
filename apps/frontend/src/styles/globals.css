@@ -22,9 +22,9 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds — Icy Frost: cool blue-white tones */
+    /* Backgrounds — white app surface, subtle elevated tint for chips */
     --bg-base: #F0F7FF;
-    --bg-app: #F0F7FF;
+    --bg-app: #FFFFFF;
     --bg-surface: #FFFFFF;
     --bg-elevated: #DDE9F7;
     --bg-overlay: rgba(10,30,60,0.35);
