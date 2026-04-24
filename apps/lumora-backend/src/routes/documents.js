@@ -199,7 +199,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
 
     await fs.writeFile(filePath, textContent, 'utf-8');
 
-    console.log(`User ${req.user.email} uploaded document: ${originalName} (${textContent.length} chars)`);
+    console.log(`user=${req.user.id} uploaded document len=${textContent.length} name=[REDACTED]`);
 
     res.json({
       success: true,
@@ -272,7 +272,7 @@ router.delete('/:filename', async (req, res, next) => {
     }
 
     await fs.unlink(filePath);
-    console.log(`User ${req.user.email} deleted document: ${rawFilename}`);
+    console.log(`user=${req.user.id} deleted document`);
 
     res.json({ success: true, message: `Document '${rawFilename}' deleted` });
   } catch (err) {

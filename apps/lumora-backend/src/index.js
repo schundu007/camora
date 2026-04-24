@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import { config } from './config/index.js';
 import { query, closePool } from './config/database.js';
 import { ensureUsageTable } from './services/usage.js';
+import { logger, requestLogger } from './middleware/requestLogger.js';
+import { requestId } from './middleware/requestId.js';
 
 dotenv.config();
 
@@ -17,6 +19,11 @@ app.use(cors({
   origin: config.corsOrigins,
   credentials: true,
 }));
+
+// Request-id + structured request/response logging. Must run after cors/helmet
+// but before body parsing so the id is available to every downstream log line.
+app.use(requestId);
+app.use(requestLogger);
 
 // Body parsing — raw for Stripe webhooks, JSON for everything else
 app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
@@ -119,9 +126,9 @@ async function runMigrations() {
     // Usage tracking tables (plan limits, topups, active sessions)
     await ensureUsageTable();
 
-    console.log('Database migrations complete');
+    logger.info('Database migrations complete');
   } catch (err) {
-    console.error('Migration error:', err.message);
+    logger.error({ err: err.message }, 'Migration error');
   }
 }
 
@@ -163,17 +170,35 @@ app.use('/api/v1/usage', apiLimiter, usageRouter);
 app.use('/api/v1/jobs', apiLimiter, jobsRouter);
 app.use('/api/v1/stories', apiLimiter, storiesRouter);
 
-// Global error handler
+// Global error handler — generic message to client, full details to logs.
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error({
+    err: err.message,
+    stack: err.stack,
+    requestId: req.requestId,
+    method: req.method,
+    url: req.url,
+  }, 'Unhandled error');
   res.status(500).json({ error: 'Internal server error' });
+});
+
+// Process-level safety nets — previously uncaught rejections just crashed
+// with a raw dump. Now they're logged structured so Railway / Datadog
+// can group them and page on spikes.
+process.on('unhandledRejection', (reason) => {
+  logger.error({ reason: reason?.message || String(reason), stack: reason?.stack }, 'Unhandled promise rejection');
+});
+process.on('uncaughtException', (err) => {
+  logger.fatal({ err: err.message, stack: err.stack }, 'Uncaught exception');
+  // Exit after logging — Node should not continue with an unknown app state.
+  process.exit(1);
 });
 
 // Start
 const PORT = config.port;
 runMigrations().then(() => {
   const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Lumora backend running on port ${PORT}`);
+    logger.info({ port: PORT }, 'Lumora backend started');
   });
 
   // Graceful shutdown — stop accepting connections, drain, close the DB pool,
@@ -183,12 +208,12 @@ runMigrations().then(() => {
   const shutdown = async (signal) => {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log(`${signal} received, shutting down gracefully...`);
-    const forceTimer = setTimeout(() => { console.error('Forced shutdown'); process.exit(1); }, 15_000);
+    logger.info({ signal }, 'Shutdown signal received');
+    const forceTimer = setTimeout(() => { logger.error('Forced shutdown after timeout'); process.exit(1); }, 15_000);
     server.close(async () => {
-      console.log('HTTP server closed');
-      try { await closePool(); console.log('DB pool closed'); }
-      catch (err) { console.error('closePool failed:', err?.message); }
+      logger.info('HTTP server closed');
+      try { await closePool(); logger.info('DB pool closed'); }
+      catch (err) { logger.error({ err: err?.message }, 'closePool failed'); }
       clearTimeout(forceTimer);
       process.exit(0);
     });

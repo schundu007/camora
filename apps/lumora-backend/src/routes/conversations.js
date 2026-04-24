@@ -101,7 +101,7 @@ router.post('/', async (req, res, next) => {
     );
 
     const conversation = result.rows[0];
-    console.log(`Created conversation ${conversation.id} for user ${req.user.email}`);
+    console.log(`Created conversation ${conversation.id} user=${req.user.id}`);
 
     res.status(201).json(conversation);
   } catch (err) {
