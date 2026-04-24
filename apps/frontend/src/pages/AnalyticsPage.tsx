@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
   }
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div className="flex items-center justify-center py-32">
           <p className="text-[var(--text-muted)] text-lg">You don't have access to this page.</p>
         </div>
@@ -251,7 +251,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       <div className="lg:max-w-[85%] mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="mb-6" style={{ color: 'var(--text-muted)' }}>Analytics, user management & emails</p>

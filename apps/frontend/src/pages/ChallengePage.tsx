@@ -382,7 +382,7 @@ export default function ChallengePage() {
                     <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? '#22C55E' : i === quizIdx ? '#22C55E' : 'rgba(255,255,255,0.08)', boxShadow: 'none' }} />
                   ))}
                 </div>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444'}` }}>
+                <span style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? '#22C55E' : quizTimeLeft > 120 ? '#F59E0B' : '#EF4444'}` }}>
                   {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
                 </span>
               </div>
@@ -726,7 +726,7 @@ export default function ChallengePage() {
           flex-direction: column;
           background: #FFFFFF;
           color: #0F172A;
-          font-family: 'Clash Display', 'Satoshi', system-ui, sans-serif;
+          font-family: 'Source Sans 3', 'Inter', system-ui, sans-serif;
           overflow-x: hidden;
         }
 
@@ -747,7 +747,7 @@ export default function ChallengePage() {
           background: transparent;
           border: none;
           margin-bottom: 24px;
-          font-family: 'JetBrains Mono', monospace;
+          font-family: 'Source Code Pro', monospace;
         }
         .ch-badge-dot {
           width: 6px; height: 6px; border-radius: 50%;
@@ -784,7 +784,7 @@ export default function ChallengePage() {
           width: 64px; height: 64px;
           display: flex; align-items: center; justify-content: center;
           border-radius: 12px;
-          font-family: 'JetBrains Mono', monospace;
+          font-family: 'Source Code Pro', monospace;
           font-size: 28px; font-weight: 700;
           color: #0F172A;
           background: #FFFFFF;
@@ -804,7 +804,7 @@ export default function ChallengePage() {
           border: 1px solid #E2E8F0;
         }
         .ch-prize-amount {
-          font-family: 'Clash Display', sans-serif;
+          font-family: 'Source Sans 3', sans-serif;
           font-size: 48px; font-weight: 800;
           color: #29B5E8;
         }
@@ -844,7 +844,7 @@ export default function ChallengePage() {
         .ch-section { padding: 60px 0; position: relative; }
         .ch-section:nth-child(even) { background: #F8FAFC; }
         .ch-section-head { text-align: center; margin-bottom: 32px; }
-        .ch-section-tag { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.2em; font-family: 'JetBrains Mono', monospace; }
+        .ch-section-tag { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.2em; font-family: 'Source Code Pro', monospace; }
         .ch-section-title { font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800; color: #0F172A; letter-spacing: -0.02em; margin-top: 12px; text-transform: uppercase; }
         .ch-section-sub { font-size: 16px; color: #475569; margin-top: 10px; line-height: 1.6; }
 
@@ -870,7 +870,7 @@ export default function ChallengePage() {
 
         .ch-code-editor {
           min-height: 180px; padding: 16px; border-radius: 8px;
-          font-family: 'JetBrains Mono', monospace;
+          font-family: 'Source Code Pro', monospace;
           font-size: 14px; line-height: 1.6;
           background: #FFFFFF;
           border: 1px solid #E2E8F0;
@@ -908,7 +908,7 @@ export default function ChallengePage() {
           margin-bottom: 12px;
         }
         .ch-prize-amount-card {
-          font-family: 'Clash Display', sans-serif;
+          font-family: 'Source Sans 3', sans-serif;
           font-size: 36px; font-weight: 800; color: #0F172A;
           margin-bottom: 4px;
         }
@@ -943,7 +943,7 @@ export default function ChallengePage() {
         .ch-timeline-node {
           width: 36px; height: 36px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-family: 'JetBrains Mono', monospace;
+          font-family: 'Source Code Pro', monospace;
           font-size: 14px; font-weight: 700; color: #FFFFFF;
           background: var(--node-color, #29B5E8);
           position: relative; z-index: 2;

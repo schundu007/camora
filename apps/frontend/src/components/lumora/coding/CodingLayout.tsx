@@ -1032,7 +1032,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                     Copy
                                   </button>
                                 </div>
-                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: '#0F172A', fontFamily: "'Satoshi', sans-serif" }}>
+                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: '#0F172A', fontFamily: "'Inter', sans-serif" }}>
                                   {activeSol.narration}
                                 </p>
                               </div>

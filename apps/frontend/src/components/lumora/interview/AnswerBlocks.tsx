@@ -47,7 +47,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0', backdropFilter: 'blur(8px)'}}>
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #22D3EE, #22D3EE, #67E8F9)' }} />
           <div className="p-5">
-            <p className="text-[15px] text-slate-800 leading-relaxed font-medium" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
+            <p className="text-[15px] text-slate-800 leading-relaxed font-medium" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
           </div>
         </div>
       );

@@ -71,11 +71,11 @@
     --cat-tertiary: #22D3EE;
     --cat-tertiary-bg: rgba(34,211,238,0.10);
 
-    /* Fonts — Camora custom (Winter Kei + Satoshi) */
-    --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-display: 'Winter Kei', 'Clash Display', 'Satoshi', sans-serif;
-    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    --font-brand: 'Winter Kei', 'Clash Display', sans-serif;
+    /* Fonts — Adobe Source family (display + mono) + Inter (body/UI) */
+    --font-sans: 'Inter', 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Source Sans 3', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Source Code Pro', 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+    --font-brand: 'Source Sans 3', 'Inter', sans-serif;
 
     /* Shadows — cool blue frost glow */
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);

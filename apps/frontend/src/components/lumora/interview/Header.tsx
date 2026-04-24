@@ -131,7 +131,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, #22D3EE 0%, #22D3EE 100%)', borderBottom: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Satoshi', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, #22D3EE 0%, #22D3EE 100%)', borderBottom: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Inter', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -161,7 +161,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
         <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
-          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Satoshi', sans-serif", fontWeight: 700 }} title="Prepare">
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif", fontWeight: 700 }} title="Prepare">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             <span className="hidden xl:inline">Prepare</span>
           </Link>
@@ -169,8 +169,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
               className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-all"
               style={currentTab === tab.id
-                ? { background: 'rgba(34,211,238,0.15)', color: '#67E8F9', fontFamily: "'Satoshi', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(34,211,238,0.25)' }
-                : { color: 'rgba(255,255,255,0.75)', fontFamily: "'Satoshi', sans-serif" }}>
+                ? { background: 'rgba(34,211,238,0.15)', color: '#67E8F9', fontFamily: "'Inter', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(34,211,238,0.25)' }
+                : { color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif" }}>
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
             </button>

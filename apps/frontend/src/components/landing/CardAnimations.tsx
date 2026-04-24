@@ -1,7 +1,7 @@
 import React from 'react';
 
 const ACCENT = '#29B5E8';
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "'Source Code Pro', monospace";
 
 export function CardAnimationStyles() {
   return (
@@ -588,7 +588,7 @@ export function FeaturePrepAnim() {
               fontSize="9"
               fontWeight="800"
               fill={n.filled ? '#FFFFFF' : ACCENT}
-              fontFamily="'JetBrains Mono', monospace"
+              fontFamily="'Source Code Pro', monospace"
               letterSpacing="0.5"
             >
               {n.label}
@@ -606,7 +606,7 @@ export function FeaturePrepAnim() {
               fontSize="8"
               fontWeight="800"
               fill="#FFFFFF"
-              fontFamily="'JetBrains Mono', monospace"
+              fontFamily="'Source Code Pro', monospace"
               letterSpacing="1"
             >
               {t}
@@ -683,7 +683,7 @@ export function FeatureMockInterviewAnim() {
                   textAnchor="middle"
                   fontSize="13"
                   fill="#0F172A"
-                  fontFamily="'JetBrains Mono', monospace"
+                  fontFamily="'Source Code Pro', monospace"
                   fontWeight="800"
                   style={{ opacity: 0, animation: `feat-pop 0.3s ease-out ${g.delay + 0.3}s forwards` }}
                 >

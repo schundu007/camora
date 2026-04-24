@@ -521,8 +521,8 @@ export default function CompanyPrepPage() {
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
           body { margin: 0; }
-          .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-          .practice-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+          .practice-display { font-family: 'Inter', system-ui, sans-serif; }
+          .practice-body { font-family: 'Inter', system-ui, sans-serif; }
         `}</style>
       </div>
     );
@@ -570,7 +570,7 @@ export default function CompanyPrepPage() {
                   flexShrink: 0,
                 }}
               >
-                <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: "'Inter', system-ui, sans-serif" }}>
                   {companyData.logo}
                 </span>
               </div>
@@ -831,19 +831,19 @@ export default function CompanyPrepPage() {
           margin: 0;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .practice-display {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .practice-body {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .practice-mono {
-          font-family: 'IBM Plex Mono', monospace;
+          font-family: 'Source Code Pro', monospace;
         }
 
         html { scroll-behavior: smooth; }

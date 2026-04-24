@@ -2704,19 +2704,19 @@ export default function DocsPage({ onBack }) {
         .landing-root {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .landing-display {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .landing-body {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .landing-mono {
-          font-family: 'IBM Plex Mono', monospace;
+          font-family: 'Source Code Pro', monospace;
         }
 
         .animate-fade-in {

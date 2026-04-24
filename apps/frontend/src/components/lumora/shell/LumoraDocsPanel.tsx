@@ -741,7 +741,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid #e2e8f0', background: '#f8fafc' }}>
         {/* Company selector */}
         <div className="px-3 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#94a3b8', fontFamily: "'Satoshi', sans-serif" }}>Interview Prep</h2>
+          <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#94a3b8', fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
           {prepData.activeCompany ? (
             <div className="relative">
               <button onClick={() => setShowDropdown(!showDropdown)}

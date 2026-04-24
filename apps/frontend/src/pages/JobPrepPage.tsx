@@ -522,7 +522,7 @@ export default function JobPrepPage() {
               color: 'var(--text-primary)',
               letterSpacing: '-0.02em',
               margin: 0,
-              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              fontFamily: "'Inter', system-ui, sans-serif",
             }}>
               {job.company_name} &mdash; {job.title}
             </h1>
@@ -545,7 +545,7 @@ export default function JobPrepPage() {
           {/* ── Tech Stack Extracted ── */}
           {techStack.length > 0 && (
             <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Inter', system-ui, sans-serif" }}>
                 Tech Stack Extracted
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
@@ -610,7 +610,7 @@ export default function JobPrepPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                 </div>
-                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
                   AI Analysis
                 </h2>
               </div>
@@ -662,7 +662,7 @@ export default function JobPrepPage() {
 
           {/* ── Recommended Study Path ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Inter', system-ui, sans-serif" }}>
               Recommended Study Path
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
@@ -684,7 +684,7 @@ export default function JobPrepPage() {
                   }}>
                     {round.icon}
                   </div>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
                     {round.title}
                   </h3>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>({round.estimate})</span>
@@ -701,7 +701,7 @@ export default function JobPrepPage() {
           {/* ── JD based Interview Preparation ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
             <div className="flex items-start justify-between mb-1">
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
                 JD based Interview Preparation
               </h2>
               {Object.keys(generatedSections).length > 0 && !generating && (
@@ -730,7 +730,7 @@ export default function JobPrepPage() {
                   padding: '14px 24px',
                   cursor: 'pointer',
                   transition: 'background 0.15s',
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent)'; }}
@@ -760,7 +760,7 @@ export default function JobPrepPage() {
                   borderRadius: '10px',
                   padding: '14px 24px',
                   cursor: 'not-allowed',
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                 }}
               >
                 <div
@@ -903,7 +903,7 @@ export default function JobPrepPage() {
                             fontSize: '14px',
                             fontWeight: 600,
                             color: isDone ? '#111827' : '#6b7280',
-                            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                            fontFamily: "'Inter', system-ui, sans-serif",
                           }}>
                             {sec.label}
                           </div>
@@ -983,7 +983,7 @@ export default function JobPrepPage() {
 
           {/* ── Bottom CTAs ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif" }}>
               Ready to start?
             </h2>
             <div className="flex flex-wrap gap-3">
@@ -1145,7 +1145,7 @@ const S = {
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
   callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? '#3b82f6' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
-  code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'IBM Plex Mono', monospace" },
+  code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'Source Code Pro', monospace" },
   badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 

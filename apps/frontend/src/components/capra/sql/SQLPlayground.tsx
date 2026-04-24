@@ -106,7 +106,7 @@ function ResultTable({
   const displayRows = rows.slice(0, maxRows);
   return (
     <div className="overflow-auto max-h-[260px] rounded-lg border border-slate-200">
-      <table className="w-full text-sm border-collapse" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+      <table className="w-full text-sm border-collapse" style={{ fontFamily: "'Source Code Pro', monospace" }}>
         <thead>
           <tr className="bg-slate-50 sticky top-0">
             {columns.map((col, i) => (
@@ -159,13 +159,13 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
       <div className="flex items-center gap-2 mb-1.5">
         <span
           className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.2)]"
-          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+          style={{ fontFamily: "'Source Code Pro', monospace" }}
         >
           {table.name}
         </span>
       </div>
       <div className="overflow-auto rounded-lg border border-slate-200">
-        <table className="w-full text-sm border-collapse" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+        <table className="w-full text-sm border-collapse" style={{ fontFamily: "'Source Code Pro', monospace" }}>
           <thead>
             <tr className="bg-slate-50">
               {table.columns.map((col, i) => (
@@ -448,7 +448,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               </button>
               <h2
                 className="text-lg font-bold text-slate-900 flex-1"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                style={{ fontFamily: "'Source Sans 3', sans-serif" }}
               >
                 {problem.id}. {problem.title}
               </h2>
@@ -476,7 +476,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             {/* Description */}
             <p
               className="text-sm text-slate-600 leading-relaxed mb-4 whitespace-pre-line"
-              style={{ fontFamily: "'Satoshi', sans-serif" }}
+              style={{ fontFamily: "'Inter', sans-serif" }}
             >
               {problem.description}
             </p>
@@ -569,7 +569,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                 </div>
                 <pre
                   className="text-xs text-[var(--accent)] bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.2)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
-                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  style={{ fontFamily: "'Source Code Pro', monospace" }}
                 >
                   {problem.solution}
                 </pre>
@@ -810,7 +810,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                     <div className="text-[11px] font-bold uppercase tracking-wider text-red-400 mb-1">Error</div>
                     <pre
                       className="text-sm text-red-700 whitespace-pre-wrap"
-                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      style={{ fontFamily: "'Source Code Pro', monospace" }}
                     >
                       {error}
                     </pre>

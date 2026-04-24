@@ -231,7 +231,7 @@ export default function ResumeOptimizer() {
         gridTemplateColumns: '1fr 1fr',
         gap: '24px',
         minHeight: '600px',
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontFamily: "'Inter', sans-serif",
       }}
     >
       {/* ───────── Left: Input Panel ───────── */}
@@ -282,7 +282,7 @@ export default function ResumeOptimizer() {
               border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               color: 'var(--text-primary)',
               background: 'var(--bg-elevated)',
               resize: 'vertical',
@@ -314,7 +314,7 @@ export default function ResumeOptimizer() {
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '13px',
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "'Source Code Pro', monospace",
                 color: 'var(--text-primary)',
                 background: 'var(--bg-elevated)',
                 outline: 'none',
@@ -348,7 +348,7 @@ export default function ResumeOptimizer() {
               border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               color: 'var(--text-primary)',
               background: 'var(--bg-elevated)',
               resize: 'vertical',
@@ -438,7 +438,7 @@ export default function ResumeOptimizer() {
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '14px',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 color: 'var(--text-primary)',
                 background: 'var(--bg-elevated)',
                 outline: 'none',
@@ -489,7 +489,7 @@ export default function ResumeOptimizer() {
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '14px',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 color: 'var(--text-primary)',
                 background: 'var(--bg-elevated)',
                 outline: 'none',
@@ -533,7 +533,7 @@ export default function ResumeOptimizer() {
               color: '#ffffff',
               fontSize: '14px',
               fontWeight: 600,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'opacity 0.15s',
               opacity: loading ? 0.7 : 1,
@@ -556,7 +556,7 @@ export default function ResumeOptimizer() {
               color: '#ffffff',
               fontSize: '14px',
               fontWeight: 600,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'opacity 0.15s',
               opacity: loading ? 0.7 : 1,
@@ -616,7 +616,7 @@ export default function ResumeOptimizer() {
                   borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: activeTab === tab.key ? 600 : 500,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontFamily: "'Inter', sans-serif",
                   color: activeTab === tab.key ? 'var(--text-primary)' : 'var(--text-muted)',
                   background: activeTab === tab.key ? 'var(--bg-surface)' : 'transparent',
                   boxShadow:
@@ -651,7 +651,7 @@ export default function ResumeOptimizer() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontFamily: "'Inter', sans-serif",
                   transition: 'border-color 0.15s',
                 }}
                 onMouseEnter={(e) =>
@@ -693,7 +693,7 @@ export default function ResumeOptimizer() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontFamily: "'Inter', sans-serif",
                   transition: 'border-color 0.15s',
                 }}
                 onMouseEnter={(e) =>
@@ -779,7 +779,7 @@ export default function ResumeOptimizer() {
             <pre
               style={{
                 margin: 0,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "'Source Code Pro', monospace",
                 fontSize: '13px',
                 lineHeight: '1.7',
                 color: 'var(--text-primary)',
