@@ -172,7 +172,7 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
                 >
                   <div>
                     <p className="text-xs font-bold text-[var(--text-primary)]">{pack.label}</p>
-                    <p className="text-[11px] text-gray-400">{pack.description}</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">{pack.description}</p>
                   </div>
                   <button
                     onClick={() => handleBuy(pack.id)}

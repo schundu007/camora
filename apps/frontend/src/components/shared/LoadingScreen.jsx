@@ -18,7 +18,7 @@ export default function LoadingScreen() {
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <span className="text-xs text-gray-400">Loading</span>
+            <span className="text-xs text-[var(--text-muted)]">Loading</span>
           </div>
         </div>
       </div>

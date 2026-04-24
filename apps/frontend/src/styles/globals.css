@@ -34,15 +34,15 @@
     --border-hover: #CBD5E1;
     --border-focus: #38BDF8;
 
-    /* Text — WCAG-AA compliant on white
-       primary    #0F172A   19:1   AAA
-       secondary  #334155   11:1   AAA
-       muted      #64748B   4.9:1  AA  (was #7096BF = 3.5:1, failed)
-       dimmed     #94A3B8   3.2:1  large text only  */
-    --text-primary: #0F172A;
-    --text-secondary: #334155;
-    --text-muted: #64748B;
-    --text-dimmed: #94A3B8;
+    /* Text — black-first on white; all four tokens stay above 7:1 (AAA)
+       primary    #000000   21:1   pure black for body + headings
+       secondary  #0F172A   19:1   near-black, tiny hierarchy drop
+       muted      #1E293B   15:1   slate-800, for captions / count chips
+       dimmed     #334155   11:1   slate-700, rare — only for disabled  */
+    --text-primary: #000000;
+    --text-secondary: #0F172A;
+    --text-muted: #1E293B;
+    --text-dimmed: #334155;
 
     /* Accent — Icy cyan-blue (matches logo) */
     --accent: #22D3EE;
