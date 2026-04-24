@@ -141,23 +141,27 @@ import usageRouter from './routes/usage.js';
 import jobsRouter from './routes/jobs.js';
 import storiesRouter from './routes/stories.js';
 
-// Register routes
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/inference', inferenceRouter);
+// Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
+// diagram were wide open to abuse before this.
+import { authLimiter, apiLimiter, aiLimiter, paymentLimiter } from './middleware/rateLimiter.js';
+
+// Register routes — limiter tiers mirror the ascend contract.
+app.use('/api/v1/auth', authLimiter, authRouter);
+app.use('/api/v1/inference', aiLimiter, inferenceRouter);
 // Backwards compat: /api/v1/stream → forward to inference router's /stream handler
-app.post('/api/v1/stream', (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
-app.use('/api/v1/coding', codingRouter);
-app.use('/api/v1/billing', billingRouter);
-app.use('/api/v1/conversations', conversationsRouter);
-app.use('/api/v1/documents', documentsRouter);
-app.use('/api/v1/transcribe', transcriptionRouter);
-app.use('/api/v1/speaker', speakerRouter);
-app.use('/api/v1/diagram', diagramRouter);
-app.use('/api/v1/reactions', reactionsRouter);
-app.use('/api/v1/analytics', analyticsRouter);
-app.use('/api/v1/usage', usageRouter);
-app.use('/api/v1/jobs', jobsRouter);
-app.use('/api/v1/stories', storiesRouter);
+app.post('/api/v1/stream', aiLimiter, (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
+app.use('/api/v1/coding', aiLimiter, codingRouter);
+app.use('/api/v1/billing', paymentLimiter, billingRouter);
+app.use('/api/v1/conversations', apiLimiter, conversationsRouter);
+app.use('/api/v1/documents', apiLimiter, documentsRouter);
+app.use('/api/v1/transcribe', aiLimiter, transcriptionRouter);
+app.use('/api/v1/speaker', aiLimiter, speakerRouter);
+app.use('/api/v1/diagram', aiLimiter, diagramRouter);
+app.use('/api/v1/reactions', apiLimiter, reactionsRouter);
+app.use('/api/v1/analytics', apiLimiter, analyticsRouter);
+app.use('/api/v1/usage', apiLimiter, usageRouter);
+app.use('/api/v1/jobs', apiLimiter, jobsRouter);
+app.use('/api/v1/stories', apiLimiter, storiesRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {
