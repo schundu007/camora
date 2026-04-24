@@ -1,16 +1,6 @@
-import { Icon } from '../../shared/Icons.jsx';
-
-export default function FormattedContent({ content, color = 'blue' }) {
+export default function FormattedContent({ content }) {
   if (!content) return null;
 
-  // Use Ascend brand Zoom Blue colors
-  const colors = {
-    heading: 'text-[var(--accent)]',
-    bullet: 'text-[var(--accent)]',
-    highlight: 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20',
-  };
-
-  // Check if line looks like ASCII diagram (box drawing, arrows, pipes)
   const isDiagramLine = (line) => {
     if (/[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬▶▼◀▲→←↑↓►◄]/.test(line)) return true;
     if (/[|]{2,}|[-]{3,}|[─]{2,}|[=]{3,}/.test(line)) return true;
@@ -20,25 +10,27 @@ export default function FormattedContent({ content, color = 'blue' }) {
     return false;
   };
 
-  // Format inline text with bold, code, and quoted text
-  const starColors = { 'Situation': '#3b82f6', 'Task': '#f59e0b', 'Action': '#10b981', 'Result': '#ef4444' };
+  const isStarKey = (s) => /^(Situation|Task|Action|Result)$/i.test(s);
+
+  const renderStarEyebrow = (keyword, key) => (
+    <span
+      key={key}
+      className="inline-block mr-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] landing-mono"
+    >
+      {keyword}
+    </span>
+  );
 
   const formatInlineText = (text) => {
     const parts = [];
     let remaining = text;
     let keyCounter = 0;
 
-    // Check for STAR keywords at the start of text
     const starMatch = remaining.match(/^(Situation|Task|Action|Result)\s*[:–—-]\s*/i);
     if (starMatch) {
-      const keyword = starMatch[1].charAt(0).toUpperCase() + starMatch[1].slice(1).toLowerCase();
-      const color = starColors[keyword] || '#a855f7';
-      parts.push(
-        <span key={keyCounter++} className="inline-flex items-center gap-1.5 mr-1.5">
-          <span className="px-1.5 py-0.5 rounded text-xs font-extrabold text-white" style={{ background: color }}>{keyword.charAt(0)}</span>
-          <span className="font-bold text-sm" style={{ color }}>{keyword}:</span>
-        </span>
-      );
+      const keyword =
+        starMatch[1].charAt(0).toUpperCase() + starMatch[1].slice(1).toLowerCase();
+      parts.push(renderStarEyebrow(keyword, keyCounter++));
       remaining = remaining.substring(starMatch[0].length);
     }
 
@@ -72,11 +64,29 @@ export default function FormattedContent({ content, color = 'blue' }) {
           parts.push(remaining.substring(0, nextMatch.index));
         }
         if (matchType === 'bold') {
-          parts.push(<strong key={keyCounter++} className="text-[var(--text-primary)] font-semibold">{nextMatch[1]}</strong>);
+          parts.push(
+            <strong
+              key={keyCounter++}
+              className="text-[var(--text-primary)] font-semibold"
+            >
+              {nextMatch[1]}
+            </strong>,
+          );
         } else if (matchType === 'code') {
-          parts.push(<code key={keyCounter++} className={`${colors.highlight} px-1.5 py-0.5 rounded text-sm font-mono border`}>{nextMatch[1]}</code>);
+          parts.push(
+            <code
+              key={keyCounter++}
+              className="px-1.5 py-0.5 rounded text-[13px] landing-mono text-[var(--text-primary)] bg-[var(--bg-elevated)] border border-[var(--border)]"
+            >
+              {nextMatch[1]}
+            </code>,
+          );
         } else if (matchType === 'quote') {
-          parts.push(<em key={keyCounter++} className="text-[var(--text-primary)] italic">{nextMatch[1]}</em>);
+          parts.push(
+            <em key={keyCounter++} className="text-[var(--text-primary)] italic">
+              {nextMatch[1]}
+            </em>,
+          );
         }
         remaining = remaining.substring(nextMatch.index + nextMatch[0].length);
       } else {
@@ -88,7 +98,6 @@ export default function FormattedContent({ content, color = 'blue' }) {
     return parts.length > 0 ? parts : text;
   };
 
-  // Split content into blocks: code blocks, diagrams, and text
   const blocks = [];
   let currentBlock = { type: 'text', lines: [], lang: null };
   const lines = content.split('\n');
@@ -96,18 +105,13 @@ export default function FormattedContent({ content, color = 'blue' }) {
   let codeBlockLang = null;
 
   lines.forEach((line) => {
-    // Check for code block start/end
     if (line.trim().startsWith('```')) {
       if (!inCodeBlock) {
-        // Starting a code block
-        if (currentBlock.lines.length > 0) {
-          blocks.push(currentBlock);
-        }
+        if (currentBlock.lines.length > 0) blocks.push(currentBlock);
         codeBlockLang = line.trim().slice(3).trim() || 'code';
         currentBlock = { type: 'code', lines: [], lang: codeBlockLang };
         inCodeBlock = true;
       } else {
-        // Ending a code block
         blocks.push(currentBlock);
         currentBlock = { type: 'text', lines: [], lang: null };
         inCodeBlock = false;
@@ -125,75 +129,73 @@ export default function FormattedContent({ content, color = 'blue' }) {
 
     if (isDiagram) {
       if (currentBlock.type !== 'diagram') {
-        if (currentBlock.lines.length > 0) {
-          blocks.push(currentBlock);
-        }
+        if (currentBlock.lines.length > 0) blocks.push(currentBlock);
         currentBlock = { type: 'diagram', lines: [], lang: null };
       }
       currentBlock.lines.push(line);
     } else {
       if (currentBlock.type !== 'text') {
-        if (currentBlock.lines.length > 0) {
-          blocks.push(currentBlock);
-        }
+        if (currentBlock.lines.length > 0) blocks.push(currentBlock);
         currentBlock = { type: 'text', lines: [], lang: null };
       }
       currentBlock.lines.push(line);
     }
   });
 
-  if (currentBlock.lines.length > 0) {
-    blocks.push(currentBlock);
-  }
+  if (currentBlock.lines.length > 0) blocks.push(currentBlock);
 
-  // Render blocks
   const elements = [];
 
   blocks.forEach((block, blockIdx) => {
     if (block.type === 'code') {
-      // Render code block with proper formatting
       elements.push(
-        <div key={`code-${blockIdx}`} className="my-1 rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
+        <div
+          key={`code-${blockIdx}`}
+          className="my-3 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]"
+        >
           {block.lang && block.lang !== 'code' && (
-            <div className="px-4 py-1.5 text-xs landing-mono text-[var(--text-muted)] border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+            <div className="px-4 py-1.5 text-[10px] uppercase tracking-[0.14em] landing-mono text-[var(--text-muted)] border-b border-[var(--border)]">
               {block.lang}
             </div>
           )}
           <pre
-            className="p-4 text-sm leading-7 overflow-x-auto landing-mono text-[var(--text-secondary)]"
+            className="p-4 text-sm leading-7 overflow-x-auto landing-mono text-[var(--text-primary)]"
             style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}
           >
             {block.lines.join('\n')}
           </pre>
-        </div>
+        </div>,
       );
     } else if (block.type === 'diagram') {
-      // Render diagram with preserved spacing
       elements.push(
-        <div key={`diagram-${blockIdx}`} className="my-1 rounded-lg border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]">
+        <div
+          key={`diagram-${blockIdx}`}
+          className="my-3 rounded border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]"
+        >
           <pre
-            className="p-4 text-sm leading-7 landing-mono text-[var(--accent)]"
+            className="p-4 text-sm leading-7 landing-mono text-[var(--text-secondary)]"
             style={{ whiteSpace: 'pre', tabSize: 4, margin: 0, overflow: 'visible' }}
           >
             {block.lines.join('\n')}
           </pre>
-        </div>
+        </div>,
       );
     } else {
-      // Process text block
       let currentList = [];
 
       const flushList = () => {
         if (currentList.length > 0) {
           elements.push(
-            <ul key={`list-${elements.length}`} className="grid grid-cols-1 gap-1 my-1 ml-2">
+            <ul key={`list-${elements.length}`} className="grid grid-cols-1 gap-1.5 my-2 ml-1">
               {currentList.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
-                  <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{formatInlineText(item)}</span>
+                  <span className="w-1 h-1 rounded-full bg-[var(--text-muted)] mt-2.5 flex-shrink-0 opacity-60" />
+                  <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
+                    {formatInlineText(item)}
+                  </span>
                 </li>
               ))}
-            </ul>
+            </ul>,
           );
           currentList = [];
         }
@@ -202,75 +204,83 @@ export default function FormattedContent({ content, color = 'blue' }) {
       block.lines.forEach((line, lineIdx) => {
         const trimmed = line.trim();
 
-        // Skip empty lines
         if (!trimmed) {
           flushList();
           return;
         }
 
-        // Bold section headers (with colon at end or space after)
-        if (trimmed.match(/^\*\*[^*]+\*\*[:\s(]/) || (trimmed.startsWith('**') && trimmed.endsWith(':'))) {
+        if (
+          trimmed.match(/^\*\*[^*]+\*\*[:\s(]/) ||
+          (trimmed.startsWith('**') && trimmed.endsWith(':'))
+        ) {
           flushList();
           const headerText = trimmed.replace(/\*\*/g, '').replace(/:\s*$/, '');
-          // Check if it's a STAR keyword
-          const starKey = Object.keys(starColors).find(k => headerText.toLowerCase().startsWith(k.toLowerCase()));
-          if (starKey) {
-            const sc = starColors[starKey];
-            const rest = headerText.slice(starKey.length).replace(/^[\s:–—-]+/, '');
+          if (isStarKey(headerText)) {
+            const keyword =
+              headerText.charAt(0).toUpperCase() + headerText.slice(1).toLowerCase();
             elements.push(
-              <div key={`star-${blockIdx}-${lineIdx}`} className="flex items-center gap-2 mt-2 mb-0.5 first:mt-0">
-                <span className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-extrabold text-white" style={{ background: sc }}>{starKey.charAt(0)}</span>
-                <span className="text-sm font-bold" style={{ color: sc }}>{starKey}{rest ? ': ' + rest : ''}</span>
-              </div>
+              <div
+                key={`star-${blockIdx}-${lineIdx}`}
+                className="mt-4 mb-1 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
+              >
+                {keyword}
+              </div>,
             );
           } else {
             elements.push(
-              <div key={`h-${blockIdx}-${lineIdx}`} className="text-[var(--text-primary)] font-bold text-sm mt-3 mb-1.5 first:mt-0 landing-display">
+              <div
+                key={`h-${blockIdx}-${lineIdx}`}
+                className="text-[var(--text-primary)] font-semibold text-sm mt-4 mb-1 first:mt-0 landing-display"
+              >
                 {headerText}
-              </div>
+              </div>,
             );
           }
           return;
         }
 
-        // STAR keywords as styled headers
         const starHeaderMatch = trimmed.match(/^(Situation|Task|Action|Result)\s*[:]\s*$/i);
         if (starHeaderMatch) {
           flushList();
-          const keyword = starHeaderMatch[1].charAt(0).toUpperCase() + starHeaderMatch[1].slice(1).toLowerCase();
-          const sc = starColors[keyword] || '#a855f7';
+          const keyword =
+            starHeaderMatch[1].charAt(0).toUpperCase() + starHeaderMatch[1].slice(1).toLowerCase();
           elements.push(
-            <div key={`star-${blockIdx}-${lineIdx}`} className="flex items-center gap-2 mt-2 mb-0.5 first:mt-0">
-              <span className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-extrabold text-white" style={{ background: sc }}>{keyword.charAt(0)}</span>
-              <span className="text-sm font-bold" style={{ color: sc }}>{keyword}</span>
-            </div>
+            <div
+              key={`star-${blockIdx}-${lineIdx}`}
+              className="mt-4 mb-1 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
+            >
+              {keyword}
+            </div>,
           );
           return;
         }
 
-        // Section headers without bold (ending with colon)
         if (trimmed.endsWith(':') && trimmed.length < 50 && !trimmed.includes('.')) {
           flushList();
           elements.push(
-            <div key={`h-${blockIdx}-${lineIdx}`} className="text-[var(--text-primary)] font-bold text-sm mt-3 mb-1.5 first:mt-0 landing-display">
-              {trimmed}
-            </div>
+            <div
+              key={`h-${blockIdx}-${lineIdx}`}
+              className="text-[var(--text-primary)] font-semibold text-sm mt-4 mb-1 first:mt-0 landing-display"
+            >
+              {trimmed.replace(/:\s*$/, '')}
+            </div>,
           );
           return;
         }
 
-        // List items
         if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
           currentList.push(trimmed.substring(2));
           return;
         }
 
-        // Regular paragraph
         flushList();
         elements.push(
-          <p key={`p-${blockIdx}-${lineIdx}`} className="text-[var(--text-secondary)] text-sm leading-relaxed my-2 landing-body">
+          <p
+            key={`p-${blockIdx}-${lineIdx}`}
+            className="text-[var(--text-secondary)] text-sm leading-relaxed my-2 landing-body"
+          >
             {formatInlineText(trimmed)}
-          </p>
+          </p>,
         );
       });
 
