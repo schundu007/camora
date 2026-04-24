@@ -1,18 +1,21 @@
 import jwt from 'jsonwebtoken';
 
+// Canonical name is JWT_SECRET. JWT_SECRET_KEY is a legacy alias from before
+// the two backends were unified — still honored but will be dropped.
 const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
 
-/**
- * Verify a JWT token (works for both Lumora and Ascend tokens)
- */
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET not set. Refusing to start — auth would silently break.');
+}
+if (!process.env.JWT_SECRET && process.env.JWT_SECRET_KEY) {
+  console.warn('[shared-auth] Using deprecated JWT_SECRET_KEY — rename to JWT_SECRET.');
+}
+
 export function verifyToken(token) {
   if (!JWT_SECRET) throw new Error('JWT_SECRET not configured');
   return jwt.verify(token, JWT_SECRET);
 }
 
-/**
- * Create a JWT token
- */
 export function createToken(payload, expiresIn = '30d') {
   if (!JWT_SECRET) throw new Error('JWT_SECRET not configured');
   return jwt.sign(payload, JWT_SECRET, { expiresIn });
@@ -61,7 +64,9 @@ export function setSSOCookie(res, token) {
   res.cookie('cariara_sso', token, {
     domain: '.cariara.com',
     path: '/',
-    httpOnly: false,
+    // httpOnly so JS-land XSS can't read the session token. Frontend receives
+    // a short-lived access_token in the /auth/me response body for Bearer use.
+    httpOnly: true,
     secure: true,
     sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000,

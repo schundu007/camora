@@ -1,9 +1,22 @@
 import { Router } from 'express';
+import { timingSafeEqual } from 'crypto';
 import { stripe, STRIPE_PRICES, isStripeConfigured } from '../config/stripe.js';
 import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
 import { logger } from '../middleware/requestLogger.js';
+
+// Valid paid plan_type values — kept here as source of truth; any new plan added
+// to Stripe must be added here so subscription-verify recognises it.
+const PAID_PLAN_TYPES = new Set(['monthly', 'monthly_starter', 'monthly_pro', 'quarterly_pro']);
+
+function safeCompareApiKey(provided, expected) {
+  if (!provided || !expected) return false;
+  const a = Buffer.from(String(provided));
+  const b = Buffer.from(String(expected));
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
 
 const router = Router();
 
@@ -352,8 +365,9 @@ router.get('/verify-subscription/:userId', async (req, res) => {
   const { userId } = req.params;
   const apiKey = req.headers['x-api-key'];
 
-  // Verify internal API key for cross-service auth
-  if (!process.env.INTERNAL_API_KEY || apiKey !== process.env.INTERNAL_API_KEY) {
+  // Verify internal API key for cross-service auth (constant-time compare
+  // so we don't leak the key byte-by-byte via response timing).
+  if (!process.env.INTERNAL_API_KEY || !safeCompareApiKey(apiKey, process.env.INTERNAL_API_KEY)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -365,8 +379,11 @@ router.get('/verify-subscription/:userId', async (req, res) => {
 
     const subscription = result.rows[0];
 
-    // Check if user has active paid subscription OR active trial
-    const isPaidActive = (subscription?.plan_type === 'monthly' || subscription?.plan_type === 'quarterly_pro') &&
+    // Check if user has active paid subscription OR active trial. The old check
+    // hard-coded 'monthly' but production stores 'monthly_starter' / 'monthly_pro',
+    // making the branch unreachable and silently returning hasAccess=false for
+    // paying users.
+    const isPaidActive = PAID_PLAN_TYPES.has(subscription?.plan_type) &&
                          subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
     const hasAccess = isPaidActive || hasActiveTrial;

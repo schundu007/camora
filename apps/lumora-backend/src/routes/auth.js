@@ -132,11 +132,21 @@ router.post('/sync', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /me — current authenticated user info
+// GET /me — current authenticated user info. Now also returns a fresh short-lived
+// access_token so SPAs can drop cookie access entirely (cookie stays httpOnly).
+// Token is regenerated on each call so the session-cookie remains the source of
+// truth for the 30-day lifetime.
 // ---------------------------------------------------------------------------
 router.get('/me', authenticate, async (req, res) => {
   try {
-    return res.json(formatUserResponse(req.user));
+    const user = formatUserResponse(req.user);
+    const accessToken = createToken({
+      sub: req.user.id,
+      email: req.user.email,
+      name: req.user.name,
+      picture: req.user.picture,
+    }, '24h');
+    return res.json({ ...user, access_token: accessToken });
   } catch (err) {
     console.error('GET /me error:', err);
     return res.status(500).json({ error: 'Internal server error' });
