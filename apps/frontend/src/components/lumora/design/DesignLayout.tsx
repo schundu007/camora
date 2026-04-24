@@ -18,6 +18,8 @@ interface DesignLayoutProps {
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
+  /** Ref to drop captured/screenshot problem text in WITHOUT auto-submitting — review first */
+  onCapturedProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
 }
 
 interface SystemDesign {
@@ -454,7 +456,7 @@ function SectionCopyBtn({ getText, title }: { getText: () => string; title?: str
   );
 }
 
-export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onCapturedProblemRef }: DesignLayoutProps) {
   const t = useTheme(!!embedded);
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
@@ -720,6 +722,16 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
   }, [onVoiceProblemRef, token, isLoading, handleSubmit]);
+
+  // Register screenshot-captured problem handler — review-first, no auto-submit
+  useEffect(() => {
+    if (onCapturedProblemRef) {
+      onCapturedProblemRef.current = (text: string) => {
+        setProblemText(text);
+      };
+    }
+    return () => { if (onCapturedProblemRef) onCapturedProblemRef.current = null; };
+  }, [onCapturedProblemRef]);
 
   // Auto-submit after voice input sets problemText
   useEffect(() => {

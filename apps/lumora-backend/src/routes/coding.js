@@ -1002,4 +1002,64 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
   }
 });
 
+/* ── POST /capture — extract a coding/design problem from a screenshot ──
+   Body: { image: "data:image/jpeg;base64,..." | base64-string, kind?: 'coding' | 'design' }
+   Returns: { problem: string, kind: 'coding' | 'design' }
+
+   Used by the browser "Capture problem" button which calls
+   getDisplayMedia() → grabs one frame → POSTs the JPEG here. Claude Vision
+   OCRs + normalizes it into a clean problem statement we can feed into
+   the Coding / Design solver directly. */
+router.post('/capture', authenticate, async (req, res) => {
+  try {
+    const { image, kind } = req.body || {};
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({ error: 'image is required (base64 data URL or raw base64)' });
+    }
+
+    // Accept either "data:image/jpeg;base64,XXXX" or raw base64
+    let mediaType = 'image/jpeg';
+    let data = image;
+    const dataUrlMatch = image.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
+    if (dataUrlMatch) {
+      mediaType = dataUrlMatch[1] === 'image/jpg' ? 'image/jpeg' : dataUrlMatch[1];
+      data = dataUrlMatch[2];
+    }
+
+    // Guard against absurdly large payloads (express.json is already 10mb, this is belt+suspenders)
+    if (data.length > 8 * 1024 * 1024) {
+      return res.status(413).json({ error: 'screenshot too large — try a smaller capture region' });
+    }
+
+    const isDesign = kind === 'design';
+    const prompt = isDesign
+      ? `Extract the SYSTEM DESIGN interview question from this screenshot. Return ONLY the problem statement — the company/platform asking, the product or system to design, any scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary. If the screenshot does not contain a system design question, reply with exactly: NO_PROBLEM_FOUND.`
+      : `Extract the CODING interview problem from this screenshot. Return the full problem statement exactly: description, input format, output format, constraints, and all example cases (input / output / explanation). Preserve code blocks, example formatting, and math/exponent notation. Do not solve it, do not add commentary or headers like "Problem:". If the screenshot does not contain a coding problem, reply with exactly: NO_PROBLEM_FOUND.`;
+
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
+          { type: 'text', text: prompt },
+        ],
+      }],
+    });
+
+    const problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+
+    if (!problem || problem === 'NO_PROBLEM_FOUND') {
+      return res.status(422).json({ error: "Couldn't find a problem in that screenshot. Try capturing the tab with the problem statement visible." });
+    }
+
+    res.json({ problem, kind: isDesign ? 'design' : 'coding' });
+  } catch (err) {
+    console.error('capture error:', err?.message || err);
+    res.status(500).json({ error: err?.message || 'Capture failed' });
+  }
+});
+
 export default router;
