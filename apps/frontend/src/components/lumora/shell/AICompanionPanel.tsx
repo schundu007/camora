@@ -68,6 +68,50 @@ function parseStar(text: string): { sections: { label: StarLabel; body: string }
   return { sections };
 }
 
+/* ── StarBody — larger-type body renderer used inside STAR cards.
+   STAR answers are prose with bullets/bold — no code blocks needed. The
+   regular RichText runs at 11px for side-panel density, but the fullscreen
+   behavioral view is read at glance-distance during a live interview, so
+   this renders at 13-14px and skips the code-detection machinery. */
+function StarBody({ text }: { text: string }) {
+  if (!text) return null;
+  const renderInline = (s: string) =>
+    s
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700">$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.05);color:#0E7490;padding:1px 5px;border-radius:3px;font-size:12px;font-family:\'JetBrains Mono\',monospace">$1</code>');
+  const lines = text.split('\n');
+  const out: React.ReactNode[] = [];
+  let bulletGroup: string[] = [];
+  const flushBullets = (key: string) => {
+    if (bulletGroup.length === 0) return;
+    out.push(
+      <ul key={key} className="my-1 flex flex-col gap-1 pl-1">
+        {bulletGroup.map((b, bi) => (
+          <li key={bi} className="flex gap-2">
+            <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: '#22D3EE' }} />
+            <span style={{ fontSize: '13px', lineHeight: '1.55', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(b) }} />
+          </li>
+        ))}
+      </ul>
+    );
+    bulletGroup = [];
+  };
+  lines.forEach((raw, i) => {
+    const t = raw.trim();
+    if (!t) { flushBullets(`bl-${i}`); return; }
+    if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) {
+      bulletGroup.push(t.slice(2));
+      return;
+    }
+    flushBullets(`bl-${i}`);
+    out.push(
+      <p key={`p-${i}`} style={{ fontSize: '13px', lineHeight: '1.55', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(t) }} />
+    );
+  });
+  flushBullets('bl-end');
+  return <div className="flex flex-col gap-1" style={{ fontFamily: "'Satoshi', sans-serif" }}>{out}</div>;
+}
+
 /* ── StarAnswer — renders a behavioral STAR answer as 4 scannable cards ── */
 function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; body: string }[]; streaming?: boolean }) {
   const labelCopy: Record<StarLabel, { short: string; hint: string }> = {
@@ -106,7 +150,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
             </button>
           </div>
           <div className="px-3 py-2">
-            <RichText text={s.body} />
+            <StarBody text={s.body} />
           </div>
         </div>
       ))}
