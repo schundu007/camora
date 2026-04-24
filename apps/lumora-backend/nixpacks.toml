@@ -11,7 +11,10 @@ nixPkgs = [
   "dart",          # Dart
   "scala",         # Scala
   "kotlin",        # Kotlin
-  "swift",         # Swift
+  # Swift intentionally NOT listed — the current nixpkgs snapshot has no
+  # cached swift-5.8 binary and compiles LLVM/clang from source, blowing
+  # past Railway's build timeout (~12m observed). Restore via a swiftly
+  # install step in [phases.install] when needed, same pattern as Julia.
   "mono",          # C# (mcs + mono)
   "tcl",           # Tcl
   # Julia is installed via juliaup in [phases.install] — the current
