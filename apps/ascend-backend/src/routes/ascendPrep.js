@@ -178,14 +178,24 @@ router.post('/stream', async (req, res) => {
     return;
   }
 
-  const { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'claude', model } = req.body;
+  let { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'claude', model } = req.body;
 
-  if (!jobDescription || !resume) {
-    return res.status(400).json({ error: 'Job description and resume are required' });
+  if (!jobDescription) {
+    return res.status(400).json({ error: 'Job description is required' });
   }
 
   if (!sections || !Array.isArray(sections) || sections.length === 0) {
     return res.status(400).json({ error: 'At least one section must be specified' });
+  }
+
+  // If no resume was provided in the request, fall back to the user's stored resume
+  if (!resume && req.userId) {
+    try {
+      const r = await query('SELECT resume_text FROM users WHERE id = $1', [req.userId]);
+      resume = r.rows[0]?.resume_text || '';
+    } catch (err) {
+      console.warn('[AscendPrep] Failed to load stored resume:', err.message);
+    }
   }
 
   // Set SSE headers
@@ -242,14 +252,23 @@ router.post('/section', async (req, res) => {
     return;
   }
 
-  const { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'claude', model } = req.body;
+  let { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'claude', model } = req.body;
 
-  if (!jobDescription || !resume) {
-    return res.status(400).json({ error: 'Job description and resume are required' });
+  if (!jobDescription) {
+    return res.status(400).json({ error: 'Job description is required' });
   }
 
   if (!section) {
     return res.status(400).json({ error: 'Section is required' });
+  }
+
+  if (!resume && req.userId) {
+    try {
+      const r = await query('SELECT resume_text FROM users WHERE id = $1', [req.userId]);
+      resume = r.rows[0]?.resume_text || '';
+    } catch (err) {
+      console.warn('[AscendPrep] Failed to load stored resume:', err.message);
+    }
   }
 
   // Set SSE headers
