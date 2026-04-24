@@ -3,6 +3,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
+import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -169,9 +170,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(true); // Start collapsed — expands when test cases arrive
-
-  // Expanded follow-up
-  const [expandedFollowup, setExpandedFollowup] = useState<number | null>(null);
 
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1077,6 +1075,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           ))}
                         </ul>
                       </div>
+                    )}
+
+                    {/* ── FOLLOW-UP Q&A (context-scoped, no leaving the tab) ── */}
+                    {problemText.trim() && token && (
+                      <FollowupAsk
+                        problem={problemText}
+                        activeSolutionName={sd.solutions?.[activeSolutionIdx]?.name}
+                        activeSolutionCode={sd.solutions?.[activeSolutionIdx]?.code}
+                        token={token}
+                      />
                     )}
 
                     {/* ── LINE-BY-LINE WALKTHROUGH ── */}
