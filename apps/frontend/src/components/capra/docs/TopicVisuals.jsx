@@ -227,11 +227,11 @@ export function EvolutionTimeline({ steps }) {
                 )}
                 {current.cons && (
                   <div>
-                    <span className="text-[10px] landing-mono font-bold text-red-500 uppercase tracking-wider">Cons</span>
+                    <span className="text-[10px] landing-mono font-bold text-[var(--text-muted)] uppercase tracking-[0.14em]">Cons</span>
                     <ul className="mt-1 space-y-0.5">
                       {current.cons.map((c, i) => (
                         <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
-                          <span className="text-red-400 mt-px flex-shrink-0">−</span>
+                          <span className="text-[var(--text-muted)] mt-px flex-shrink-0">−</span>
                           <span>{c}</span>
                         </li>
                       ))}

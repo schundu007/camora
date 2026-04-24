@@ -583,15 +583,15 @@ export default function DocsPage({ onBack }) {
   // ── Overview dashboard data ──
   const overviewCategories = (() => {
     const cats = [
-      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#2D8CFF', grad: 'linear-gradient(135deg, #2D8CFF, #60A5FA)', topics: codingTopics },
-      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
-      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#60A5FA', grad: 'linear-gradient(135deg, #60A5FA, #2D8CFF)', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: [...databaseTopics, ...sqlTopics] },
-      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
-      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #60A5FA)', topics: projectTopics },
-      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#2D8CFF', grad: 'linear-gradient(135deg, #2D8CFF, #60A5FA)', topics: roadmapTopics },
-      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)', topics: engBlogTopics },
-      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a855f7', grad: 'linear-gradient(135deg, #a855f7, #c084fc)', topics: [...behavioralTopics, ...companyPrep] },
+      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#2D8CFF', topics: codingTopics },
+      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
+      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#60A5FA', topics: microservicesPatterns },
+      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', topics: [...databaseTopics, ...sqlTopics] },
+      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', topics: [...lldTopics, ...lldProblems] },
+      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', topics: projectTopics },
+      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#2D8CFF', topics: roadmapTopics },
+      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', topics: engBlogTopics },
+      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a855f7', topics: [...behavioralTopics, ...companyPrep] },
     ];
     return cats.map(c => {
       const count = c.topics.length;
@@ -930,8 +930,8 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-2 flex-shrink-0">
                                     {starredTopics[topic.id] && (
-                                      <span className="w-5 h-5 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                                        <Icon name="star5" size={10} className="text-yellow-500" />
+                                      <span className="w-5 h-5 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
+                                        <Icon name="star5" size={10} className="text-[var(--accent)]" />
                                       </span>
                                     )}
                                     {completedTopics[topic.id] && (
@@ -1344,9 +1344,9 @@ export default function DocsPage({ onBack }) {
                                 const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
                                 return (
                                   <div className="flex items-center gap-1">
-                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20">{easy}E</span>}
-                                    {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">{med}M</span>}
-                                    {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-red-500/10 text-red-600 border border-red-500/20">{hard}H</span>}
+                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-white border border-[var(--border)] font-medium text-[var(--text-muted)]">{easy}E</span>}
+                                    {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-white border border-[var(--border)] font-semibold text-[var(--text-primary)]">{med}M</span>}
+                                    {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-white border border-[var(--border)] font-bold text-[var(--accent)]">{hard}H</span>}
                                   </div>
                                 );
                               })()}
@@ -1390,11 +1390,11 @@ export default function DocsPage({ onBack }) {
                             <tbody>
                               {[
                                 { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20' },
-                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20' },
-                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]' },
-                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]' },
-                                { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' },
-                                { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'text-red-600 bg-red-500/10 border border-red-500/20' },
+                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]' },
+                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]' },
+                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]' },
+                                { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]' },
+                                { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' },
                               ].map((item, i) => (
                                 <tr key={i} className="border-b border-[var(--border)] last:border-0">
                                   <td className="py-2 landing-mono text-xs text-[var(--accent)]">{item.complexity}</td>
@@ -1501,7 +1501,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
+                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -1540,9 +1540,9 @@ export default function DocsPage({ onBack }) {
                       const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
-                        'Easy': 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20',
-                        'Medium': 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]',
-                        'Hard': 'text-red-600 bg-red-500/10 border border-red-500/20',
+                        'Easy': 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]',
+                        'Medium': 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]',
+                        'Hard': 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]',
                       };
                       return (
                         <div key={category.id} className="rounded-2xl overflow-hidden border-0">
@@ -1632,7 +1632,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
+                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -1987,7 +1987,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
+                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2031,7 +2031,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
+                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -2211,7 +2211,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
+                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2352,7 +2352,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
+                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2405,7 +2405,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
+                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2451,7 +2451,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
+                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2515,10 +2515,10 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold ${
-                                          topic.difficulty === 'beginner' ? 'bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20' :
-                                          topic.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]' :
-                                          'bg-red-500/10 text-red-600 border border-red-500/20'
+                                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded bg-white border border-[var(--border)] uppercase tracking-[0.1em] ${
+                                          topic.difficulty === 'beginner' ? 'font-medium text-[var(--text-muted)]' :
+                                          topic.difficulty === 'intermediate' ? 'font-semibold text-[var(--text-primary)]' :
+                                          'font-bold text-[var(--accent)]'
                                         }`}>{topic.difficulty}</span>
                                         <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.estimatedTime}</span>
                                         {topic.techStack?.slice(0, 3).map(tech => (
@@ -2527,7 +2527,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
-                                      {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
                                       <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                   </div>
@@ -2595,7 +2595,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
-                                      {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
                                       <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                   </div>
@@ -2665,7 +2665,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
-                                      {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
                                       <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                   </div>
@@ -2701,7 +2701,7 @@ export default function DocsPage({ onBack }) {
                       onClick={() => setSelectedTopic(topicId)}
                       className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-xs text-left text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all landing-body"
                     >
-                      <Icon name="star5" size={10} className="text-yellow-500 flex-shrink-0" />
+                      <Icon name="star5" size={10} className="text-[var(--accent)] flex-shrink-0" />
                       <span className="truncate">{t.title}</span>
                     </button>
                   );
