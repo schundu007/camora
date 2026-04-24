@@ -821,8 +821,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             </button>
           </div>
 
-          {/* Architecture Diagram - in left panel below input */}
-          {question && sd && (
+          {/* Architecture Diagram - in left panel below input.
+              Mount on `question` alone (not `question && sd`) so the diagram
+              cache lookup runs in parallel with the streaming text answer.
+              This removes the mid-interview cold start where the diagram pane
+              sat blank until the full answer had parsed. */}
+          {question && (
             <div className="border-t border-[var(--border)] p-3 flex-1 overflow-auto min-h-0 hidden md:block">
               <div className="flex items-center gap-2 mb-2">
                 <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
