@@ -84,8 +84,8 @@ router.post('/enroll', upload.any(), async (req, res) => {
     console.log(`[Speaker] Response: ${upstream.status}`, JSON.stringify(data));
     return res.status(upstream.status).json(data);
   } catch (err) {
-    console.error('[Speaker] Enroll error:', err.message || err);
-    return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
+    console.error('[Speaker] Enroll error:', err);
+    return res.status(500).json({ error: 'Speaker enrollment failed' });
   } finally {
     try {
       const tmpDir = os.tmpdir();

@@ -212,7 +212,7 @@ router.post(
       const latencyMs = Math.round(performance.now() - start);
       console.error('Transcription error:', err);
       return res.status(500).json({
-        error: `Transcription failed: ${err.message}`,
+        error: 'Transcription failed',
         latency_ms: latencyMs,
       });
     }
