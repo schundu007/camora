@@ -3,6 +3,7 @@
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
   "installCommand": "cd ../.. && pnpm install",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/frontend packages",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
