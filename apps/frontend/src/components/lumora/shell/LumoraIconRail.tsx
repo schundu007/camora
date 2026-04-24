@@ -59,6 +59,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       style={{ width: expanded ? 200 : 60, background: '#0e7490', borderRight: '1px solid rgba(255,255,255,0.1)' }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
+      onTouchStart={() => setExpanded(prev => !prev)}
     >
       {/* Logo */}
       <Link to="/" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Camora">

@@ -113,7 +113,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   };
 
   return (
-    <div className="flex-1 overflow-auto px-8 py-6">
+    <div className="flex-1 overflow-auto px-4 sm:px-6 md:px-8 py-4 md:py-6">
       {/* Greeting */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold" style={{ color: '#0F172A' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
@@ -164,8 +164,8 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         </div>
       </div>
 
-      {/* Keyboard hints */}
-      <div className="flex items-center gap-4 text-[10px]" style={{ color: '#94A3B8' }}>
+      {/* Keyboard hints — hidden on mobile (no physical keyboard) */}
+      <div className="hidden md:flex items-center gap-4 text-[10px]" style={{ color: '#94A3B8' }}>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘K</kbd> focus</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘M</kbd> mic</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘B</kbd> blank screen</span>

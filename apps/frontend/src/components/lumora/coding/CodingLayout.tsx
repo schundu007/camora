@@ -798,7 +798,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className={`w-full md:w-auto flex flex-col min-w-0 md:border-r border-b md:border-b-0 coding-left-panel max-h-[35vh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
+        <div className={`w-full md:w-auto flex flex-col min-w-0 md:border-r border-b md:border-b-0 coding-left-panel max-h-[45dvh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
           {/* Tabs */}
           <div className="flex items-center gap-1 px-3 py-1.5 border-b" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
             <button
@@ -869,7 +869,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           onDrop={handleDrop}
                           onDragOver={(e) => e.preventDefault()}
                           placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
-                          className="w-full h-[180px] md:h-[220px] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
+                          className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                           style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                         />
                       )}
