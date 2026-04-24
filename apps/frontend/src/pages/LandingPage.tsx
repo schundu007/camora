@@ -6,7 +6,7 @@ import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
-import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles } from '../components/landing/CardAnimations';
+import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim } from '../components/landing/CardAnimations';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE — Snowflake-inspired clean design
@@ -76,29 +76,35 @@ const FEATURES = [
     title: 'Real-time AI during interviews',
     desc: 'Voice transcription captures the question. AI generates instant answers in seconds — no other tool does this.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" strokeLinecap="round" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" strokeLinecap="round" /></svg>,
-    image: '/feature-live-ai.jpg',
+    Anim: FeatureLiveAIAnim,
   },
   {
     label: 'JOB MATCHING',
     title: 'AI-powered job discovery',
     desc: '1,000+ roles matched to your skills. Auto-generate tailored resumes and cover letters for every application.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
-    image: '/feature-job-matching.jpg',
+    Anim: FeatureJobMatchAnim,
   },
   {
     label: 'PREP',
     title: '800+ topics with diagrams',
     desc: 'System design, DSA, behavioral, databases — each with AI explanations, architecture diagrams, and company-specific prep.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
-    image: '/feature-prep.jpg',
+    Anim: FeaturePrepAnim,
   },
   {
     label: 'MOCK INTERVIEWS',
     title: 'AI-scored practice sessions',
     desc: 'Timed mock interviews with instant feedback. Scored on communication, accuracy, and code quality.',
     icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
-    image: '/feature-mock.jpg',
+    Anim: FeatureMockInterviewAnim,
   },
+];
+
+/* ── Skills covered (shown beneath feature cards) ─────── */
+const SKILLS = [
+  'Python', 'JavaScript', 'TypeScript', 'Java', 'Go', 'Rust', 'C++', 'SQL',
+  'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes', 'System Design', 'DSA', 'Behavioral',
 ];
 
 /* ── Hooks ────────────────────────────────────────────── */
@@ -332,7 +338,9 @@ export default function LandingPage() {
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.06}>
                 <div className="rounded-lg h-full overflow-hidden flex flex-col" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
-                  <img src={f.image} alt={f.title} className="w-full h-40 object-cover" loading="lazy" />
+                  <div className="w-full h-40 overflow-hidden relative" style={{ background: '#F1F5F9' }}>
+                    <f.Anim />
+                  </div>
                   <div className="p-8 flex-1">
                     <div className="mb-5">{f.icon}</div>
                     <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: accent, fontFamily: F.mono }}>{f.label}</span>
@@ -351,6 +359,30 @@ export default function LandingPage() {
                 <span key={f} className="flex items-center gap-2 text-white text-xs font-bold uppercase tracking-wider">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   {f}
+                </span>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Skills covered — what you'll master */}
+          <Reveal className="mt-8 text-center">
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>
+              SKILLS YOU'LL MASTER
+            </span>
+            <div className="mt-4 flex items-center justify-center gap-2 flex-wrap max-w-4xl mx-auto">
+              {SKILLS.map((s) => (
+                <span
+                  key={s}
+                  className="text-xs font-bold px-3 py-1.5 rounded-full transition-all hover:scale-105"
+                  style={{
+                    fontFamily: F.mono,
+                    background: '#FFFFFF',
+                    color: '#0F172A',
+                    border: `1px solid ${accent}44`,
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {s}
                 </span>
               ))}
             </div>
