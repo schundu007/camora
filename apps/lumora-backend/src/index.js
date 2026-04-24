@@ -139,6 +139,7 @@ import reactionsRouter from './routes/reactions.js';
 import analyticsRouter from './routes/analytics.js';
 import usageRouter from './routes/usage.js';
 import jobsRouter from './routes/jobs.js';
+import storiesRouter from './routes/stories.js';
 
 // Register routes
 app.use('/api/v1/auth', authRouter);
@@ -156,6 +157,7 @@ app.use('/api/v1/reactions', reactionsRouter);
 app.use('/api/v1/analytics', analyticsRouter);
 app.use('/api/v1/usage', usageRouter);
 app.use('/api/v1/jobs', jobsRouter);
+app.use('/api/v1/stories', storiesRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {

@@ -661,6 +661,8 @@ interface Assistant {
   model: string;
   resume: string;
   jobDescription: string;
+  stories?: import('../../lib/lumora-assistant').LumoraStory[];
+  storyParseStatus?: 'idle' | 'parsing' | 'done' | 'failed';
   createdAt: string;
 }
 
@@ -673,17 +675,67 @@ const AI_MODELS = [
 ];
 
 function AssistantsPage() {
+  const { token } = useAuth();
+  const LUMORA_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
   const [assistants, setAssistants] = useState<Assistant[]>(() => {
     try { return JSON.parse(localStorage.getItem('lumora_assistants') || '[]'); } catch { return []; }
   });
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
   const save = (list: Assistant[]) => { setAssistants(list); localStorage.setItem('lumora_assistants', JSON.stringify(list)); };
+
+  /** Kick off resume → Story Bank extraction in the background. Updates the
+   *  assistant row's storyParseStatus + stories when done. */
+  const parseStories = async (assistantId: string, resume: string) => {
+    if (!resume.trim() || !token) return;
+    // Mark as parsing first — let UI show a spinner
+    setAssistants(prev => {
+      const next = prev.map(a => a.id === assistantId ? { ...a, storyParseStatus: 'parsing' as const } : a);
+      localStorage.setItem('lumora_assistants', JSON.stringify(next));
+      return next;
+    });
+    try {
+      const r = await fetch(`${LUMORA_API}/api/v1/stories/parse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ resume }),
+      });
+      const data = await r.json();
+      setAssistants(prev => {
+        const next = prev.map(a => a.id === assistantId
+          ? { ...a, stories: Array.isArray(data?.stories) ? data.stories : [], storyParseStatus: (r.ok ? 'done' : 'failed') as 'done' | 'failed' }
+          : a);
+        localStorage.setItem('lumora_assistants', JSON.stringify(next));
+        return next;
+      });
+    } catch {
+      setAssistants(prev => {
+        const next = prev.map(a => a.id === assistantId ? { ...a, storyParseStatus: 'failed' as const } : a);
+        localStorage.setItem('lumora_assistants', JSON.stringify(next));
+        return next;
+      });
+    }
+  };
+
   const create = () => {
     if (!form.company.trim() && !form.role.trim()) return;
-    save([{ id: Date.now().toString(), name: form.name.trim() || (form.company || 'Interview') + ' — ' + (form.role || 'General'), role: form.role.trim(), company: form.company.trim(), model: form.model, resume: form.resume.trim(), jobDescription: form.jobDescription.trim(), createdAt: new Date().toISOString() }, ...assistants]);
+    const id = Date.now().toString();
+    const newAssistant: Assistant = {
+      id,
+      name: form.name.trim() || (form.company || 'Interview') + ' — ' + (form.role || 'General'),
+      role: form.role.trim(),
+      company: form.company.trim(),
+      model: form.model,
+      resume: form.resume.trim(),
+      jobDescription: form.jobDescription.trim(),
+      createdAt: new Date().toISOString(),
+      storyParseStatus: form.resume.trim() ? 'parsing' : 'idle',
+    };
+    save([newAssistant, ...assistants]);
     setForm({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
     setShowCreate(false);
+    // Fire-and-forget story extraction
+    if (newAssistant.resume) parseStories(id, newAssistant.resume);
   };
   const remove = (id: string) => { if (confirm('Delete this assistant?')) save(assistants.filter(a => a.id !== id)); };
   const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
@@ -784,6 +836,56 @@ function AssistantsPage() {
                 {a.resume && <FormatTextPreview text={a.resume} label="Resume" />}
                 {a.jobDescription && <FormatTextPreview text={a.jobDescription} label="Job Description" />}
               </div>}
+
+              {a.resume && (
+                <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#0E7490' }}>Story Bank</span>
+                    {a.storyParseStatus === 'parsing' && (
+                      <span className="flex items-center gap-1 text-[10px]" style={{ color: '#64748B' }}>
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22D3EE' }} />
+                        Parsing resume…
+                      </span>
+                    )}
+                    {a.storyParseStatus === 'failed' && (
+                      <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: '#B91C1C' }}>
+                        Parse failed — retry
+                      </button>
+                    )}
+                    {a.storyParseStatus === 'done' && a.stories && (
+                      <span className="text-[10px]" style={{ color: '#64748B' }}>· {a.stories.length} stories extracted</span>
+                    )}
+                  </div>
+                  {a.stories && a.stories.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      {a.stories.map(s => (
+                        <div key={s.id} className="flex items-start gap-2 text-[11px]">
+                          <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
+                            {s.archetypes.map(t => (
+                              <span key={t} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: '#22D3EE', color: '#FFFFFF' }}>
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold" style={{ color: '#0F172A' }}>{s.title}</p>
+                            <p className="text-[10px]" style={{ color: '#64748B' }}>{s.summary}{s.impact ? <span style={{ color: '#0E7490' }}> · {s.impact}</span> : null}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {a.storyParseStatus !== 'parsing' && (!a.stories || a.stories.length === 0) && a.storyParseStatus !== 'failed' && (
+                    <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: '#22D3EE' }}>
+                      Extract stories from resume
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}</div>

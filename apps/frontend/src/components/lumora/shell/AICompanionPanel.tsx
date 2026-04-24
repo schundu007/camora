@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
-import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
+import { getActiveAssistant, buildSystemContext, type LumoraStory } from '@/lib/lumora-assistant';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
@@ -204,6 +204,61 @@ function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
         {archetype} Question
       </span>
       <span className="text-[10px]" style={{ color: '#64748B' }}>· {ARCHETYPE_HINT[archetype]}</span>
+    </div>
+  );
+}
+
+/* ── StoryBankPanel — lists resume-parsed stories in the left column ── */
+function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraStory[]; activeArchetype: Archetype | null }) {
+  if (!stories || stories.length === 0) return null;
+  // Sort: matching-archetype stories first
+  const sorted = [...stories].sort((a, b) => {
+    const aMatch = activeArchetype && a.archetypes.includes(activeArchetype) ? 0 : 1;
+    const bMatch = activeArchetype && b.archetypes.includes(activeArchetype) ? 0 : 1;
+    return aMatch - bMatch;
+  });
+  return (
+    <div className="border-b" style={{ borderColor: '#E2E8F0' }}>
+      <div className="px-3 pt-3 pb-1.5 flex items-center gap-2">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        <span className="text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#0E7490' }}>Story Bank</span>
+        <span className="text-[9px]" style={{ color: '#94A3B8' }}>{stories.length}</span>
+      </div>
+      <div className="px-2 pb-2 space-y-1">
+        {sorted.map(s => {
+          const matches = !!activeArchetype && s.archetypes.includes(activeArchetype);
+          return (
+            <div key={s.id} className="px-2 py-1.5 rounded-md transition-all"
+              style={{
+                background: matches ? 'rgba(34,211,238,0.1)' : '#FFFFFF',
+                border: matches ? '1px solid #22D3EE' : '1px solid #E2E8F0',
+              }}>
+              <div className="flex items-start gap-1.5">
+                <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
+                  {s.archetypes.slice(0, 2).map(t => (
+                    <span key={t} className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
+                      style={{
+                        background: (matches && t === activeArchetype) ? '#22D3EE' : 'rgba(34,211,238,0.15)',
+                        color: (matches && t === activeArchetype) ? '#FFFFFF' : '#0E7490',
+                      }}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold truncate" style={{ color: '#0F172A', fontFamily: "'Clash Display', sans-serif" }}>
+                    {s.title}
+                  </p>
+                  {s.impact && <p className="text-[9px] truncate" style={{ color: '#0E7490' }}>{s.impact}</p>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -698,11 +753,20 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       {/* Chat — side-by-side when embedded, top-to-bottom when floating */}
       {embedded ? (
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          {/* Left: questions */}
+          {/* Left: stories + questions */}
           <div className="w-[280px] shrink-0 overflow-auto border-r" style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}>
+            <StoryBankPanel
+              stories={activeAssistant?.stories}
+              activeArchetype={(() => {
+                const lastAi = [...messages].reverse().find(m => m.role === 'ai');
+                if (!lastAi && streamText) return extractArchetype(streamText).archetype;
+                return lastAi ? extractArchetype(lastAi.text).archetype : null;
+              })()}
+            />
             <div className="p-3 space-y-1.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: '#94A3B8' }}>Questions</p>
               {messages.filter(m => m.role === 'user').length === 0 && !streaming && (
-                <div className="py-6 text-center">
+                <div className="py-4">
                   <p className="text-[10px] mb-3" style={{ color: '#94A3B8' }}>Ask a question to get started</p>
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
