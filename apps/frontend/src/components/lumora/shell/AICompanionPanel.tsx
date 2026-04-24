@@ -81,95 +81,96 @@ function cleanTags(text: string): string {
   return t.trim();
 }
 
-/* ── SonaAvatar — monogram mark ──
-   Elegant "S" glyph inside a deep cyan→indigo gradient orb. Reads as a
-   logo rather than a portrait, so it stays crisp from 14 px to 64 px.
+/* ── SonaAvatar — enterprise wordmark ──
+   Hexagonal silhouette with a bold cyan "S" glyph over a deep-navy
+   field. Designed to read like a product wordmark — Stripe / Linear /
+   Vercel weight class — rather than a cute portrait. Stays crisp at
+   14–64 px.
+
    Props:
      size   — px square dimension
-     active — cyan glow pulse + gentle shimmer while Sona is streaming */
+     active — a thin outer ring pulses while Sona is streaming */
 let SONA_AVATAR_SEED = 0;
 function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boolean }) {
   const id = useMemo(() => `sona-${++SONA_AVATAR_SEED}`, []);
   const g = {
-    orb: `${id}-orb`,
-    rim: `${id}-rim`,
+    field: `${id}-field`,
     glyph: `${id}-glyph`,
-    shine: `${id}-shine`,
-    glow: `${id}-glow`,
+    edge: `${id}-edge`,
   };
+  // Pointy-top hexagon path — precise symmetric vertices, rounded join.
+  const hexPath = 'M32 5 L55.3 18.5 L55.3 45.5 L32 59 L8.7 45.5 L8.7 18.5 Z';
+  // S glyph — two continuous bezier curves forming a flat-ribbon monogram.
+  // Thick enough to hold at 14 px, crisp enough to read like a typeset letter.
+  const sPath =
+    'M41.5 22.2 C41.5 19.1 37.5 17 32 17 C26 17 22 19.3 22 23.8 ' +
+    'C22 28.2 27 30.5 33 31.8 C39 33.1 42.5 35.3 42.5 39.8 ' +
+    'C42.5 44.5 38 47 32 47 C26.5 47 22.5 44.8 21.5 41.2';
+
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block', filter: 'drop-shadow(0 1px 3px rgba(8,47,73,0.35))' }}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgba(8,47,73,0.25))' }}
+    >
       <defs>
-        {/* Deep orb — cyan top-left → indigo bottom-right */}
-        <radialGradient id={g.orb} cx="32%" cy="28%" r="80%">
-          <stop offset="0%" stopColor="#38BDF8" />
-          <stop offset="45%" stopColor="#0891B2" />
-          <stop offset="100%" stopColor="#1E1B4B" />
-        </radialGradient>
-        {/* Rim ring — bright cyan top fading to indigo bottom */}
-        <linearGradient id={g.rim} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#67E8F9" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#312E81" stopOpacity="0.5" />
+        {/* Deep-navy field — flat enterprise feel, just a subtle top-to-bottom
+            lift so the hex has form without reading as a glass orb. */}
+        <linearGradient id={g.field} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0F172A" />
+          <stop offset="100%" stopColor="#020617" />
         </linearGradient>
-        {/* Glyph fill — pure white with a faint cyan tint at the bottom */}
+        {/* S glyph — single-tone cyan, no rainbow. */}
         <linearGradient id={g.glyph} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#CFFAFE" />
+          <stop offset="0%" stopColor="#67E8F9" />
+          <stop offset="100%" stopColor="#22D3EE" />
         </linearGradient>
-        {/* Top-left specular shine on the orb */}
-        <radialGradient id={g.shine} cx="28%" cy="22%" r="32%">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.65" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-        </radialGradient>
-        {/* Active-state glow — soft cyan halo */}
-        <radialGradient id={g.glow} cx="50%" cy="50%" r="50%">
-          <stop offset="78%" stopColor="#22D3EE" stopOpacity="0" />
-          <stop offset="94%" stopColor="#22D3EE" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#22D3EE" stopOpacity="0" />
-        </radialGradient>
+        {/* Inner edge hairline — a thin cyan hint along the top edge of
+            the hex to suggest light catch. No glossy shine. */}
+        <linearGradient id={g.edge} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.7" />
+          <stop offset="55%" stopColor="#22D3EE" stopOpacity="0" />
+        </linearGradient>
       </defs>
 
-      {/* Active-state pulse halo */}
+      {/* Active outer crystal ring — pulses while Sona streams */}
       {active && (
-        <circle cx="32" cy="32" r="30" fill={`url(#${g.glow})`}>
-          <animate attributeName="r" values="28;32;28" dur="1.8s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="1;0.45;1" dur="1.8s" repeatCount="indefinite" />
-        </circle>
+        <path
+          d={hexPath}
+          fill="none"
+          stroke="#22D3EE"
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+          opacity="0"
+        >
+          <animate attributeName="opacity" values="0;0.55;0" dur="1.8s" repeatCount="indefinite" />
+          <animateTransform
+            attributeName="transform"
+            type="scale"
+            values="1;1.06;1"
+            dur="1.8s"
+            additive="sum"
+            repeatCount="indefinite"
+          />
+        </path>
       )}
 
-      {/* Main orb */}
-      <circle cx="32" cy="32" r="28" fill={`url(#${g.orb})`} />
-      {/* Specular shine */}
-      <circle cx="32" cy="32" r="28" fill={`url(#${g.shine})`} />
+      {/* Main hex field */}
+      <path d={hexPath} fill={`url(#${g.field})`} stroke="#22D3EE" strokeOpacity="0.35" strokeWidth="1" strokeLinejoin="round" />
 
-      {/* Stylized S glyph — two continuous curves forming a compact ribbon.
-          Drawn thick so it reads at 14 px. */}
+      {/* Top-edge light catch (enterprise depth cue, no gloss) */}
+      <path d={hexPath} fill={`url(#${g.edge})`} style={{ mixBlendMode: 'screen' }} />
+
+      {/* S glyph — thick ribbon, single-tone cyan, crisp at 14 px */}
       <path
-        d="M41 22 Q37 18 31 18 Q23 18 23 24 Q23 29 30 31 Q39 33 39 39 Q39 46 31 46 Q24 46 20 41"
+        d={sPath}
         fill="none"
         stroke={`url(#${g.glyph})`}
-        strokeWidth="5.2"
+        strokeWidth="5.4"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Terminal accent dots — give the mark personality at small sizes */}
-      <circle cx="41" cy="22" r="1.6" fill="#FFFFFF" opacity="0.95">
-        {active && <animate attributeName="opacity" values="0.95;0.35;0.95" dur="1.8s" repeatCount="indefinite" />}
-      </circle>
-      <circle cx="20" cy="41" r="1.6" fill="#A5F3FC" opacity="0.9" />
-
-      {/* Inner highlight arc — adds depth without clutter */}
-      <path
-        d="M10 24 Q16 14 32 10"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeOpacity="0.2"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-
-      {/* Outer rim ring */}
-      <circle cx="32" cy="32" r="28" fill="none" stroke={`url(#${g.rim})`} strokeWidth="1.4" />
     </svg>
   );
 }
