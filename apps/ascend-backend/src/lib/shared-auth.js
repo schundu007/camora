@@ -2,6 +2,13 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
 
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET not set. Refusing to start — auth would silently break.');
+}
+if (!process.env.JWT_SECRET && process.env.JWT_SECRET_KEY) {
+  console.warn('[shared-auth] Using deprecated JWT_SECRET_KEY — rename to JWT_SECRET.');
+}
+
 /**
  * Verify a JWT token (works for both Lumora and Ascend tokens)
  */
@@ -61,9 +68,9 @@ export function setSSOCookie(res, token) {
   res.cookie('cariara_sso', token, {
     domain: '.cariara.com',
     path: '/',
-    httpOnly: false,
+    httpOnly: true,
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 }
@@ -76,6 +83,6 @@ export function clearSSOCookie(res) {
     domain: '.cariara.com',
     path: '/',
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
   });
 }

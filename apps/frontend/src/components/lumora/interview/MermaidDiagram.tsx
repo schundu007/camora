@@ -36,8 +36,11 @@ async function getMermaid() {
       startOnLoad: false,
       theme: 'default',
       fontSize: 14,
+      // htmlLabels + strict: Mermaid still renders labels as HTML but its own
+      // internal sanitizer runs. Combined with strict mode this blocks
+      // <script>, javascript: URLs, and onerror handlers in user-supplied diagrams.
       flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 15 },
-      securityLevel: 'loose',
+      securityLevel: 'strict',
     });
     return mermaidInstance;
   })();

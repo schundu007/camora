@@ -41,15 +41,6 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-function clearCookie(name: string) {
-  document.cookie = `${name}=; domain=.cariara.com; path=/; max-age=0; secure; samesite=lax`;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -93,7 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check URL hash for OAuth callback tokens (after Google login redirect)
+      // Check URL hash for OAuth callback tokens (after Google login redirect).
+      // Note: the ascend backend already sets the cariara_sso cookie (httpOnly)
+      // on its OAuth callback before redirecting, so we DO NOT write the cookie
+      // from JS here — that would override httpOnly and re-expose the token.
       const hash = window.location.hash;
       if (hash && hash.includes('access_token=')) {
         const params: Record<string, string> = {};
@@ -106,16 +100,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (hashToken) {
           // Clear hash from URL
           window.history.replaceState(null, '', window.location.pathname);
-          // Set cookie for future visits
-          document.cookie = `cariara_sso=${hashToken}; domain=.cariara.com; path=/; max-age=${30*24*60*60}; secure; samesite=lax`;
           // Validate with backend
           try {
             const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
               headers: { Authorization: `Bearer ${hashToken}` },
+              credentials: 'include',
             });
             if (res.ok) {
-              setToken(hashToken);
-              setUser(await res.json());
+              const data = await res.json();
+              // Prefer the freshly minted short-lived token from /me if present.
+              setToken(data.access_token || hashToken);
+              const { access_token, ...userData } = data;
+              setUser(userData);
             }
           } catch { /* network error */ }
           // Check onboarding
@@ -144,30 +140,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Production: read SSO cookie from Ascend
-      const ssoToken = getCookie('cariara_sso');
-      if (ssoToken) {
-        try {
-          const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
-            headers: { Authorization: `Bearer ${ssoToken}` },
-          });
-          if (res.ok) {
-            setToken(ssoToken);
-            setUser(await res.json());
-          }
-        } catch { /* network error */ }
+      // Production: the cariara_sso cookie is now httpOnly, so we can't read it
+      // from document.cookie. Instead, call /auth/me with credentials:'include'
+      // — the cookie rides along, the backend validates it, and returns a fresh
+      // short-lived access_token in the response body which we use as Bearer.
+      try {
+        const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.access_token) {
+            setToken(data.access_token);
+            const { access_token, ...userData } = data;
+            setUser(userData);
 
-        // Fetch onboarding status from Capra backend
-        try {
-          const onboardingRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
-            headers: { Authorization: `Bearer ${ssoToken}` },
-          });
-          if (onboardingRes.ok) {
-            const data = await onboardingRes.json();
-            setOnboardingCompleted(data.onboarding_completed);
+            // Fetch onboarding status from Capra backend using the fresh token
+            try {
+              const onboardingRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
+                headers: { Authorization: `Bearer ${data.access_token}` },
+                credentials: 'include',
+              });
+              if (onboardingRes.ok) {
+                const o = await onboardingRes.json();
+                setOnboardingCompleted(o.onboarding_completed);
+              }
+            } catch { /* capra backend may not be available */ }
           }
-        } catch { /* capra backend may not be available */ }
-      }
+        }
+      } catch { /* not logged in or network error */ }
       setIsLoading(false);
     }
     init();
@@ -217,8 +218,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setOnboardingCompleted(null);
     setSubscription(null);
-    clearCookie('cariara_sso');
-    window.location.href = ASCEND_URL;
+    // The cariara_sso cookie is httpOnly so JS can't clear it — hit the backend
+    // /logout endpoint which returns a Set-Cookie with an expired cookie.
+    fetch(`${CAPRA_API_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    }).catch(() => { /* navigate anyway even if the clear call fails */ })
+      .finally(() => { window.location.href = ASCEND_URL; });
   }, []);
 
   return (
