@@ -45,7 +45,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
           {canCapture && onCapturedProblem && (
             <>
               <div className="w-px h-5 mx-1" style={{ background: C.border }} />
-              <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="icon" />
+              <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="label" label="Capture problem" />
             </>
           )}
         </div>
@@ -76,7 +76,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
           {canCapture && onCapturedProblem && (
             <>
               <div className="w-px h-5 mx-1" style={{ background: C.border }} />
-              <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="icon" />
+              <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="label" label="Capture problem" />
             </>
           )}
         </div>
