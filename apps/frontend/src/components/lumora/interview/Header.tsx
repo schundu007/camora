@@ -78,7 +78,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       // Cmd/Ctrl + Backspace: Reset history (with confirmation)
       if (isMod && e.key === 'Backspace' && !el.closest('.monaco-editor')) {
         e.preventDefault();
-        if (confirm('Clear all history?')) clearHistory();
+        dialogConfirm({ title: 'Clear all history?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' }).then(ok => { if (ok) clearHistory(); });
       }
     };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
+import { dialogConfirm, dialogAlert } from '../components/shared/Dialog';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const EXCLUDE = 'chundubabu@gmail.com,babuchundu@gmail.com';
@@ -159,7 +160,7 @@ export default function AnalyticsPage() {
   // Grant trial with confirmation + error handling
   async function grantTrial(userId: number, trialDays: number) {
     const user = users.find(u => u.id === userId);
-    if (!confirm(`Grant ${trialDays}-day trial to ${user?.name || user?.email}?`)) return;
+    if (!(await dialogConfirm({ title: 'Grant trial?', message: `Grant ${trialDays}-day trial to ${user?.name || user?.email}?`, confirmLabel: 'Grant trial' }))) return;
 
     setGranting(userId);
     setTrialError('');
@@ -183,8 +184,8 @@ export default function AnalyticsPage() {
   // Delete user with confirmation
   async function deleteUser(userId: number) {
     const user = users.find(u => u.id === userId);
-    if (!confirm(`Are you sure you want to DELETE ${user?.name || user?.email}?\n\nThis will permanently remove the user and ALL their data. This cannot be undone.`)) return;
-    if (!confirm(`FINAL CONFIRMATION: Delete ${user?.email}?`)) return;
+    if (!(await dialogConfirm({ title: `Delete ${user?.name || user?.email}?`, message: 'This will permanently remove the user and ALL their data. This cannot be undone.', confirmLabel: 'Continue', tone: 'danger' }))) return;
+    if (!(await dialogConfirm({ title: 'Final confirmation', message: `Delete ${user?.email}? This action is irreversible.`, confirmLabel: 'Delete user', tone: 'danger' }))) return;
 
     try {
       const r = await fetch(`${API}/api/admin/delete-user/${userId}`, {
@@ -195,7 +196,7 @@ export default function AnalyticsPage() {
       if (!r.ok) throw new Error(d.error || 'Failed to delete user');
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (err: any) {
-      alert(`Failed to delete user: ${err.message}`);
+      dialogAlert({ title: 'Delete failed', message: `Failed to delete user: ${err.message}`, tone: 'danger' });
     }
   }
 

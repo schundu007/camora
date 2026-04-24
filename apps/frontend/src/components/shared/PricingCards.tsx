@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { dialogAlert } from './Dialog';
 
 const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -128,16 +129,16 @@ export function useCheckout() {
       });
       if (!resp.ok) {
         if (resp.status === 503 || resp.status === 400) {
-          alert('Payment service temporarily unavailable. Please try again.');
+          dialogAlert({ title: 'Payment service unavailable', message: 'Please try again in a moment.', tone: 'danger' });
         }
         setLoading('');
         return;
       }
       const data = await resp.json();
       if (data.url) window.location.href = data.url;
-      else alert('Could not create checkout session. Please try again.');
+      else dialogAlert({ title: 'Could not start checkout', message: 'Please try again.', tone: 'danger' });
     } catch {
-      alert('Payment service error. Please try again later.');
+      dialogAlert({ title: 'Payment service error', message: 'Please try again later.', tone: 'danger' });
     } finally {
       setLoading('');
     }

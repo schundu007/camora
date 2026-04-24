@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
+import { dialogConfirm } from '../../components/shared/Dialog';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -115,7 +116,7 @@ export default function PrepPlanPage() {
   }
 
   async function clearPlan() {
-    if (!confirm('Are you sure you want to clear your prep plan? This cannot be undone.')) return;
+    if (!(await dialogConfirm({ title: 'Clear your prep plan?', message: 'This will permanently remove your plan. This action cannot be undone.', confirmLabel: 'Clear plan', tone: 'danger' }))) return;
     setClearing(true);
     try {
       const res = await fetch(`${API_URL}/api/interview/plan`, {

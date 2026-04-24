@@ -19,6 +19,7 @@ import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 import { AnswerBlocks } from '../../components/lumora/interview/AnswerBlocks';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '../../lib/constants';
 import type { ParsedBlock } from '../../types';
+import { dialogConfirm, dialogAlert } from '../../components/shared/Dialog';
 
 // Lazy load heavy layouts — only mounted on first tab activation
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
@@ -37,7 +38,7 @@ export function LumoraShellPage() {
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
-  const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, vadThreshold } = useInterviewStore();
+  const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, removeHistoryEntry, vadThreshold } = useInterviewStore();
   const [settingsDismissed, setSettingsDismissed] = useState(false);
 
   // Track which tabs have been activated (for lazy mounting)
@@ -128,7 +129,7 @@ export function LumoraShellPage() {
       // Cmd+Backspace: clear history
       if (isMod && e.key === 'Backspace' && !el.closest('.monaco-editor')) {
         e.preventDefault();
-        if (confirm('Clear all history?')) clearHistory();
+        (async () => { if (await dialogConfirm({ title: 'Clear all history?', message: 'This will permanently remove every saved session across all tabs.', confirmLabel: 'Clear all', tone: 'danger' })) clearHistory(); })();
       }
     };
     window.addEventListener('keydown', handler);
@@ -253,7 +254,6 @@ export function LumoraShellPage() {
                 onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
                 onSwitchToDesign={(p) => navigate(p ? `/lumora/design?problem=${encodeURIComponent(p)}` : '/lumora/design')}
-                onViewAnswer={(idx) => { setFocusedEntry(idx); setCopilotOpen(true); }}
               />
             </ErrorBoundary>
           </div>
@@ -312,8 +312,22 @@ export function LumoraShellPage() {
           {activeTab === 'sessions' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
               <div className="max-w-3xl mx-auto px-6 py-8 w-full">
-                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sessions</h2>
-                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Your interview session history.</p>
+                <div className="flex items-end justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sessions</h2>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Your interview session history — {history.length} saved.</p>
+                  </div>
+                  {history.length > 0 && (
+                    <button
+                      onClick={async () => {
+                        const ok = await dialogConfirm({ title: 'Clear all sessions?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' });
+                        if (ok) clearHistory();
+                      }}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors"
+                      style={{ color: '#DC2626', border: '1px solid #FCA5A5', background: '#FFFFFF' }}
+                    >Clear all</button>
+                  )}
+                </div>
                 {history.length === 0 ? (
                   <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
                     <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -322,15 +336,55 @@ export function LumoraShellPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {history.slice().reverse().map((entry: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                        <div>
-                          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{entry.question}</p>
-                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{new Date(entry.timestamp).toLocaleString()}</p>
+                    {history.slice().reverse().map((entry: any, revIdx: number) => {
+                      const realIdx = history.length - 1 - revIdx;
+                      return (
+                        <div
+                          key={realIdx}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => { setFocusedEntry(realIdx); navigate('/lumora'); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocusedEntry(realIdx); navigate('/lumora'); } }}
+                          className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors"
+                          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                        >
+                          <span className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-bold shrink-0"
+                            style={{ background: '#22D3EE15', color: '#22D3EE', fontFamily: 'var(--font-code)' }}>
+                            {realIdx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold truncate" style={{ color: '#0F172A' }}>{entry.question}</p>
+                            <p className="text-[10px] mt-0.5" style={{ color: '#64748B' }}>{new Date(entry.timestamp).toLocaleString()}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setFocusedEntry(realIdx); navigate('/lumora'); }}
+                            className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors shrink-0"
+                            style={{ color: '#0891B2', background: '#CFFAFE', border: '1px solid #A5F3FC' }}
+                          >View</button>
+                          <button
+                            type="button"
+                            aria-label="Delete session"
+                            title="Delete session"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const ok = await dialogConfirm({ title: 'Delete session?', message: 'This will permanently remove the question and its stored answer from your history.', confirmLabel: 'Delete', tone: 'danger' });
+                              if (ok) removeHistoryEntry(realIdx);
+                            }}
+                            className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-colors hover:bg-red-50"
+                            style={{ color: '#94A3B8', border: '1px solid #E2E8F0' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FCA5A5'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                            </svg>
+                          </button>
                         </div>
-                        <button onClick={() => { setFocusedEntry(history.length - 1 - idx); navigate('/lumora'); }} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--accent)', border: '1px solid var(--border)' }}>View</button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -764,7 +818,10 @@ function AssistantsPage() {
     // Fire-and-forget story extraction
     if (newAssistant.resume) parseStories(id, newAssistant.resume);
   };
-  const remove = (id: string) => { if (confirm('Delete this assistant?')) save(assistants.filter(a => a.id !== id)); };
+  const remove = async (id: string) => {
+    const ok = await dialogConfirm({ title: 'Delete this assistant?', message: 'The assistant profile and its stored resume/stories will be removed.', confirmLabel: 'Delete', tone: 'danger' });
+    if (ok) save(assistants.filter(a => a.id !== id));
+  };
   const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 w-full">
@@ -800,7 +857,7 @@ function AssistantsPage() {
                   try {
                     const text = await extractTextFromFile(file);
                     setForm(f => ({ ...f, resume: text }));
-                  } catch { alert('Could not read file. Please paste text directly.'); }
+                  } catch { dialogAlert({ title: 'Could not read file', message: 'Please paste the text directly into the box below.', tone: 'danger' }); }
                   e.target.value = '';
                 }} />
               </label>
@@ -818,7 +875,7 @@ function AssistantsPage() {
                   try {
                     const text = await extractTextFromFile(file);
                     setForm(f => ({ ...f, jobDescription: text }));
-                  } catch { alert('Could not read file. Please paste text directly.'); }
+                  } catch { dialogAlert({ title: 'Could not read file', message: 'Please paste the text directly into the box below.', tone: 'danger' }); }
                   e.target.value = '';
                 }} />
               </label>
