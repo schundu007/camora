@@ -113,8 +113,26 @@ interface CodingLayoutProps {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-// ── Theme tokens — dark when embedded, light when standalone ──
-function useTheme(_dark: boolean) {
+// ── Theme tokens — dark when embedded (live interview), light when standalone ──
+// The dark palette uses slate-900 surfaces and cyan highlights so the code
+// editor, tabs, and solution cards read as a single coherent dark UI during
+// a live interview (matches Monaco's vs-dark theme).
+function useTheme(dark: boolean) {
+  if (dark) {
+    return {
+      cardBg: '#0F172A', cardBorder: '#1E293B',
+      headerBg: 'rgba(34,211,238,0.08)', headerBorder: '#1E40AF',
+      headerText: '#22D3EE', badgeBg: 'rgba(34,211,238,0.12)', badgeText: '#22D3EE',
+      text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
+      codeBg: '#020617', codeText: '#E2E8F0',
+      inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
+      sectionBg: '#0F172A', surfaceBg: '#1E293B',
+      tabActive: '#22D3EE', tabActiveBg: '#1E293B', tabText: '#94A3B8',
+      dotColor: '#22D3EE',
+      passedBg: 'rgba(34,197,94,0.12)', passedBorder: 'rgba(34,197,94,0.35)', passedText: '#4ADE80',
+      failedBg: 'rgba(239,68,68,0.12)', failedBorder: 'rgba(239,68,68,0.35)', failedText: '#F87171',
+    };
+  }
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
     headerBg: 'rgba(34,211,238,0.05)', headerBorder: '#BFDBFE',
