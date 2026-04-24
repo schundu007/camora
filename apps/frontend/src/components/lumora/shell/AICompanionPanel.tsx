@@ -557,8 +557,15 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
 /* ═══ Icicle Panel ═══ */
 export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) {
   const { token } = useAuth();
+
+  // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
+  const activeAssistant = useMemo(() => getActiveAssistant(), []);
+  const systemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
+
   // Persist Behavioral messages per-assistant in sessionStorage so refresh doesn't
   // wipe an in-progress interview. Cleared when the user explicitly clears chat.
+  // MUST come after activeAssistant — `const` has TDZ, minified references crash
+  // at runtime with 'Cannot access … before initialization' if this block runs first.
   const storageKey = useMemo(() => activeAssistant?.id ? `lumora_behavioral_${activeAssistant.id}` : 'lumora_behavioral_default', [activeAssistant?.id]);
   const [messages, setMessages] = useState<CopilotMessage[]>(() => {
     try {
@@ -573,6 +580,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   useEffect(() => {
     try { sessionStorage.setItem(storageKey, JSON.stringify(messages.map(m => ({ ...m, time: m.time.toISOString() })))); } catch { /* quota */ }
   }, [messages, storageKey]);
+
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
@@ -582,10 +590,6 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const [panelHeight, setPanelHeight] = useState(560);
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh'>(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
-
-  // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
-  const activeAssistant = useMemo(() => getActiveAssistant(), []);
-  const systemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
