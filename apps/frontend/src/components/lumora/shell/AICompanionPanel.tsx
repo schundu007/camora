@@ -35,187 +35,95 @@ function cleanTags(text: string): string {
   return text.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
-/* ── SonaAvatar — Sona portrait icon ──
-   Refined illustrative portrait: warm-olive skin tone, long dark hair
-   flowing past the shoulders, large almond eyes with subtle liner and
-   lashes, softly arched brows, gentle pink lips, a small bindi, and
-   delicate gold stud earrings. Built as pure SVG with radial + linear
-   gradients so it reads with depth from 14 px to 64 px.
+/* ── SonaAvatar — monogram mark ──
+   Elegant "S" glyph inside a deep cyan→indigo gradient orb. Reads as a
+   logo rather than a portrait, so it stays crisp from 14 px to 64 px.
    Props:
      size   — px square dimension
-     active — soft cyan glow ring + blink cycle while Sona is streaming */
+     active — cyan glow pulse + gentle shimmer while Sona is streaming */
 let SONA_AVATAR_SEED = 0;
 function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boolean }) {
   const id = useMemo(() => `sona-${++SONA_AVATAR_SEED}`, []);
   const g = {
-    skin: `${id}-skin`,
-    hair: `${id}-hair`,
-    hairShine: `${id}-hair-shine`,
-    lips: `${id}-lips`,
-    cheek: `${id}-cheek`,
+    orb: `${id}-orb`,
+    rim: `${id}-rim`,
+    glyph: `${id}-glyph`,
     shine: `${id}-shine`,
-    ring: `${id}-ring`,
-    neck: `${id}-neck`,
-    frame: `${id}-frame`,
+    glow: `${id}-glow`,
   };
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block', filter: 'drop-shadow(0 1px 3px rgba(68,35,15,0.18))' }}>
+    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: 'block', filter: 'drop-shadow(0 1px 3px rgba(8,47,73,0.35))' }}>
       <defs>
-        {/* Warm olive / tan skin — light top-left → deeper lower-right */}
-        <radialGradient id={g.skin} cx="42%" cy="38%" r="65%">
-          <stop offset="0%" stopColor="#F2CBA5" />
-          <stop offset="55%" stopColor="#D79D6E" />
-          <stop offset="100%" stopColor="#9C6438" />
+        {/* Deep orb — cyan top-left → indigo bottom-right */}
+        <radialGradient id={g.orb} cx="32%" cy="28%" r="80%">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="45%" stopColor="#0891B2" />
+          <stop offset="100%" stopColor="#1E1B4B" />
         </radialGradient>
-        {/* Neck — slightly deeper than face shadow */}
-        <linearGradient id={g.neck} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#B8834D" />
-          <stop offset="100%" stopColor="#8B5A2E" />
+        {/* Rim ring — bright cyan top fading to indigo bottom */}
+        <linearGradient id={g.rim} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#67E8F9" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#312E81" stopOpacity="0.5" />
         </linearGradient>
-        {/* Hair — rich espresso with warm undertones */}
-        <linearGradient id={g.hair} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3D1F10" />
-          <stop offset="60%" stopColor="#2A140A" />
-          <stop offset="100%" stopColor="#180904" />
+        {/* Glyph fill — pure white with a faint cyan tint at the bottom */}
+        <linearGradient id={g.glyph} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#CFFAFE" />
         </linearGradient>
-        {/* Hair highlight band — soft sheen */}
-        <linearGradient id={g.hairShine} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#6B3A1F" stopOpacity="0.7" />
-          <stop offset="100%" stopColor="#6B3A1F" stopOpacity="0" />
-        </linearGradient>
-        {/* Lips — warm rose with depth */}
-        <linearGradient id={g.lips} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C76A6E" />
-          <stop offset="100%" stopColor="#94424A" />
-        </linearGradient>
-        {/* Cheek blush */}
-        <radialGradient id={g.cheek} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#E88AA0" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#E88AA0" stopOpacity="0" />
-        </radialGradient>
-        {/* Forehead highlight */}
-        <radialGradient id={g.shine} cx="40%" cy="22%" r="28%">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+        {/* Top-left specular shine on the orb */}
+        <radialGradient id={g.shine} cx="28%" cy="22%" r="32%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.65" />
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
         </radialGradient>
-        {/* Active-state soft glow ring */}
-        <radialGradient id={g.ring} cx="50%" cy="50%" r="50%">
-          <stop offset="80%" stopColor="#22D3EE" stopOpacity="0" />
-          <stop offset="95%" stopColor="#22D3EE" stopOpacity="0.5" />
+        {/* Active-state glow — soft cyan halo */}
+        <radialGradient id={g.glow} cx="50%" cy="50%" r="50%">
+          <stop offset="78%" stopColor="#22D3EE" stopOpacity="0" />
+          <stop offset="94%" stopColor="#22D3EE" stopOpacity="0.55" />
           <stop offset="100%" stopColor="#22D3EE" stopOpacity="0" />
         </radialGradient>
-        {/* Subtle cyan frame ring around the whole avatar */}
-        <linearGradient id={g.frame} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#22D3EE" stopOpacity="0.05" />
-        </linearGradient>
       </defs>
 
-      {/* Active-state pulse ring */}
+      {/* Active-state pulse halo */}
       {active && (
-        <circle cx="32" cy="32" r="30" fill={`url(#${g.ring})`}>
+        <circle cx="32" cy="32" r="30" fill={`url(#${g.glow})`}>
           <animate attributeName="r" values="28;32;28" dur="1.8s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.9;0.35;0.9" dur="1.8s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="1;0.45;1" dur="1.8s" repeatCount="indefinite" />
         </circle>
       )}
 
-      {/* Circular frame — clips the portrait to a clean avatar shape */}
-      <clipPath id={`${id}-clip`}>
-        <circle cx="32" cy="32" r="29" />
-      </clipPath>
-      <circle cx="32" cy="32" r="29" fill="#FEF3E7" />
+      {/* Main orb */}
+      <circle cx="32" cy="32" r="28" fill={`url(#${g.orb})`} />
+      {/* Specular shine */}
+      <circle cx="32" cy="32" r="28" fill={`url(#${g.shine})`} />
 
-      <g clipPath={`url(#${id}-clip)`}>
-        {/* Back hair — long flowing strands behind shoulders */}
-        <path
-          d="M12 30 Q8 44 10 58 Q14 64 22 64 Q18 54 18 44 Q18 32 22 24 Q16 24 12 30 Z"
-          fill={`url(#${g.hair})`}
-        />
-        <path
-          d="M52 30 Q56 44 54 58 Q50 64 42 64 Q46 54 46 44 Q46 32 42 24 Q48 24 52 30 Z"
-          fill={`url(#${g.hair})`}
-        />
+      {/* Stylized S glyph — two continuous curves forming a compact ribbon.
+          Drawn thick so it reads at 14 px. */}
+      <path
+        d="M41 22 Q37 18 31 18 Q23 18 23 24 Q23 29 30 31 Q39 33 39 39 Q39 46 31 46 Q24 46 20 41"
+        fill="none"
+        stroke={`url(#${g.glyph})`}
+        strokeWidth="5.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Terminal accent dots — give the mark personality at small sizes */}
+      <circle cx="41" cy="22" r="1.6" fill="#FFFFFF" opacity="0.95">
+        {active && <animate attributeName="opacity" values="0.95;0.35;0.95" dur="1.8s" repeatCount="indefinite" />}
+      </circle>
+      <circle cx="20" cy="41" r="1.6" fill="#A5F3FC" opacity="0.9" />
 
-        {/* Neck + shoulders */}
-        <path d="M26 46 L38 46 L38 54 Q38 56 36 56 L28 56 Q26 56 26 54 Z" fill={`url(#${g.neck})`} />
-        <path d="M14 58 Q18 52 26 52 L38 52 Q46 52 50 58 L50 64 L14 64 Z" fill="#164E63" />
-        {/* Collar hint */}
-        <path d="M20 58 Q26 56 32 56 Q38 56 44 58" fill="none" stroke="#0E7490" strokeWidth="0.8" opacity="0.6" />
+      {/* Inner highlight arc — adds depth without clutter */}
+      <path
+        d="M10 24 Q16 14 32 10"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeOpacity="0.2"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
 
-        {/* Face — soft oval */}
-        <ellipse cx="32" cy="31" rx="14" ry="16" fill={`url(#${g.skin})`} />
-        <ellipse cx="32" cy="26" rx="14" ry="10" fill={`url(#${g.shine})`} />
-
-        {/* Hair front — middle part cascading down the sides of the face */}
-        <path
-          d="M18 20 Q20 12 32 10 Q44 12 46 20 Q46 26 44 30 Q42 21 40 20 Q36 22 32 22 Q28 22 24 20 Q22 21 20 30 Q18 26 18 20 Z"
-          fill={`url(#${g.hair})`}
-        />
-        {/* Hair sheen */}
-        <path d="M23 14 Q27 11 32 11 Q37 11 41 14 Q38 13 32 13 Q26 13 23 14 Z" fill={`url(#${g.hairShine})`} />
-        {/* Side strands softly framing the face */}
-        <path d="M18 22 Q16 34 18 44 Q20 36 22 30 Q20 26 18 22 Z" fill={`url(#${g.hair})`} />
-        <path d="M46 22 Q48 34 46 44 Q44 36 42 30 Q44 26 46 22 Z" fill={`url(#${g.hair})`} />
-
-        {/* Eyebrows — gently arched, thin */}
-        <path d="M21.5 26 Q25.5 24 29 25.5" fill="none" stroke="#2A140A" strokeWidth="1.1" strokeLinecap="round" />
-        <path d="M35 25.5 Q38.5 24 42.5 26" fill="none" stroke="#2A140A" strokeWidth="1.1" strokeLinecap="round" />
-
-        {/* Eyes — whites */}
-        <g fill="#FFFFFF">
-          <ellipse cx="26" cy="30" rx="2.7" ry="2.1" />
-          <ellipse cx="38" cy="30" rx="2.7" ry="2.1" />
-        </g>
-        {/* Iris */}
-        <g fill="#3A1E0E">
-          <ellipse cx="26" cy="30.2" rx="1.8" ry="1.9">
-            {active && <animate attributeName="ry" values="1.9;0.3;1.9" keyTimes="0;0.06;0.12" dur="5s" repeatCount="indefinite" />}
-          </ellipse>
-          <ellipse cx="38" cy="30.2" rx="1.8" ry="1.9">
-            {active && <animate attributeName="ry" values="1.9;0.3;1.9" keyTimes="0;0.06;0.12" dur="5s" repeatCount="indefinite" />}
-          </ellipse>
-        </g>
-        {/* Pupil */}
-        <g fill="#0E0A05">
-          <circle cx="26" cy="30.3" r="0.75" />
-          <circle cx="38" cy="30.3" r="0.75" />
-        </g>
-        {/* Catchlight */}
-        <circle cx="26.5" cy="29.6" r="0.5" fill="#FFFFFF" />
-        <circle cx="38.5" cy="29.6" r="0.5" fill="#FFFFFF" />
-        {/* Eyeliner flicks */}
-        <path d="M23.3 29.8 Q23 30.6 24 31.2" fill="none" stroke="#1A0E08" strokeWidth="0.6" strokeLinecap="round" />
-        <path d="M40.7 29.8 Q41 30.6 40 31.2" fill="none" stroke="#1A0E08" strokeWidth="0.6" strokeLinecap="round" />
-        {/* Lashes — tiny strokes above outer eye */}
-        <path d="M24 28.3 L23.3 27.6 M25.5 28 L25.2 27.1 M27 28 L27.3 27.1" stroke="#1A0E08" strokeWidth="0.45" strokeLinecap="round" fill="none" />
-        <path d="M40 28.3 L40.7 27.6 M38.5 28 L38.8 27.1 M37 28 L36.7 27.1" stroke="#1A0E08" strokeWidth="0.45" strokeLinecap="round" fill="none" />
-
-        {/* Nose — minimal: a soft highlight + shadow for shape */}
-        <path d="M32 32 Q31.5 35 32 37" fill="none" stroke="#A87145" strokeWidth="0.6" strokeLinecap="round" opacity="0.55" />
-        <path d="M31 38 Q32 38.6 33 38" fill="none" stroke="#8A5A32" strokeWidth="0.5" strokeLinecap="round" opacity="0.6" />
-
-        {/* Bindi — small maroon-red dot between the brows */}
-        <circle cx="32" cy="23.5" r="1" fill="#9D0011" />
-        <circle cx="31.7" cy="23.2" r="0.3" fill="#FF6B6B" opacity="0.5" />
-
-        {/* Cheek blush */}
-        <ellipse cx="24" cy="34.5" rx="2.3" ry="1.4" fill={`url(#${g.cheek})`} />
-        <ellipse cx="40" cy="34.5" rx="2.3" ry="1.4" fill={`url(#${g.cheek})`} />
-
-        {/* Lips — gentle smile, upper + lower lip shapes */}
-        <path d="M28 41 Q30 40 32 40.3 Q34 40 36 41 Q34 40.5 32 40.8 Q30 40.5 28 41 Z" fill={`url(#${g.lips})`} />
-        <path d="M28 41 Q32 43.6 36 41 Q34 42.2 32 42.3 Q30 42.2 28 41 Z" fill={`url(#${g.lips})`} />
-        <path d="M28 41 Q32 41.6 36 41" fill="none" stroke="#6B2A32" strokeWidth="0.5" strokeLinecap="round" opacity="0.6" />
-
-        {/* Earrings — small gold studs peeking through the hair */}
-        <circle cx="17" cy="36" r="1.3" fill="#F5C542" />
-        <circle cx="17" cy="36" r="0.5" fill="#FFF3A0" />
-        <circle cx="47" cy="36" r="1.3" fill="#F5C542" />
-        <circle cx="47" cy="36" r="0.5" fill="#FFF3A0" />
-      </g>
-
-      {/* Outer frame ring — discrete cyan edge ties her to Lumora palette */}
-      <circle cx="32" cy="32" r="29" fill="none" stroke={`url(#${g.frame})`} strokeWidth="1.4" />
+      {/* Outer rim ring */}
+      <circle cx="32" cy="32" r="28" fill="none" stroke={`url(#${g.rim})`} strokeWidth="1.4" />
     </svg>
   );
 }
