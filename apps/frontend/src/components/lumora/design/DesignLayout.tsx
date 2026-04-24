@@ -286,6 +286,27 @@ function useTheme(_dark: boolean) {
   };
 }
 
+/** Tiny copy-to-clipboard button for section headers. Placed with ml-auto so it
+ *  sits on the right of the row next to (or in place of) the count badge. */
+function SectionCopyBtn({ getText, title }: { getText: () => string; title?: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(getText()).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+      title={title || 'Copy section'}
+      className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-all hover:bg-black/5"
+      style={{ color: '#64748B', border: '1px solid rgba(0,0,0,0.08)' }}>
+      {copied ? 'Copied ✓' : 'Copy'}
+    </button>
+  );
+}
+
 export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef }: DesignLayoutProps) {
   const t = useTheme(!!embedded);
   const { token } = useAuth();
@@ -888,6 +909,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #22D3EE)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Overview</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => sd.overview!} title="Copy overview" /></div>
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-sm leading-relaxed" style={{ color: t.text }}>{sd.overview}</p>
@@ -901,6 +923,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #22D3EE)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Explanation</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => result.pitch!} title="Copy explanation" /></div>
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-sm leading-relaxed italic" style={{ color: t.text }}>&ldquo;{result.pitch}&rdquo;</p>
@@ -916,6 +939,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #22D3EE)` }} />
                       <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Functional</h2>
                       <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.functional.length}</span>
+                      <SectionCopyBtn getText={() => (sd.requirements?.functional || []).map((r, i) => `${i + 1}. ${r}`).join('\n')} title="Copy functional requirements" />
                     </div>
                     <div className="px-4 py-3">
                       <div className="grid grid-cols-1 gap-y-1">
@@ -934,6 +958,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #3b82f6)` }} />
                       <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Non-Functional</h2>
                       <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.nonFunctional.length}</span>
+                      <SectionCopyBtn getText={() => (sd.requirements?.nonFunctional || []).join('\n')} title="Copy non-functional requirements" />
                     </div>
                     <div className="px-4 py-3">
                       <div className="grid grid-cols-1 gap-y-1">
@@ -954,6 +979,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #22D3EE, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scale Estimates</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => Object.entries(sd.scaleEstimates || {}).filter(([, v]) => v && v.trim()).map(([k, v]) => `${k}: ${v}`).join('\n')} title="Copy scale estimates" /></div>
                   </div>
                   <div className="px-4 py-2">
                     {(() => {
@@ -993,6 +1019,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #22D3EE, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scalability Tiers</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => (sd.techJustifications || []).map(tier => `${tier.tech}\n${tier.details.map(d => `  - ${d}`).join('\n')}`).join('\n\n')} title="Copy scalability tiers" /></div>
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1019,6 +1046,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                         <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #ec4899)` }} />
                         <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Tradeoffs</h2>
+                        <div className="ml-auto"><SectionCopyBtn getText={() => (sd.tradeoffs || []).map((tr, i) => `${i + 1}. ${tr}`).join('\n')} title="Copy tradeoffs" /></div>
                       </div>
                       <div className="px-4 py-3">
                         <div className="grid grid-cols-1 gap-2">
@@ -1041,6 +1069,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                         <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #f59e0b)` }} />
                         <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Edge Cases</h2>
+                        <div className="ml-auto"><SectionCopyBtn getText={() => (sd.edgeCases || []).map((e, i) => `${i + 1}. ${e}`).join('\n')} title="Copy edge cases" /></div>
                       </div>
                       <div className="px-4 py-3">
                         <div className="grid grid-cols-1 gap-2">
@@ -1068,6 +1097,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #f59e0b)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Follow-up Q&A</h2>
                     <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.followups.length}</span>
+                    <SectionCopyBtn getText={() => (sd.followups || []).map((f, i) => `Q${i + 1}: ${f.question}\nA: ${f.answer}`).join('\n\n')} title="Copy follow-up Q&A" />
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
