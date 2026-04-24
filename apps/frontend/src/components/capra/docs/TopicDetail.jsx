@@ -84,9 +84,9 @@ function CapacityPlanningGrid({ estimation }) {
 
   return (
     <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
         <Icon name="hash" size={16} className="text-[var(--text-muted)]" />
-        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{estimation.title || 'Capacity Planning'}</h3>
+        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{estimation.title || 'Capacity Planning'}</h3>
       </div>
       {estimation.assumptions && (
         <div className="px-3 py-1.5 text-xs text-[var(--text-muted)] bg-[var(--bg-elevated)]/30 border-b border-[var(--border)]">
@@ -236,10 +236,10 @@ function DataModelSection({ schema, examples }) {
   // If we successfully parsed tables, show structured view
   if (tables.length > 0) {
     return (
-      <div id="data-model" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-        <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+      <div id="data-model" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+        <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
           <Icon name="database" size={14} className="text-[var(--text-muted)]" />
-          <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Data Model</h3>
+          <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Data Model</h3>
           <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{tables.length} tables</span>
         </div>
         <div className="p-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -308,11 +308,11 @@ function DataModelSection({ schema, examples }) {
   // Fallback: enhanced code block with line numbers, syntax coloring, and Copy button
   const schemaLines = (schema || '').split('\n');
   return (
-    <div id="data-model" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
+    <div id="data-model" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
       <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon name="database" size={14} className="text-[var(--text-muted)]" />
-          <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Data Model</h3>
+          <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Data Model</h3>
         </div>
         <button
           onClick={handleCopy}
@@ -873,9 +873,9 @@ export default function TopicDetail({
           {/* Preview: full introduction */}
           {topicDetails.introduction && (
             <div className="rounded overflow-hidden border border-[var(--border)] bg-white mb-3">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="book" size={14} className="text-[var(--text-muted)]" />
-                <h2 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Introduction</h2>
+                <h2 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Introduction</h2>
               </div>
               <div className="p-3">
                 <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
@@ -888,9 +888,9 @@ export default function TopicDetail({
           {/* Preview: key concepts */}
           {topicDetails.concepts && topicDetails.concepts.length > 0 && (
             <div className="rounded overflow-hidden border border-[var(--border)] bg-white mb-3">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="puzzle" size={14} className="text-[var(--text-muted)]" />
-                <h2 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Concepts</h2>
+                <h2 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Concepts</h2>
               </div>
               <div className="p-3 flex flex-wrap gap-1.5">
                 {topicDetails.concepts.map((concept, i) => (
@@ -908,9 +908,9 @@ export default function TopicDetail({
             const previewQuestions = topicDetails.keyQuestions.slice(0, previewCount);
             return (
               <div className="rounded overflow-hidden border border-[var(--border)] bg-white mb-3">
-                <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                   <Icon name="helpCircle" size={14} className="text-[var(--text-muted)]" />
-                  <h2 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Questions</h2>
+                  <h2 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Questions</h2>
                   <span className="text-[10px] text-white/80 ml-1">({previewCount} of {topicDetails.keyQuestions.length})</span>
                 </div>
                 <div className="divide-y divide-[var(--border)]">
@@ -1010,7 +1010,7 @@ export default function TopicDetail({
         <div className="space-y-3">
           {/* Overview */}
           {topicDetails.introduction && (
-            <div id="overview" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
+            <div id="overview" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
               <div className="px-4 py-2.5 border-b border-[var(--border)] bg-white flex items-center gap-2">
                 <Icon name="bookOpen" size={14} className="text-[var(--text-muted)]" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h3>
@@ -1032,10 +1032,10 @@ export default function TopicDetail({
 
           {/* Articles List */}
           {topicDetails.articles && topicDetails.articles.length > 0 && (
-            <div id="articles" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="articles" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="list" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Articles</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Articles</h3>
                 <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded">{topicDetails.articles.length}</span>
               </div>
               <div className="divide-y divide-[var(--border)]">
@@ -1062,10 +1062,10 @@ export default function TopicDetail({
 
           {/* Key Takeaways */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <div id="key-questions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="key-questions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="lightbulb" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Takeaways</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Takeaways</h3>
               </div>
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.keyQuestions.map((qa, i) => (
@@ -1098,10 +1098,10 @@ export default function TopicDetail({
         <div className="space-y-3">
           {/* Overview */}
           {topicDetails.introduction && (
-            <div id="overview" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="overview" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="trendingUp" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Overview</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Overview</h3>
                 <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded">{topicDetails.phases?.length || 0} phases</span>
                 <span className="text-[10px] landing-mono text-white/80">{topicDetails.phases?.reduce((a, p) => a + p.topics.length, 0) || 0} topics total</span>
               </div>
@@ -1115,10 +1115,10 @@ export default function TopicDetail({
 
           {/* Visual Roadmap — dark spine with branching topics */}
           {topicDetails.phases && topicDetails.phases.length > 0 && (
-            <div id="roadmap-phases" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="roadmap-phases" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="layers" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{topicDetails.title} Roadmap</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.title} Roadmap</h3>
                 <span className="text-[10px] landing-mono text-white/80">{topicDetails.phases.length} phases, {topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics</span>
               </div>
 
@@ -1167,10 +1167,10 @@ export default function TopicDetail({
 
           {/* Key Questions / FAQ */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <div id="key-questions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="key-questions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="messageSquare" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">FAQ</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">FAQ</h3>
               </div>
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.keyQuestions.map((qa, i) => (
@@ -1203,10 +1203,10 @@ export default function TopicDetail({
       {!isLocked && activePage === 'projects' && (
         <div className="space-y-3">
           {/* Header: Difficulty + Tech Stack + Time */}
-          <div id="overview" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
-            <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+          <div id="overview" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+            <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
               <Icon name="code" size={14} className="text-[var(--text-muted)]" />
-              <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Project Overview</h3>
+              <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Project Overview</h3>
             </div>
             <div className="p-4">
               {/* Difficulty + Time badges */}
@@ -1240,10 +1240,10 @@ export default function TopicDetail({
 
           {/* Learning Objectives */}
           {topicDetails.learningObjectives && topicDetails.learningObjectives.length > 0 && (
-            <div id="learning-objectives" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="learning-objectives" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="check" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">What You'll Learn</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">What You'll Learn</h3>
               </div>
               <div className="p-4">
                 <ul className="space-y-2.5">
@@ -1263,9 +1263,9 @@ export default function TopicDetail({
           {/* Interview Relevance */}
           {topicDetails.interviewRelevance && (
             <div id="interview-relevance" className="rounded overflow-hidden scroll-mt-24 border border-[var(--accent)]/20 bg-[var(--accent)]/10/50">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="briefcase" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Interview Relevance</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Interview Relevance</h3>
               </div>
               <div className="p-4">
                 <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
@@ -1275,10 +1275,10 @@ export default function TopicDetail({
 
           {/* Key Questions */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <div id="key-questions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="key-questions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="messageSquare" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Questions</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Questions</h3>
                 <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded">{topicDetails.keyQuestions.length}</span>
               </div>
               <div className="divide-y divide-[var(--border)]">
@@ -1324,10 +1324,10 @@ export default function TopicDetail({
 
           {/* 1. Overview / Introduction */}
           {topicDetails.introduction && (
-            <div id="overview" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="overview" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="book" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Overview</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Overview</h3>
               </div>
               <div className="p-4">
                 <div className="text-[15px] leading-relaxed text-[var(--text-secondary)] landing-body">
@@ -1354,10 +1354,10 @@ export default function TopicDetail({
 
           {/* 2. Key Patterns — what to recognize */}
           {topicDetails.keyPatterns && (
-            <div id="key-patterns" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white shadow-sm">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="key-patterns" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="puzzle" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Patterns</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Patterns</h3>
                 <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.keyPatterns.length}</span>
               </div>
               <div className="p-3">
@@ -1374,10 +1374,10 @@ export default function TopicDetail({
 
           {/* 3. When to Use — when to apply */}
           {topicDetails.whenToUse && (
-            <div id="when-to-use" className="rounded overflow-hidden border border-[var(--border)] bg-white shadow-sm scroll-mt-24">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="when-to-use" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="target" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">When to Use</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">When to Use</h3>
                 <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.whenToUse.length}</span>
               </div>
               <div className="p-3 grid grid-cols-1 gap-1.5">
@@ -1395,10 +1395,10 @@ export default function TopicDetail({
 
           {/* 4. Visual Explanation — see it */}
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
-            <div id="visual" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="visual" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="image" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Visual Explanation</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Visual Explanation</h3>
                 <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">{topicDetails.visualizations.length}</span>
               </div>
               <div className={`p-4 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : ''}`}>
@@ -1417,10 +1417,10 @@ export default function TopicDetail({
 
           {/* 5. Step-by-Step Approach — how to solve */}
           {topicDetails.approach && (
-            <div id="approach" className="rounded overflow-hidden border border-[var(--border)] bg-white shadow-sm scroll-mt-24">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="approach" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="list" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Step-by-Step Approach</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Step-by-Step Approach</h3>
                 <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.approach.length}</span>
               </div>
               <div className="p-4">
@@ -1570,10 +1570,10 @@ export default function TopicDetail({
 
           {/* 8. Common Mistakes — avoid pitfalls */}
           {topicDetails.commonMistakes && (
-            <div id="common-mistakes" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white shadow-sm">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="common-mistakes" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="alertTriangle" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Common Mistakes</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Common Mistakes</h3>
                 <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.commonMistakes.length}</span>
               </div>
               <div className="p-3 grid grid-cols-1 gap-1.5">
@@ -1591,10 +1591,10 @@ export default function TopicDetail({
 
           {/* 9. Practice Problems — self practice */}
           {topicDetails.commonProblems && (
-            <div id="practice" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white shadow-sm">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="practice" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="code" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Practice Problems</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Practice Problems</h3>
                 <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.commonProblems.length}</span>
               </div>
               <div className="overflow-hidden">
@@ -1644,10 +1644,10 @@ export default function TopicDetail({
 
           {/* 10. Theory Questions — deeper review */}
           {topicDetails.theoryQuestions && topicDetails.theoryQuestions.length > 0 && (
-            <div id="theory" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white shadow-sm">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="theory" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="bookOpen" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Theory Questions</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Theory Questions</h3>
                 <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.theoryQuestions.length}</span>
                 <button
                   className="ml-auto text-[10px] landing-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
@@ -1704,10 +1704,10 @@ export default function TopicDetail({
 
           {/* 11. Tips & Interview Tips — final checklist */}
           {(topicDetails.tips || topicDetails.interviewTips) && (
-            <div id="tips" className="rounded overflow-hidden border border-[var(--border)] bg-white shadow-sm scroll-mt-24">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="tips" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <Icon name="lightbulb" size={14} className="text-[var(--text-muted)]" />
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Tips & Interview Checklist</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Tips & Interview Checklist</h3>
                 <span className="text-[10px] font-bold text-white bg-white/20 border border-white/30 px-1.5 py-0.5 rounded-full landing-mono ml-auto">PRO</span>
               </div>
               <div className="p-3 grid grid-cols-1 gap-1.5">
@@ -1739,7 +1739,7 @@ export default function TopicDetail({
             <>
               {/* 1. Introduction — full width */}
               {topicDetails.introduction && (
-                <div id="overview" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'white' }}>
+                <div id="overview" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
                   {/* Product Hero — shown when productMeta exists */}
                   {topicDetails.productMeta && (
                     <div className="p-5 pb-0">
@@ -1799,9 +1799,9 @@ export default function TopicDetail({
                     </div>
                   )}
                   {/* Introduction header */}
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2" style={topicDetails.productMeta ? { borderTop: `1px solid var(--border)` } : {}}>
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2" style={topicDetails.productMeta ? { borderTop: `1px solid var(--border)` } : {}}>
                     <Icon name="book" size={14} className="text-[var(--text-muted)]" />
-                    <h2 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{topicDetails.productMeta ? 'Why This Design Problem?' : 'Introduction'}</h2>
+                    <h2 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.productMeta ? 'Why This Design Problem?' : 'Introduction'}</h2>
                   </div>
                   <div className="p-5">
                     <div className="text-[var(--text-secondary)] text-base leading-relaxed landing-body">
@@ -1825,10 +1825,10 @@ export default function TopicDetail({
 
               {/* 2. Key Concepts — separate card below introduction */}
               {topicDetails.concepts && !topicDetails.concepts[0]?.name && (
-                <div id="concepts" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="concepts" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="puzzle" size={14} className="text-[var(--text-muted)]" />
-                    <h2 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Concepts</h2>
+                    <h2 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Concepts</h2>
                   </div>
                   <div className="p-3 flex flex-wrap gap-1.5">
                     {topicDetails.concepts.map((concept, i) => (
@@ -1846,9 +1846,9 @@ export default function TopicDetail({
                 {/* Functional Requirements */}
                 {(topicDetails.functionalRequirements || topicDetails.requirements) && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="check" size={14} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Functional Requirements</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Functional Requirements</h3>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{(topicDetails.functionalRequirements || topicDetails.requirements).length} requirements</span>
                   </div>
                   <div className="p-2.5">
@@ -1869,9 +1869,9 @@ export default function TopicDetail({
                 {/* Non-Functional Requirements */}
                 {topicDetails.nonFunctionalRequirements && (
                   <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                    <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                    <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                       <Icon name="zap" size={14} className="text-[var(--text-muted)]" />
-                      <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Non-Functional Requirements</h3>
+                      <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Non-Functional Requirements</h3>
                       <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.nonFunctionalRequirements.length} requirements</span>
                     </div>
                     <div className="p-2.5">
@@ -1939,10 +1939,10 @@ export default function TopicDetail({
 
               {/* 5b. Architecture Layers + Layered Design — immediately after architecture diagram */}
               {topicDetails.architectureLayers && (
-                <div id="arch-layers" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="arch-layers" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="layers" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Architecture Layers</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Architecture Layers</h3>
                   </div>
                   <div className="p-3 space-y-1.5">
                     {topicDetails.architectureLayers.map((layer, i) => (
@@ -1962,9 +1962,9 @@ export default function TopicDetail({
 
               {topicDetails.layeredDesign && (
                 <div className="rounded overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="layers" size={14} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Layered Design</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Layered Design</h3>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.layeredDesign.length} layers</span>
                   </div>
                   <div className="p-2.5 space-y-0">
@@ -2006,9 +2006,9 @@ export default function TopicDetail({
                 <div id="implementation" className={`grid gap-3 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                   {topicDetails.basicImplementation && (
                     <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-wider landing-mono">Basic</span>
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
                       </div>
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
@@ -2035,9 +2035,9 @@ export default function TopicDetail({
                   )}
                   {topicDetails.advancedImplementation && (
                     <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-wider landing-mono">Advanced</span>
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
                       </div>
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
@@ -2070,9 +2070,9 @@ export default function TopicDetail({
                 <div id="flows" className="space-y-3 scroll-mt-24">
                   {topicDetails.createFlow && (
                     <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <Icon name="arrowRight" size={16} className="text-[var(--text-muted)]" />
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{topicDetails.createFlow.title}</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.createFlow.title}</h3>
                       </div>
                       {topicDetails.createFlow.diagramSrc ? (
                         <div className="p-3">
@@ -2094,9 +2094,9 @@ export default function TopicDetail({
                   )}
                   {topicDetails.redirectFlow && (
                     <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <Icon name="arrowLeft" size={16} className="text-[var(--text-muted)]" />
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{topicDetails.redirectFlow.title}</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.redirectFlow.title}</h3>
                       </div>
                       {topicDetails.redirectFlow.diagramSrc ? (
                         <div className="p-3">
@@ -2132,10 +2132,10 @@ export default function TopicDetail({
                 <div className="space-y-3 scroll-mt-24">
                   {/* API Design — Stripe-style endpoint cards */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
-                    <div id="api-design" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                    <div id="api-design" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <Icon name="code" size={14} className="text-[var(--text-muted)]" />
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">API Design</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">API Design</h3>
                         <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
                       </div>
                       <div className="p-3">
@@ -2179,10 +2179,10 @@ export default function TopicDetail({
 
               {/* 10. Deep Dive Topics + System Components + Key Design Decisions */}
               {topicDetails.deepDiveTopics && (
-                <div id="deep-dive" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="deep-dive" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="search" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Deep Dive Topics</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Deep Dive Topics</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
@@ -2210,9 +2210,9 @@ export default function TopicDetail({
                   {/* System Components */}
                   {!topicDetails.introduction && topicDetails.components && (
                     <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <Icon name="layers" size={14} className="text-[var(--text-muted)]" />
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">System Components</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">System Components</h3>
                       </div>
                       <div className="p-3">
                         <div className="flex flex-wrap gap-2">
@@ -2229,9 +2229,9 @@ export default function TopicDetail({
                   {/* Key Design Decisions — Diagram + Numbered cards */}
                   {topicDetails.keyDecisions && (
                     <div className="rounded overflow-hidden bg-white border border-[var(--border)]">
-                      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                      <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                         <Icon name="lightbulb" size={14} className="text-[var(--text-muted)]" />
-                        <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Design Decisions</h3>
+                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Design Decisions</h3>
                         <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.keyDecisions.length}</span>
                       </div>
                       {/* Decision architecture diagram */}
@@ -2300,10 +2300,10 @@ export default function TopicDetail({
 
               {/* 12. Trade-offs + Edge Cases */}
               {topicDetails.tradeoffDecisions && (
-                <div id="tradeoff-decisions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="tradeoff-decisions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="gitBranch" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Trade-off Decisions</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Trade-off Decisions</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.tradeoffDecisions.map((d, i) => (
@@ -2324,9 +2324,9 @@ export default function TopicDetail({
 
               {topicDetails.tradeoffs && (
                 <div id="tradeoffs" className="rounded overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="gitBranch" size={14} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Tradeoffs</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Tradeoffs</h3>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.tradeoffs.length} decisions</span>
                   </div>
                   <div className="p-2.5 space-y-2">
@@ -2364,9 +2364,9 @@ export default function TopicDetail({
 
               {topicDetails.edgeCases && (
                 <div id="edge-cases" className="rounded overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="alertTriangle" size={14} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Edge Cases</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Edge Cases</h3>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.edgeCases.length} cases</span>
                   </div>
                   <div className="p-2.5 space-y-2">
@@ -2396,9 +2396,9 @@ export default function TopicDetail({
                 const TOPIC_COLORS = ['var(--accent)'];
                 return (
                 <div id="discussion" className="rounded overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="messageCircle" size={14} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Discussion Points</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Discussion Points</h3>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.discussionPoints.length} topics</span>
                   </div>
                   <div className="p-2.5 space-y-2">
@@ -2446,10 +2446,10 @@ export default function TopicDetail({
               })()}
 
               {topicDetails.interviewFollowups && (
-                <div id="followups" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="followups" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="helpCircle" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Common Follow-up Questions</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Common Follow-up Questions</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
@@ -2480,9 +2480,9 @@ export default function TopicDetail({
 
               {topicDetails.algorithmApproaches && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="zap" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Algorithm Approaches</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Algorithm Approaches</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.algorithmApproaches.map((app, i) => (
@@ -2504,10 +2504,10 @@ export default function TopicDetail({
 
               {/* 14. Code Examples */}
               {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
-                <div id="code-examples" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="code-examples" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="code" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Implementation Code</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Implementation Code</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
@@ -2528,10 +2528,10 @@ export default function TopicDetail({
 
               {/* 15. Key Questions — Accordion (self-test/review) */}
               {topicDetails.keyQuestions && (
-                <div id="key-questions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="key-questions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="messageSquare" size={14} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Key Questions</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Key Questions</h3>
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.keyQuestions.length} topics</span>
                     <button
                       onClick={() => {
@@ -2580,9 +2580,9 @@ export default function TopicDetail({
               {/* 16. Interview Tips — very last SD card */}
               {topicDetails.tips && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="star" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Interview Tips</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Interview Tips</h3>
                   </div>
                   <div className="grid  gap-1 p-3">
                     {topicDetails.tips.map((tip, i) => (
@@ -2599,9 +2599,9 @@ export default function TopicDetail({
               {/* LLD Core Entities */}
               {topicDetails.coreEntities && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="box" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Core Entities</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Core Entities</h3>
                   </div>
                   <div className="p-3">
                     <div className="grid grid-cols-1 gap-2">
@@ -2619,9 +2619,9 @@ export default function TopicDetail({
               {/* LLD Design Patterns */}
               {topicDetails.designPatterns && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="puzzle" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Design Patterns</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Design Patterns</h3>
                   </div>
                   <div className="p-4">
                     <ul className="grid grid-cols-1 gap-1">
@@ -2639,9 +2639,9 @@ export default function TopicDetail({
               {/* LLD Implementation Code */}
               {topicDetails.implementation && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="code" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Implementation</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Implementation</h3>
                   </div>
                   <div className="overflow-x-auto bg-[#0d1117]">
                     <pre
@@ -2660,10 +2660,10 @@ export default function TopicDetail({
 
               {/* Concurrency Concepts */}
               {topicDetails.concepts && Array.isArray(topicDetails.concepts) && topicDetails.concepts[0]?.name && (
-                <div id="concepts" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                <div id="concepts" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="cpu" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Core Concepts</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Core Concepts</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.concepts.map((concept, i) => (
@@ -2679,9 +2679,9 @@ export default function TopicDetail({
               {/* Concurrency Primitives */}
               {topicDetails.primitives && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="lock" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Synchronization Primitives</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Synchronization Primitives</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.primitives.map((prim, i) => (
@@ -2700,9 +2700,9 @@ export default function TopicDetail({
               {/* Concurrency Classic Problems */}
               {topicDetails.problems && topicDetails.problems[0]?.solution && (
                 <div className="rounded overflow-hidden border border-[var(--border)] bg-white">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="alertTriangle" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Classic Problems</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Classic Problems</h3>
                   </div>
                   <div className="grid  gap-2 p-3">
                     {topicDetails.problems.map((problem, i) => (
@@ -2722,9 +2722,9 @@ export default function TopicDetail({
               {/* Concurrency Data Structures */}
               {topicDetails.structures && (
                 <div className="rounded overflow-hidden bg-white border border-[var(--border)]">
-                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+                  <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                     <Icon name="database" size={16} className="text-[var(--text-muted)]" />
-                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Concurrent Data Structures</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Concurrent Data Structures</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.structures.map((struct, i) => (
@@ -2751,10 +2751,10 @@ export default function TopicDetail({
           {topicDetails.introduction && (() => {
             const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
             return (
-              <div id="overview" className="scroll-mt-24 rounded border border-[var(--border)] overflow-hidden" style={{ background: 'white' }}>
-                <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+              <div id="overview" className="scroll-mt-24 rounded border border-[var(--border)] overflow-hidden">
+                <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                   <Icon name="book" size={14} className="text-[var(--text-muted)]" />
-                  <h2 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Overview</h2>
+                  <h2 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Overview</h2>
                 </div>
                 <div className="p-5">
                   {quoteMatch ? (
@@ -2859,12 +2859,12 @@ export default function TopicDetail({
 
           {/* 4. Example Response — see the method applied */}
           {topicDetails.exampleResponse && (
-            <div id="example-response" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="example-response" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
                   <Icon name="messageSquare" size={12} className="text-[var(--text-muted)]" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Example Response</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Example Response</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">Ready to use</span>
               </div>
               <div className="p-5">
@@ -2891,12 +2891,12 @@ export default function TopicDetail({
 
           {/* 5. Questions & Answers — practice AFTER learning the framework */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <div id="key-questions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="key-questions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
                   <Icon name="messageSquare" size={12} className="text-[var(--text-muted)]" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Questions & Answers</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Questions & Answers</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.keyQuestions.length} questions</span>
               </div>
               <div className="p-2.5 space-y-2">
@@ -3034,12 +3034,12 @@ export default function TopicDetail({
 
           {/* 6. Practice Questions — more practice */}
           {topicDetails.sampleQuestions && topicDetails.sampleQuestions.length > 0 && (
-            <div id="sample-questions" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="sample-questions" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
                   <Icon name="helpCircle" size={12} className="text-[var(--text-muted)]" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Practice Questions</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Practice Questions</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">{topicDetails.sampleQuestions.length} questions</span>
               </div>
               <div className="p-2.5 space-y-1.5">
@@ -3055,14 +3055,14 @@ export default function TopicDetail({
 
           {/* 7. Tips for Success — final review checklist, LAST card */}
           {topicDetails.tips && (
-            <div id="tips" className="rounded overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
+            <div id="tips" className="scroll-mt-24 pt-6 mt-6 first:mt-0 first:pt-0">
+              <div className="pb-2 mb-4 border-b border-[var(--border)] flex items-baseline gap-2">
                 <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
                   <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Tips for Success</h3>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] landing-display tracking-tight">Tips for Success</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.tips.length} tips</span>
               </div>
               <div className="p-2.5 space-y-1.5">
