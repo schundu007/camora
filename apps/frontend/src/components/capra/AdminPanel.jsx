@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { dialogConfirm } from '../shared/Dialog';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders as getBaseAuthHeaders } from '../../utils/authHeaders.js';
 
@@ -85,9 +86,13 @@ export default function AdminPanel({ token, onClose }) {
   };
 
   const handleDeleteUser = async (username) => {
-    if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
-      return;
-    }
+    const ok = await dialogConfirm({
+      title: 'Delete user?',
+      message: `Permanently remove "${username}" and all their data. This cannot be undone.`,
+      confirmLabel: 'Delete user',
+      tone: 'danger',
+    });
+    if (!ok) return;
 
     try {
       setError('');

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { dialogConfirm } from '../../shared/Dialog';
 
 const providerConfig = {
   anthropic: {
@@ -59,7 +60,13 @@ export default function ApiKeyInput({
   };
 
   const handleDelete = async () => {
-    if (window.confirm(`Remove ${config.name} API key?`)) {
+    const ok = await dialogConfirm({
+      title: 'Remove API key?',
+      message: `Delete your stored ${config.name} API key from this account.`,
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    });
+    if (ok) {
       await onDelete();
       setIsEditing(true);
     }

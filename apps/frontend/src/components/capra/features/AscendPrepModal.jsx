@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { dialogConfirm } from '../../shared/Dialog';
 import InputPanel from '../prep/InputPanel';
 import OutputPanel from '../prep/OutputPanel';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -743,9 +744,13 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
 
   // Delete a company (with cloud sync for authenticated users)
   const handleDeleteCompany = async (companyName) => {
-    if (!confirm(`Delete "${companyName}" and all its interview prep data?`)) {
-      return;
-    }
+    const ok = await dialogConfirm({
+      title: `Delete "${companyName}"?`,
+      message: 'Removes this company and all its interview prep data.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!ok) return;
 
     // Prevent auto-save during transition
     setIsLoadingCompany(true);
@@ -1100,8 +1105,9 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
   };
 
   // Delete a custom section
-  const handleDeleteCustomSection = (sectionId) => {
-    if (!confirm('Delete this custom section?')) return;
+  const handleDeleteCustomSection = async (sectionId) => {
+    const ok = await dialogConfirm({ title: 'Delete section?', message: 'Removes this custom section and its content.', confirmLabel: 'Delete', tone: 'danger' });
+    if (!ok) return;
 
     setCustomSections(prev => prev.filter(s => s.id !== sectionId));
     setGenerated(prev => {
@@ -1115,8 +1121,9 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
     }
   };
 
-  const handleClearAll = () => {
-    if (!confirm('Clear generated content? (Your inputs will be kept)')) return;
+  const handleClearAll = async () => {
+    const ok = await dialogConfirm({ title: 'Clear generated content?', message: 'Removes the AI-generated output. Your inputs stay.', confirmLabel: 'Clear', tone: 'danger' });
+    if (!ok) return;
 
     setGenerated({ ...EMPTY_GENERATED });
     setActiveTab('input');
@@ -1232,7 +1239,13 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 <button
                   onClick={async () => {
                     if (accountLinked) {
-                      if (confirm('Unlink your cloud account? Your data will remain local only.')) {
+                      const ok = await dialogConfirm({
+                        title: 'Unlink your cloud account?',
+                        message: 'Your data stays on this device only. Sign back in any time to re-enable cloud sync.',
+                        confirmLabel: 'Unlink',
+                        tone: 'danger',
+                      });
+                      if (ok) {
                         await window.electronAPI.accountLogout();
                         setAccountLinked(false);
                       }

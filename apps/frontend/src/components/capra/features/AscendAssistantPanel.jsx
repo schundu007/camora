@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { dialogConfirm } from '../../shared/Dialog';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
@@ -391,8 +392,14 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
   }, []);
 
   // Clear conversation history
-  const clearHistory = useCallback(() => {
-    if (confirm('Clear all conversation history?')) {
+  const clearHistory = useCallback(async () => {
+    const ok = await dialogConfirm({
+      title: 'Clear conversation history?',
+      message: 'This removes every prior prompt and reply stored in this panel.',
+      confirmLabel: 'Clear',
+      tone: 'danger',
+    });
+    if (ok) {
       setConversationHistory([]);
       localStorage.removeItem('ascend_assistant_history');
     }
