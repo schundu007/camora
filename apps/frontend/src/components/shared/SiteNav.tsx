@@ -38,7 +38,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const borderClass = isLight ? 'border-b border-[var(--border)]' : 'border-b border-white/[0.08]';
   const textColor = isLight ? 'var(--text-primary)' : '#FFFFFF';
   const textMuted = isLight ? 'var(--text-secondary)' : 'rgba(255,255,255,0.75)';
-  const activeBg = isLight ? 'var(--accent-subtle)' : 'rgba(255,255,255,0.10)';
+  const activeBg = isLight ? 'var(--accent-subtle)' : 'rgba(41,181,232,0.18)';
   const activeColor = isLight ? 'var(--accent)' : '#FFFFFF';
 
   const nav = (

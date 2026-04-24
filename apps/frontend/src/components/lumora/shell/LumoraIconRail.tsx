@@ -97,9 +97,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {accountOpen && expanded && (
           <div className="ml-5 flex flex-col gap-0.5">
             {MORE_ITEMS.map(item => (
-              <Link key={item.id} to={item.path} className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all" style={{ color: 'rgba(255,255,255,0.6)' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
+              <Link key={item.id} to={item.path} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white/60 hover:text-white hover:bg-white/10 active:text-white active:bg-white/10 transition-all">
                 {item.label}
               </Link>
             ))}
@@ -120,9 +118,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
           { label: 'Help', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
             onClick: () => dialogAlert({ title: 'Keyboard shortcuts', message: '⌘K — focus search\n⌘M — toggle mic\n⌘B — go invisible (hide overlay)\n⌘S — search' }) },
         ].map(item => (
-          <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full`} style={{ color: 'rgba(255,255,255,0.6)' }} title={expanded ? undefined : item.label}
-            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent'; }}>
+          <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium text-white/60 hover:text-white hover:bg-white/10 active:text-white active:bg-white/10 transition-all text-left w-full`} title={expanded ? undefined : item.label}>
             {item.icon}
             {expanded && <span className="whitespace-nowrap">{item.label}</span>}
           </button>
