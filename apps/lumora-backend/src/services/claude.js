@@ -330,7 +330,9 @@ ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
 
 Think: What would fit on a sticky note that helps someone ace this question?`;
-    maxTokens = 600;
+    // Raised from 600 → 1200: 600 truncated full STAR answers (Action = 3 bullets +
+    // Result with metric + Follow-up) mid-sentence during live interviews.
+    maxTokens = 1200;
   } else if (isCoding) {
     systemPrompt = CODING_SYSTEM_PROMPT + `
 
