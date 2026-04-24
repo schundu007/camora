@@ -6,6 +6,7 @@ import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
+import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles } from '../components/landing/CardAnimations';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE — Snowflake-inspired clean design
@@ -25,28 +26,28 @@ const APPA = [
     key: 'apply', label: 'APPLY', href: '/jobs',
     headline: 'Discover roles matched to your skills',
     desc: 'Browse 1,000+ engineering roles with AI-powered matching. Auto-generate tailored resumes and cover letters.',
-    image: '/card-apply.jpg',
+    Anim: ApplyAnim,
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></svg>,
   },
   {
     key: 'prepare', label: 'PREPARE', href: '/capra/prepare',
     headline: 'Study 800+ curated interview topics',
     desc: 'System design, DSA, behavioral, databases, and low-level design with AI-powered explanations and architecture diagrams.',
-    image: '/card-prepare.jpg',
+    Anim: PrepareAnim,
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
   },
   {
     key: 'practice', label: 'PRACTICE', href: '/capra/practice',
     headline: 'Solve 1,850+ problems with AI feedback',
     desc: 'Real interview problems with multi-approach solutions. Timed mock interviews scored on communication and accuracy.',
-    image: '/card-practice.jpg',
+    Anim: PracticeAnim,
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></svg>,
   },
   {
     key: 'attend', label: 'ATTEND', href: '/lumora',
     headline: 'Real-time AI during your live interview',
     desc: 'Voice transcription captures the question. AI generates instant answers — system design diagrams, coding solutions, and STAR coaching.',
-    image: '/card-attend.jpg',
+    Anim: AttendAnim,
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,
   },
 ];
@@ -133,6 +134,7 @@ export default function LandingPage() {
       <SEO path="/" />
 
       <style>{`@keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+      <CardAnimationStyles />
       <SiteNav variant="light" />
 
       {/* ═══════════ 1. HERO ═══════════ */}
@@ -230,8 +232,8 @@ export default function LandingPage() {
               <Reveal key={step.key} delay={i * 0.06}>
                 <Link to={step.href} className="block rounded-lg h-full transition-all hover:border-[#29B5E8] group overflow-hidden"
                   style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
-                  <div className="w-full h-40 overflow-hidden" style={{ background: '#F1F5F9' }}>
-                    <img src={step.image} alt={step.label} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="w-full h-40 overflow-hidden relative" style={{ background: '#F1F5F9' }}>
+                    <step.Anim />
                   </div>
                   <div className="p-8">
                     <div className="mb-5">{step.icon}</div>
