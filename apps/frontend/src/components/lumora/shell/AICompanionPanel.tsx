@@ -4,6 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext, type LumoraStory } from '@/lib/lumora-assistant';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogConfirm } from '@/components/shared/Dialog';
 
 /* White glass copilot — dark text */
@@ -802,9 +803,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, streamText, isOpen]);
   useEffect(() => { if (isOpen) setTimeout(() => inputRef.current?.focus(), 100); }, [isOpen]);
 
+  // Holds the most recent question captured while Sona is still streaming.
+  // Only the latest is kept — older pending questions are overwritten — so
+  // the queue drains to exactly one follow-up when the current answer ends.
+  const pendingQuestionRef = useRef<string | null>(null);
+
   // Ask a question — streams independently
   const ask = useCallback(async (question: string) => {
-    if (!question.trim() || !token || streaming) return;
+    const trimmed = question.trim();
+    if (!trimmed || !token) return;
+    if (streaming) {
+      pendingQuestionRef.current = trimmed;
+      return;
+    }
 
     const modePrefix = answerMode === 'short' ? '[SHORT] ' : '[DETAILED] ';
 
@@ -843,6 +854,28 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const handleSubmit = useCallback(() => {
     if (input.trim()) { ask(input); setInput(''); }
   }, [input, ask]);
+
+  // Stable ref so AudioCapture's onTranscription dep doesn't rebuild on every
+  // `streaming` flip — mid-recording callback swaps caused dropped chunks.
+  const askRef = useRef(ask);
+  useEffect(() => { askRef.current = ask; }, [ask]);
+
+  // Drain the queued question when the current answer finishes streaming.
+  // Auto-mic can capture follow-ups while Sona is mid-stream — we hold only
+  // the latest in `pendingQuestionRef` and fire it here.
+  useEffect(() => {
+    if (!streaming && pendingQuestionRef.current) {
+      const q = pendingQuestionRef.current;
+      pendingQuestionRef.current = null;
+      const timer = setTimeout(() => askRef.current?.(q), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [streaming]);
+
+  // Stable handler for continuous-mic transcriptions (no deps → never rebuilds).
+  const handleAutoTranscription = useCallback((text: string) => {
+    askRef.current?.(text);
+  }, []);
 
   // Embedded mode = render inline, skip minimized/floating
   useEffect(() => {
@@ -1085,7 +1118,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 shrink-0 flex flex-col items-center gap-2">
-        {/* Prominent centered mic button */}
+        {/* Mic + AUTO toggle — click AUTO before the interview to keep Sona
+            listening continuously (auto-restarts, persists across reloads). */}
+        <div className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl"
+          style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)' }}>
+          <AudioCapture onTranscription={handleAutoTranscription} />
+        </div>
+        {/* Prominent centered one-shot mic — kept for explicit single-question capture */}
         <MicButtonLarge onResult={(text) => ask(text)} disabled={streaming} />
         {/* Text input row */}
         <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}>
