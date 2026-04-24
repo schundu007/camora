@@ -557,7 +557,22 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
 /* ═══ Icicle Panel ═══ */
 export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) {
   const { token } = useAuth();
-  const [messages, setMessages] = useState<CopilotMessage[]>([]);
+  // Persist Behavioral messages per-assistant in sessionStorage so refresh doesn't
+  // wipe an in-progress interview. Cleared when the user explicitly clears chat.
+  const storageKey = useMemo(() => activeAssistant?.id ? `lumora_behavioral_${activeAssistant.id}` : 'lumora_behavioral_default', [activeAssistant?.id]);
+  const [messages, setMessages] = useState<CopilotMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved) as Array<{ role: 'user' | 'ai'; text: string; time: string }>;
+      return parsed.map(m => ({ ...m, time: new Date(m.time) }));
+    } catch { return []; }
+  });
+
+  // Persist on every messages change
+  useEffect(() => {
+    try { sessionStorage.setItem(storageKey, JSON.stringify(messages.map(m => ({ ...m, time: m.time.toISOString() })))); } catch { /* quota */ }
+  }, [messages, storageKey]);
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
