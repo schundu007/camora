@@ -461,7 +461,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [problemText, setProblemText] = useState(initialProblem || '');
   const autoSubmittedRef = useRef(false);
   const [inputTab, setInputTab] = useState<'text' | 'url' | 'image'>('text');
-  const [detailLevel, setDetailLevel] = useState<'basic' | 'full'>('basic');
+  const [detailLevel, setDetailLevel] = useState<'basic' | 'full'>('full');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DesignResult | null>(null);
   const [streamingText, setStreamingText] = useState('');
