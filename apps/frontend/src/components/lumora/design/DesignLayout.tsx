@@ -1041,9 +1041,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </div>
                 <span className="text-xs font-semibold" style={{ color: t.headerText }}>Analyzing and designing system architecture...</span>
               </div>
-              {streamingText && (
-                <pre className="flex-1 overflow-auto text-[10px] font-mono whitespace-pre-wrap leading-relaxed max-h-60" style={{ color: t.textDim }}>{streamingText}</pre>
-              )}
+              {/* No raw stream preview — wait for the parsed structure. */}
             </div>
           )}
 
