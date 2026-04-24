@@ -10,6 +10,17 @@ import { parseAnswer } from './answerParser.js';
 // Config
 // ---------------------------------------------------------------------------
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
+const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-20250514';
+
+/** Select model by plan. Paid users on coding/design get Sonnet for accuracy;
+ *  behavioral stays on Haiku (fast, cheap, quality is fine for short STAR). */
+function selectModel(plan, questionType) {
+  const paid = plan && plan !== 'free';
+  if (!paid) return MODEL;
+  // Behavioral stays on Haiku — STAR answers don't benefit from Sonnet
+  if (questionType === 'behavioral') return MODEL;
+  return MODEL_PAID;
+}
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
 const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '12000', 10);
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
@@ -307,6 +318,7 @@ export async function* streamResponse(question, history, options = {}) {
     technicalContext = null,
     systemContext = null,
     detailLevel = null,
+    plan = 'free',
   } = options;
 
   const startTime = performance.now();
@@ -412,8 +424,10 @@ IMPORTANT CODE FORMATTING RULE:
   let outputTokens = 0;
 
   try {
+    const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isShortMode ? 'behavioral' : 'general');
+    const chosenModel = selectModel(plan, questionType);
     const stream = client.messages.stream({
-      model: MODEL,
+      model: chosenModel,
       max_tokens: maxTokens,
       system: systemPrompt,
       messages,
