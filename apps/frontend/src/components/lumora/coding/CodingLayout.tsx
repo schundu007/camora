@@ -1014,29 +1014,38 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                 ))}
                               </div>
                             )}
-                            {activeSol.narration && (
-                              <div className="rounded-lg mt-2" style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)', borderLeft: '3px solid #22D3EE' }}>
-                                <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                            {activeSol.narration && (() => {
+                              const dark = !!embedded;
+                              const narrBg = dark ? '#0B2534' : '#F0FDFF';
+                              const narrBorder = dark ? 'rgba(103,232,249,0.55)' : 'rgba(14,116,144,0.35)';
+                              const narrText = dark ? '#F1F5F9' : '#0F172A';
+                              const narrLabel = dark ? '#67E8F9' : '#0E7490';
+                              const narrCopy = dark ? '#A5F3FC' : '#0E7490';
+                              const narrDivider = dark ? 'rgba(103,232,249,0.2)' : 'rgba(14,116,144,0.18)';
+                              return (
+                              <div className="rounded-lg mt-2" style={{ background: narrBg, border: `1px solid ${narrBorder}`, borderLeft: '3px solid #22D3EE' }}>
+                                <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: `1px solid ${narrDivider}` }}>
                                   <div className="flex items-center gap-1.5">
                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
                                       <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                                       <line x1="12" y1="19" x2="12" y2="22" />
                                     </svg>
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: t.headerText }}>Say this out loud</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: narrLabel }}>Say this out loud</span>
                                   </div>
                                   <button
                                     onClick={() => navigator.clipboard.writeText(activeSol.narration)}
-                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5"
-                                    style={{ color: t.textMuted }}>
+                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-white/5"
+                                    style={{ color: narrCopy }}>
                                     Copy
                                   </button>
                                 </div>
-                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: t.text, fontFamily: "'Inter', sans-serif" }}>
+                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: narrText, fontFamily: "'Inter', sans-serif", opacity: 1 }}>
                                   {activeSol.narration}
                                 </p>
                               </div>
-                            )}
+                              );
+                            })()}
                             {Array.isArray(activeSol.trace) && activeSol.trace.length > 0 && (
                               <div className="rounded-lg mt-2 overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
                                 <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
