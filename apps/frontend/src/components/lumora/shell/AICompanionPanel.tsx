@@ -135,7 +135,7 @@ function StarBody({ text }: { text: string }) {
     );
   });
   flushBullets('bl-end');
-  return <div className="flex flex-col gap-1" style={{ fontFamily: "'Satoshi', sans-serif" }}>{out}</div>;
+  return <div className="flex flex-col gap-1" style={{ fontFamily: "'Inter', sans-serif" }}>{out}</div>;
 }
 
 /* ── StarAnswer — renders a behavioral STAR answer as 4 scannable cards ── */
@@ -158,10 +158,10 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
           <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(34,211,238,0.06)', borderBottom: '1px solid rgba(34,211,238,0.1)' }}>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
-                style={{ background: '#22D3EE', color: '#FFFFFF', fontFamily: "'Clash Display', sans-serif" }}>
+                style={{ background: '#22D3EE', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
                 {s.label[0]}
               </span>
-              <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: '#0E7490', fontFamily: "'Clash Display', sans-serif" }}>
+              <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: '#0E7490', fontFamily: "'Source Sans 3', sans-serif" }}>
                 {labelCopy[s.label].short}
               </span>
               <span className="text-[10px]" style={{ color: '#64748B' }}>· {labelCopy[s.label].hint}</span>
@@ -200,7 +200,7 @@ function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
         <line x1="12" y1="8" x2="12" y2="12" />
         <line x1="12" y1="16" x2="12.01" y2="16" />
       </svg>
-      <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#0E7490', fontFamily: "'Clash Display', sans-serif" }}>
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#0E7490', fontFamily: "'Source Sans 3', sans-serif" }}>
         {archetype} Question
       </span>
       <span className="text-[10px]" style={{ color: '#64748B' }}>· {ARCHETYPE_HINT[archetype]}</span>
@@ -236,12 +236,12 @@ function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#B45309', fontFamily: "'Clash Display', sans-serif" }}>Likely Rebuttals</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#B45309', fontFamily: "'Source Sans 3', sans-serif" }}>Likely Rebuttals</span>
         <span className="ml-auto text-[10px]" style={{ color: '#92400E' }}>{items.length}</span>
       </div>
       <div className="px-2.5 py-2 flex flex-col gap-1.5">
         {items.map((r, i) => (
-          <div key={i} className="text-[12px] leading-[1.55]" style={{ color: '#0F172A', fontFamily: "'Satoshi', sans-serif" }}>
+          <div key={i} className="text-[12px] leading-[1.55]" style={{ color: '#0F172A', fontFamily: "'Inter', sans-serif" }}>
             <p className="font-bold flex items-start gap-1">
               <span className="font-mono shrink-0" style={{ color: '#B45309' }}>Q{i + 1}.</span>
               <span>{r.probe}</span>
@@ -295,7 +295,7 @@ function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraStory[];
                   ))}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold truncate" style={{ color: '#0F172A', fontFamily: "'Clash Display', sans-serif" }}>
+                  <p className="text-[10px] font-bold truncate" style={{ color: '#0F172A', fontFamily: "'Source Sans 3', sans-serif" }}>
                     {s.title}
                   </p>
                   {s.impact && <p className="text-[9px] truncate" style={{ color: '#0E7490' }}>{s.impact}</p>}
@@ -412,7 +412,7 @@ function RichText({ text }: { text: string }) {
         <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>{lang || 'code'}</span>
         <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-black/5" style={{ color: '#64748B' }}>Copy</button>
       </div>
-      <pre className="px-3 py-2 overflow-x-auto" style={{ background: 'rgba(15,23,42,0.95)', color: '#7DD3FC', fontSize: '11px', lineHeight: '1.6', fontFamily: "'JetBrains Mono', monospace" }}><code>{content}</code></pre>
+      <pre className="px-3 py-2 overflow-x-auto" style={{ background: 'rgba(15,23,42,0.95)', color: '#7DD3FC', fontSize: '11px', lineHeight: '1.6', fontFamily: "'Source Code Pro', monospace" }}><code>{content}</code></pre>
     </div>
   );
 
@@ -421,15 +421,15 @@ function RichText({ text }: { text: string }) {
     if (!t) return <div key={key} className="h-1" />;
 
     // Headers — bold with Clash Display
-    if (t.startsWith('### ')) return <h4 key={key} className="mt-3 mb-1" style={{ fontSize: '11px', fontWeight: 700, color: C.text, fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.01em' }}>{t.slice(4)}</h4>;
-    if (t.startsWith('## ')) return <h3 key={key} className="mt-3 mb-1" style={{ fontSize: '12px', fontWeight: 700, color: C.text, fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.01em' }}>{t.slice(3)}</h3>;
-    if (t.startsWith('# ')) return <h2 key={key} className="mt-3 mb-1" style={{ fontSize: '13px', fontWeight: 700, color: C.text, fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.02em' }}>{t.slice(2)}</h2>;
+    if (t.startsWith('### ')) return <h4 key={key} className="mt-3 mb-1" style={{ fontSize: '11px', fontWeight: 700, color: C.text, fontFamily: "'Source Sans 3', sans-serif", letterSpacing: '-0.01em' }}>{t.slice(4)}</h4>;
+    if (t.startsWith('## ')) return <h3 key={key} className="mt-3 mb-1" style={{ fontSize: '12px', fontWeight: 700, color: C.text, fontFamily: "'Source Sans 3', sans-serif", letterSpacing: '-0.01em' }}>{t.slice(3)}</h3>;
+    if (t.startsWith('# ')) return <h2 key={key} className="mt-3 mb-1" style={{ fontSize: '13px', fontWeight: 700, color: C.text, fontFamily: "'Source Sans 3', sans-serif", letterSpacing: '-0.02em' }}>{t.slice(2)}</h2>;
 
     // ALL-CAPS labels (TIME:, SPACE:, APPROACH:, etc.)
     const labelMatch = t.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|SUMMARY|TIP|NOTE|WARNING|TIME|SPACE|APPROACH|COMPLEXITY|EXAMPLE|INPUT|OUTPUT|Q\d+|A\d+)[:\s]+\s*(.*)/i);
     if (labelMatch) return (
       <div key={key} className="mt-1.5">
-        <span style={{ fontSize: '10px', fontWeight: 700, color: '#0F172A', fontFamily: "'Clash Display', sans-serif" }}>{labelMatch[1].toUpperCase()}: </span>
+        <span style={{ fontSize: '10px', fontWeight: 700, color: '#0F172A', fontFamily: "'Source Sans 3', sans-serif" }}>{labelMatch[1].toUpperCase()}: </span>
         <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(labelMatch[2]) }} />
       </div>
     );
@@ -462,7 +462,7 @@ function RichText({ text }: { text: string }) {
 
     // Arrow patterns (Input: X -> Output: Y)
     if (/^(Input|Output)[:\s]/.test(t)) return (
-      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: 'rgba(0,0,0,0.04)', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#0F172A', border: '1px solid rgba(0,0,0,0.06)' }}>
+      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: 'rgba(0,0,0,0.04)', fontFamily: "'Source Code Pro', monospace", fontSize: '10px', color: '#0F172A', border: '1px solid rgba(0,0,0,0.06)' }}>
         {t}
       </div>
     );
@@ -475,7 +475,7 @@ function RichText({ text }: { text: string }) {
   };
 
   return (
-    <div className="flex flex-col gap-0.5" style={{ fontFamily: "'Satoshi', sans-serif" }}>
+    <div className="flex flex-col gap-0.5" style={{ fontFamily: "'Inter', sans-serif" }}>
       {blocks.map((block, bi) => {
         if (block.type === 'code') return renderCodeBlock(block.content, block.lang, bi);
 
@@ -957,7 +957,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
             placeholder={answerMode === 'short' ? 'Type a question...' : 'Type a question...'}
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
-            style={{ fontFamily: "'Satoshi', sans-serif", color: '#0F172A', fontSize: '10px' }} disabled={streaming} />
+            style={{ fontFamily: "'Inter', sans-serif", color: '#0F172A', fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
             <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#22D3EE' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>

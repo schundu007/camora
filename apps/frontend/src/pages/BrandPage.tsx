@@ -184,14 +184,14 @@ function Wordmark1({ dark = true }: { dark?: boolean }) {
   return (
     <div>
       <div className={`${textColor} tracking-[-0.04em] leading-none`}
-           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 800 }}>
+           style={{ fontFamily: "'Inter', sans-serif", fontSize: 32, fontWeight: 800 }}>
         <span style={{ color: C.accent }}>C</span>
         <span style={{ color: dark ? C.accent : '#2D8CFF' }}>a</span>
         mor
         <span style={{ color: dark ? C.accent : '#2D8CFF' }}>a</span>
       </div>
       <div className={`${subColor} mt-1.5`}
-           style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+           style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
         Apply · Prepare · Practice · Attend
       </div>
     </div>
@@ -204,13 +204,13 @@ function Wordmark2({ dark = true }: { dark?: boolean }) {
   return (
     <div>
       <div className="relative inline-block leading-none"
-           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 700, letterSpacing: '0.15em', color: textColor, textTransform: 'uppercase' as const }}>
+           style={{ fontFamily: "'Inter', sans-serif", fontSize: 32, fontWeight: 700, letterSpacing: '0.15em', color: textColor, textTransform: 'uppercase' as const }}>
         CAMORA
         {/* Strikethrough line */}
         <div className="absolute left-0 right-0" style={{ top: '52%', height: 1.5, background: `linear-gradient(90deg, ${C.accent}, ${C.indigo}, ${C.cyan}, ${C.amber})` }} />
       </div>
       <div className={`${subColor} mt-2`}
-           style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 400, letterSpacing: '0.08em' }}>
+           style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 10, fontWeight: 400, letterSpacing: '0.08em' }}>
         apply. prepare. practice. attend.
       </div>
     </div>
@@ -222,11 +222,11 @@ function Wordmark3({ dark = true }: { dark?: boolean }) {
   const subColor = dark ? 'text-gray-500' : 'text-gray-400';
   return (
     <div>
-      <div className="leading-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 600, color: textColor, letterSpacing: '-0.02em' }}>
+      <div className="leading-none" style={{ fontFamily: "'Inter', sans-serif", fontSize: 32, fontWeight: 600, color: textColor, letterSpacing: '-0.02em' }}>
         <span style={{ fontSize: 38, color: C.accent, fontWeight: 700 }}>c</span>amora
       </div>
       <div className={`${subColor} mt-1.5`}
-           style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em' }}>
+           style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em' }}>
         A·P·P·A
       </div>
     </div>
@@ -264,10 +264,10 @@ export default function BrandPage() {
       <div className="relative lg:max-w-[85%] mx-auto px-6 lg:px-8 py-16 md:py-24">
         {/* Header */}
         <div className="mb-20">
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm text-[var(--accent)] font-semibold tracking-wider uppercase mb-4">
+          <div style={{ fontFamily: "'Source Code Pro', monospace" }} className="text-sm text-[var(--accent)] font-semibold tracking-wider uppercase mb-4">
             Brand Identity
           </div>
-          <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          <h1 style={{ fontFamily: "'Inter', sans-serif" }}
               className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
             Camora Brand Concepts
           </h1>
@@ -292,7 +292,7 @@ export default function BrandPage() {
 
         {/* ── LOGO CONCEPTS ───────────────────────────────── */}
         <section className="mb-24">
-          <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          <h2 style={{ fontFamily: "'Inter', sans-serif" }}
               className="text-2xl font-bold text-white mb-2">Logo Concepts</h2>
           <p className="text-base text-gray-500 mb-10">Click to select your preferred concept.</p>
 
@@ -313,18 +313,18 @@ export default function BrandPage() {
                   {/* Dark bg */}
                   <div className="flex flex-col items-center justify-center py-10 px-6" style={{ background: C.dark }}>
                     <logo.Component size={96} />
-                    <span className="text-xs text-gray-600 mt-3 font-medium" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>DARK</span>
+                    <span className="text-xs text-gray-600 mt-3 font-medium" style={{ fontFamily: "'Source Code Pro', monospace" }}>DARK</span>
                   </div>
                   {/* Light bg */}
                   <div className="flex flex-col items-center justify-center py-10 px-6 border-l border-white/[0.06]" style={{ background: '#f8f9fa' }}>
                     <logo.Component size={96} />
-                    <span className="text-xs text-gray-400 mt-3 font-medium" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>LIGHT</span>
+                    <span className="text-xs text-gray-400 mt-3 font-medium" style={{ fontFamily: "'Source Code Pro', monospace" }}>LIGHT</span>
                   </div>
                 </div>
                 {/* Info */}
                 <div className="px-6 py-5 border-t border-white/[0.06]">
                   <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-lg font-bold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    <h3 className="text-lg font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
                       {logo.name}
                     </h3>
                     {/* Small size preview */}
@@ -343,7 +343,7 @@ export default function BrandPage() {
 
         {/* ── WORDMARK TREATMENTS ─────────────────────────── */}
         <section className="mb-24">
-          <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          <h2 style={{ fontFamily: "'Inter', sans-serif" }}
               className="text-2xl font-bold text-white mb-2">Wordmark Treatments</h2>
           <p className="text-base text-gray-500 mb-10">Click to select your preferred typography.</p>
 
@@ -370,7 +370,7 @@ export default function BrandPage() {
                   </div>
                 </div>
                 <div className="px-6 py-5 border-t border-white/[0.06]">
-                  <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
                     {wm.name}
                   </h3>
                   <p className="text-sm text-gray-500">{wm.desc}</p>
@@ -383,7 +383,7 @@ export default function BrandPage() {
         {/* ── COMBINED PREVIEW ─────────────────────────────── */}
         {selectedLogo !== null && selectedWordmark !== null && (
           <section className="mb-24">
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            <h2 style={{ fontFamily: "'Inter', sans-serif" }}
                 className="text-2xl font-bold text-white mb-2">Your Selection</h2>
             <p className="text-base text-gray-500 mb-10">
               {LOGOS[selectedLogo].name} logo + {WORDMARKS[selectedWordmark].name} wordmark
@@ -404,7 +404,7 @@ export default function BrandPage() {
 
             {/* Favicon / small sizes */}
             <div className="mt-6 rounded-2xl border border-white/[0.08] p-8" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <div className="text-sm text-gray-500 font-medium mb-4" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>SIZE VARIANTS</div>
+              <div className="text-sm text-gray-500 font-medium mb-4" style={{ fontFamily: "'Source Code Pro', monospace" }}>SIZE VARIANTS</div>
               <div className="flex items-end gap-8">
                 {[16, 24, 32, 48, 64, 96].map((sz) => {
                   const L = LOGOS[selectedLogo].Component;
@@ -420,7 +420,7 @@ export default function BrandPage() {
 
             {/* Nav preview */}
             <div className="mt-6 rounded-2xl border border-white/[0.08] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <div className="text-sm text-gray-500 font-medium px-8 pt-6 mb-4" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>NAV PREVIEW</div>
+              <div className="text-sm text-gray-500 font-medium px-8 pt-6 mb-4" style={{ fontFamily: "'Source Code Pro', monospace" }}>NAV PREVIEW</div>
               <div className="flex items-center justify-between px-8 py-4 border-t border-b border-white/[0.06]" style={{ background: 'rgba(10,11,20,0.8)' }}>
                 <div className="flex items-center gap-3">
                   {(() => { const L = LOGOS[selectedLogo].Component; return <L size={32} />; })()}

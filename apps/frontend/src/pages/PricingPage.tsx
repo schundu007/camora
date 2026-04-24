@@ -7,9 +7,9 @@ import SharedPricingCards from '../components/shared/PricingCards';
 
 const accent = '#29B5E8';
 const F = {
-  display: "'Clash Display', sans-serif",
-  body: "'Satoshi', sans-serif",
-  mono: "'JetBrains Mono', monospace",
+  display: "'Source Sans 3', sans-serif",
+  body: "'Inter', sans-serif",
+  mono: "'Source Code Pro', monospace",
 };
 
 const COMPARISON = [

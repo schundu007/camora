@@ -221,10 +221,10 @@ export default function OAuthLogin() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
-        .landing-root { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-mono { font-family: 'IBM Plex Mono', monospace; }
+        .landing-root { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: 'Inter', system-ui, sans-serif; }
+        .landing-display { font-family: 'Inter', system-ui, sans-serif; }
+        .landing-body { font-family: 'Inter', system-ui, sans-serif; }
+        .landing-mono { font-family: 'Source Code Pro', monospace; }
         html { scroll-behavior: smooth; }
         .journey-card { background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg-end) 50%, var(--card-bg) 100%); background-size: 200% 200%; border: 2px solid var(--card-border); box-shadow: 0 4px 24px rgba(var(--card-glow), 0.12); animation: journeySlideIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both, journeyGradientShift 6s ease-in-out infinite, journeyFloat 4s ease-in-out 1.5s infinite; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease; }
         .journey-card-0 { animation: journeySlideLt 0.7s cubic-bezier(0.16,1,0.3,1) both, journeyGradientShift 6s ease-in-out infinite, journeyFloat 4s ease-in-out 1.2s infinite; }

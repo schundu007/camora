@@ -77,7 +77,7 @@ export function LumoraTopBar({ activeTab, onTranscription, inline = false }: Lum
             (status.state === 'listen' || status.state === 'write') ? 'bg-[var(--accent)] animate-pulse' :
             ''
           }`} />
-          <span className="text-xs font-bold" style={{ fontFamily: "'Satoshi', sans-serif", color: C.muted }}>{status.message}</span>
+          <span className="text-xs font-bold" style={{ fontFamily: "'Inter', sans-serif", color: C.muted }}>{status.message}</span>
         </div>
 
         {/* Settings gear */}

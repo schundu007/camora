@@ -232,16 +232,16 @@ function RadarChart({ values, labels, size = 200 }) {
       {labels.map((label, i) => {
         const [x, y] = point(i, 1.18);
         return (
-          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: 'var(--text-muted)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
             {label}
           </text>
         );
       })}
       {/* Center score */}
-      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 22, fontWeight: 800, fill: 'var(--text-primary)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 22, fontWeight: 800, fill: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
         {avg}%
       </text>
-      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: 'var(--text-muted)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
         readiness
       </text>
     </svg>
@@ -259,7 +259,7 @@ function ScoreRing({ value, size = 140, strokeW = 10, animated = false }) {
     <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--bg-elevated)" strokeWidth={strokeW} />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={strokeW} strokeDasharray={circ} strokeDashoffset={animated ? offset : offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }} />
-      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central" fill="var(--text-primary)" fontSize={size * 0.22} fontWeight={800} style={{ transform: 'rotate(90deg)', transformOrigin: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central" fill="var(--text-primary)" fontSize={size * 0.22} fontWeight={800} style={{ transform: 'rotate(90deg)', transformOrigin: 'center', fontFamily: "'Inter', sans-serif" }}>
         {value}%
       </text>
     </svg>
@@ -924,7 +924,7 @@ export default function PracticePage() {
                 <div style={{ position: 'relative', marginBottom: 8 }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, width: 36, height: '100%', background: 'var(--bg-elevated)', borderRadius: '12px 0 0 12px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, pointerEvents: 'none' }}>
                     {Array.from({ length: Math.max(10, (answers[currentIdx] || '').split('\n').length) }, (_, i) => (
-                      <div key={i} style={{ fontSize: 11, color: '#c0c5ce', lineHeight: '22.1px', fontFamily: "'IBM Plex Mono', monospace", userSelect: 'none' }}>{i + 1}</div>
+                      <div key={i} style={{ fontSize: 11, color: '#c0c5ce', lineHeight: '22.1px', fontFamily: "'Source Code Pro', monospace", userSelect: 'none' }}>{i + 1}</div>
                     ))}
                   </div>
                   <textarea
@@ -932,7 +932,7 @@ export default function PracticePage() {
                     value={answers[currentIdx]}
                     onChange={(e) => { const newA = [...answers]; newA[currentIdx] = e.target.value; setAnswers(newA); }}
                     placeholder="Write your solution here... (pseudocode or real code)"
-                    style={{ width: '100%', minHeight: 220, padding: '12px 16px 12px 44px', borderRadius: 12, border: '1px solid var(--border)', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: "'IBM Plex Mono', monospace", background: 'var(--bg-surface)', lineHeight: '22.1px', tabSize: 2 }}
+                    style={{ width: '100%', minHeight: 220, padding: '12px 16px 12px 44px', borderRadius: 12, border: '1px solid var(--border)', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: "'Source Code Pro', monospace", background: 'var(--bg-surface)', lineHeight: '22.1px', tabSize: 2 }}
                     autoFocus
                     disabled={!!inlineEval}
                   />
@@ -1215,7 +1215,7 @@ export default function PracticePage() {
                         {showModelAnswer === currentIdx ? 'Hide' : 'Show'} Model Answer
                       </button>
                       {showModelAnswer === currentIdx && (
-                        <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, fontSize: 13, color: 'var(--accent-hover)', lineHeight: 1.6, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap' }}>
+                        <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, fontSize: 13, color: 'var(--accent-hover)', lineHeight: 1.6, fontFamily: category === 'coding' ? "'Source Code Pro', monospace" : 'inherit', whiteSpace: 'pre-wrap' }}>
                           {inlineEval.modelAnswer}
                         </div>
                       )}
@@ -1389,7 +1389,7 @@ export default function PracticePage() {
                       {isExpanded && (
                         <div style={{ padding: '0 24px 20px 60px' }}>
                           {answers[i] && (
-                            <div style={{ marginBottom: 14, padding: 14, background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto' }}>
+                            <div style={{ marginBottom: 14, padding: 14, background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7, fontFamily: category === 'coding' ? "'Source Code Pro', monospace" : 'inherit', whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto' }}>
                               {answers[i].replace(/---SECTION---/g, '\n\n').replace(/---STAR---/g, '\n\n')}
                             </div>
                           )}
@@ -1426,9 +1426,9 @@ export default function PracticePage() {
 
       {/* ═══════════ Styles ═══════════ */}
       <style>{`
-        .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .practice-mono { font-family: 'IBM Plex Mono', monospace; }
+        .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Inter', system-ui, sans-serif; }
+        .practice-display { font-family: 'Inter', system-ui, sans-serif; }
+        .practice-mono { font-family: 'Source Code Pro', monospace; }
         textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(45,140,255,0.1); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>

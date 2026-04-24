@@ -340,7 +340,7 @@ export default function DownloadPage() {
       style={{
         background: '#0D0C14',
         color: '#F2F1F3',
-        fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        fontFamily: "'Inter', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
       {/* ── Background mesh ────────────────────────────── */}

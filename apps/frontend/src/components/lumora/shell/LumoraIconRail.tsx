@@ -60,7 +60,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       {/* Logo */}
       <Link to="/" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Camora">
         <CamoraLogo size={expanded ? 28 : 24} />
-        {expanded && <span className="text-sm font-bold text-white whitespace-nowrap" style={{ fontFamily: "'Clash Display', sans-serif" }}>Camora</span>}
+        {expanded && <span className="text-sm font-bold text-white whitespace-nowrap" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>}
       </Link>
 
       {/* Main nav */}

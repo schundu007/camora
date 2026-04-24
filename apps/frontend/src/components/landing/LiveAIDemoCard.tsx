@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const ACCENT = '#29B5E8';
-const MONO = "'JetBrains Mono', monospace";
+const MONO = "'Source Code Pro', monospace";
 
 type Phase = 'listening' | 'transcribing' | 'thinking' | 'responding' | 'done';
 
