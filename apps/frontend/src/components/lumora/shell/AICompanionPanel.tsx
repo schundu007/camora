@@ -208,6 +208,52 @@ function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
   );
 }
 
+/* ── Rebuttals parser — pulls "REBUTTALS:" block off the end of behavioral answer ── */
+interface Rebuttal { probe: string; handling: string; }
+
+function extractRebuttals(text: string): { rebuttals: Rebuttal[]; stripped: string } {
+  if (!text) return { rebuttals: [], stripped: text };
+  const m = text.match(/\n\s*REBUTTALS\s*:\s*\n([\s\S]*?)$/i);
+  if (!m) return { rebuttals: [], stripped: text };
+  const body = m[1];
+  const rebuttals: Rebuttal[] = [];
+  body.split('\n').forEach(line => {
+    const t = line.trim();
+    if (!t) return;
+    const lm = t.match(/^\d+[.)]\s*(.+?)\s*(?:—|-|–|:)\s*(.+)$/);
+    if (lm) rebuttals.push({ probe: lm[1].trim(), handling: lm[2].trim() });
+  });
+  return { rebuttals, stripped: text.slice(0, m.index).trimEnd() };
+}
+
+function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-2 rounded-lg overflow-hidden" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.22)', borderLeft: '3px solid #F59E0B' }}>
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#B45309', fontFamily: "'Clash Display', sans-serif" }}>Likely Rebuttals</span>
+        <span className="ml-auto text-[10px]" style={{ color: '#92400E' }}>{items.length}</span>
+      </div>
+      <div className="px-2.5 py-2 flex flex-col gap-1.5">
+        {items.map((r, i) => (
+          <div key={i} className="text-[12px] leading-[1.55]" style={{ color: '#0F172A', fontFamily: "'Satoshi', sans-serif" }}>
+            <p className="font-bold flex items-start gap-1">
+              <span className="font-mono shrink-0" style={{ color: '#B45309' }}>Q{i + 1}.</span>
+              <span>{r.probe}</span>
+            </p>
+            <p className="pl-5" style={{ color: '#334155' }}>→ {r.handling}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── StoryBankPanel — lists resume-parsed stories in the left column ── */
 function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraStory[]; activeArchetype: Archetype | null }) {
   if (!stories || stories.length === 0) return null;
@@ -265,26 +311,33 @@ function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraStory[];
 
 /* ── AnswerView — picks STAR cards for behavioral, RichText otherwise ── */
 function AnswerView({ text, streaming }: { text: string; streaming?: boolean }) {
-  const { archetype, stripped } = useMemo(() => extractArchetype(text), [text]);
+  const { archetype, stripped: afterArch } = useMemo(() => extractArchetype(text), [text]);
+  const { rebuttals, stripped } = useMemo(() => extractRebuttals(afterArch), [afterArch]);
   const star = useMemo(() => parseStar(stripped), [stripped]);
   if (star) {
     return (
       <div>
         {archetype && <ArchetypeBadge archetype={archetype} />}
         <StarAnswer sections={star.sections} streaming={streaming} />
+        <RebuttalsPanel items={rebuttals} />
       </div>
     );
   }
-  // Archetype present but STAR not yet parsed (early streaming): show badge + raw text
   if (archetype) {
     return (
       <div>
         <ArchetypeBadge archetype={archetype} />
         <RichText text={stripped} />
+        <RebuttalsPanel items={rebuttals} />
       </div>
     );
   }
-  return <RichText text={stripped} />;
+  return (
+    <div>
+      <RichText text={stripped} />
+      <RebuttalsPanel items={rebuttals} />
+    </div>
+  );
 }
 
 /* ── RichText — renders markdown with proper code blocks ── */
