@@ -111,6 +111,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
+      plan: userPlan,
     })) {
       if (clientDisconnected) break;
 
@@ -255,6 +256,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
+      plan: userPlan,
     })) {
       if (clientDisconnected) break;
 
