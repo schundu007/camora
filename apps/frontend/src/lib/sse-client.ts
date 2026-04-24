@@ -6,6 +6,46 @@ import type { SSEEvent, StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, 
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
+// Timeout for the initial request to reach first-byte. Once the stream starts
+// we rely on the stream-alive signal, not a wall-clock timeout — user answers
+// can legitimately take 20-30s to complete.
+const CONNECT_TIMEOUT_MS = 30_000;
+// How many times to retry on pre-stream network / 5xx failures. Zero retries
+// once tokens are flowing — replaying would double-bill Anthropic and confuse
+// the UI mid-answer.
+const MAX_CONNECT_RETRIES = 2;
+
+async function fetchWithConnectRetry(url: string, init: RequestInit): Promise<Response> {
+  let lastErr: any;
+  for (let attempt = 0; attempt <= MAX_CONNECT_RETRIES; attempt++) {
+    try {
+      // A fresh AbortController PER ATTEMPT so the connect-timeout doesn't leak
+      // into the streaming phase. We reapply the caller's signal as the fetch
+      // signal (so external aborts still work).
+      const connectTimer = setTimeout(() => { try { (init as any)._connectAbort?.abort(); } catch {} }, CONNECT_TIMEOUT_MS);
+      try {
+        const response = await fetch(url, init);
+        clearTimeout(connectTimer);
+        // Retry only on pre-stream 5xx; 4xx is a real answer the caller should see.
+        if (response.status >= 500 && attempt < MAX_CONNECT_RETRIES) {
+          lastErr = new Error(`HTTP ${response.status}`);
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+          continue;
+        }
+        return response;
+      } finally {
+        clearTimeout(connectTimer);
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError') throw err;
+      lastErr = err;
+      if (attempt >= MAX_CONNECT_RETRIES) break;
+      await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+    }
+  }
+  throw lastErr;
+}
+
 export interface StreamOptions {
   conversationId?: string;
   question: string;
@@ -53,8 +93,9 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     ? `/api/v1/inference/conversations/${conversationId}/stream`
     : '/api/v1/stream';
 
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetchWithConnectRetry(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,6 +108,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         ...(systemContext ? { system_context: systemContext } : {}),
         ...(detailLevel ? { detail_level: detailLevel } : {}),
       }),
+      credentials: 'include',
       signal: abortController.signal,
     });
 
@@ -76,7 +118,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
       return abortController;
     }
 
-    const reader = response.body?.getReader();
+    reader = response.body?.getReader();
     if (!reader) {
       onError?.({ msg: 'No response body' });
       return abortController;
@@ -137,6 +179,11 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     if (error.name !== 'AbortError') {
       onError?.({ msg: error.message || 'Stream error' });
     }
+  } finally {
+    // Release the stream reader on every exit path so the underlying network
+    // connection can be torn down and memory reclaimed — previously abort
+    // paths left the reader locked and the response body dangling.
+    try { await reader?.cancel(); } catch { /* already released */ }
   }
 
   return abortController;
@@ -218,8 +265,9 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     externalSignal.addEventListener('abort', () => abortController.abort());
   }
 
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
-    const response = await fetch(`${API_URL}/api/v1/coding/stream`, {
+    const response = await fetchWithConnectRetry(`${API_URL}/api/v1/coding/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -231,6 +279,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
         language,
         ...(systemContext ? { system_context: systemContext } : {}),
       }),
+      credentials: 'include',
       signal: abortController.signal,
     });
 
@@ -240,7 +289,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
       return abortController;
     }
 
-    const reader = response.body?.getReader();
+    reader = response.body?.getReader();
     if (!reader) {
       onError?.({ msg: 'No response body' });
       return abortController;
@@ -301,6 +350,8 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     if (error.name !== 'AbortError') {
       onError?.({ msg: error.message || 'Stream error' });
     }
+  } finally {
+    try { await reader?.cancel(); } catch { /* already released */ }
   }
 
   return abortController;
