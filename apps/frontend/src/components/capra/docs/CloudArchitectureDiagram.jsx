@@ -23,7 +23,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 rounded-lg bg-[var(--bg-surface)]">
+      <div className="flex items-center justify-center py-12 rounded bg-[var(--bg-surface)]">
         <div className="flex items-center gap-3">
           <div className="w-6 h-6 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
           <div>
@@ -37,11 +37,11 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
 
   if (error) {
     return (
-      <div className="text-center py-8 rounded-lg bg-[var(--danger)]/5 border border-[var(--danger)]/20">
+      <div className="text-center py-8 rounded bg-[var(--danger)]/5 border border-[var(--danger)]/20">
         <Icon name="alertTriangle" size={24} className="mx-auto mb-2 text-[var(--danger)]" />
         <p className="text-sm text-[var(--danger)]">{error}</p>
         {onRetry && (
-          <button onClick={onRetry} className="mt-3 px-4 py-2 text-sm bg-[var(--danger)]/10 text-[var(--danger)] rounded-lg hover:bg-[var(--danger)]/20 transition-colors">
+          <button onClick={onRetry} className="mt-3 px-4 py-2 text-sm bg-[var(--danger)]/10 text-[var(--danger)] rounded hover:bg-[var(--danger)]/20 transition-colors">
             Try Again
           </button>
         )}
@@ -51,12 +51,12 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
 
   if (!imageUrl || imageError) {
     return (
-      <div className="text-center py-12 rounded-lg bg-[var(--bg-surface)]">
+      <div className="text-center py-12 rounded bg-[var(--bg-surface)]">
         <Icon name="image" size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
         <p className="text-sm text-[var(--text-muted)]">No pre-generated diagram available</p>
         <p className="text-xs text-[var(--text-muted)] mt-1">Real AWS/GCP/Azure cloud icons</p>
         {onRetry && (
-          <button onClick={onRetry} className="mt-3 px-4 py-2 text-sm bg-[var(--accent)] text-white rounded-lg hover:opacity-90 transition-colors font-medium">
+          <button onClick={onRetry} className="mt-3 px-4 py-2 text-sm bg-[var(--accent)] text-white rounded hover:opacity-90 transition-colors font-medium">
             Generate Diagram
           </button>
         )}
@@ -75,7 +75,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
         <button onClick={resetView} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">1:1</button>
       </div>
       <div ref={containerRef}
-        className="rounded-lg select-none flex items-center justify-center"
+        className="rounded select-none flex items-center justify-center"
         style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', maxHeight: '70vh', minHeight: '300px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
         onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.15 : 0.15)), 5)); }}
         onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}

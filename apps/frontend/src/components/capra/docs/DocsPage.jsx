@@ -497,17 +497,17 @@ export default function DocsPage({ onBack }) {
   // Get page title and color
   const getPageConfig = () => {
     switch (activePage) {
-      case 'overview': return { title: 'Overview', color: '#2D8CFF' };
-      case 'coding': return { title: 'Data Structures & Algorithms', color: '#2D8CFF' };
-      case 'system-design': return { title: 'System Design', color: '#3b82f6' };
-      case 'low-level': return { title: 'Low Level Design', color: '#ec4899' };
-      case 'behavioral': return { title: 'Behavioral Interviews', color: '#a855f7' };
-      case 'microservices': return { title: 'Microservices Patterns', color: '#60A5FA' };
-      case 'databases': return { title: 'Databases & SQL', color: '#f59e0b' };
-      case 'projects': return { title: 'Projects', color: '#10b981' };
-      case 'roadmaps': return { title: 'Roadmaps', color: '#2D8CFF' };
-      case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
-      default: return { title: 'Documentation', color: '#2D8CFF' };
+      case 'overview': return { title: 'Overview', color: 'var(--text-primary)' };
+      case 'coding': return { title: 'Data Structures & Algorithms', color: 'var(--text-primary)' };
+      case 'system-design': return { title: 'System Design', color: 'var(--text-primary)' };
+      case 'low-level': return { title: 'Low Level Design', color: 'var(--text-primary)' };
+      case 'behavioral': return { title: 'Behavioral Interviews', color: 'var(--text-primary)' };
+      case 'microservices': return { title: 'Microservices Patterns', color: 'var(--text-primary)' };
+      case 'databases': return { title: 'Databases & SQL', color: 'var(--text-primary)' };
+      case 'projects': return { title: 'Projects', color: 'var(--text-primary)' };
+      case 'roadmaps': return { title: 'Roadmaps', color: 'var(--text-primary)' };
+      case 'eng-blogs': return { title: 'Engineering Blogs', color: 'var(--text-primary)' };
+      default: return { title: 'Documentation', color: 'var(--text-primary)' };
     }
   };
 
@@ -583,15 +583,15 @@ export default function DocsPage({ onBack }) {
   // ── Overview dashboard data ──
   const overviewCategories = (() => {
     const cats = [
-      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#2D8CFF', topics: codingTopics },
-      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
-      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#60A5FA', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', topics: [...databaseTopics, ...sqlTopics] },
-      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', topics: [...lldTopics, ...lldProblems] },
-      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', topics: projectTopics },
-      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#2D8CFF', topics: roadmapTopics },
-      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', topics: engBlogTopics },
-      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a855f7', topics: [...behavioralTopics, ...companyPrep] },
+      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: 'var(--text-primary)', topics: codingTopics },
+      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: 'var(--text-primary)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
+      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: 'var(--text-primary)', topics: microservicesPatterns },
+      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: 'var(--text-primary)', topics: [...databaseTopics, ...sqlTopics] },
+      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: 'var(--text-primary)', topics: [...lldTopics, ...lldProblems] },
+      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: 'var(--text-primary)', topics: projectTopics },
+      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: 'var(--text-primary)', topics: roadmapTopics },
+      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: 'var(--text-primary)', topics: engBlogTopics },
+      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep] },
     ];
     return cats.map(c => {
       const count = c.topics.length;
@@ -624,7 +624,7 @@ export default function DocsPage({ onBack }) {
               {isMobile && selectedTopic && (
                 <button
                   onClick={() => setSelectedTopic(null)}
-                  className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg font-semibold text-xs transition-colors"
+                  className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded font-semibold text-xs transition-colors"
                   style={{ color: 'var(--accent)', background: 'var(--accent-subtle)', border: '1px solid rgba(45,140,255,0.25)' }}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
@@ -674,13 +674,13 @@ export default function DocsPage({ onBack }) {
                 <div className="landing-root animate-fade-in">
                   <button
                     onClick={() => setSelectedTopic(null)}
-                    className="inline-flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--text-primary)] mb-4 transition-all hover:gap-2 group landing-body"
+                    className="inline-flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--text-primary)] mb-4 transition-colors hover:gap-2 group landing-body"
                   >
                     <Icon name="chevronLeft" size={18} className="transition-transform group-hover:-translate-x-0.5" />
                     <span>Back to {pageConfig.title}</span>
                   </button>
                   <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 rounded bg-[var(--bg-elevated)] flex items-center justify-center mb-4">
                       <Icon name="alertTriangle" size={32} className="text-[var(--text-muted)]" />
                     </div>
                     <h2 className="text-xl font-bold text-[var(--text-primary)] landing-display mb-2">Topic not found</h2>
@@ -689,7 +689,7 @@ export default function DocsPage({ onBack }) {
                     </p>
                     <button
                       onClick={() => setSelectedTopic(null)}
-                      className="px-6 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-sm rounded-lg transition-colors landing-body"
+                      className="px-6 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-sm rounded transition-colors landing-body"
                     >
                       Browse all topics
                     </button>
@@ -708,8 +708,8 @@ export default function DocsPage({ onBack }) {
                   {activePage === 'overview' && (
                     <>
                       {/* Hero Banner — frosted glass, single cyan tone */}
-                      <div className="relative mb-8 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                        <div className="rounded-[15px] p-6 md:p-8" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                      <div className="relative mb-8 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                        <div className="rounded-[15px] p-6 md:p-8" style={{ background: 'rgba(240,247,255,0.94)', }}>
                           <div>
                             <h1 className="font-extrabold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
                               Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
@@ -727,9 +727,9 @@ export default function DocsPage({ onBack }) {
                               { label: 'Categories', value: overviewCategories.length, icon: 'grid' },
                               { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp' },
                             ].map(stat => (
-                              <div key={stat.label} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}>
+                              <div key={stat.label} className="rounded p-4" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)' }}>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                     <Icon name={stat.icon} size={15} style={{ color: 'var(--accent)' }} />
                                   </div>
                                 </div>
@@ -753,15 +753,15 @@ export default function DocsPage({ onBack }) {
                             <a
                               key={cat.id}
                               href={`/capra/prepare/${cat.href}`}
-                              className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                              style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
+                              className="group relative rounded overflow-hidden transition-colors duration-300  "
+                              style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}
                             >
                               {/* Top accent bar */}
                               <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               <div className="p-4">
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <div className="w-10 h-10 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                       <Icon name={cat.icon} size={18} style={{ color: 'var(--accent)' }} />
                                     </div>
                                     <div>
@@ -775,7 +775,7 @@ export default function DocsPage({ onBack }) {
                                       <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(56,189,248,0.1)" strokeWidth="3" />
                                       <circle cx="24" cy="24" r={radius} fill="none" stroke="var(--accent)" strokeWidth="3"
                                         strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-                                        strokeLinecap="round" className="transition-all duration-1000" />
+                                        strokeLinecap="round" className="transition-colors duration-1000" />
                                     </svg>
                                     <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
                                       {cat.progress}%
@@ -784,7 +784,7 @@ export default function DocsPage({ onBack }) {
                                 </div>
                                 {/* Progress bar */}
                                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(34,211,238,0.08)' }}>
-                                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
+                                  <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                 </div>
                               </div>
                             </a>
@@ -796,7 +796,7 @@ export default function DocsPage({ onBack }) {
                       {/* Expedition Map — learning path */}
                       <div className="mb-8">
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Expedition Map</h2>
-                        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div className="rounded overflow-hidden" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
                           <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
@@ -805,8 +805,8 @@ export default function DocsPage({ onBack }) {
                               { step: 3, title: 'Frost Blueprints', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
                               { step: 4, title: 'Northern Lights', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
                             ].map((phase, idx) => (
-                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-5 transition-all hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
+                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-5 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
+                                <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
                                   <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
                                 {/* Arrow connector between steps */}
@@ -815,7 +815,7 @@ export default function DocsPage({ onBack }) {
                                     <Icon name="chevronRight" size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                 )}
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-2" style={{ background: 'rgba(56,189,248,0.06)' }}>
+                                <div className="w-7 h-7 rounded flex items-center justify-center mb-2" style={{ background: 'rgba(56,189,248,0.06)' }}>
                                   <Icon name={phase.icon} size={14} style={{ color: 'var(--accent)' }} />
                                 </div>
                                 <div className="text-sm font-bold mb-1 transition-colors" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{phase.title}</div>
@@ -838,13 +838,13 @@ export default function DocsPage({ onBack }) {
                             <a
                               key={resource.title}
                               href={resource.href}
-                              className="group rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                              style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
+                              className="group rounded overflow-hidden transition-colors duration-300  "
+                              style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}
                             >
                               <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
-                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                     <Icon name={resource.icon} size={18} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(34,211,238,0.08)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
@@ -874,13 +874,13 @@ export default function DocsPage({ onBack }) {
                           ].map((card) => (
                             <div
                               key={card.title}
-                              className="rounded-2xl overflow-hidden"
-                              style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
+                              className="rounded overflow-hidden"
+                              style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}
                             >
                               <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                <div className="w-9 h-9 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                   <Icon name={card.icon} size={18} style={{ color: 'var(--accent)' }} />
                                 </div>
                                 <div>
@@ -914,16 +914,16 @@ export default function DocsPage({ onBack }) {
                         return (
                           <div className="mb-8">
                             <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Continue Where You Left Off</h2>
-                            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                            <div className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                               <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                               {recentItems.map((topic) => (
                                 <a
                                   key={topic.id}
                                   href={`/capra/prepare?topic=${topic.id}`}
-                                  className="flex items-center justify-between px-5 py-3.5 hover:bg-[var(--bg-elevated)] transition-all border-b border-[var(--border)] last:border-0 group"
+                                  className="flex items-center justify-between px-5 py-3.5 hover:bg-[var(--bg-elevated)] transition-colors border-b border-[var(--border)] last:border-0 group"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                    <div className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                       <Icon name={topic.icon} size={16} style={{ color: 'var(--accent)' }} />
                                     </div>
                                     <span className="text-sm font-semibold text-[var(--text-primary)] landing-body group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -939,7 +939,7 @@ export default function DocsPage({ onBack }) {
                                         <Icon name="check" size={10} className="text-[var(--success)]" />
                                       </span>
                                     )}
-                                    <Icon name="chevronRight" size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                    <Icon name="chevronRight" size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                   </div>
                                 </a>
                               ))}
@@ -956,14 +956,14 @@ export default function DocsPage({ onBack }) {
 
                       {/* SQL Playground toggle */}
                       {(activePage === 'databases') && (
-                        <div className="flex items-center gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <div className="flex items-center gap-1 mt-5 p-1 rounded w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
-                            className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
+                            className="px-5 py-2.5 text-sm font-bold rounded transition-colors"
                             style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
-                            className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
+                            className="px-5 py-2.5 text-sm font-bold rounded transition-colors"
                             style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             SQL Playground
                           </button>
@@ -993,10 +993,10 @@ export default function DocsPage({ onBack }) {
                     ) : null;
 
                     return (
-                    <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--accent-subtle)] overflow-hidden">
+                    <div className="mb-4 rounded border border-[var(--border)] bg-[var(--accent-subtle)] overflow-hidden">
                       <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded bg-[var(--accent-subtle)] flex items-center justify-center flex-shrink-0">
                             <Icon name="target" size={16} className="text-[var(--accent)]" />
                           </div>
                           <div>
@@ -1011,7 +1011,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                         <button
                           onClick={clearJobFilter}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 landing-body"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 landing-body"
                         >
                           <Icon name="x" size={12} />
                           Show all topics
@@ -1028,7 +1028,7 @@ export default function DocsPage({ onBack }) {
                           <button
                             key={tab.key}
                             onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); setActiveSection(tab.key); }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
                           >
                             <Icon name={tab.icon} size={12} />
                             {tab.label}
@@ -1056,10 +1056,10 @@ export default function DocsPage({ onBack }) {
 
                   {/* Category Introduction Heroes */}
                   {activePage === 'coding' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="cpu" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1079,10 +1079,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'system-design' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="systemDesign" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1102,10 +1102,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'behavioral' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="users" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1125,10 +1125,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'low-level' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="layers" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1148,10 +1148,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'microservices' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="grid" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1171,10 +1171,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'databases' && !selectedTopic && !sqlPlaygroundOpen && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="database" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1194,10 +1194,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'projects' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="code" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1217,10 +1217,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'roadmaps' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="trendingUp" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1240,10 +1240,10 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'eng-blogs' && !selectedTopic && (
-                    <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', backdropFilter: 'blur(20px)' }}>
+                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'var(--accent)', padding: '1px' }}>
+                      <div className="rounded-[15px] p-6" style={{ background: 'rgba(240,247,255,0.94)', }}>
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                             <Icon name="bookOpen" size={28} style={{ color: 'var(--accent)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1275,14 +1275,14 @@ export default function DocsPage({ onBack }) {
                         placeholder="Search topics..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-all landing-body"
+                        className="w-full pl-9 pr-4 py-2 rounded text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-colors landing-body"
                       />
                     </div>
                     <div className="flex items-center gap-3">
                       <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value)}
-                        className="px-4 py-2 rounded-lg text-sm text-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] cursor-pointer landing-body"
+                        className="px-4 py-2 rounded text-sm text-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] cursor-pointer landing-body"
                       >
                         <option value="a-z">A - Z</option>
                         <option value="z-a">Z - A</option>
@@ -1300,7 +1300,7 @@ export default function DocsPage({ onBack }) {
               {activePage === 'coding' && (
                 <>
                   {/* All topics in a flat 2-column grid */}
-                  <div className="rounded-2xl overflow-hidden mb-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                  <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                     <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-3">
                     {filteredTopics.map((topic, idx) => {
@@ -1315,12 +1315,12 @@ export default function DocsPage({ onBack }) {
                             const completedCount = catTopics.filter(t => completedTopics[t.id]).length;
                             const progressPct = catTopics.length > 0 ? Math.round((completedCount / catTopics.length) * 100) : 0;
                             return (
-                              <div className="col-span-full px-3 py-2 flex items-center gap-3 rounded-lg" style={{ background: 'rgba(34,211,238,0.04)' }}>
+                              <div className="col-span-full px-3 py-2 flex items-center gap-3 rounded" style={{ background: 'rgba(34,211,238,0.04)' }}>
                                 <Icon name={category.icon} size={12} style={{ color: 'var(--accent)' }} />
                                 <span className="landing-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-semibold">{category.name}</span>
                                 <span className="landing-mono text-[10px] text-[var(--text-muted)]">{completedCount}/{catTopics.length}</span>
                                 <div className="flex-1 h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden max-w-[120px]">
-                                  <div className="h-full bg-[var(--accent)] rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                                  <div className="h-full bg-[var(--accent)] rounded-full transition-colors duration-500" style={{ width: `${progressPct}%` }} />
                                 </div>
                                 {progressPct === 100 && <span className="text-[10px] text-[var(--accent)] font-semibold">Done</span>}
                               </div>
@@ -1328,11 +1328,11 @@ export default function DocsPage({ onBack }) {
                           })()}
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${codingLocked ? 'opacity-60' : ''}`}
+                            className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${codingLocked ? 'opacity-60' : ''}`}
                             style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                 {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
@@ -1355,7 +1355,7 @@ export default function DocsPage({ onBack }) {
                                   {topic.keyQuestions?.length || 0}Q
                                 </span>
                               )}
-                              <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                              <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                             </div>
                           </div>
                         </div>
@@ -1375,7 +1375,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
-                      <div className="rounded-2xl overflow-hidden transition-colors" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                      <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                         <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                         <div className="px-4 py-3 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.06)' }}>
                           <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
@@ -1411,7 +1411,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
                       {/* Data Structure Selection Card */}
-                      <div className="rounded-2xl overflow-hidden transition-colors" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                      <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                         <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                         <div className="px-4 py-3 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.06)' }}>
                           <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
@@ -1464,7 +1464,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => systemDesignCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
@@ -1478,7 +1478,7 @@ export default function DocsPage({ onBack }) {
                                 <>
                                   <span className="text-[10px] landing-mono text-[var(--text-muted)]">{done}/{categoryTopics.length}</span>
                                   <div className="h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden max-w-[100px] flex-shrink-0">
-                                    <div className="h-full bg-[var(--accent)] rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                                    <div className="h-full bg-[var(--accent)] rounded-full transition-colors duration-500" style={{ width: `${pct}%` }} />
                                   </div>
                                 </>
                               );
@@ -1492,11 +1492,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
+                                className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -1508,7 +1508,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                               );
@@ -1545,11 +1545,11 @@ export default function DocsPage({ onBack }) {
                         'Hard': 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]',
                       };
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
+                        <div key={category.id} className="rounded overflow-hidden border-0">
                           {/* Category Header */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
-                              <Icon name={category.icon} size={14} style={{ color: category.color }} />
+                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
+                              <Icon name={category.icon} size={14} style={{ color: 'var(--text-primary)' }} />
                             </div>
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryDesigns.length} systems</span>
@@ -1563,7 +1563,7 @@ export default function DocsPage({ onBack }) {
                               return (
                                 <div
                                   key={design.id}
-                                  className={`group rounded-xl p-3 flex items-center justify-between transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-0 overflow-hidden ${designLocked ? 'opacity-60' : ''}`}
+                                  className={`group rounded p-3 flex items-center justify-between transition-colors duration-200   min-w-0 overflow-hidden ${designLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div
@@ -1573,7 +1573,7 @@ export default function DocsPage({ onBack }) {
                                     {getCompanyLogoSrc(design.id) ? (
                                       <CompanyLogo topicId={design.id} size={24} />
                                     ) : (
-                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                      <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                         <Icon name={design.icon} size={12} style={{ color: 'var(--accent)' }} />
                                       </div>
                                     )}
@@ -1622,7 +1622,7 @@ export default function DocsPage({ onBack }) {
                       if (categoryProblems.length === 0) return null;
                       // diffStyle is computed inline per-problem below
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -1637,14 +1637,14 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
-                                  className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                  className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     {getCompanyLogoSrc(problem.id) ? (
                                       <CompanyLogo topicId={problem.id} size={24} />
                                     ) : (
-                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                      <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                         <Icon name={problem.icon} size={12} style={{ color: 'var(--accent)' }} />
                                       </div>
                                     )}
@@ -1658,7 +1658,7 @@ export default function DocsPage({ onBack }) {
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>
                                       {problem.difficulty}
                                     </span>
-                                    <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                    <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                   </div>
                                 </div>
                               );
@@ -1685,7 +1685,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -1698,11 +1698,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                     <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -1711,7 +1711,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                             ))}
@@ -1737,7 +1737,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -1750,11 +1750,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                     <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -1763,7 +1763,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                             ))}
@@ -1789,7 +1789,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -1802,11 +1802,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                     <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -1815,7 +1815,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                             ))}
@@ -1841,7 +1841,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -1854,11 +1854,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                     <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -1867,7 +1867,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                             ))}
@@ -1888,19 +1888,19 @@ export default function DocsPage({ onBack }) {
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Concurrency & Multithreading</h2>
                       <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
-                    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                    <div className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                       <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                            className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                             style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${topic.color}12` }}>
-                                <Icon name={topic.icon} size={11} style={{ color: topic.color }} />
+                              <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
+                                <Icon name={topic.icon} size={11} style={{ color: 'var(--text-primary)' }} />
                               </div>
                               <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                             </div>
@@ -1908,7 +1908,7 @@ export default function DocsPage({ onBack }) {
                               <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                 {topic.concepts?.length || topic.primitives?.length || topic.problems?.length || 0} items
                               </span>
-                              <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                              <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                             </div>
                           </div>
                         ))}
@@ -1920,7 +1920,7 @@ export default function DocsPage({ onBack }) {
                   <div className="h-px bg-[var(--border)] mb-6" />
 
                   {/* Interview Framework */}
-                  <div className="rounded-2xl overflow-hidden p-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                  <div className="rounded overflow-hidden p-5" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Framework</span>
                       <h3 className="landing-display font-bold text-lg mt-1 tracking-tight text-[var(--text-primary)] flex items-center gap-2">
@@ -1935,7 +1935,7 @@ export default function DocsPage({ onBack }) {
                         { time: '20 min', step: 'High-Level', desc: 'Components, data flow, API design', num: '03' },
                         { time: '15 min', step: 'Deep Dive', desc: 'Database schema, scaling, trade-offs', num: '04' },
                       ].map((phase, i) => (
-                        <div key={i} className="group p-3 rounded-lg transition-all hover:shadow-sm" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(56,189,248,0.12)' }}>
+                        <div key={i} className="group p-3 rounded transition-colors " style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(56,189,248,0.12)' }}>
                           <span className="landing-mono text-2xl font-black transition-colors" style={{ color: 'var(--accent)' }}>
                             {phase.num}
                           </span>
@@ -1963,7 +1963,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => lldCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -1978,11 +1978,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
+                                className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -1994,7 +1994,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                               );
@@ -2021,7 +2021,7 @@ export default function DocsPage({ onBack }) {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2036,14 +2036,14 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
-                                  className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                  className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     {getCompanyLogoSrc(problem.id) ? (
                                       <CompanyLogo topicId={problem.id} size={24} />
                                     ) : (
-                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                                      <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                         <Icon name={problem.icon} size={12} style={{ color: 'var(--accent)' }} />
                                       </div>
                                     )}
@@ -2054,7 +2054,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>{problem.difficulty}</span>
-                                    <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                    <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                   </div>
                                 </div>
                               );
@@ -2081,7 +2081,7 @@ export default function DocsPage({ onBack }) {
                     const readinessPercent = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
                     const readinessLabel = readinessPercent === 0 ? 'Not Started' : readinessPercent < 25 ? 'Getting Started' : readinessPercent < 50 ? 'Building Momentum' : readinessPercent < 75 ? 'Strong Progress' : readinessPercent < 100 ? 'Almost Ready' : 'Fully Prepared';
                     return (
-                      <div className="rounded-2xl overflow-hidden mb-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                      <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                         <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                         <div className="px-5 py-4">
                           <div className="flex items-center justify-between mb-4">
@@ -2097,7 +2097,7 @@ export default function DocsPage({ onBack }) {
                           {/* Progress bar */}
                           <div className="w-full h-2 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(34,211,238,0.08)' }}>
                             <div
-                              className="h-full rounded-full transition-all duration-700 ease-out"
+                              className="h-full rounded-full transition-colors duration-700 ease-out"
                               style={{ width: `${readinessPercent}%`, background: 'var(--accent)' }}
                             />
                           </div>
@@ -2109,7 +2109,7 @@ export default function DocsPage({ onBack }) {
                               { value: companyCompleted, label: 'Companies', total: companyPrep.length },
                               { value: behavioralCategories.filter(cat => { const ct = behavioralTopics.filter(t => topicCategoryMap[t.id] === cat.id); return ct.length > 0 && ct.every(t => completedTopics[t.id]); }).length, label: 'Categories Done', total: behavioralCategories.length },
                             ].map((stat, i) => (
-                              <div key={i} className="text-center p-2.5 rounded-lg" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(56,189,248,0.1)' }}>
+                              <div key={i} className="text-center p-2.5 rounded" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(56,189,248,0.1)' }}>
                                 <div className="landing-mono text-lg font-bold" style={{ color: 'var(--accent)' }}>
                                   {stat.value}{stat.total !== null && <span className="text-[var(--text-muted)] text-sm">/{stat.total}</span>}
                                 </div>
@@ -2123,7 +2123,7 @@ export default function DocsPage({ onBack }) {
                   })()}
 
                   {/* STAR Method — Compact */}
-                  <div className="rounded-2xl overflow-hidden mb-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                  <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                     <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                     <div className="px-5 py-3">
                       <div className="flex items-center gap-2 mb-2">
@@ -2139,7 +2139,7 @@ export default function DocsPage({ onBack }) {
                           { icon: 'zap', title: 'Action', desc: 'Steps you took — use "I", own it', timing: '60%' },
                           { icon: 'trendingUp', title: 'Result', desc: 'Measurable outcomes & impact', timing: '15%' },
                         ].map((step, i) => (
-                          <div key={i} className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:shadow-sm transition-all" style={{ border: '1px solid rgba(56,189,248,0.12)', background: 'rgba(34,211,238,0.04)' }}>
+                          <div key={i} className="flex items-center gap-2.5 rounded px-3 py-2  transition-colors" style={{ border: '1px solid rgba(56,189,248,0.12)', background: 'rgba(34,211,238,0.04)' }}>
                             <span className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={step.icon} size={14} style={{ color: 'var(--accent)' }} />
                             </span>
@@ -2177,7 +2177,7 @@ export default function DocsPage({ onBack }) {
                       const catCompleted = categoryTopics.filter(t => completedTopics[t.id]).length;
                       const catPercent = Math.round((catCompleted / categoryTopics.length) * 100);
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
@@ -2192,7 +2192,7 @@ export default function DocsPage({ onBack }) {
                                 </span>
                               )}
                               <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(34,211,238,0.08)' }}>
-                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${catPercent}%`, background: 'var(--accent)' }} />
+                                <div className="h-full rounded-full transition-colors duration-500" style={{ width: `${catPercent}%`, background: 'var(--accent)' }} />
                               </div>
                             </div>
                           </div>
@@ -2202,11 +2202,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2218,7 +2218,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {topic.keyQuestions?.length || topic.sampleQuestions?.length || 0}Q
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                             ))}
@@ -2244,12 +2244,12 @@ export default function DocsPage({ onBack }) {
                         <div
                           key={company.id}
                           onClick={() => setSelectedTopic(company.id)}
-                          className={`group rounded-2xl transition-all cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-[var(--success)]/30' : ''}`}
-                          style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: completedTopics[company.id] ? undefined : '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
+                          className={`group rounded transition-colors cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-[var(--success)]/30' : ''}`}
+                          style={{ background: 'rgba(255,255,255,0.75)', border: completedTopics[company.id] ? undefined : '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 relative" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                              <div className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0 relative" style={{ background: 'rgba(34,211,238,0.1)' }}>
                                 <Icon name={company.icon} size={16} style={{ color: 'var(--accent)' }} />
                                 {completedTopics[company.id] && (
                                   <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--success)] flex items-center justify-center">
@@ -2301,9 +2301,9 @@ export default function DocsPage({ onBack }) {
                         { icon: 'layers', title: '8-10 Stories Ready', desc: 'Diverse stories that flex across question types and company values.', metric: 'Story Bank' },
                         { icon: 'target', title: 'Quantify Everything', desc: 'Revenue, percentages, users impacted, time saved — numbers stick.', metric: 'Data > Words' },
                       ].map((tip, i) => (
-                        <div key={i} className="rounded-2xl transition-all p-4 group hover:shadow-lg hover:-translate-y-0.5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={i} className="rounded transition-colors p-4 group  " style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{ background: 'rgba(34,211,238,0.1)' }}>
+                            <div className="w-8 h-8 rounded flex items-center justify-center transition-colors" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={tip.icon} size={14} style={{ color: 'var(--accent)' }} />
                             </div>
                             <span className="text-[10px] landing-mono font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--accent)', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(56,189,248,0.15)' }}>{tip.metric}</span>
@@ -2330,7 +2330,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2343,11 +2343,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className="group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                                className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2359,7 +2359,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                             ))}
@@ -2381,7 +2381,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => databaseCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2396,11 +2396,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
+                                className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2412,7 +2412,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                               );
@@ -2427,7 +2427,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => sqlCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'rgba(34,211,238,0.1)' }}>
                               <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2442,11 +2442,11 @@ export default function DocsPage({ onBack }) {
                               <div
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
-                                className={`group rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${locked ? 'opacity-60' : ''}`}
+                                className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(34,211,238,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2458,7 +2458,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
                                   </span>
-                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
                               );
@@ -2486,7 +2486,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => projectCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2502,7 +2502,7 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative rounded-xl p-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
@@ -2528,7 +2528,7 @@ export default function DocsPage({ onBack }) {
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
                                       {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
-                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -2557,7 +2557,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => roadmapCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2573,7 +2573,7 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative rounded-xl p-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
@@ -2596,7 +2596,7 @@ export default function DocsPage({ onBack }) {
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
                                       {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
-                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -2625,7 +2625,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => engBlogCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--accent)', border: '1px solid var(--border)' }}>
                           <div className="h-0.5" style={{ background: 'var(--accent)' }} />
                           <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'rgba(34,211,238,0.04)' }}>
                             <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2641,7 +2641,7 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative rounded-xl p-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(56,189,248,0.08)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
@@ -2666,7 +2666,7 @@ export default function DocsPage({ onBack }) {
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
                                       {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
-                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -2699,7 +2699,7 @@ export default function DocsPage({ onBack }) {
                     <button
                       key={topicId}
                       onClick={() => setSelectedTopic(topicId)}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-xs text-left text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all landing-body"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-xs text-left text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors landing-body"
                     >
                       <Icon name="star5" size={10} className="text-[var(--accent)] flex-shrink-0" />
                       <span className="truncate">{t.title}</span>

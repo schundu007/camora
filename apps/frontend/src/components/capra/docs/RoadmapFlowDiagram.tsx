@@ -15,11 +15,7 @@ interface RoadmapFlowDiagramProps {
   color?: string;
 }
 
-const PHASE_COLORS = [
-  '#2D8CFF', '#60A5FA', '#06b6d4', '#ec4899', '#f59e0b',
-  '#10b981', '#3b82f6', '#ef4444', '#14b8a6', '#a855f7',
-  '#2D8CFF', '#06b6d4',
-];
+const PHASE_COLORS = ['var(--accent)'];
 
 export default function RoadmapFlowDiagram({ title, phases, color }: RoadmapFlowDiagramProps) {
   if (!phases || phases.length === 0) return null;
@@ -69,10 +65,10 @@ export default function RoadmapFlowDiagram({ title, phases, color }: RoadmapFlow
   }
 
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
+    <div className="rounded overflow-hidden border border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
       {/* Header */}
       <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2" style={{ background: 'var(--bg-elevated)' }}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={color || '#2D8CFF'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={color || 'var(--accent)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 8h4l2-6 2 12 2-6h4" />
         </svg>
         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
