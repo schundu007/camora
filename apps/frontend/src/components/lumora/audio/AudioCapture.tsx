@@ -349,64 +349,218 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     );
   }
 
+  return <UnifiedMicButton
+    continuousMode={continuousMode}
+    storeIsRecording={storeIsRecording}
+    audioLevel={audioLevel}
+    handleToggle={handleToggle}
+    handleModeToggle={handleModeToggle}
+  />;
+}
+
+/**
+ * Single mic control replacing the old Live/Manual mode selector.
+ *
+ *   Short tap   → one-shot recording (start / stop)
+ *   Long press  → toggle continuous "Auto" listening (Sona keeps
+ *                 listening, filters non-questions automatically,
+ *                 fires the LLM only on real interview questions)
+ *
+ * Visual states:
+ *   idle        — hollow mic, muted color
+ *   one-shot    — filled mic, accent color, pulsing ring
+ *   auto on     — filled mic + "AUTO" pill, accent color, steady glow
+ *   long-press  — ring fills around the button while held
+ */
+function UnifiedMicButton({
+  continuousMode, storeIsRecording, audioLevel,
+  handleToggle, handleModeToggle,
+}: {
+  continuousMode: boolean;
+  storeIsRecording: boolean;
+  audioLevel: number;
+  handleToggle: () => void;
+  handleModeToggle: () => void;
+}) {
+  const LONG_PRESS_MS = 550;
+  const pressStartRef = useRef<number | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+  const [pressProgress, setPressProgress] = useState(0); // 0..1 while held
+
+  const beginPress = useCallback(() => {
+    longPressFiredRef.current = false;
+    pressStartRef.current = performance.now();
+    setPressProgress(0);
+
+    // Animate the progress ring
+    const tick = () => {
+      if (pressStartRef.current == null) return;
+      const elapsed = performance.now() - pressStartRef.current;
+      const p = Math.min(1, elapsed / LONG_PRESS_MS);
+      setPressProgress(p);
+      if (p < 1) longPressTimerRef.current = requestAnimationFrame(tick);
+    };
+    longPressTimerRef.current = requestAnimationFrame(tick);
+
+    // Fire the long-press action when the threshold is hit
+    window.setTimeout(() => {
+      if (pressStartRef.current != null) {
+        longPressFiredRef.current = true;
+        handleModeToggle(); // enable / disable continuous mode
+      }
+    }, LONG_PRESS_MS);
+  }, [handleModeToggle]);
+
+  const endPress = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      cancelAnimationFrame(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    const wasLongPress = longPressFiredRef.current;
+    pressStartRef.current = null;
+    setPressProgress(0);
+    // Short tap → one-shot toggle (only if we didn't already fire the
+    // long-press handler and we aren't currently in continuous mode —
+    // in continuous, the long press itself is the toggle).
+    if (!wasLongPress && !continuousMode) handleToggle();
+  }, [continuousMode, handleToggle]);
+
+  const cancelPress = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      cancelAnimationFrame(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    pressStartRef.current = null;
+    setPressProgress(0);
+  }, []);
+
+  const isLive = continuousMode;
+  const isRec = !continuousMode && storeIsRecording;
+
   return (
-    <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
-      {/* Mode Selector — unified monochrome */}
-      <div className="flex items-center rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid var(--border)' }}>
+    <div className="flex items-center gap-2 shrink-0">
+      {/* The button itself */}
+      <div className="relative inline-flex">
+        {/* Long-press progress ring */}
+        {pressProgress > 0 && (
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width="32" height="32" viewBox="0 0 32 32"
+          >
+            <circle
+              cx="16" cy="16" r="14.5"
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="1.5"
+              strokeDasharray={2 * Math.PI * 14.5}
+              strokeDashoffset={(1 - pressProgress) * 2 * Math.PI * 14.5}
+              transform="rotate(-90 16 16)"
+              style={{ transition: 'none' }}
+            />
+          </svg>
+        )}
+
         <button
-          onClick={() => { if (!continuousMode) handleModeToggle(); }}
-          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
-          style={continuousMode
-            ? { background: 'var(--accent-subtle)', color: 'var(--accent)' }
-            : { color: 'var(--text-muted)' }}
-          title="Live: always listening, auto-restarts"
+          type="button"
+          onMouseDown={beginPress}
+          onMouseUp={endPress}
+          onMouseLeave={cancelPress}
+          onTouchStart={(e) => { e.preventDefault(); beginPress(); }}
+          onTouchEnd={(e) => { e.preventDefault(); endPress(); }}
+          onTouchCancel={cancelPress}
+          className="relative flex items-center justify-center rounded-full transition-all"
+          style={{
+            width: 32,
+            height: 32,
+            background: isLive || isRec ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+            border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
+            color: isLive || isRec ? 'var(--accent)' : 'var(--text-muted)',
+            boxShadow: isLive ? '0 0 0 3px rgba(41,181,232,0.18)' : 'none',
+          }}
+          aria-pressed={isLive || isRec}
+          title={
+            isLive
+              ? 'Sona is listening — long-press to stop Auto'
+              : isRec
+                ? 'Recording — tap to stop · long-press for Auto'
+                : 'Tap to record one answer · long-press for Auto (always listening)'
+          }
         >
-          <LiveIcon isActive={continuousMode} />
-          <span className="hidden xl:inline">Live</span>
-        </button>
-        <button
-          onClick={() => { if (continuousMode) handleModeToggle(); }}
-          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
-          style={!continuousMode
-            ? { background: 'var(--accent-subtle)', color: 'var(--accent)', borderLeft: '1px solid var(--border)' }
-            : { color: 'var(--text-muted)', borderLeft: '1px solid var(--border)' }}
-          title="Manual: press Cmd+M to start/stop"
-        >
-          <MicIcon isActive={!continuousMode && storeIsRecording} />
-          <span className="hidden xl:inline">Manual</span>
+          {isLive ? (
+            // Live: filled sound-wave / auto glyph
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="2" y="10" width="2" height="4" rx="1" />
+              <rect x="6" y="6" width="2" height="12" rx="1" />
+              <rect x="10" y="2" width="2" height="20" rx="1" />
+              <rect x="14" y="6" width="2" height="12" rx="1" />
+              <rect x="18" y="10" width="2" height="4" rx="1" />
+            </svg>
+          ) : isRec ? (
+            // Recording: filled pause bars
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+          ) : (
+            // Idle: outlined mic
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="22" />
+            </svg>
+          )}
+
+          {/* Pulsing halo when actively recording */}
+          {(isLive || isRec) && (
+            <span
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                border: '1px solid var(--accent)',
+                animation: 'mic-pulse 1.4s ease-out infinite',
+                opacity: 0.6,
+              }}
+            />
+          )}
         </button>
       </div>
 
-      {/* Audio level bars */}
-      <div className="flex items-center gap-0.5 shrink-0">
+      {/* AUTO badge — only while continuous mode is on */}
+      {isLive && (
+        <span
+          className="text-[9px] font-bold uppercase tracking-[0.16em] px-1.5 py-0.5 rounded"
+          style={{
+            color: 'var(--accent)',
+            background: 'var(--accent-subtle)',
+            border: '1px solid var(--accent)',
+            fontFamily: 'var(--font-mono)',
+          }}
+          title="Auto mode — Sona listens continuously and answers every detected question. Long-press mic to turn off."
+        >
+          AUTO
+        </span>
+      )}
+
+      {/* Audio-level bars */}
+      <div className="flex items-center gap-0.5 shrink-0" aria-hidden="true">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.02 ? 'bg-[var(--accent)]' : 'bg-[var(--bg-surface)]/10'}`}
-            style={{ height: `${6 + i * 2}px` }} />
+          <div
+            key={i}
+            className="w-0.5 rounded-full transition-all duration-75"
+            style={{
+              height: `${6 + i * 2}px`,
+              background: audioLevel > i * 0.02 ? 'var(--accent)' : 'rgba(148,163,184,0.25)',
+            }}
+          />
         ))}
       </div>
 
-      {/* Mic selector moved to Header — no longer rendered here */}
-
-      {/* Record/Pause — Manual only */}
-      {!continuousMode && (
-        <button
-          onClick={handleToggle}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
-          style={storeIsRecording
-            ? { background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--border)' }
-            : { background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-          title={storeIsRecording ? 'Pause (⌘M)' : 'Record (⌘M)'}
-        >
-          {storeIsRecording ? (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-          ) : (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
-          )}
-          <span className="hidden xl:inline">{storeIsRecording ? 'Pause' : 'Record'}</span>
-        </button>
-      )}
-
-      {/* Voice enrollment + Calibrate moved to Settings (gear icon) */}
+      <style>{`
+        @keyframes mic-pulse {
+          0% { transform: scale(1); opacity: 0.6; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
