@@ -11,7 +11,7 @@ export function ComparisonCard({ comparison }) {
   // Table format (headers + rows)
   if (headers && rows) {
     return (
-      <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+      <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
         <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
           <Icon name="columns" size={14} className="text-[var(--accent)]" />
           <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{title}</h3>
@@ -49,7 +49,7 @@ export function ComparisonCard({ comparison }) {
   // Side-by-side format (left + right)
   if (!left || !right) return null;
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="columns" size={14} className="text-[var(--accent)]" />
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{title}</h3>
@@ -95,7 +95,7 @@ export function CheatSheetCard({ card }) {
   const cardColor = card.color || 'var(--accent)';
   const hasBarData = card.items?.[0]?.bar !== undefined;
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
         {card.icon && <Icon name={card.icon} size={14} className="text-[var(--text-muted)]" />}
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{card.title}</h3>
@@ -108,14 +108,14 @@ export function CheatSheetCard({ card }) {
               <span className="text-xs text-[var(--text-secondary)] landing-body w-[45%] flex-shrink-0 truncate" title={item.label}>{item.label}</span>
               <div className="flex-1 h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden relative">
                 <div
-                  className="h-full rounded-full transition-all duration-500 ease-out bg-[var(--accent)]"
+                  className="h-full rounded-full transition-colors duration-500 ease-out bg-[var(--accent)]"
                   style={{ width: `${Math.max(item.bar || 0, 3)}%` }}
                 />
               </div>
               <span className="text-[10px] landing-mono font-semibold text-[var(--text-muted)] w-[25%] flex-shrink-0 text-right">{item.value}</span>
             </div>
           ) : (
-            <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">
+            <div key={i} className="flex items-start gap-2.5 p-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
               <span className="text-sm font-semibold text-[var(--text-primary)] landing-mono whitespace-nowrap">{item.label}</span>
               <span className="text-sm text-[var(--text-secondary)] landing-body">{item.description || item.value}</span>
             </div>
@@ -136,7 +136,7 @@ export function EvolutionTimeline({ steps }) {
   const stepColor = current?.color || 'var(--accent)';
 
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="trendingUp" size={14} className="text-[var(--accent)]" />
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Architecture Evolution</h3>
@@ -148,7 +148,7 @@ export function EvolutionTimeline({ steps }) {
         <div className="flex items-center gap-0 relative">
           <div className="absolute top-[14px] left-4 right-4 h-0.5 bg-[var(--bg-elevated)] z-0" />
           <div
-            className="absolute top-[14px] left-4 h-0.5 z-[1] transition-all duration-300 bg-[var(--accent)]"
+            className="absolute top-[14px] left-4 h-0.5 z-[1] transition-colors duration-300 bg-[var(--accent)]"
             style={{ width: `${(activeStep / Math.max(steps.length - 1, 1)) * (100 - (8 / steps.length))}%` }}
           />
           {steps.map((s, i) => (
@@ -158,7 +158,7 @@ export function EvolutionTimeline({ steps }) {
               className="flex-1 flex flex-col items-center gap-1.5 z-10 group"
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2"
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-200 border-2"
                 style={{
                   background: i <= activeStep ? 'var(--accent)' : '#f7f8f9',
                   borderColor: i <= activeStep ? 'var(--accent)' : '#e3e8ee',
@@ -248,7 +248,7 @@ export function EvolutionTimeline({ steps }) {
               <img
                 src={current.diagram}
                 alt={`${current.title} architecture`}
-                className="w-full rounded-lg border border-[var(--border)]"
+                className="w-full rounded border border-[var(--border)]"
                 loading="lazy"
               />
             </div>
@@ -264,7 +264,7 @@ export function EvolutionTimeline({ steps }) {
 export function PatternCard({ pattern }) {
   return (
     <div
-      className="rounded-lg p-2.5 border border-[var(--border)] hover:border-[var(--border)] transition-all bg-[var(--bg-surface)] hover:shadow-sm group"
+      className="rounded p-2.5 border border-[var(--border)] hover:border-[var(--border)] transition-colors bg-[var(--bg-surface)]  group"
     >
       <div className="flex items-start gap-2.5">
         <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
@@ -291,7 +291,7 @@ export function PatternCard({ pattern }) {
 // Grid wrapper for multiple pattern cards
 export function PatternCardGrid({ patterns, title = 'Design Patterns' }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="puzzle" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
@@ -343,18 +343,18 @@ export function StaticDiagram({ diagram }) {
   if (error && !isCloudDiagram) return null;
 
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="layers" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{diagram.title}</h3>
         {/* Cloud Provider Tabs */}
         {isCloudDiagram && (
-          <div className="flex items-center gap-1 ml-auto px-1 py-0.5 rounded-lg bg-[var(--bg-elevated)]">
+          <div className="flex items-center gap-1 ml-auto px-1 py-0.5 rounded bg-[var(--bg-elevated)]">
             {CLOUD_PROVIDERS.map(p => (
               <button
                 key={p.id}
                 onClick={() => handleProviderChange(p.id)}
-                className="px-2 py-0.5 text-[10px] font-bold rounded transition-all landing-mono"
+                className="px-2 py-0.5 text-[10px] font-bold rounded transition-colors landing-mono"
                 style={{
                   background: provider === p.id ? `${p.color}20` : 'transparent',
                   color: provider === p.id ? p.color : '#9ca3af',
@@ -375,12 +375,12 @@ export function StaticDiagram({ diagram }) {
       )}
       <div className="p-3">
         {!loaded && !error && (
-          <div className="w-full h-48 bg-[var(--bg-elevated)] rounded-lg animate-pulse flex items-center justify-center">
+          <div className="w-full h-48 bg-[var(--bg-elevated)] rounded animate-pulse flex items-center justify-center">
             <Icon name="loader" size={20} className="text-[var(--text-muted)] animate-spin" />
           </div>
         )}
         {error && isCloudDiagram && (
-          <div className="w-full h-32 bg-[var(--bg-elevated)] rounded-lg flex items-center justify-center text-[var(--text-muted)] text-xs landing-mono">
+          <div className="w-full h-32 bg-[var(--bg-elevated)] rounded flex items-center justify-center text-[var(--text-muted)] text-xs landing-mono">
             {CLOUD_PROVIDERS.find(p => p.id === provider)?.label} diagram not available
           </div>
         )}
@@ -388,7 +388,7 @@ export function StaticDiagram({ diagram }) {
           key={currentSrc}
           src={currentSrc}
           alt={`${diagram.title} — ${provider.toUpperCase()}`}
-          className={`rounded-lg transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'} ${diagram.type === 'ui' ? 'max-h-[320px] mx-auto' : 'w-full'}`}
+          className={`rounded transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'} ${diagram.type === 'ui' ? 'max-h-[320px] mx-auto' : 'w-full'}`}
           style={diagram.type === 'ui' ? { width: 'auto', maxHeight: '320px' } : { maxHeight: '500px', objectFit: 'contain', width: '100%' }}
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
@@ -426,7 +426,7 @@ export function FlowchartCard({ flowchart }) {
   const hasDiagram = flowchart.src && !imgError;
 
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="gitBranch" size={14} className="text-[var(--accent)]" />
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display flex-1">{flowchart.title}</h3>
@@ -447,12 +447,12 @@ export function FlowchartCard({ flowchart }) {
         {hasDiagram && (
           <div className="flex justify-center">
             {!imgLoaded && (
-              <div className="w-full h-40 bg-[var(--bg-elevated)] rounded-lg animate-pulse" />
+              <div className="w-full h-40 bg-[var(--bg-elevated)] rounded animate-pulse" />
             )}
             <img
               src={flowchart.src}
               alt={flowchart.title}
-              className={`rounded-lg border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+              className={`rounded border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
               style={{ maxHeight: '320px', maxWidth: '100%', objectFit: 'contain' }}
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
@@ -489,7 +489,7 @@ export function ChartCard({ chart }) {
   const isReadWriteChart = chart.data?.[0]?.read !== undefined;
 
   return (
-    <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="barChart" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{chart.title}</h3>
@@ -509,7 +509,7 @@ export function ChartCard({ chart }) {
                   <span className="text-xs text-[var(--text-secondary)] landing-body w-24 flex-shrink-0 truncate">{d.label}</span>
                   <div className="flex-1 h-6 rounded bg-[var(--bg-elevated)] overflow-hidden relative">
                     <div
-                      className="h-full rounded transition-all duration-500"
+                      className="h-full rounded transition-colors duration-500"
                       style={{ width: `${Math.max(logWidth, 4)}%`, background: d.color }}
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] landing-mono font-semibold text-[var(--text-muted)]">
@@ -553,12 +553,12 @@ export function ChartCard({ chart }) {
         {chart.src && !imgError && (
           <>
             {!imgLoaded && !imgError && (
-              <div className="w-full h-32 bg-[var(--bg-elevated)] rounded-lg animate-pulse" />
+              <div className="w-full h-32 bg-[var(--bg-elevated)] rounded animate-pulse" />
             )}
             <img
               src={chart.src}
               alt={chart.title}
-              className={`w-full rounded-lg border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+              className={`w-full rounded border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
               loading="lazy"

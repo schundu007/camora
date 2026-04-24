@@ -34,7 +34,7 @@ function timeAgo(date: string): string {
 
 function Avatar({ name, image, size = 28 }: { name: string | null; image: string | null; size?: number }) {
   const initial = (name || '?')[0].toUpperCase();
-  const colors = ['#2D8CFF', '#60A5FA', '#a855f7', '#ec4899', '#f43f5e', '#ef4444', '#2D8CFF', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
+  const colors = ['var(--accent)'];
   const colorIndex = (name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
 
   if (image) {
@@ -156,7 +156,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
 
   return (
     <div
-      className="rounded-xl p-5 mt-6"
+      className="rounded p-5 mt-6"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
       {/* Header */}
@@ -176,7 +176,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
 
           {replyTo && (
             <div
-              className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg text-xs"
+              className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded text-xs"
               style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
             >
               <span>Replying to <strong style={{ color: 'var(--text-secondary)' }}>{replyTo.user_name || 'Anonymous'}</strong></span>
@@ -198,7 +198,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
             onChange={e => setContent(e.target.value)}
             placeholder="Share your thoughts..."
             rows={3}
-            className="w-full rounded-lg px-3 py-2.5 text-sm landing-body resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 transition-shadow"
+            className="w-full rounded px-3 py-2.5 text-sm landing-body resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 transition-shadow"
             style={{
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
@@ -210,7 +210,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
             <button
               type="submit"
               disabled={!content.trim() || submitting}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium text-white transition-opacity disabled:opacity-40 landing-body"
+              className="px-4 py-1.5 rounded text-sm font-medium text-white transition-opacity disabled:opacity-40 landing-body"
               style={{ background: 'var(--accent)' }}
             >
               {submitting ? 'Posting...' : 'Post'}

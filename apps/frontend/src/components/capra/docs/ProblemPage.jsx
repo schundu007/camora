@@ -51,7 +51,7 @@ function TestCase({ testCase, index, isActive, onClick, result }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+      className={`px-4 py-2 rounded text-sm font-medium transition-colors border ${
         isActive
           ? 'bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/30'
           : statusColor
@@ -85,12 +85,12 @@ function CodeBlock({ code, language }) {
     <div className="relative group">
       <button
         onClick={copyCode}
-        className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-gray-700/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 touch:opacity-100 text-sm flex items-center gap-2"
+        className="absolute top-3 right-3 px-3 py-1.5 rounded bg-gray-700/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100 touch:opacity-100 text-sm flex items-center gap-2"
       >
         <Icon name={copied ? 'check' : 'copy'} size={14} />
         {copied ? 'Copied!' : 'Copy'}
       </button>
-      <pre className="bg-[#0d1117] rounded-lg p-5 overflow-x-auto border border-[var(--border)]">
+      <pre className="bg-[#0d1117] rounded p-5 overflow-x-auto border border-[var(--border)]">
         <code className="text-sm leading-relaxed font-mono text-gray-300 whitespace-pre">
           {code}
         </code>
@@ -104,20 +104,20 @@ function CodeBlock({ code, language }) {
  */
 function ExampleBlock({ example, index }) {
   return (
-    <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border)] overflow-hidden">
+    <div className="bg-[var(--bg-surface)] rounded border border-[var(--border)] overflow-hidden">
       <div className="px-4 py-2.5 bg-gray-800/30 border-b border-[var(--border)]">
         <span className="text-base font-semibold text-[var(--text-primary)]">Example {index + 1}</span>
       </div>
       <div className="p-4 space-y-3">
         <div>
           <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
-          <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
+          <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
             {example.input}
           </pre>
         </div>
         <div>
           <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Output</span>
-          <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
+          <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
             {example.output}
           </pre>
         </div>
@@ -139,7 +139,7 @@ function HintCard({ hint, index }) {
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border)] overflow-hidden">
+    <div className="bg-[var(--bg-surface)] rounded border border-[var(--border)] overflow-hidden">
       <button
         onClick={() => setRevealed(!revealed)}
         className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors"
@@ -337,7 +337,7 @@ export default function ProblemPage({ slug, onBack }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-800 rounded transition-colors"
               >
                 <Icon name="arrowLeft" size={18} className="text-[var(--text-muted)]" />
               </button>
@@ -355,7 +355,7 @@ export default function ProblemPage({ slug, onBack }) {
                   href={problem.leetcodeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Icon name="externalLink" size={14} />
                   LeetCode
@@ -437,7 +437,7 @@ export default function ProblemPage({ slug, onBack }) {
                         ))}
                       </div>
                     ) : problem.isDynamic ? (
-                      <div className="bg-gray-800/50 border border-[var(--border)] rounded-lg p-5 text-center">
+                      <div className="bg-gray-800/50 border border-[var(--border)] rounded p-5 text-center">
                         <Icon name="externalLink" size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
                         <p className="text-gray-300 mb-4">
                           This problem is not in our practice database yet.
@@ -446,7 +446,7 @@ export default function ProblemPage({ slug, onBack }) {
                           href={`https://leetcode.com/problemset/?search=${encodeURIComponent(problem.name)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+                          className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] rounded font-medium transition-colors inline-flex items-center gap-2"
                         >
                           <Icon name="externalLink" size={16} />
                           Find on LeetCode
@@ -472,7 +472,7 @@ export default function ProblemPage({ slug, onBack }) {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 pt-2">
                       {problem.tags.map((tag, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-gray-800 text-[var(--text-muted)] text-xs rounded-lg">
+                        <span key={i} className="px-2.5 py-1 bg-gray-800 text-[var(--text-muted)] text-xs rounded">
                           {tag}
                         </span>
                       ))}
@@ -488,7 +488,7 @@ export default function ProblemPage({ slug, onBack }) {
                         <button
                           key={key}
                           onClick={() => setSelectedLanguage(key)}
-                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                             selectedLanguage === key
                               ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
                               : 'bg-gray-800/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800 border border-transparent'
@@ -501,7 +501,7 @@ export default function ProblemPage({ slug, onBack }) {
 
                     {/* Approach */}
                     {problem.approach && (
-                      <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border)] p-5">
+                      <div className="bg-[var(--bg-surface)] rounded border border-[var(--border)] p-5">
                         <h3 className="text-base font-semibold text-[var(--text-primary)] mb-3">Approach</h3>
                         <div className="prose prose-invert prose-sm max-w-none">
                           {problem.approach.split('\n').map((line, i) => {
@@ -674,13 +674,13 @@ export default function ProblemPage({ slug, onBack }) {
                               <div className="space-y-3">
                                 <div>
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
-                                  <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
+                                  <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
                                     {problem.examples[activeTestCase].input}
                                   </pre>
                                 </div>
                                 <div>
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Expected Output</span>
-                                  <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
+                                  <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
                                     {problem.examples[activeTestCase].output}
                                   </pre>
                                 </div>
@@ -702,7 +702,7 @@ export default function ProblemPage({ slug, onBack }) {
                         {output ? (
                           <>
                             {output.summary ? (
-                              <div className={`p-4 rounded-lg ${output.success ? 'bg-[var(--success)]/10 border border-[var(--success)]/30' : 'bg-[var(--danger)]/10 border border-[var(--danger)]/30'}`}>
+                              <div className={`p-4 rounded ${output.success ? 'bg-[var(--success)]/10 border border-[var(--success)]/30' : 'bg-[var(--danger)]/10 border border-[var(--danger)]/30'}`}>
                                 <div className="flex items-center gap-2">
                                   <Icon name={output.success ? 'check' : 'x'} size={20} className={output.success ? 'text-[var(--success)]' : 'text-[var(--danger)]'} />
                                   <span className={`text-lg font-semibold ${output.success ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
@@ -719,7 +719,7 @@ export default function ProblemPage({ slug, onBack }) {
                                 {output.input && (
                                   <div>
                                     <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
-                                    <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
+                                    <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
                                       {output.input}
                                     </pre>
                                   </div>
@@ -728,14 +728,14 @@ export default function ProblemPage({ slug, onBack }) {
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">
                                     {output.success ? 'Output' : 'Error'}
                                   </span>
-                                  <pre className={`mt-1.5 bg-[#0d1117] rounded-lg p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-gray-300' : 'text-red-400'}`}>
+                                  <pre className={`mt-1.5 bg-[#0d1117] rounded p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-gray-300' : 'text-red-400'}`}>
                                     {output.output}
                                   </pre>
                                 </div>
                                 {output.expected && (
                                   <div>
                                     <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Expected</span>
-                                    <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
+                                    <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
                                       {output.expected}
                                     </pre>
                                   </div>
