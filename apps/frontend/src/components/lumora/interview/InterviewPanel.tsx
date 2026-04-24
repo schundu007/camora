@@ -4,6 +4,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
 import { AnswerBlocks } from './AnswerBlocks';
 import { StreamingAnswer } from './StreamingAnswer';
+import { dialogConfirm } from '@/components/shared/Dialog';
 
 function isDesignBlocks(blocks: any): boolean {
   if (!blocks) return false;
@@ -100,9 +101,10 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                   type="button"
                   aria-label="Delete session"
                   title="Delete session"
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
-                    if (confirm('Delete this session?')) removeHistoryEntry(idx);
+                    const ok = await dialogConfirm({ title: 'Delete session?', message: 'This will permanently remove the question and its stored answer from your history.', confirmLabel: 'Delete', tone: 'danger' });
+                    if (ok) removeHistoryEntry(idx);
                   }}
                   className="flex items-center justify-center w-7 h-7 rounded-md shrink-0 transition-colors hover:bg-red-50"
                   style={{ color: '#94A3B8', border: '1px solid #E2E8F0' }}

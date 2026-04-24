@@ -933,7 +933,33 @@ function HistoryAnswerViewer({
   entry: { question: string; blocks: ParsedBlock[]; timestamp: Date | string };
   onClose: () => void;
 }) {
-  const blocks = Array.isArray(entry.blocks) ? entry.blocks : [];
+  // Normalize legacy coding entries where `blocks` was stored as the raw
+  // { json: {...}, format: 'ascend_json' } payload from the coding backend
+  // instead of a ParsedBlock[]. Convert on-the-fly so those sessions still
+  // render instead of hitting "No answer saved".
+  const normaliseBlocks = (raw: any): ParsedBlock[] => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') {
+      const json = raw.json || (raw.solutions ? raw : null);
+      if (json && typeof json === 'object') {
+        const out: any[] = [];
+        const sol = json.solutions?.[0] || json;
+        const lang = json.language || 'python';
+        if (sol.approach) out.push({ type: 'APPROACH', content: sol.approach });
+        if (sol.code) out.push({ type: 'CODE', content: sol.code, language: lang });
+        if (sol.complexity?.time || sol.complexity?.space) {
+          out.push({ type: 'COMPLEXITY', content: `TIME: ${sol.complexity.time || 'n/a'}\nSPACE: ${sol.complexity.space || 'n/a'}` });
+        }
+        if (sol.narration) out.push({ type: 'WALKTHROUGH', content: sol.narration });
+        if (Array.isArray(sol.trace) && sol.trace.length) {
+          out.push({ type: 'WALKTHROUGH', content: sol.trace.map((s: any) => `${s.step}. ${s.action} → ${s.state}`).join('\n') });
+        }
+        return out;
+      }
+    }
+    return [];
+  };
+  const blocks = normaliseBlocks(entry.blocks);
   const isDesign = blocks.some(b => (DESIGN_BLOCK_TYPES as readonly string[]).includes(b.type));
   const isCoding = !isDesign && blocks.some(b => (CODING_BLOCK_TYPES as readonly string[]).includes(b.type));
   const ts = entry.timestamp instanceof Date ? entry.timestamp : new Date(entry.timestamp);

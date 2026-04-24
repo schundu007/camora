@@ -6,6 +6,7 @@ import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/Audio
 import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { DocumentUpload } from '@/components/lumora/documents/DocumentUpload';
 import CamoraLogo from '../../shared/CamoraLogo';
+import { dialogConfirm } from '@/components/shared/Dialog';
 
 export type TabType = 'interview' | 'coding' | 'design';
 
