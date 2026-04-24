@@ -272,7 +272,20 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-function useTheme(_dark: boolean) {
+function useTheme(dark: boolean) {
+  if (dark) {
+    return {
+      cardBg: '#0F172A', cardBorder: '#1E293B',
+      headerBg: 'rgba(34,211,238,0.08)', headerBorder: '#1E40AF',
+      headerText: '#22D3EE', badgeBg: 'rgba(34,211,238,0.12)', badgeText: '#22D3EE',
+      text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
+      codeBg: '#020617', codeText: '#E2E8F0',
+      inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
+      sectionBg: '#0F172A', surfaceBg: '#1E293B',
+      tabActive: '#22D3EE', tabActiveBg: '#1E293B', tabText: '#94A3B8',
+      dotColor: '#22D3EE',
+    };
+  }
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
     headerBg: 'rgba(34,211,238,0.05)', headerBorder: '#BFDBFE',
