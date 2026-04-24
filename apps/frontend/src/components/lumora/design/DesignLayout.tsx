@@ -1169,16 +1169,34 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="ml-auto"><SectionCopyBtn getText={() => (sd.techJustifications || []).map(tier => `${tier.tech}\n${tier.details.map(d => `  - ${d}`).join('\n')}`).join('\n\n')} title="Copy scalability tiers" /></div>
                   </div>
                   <div className="px-4 py-3">
+                    <p className="text-[10px] mb-2" style={{ color: t.textMuted }}>Click a tier to re-stream a focused LLD drill-down for that component.</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {sd.techJustifications.map((tier, i) => (
-                          <div key={i} className="rounded-lg p-2 text-center" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
-                            <div className="text-xs font-bold text-white bg-[var(--accent)] rounded px-2 py-1 mb-1">{tier.tech}</div>
+                          <button
+                            key={i}
+                            onClick={() => {
+                              if (isLoading || !problemText.trim()) return;
+                              const drill = `Deep-dive LLD for the ${tier.tech} component in this system: "${problemText.trim()}". Cover partitioning strategy, replication, consistency model, failure modes, and data model for just this component — skip the rest of the system.`;
+                              handleSubmit(drill);
+                            }}
+                            disabled={isLoading}
+                            title={`Drill into ${tier.tech}`}
+                            className="rounded-lg p-2 text-center transition-all hover:shadow-sm disabled:opacity-60"
+                            style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+                            onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = '#22D3EE'; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.cardBorder; }}>
+                            <div className="text-xs font-bold text-white bg-[var(--accent)] rounded px-2 py-1 mb-1 flex items-center justify-center gap-1">
+                              {tier.tech}
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                              </svg>
+                            </div>
                             {tier.details.length > 0 && (
                               <div className="text-xs leading-relaxed text-left mt-1" style={{ color: t.textMuted }}>
                                 {tier.details.map((d, j) => <div key={j} title={d}>- {d}</div>)}
                               </div>
                             )}
-                          </div>
+                          </button>
                         ))}
                     </div>
                   </div>
