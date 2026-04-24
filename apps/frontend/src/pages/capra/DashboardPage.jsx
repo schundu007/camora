@@ -1016,7 +1016,7 @@ function SwitchNotificationBanner({ notification, onDismiss }) {
 
 function LoadingProgress() {
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="h-1 overflow-hidden bg-gray-200">
         <div className="h-full w-1/3 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-400 rounded-full" style={{ animation: 'progress-indeterminate 1.5s ease-in-out infinite' }} />
       </div>
@@ -1054,7 +1054,7 @@ function Footer({ isLoading, ascendMode }) {
 
 function CopyToast() {
   return (
-    <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 animate-scale-in">
+    <div className="fixed left-1/2 transform -translate-x-1/2 z-50 animate-scale-in" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-[var(--accent-subtle)]0 shadow-lg">
         <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface)]/20 flex items-center justify-center backdrop-blur-sm">
           <svg className="w-4 h-4 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
@@ -1198,7 +1198,7 @@ function CodingLayout({
         {showAscendAssistant && (
           <div className="fixed inset-0 z-modal flex flex-col">
             <div className="flex-1 bg-black/50" onClick={onCloseAscendAssistant} />
-            <div className="h-[75dvh] bg-[var(--bg-surface)] rounded-t-2xl border-t border-[var(--border)] overflow-hidden animate-slide-in-up shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+            <div className="h-[85dvh] sm:h-[75dvh] bg-[var(--bg-surface)] rounded-t-2xl border-t border-[var(--border)] overflow-hidden animate-slide-in-up shadow-[0_-4px_16px_rgba(0,0,0,0.08)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
                 <span className="text-sm font-semibold text-[var(--text-primary)]">Assistant</span>
                 <button onClick={onCloseAscendAssistant} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] active:bg-[var(--bg-elevated)]">

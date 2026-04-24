@@ -130,7 +130,7 @@ export default function BadgeGrid() {
       <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
         <div className="animate-pulse space-y-4">
           <div className="h-5 bg-[var(--bg-elevated)] rounded w-32" />
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="h-36 bg-[var(--bg-elevated)] rounded-xl" />
             ))}
@@ -157,7 +157,7 @@ export default function BadgeGrid() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         {badges.map((badge) => (
           <div
             key={badge.key}

@@ -111,7 +111,7 @@ export default function ScoreCard({
   return (
     <div className="rounded-2xl overflow-hidden w-full max-w-md" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
       {/* Header with branding */}
-      <div className="px-6 pt-5 pb-4 flex items-center justify-between">
+      <div className="px-4 sm:px-6 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CamoraLogo size={32} />
         </div>
@@ -124,7 +124,7 @@ export default function ScoreCard({
       <div className="mx-6 border-t border-[var(--border)]" />
 
       {/* Score */}
-      <div className="px-6 py-6 flex flex-col items-center">
+      <div className="px-4 sm:px-6 py-6 flex flex-col items-center">
         <div className="relative">
           <svg width={ringSize} height={ringSize} className="-rotate-90">
             <circle
@@ -157,7 +157,7 @@ export default function ScoreCard({
       </div>
 
       {/* Title + Category */}
-      <div className="px-6 text-center">
+      <div className="px-4 sm:px-6 text-center">
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight leading-snug">{title}</h3>
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${scoreBgColor(score)} ${scoreColor(score)}`}>
@@ -170,7 +170,7 @@ export default function ScoreCard({
       </div>
 
       {/* User + Date */}
-      <div className="px-6 pt-5 pb-5">
+      <div className="px-4 sm:px-6 pt-5 pb-5">
         <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
           <div className="flex items-center gap-2.5">
             {userAvatar ? (

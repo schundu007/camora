@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import CamoraLogo from './CamoraLogo';
@@ -14,9 +14,18 @@ const TICKER_ITEMS = [
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+
+  // Close the mobile menu on Escape or when the route changes.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+  useEffect(() => { setOpen(false); }, [location.pathname]);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -79,7 +88,10 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden px-6 py-3 space-y-1" style={{ background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)', zIndex: 50, borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }} role="menu">
+        <>
+          {/* Tap-outside backdrop — sits below the menu, covers the rest of the viewport */}
+          <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-40 cursor-default" style={{ background: 'rgba(0,0,0,0.25)', top: 56 }} />
+        <div className="md:hidden relative z-50 px-6 py-3 space-y-1" style={{ background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }} role="menu">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
@@ -105,6 +117,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             )}
           </div>
         </div>
+        </>
       )}
       {/* Challenge Campaign Ticker */}
       {new Date() < CHALLENGE_END && (

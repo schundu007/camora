@@ -1378,7 +1378,7 @@ export default function DocsPage({ onBack }) {
                             Time Complexity Cheat Sheet
                           </h3>
                         </div>
-                        <div className="p-4">
+                        <div className="p-4 overflow-x-auto">
                           <table className="w-full text-sm">
                             <tbody>
                               {[
@@ -1413,7 +1413,7 @@ export default function DocsPage({ onBack }) {
                             When to Use What
                           </h3>
                         </div>
-                        <div className="p-4">
+                        <div className="p-4 overflow-x-auto">
                           <table className="w-full text-sm">
                             <tbody>
                               {[
