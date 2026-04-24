@@ -178,27 +178,33 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
   "solutions": [
     {
       "name": "Approach name (e.g. Brute Force, Hash Map, Two Pointers)",
+      "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code for this approach with \\n for newlines",
       "complexity": { "time": "O(...)", "space": "O(...)" },
+      "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose. Example: 'So my first instinct here is to brute-force it by comparing every pair — that's O(n squared). But we can do better: as I scan the array, I'll track values I've already seen in a hash map. For each element, I check if its complement — target minus current — is already in the map. That drops us to O(n) time with O(n) extra space for the map.'",
       "explanations": [
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
       ]
     },
     {
       "name": "Second approach name",
+      "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for second approach",
       "complexity": { "time": "O(...)", "space": "O(...)" },
+      "narration": "First-person spoken script, 4-6 sentences, conversational prose",
       "explanations": [
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
       ]
     },
     {
       "name": "Third approach name (most optimal)",
+      "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for third approach",
       "complexity": { "time": "O(...)", "space": "O(...)" },
+      "narration": "First-person spoken script, 4-6 sentences, conversational prose",
       "explanations": [
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
       ]
@@ -220,6 +226,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
 Rules:
 - You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)
 - Each solution MUST have complete, runnable code — not pseudocode
+- Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
+- Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
 - Do NOT add comments in the code
 - Do NOT add main blocks or hard-coded test calls
 - The pitch should compare the 3 approaches conversationally

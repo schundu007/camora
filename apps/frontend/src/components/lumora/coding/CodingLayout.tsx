@@ -925,9 +925,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                       const activeSol = sd.solutions?.[activeSolutionIdx];
                       if (activeSol) return (
                         <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                          <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                             <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: t.badgeBg, color: t.badgeText }}>{activeSolutionIdx + 1}</div>
                             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>{activeSol.name}</h4>
+                            {activeSol.patternTag && (
+                              <span className="text-[9px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5"
+                                title="Canonical interview pattern"
+                                style={{ color: '#FFFFFF', background: '#22D3EE', letterSpacing: '0.04em' }}>
+                                {activeSol.patternTag}
+                              </span>
+                            )}
                             {activeSol.complexity && (
                               <div className="ml-auto flex gap-1.5">
                                 <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.time}</span>
@@ -945,6 +952,29 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                     <span style={{ color: t.textMuted }}>{ex.explanation}</span>
                                   </div>
                                 ))}
+                              </div>
+                            )}
+                            {activeSol.narration && (
+                              <div className="rounded-lg mt-2" style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.2)', borderLeft: '3px solid #22D3EE' }}>
+                                <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(34,211,238,0.12)' }}>
+                                  <div className="flex items-center gap-1.5">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                      <line x1="12" y1="19" x2="12" y2="22" />
+                                    </svg>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#0E7490' }}>Say this out loud</span>
+                                  </div>
+                                  <button
+                                    onClick={() => navigator.clipboard.writeText(activeSol.narration)}
+                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5"
+                                    style={{ color: '#64748B' }}>
+                                    Copy
+                                  </button>
+                                </div>
+                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: '#0F172A', fontFamily: "'Satoshi', sans-serif" }}>
+                                  {activeSol.narration}
+                                </p>
                               </div>
                             )}
                           </div>
