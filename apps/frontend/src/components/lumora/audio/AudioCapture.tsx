@@ -23,9 +23,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const [mounted, setMounted] = useState(false);
   const [shouldRestart, setShouldRestart] = useState(false);
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
-  const [continuousMode, setContinuousMode] = useState(false); // Default to manual
+  // Persist so the user sets Auto ON/OFF once before the interview and
+  // never has to click (audible!) during the call. Stored under a
+  // dedicated key; read synchronously at mount so there is no flicker.
+  const [continuousMode, setContinuousMode] = useState<boolean>(() => {
+    try { return localStorage.getItem('lumora_sona_auto') === 'on'; } catch { return false; }
+  });
   const startRecordingRef = useRef<(() => void) | null>(null);
   const continuousModeRef = useRef(continuousMode);
+  useEffect(() => {
+    try { localStorage.setItem('lumora_sona_auto', continuousMode ? 'on' : 'off'); } catch {}
+  }, [continuousMode]);
 
   // Get store values first (must be before any useEffect that uses them)
   const {
@@ -328,8 +336,38 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       setIsRecording(true);
       startListenTimer();
       setStatus('listen', 'Live - listening...');
+    } else if (!newMode && storeIsRecording) {
+      // Turning Auto off — stop the live stream so the mic light goes off
+      stopRecording();
+      setIsRecording(false);
+      stopListenTimer();
+      setStatus('ready', 'Auto off');
     }
-  }, [continuousMode, storeIsRecording, startRecording, setIsRecording, startListenTimer, setStatus]);
+  }, [continuousMode, storeIsRecording, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
+
+  // Silent Auto toggle: Cmd/Ctrl+Shift+A works from anywhere on the Lumora
+  // page, including while Auto is ON. A keystroke is inaudible to the
+  // interviewer where a mouse click isn't, so the user can flip Sona on/off
+  // mid-call without raising suspicion. Never fires inside editable fields.
+  useEffect(() => {
+    const handleAutoShortcut = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return;
+      if (e.key !== 'A' && e.key !== 'a') return;
+      const el = e.target as HTMLElement;
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        el instanceof HTMLSelectElement ||
+        el.isContentEditable ||
+        el.closest?.('.monaco-editor') ||
+        el.getAttribute?.('role') === 'textbox'
+      ) return;
+      e.preventDefault();
+      handleModeToggle();
+    };
+    window.addEventListener('keydown', handleAutoShortcut);
+    return () => window.removeEventListener('keydown', handleAutoShortcut);
+  }, [handleModeToggle]);
 
   // Hydration: set mounted after all hooks
   useEffect(() => {
@@ -459,8 +497,8 @@ function UnifiedMicButton({
           fontFamily: 'var(--font-mono)',
         }}
         title={isLive
-          ? 'Auto is ON — Sona is listening continuously and answering every detected question. Click to stop.'
-          : 'Turn on Auto — Sona will listen continuously and answer each question as it is asked.'}
+          ? 'Auto is ON — Sona is listening continuously. Click or press ⌘⇧A to stop. (Setting persists across reloads — set it BEFORE the interview so you don\'t click during the call.)'
+          : 'Turn on Auto — Sona will listen continuously and answer each question. Click or press ⌘⇧A. Setting persists across reloads so you only click once before the interview.'}
         aria-pressed={isLive}
       >
         {isLive ? '● AUTO' : 'AUTO'}
