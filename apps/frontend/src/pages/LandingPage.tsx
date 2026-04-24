@@ -259,19 +259,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 5. LIVE AI DEMO — Split Layout ═══════════ */}
+      {/* ═══════════ 5. CAPABILITY DECK — Everything Camora does, on loop ═══════════ */}
       <section className="px-6 py-28" style={{ background: '#F8FAFC' }}>
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-16">
             {/* Left: text */}
-            <div className="lg:w-[45%]">
+            <div className="lg:w-[38%]">
               <Reveal>
-                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>LIVE AI ASSISTANT</span>
+                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>CAMORA · AI COPILOT</span>
                 <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
-                  AI THAT WORKS<br /><span style={{ color: accent }}>IN REAL TIME.</span>
+                  ONE TOOL.<br /><span style={{ color: accent }}>EVERY INTERVIEW.</span>
                 </h2>
                 <p className="mt-6 text-base leading-relaxed" style={{ color: '#475569' }}>
-                  Voice transcription captures the interviewer's question. AI generates instant answers — system design diagrams, multi-approach coding solutions, and STAR behavioral coaching — in seconds.
+                  Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems — requirements through API. Company-specific prep for the full loop: HR, Hiring Manager, Coding, Design, Behavioral. Mock-interview scoring across every dimension.
                 </p>
                 <div className="mt-8 flex items-center gap-4">
                   <Link to="/lumora" className="px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] text-white rounded-full" style={{ background: accent }}>
@@ -284,10 +284,10 @@ export default function LandingPage() {
               </Reveal>
             </div>
 
-            {/* Right: animated live AI demo card */}
-            <div className="lg:w-[55%]">
+            {/* Right: capability deck */}
+            <div className="lg:w-[62%] w-full">
               <Reveal delay={0.12}>
-                <LiveAIDemoCard />
+                <CapabilityDeck />
               </Reveal>
             </div>
           </div>
