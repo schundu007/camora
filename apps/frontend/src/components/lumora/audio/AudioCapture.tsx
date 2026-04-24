@@ -382,58 +382,85 @@ function UnifiedMicButton({
   handleToggle: () => void;
   handleModeToggle: () => void;
 }) {
-  const LONG_PRESS_MS = 550;
+  const LONG_PRESS_MS = 600;
   const pressStartRef = useRef<number | null>(null);
-  const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [pressProgress, setPressProgress] = useState(0); // 0..1 while held
+
+  // Latest handler refs so the setTimeout callback never sees a stale closure.
+  const handleModeToggleRef = useRef(handleModeToggle);
+  const handleToggleRef = useRef(handleToggle);
+  const continuousModeRef = useRef(continuousMode);
+  useEffect(() => { handleModeToggleRef.current = handleModeToggle; }, [handleModeToggle]);
+  useEffect(() => { handleToggleRef.current = handleToggle; }, [handleToggle]);
+  useEffect(() => { continuousModeRef.current = continuousMode; }, [continuousMode]);
+
+  const clearTimers = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (timeoutRef.current != null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
   const beginPress = useCallback(() => {
     longPressFiredRef.current = false;
     pressStartRef.current = performance.now();
     setPressProgress(0);
+    clearTimers();
 
-    // Animate the progress ring
+    // Progress ring rAF loop
     const tick = () => {
       if (pressStartRef.current == null) return;
       const elapsed = performance.now() - pressStartRef.current;
       const p = Math.min(1, elapsed / LONG_PRESS_MS);
       setPressProgress(p);
-      if (p < 1) longPressTimerRef.current = requestAnimationFrame(tick);
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
     };
-    longPressTimerRef.current = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tick);
 
-    // Fire the long-press action when the threshold is hit
-    window.setTimeout(() => {
+    // Long-press threshold — fire the mode toggle
+    timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = null;
+      // pressStartRef still set means the user is still holding.
       if (pressStartRef.current != null) {
         longPressFiredRef.current = true;
-        handleModeToggle(); // enable / disable continuous mode
+        handleModeToggleRef.current();
       }
     }, LONG_PRESS_MS);
-  }, [handleModeToggle]);
+  }, [clearTimers]);
 
   const endPress = useCallback(() => {
-    if (longPressTimerRef.current != null) {
-      cancelAnimationFrame(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
+    clearTimers();
     const wasLongPress = longPressFiredRef.current;
     pressStartRef.current = null;
     setPressProgress(0);
-    // Short tap → one-shot toggle (only if we didn't already fire the
-    // long-press handler and we aren't currently in continuous mode —
-    // in continuous, the long press itself is the toggle).
-    if (!wasLongPress && !continuousMode) handleToggle();
-  }, [continuousMode, handleToggle]);
-
-  const cancelPress = useCallback(() => {
-    if (longPressTimerRef.current != null) {
-      cancelAnimationFrame(longPressTimerRef.current);
-      longPressTimerRef.current = null;
+    // Short tap handling:
+    //   - If long-press already fired, we're done (it's a long-press cycle).
+    //   - If we're currently in continuous mode, short taps do nothing;
+    //     the user has to long-press to turn Auto off.
+    //   - Otherwise, toggle one-shot recording.
+    if (!wasLongPress && !continuousModeRef.current) {
+      handleToggleRef.current();
     }
+  }, [clearTimers]);
+
+  // Cancel only on true abort signals (pointercancel / window blur), NOT
+  // on small mouse movements — the old onMouseLeave was firing on
+  // sub-pixel drift and wiping out legitimate long-presses.
+  const cancelPress = useCallback(() => {
+    clearTimers();
     pressStartRef.current = null;
     setPressProgress(0);
-  }, []);
+  }, [clearTimers]);
+
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
   const isLive = continuousMode;
   const isRec = !continuousMode && storeIsRecording;
@@ -462,14 +489,19 @@ function UnifiedMicButton({
         )}
 
         <button
+          ref={buttonRef}
           type="button"
-          onMouseDown={beginPress}
-          onMouseUp={endPress}
-          onMouseLeave={cancelPress}
-          onTouchStart={(e) => { e.preventDefault(); beginPress(); }}
-          onTouchEnd={(e) => { e.preventDefault(); endPress(); }}
-          onTouchCancel={cancelPress}
-          className="relative flex items-center justify-center rounded-full transition-all"
+          onPointerDown={(e) => {
+            // Capture the pointer so drift during the press (finger
+            // wiggle, mouse tremor) stays with this button and doesn't
+            // bubble elsewhere or fire cancel events.
+            try { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); } catch { /* older browsers */ }
+            beginPress();
+          }}
+          onPointerUp={() => endPress()}
+          onPointerCancel={() => cancelPress()}
+          onContextMenu={(e) => e.preventDefault()} /* don't show touch context menu on long-press */
+          className="relative flex items-center justify-center rounded-full transition-all select-none touch-none"
           style={{
             width: 32,
             height: 32,

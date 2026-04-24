@@ -191,9 +191,27 @@ export function useStreamingInterview() {
           setIsCodingQuestion(true);
           setIsDesignQuestion(false);
           setParsedBlocks(data.parsed || []);
+          // Coding backend returns parsed as { json: {...}, format: 'ascend_json' } —
+          // not a ParsedBlock[]. Flatten the JSON into a real block array so the
+          // history viewer can render it later without hitting "No answer saved".
+          const codingJson = data.parsed?.json || (data.parsed && typeof data.parsed === 'object' && 'solutions' in data.parsed ? data.parsed : null);
+          const historyBlocks: any[] = [];
+          if (codingJson && typeof codingJson === 'object') {
+            const sol = codingJson.solutions?.[0] || codingJson;
+            const lang = codingJson.language || language;
+            if (sol.approach) historyBlocks.push({ type: 'APPROACH', content: sol.approach });
+            if (sol.code) historyBlocks.push({ type: 'CODE', content: sol.code, language: lang });
+            if (sol.complexity?.time || sol.complexity?.space) {
+              historyBlocks.push({ type: 'COMPLEXITY', content: `TIME: ${sol.complexity.time || 'n/a'}\nSPACE: ${sol.complexity.space || 'n/a'}` });
+            }
+            if (sol.narration) historyBlocks.push({ type: 'WALKTHROUGH', content: sol.narration });
+            if (Array.isArray(sol.trace) && sol.trace.length) {
+              historyBlocks.push({ type: 'WALKTHROUGH', content: sol.trace.map((s: any) => `${s.step}. ${s.action} → ${s.state}`).join('\n') });
+            }
+          }
           addHistoryEntry({
             question: displayTitle,
-            blocks: data.parsed || [],
+            blocks: historyBlocks.length ? historyBlocks : (Array.isArray(data.parsed) ? data.parsed : []),
             timestamp: new Date(),
           });
           stopAnswerTimer();
