@@ -51,27 +51,46 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#22D3EE' },
 ];
 
+/** Strip markdown fences and leading "json" tag; shared helper. */
+function stripFences(raw: string): string {
+  return raw
+    .replace(/^```(?:json)?\s*/gim, '')
+    .replace(/```\s*$/gm, '')
+    .replace(/^data:\s*/gim, '')
+    .replace(/^json\s*(?=\{)/i, '')
+    .trim();
+}
+
 /** Normalize prep content into a clean object (never stringify).
- *  Backend wraps failed JSON parsing in { rawContent: string } — unwrap it here. */
+ *  Backend wraps failed JSON parsing in { rawContent: string } — unwrap it
+ *  here and, if parsing fails, fall back to a readable { summary: text }
+ *  so the UI never renders a RAW CONTENT dump with ```json fences. */
 function formatPrepContent(content: any): any {
   if (!content) return { summary: 'No content generated' };
   if (typeof content === 'object' && !Array.isArray(content)) {
-    // Backend wraps unparsed AI output in rawContent — try to extract the real JSON
+    // Backend wraps unparsed AI output in rawContent — try to extract the real JSON.
+    // Bounded to small wrapper objects so we don't nuke legitimate payloads that
+    // happen to carry a rawContent field alongside real fields.
     if (content.rawContent && typeof content.rawContent === 'string' && Object.keys(content).length <= 2) {
       const parsed = extractJSON(content.rawContent);
-      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 1) return parsed;
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) return parsed;
+      // Parsing failed — strip fences and present the text as a readable summary
+      // instead of leaving the rawContent wrapper on, which would render a
+      // "RAW CONTENT" dump via the generic catch-all.
+      return { summary: stripFences(content.rawContent) };
     }
     // Summary contains raw JSON from a previous failed parse — extract it
     if (content.summary && typeof content.summary === 'string' && content.summary.trim().startsWith('{') && Object.keys(content).length === 1) {
       const parsed = extractJSON(content.summary);
       if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 1) return parsed;
+      return { summary: stripFences(content.summary) };
     }
     return content;
   }
   if (typeof content === 'string') {
     const parsed = extractJSON(content);
     if (parsed) return parsed;
-    return { summary: content.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').trim() };
+    return { summary: stripFences(content) };
   }
   return { summary: String(content) };
 }
@@ -116,25 +135,48 @@ function repairJSON(s: string): any {
   return null;
 }
 
+/** Escape literal newlines/tabs inside JSON string values so JSON.parse
+ *  tolerates model outputs that forget to escape control chars. */
+function escapeJsonStringControls(s: string): string {
+  let out = '';
+  let inStr = false, esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (esc) { out += c; esc = false; continue; }
+    if (c === '\\') { out += c; esc = true; continue; }
+    if (c === '"') { inStr = !inStr; out += c; continue; }
+    if (inStr) {
+      if (c === '\n') { out += '\\n'; continue; }
+      if (c === '\r') { out += '\\r'; continue; }
+      if (c === '\t') { out += '\\t'; continue; }
+    }
+    out += c;
+  }
+  return out;
+}
+
 /** Aggressively extract a JSON object from any string */
 function extractJSON(raw: string): any {
   if (!raw || typeof raw !== 'string') return null;
-  // Strip markdown fences and leading "json" tag
-  let s = raw.replace(/^```(?:json)?\s*/gm, '').replace(/```\s*$/gm, '').replace(/^data:\s*/gm, '').trim();
-  // Strip leading "json" word (model sometimes prefixes JSON with the word "json")
-  if (/^json\s*\{/i.test(s)) s = s.replace(/^json\s*/i, '');
+  let s = stripFences(raw);
   // Try direct parse
   try { const p = JSON.parse(s); if (p && typeof p === 'object') return p; } catch {}
+  // Try with literal-newline rescue (most common model-output failure mode)
+  try { const p = JSON.parse(escapeJsonStringControls(s)); if (p && typeof p === 'object') return p; } catch {}
   // Try extracting { ... } from the string
   const i = s.indexOf('{'), j = s.lastIndexOf('}');
   if (i >= 0 && j > i) {
-    try { const p = JSON.parse(s.slice(i, j + 1)); if (p && typeof p === 'object') return p; } catch {}
+    const slice = s.slice(i, j + 1);
+    try { const p = JSON.parse(slice); if (p && typeof p === 'object') return p; } catch {}
+    try { const p = JSON.parse(escapeJsonStringControls(slice)); if (p && typeof p === 'object') return p; } catch {}
   }
   // Try double-parse (content was double-stringified)
   try { const inner = JSON.parse(s); if (typeof inner === 'string') return extractJSON(inner); } catch {}
   // Try repairing truncated JSON (model hit token limit mid-response)
   const repaired = repairJSON(s);
   if (repaired && Object.keys(repaired).length > 0) return repaired;
+  const repairedEsc = repairJSON(escapeJsonStringControls(s));
+  if (repairedEsc && Object.keys(repairedEsc).length > 0) return repairedEsc;
   return null;
 }
 
