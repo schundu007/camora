@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { isQuestion } from '@/lib/questionDetector';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
@@ -763,10 +764,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
           <AudioCapture
             onTranscription={(text) => {
-              if (text.trim()) {
-                setProblemText(text.trim());
-                // Auto-submit after voice input
-                setTimeout(() => onSubmit(text.trim(), language), 500);
+              const trimmed = text.trim();
+              if (!trimmed) return;
+              // Populate the problem field either way, but only fire the
+              // LLM when this looks like an interview question — not
+              // the interviewer's intro, experience, or small talk.
+              setProblemText(trimmed);
+              if (isQuestion(trimmed)) {
+                setTimeout(() => onSubmit(trimmed, language), 500);
               }
             }}
             autoStart={false}

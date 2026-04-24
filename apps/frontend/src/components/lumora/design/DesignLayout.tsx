@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
+import { isQuestion } from '@/lib/questionDetector';
 import { getSystemContext } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -848,8 +849,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           {/* Voice Input — no more hacky getElementById */}
           <AudioCapture
             onTranscription={(text) => {
-              if (text.trim()) {
-                setProblemText(text.trim());
+              const trimmed = text.trim();
+              if (!trimmed) return;
+              // Always show the transcript in the input so the candidate
+              // can see what Sona heard. Only auto-submit when the
+              // utterance actually looks like an interview question —
+              // skip the interviewer's introductions, experience
+              // narrative, and small talk.
+              setProblemText(trimmed);
+              if (isQuestion(trimmed)) {
                 pendingVoiceSubmit.current = true;
               }
             }}

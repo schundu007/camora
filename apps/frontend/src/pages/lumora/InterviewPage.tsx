@@ -5,6 +5,7 @@ import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel
 import { SessionSidebar } from '../../components/lumora/interview/SessionSidebar';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { useStreamingInterview } from '../../hooks/useStreamingInterview';
+import { isQuestion } from '../../lib/questionDetector';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
@@ -57,7 +58,11 @@ export function InterviewPage() {
   }, [inputValue, handleSubmit]);
 
   const handleTranscription = useCallback((text: string) => {
-    if (text.trim()) handleSubmit(text);
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    // Only fire Sona on actual interview questions — skip the
+    // interviewer's intro, experience story, and small talk.
+    if (isQuestion(trimmed)) handleSubmit(trimmed);
   }, [handleSubmit]);
 
   if (blanked) {
