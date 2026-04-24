@@ -1037,6 +1037,35 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                 </p>
                               </div>
                             )}
+                            {Array.isArray(activeSol.trace) && activeSol.trace.length > 0 && (
+                              <div className="rounded-lg mt-2 overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                                <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.headerText} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                  </svg>
+                                  <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: t.headerText }}>Dry-run trace</span>
+                                  <span className="ml-auto text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg }}>{activeSol.trace.length} steps</span>
+                                </div>
+                                <table className="w-full text-[10px] md:text-[11px]" style={{ borderCollapse: 'collapse' }}>
+                                  <thead>
+                                    <tr style={{ borderBottom: `1px solid ${t.cardBorder}` }}>
+                                      <th className="text-left font-mono font-bold uppercase tracking-wider px-2 py-1" style={{ color: t.textDim, width: '32px' }}>#</th>
+                                      <th className="text-left font-mono font-bold uppercase tracking-wider px-2 py-1" style={{ color: t.textDim }}>Action</th>
+                                      <th className="text-left font-mono font-bold uppercase tracking-wider px-2 py-1" style={{ color: t.textDim }}>State</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {activeSol.trace.map((tr: any, j: number) => (
+                                      <tr key={j} style={{ borderBottom: `1px solid ${t.cardBorder}` }}>
+                                        <td className="px-2 py-1 font-mono font-bold" style={{ color: t.headerText }}>{tr.step ?? j + 1}</td>
+                                        <td className="px-2 py-1" style={{ color: t.text }}>{tr.action}</td>
+                                        <td className="px-2 py-1 font-mono" style={{ color: t.textMuted }}>{tr.state}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );

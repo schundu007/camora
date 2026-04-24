@@ -183,6 +183,9 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "code": "complete runnable code for this approach with \\n for newlines",
       "complexity": { "time": "O(...)", "space": "O(...)" },
       "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose. Example: 'So my first instinct here is to brute-force it by comparing every pair — that's O(n squared). But we can do better: as I scan the array, I'll track values I've already seen in a hash map. For each element, I check if its complement — target minus current — is already in the map. That drops us to O(n) time with O(n) extra space for the map.'",
+      "trace": [
+        {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
+      ],
       "explanations": [
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
       ]
@@ -228,6 +231,7 @@ Rules:
 - Each solution MUST have complete, runnable code — not pseudocode
 - Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
 - Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
+- Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
 - Do NOT add comments in the code
 - Do NOT add main blocks or hard-coded test calls
 - The pitch should compare the 3 approaches conversationally
