@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
+import { dialogAlert } from '../../shared/Dialog';
 
 export type LumoraTab = 'interview' | 'coding' | 'design' | 'behavioral' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits' | 'pricing';
 
@@ -112,9 +113,9 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
           { label: 'Go Invisible', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>,
             onClick: () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', metaKey: true })) },
           { label: 'Audio Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>,
-            onClick: () => navigator.mediaDevices?.getUserMedia({ audio: true }).then(s => { s.getTracks().forEach(t => t.stop()); alert('Microphone working!'); }).catch(() => alert('Microphone access denied.')) },
+            onClick: () => navigator.mediaDevices?.getUserMedia({ audio: true }).then(s => { s.getTracks().forEach(t => t.stop()); dialogAlert({ title: 'Microphone working', message: 'Your microphone is picking up audio correctly.', tone: 'success' }); }).catch(() => dialogAlert({ title: 'Microphone access denied', message: 'Grant microphone permission in your browser settings and try again.', tone: 'danger' })) },
           { label: 'Help', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
-            onClick: () => alert('Shortcuts: ⌘K focus · ⌘M mic · ⌘B blank · ⌘S search') },
+            onClick: () => dialogAlert({ title: 'Keyboard shortcuts', message: '⌘K — focus search\n⌘M — toggle mic\n⌘B — go invisible (hide overlay)\n⌘S — search' }) },
         ].map(item => (
           <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all text-left w-full`} style={{ color: 'rgba(255,255,255,0.6)' }} title={expanded ? undefined : item.label}
             onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}

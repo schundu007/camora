@@ -4,6 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext, type LumoraStory } from '@/lib/lumora-assistant';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
+import { dialogConfirm } from '@/components/shared/Dialog';
 
 /* White glass copilot — dark text */
 const C = {
@@ -901,7 +902,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       >
         {/* Left: clear + close (embedded) or clear + new (floating) */}
         <div className="flex items-center gap-0.5">
-          <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
+          <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
             className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Clear history">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
           </button>

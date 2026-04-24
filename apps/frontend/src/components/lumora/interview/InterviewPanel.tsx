@@ -1,61 +1,14 @@
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
-import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
-import { AnswerBlocks } from './AnswerBlocks';
 import { StreamingAnswer } from './StreamingAnswer';
-import { dialogConfirm } from '@/components/shared/Dialog';
-
-function isDesignBlocks(blocks: any): boolean {
-  if (!blocks) return false;
-  if (Array.isArray(blocks)) return blocks.some(b => (DESIGN_BLOCK_TYPES as readonly string[]).includes(b.type));
-  if (blocks.systemDesign) return true;
-  return false;
-}
-function isCodingBlocks(blocks: any): boolean {
-  if (!blocks) return false;
-  if (Array.isArray(blocks)) return blocks.some(b => (CODING_BLOCK_TYPES as readonly string[]).includes(b.type));
-  if (blocks.code) return true;
-  return false;
-}
-function safeBlocks(blocks: any): any[] {
-  if (Array.isArray(blocks)) return blocks;
-  if (blocks && typeof blocks === 'object') {
-    const result: any[] = [];
-    if (blocks.systemDesign) {
-      const sd = blocks.systemDesign;
-      if (sd.overview) result.push({ type: 'HEADLINE', content: sd.overview });
-      if (sd.requirements) {
-        const reqs = [
-          'FUNCTIONAL',
-          ...(sd.requirements.functional || []).map((r: string) => `- ${r}`),
-          'NON-FUNCTIONAL',
-          ...(sd.requirements.nonFunctional || []).map((r: string) => `- ${r}`),
-        ].join('\n');
-        result.push({ type: 'REQUIREMENTS', content: reqs });
-      }
-      if (sd.scaleEstimates) {
-        result.push({ type: 'SCALEMATH', content: Object.entries(sd.scaleEstimates).map(([k, v]) => `${k}: ${v}`).join('\n') });
-      }
-      if (sd.tradeoffs) result.push({ type: 'TRADEOFFS', content: sd.tradeoffs.map((t: string) => `- ${t}`).join('\n') });
-      if (sd.edgeCases) result.push({ type: 'EDGECASES', content: sd.edgeCases.map((e: string) => `- ${e}`).join('\n') });
-      if (sd.followups) result.push({ type: 'FOLLOWUP', content: sd.followups.map((f: any) => `Q: ${f.question}\nA: ${f.answer}`).join('\n') });
-    }
-    if (blocks.pitch) result.push({ type: 'ANSWER', content: typeof blocks.pitch === 'string' ? blocks.pitch : blocks.pitch.approach || '' });
-    if (result.length > 0) return result;
-  }
-  return [];
-}
 
 interface InterviewPanelProps {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
-  /** Called when user clicks a history entry — opens the history viewer with that answer */
-  onViewAnswer?: (idx: number) => void;
 }
 
-export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onViewAnswer }: InterviewPanelProps) {
+export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: InterviewPanelProps) {
   const {
     question,
     isStreaming,
@@ -64,12 +17,13 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
     streamChunks,
     parsedBlocks,
     error,
-    history,
-    removeHistoryEntry,
     setError,
   } = useInterviewStore();
 
-  const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
+  // Home tab = dashboard by default. Past sessions live on /lumora/sessions,
+  // not here. Only switch off the dashboard while a question is actively
+  // being asked / answered.
+  const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0;
 
   return (
     <main className="flex-1 min-h-0 overflow-auto flex flex-col">
@@ -77,57 +31,12 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
         <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-auto w-full mx-auto px-2 sm:px-3 py-2" style={{ maxWidth: 'min(700px, 100%)' }}>
-          {/* Q&A history */}
-          {history.length > 0 && history.map((entry, idx) => (
-            <div key={idx} className="shrink-0">
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => onViewAnswer?.(idx)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewAnswer?.(idx); } }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group cursor-pointer"
-                style={{ background: 'transparent', border: '1px solid transparent' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-              >
-                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"
-                  style={{ background: '#22D3EE10', color: '#22D3EE', fontFamily: 'var(--font-code)' }}>
-                  {idx + 1}
-                </span>
-                <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#0F172A' }}>
-                  {entry.question}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Delete session"
-                  title="Delete session"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const ok = await dialogConfirm({ title: 'Delete session?', message: 'This will permanently remove the question and its stored answer from your history.', confirmLabel: 'Delete', tone: 'danger' });
-                    if (ok) removeHistoryEntry(idx);
-                  }}
-                  className="flex items-center justify-center w-7 h-7 rounded-md shrink-0 transition-colors hover:bg-red-50"
-                  style={{ color: '#94A3B8', border: '1px solid #E2E8F0' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FCA5A5'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
-                  </svg>
-                </button>
-                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#22D3EE' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          ))}
-
           {/* Current streaming question */}
           {isStreaming && question && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: '#22D3EE08', border: '1px solid #22D3EE20' }}>
               <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
                 <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: '#22D3EE15', color: '#22D3EE', fontFamily: 'var(--font-code)' }}>
-                  {history.length + 1}
+                  •
                 </span>
                 <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#06B6D4' }} />
               </div>
@@ -151,16 +60,6 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 isDesign={isDesignQuestion}
                 isCoding={isCodingQuestion}
               />
-            </div>
-          )}
-
-          {/* Cross-sell */}
-          {history.length > 0 && history.length % 3 === 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-              <span className="text-xs" style={{ color: '#64748B' }}>Want deeper prep?</span>
-              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#22D3EE' }}>
-                Explore 300+ topics →
-              </Link>
             </div>
           )}
 

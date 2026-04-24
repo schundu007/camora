@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
+import { dialogConfirm } from '@/components/shared/Dialog';
 
 interface SessionSidebarProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
               <div className="flex items-center gap-1">
                 {history.length > 0 && (
                   <button
-                    onClick={() => { if (confirm('Clear all history?')) clearHistory(); }}
+                    onClick={async () => { const ok = await dialogConfirm({ title: 'Clear all history?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' }); if (ok) clearHistory(); }}
                     className="text-[10px] font-mono text-white/70 hover:text-red-400 px-2 py-1 rounded transition-colors"
                     title="Clear all"
                   >
