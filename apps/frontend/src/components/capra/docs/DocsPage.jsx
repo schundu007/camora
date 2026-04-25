@@ -11,14 +11,9 @@ import { getAuthHeaders } from '../../../utils/authHeaders.js';
 const SQLPlayground = lazy(() => import('../sql/SQLPlayground'));
 import { useContentAccess } from '../../../hooks/useContentAccess';
 import ResumeOptimizer from '../features/ResumeOptimizer';
-import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
-import { extraCodingCategoryMap, extraCodingTopics } from '../../../data/capra/topics/codingTopicsExtra.js';
-import { systemDesignCategories, systemDesignCategoryMap, systemDesignTopics } from '../../../data/capra/topics/systemDesignTopics.js';
-import { systemDesignProblemCategories as _sdProblemCategories, systemDesignProblemCategoryMap as _sdProblemCategoryMap, systemDesigns as _systemDesigns, lldProblemCategories, lldProblemCategoryMap as _lldProblemCategoryMap } from '../../../data/capra/topics/systemDesignProblems.js';
-import { extraSystemDesignProblemCategories, extraSystemDesignProblemCategoryMap, extraSystemDesigns } from '../../../data/capra/topics/systemDesignProblemsExtra.js';
-import { lldProblems as _lldProblems } from '../../../data/capra/topics/lldProblems.js';
-import { extraLldProblems, extraLldProblemCategoryMap } from '../../../data/capra/topics/lldProblemsExtra.js';
-import { lldCategories, lldCategoryMap, lldTopics } from '../../../data/capra/topics/lldTopics.js';
+// Lightweight categories that stay statically imported — these total ~1.1 MB
+// combined and don't justify the orchestration overhead of the loader.
+import { systemDesignCategories, systemDesignCategoryMap } from '../../../data/capra/topics/systemDesignTopics.js';
 import { concurrencyTopics } from '../../../data/capra/topics/concurrencyTopics.js';
 import { systemDesignPatternCategories, systemDesignPatternCategoryMap, systemDesignPatterns } from '../../../data/capra/topics/systemDesignPatterns.js';
 import { microservicesCategories, microservicesCategoryMap, microservicesPatterns } from '../../../data/capra/topics/microservicesPatterns.js';
@@ -26,22 +21,16 @@ import { tradeoffCategories, tradeoffCategoryMap, systemDesignTradeoffs } from '
 import { scalableSystemsCategories, scalableSystemsCategoryMap, scalableSystemsTopics } from '../../../data/capra/topics/scalableSystemsTopics.js';
 import { databaseCategories, databaseCategoryMap, databaseTopics } from '../../../data/capra/topics/databaseTopics.js';
 import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/topics/sqlTopics.js';
-import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
-import { projectCategories, projectCategoryMap, projectTopics } from '../../../data/capra/topics/projectTopics.js';
 import { roadmapCategories, roadmapCategoryMap, roadmapTopics } from '../../../data/capra/topics/roadmapTopics.js';
 import { engBlogCategories, engBlogCategoryMap, engBlogTopics } from '../../../data/capra/topics/engBlogsTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
 import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capra/jobRoleTopicMapping';
 
-// Merge extra topics into base arrays
-const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
-const codingTopics = [..._codingTopics, ...extraCodingTopics];
-const systemDesignProblemCategories = [..._sdProblemCategories, ...extraSystemDesignProblemCategories.filter(c => !_sdProblemCategories.some(p => p.id === c.id))];
-const systemDesignProblemCategoryMap = { ..._sdProblemCategoryMap, ...extraSystemDesignProblemCategoryMap };
-const systemDesigns = [..._systemDesigns, ...extraSystemDesigns];
-const lldProblemCategoryMap = { ..._lldProblemCategoryMap, ...extraLldProblemCategoryMap };
-const lldProblems = [..._lldProblems, ...extraLldProblems];
+// Heavy data — coding (~830 kB), system-design (~4 MB), low-level (~790 kB),
+// behavioral (~280 kB), projects (~360 kB) — load on demand keyed off
+// activePage. See loader.js for the chunk boundaries.
+import { loadTopicsForPage } from '../../../data/capra/topics/loader.js';
 
 import TopicDetail from './TopicDetail.jsx';
 import ProgressTracker from './ProgressTracker.jsx';
@@ -90,6 +79,44 @@ export default function DocsPage({ onBack }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('a-z');
   const [selectedTopic, setSelectedTopicState] = useState(initialState.topic);
+
+  // Heavy topic data is dynamically imported per category. This object holds
+  // whatever has been loaded so far; references below default to empty
+  // arrays/maps until the corresponding category's chunk lands. The
+  // 'no-topics' state during the brief load is acceptable — Vite caches
+  // chunks so subsequent visits are instant.
+  const [heavyData, setHeavyData] = useState({});
+  useEffect(() => {
+    let cancelled = false;
+    loadTopicsForPage(activePage).then((data) => {
+      if (cancelled || Object.keys(data).length === 0) return;
+      setHeavyData((prev) => ({ ...prev, ...data }));
+    }).catch(() => { /* network error — leave previous state in place */ });
+    return () => { cancelled = true; };
+  }, [activePage]);
+
+  // Destructure heavy data with empty fallbacks so existing references keep
+  // compiling. Empty arrays/objects render as the loading state (handled in
+  // the JSX paths that consume these).
+  const codingCategories = heavyData.codingCategories || [];
+  const codingCategoryMap = heavyData.codingCategoryMap || {};
+  const codingTopics = heavyData.codingTopics || [];
+  const systemDesignTopics = heavyData.systemDesignTopics || [];
+  const systemDesignProblemCategories = heavyData.systemDesignProblemCategories || [];
+  const systemDesignProblemCategoryMap = heavyData.systemDesignProblemCategoryMap || {};
+  const systemDesigns = heavyData.systemDesigns || [];
+  const lldCategories = heavyData.lldCategories || [];
+  const lldCategoryMap = heavyData.lldCategoryMap || {};
+  const lldTopics = heavyData.lldTopics || [];
+  const lldProblemCategories = heavyData.lldProblemCategories || [];
+  const lldProblemCategoryMap = heavyData.lldProblemCategoryMap || {};
+  const lldProblems = heavyData.lldProblems || [];
+  const behavioralCategories = heavyData.behavioralCategories || [];
+  const topicCategoryMap = heavyData.topicCategoryMap || {};
+  const behavioralTopics = heavyData.behavioralTopics || [];
+  const projectCategories = heavyData.projectCategories || [];
+  const projectCategoryMap = heavyData.projectCategoryMap || {};
+  const projectTopics = heavyData.projectTopics || [];
 
   // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
