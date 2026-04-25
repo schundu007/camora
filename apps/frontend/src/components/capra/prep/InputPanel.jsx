@@ -97,6 +97,49 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
     }
   };
 
+  const pasteFromClipboard = async () => {
+    setUrlError('');
+    if (!navigator.clipboard?.readText) {
+      setUrlError('Clipboard access not available. Use Cmd/Ctrl+V to paste.');
+      return;
+    }
+    let clip;
+    try {
+      clip = (await navigator.clipboard.readText()).trim();
+    } catch {
+      setUrlError('Clipboard permission denied. Use Cmd/Ctrl+V to paste.');
+      return;
+    }
+    if (!clip) {
+      setUrlError('Clipboard is empty.');
+      return;
+    }
+    const looksLikeUrl = /^https?:\/\/\S+$/i.test(clip);
+    if (looksLikeUrl) {
+      setJdUrl(clip);
+      setFetchingUrl(true);
+      try {
+        const response = await fetch(API_URL + '/api/job-analyze/fetch-text', {
+          method: 'POST',
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: clip }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          setUrlError(data.error || 'Could not fetch this URL.');
+        } else {
+          setEditText(data.text);
+        }
+      } catch {
+        setUrlError('Network error. Please try again.');
+      } finally {
+        setFetchingUrl(false);
+      }
+      return;
+    }
+    setEditText(clip);
+  };
+
   const extractTextFromFile = async (file, fieldId) => {
     const filename = file.name.toLowerCase();
 
@@ -498,6 +541,21 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                       disabled={fetchingUrl}
                     />
                     <button
+                      onClick={pasteFromClipboard}
+                      disabled={fetchingUrl}
+                      className="px-3 py-2 rounded text-sm font-medium"
+                      style={{
+                        background: 'var(--bg-elevated)',
+                        color: 'var(--content-text)',
+                        border: '1px solid var(--border)',
+                        opacity: fetchingUrl ? 0.5 : 1,
+                        cursor: fetchingUrl ? 'not-allowed' : 'pointer',
+                      }}
+                      title="Paste URL or JD text from clipboard"
+                    >
+                      Paste
+                    </button>
+                    <button
                       onClick={fetchFromUrl}
                       disabled={!jdUrl.trim() || fetchingUrl}
                       className="px-3 py-2 rounded text-sm font-medium"
@@ -512,7 +570,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                     </button>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn, and most career pages.
+                    Paste a URL (Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn) or paste JD text directly.
                   </div>
                   {urlError && (
                     <div style={{ fontSize: '0.8125rem', color: '#ef4444', marginTop: '6px' }}>
