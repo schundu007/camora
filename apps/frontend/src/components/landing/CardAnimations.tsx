@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ACCENT = '#29B5E8';
+const ACCENT = 'var(--cam-primary)';
 const MONO = "'Source Code Pro', monospace";
 
 export function CardAnimationStyles() {
@@ -86,7 +86,7 @@ export function ApplyAnim() {
           right: 0,
           top: 0,
           height: '48px',
-          background: `linear-gradient(180deg, transparent, ${ACCENT}26, transparent)`,
+          background: 'linear-gradient(180deg, transparent, rgba(0,71,171,0.15), transparent)',
           animation: 'card-scan 3.2s linear infinite',
           pointerEvents: 'none',
         }}
@@ -143,7 +143,7 @@ export function PrepareAnim() {
             key={t}
             style={{
               background: '#FFFFFF',
-              border: `1px solid ${ACCENT}33`,
+              border: '1px solid rgba(0,71,171,0.20)',
               borderRadius: 4,
               padding: '7px 4px',
               textAlign: 'center',
@@ -177,7 +177,7 @@ export function PracticeAnim() {
     { text: '}', color: '#94A3B8' },
   ];
   return (
-    <div style={{ ...base, background: '#0F172A', padding: '10px 12px', fontFamily: MONO }}>
+    <div style={{ ...base, background: 'var(--cam-void)', padding: '10px 12px', fontFamily: MONO }}>
       <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#EF4444' }} />
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--text-muted)' }} />
@@ -236,7 +236,7 @@ export function AttendAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        background: 'linear-gradient(135deg, var(--cam-void) 0%, #1E293B 100%)',
         padding: '12px 14px',
         display: 'flex',
         flexDirection: 'column',
@@ -302,7 +302,7 @@ export function FeatureLiveAIAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        background: 'linear-gradient(135deg, var(--cam-void) 0%, #1E293B 100%)',
         padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',
@@ -366,9 +366,9 @@ export function FeatureLiveAIAnim() {
                 fontWeight: 700,
                 padding: '2px 7px',
                 borderRadius: 10,
-                background: `${ACCENT}22`,
+                background: 'rgba(0,71,171,0.13)',
                 color: ACCENT,
-                border: `1px solid ${ACCENT}55`,
+                border: '1px solid rgba(0,71,171,0.33)',
                 opacity: 0,
                 animation: `feat-chip-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${2 + i * 0.28}s forwards`,
               }}
@@ -445,7 +445,7 @@ export function FeatureJobMatchAnim() {
             height: 26,
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${ACCENT}, #0EA5E9)`,
-            boxShadow: `0 2px 8px ${ACCENT}44`,
+            boxShadow: '0 2px 8px rgba(0,71,171,0.27)',
             marginBottom: 4,
           }}
         />
@@ -459,7 +459,7 @@ export function FeatureJobMatchAnim() {
               borderRadius: 3,
               background: '#FFFFFF',
               color: ACCENT,
-              border: `1px solid ${ACCENT}44`,
+              border: '1px solid rgba(0,71,171,0.27)',
               alignSelf: 'flex-start',
               opacity: 0,
               animation: `feat-chip-enter 0.4s ease-out ${0.2 + i * 0.12}s forwards`,
@@ -598,7 +598,7 @@ export function FeaturePrepAnim() {
 
         {topics.map((t, i) => (
           <g key={t} style={{ opacity: 0, animation: `feat-chip-enter 0.4s ease-out ${1.7 + i * 0.12}s forwards` }}>
-            <rect x={8 + i * 63} y="126" width="58" height="18" rx="3" fill="#0F172A" />
+            <rect x={8 + i * 63} y="126" width="58" height="18" rx="3" fill="var(--cam-void)" />
             <text
               x={37 + i * 63}
               y="138.5"

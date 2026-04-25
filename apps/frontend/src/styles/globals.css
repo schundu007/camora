@@ -2,10 +2,9 @@
    CAMORA v4 DESIGN SYSTEM — Dark-first, Railway-inspired
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Satoshi — Fontshare CDN ── */
-@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap');
+/* ── Satoshi — loaded via Fontshare in index.html (single source) ── */
 
-/* ── JetBrains Mono — Bunny.net CDN ── */
+/* ── JetBrains Mono — Bunny.net CDN (canonical source for mono) ── */
 @import url('https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700&display=swap');
 
 @import "tailwindcss";
@@ -120,6 +119,29 @@
     --nav-text-secondary: var(--text-secondary);
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
+
+    /* ── Camora brand palette ── */
+    --cam-primary:      #0047AB;
+    --cam-primary-lt:   #3D75CC;
+    --cam-primary-dk:   #003688;
+    --cam-primary-900:  #050C1A;
+
+    --cam-amber:        #AB6400;
+    --cam-amber-lt:     #C07A00;
+    --cam-amber-dk:     #864E00;
+    --cam-amber-50:     #FAF0E0;
+
+    --cam-midnight:     #001F6E;
+    --cam-steel:        #006CAB;
+    --cam-mist:         #EAF0FA;
+    --cam-surface-lt:   #F0F4FF;
+    --cam-void:         #050C1A;
+
+    /* Resolve the 3-way cyan drift — single source of truth */
+    --accent:           #0047AB;
+    --accent-hover:     #003688;
+    --accent-subtle:    rgba(0, 71, 171, 0.10);
+    --accent-text:      #003688;
   }
 
   /* Light theme — opt-in via class on body or root container */

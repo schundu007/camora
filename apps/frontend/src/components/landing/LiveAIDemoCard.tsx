@@ -1,6 +1,7 @@
+// TODO: remove dead component — not imported anywhere (verified against LandingPage.tsx and App.tsx)
 import { useEffect, useState } from 'react';
 
-const ACCENT = '#29B5E8';
+const ACCENT = 'var(--cam-primary)';
 const MONO = "'Source Code Pro', monospace";
 
 type Phase = 'listening' | 'transcribing' | 'thinking' | 'responding' | 'done';
@@ -103,7 +104,7 @@ export default function LiveAIDemoCard() {
         @keyframes la-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
         @keyframes la-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-4px); opacity: 1; } }
         @keyframes la-cursor { 50% { opacity: 0; } }
-        @keyframes la-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(41,181,232,0); } 50% { box-shadow: 0 0 0 4px rgba(41,181,232,0.12); } }
+        @keyframes la-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,71,171,0); } 50% { box-shadow: 0 0 0 4px rgba(0,71,171,0.12); } }
         .la-cursor {
           display: inline-block;
           width: 2px;

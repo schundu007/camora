@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const ACCENT = '#29B5E8';
+const ACCENT = 'var(--cam-primary)';
 const DANGER = '#EF4444';
 const SUCCESS = 'var(--accent)';
 const MONO = "'Source Code Pro', monospace";
@@ -36,7 +36,7 @@ export default function CapabilityDeck() {
     <div
       className="rounded-xl overflow-hidden relative"
       style={{
-        background: 'linear-gradient(180deg, #0B1220 0%, #0F172A 100%)',
+        background: 'linear-gradient(180deg, #0B1220 0%, var(--cam-void) 100%)',
         border: '1px solid #1E293B',
         boxShadow: '0 30px 80px -20px rgba(15,23,42,0.4), 0 12px 30px -10px rgba(15,23,42,0.25)',
         minHeight: 560,
@@ -54,7 +54,7 @@ export default function CapabilityDeck() {
         @keyframes cd-gauge { to { stroke-dashoffset: var(--cd-offset); } }
         @keyframes cd-count-up { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes cd-grid-drift { 0% { transform: translate(0,0); } 100% { transform: translate(48px,48px); } }
-        @keyframes cd-glow-ring { 0% { box-shadow: 0 0 0 0 ${ACCENT}55; } 80%,100% { box-shadow: 0 0 0 18px ${ACCENT}00; } }
+        @keyframes cd-glow-ring { 0% { box-shadow: 0 0 0 0 rgba(0,71,171,0.33); } 80%,100% { box-shadow: 0 0 0 18px rgba(0,71,171,0); } }
         @keyframes cd-provider-sweep { 0% { left: 0; } 33% { left: calc(33.333% + 4px); } 66% { left: calc(66.666% + 8px); } 100% { left: 0; } }
         .cd-cursor { display:inline-block; width:2px; height:14px; background:#E2E8F0; vertical-align:text-bottom; margin-left:1px; animation: cd-blink 0.9s step-end infinite; }
       `}</style>
@@ -164,8 +164,8 @@ function SceneLive() {
           {typed >= Q.length && '”'}
         </p>
       </div>
-      <div style={{ background: `linear-gradient(180deg, rgba(41,181,232,0.08), rgba(41,181,232,0.02))`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden' }}>
-        <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 40, background: `linear-gradient(180deg, transparent, ${ACCENT}26, transparent)`, animation: 'cd-scan 2.6s ease-in-out 0.8s infinite', pointerEvents: 'none' }} />
+      <div style={{ background: 'linear-gradient(180deg, rgba(0,71,171,0.08), rgba(0,71,171,0.02))', border: '1px solid rgba(0,71,171,0.20)', borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden' }}>
+        <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 40, background: 'linear-gradient(180deg, transparent, rgba(0,71,171,0.15), transparent)', animation: 'cd-scan 2.6s ease-in-out 0.8s infinite', pointerEvents: 'none' }} />
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
           <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>AI · RESPONSE</span>
@@ -173,7 +173,7 @@ function SceneLive() {
         </div>
         <div className="flex flex-wrap gap-1.5">
           {chips.map((c, i) => (
-            <span key={c} style={{ fontSize: 11, fontWeight: 700, color: ACCENT, background: `${ACCENT}12`, border: `1px solid ${ACCENT}33`, padding: '4px 10px', borderRadius: 999, fontFamily: MONO, opacity: 0, animation: `cd-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) ${1.2 + i * 0.24}s forwards` }}>
+            <span key={c} style={{ fontSize: 11, fontWeight: 700, color: ACCENT, background: 'rgba(0,71,171,0.07)', border: '1px solid rgba(0,71,171,0.20)', padding: '4px 10px', borderRadius: 999, fontFamily: MONO, opacity: 0, animation: `cd-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) ${1.2 + i * 0.24}s forwards` }}>
               {c}
             </span>
           ))}
@@ -249,7 +249,7 @@ function SceneCompany() {
           }}>
             <span style={{
               fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO,
-              background: `${ACCENT}14`, border: `1px solid ${ACCENT}55`,
+              background: 'rgba(0,71,171,0.08)', border: '1px solid rgba(0,71,171,0.33)',
               padding: '3px 6px', borderRadius: 4, letterSpacing: '0.14em',
             }}>
               {s.n}
@@ -313,8 +313,8 @@ function SceneCode() {
           <span key={a.label} style={{
             fontSize: 10, fontWeight: 700,
             color: i === tab ? ACCENT : '#64748B',
-            background: i === tab ? `${ACCENT}14` : 'transparent',
-            border: `1px solid ${i === tab ? ACCENT + '55' : '#1E293B'}`,
+            background: i === tab ? 'rgba(0,71,171,0.08)' : 'transparent',
+            border: `1px solid ${i === tab ? 'rgba(0,71,171,0.33)' : '#1E293B'}`,
             padding: '4px 10px', borderRadius: 6, fontFamily: MONO, letterSpacing: '0.08em',
             transition: 'all 0.3s',
           }}>
@@ -435,7 +435,7 @@ function SceneDesign() {
         {nodes.map((n) => (
           <g key={n.id} style={{ opacity: 0, animation: `cd-pop 0.35s ease-out ${n.delay}s forwards` }}>
             <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="5"
-              fill={n.filled ? ACCENT : '#0F172A'}
+              fill={n.filled ? ACCENT : 'var(--cam-void)'}
               stroke={n.filled ? ACCENT : '#334155'} strokeWidth="1.3" />
             <text x={n.x + n.w / 2} y={n.y + n.h / 2 + 4} textAnchor="middle" fontSize="9.5" fontWeight="800"
               fill={n.filled ? '#0B1220' : '#CBD5E1'} fontFamily={MONO} letterSpacing="0.5">
@@ -506,7 +506,7 @@ function ScenePrep() {
               { m: 'GET',  p: '/{code}/stats' },
             ].map((e, i) => (
               <div key={e.p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.6 + i * 0.1}s forwards` }}>
-                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : '#94A3B8', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? ACCENT + '55' : '#334155'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : '#94A3B8', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'rgba(0,71,171,0.33)' : '#334155'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
                   {e.m}
                 </span>
                 <code style={{ fontSize: 11, color: '#CBD5E1', fontFamily: MONO }}>{e.p}</code>
@@ -587,7 +587,7 @@ function SceneScore() {
               92<span style={{ color: '#475569', fontSize: 18, fontWeight: 700 }}>&nbsp;/&nbsp;100</span>
             </div>
           </div>
-          <div style={{ padding: '8px 16px', borderRadius: 999, background: `${ACCENT}14`, border: `1px solid ${ACCENT}55`, fontSize: 11, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
+          <div style={{ padding: '8px 16px', borderRadius: 999, background: 'rgba(0,71,171,0.08)', border: '1px solid rgba(0,71,171,0.33)', fontSize: 11, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
             READY FOR FAANG
           </div>
         </div>
