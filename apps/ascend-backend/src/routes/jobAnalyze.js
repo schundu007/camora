@@ -465,6 +465,67 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * POST /api/job-analyze/fetch-text
+ * Body: { url: "https://..." }
+ * Returns: { text, pageTitle, platform } — raw scraped JD text, no AI analysis.
+ * Used by the prep Materials JD card to autofill a job posting URL.
+ */
+router.post('/fetch-text', async (req, res) => {
+  const { url } = req.body;
+
+  if (!url || typeof url !== 'string') {
+    return res.status(400).json({ error: 'url is required' });
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid protocol');
+  } catch {
+    return res.status(400).json({ error: 'Invalid URL. Please enter a valid job listing URL.' });
+  }
+
+  try {
+    let jobText = '';
+    let pageTitle = '';
+    let platform = 'generic';
+
+    const apiResult = await fetchJobViaAPI(url);
+    if (apiResult && apiResult.text.length > 100) {
+      jobText = apiResult.text;
+      pageTitle = apiResult.pageTitle;
+      platform = apiResult.platform;
+    }
+
+    if (jobText.length < 100) {
+      const res2 = await fetchWithTimeout(url, {
+        headers: { ...FETCH_HEADERS, 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' },
+      });
+      const html = await res2.text();
+      jobText = extractJobTextFromHtml(html);
+      pageTitle = extractPageTitle(html);
+    }
+
+    if (jobText.length < 100) {
+      return res.status(422).json({
+        error: 'Could not extract enough content from this URL. The page may require login or use JavaScript rendering. Try pasting the job description text directly.',
+      });
+    }
+
+    return res.json({ success: true, text: jobText, pageTitle, platform, source_url: url });
+  } catch (err) {
+    console.error('[job-analyze/fetch-text] Error:', err.message);
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ error: 'The job page took too long to load. Please try again.' });
+    }
+    if (err.message?.includes('HTTP 4')) {
+      return res.status(422).json({ error: 'Could not access this job page. It may require authentication or be expired.' });
+    }
+    return res.status(500).json({ error: err.message || 'Failed to fetch job URL' });
+  }
+});
+
+/**
  * POST /api/job-analyze/text
  * Body: { text: "paste full JD here", title?: "optional job title hint" }
  * Returns: same structured analysis, for when URL scraping doesn't work
