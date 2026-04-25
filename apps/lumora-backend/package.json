@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
+    "@camora/shared-auth": "workspace:*",
     "cheerio": "^1.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.0",

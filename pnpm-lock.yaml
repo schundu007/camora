@@ -27,6 +27,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.0
         version: 0.91.0
+      '@camora/shared-auth':
+        specifier: workspace:*
+        version: link:../../packages/shared-auth
       bcryptjs:
         specifier: ^3.0.0
         version: 3.0.3
@@ -207,6 +210,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.0
         version: 0.91.0
+      '@camora/shared-auth':
+        specifier: workspace:*
+        version: link:../../packages/shared-auth
       cheerio:
         specifier: ^1.0.0
         version: 1.2.0
