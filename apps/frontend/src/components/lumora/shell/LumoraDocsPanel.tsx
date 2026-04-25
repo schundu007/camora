@@ -647,11 +647,21 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         credentials: 'include',
         body: JSON.stringify({ url: url.trim() }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setJdUrlError(res.status === 401 ? 'Please sign in again, then retry.' : (data.error || 'Could not fetch this URL.'));
+      // 404 means the deployed backend doesn't have /api/job-analyze/fetch-text
+      // yet — surface that explicitly so the user knows it's a deploy-lag, not
+      // a broken URL. Other statuses parse the JSON error message.
+      if (res.status === 404) {
+        setJdUrlError('JD fetch endpoint is being deployed. Try again in a minute, or paste the JD text below.');
       } else {
-        setJdEditText(data.text);
+        let data: any = null;
+        try { data = await res.json(); } catch { /* non-JSON 5xx */ }
+        if (!res.ok || !data?.success) {
+          setJdUrlError(res.status === 401
+            ? 'Please sign in again, then retry.'
+            : (data?.error || `Could not fetch this URL (HTTP ${res.status}).`));
+        } else {
+          setJdEditText(data.text);
+        }
       }
     } catch {
       setJdUrlError('Network error. Please try again.');
