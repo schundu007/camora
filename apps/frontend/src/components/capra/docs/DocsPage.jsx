@@ -687,7 +687,7 @@ export default function DocsPage({ onBack }) {
                     to="/capra/practice"
                     className="px-5 py-2 bg-[var(--accent)] text-white font-semibold text-sm rounded hover:bg-[var(--accent-hover)] transition-colors landing-body"
                   >
-                    Start Thawing
+                    Start Practicing
                   </Link>
                 </div>
               )}

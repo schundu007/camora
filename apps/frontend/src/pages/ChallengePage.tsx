@@ -271,7 +271,7 @@ export default function ChallengePage() {
           </div>
 
           <h1 className="ch-hero-title">
-            THE CAMORA <span className="ch-hero-gradient-text">AVALANCHE</span>
+            THE CAMORA <span className="ch-hero-gradient-text">CHALLENGE</span>
           </h1>
           <p className="mt-5 text-lg" style={{ color: '#475569' }}>
             Find bugs. Build features. Win $21,812 in prizes. Join the founding team.
