@@ -486,9 +486,10 @@ function savePrepData(s: PrepData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
-function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
+function UploadZone({ label, required, value, fileName, onUpload, onPaste, onClickOverride }: {
   label: string; required?: boolean; value: string; fileName?: string;
   onUpload: (file: File) => void; onPaste: (text: string) => void;
+  onClickOverride?: () => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -503,7 +504,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
     <div
       className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[#22D3EE]' : ''}`}
       style={{ background: value ? '#22D3EE08' : '#f8fafc', border: `1px solid ${value ? '#22D3EE' : '#e2e8f0'}` }}
-      onClick={() => ref.current?.click()}
+      onClick={() => { if (onClickOverride) onClickOverride(); else ref.current?.click(); }}
       onDrop={handleDrop}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
@@ -526,7 +527,9 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
           <span className="text-xs font-medium" style={{ color: '#0f172a' }}>
             {label}{required && <span style={{ color: '#ef4444' }}>*</span>}
           </span>
-          <span className="text-[10px] mt-0.5" style={{ color: '#94a3b8' }}>Drop or click</span>
+          <span className="text-[10px] mt-0.5" style={{ color: '#94a3b8' }}>
+            {onClickOverride ? 'Paste URL, text, or upload' : 'Drop or click'}
+          </span>
         </>
       )}
     </div>
@@ -618,6 +621,66 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const [newCompanyName, setNewCompanyName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const newCompanyRef = useRef<HTMLInputElement>(null);
+  const jdFileInputRef = useRef<HTMLInputElement>(null);
+  const [jdModalOpen, setJdModalOpen] = useState(false);
+  const [jdUrl, setJdUrl] = useState('');
+  const [jdEditText, setJdEditText] = useState('');
+  const [jdFetching, setJdFetching] = useState(false);
+  const [jdUrlError, setJdUrlError] = useState('');
+
+  const closeJdModal = () => {
+    setJdModalOpen(false);
+    setJdUrl('');
+    setJdEditText('');
+    setJdUrlError('');
+    setJdFetching(false);
+  };
+
+  const fetchJdUrl = async (url: string) => {
+    if (!url.trim()) return;
+    setJdFetching(true);
+    setJdUrlError('');
+    try {
+      const res = await fetch(`${API_URL}/api/job-analyze/fetch-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        credentials: 'include',
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setJdUrlError(res.status === 401 ? 'Please sign in again, then retry.' : (data.error || 'Could not fetch this URL.'));
+      } else {
+        setJdEditText(data.text);
+      }
+    } catch {
+      setJdUrlError('Network error. Please try again.');
+    } finally {
+      setJdFetching(false);
+    }
+  };
+
+  const pasteJdFromClipboard = async () => {
+    setJdUrlError('');
+    if (!navigator.clipboard?.readText) {
+      setJdUrlError('Clipboard access unavailable. Use Cmd/Ctrl+V to paste.');
+      return;
+    }
+    let clip: string;
+    try {
+      clip = (await navigator.clipboard.readText()).trim();
+    } catch {
+      setJdUrlError('Clipboard permission denied. Use Cmd/Ctrl+V to paste.');
+      return;
+    }
+    if (!clip) { setJdUrlError('Clipboard is empty.'); return; }
+    if (/^https?:\/\/\S+$/i.test(clip)) {
+      setJdUrl(clip);
+      await fetchJdUrl(clip);
+      return;
+    }
+    setJdEditText(clip);
+  };
 
   useEffect(() => { savePrepData(prepData); }, [prepData]);
 
@@ -910,7 +973,8 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <div className="grid grid-cols-2 gap-3">
                 <UploadZone label="Job Description" required value={state.jd} fileName={state.jdFile}
                   onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, jd: t, jdFile: f.name })); }}
-                  onPaste={(t) => setState(p => ({ ...p, jd: t }))} />
+                  onPaste={(t) => setState(p => ({ ...p, jd: t }))}
+                  onClickOverride={() => { setJdEditText(state.jd || ''); setJdModalOpen(true); }} />
                 <UploadZone label="Resume" required value={state.resume} fileName={state.resumeFile}
                   onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, resume: t, resumeFile: f.name })); }}
                   onPaste={(t) => setState(p => ({ ...p, resume: t }))} />
@@ -1000,6 +1064,86 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           </div>
         )}
       </div>
+
+      {jdModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={closeJdModal}>
+          <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden" style={{ background: '#ffffff' }} onClick={(e) => e.stopPropagation()}>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
+              <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>Job Description</h3>
+              <div className="flex items-center gap-2">
+                <button onClick={() => jdFileInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
+                  Upload File
+                </button>
+                <button onClick={closeJdModal} className="p-1 rounded" style={{ color: '#94a3b8' }}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: '#475569' }}>Paste job posting URL</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="url"
+                  value={jdUrl}
+                  onChange={(e) => { setJdUrl(e.target.value); setJdUrlError(''); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && jdUrl.trim() && !jdFetching) { e.preventDefault(); fetchJdUrl(jdUrl); } }}
+                  placeholder="https://nvidia.wd5.myworkdayjobs.com/..."
+                  disabled={jdFetching}
+                  className="flex-1 px-3 py-2 rounded-lg text-xs"
+                  style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                />
+                <button onClick={pasteJdFromClipboard} disabled={jdFetching}
+                  className="px-3 py-2 rounded text-xs font-medium" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', opacity: jdFetching ? 0.5 : 1, cursor: jdFetching ? 'not-allowed' : 'pointer' }}
+                  title="Paste URL or JD text from clipboard">
+                  Paste
+                </button>
+                <button onClick={() => fetchJdUrl(jdUrl)} disabled={!jdUrl.trim() || jdFetching}
+                  className="px-3 py-2 rounded text-xs font-bold" style={{ background: '#22D3EE', color: '#fff', opacity: (!jdUrl.trim() || jdFetching) ? 0.5 : 1, cursor: (!jdUrl.trim() || jdFetching) ? 'not-allowed' : 'pointer' }}>
+                  {jdFetching ? 'Fetching…' : 'Fetch JD'}
+                </button>
+              </div>
+              <p className="text-[10px] mt-1" style={{ color: '#94a3b8' }}>
+                Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn, and most career pages.
+              </p>
+              {jdUrlError && <p className="text-[11px] mt-1.5" style={{ color: '#ef4444' }}>{jdUrlError}</p>}
+
+              <textarea
+                value={jdEditText}
+                onChange={(e) => setJdEditText(e.target.value)}
+                placeholder="Or paste the full job description text here..."
+                className="w-full mt-3 p-3 rounded-lg text-xs resize-none"
+                style={{ height: '240px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a' }}
+              />
+              <input ref={jdFileInputRef} type="file" accept=".pdf,.docx,.doc,.txt,.md" className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!f) return;
+                  setJdFetching(true);
+                  try {
+                    const t = await extractFile(f);
+                    setState(p => ({ ...p, jd: t, jdFile: f.name }));
+                    closeJdModal();
+                  } finally { setJdFetching(false); }
+                }} />
+            </div>
+            <div className="px-4 py-3 flex justify-end gap-2" style={{ borderTop: '1px solid #e2e8f0' }}>
+              <button onClick={closeJdModal} className="px-4 py-2 rounded text-xs font-medium" style={{ background: '#f1f5f9', color: '#475569' }}>Cancel</button>
+              <button
+                onClick={() => {
+                  if (jdEditText.trim()) setState(p => ({ ...p, jd: jdEditText.trim(), jdFile: undefined }));
+                  closeJdModal();
+                }}
+                disabled={!jdEditText.trim()}
+                className="px-4 py-2 rounded text-xs font-bold"
+                style={{ background: '#22D3EE', color: '#fff', opacity: jdEditText.trim() ? 1 : 0.5, cursor: jdEditText.trim() ? 'pointer' : 'not-allowed' }}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
