@@ -8,17 +8,17 @@
  * POST /execute — Run code against test cases (Python, JS, Ruby).
  */
 import { Router } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropicClient } from '@camora/shared-llm';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
 
 const router = Router();
 
-// Single Anthropic client shared across requests. The SDK has its own
-// connection pool + rate-limit handling; creating a new client per request
-// (5× in this file before this change) defeats that pooling.
-const anthropicClient = new Anthropic();
+// Process-wide singleton via shared-llm. Avoids the per-request `new
+// Anthropic()` pattern that would otherwise re-initialize connection pools
+// + rate-limit state on every request.
+const anthropicClient = getAnthropicClient();
 
 // ---------------------------------------------------------------------------
 // Constants

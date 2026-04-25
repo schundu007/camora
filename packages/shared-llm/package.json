@@ -1,0 +1,14 @@
+{
+  "name": "@camora/shared-llm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.0",
+    "openai": "^6.33.0"
+  }
+}

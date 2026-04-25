@@ -30,6 +30,12 @@ importers:
       '@camora/shared-auth':
         specifier: workspace:*
         version: link:../../packages/shared-auth
+      '@camora/shared-db':
+        specifier: workspace:*
+        version: link:../../packages/shared-db
+      '@camora/shared-llm':
+        specifier: workspace:*
+        version: link:../../packages/shared-llm
       bcryptjs:
         specifier: ^3.0.0
         version: 3.0.3
@@ -125,6 +131,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@camora/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@excalidraw/excalidraw':
         specifier: ^0.18.1
         version: 0.18.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(immer@10.2.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -213,6 +222,12 @@ importers:
       '@camora/shared-auth':
         specifier: workspace:*
         version: link:../../packages/shared-auth
+      '@camora/shared-db':
+        specifier: workspace:*
+        version: link:../../packages/shared-db
+      '@camora/shared-llm':
+        specifier: workspace:*
+        version: link:../../packages/shared-llm
       cheerio:
         specifier: ^1.0.0
         version: 1.2.0
@@ -283,6 +298,15 @@ importers:
       pg:
         specifier: ^8.11.0
         version: 8.20.0
+
+  packages/shared-llm:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.91.0
+        version: 0.91.0
+      openai:
+        specifier: ^6.33.0
+        version: 6.33.0(ws@8.20.0)
 
   packages/shared-types: {}
 

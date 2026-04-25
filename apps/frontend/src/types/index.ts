@@ -1,6 +1,17 @@
 /**
  * Type definitions for the Interview Assistant frontend.
+ *
+ * Cross-app shared shapes (JWTPayload, backend User / Conversation /
+ * Message rows, Subscription, etc.) live in @camora/shared-types. Re-export
+ * them here so callers can keep importing from '@/types' but the canonical
+ * home stays in the package. Frontend-specific additions stay below.
  */
+export type {
+  AuthUser,
+  JWTPayload,
+  Conversation as BackendConversation,
+  Message as BackendMessage,
+} from '@camora/shared-types';
 
 // User types
 export interface User {
