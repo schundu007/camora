@@ -120,22 +120,22 @@
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
-    /* ── Camora brand palette — farmer's market (tomato + amber) ── */
+    /* ── Camora brand palette — accent only is tomato; surfaces stay neutral ── */
     --cam-primary:      #E63946;
     --cam-primary-lt:   #FF6B7A;
     --cam-primary-dk:   #B91D2C;
-    --cam-primary-900:  #1A0508;
+    --cam-primary-900:  #050C1A;
 
     --cam-amber:        #AB6400;
     --cam-amber-lt:     #C07A00;
     --cam-amber-dk:     #864E00;
     --cam-amber-50:     #FAF0E0;
 
-    --cam-midnight:     #7A1419;
-    --cam-steel:        #C44536;
-    --cam-mist:         #FCE5E8;
-    --cam-surface-lt:   #FFF5F6;
-    --cam-void:         #1A0508;
+    --cam-midnight:     #0F172A;
+    --cam-steel:        #475569;
+    --cam-mist:         #F1F5F9;
+    --cam-surface-lt:   #F8FAFC;
+    --cam-void:         #050C1A;
 
     /* Single source of truth (kept in sync with --accent above) */
     --accent:           #E63946;
