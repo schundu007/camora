@@ -12,7 +12,7 @@ import { MicButtonLarge } from './companion/mic-button-large';
 const C = {
   base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: 'var(--cam-primary)',
   text: '#0F172A', muted: '#64748B', accent: 'var(--cam-primary)',
-  accentBg: 'rgba(0,71,171,0.08)', border: 'rgba(0,0,0,0.15)',
+  accentBg: 'rgba(59,54,220,0.08)', border: 'rgba(0,0,0,0.15)',
 };
 
 /* ── Types ── */
@@ -67,7 +67,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
         </linearGradient>
         {/* S glyph — single-tone cyan, no rainbow. */}
         <linearGradient id={g.glyph} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#87AAE0" />
+          <stop offset="0%" stopColor="#9F9CEC" />
           <stop offset="100%" stopColor="var(--cam-primary)" />
         </linearGradient>
         {/* Inner edge hairline — a thin cyan hint along the top edge of
@@ -312,7 +312,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(0,71,171,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
+        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(59,54,220,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
         title="Open Sona"
       >
         <SonaAvatar size={44} />

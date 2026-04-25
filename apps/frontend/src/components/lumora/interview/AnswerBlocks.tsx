@@ -45,7 +45,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'HEADLINE':
       return (
         <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0', backdropFilter: 'blur(8px)'}}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, var(--cam-primary), var(--cam-primary), #87AAE0)' }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, var(--cam-primary), var(--cam-primary), #9F9CEC)' }} />
           <div className="p-5">
             <p className="text-[15px] text-slate-800 leading-relaxed font-medium" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
           </div>
@@ -72,7 +72,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
               const text = hasLabel ? line.slice(colonIdx + 1).trim() : line;
               return (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-[rgba(0,71,171,0.15)] text-[#87AAE0] text-[10px] font-bold shrink-0 mt-0.5 font-mono">{i + 1}</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-[rgba(59,54,220,0.15)] text-[#9F9CEC] text-[10px] font-bold shrink-0 mt-0.5 font-mono">{i + 1}</span>
                   <div className="text-[13px] text-slate-600 leading-relaxed">
                     {label && <span className="font-semibold text-slate-800">{label}: </span>}
                     {text}
@@ -102,7 +102,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
           <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200">
             <div className="flex items-center gap-2">
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" /></div>
-              <span className="font-mono text-[10px] font-bold text-[#87AAE0]/80 uppercase tracking-widest">{lang}</span>
+              <span className="font-mono text-[10px] font-bold text-[#9F9CEC]/80 uppercase tracking-widest">{lang}</span>
             </div>
             <button className="text-[10px] font-mono text-slate-400 hover:text-slate-600 px-2 py-0.5 border border-slate-200 rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
@@ -526,7 +526,7 @@ function ScaleMathList({ content }: { content: string }) {
   const renderTable = (items: typeof metrics) => (
     <table className="w-full text-left font-mono" style={{ borderCollapse: 'collapse' }}>
       <thead>
-        <tr style={{ borderBottom: '1px solid rgba(0,71,171,0.15)' }}>
+        <tr style={{ borderBottom: '1px solid rgba(59,54,220,0.15)' }}>
           <th className="text-[9px] font-bold uppercase tracking-wider py-1.5 pr-3" style={{ color: 'var(--text-muted)' }}>Metric</th>
           <th className="text-[9px] font-bold uppercase tracking-wider py-1.5" style={{ color: 'var(--text-muted)' }}>Estimate</th>
         </tr>
@@ -719,7 +719,7 @@ function FollowupList({ content }: { content: string }) {
             </span>
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
-          <div className="ml-9 border-l-2 border-[rgba(0,71,171,0.3)] pl-4 py-1">
+          <div className="ml-9 border-l-2 border-[rgba(59,54,220,0.3)] pl-4 py-1">
             <span className="text-[13px] text-text-muted leading-relaxed">{pair.answer}</span>
           </div>
         </div>
