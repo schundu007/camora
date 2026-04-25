@@ -199,7 +199,7 @@
     height: 100%;
   }
 
-  /* Winter Kei for all headings and important text */
+  /* Display font on all headings and prominent text */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
   }
