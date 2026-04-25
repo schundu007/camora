@@ -219,7 +219,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           style={isLight ? {
             fontSize: '13px',
             color: isRecording ? '#ffffff' : '#000000',
-            background: isRecording ? '#FF0000' : '#22D3EE',
+            background: isRecording ? '#FF0000' : 'var(--cam-primary)',
             border: '1px solid var(--border)',
           } : {
             fontSize: '11px',
@@ -266,7 +266,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           fontSize: '13px',
           padding: '10px 16px',
           color: '#ffffff',
-          background: voiceFilterEnabled ? '#22D3EE' : '#000000',
+          background: voiceFilterEnabled ? 'var(--cam-primary)' : '#000000',
           border: '1px solid var(--border)',
         } : {
           fontSize: '11px',

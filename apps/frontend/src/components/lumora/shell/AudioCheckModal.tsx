@@ -214,7 +214,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#CFFAFE', color: '#0891B2' }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#CFFAFE', color: 'var(--cam-primary-dk)' }}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -249,7 +249,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
             {permission === 'granted' ? 'Microphone permission granted' :
              permission === 'denied' ? 'Microphone blocked — update your browser site settings and reload' :
              permission === 'prompt' ? 'Waiting for microphone permission' : 'Checking microphone…'}
-            <button onClick={enumerate} className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded hover:bg-black/5" style={{ color: '#0891B2' }}>Refresh</button>
+            <button onClick={enumerate} className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded hover:bg-black/5" style={{ color: 'var(--cam-primary-dk)' }}>Refresh</button>
           </div>
 
           {/* Input — Microphone */}
@@ -291,12 +291,12 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                   key={label}
                   onClick={() => set(!val)}
                   className="text-left px-3 py-2 rounded-md transition-colors"
-                  style={{ background: val ? '#F0FDFF' : '#FFFFFF', border: `1px solid ${val ? '#67E8F9' : '#E2E8F0'}` }}
+                  style={{ background: val ? '#F0FDFF' : '#FFFFFF', border: `1px solid ${val ? '#87AAE0' : '#E2E8F0'}` }}
                   title={hint}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-semibold" style={{ color: '#0F172A' }}>{label}</span>
-                    <span className="w-8 h-4 rounded-full relative transition-colors" style={{ background: val ? '#22D3EE' : '#CBD5E1' }}>
+                    <span className="w-8 h-4 rounded-full relative transition-colors" style={{ background: val ? 'var(--cam-primary)' : '#CBD5E1' }}>
                       <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-[left]" style={{ left: val ? 18 : 2 }} />
                     </span>
                   </div>
@@ -329,7 +329,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
               <button
                 onClick={playTestTone}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors"
-                style={{ color: '#FFFFFF', background: '#0891B2', border: '1px solid #0E7490' }}
+                style={{ color: '#FFFFFF', background: 'var(--cam-primary-dk)', border: '1px solid var(--cam-primary-dk)' }}
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -391,7 +391,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
           <button
             onClick={onClose}
             className="px-4 py-1.5 text-[13px] font-semibold rounded-md transition-colors"
-            style={{ color: '#FFFFFF', background: '#0891B2', border: '1px solid #0E7490' }}
+            style={{ color: '#FFFFFF', background: 'var(--cam-primary-dk)', border: '1px solid var(--cam-primary-dk)' }}
           >Done</button>
         </div>
       </div>

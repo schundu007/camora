@@ -26,26 +26,26 @@ export function useTheme(dark: boolean): DesignTheme {
   if (dark) {
     return {
       cardBg: '#0F172A', cardBorder: '#1E293B',
-      headerBg: 'rgba(34,211,238,0.08)', headerBorder: '#1E40AF',
-      headerText: '#22D3EE', badgeBg: 'rgba(34,211,238,0.12)', badgeText: '#22D3EE',
+      headerBg: 'rgba(0,71,171,0.08)', headerBorder: '#1E40AF',
+      headerText: 'var(--cam-primary)', badgeBg: 'rgba(0,71,171,0.12)', badgeText: 'var(--cam-primary)',
       text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
       codeBg: '#020617', codeText: '#E2E8F0',
       inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
       sectionBg: '#0F172A', surfaceBg: '#1E293B',
-      tabActive: '#22D3EE', tabActiveBg: '#1E293B', tabText: '#94A3B8',
-      dotColor: '#22D3EE',
+      tabActive: 'var(--cam-primary)', tabActiveBg: '#1E293B', tabText: '#94A3B8',
+      dotColor: 'var(--cam-primary)',
     };
   }
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(34,211,238,0.05)', headerBorder: '#BFDBFE',
-    headerText: '#22D3EE', badgeBg: '#22D3EE10', badgeText: '#22D3EE',
+    headerBg: 'rgba(0,71,171,0.05)', headerBorder: '#BFDBFE',
+    headerText: 'var(--cam-primary)', badgeBg: 'rgba(0,71,171,0.06)', badgeText: 'var(--cam-primary)',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#22D3EE', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#22D3EE',
+    tabActive: 'var(--cam-primary)', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: 'var(--cam-primary)',
   };
 }
 

@@ -42,7 +42,7 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
           <div key={si} className={si > 0 ? 'mt-4' : ''}>
             {section.title && (
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1 h-4 rounded-full" style={{ background: '#22D3EE' }} />
+                <div className="w-1 h-4 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                 <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#0F172A' }}>{section.title}</h4>
               </div>
             )}
@@ -53,7 +53,7 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
 
               if (isBullet) return (
                 <div key={ii} className="flex gap-2 ml-3 mb-1">
-                  <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#22D3EE' }} />
+                  <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                   <span>{cleaned}</span>
                 </div>
               );
@@ -80,12 +80,12 @@ export function TextFieldWithPreview({ value, onChange, placeholder, label }: { 
   const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
   return previewing && value ? (
     <div>
-      <button onClick={() => setPreviewing(false)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>Edit</button>
+      <button onClick={() => setPreviewing(false)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>Edit</button>
       <FormatTextPreview text={value} label={label} />
     </div>
   ) : (
     <div>
-      {value && <button onClick={() => setPreviewing(true)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>Preview</button>}
+      {value && <button onClick={() => setPreviewing(true)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>Preview</button>}
       <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
     </div>
   );
@@ -136,7 +136,7 @@ export function LumoraProfilePage() {
         {user?.image ? (
           <img src={user.image} alt="" className="w-16 h-16 rounded-2xl object-cover" referrerPolicy="no-referrer" />
         ) : (
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: '#22D3EE' }}>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: 'var(--cam-primary)' }}>
             {(user?.name || user?.email || '?')[0].toUpperCase()}
           </div>
         )}
@@ -161,7 +161,7 @@ export function LumoraProfilePage() {
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: '#64748B' }}>Plan</span>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(34,211,238,0.1)', color: plan === 'free' ? '#64748B' : '#22D3EE' }}>{planLabel}</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(0,71,171,0.1)', color: plan === 'free' ? '#64748B' : 'var(--cam-primary)' }}>{planLabel}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: '#64748B' }}>Status</span>
@@ -318,7 +318,7 @@ export function AssistantsPage() {
     <div className="max-w-5xl mx-auto px-6 py-8 w-full">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Interview Assistants</h2>
-        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>
+        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
           New
         </button>
@@ -340,7 +340,7 @@ export function AssistantsPage() {
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Your Resume</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -358,7 +358,7 @@ export function AssistantsPage() {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Job Description</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: '#29B5E8', border: '1px solid #E2E8F0' }}>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -374,7 +374,7 @@ export function AssistantsPage() {
             <TextFieldWithPreview value={form.jobDescription} onChange={v => setForm(f => ({ ...f, jobDescription: v }))} placeholder="Paste the JD or upload a file. AI will tailor answers to match role requirements." label="Job Description Preview" />
           </div>
           <div className="flex gap-2">
-            <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: '#29B5E8' }}>Create</button>
+            <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: 'var(--cam-primary)' }}>Create</button>
             <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color: '#64748B', border: '1px solid #E2E8F0' }}>Cancel</button>
           </div>
         </div>
@@ -384,7 +384,7 @@ export function AssistantsPage() {
           <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
           <p className="text-sm font-medium" style={{ color: '#0F172A' }}>No assistants yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: '#94A3B8' }}>Add your resume + job description for personalized AI answers.</p>
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: '#29B5E8' }}>Create Your First Assistant</button>
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>Create Your First Assistant</button>
         </div>
       ) : (
         <div className="space-y-3">{assistants.map(a => {
@@ -393,8 +393,8 @@ export function AssistantsPage() {
             <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: '#fff', border: '1px solid #E2E8F0' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(41,181,232,0.1)' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,71,171,0.1)' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
@@ -402,8 +402,8 @@ export function AssistantsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: (mi?.color || '#29B5E8') + '10', color: mi?.color || '#29B5E8' }}>{mi?.label || a.model}</span>
-                  <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: '#29B5E8' }}>Launch</Link>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: (mi?.color || 'var(--cam-primary)') + '10', color: mi?.color || 'var(--cam-primary)' }}>{mi?.label || a.model}</span>
+                  <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: 'var(--cam-primary)' }}>Launch</Link>
                   <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: '#94A3B8' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
@@ -413,16 +413,16 @@ export function AssistantsPage() {
               </div>}
 
               {a.resume && (
-                <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
+                <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(0,71,171,0.04)', border: '1px solid rgba(0,71,171,0.15)' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                     </svg>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#0E7490' }}>Story Bank</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
                     {a.storyParseStatus === 'parsing' && (
                       <span className="flex items-center gap-1 text-[10px]" style={{ color: '#64748B' }}>
-                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22D3EE' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-primary)' }} />
                         Parsing resume…
                       </span>
                     )}
@@ -441,21 +441,21 @@ export function AssistantsPage() {
                         <div key={s.id} className="flex items-start gap-2 text-[11px]">
                           <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
                             {s.archetypes.map(t => (
-                              <span key={t} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: '#22D3EE', color: '#FFFFFF' }}>
+                              <span key={t} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
                                 {t}
                               </span>
                             ))}
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold" style={{ color: '#0F172A' }}>{s.title}</p>
-                            <p className="text-[10px]" style={{ color: '#64748B' }}>{s.summary}{s.impact ? <span style={{ color: '#0E7490' }}> · {s.impact}</span> : null}</p>
+                            <p className="text-[10px]" style={{ color: '#64748B' }}>{s.summary}{s.impact ? <span style={{ color: 'var(--cam-primary-dk)' }}> · {s.impact}</span> : null}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                   {a.storyParseStatus !== 'parsing' && (!a.stories || a.stories.length === 0) && a.storyParseStatus !== 'failed' && (
-                    <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: '#22D3EE' }}>
+                    <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: 'var(--cam-primary)' }}>
                       Extract stories from resume
                     </button>
                   )}

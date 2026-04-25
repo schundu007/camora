@@ -75,7 +75,7 @@ export function ScaleCalculator({ baseline, themeTokens }: {
                 value={inputs[s.key]}
                 onChange={e => setInputs(i => ({ ...i, [s.key]: Number(e.target.value) }))}
                 className="w-full h-1 rounded-full appearance-none cursor-pointer"
-                style={{ background: `linear-gradient(to right, #22D3EE ${((inputs[s.key] - s.min) / (s.max - s.min)) * 100}%, ${t.cardBorder} ${((inputs[s.key] - s.min) / (s.max - s.min)) * 100}%)`, accentColor: '#22D3EE' }}
+                style={{ background: `linear-gradient(to right, var(--cam-primary) ${((inputs[s.key] - s.min) / (s.max - s.min)) * 100}%, ${t.cardBorder} ${((inputs[s.key] - s.min) / (s.max - s.min)) * 100}%)`, accentColor: 'var(--cam-primary)' }}
               />
             </div>
           ))}

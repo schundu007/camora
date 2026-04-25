@@ -39,7 +39,7 @@ const CATEGORIES = [
   { title: 'UX / Design', color: 'var(--accent)', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
   { title: 'Performance', color: 'var(--text-muted)', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
   { title: 'Infrastructure', color: '#06b6d4', glow: 'rgba(6,182,212,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: '#29B5E8', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+  { title: 'New Features', color: 'var(--cam-primary)', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -56,8 +56,8 @@ const TECH_STACK = [
 ];
 
 const STEPS = [
-  { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: '#29B5E8' },
-  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: '#29B5E8' },
+  { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: 'var(--cam-primary)' },
+  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: 'var(--cam-primary)' },
   { num: '03', title: 'Find & build', desc: 'Hunt bugs, fix issues, build features.', color: 'var(--accent)' },
   { num: '04', title: 'Submit findings', desc: 'Detailed docs with your work.', color: 'var(--accent)' },
   { num: '05', title: 'Team review', desc: 'Top submissions reviewed by founders.', color: 'var(--text-muted)' },
@@ -70,7 +70,7 @@ const SCORING = [
   { category: 'UX / Design', points: '5 pts', color: 'var(--accent)' },
   { category: 'Performance', points: '5 pts', color: 'var(--text-muted)' },
   { category: 'Infrastructure', points: '5 pts', color: '#06b6d4' },
-  { category: 'Features', points: '3-10 pts', color: '#29B5E8' },
+  { category: 'Features', points: '3-10 pts', color: 'var(--cam-primary)' },
 ];
 
 const FAQS = [
@@ -109,7 +109,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div className="ch-glass-card" style={{ borderColor: open ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)' }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-4 text-left" aria-expanded={open}>
         <span className="text-base font-semibold text-[#0F172A]">{q}</span>
-        <svg className={`w-4 h-4 text-[#29B5E8]/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+        <svg className={`w-4 h-4 text-[var(--cam-primary)]/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
       </button>
       {open && <div className="px-5 pb-4 text-base text-[#64748B] leading-relaxed">{a}</div>}
     </div>
@@ -282,7 +282,7 @@ export default function ChallengePage() {
             {challengeEnded ? (
               <p className="text-base font-semibold text-[#64748B]">Challenge ended. Winners announced October 22.</p>
             ) : challengeActive ? (
-              <p className="text-base font-bold text-[#29B5E8]">Challenge is LIVE. Submit findings now.</p>
+              <p className="text-base font-bold text-[var(--cam-primary)]">Challenge is LIVE. Submit findings now.</p>
             ) : (
               <>
                 <span className="text-base font-bold text-[#94A3B8] uppercase tracking-[0.15em] mr-3">Starts in</span>
@@ -323,7 +323,7 @@ export default function ChallengePage() {
           {!isAuthenticated ? (
             <div className="ch-glass-card text-center py-12 px-6">
               <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--accent)' } as any}>
-                <svg className="w-6 h-6 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
+                <svg className="w-6 h-6 text-[var(--cam-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[#0F172A] mb-2">Ready to participate?</h3>
               <p className="text-base text-[#64748B] mb-6">Create a free account to take the qualification quiz.</p>
@@ -334,10 +334,10 @@ export default function ChallengePage() {
               <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
-                    <svg className="w-5 h-5 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg className="w-5 h-5 text-[var(--cam-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <span className="text-base font-bold text-[#29B5E8]">Qualified Challenger</span>
+                    <span className="text-base font-bold text-[var(--cam-primary)]">Qualified Challenger</span>
                     <span className="text-base text-[#94A3B8] ml-2">Score: {challengeStatus.quizScore}%</span>
                   </div>
                 </div>
@@ -387,7 +387,7 @@ export default function ChallengePage() {
                 </span>
               </div>
               <div className="p-5 rounded-xl mb-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                <span className="text-base font-bold text-[#29B5E8] uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                <span className="text-base font-bold text-[var(--cam-primary)] uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
                 <h3 className="text-lg font-bold text-[#0F172A] mt-1">{quizQuestions[quizIdx]?.q}</h3>
                 <p className="text-base text-[#64748B] mt-1">{quizQuestions[quizIdx]?.desc}</p>
               </div>
@@ -425,13 +425,13 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'evaluating' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="w-12 h-12 border-3 border-[#29B5E8]/20 border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
+              <div className="w-12 h-12 border-3 border-[var(--cam-primary)]/20 border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
               <p className="text-base text-[#64748B]">Evaluating your answers...</p>
             </div>
           ) : (
             <div className="ch-glass-card text-center py-12 px-6">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#29B5E8' } as any}>
-                <svg className="w-6 h-6 text-[#29B5E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--cam-primary)' } as any}>
+                <svg className="w-6 h-6 text-[var(--cam-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[#0F172A] mb-2">Qualification Quiz</h3>
               <p className="text-base text-[#64748B] mb-6">5 coding questions, 10 minutes. Score 60%+ to unlock.</p>
@@ -472,7 +472,7 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: '#29B5E8' }}>Opportunity</span>
+            <span className="ch-section-tag" style={{ color: 'var(--cam-primary)' }}>Opportunity</span>
             <h2 className="ch-section-title">Join the Founding Team</h2>
             <p className="ch-section-sub">Top performers get founding or core engineer offers.</p>
           </div>
@@ -481,32 +481,32 @@ export default function ChallengePage() {
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-[#0F172A]">Founding Engineers</h3>
-                  <span className="text-base text-[#29B5E8] font-bold">5 positions</span>
+                  <span className="text-base text-[var(--cam-primary)] font-bold">5 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + significant equity', 'Remote-first, async culture', 'Build core platform from day one', 'Direct product influence', 'Full AI/ML stack'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-base text-[#64748B]"><span className="text-[#29B5E8] mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-[#64748B]"><span className="text-[var(--cam-primary)] mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(45,140,255,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="ch-glow-icon" style={{ '--glow': '#29B5E8' } as any}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                <div className="ch-glow-icon" style={{ '--glow': 'var(--cam-primary)' } as any}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-[#0F172A]">Core Engineers</h3>
-                  <span className="text-base text-[#29B5E8] font-bold">10 positions</span>
+                  <span className="text-base text-[var(--cam-primary)] font-bold">10 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + stock options', 'Mentorship from founding team', 'Clear growth trajectory', 'Remote-first, flexible hours', 'Growth potential'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-base text-[#64748B]"><span className="text-[#29B5E8] mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-[#64748B]"><span className="text-[var(--cam-primary)] mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
@@ -517,7 +517,7 @@ export default function ChallengePage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {BENEFITS.map((b) => (
                 <div key={b} className="flex items-center gap-2 text-base text-[#64748B]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#29B5E8] shrink-0" style={{ boxShadow: 'none' }} />{b}
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--cam-primary)] shrink-0" style={{ boxShadow: 'none' }} />{b}
                 </div>
               ))}
             </div>
@@ -554,7 +554,7 @@ export default function ChallengePage() {
             {/* Scoring */}
             <div className="ch-glass-card p-5">
               <h3 className="text-base font-bold text-[#0F172A] mb-3 flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#29B5E8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
                 Scoring
               </h3>
               <div className="space-y-2.5">
@@ -646,7 +646,7 @@ export default function ChallengePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { title: 'Eligibility', color: 'var(--accent)', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
-              { title: 'Submissions', color: '#29B5E8', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
+              { title: 'Submissions', color: 'var(--cam-primary)', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
               { title: 'Timeline', color: 'var(--text-muted)', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
               { title: 'Judging', color: '#EF4444', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
             ].map((r) => (
@@ -681,7 +681,7 @@ export default function ChallengePage() {
         <section className="ch-section">
           <div className="w-full lg:max-w-[50%] mx-auto px-4 sm:px-6">
             <div className="ch-section-head">
-              <span className="ch-section-tag" style={{ color: '#29B5E8' }}>Spread the Word</span>
+              <span className="ch-section-tag" style={{ color: 'var(--cam-primary)' }}>Spread the Word</span>
               <h2 className="ch-section-title">Refer Friends, Earn Credits</h2>
               <p className="ch-section-sub">Share the challenge and earn credits when friends join.</p>
             </div>
@@ -751,7 +751,7 @@ export default function ChallengePage() {
         }
         .ch-badge-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: #29B5E8;
+          background: var(--cam-primary);
         }
 
         .ch-hero-title {
@@ -764,7 +764,7 @@ export default function ChallengePage() {
           letter-spacing: -0.02em;
         }
         .ch-hero-gradient-text {
-          background: linear-gradient(135deg, #29B5E8, #06B6D4);
+          background: linear-gradient(135deg, var(--cam-primary), var(--cam-primary));
           background-size: 300% 300%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -806,7 +806,7 @@ export default function ChallengePage() {
         .ch-prize-amount {
           font-family: 'Source Sans 3', sans-serif;
           font-size: 48px; font-weight: 800;
-          color: #29B5E8;
+          color: var(--cam-primary);
         }
 
         /* ── CTAs ── */
@@ -814,7 +814,7 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; justify-content: center;
           padding: 14px 32px; border-radius: 999px;
           font-size: 14px; font-weight: 700; color: #fff;
-          background: #29B5E8;
+          background: var(--cam-primary);
           border: none; cursor: pointer;
           transition: all 0.2s;
           text-decoration: none;
@@ -836,8 +836,8 @@ export default function ChallengePage() {
           text-transform: uppercase; letter-spacing: 0.08em;
         }
         .ch-cta-secondary:hover {
-          border-color: #29B5E8;
-          color: #29B5E8;
+          border-color: var(--cam-primary);
+          color: var(--cam-primary);
         }
 
         /* ── Sections ── */
@@ -855,7 +855,7 @@ export default function ChallengePage() {
           border-radius: 8px;
           transition: border-color 0.2s;
         }
-        .ch-glass-card:hover { border-color: #29B5E8; }
+        .ch-glass-card:hover { border-color: var(--cam-primary); }
 
         /* ── Inputs ── */
         .ch-input {
@@ -865,7 +865,7 @@ export default function ChallengePage() {
           border: 1px solid #E2E8F0;
           outline: none; transition: border-color 0.2s;
         }
-        .ch-input:focus { border-color: #29B5E8; }
+        .ch-input:focus { border-color: var(--cam-primary); }
         .ch-input::placeholder { color: #94A3B8; }
 
         .ch-code-editor {
@@ -894,7 +894,7 @@ export default function ChallengePage() {
           transition: all 0.2s;
         }
         .ch-prize-card::before { display: none; }
-        .ch-prize-card:hover { transform: translateY(-2px); border-color: #29B5E8; }
+        .ch-prize-card:hover { transform: translateY(-2px); border-color: var(--cam-primary); }
         .ch-prize-card-inner {
           background: #FFFFFF;
           border-radius: 12px;
@@ -921,7 +921,7 @@ export default function ChallengePage() {
           transition: all 0.2s;
         }
         .ch-category-card:hover {
-          border-color: var(--cat-color, #29B5E8);
+          border-color: var(--cat-color, var(--cam-primary));
           transform: translateY(-2px);
         }
 
@@ -945,7 +945,7 @@ export default function ChallengePage() {
           display: flex; align-items: center; justify-content: center;
           font-family: 'Source Code Pro', monospace;
           font-size: 14px; font-weight: 700; color: #FFFFFF;
-          background: var(--node-color, #29B5E8);
+          background: var(--node-color, var(--cam-primary));
           position: relative; z-index: 2;
         }
         .ch-timeline-line {
@@ -962,7 +962,7 @@ export default function ChallengePage() {
           transition: all 0.2s;
         }
         .ch-tech-pill:hover {
-          border-color: #29B5E8;
+          border-color: var(--cam-primary);
           transform: translateY(-1px);
         }
 

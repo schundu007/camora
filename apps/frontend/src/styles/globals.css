@@ -43,19 +43,19 @@
     --text-muted: #1E293B;
     --text-dimmed: #334155;
 
-    /* Accent — Snowflake cyan, aligned with the landing page hex */
-    --accent: #29B5E8;
-    --accent-hover: #06B6D4;
-    --accent-subtle: rgba(41,181,232,0.10);
-    --accent-text: #0891B2;
+    /* Accent — Camora navy, single source of truth */
+    --accent: #0047AB;
+    --accent-hover: #003688;
+    --accent-subtle: rgba(0,71,171,0.10);
+    --accent-text: #003688;
 
-    /* Semantic — Snowflake palette: cyan for positive, red for errors.
-       Warning + info fold onto cyan so the UI never shows amber/yellow
-       or an off-brand blue. */
-    --success: #29B5E8;
-    --warning: #29B5E8;
+    /* Semantic — Camora palette: navy for positive, red for errors.
+       Warning + info fold onto navy so the UI never shows amber/yellow
+       or an off-brand cyan. */
+    --success: #0047AB;
+    --warning: #0047AB;
     --danger: #EF4444;
-    --info: #29B5E8;
+    --info: #0047AB;
 
     /* Difficulty — rank by weight in the chip, not by hue. Values below
        are back-compat shims for any code that reads them directly. */
@@ -65,15 +65,15 @@
     --medium: #0F172A;
     --medium-bg: rgba(15,23,42,0.06);
     --medium-border: rgba(15,23,42,0.15);
-    --hard: #29B5E8;
-    --hard-bg: rgba(41,181,232,0.10);
-    --hard-border: rgba(41,181,232,0.25);
+    --hard: #0047AB;
+    --hard-bg: rgba(0,71,171,0.10);
+    --hard-border: rgba(0,71,171,0.25);
 
     /* Category — single accent plus two neutral slate shades. Pages
        with multiple categories side-by-side distinguish via typography
        and icons rather than color. */
-    --cat-primary: #29B5E8;
-    --cat-primary-bg: rgba(41,181,232,0.10);
+    --cat-primary: #0047AB;
+    --cat-primary-bg: rgba(0,71,171,0.10);
     --cat-secondary: #334155;
     --cat-secondary-bg: rgba(51,65,85,0.06);
     --cat-tertiary: #64748B;
@@ -155,7 +155,7 @@
     --text-secondary: #334155;
     --text-muted: #7096BF;
     --text-dimmed: #B0CBE6;
-    --accent-subtle: rgba(34,211,238,0.10);
+    --accent-subtle: rgba(0,71,171,0.10);
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
     --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
     --shadow-md: 0 4px 12px rgba(56,189,248,0.10);
@@ -783,7 +783,7 @@ img { max-width: 100%; height: auto; }
 
 /* Gradient text on dark backgrounds */
 .ai-gradient-text {
-  background: linear-gradient(135deg, #2D8CFF 0%, #60A5FA 50%, #06B6D4 100%);
+  background: linear-gradient(135deg, #2D8CFF 0%, #60A5FA 50%, var(--cam-primary) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

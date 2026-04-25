@@ -115,7 +115,7 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
         title={tooltip}
         aria-label={tooltip}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${className || ''}`}
-        style={{ background: busy ? 'rgba(34,211,238,0.15)' : 'rgba(34,211,238,0.1)', color: '#22D3EE', border: '1px solid rgba(34,211,238,0.3)' }}
+        style={{ background: busy ? 'rgba(0,71,171,0.15)' : 'rgba(0,71,171,0.1)', color: 'var(--cam-primary)', border: '1px solid rgba(0,71,171,0.3)' }}
       >
         {busy ? (
           <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -142,7 +142,7 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
       title={status || tooltip}
       aria-label={tooltip}
       className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors disabled:opacity-60 ${className || ''}`}
-      style={{ color: busy ? '#22D3EE' : 'var(--text-secondary, #334155)' }}
+      style={{ color: busy ? 'var(--cam-primary)' : 'var(--text-secondary, #334155)' }}
     >
       {busy ? (
         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

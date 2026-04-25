@@ -81,9 +81,9 @@ function formatTime(seconds: number): string {
 /** Color-code complexity notation from best (green) to worst (red) */
 function getComplexityColor(notation: string): string {
   const n = notation.toLowerCase().replace(/\s+/g, '');
-  if (/o\(1\)/.test(n)) return '#22D3EE';           // O(1) - best
+  if (/o\(1\)/.test(n)) return 'var(--cam-primary)';           // O(1) - best
   if (/o\(log/.test(n) && !/o\(n/.test(n)) return '#0891b2'; // O(log n) - great
-  if (/o\(n\)$/.test(n)) return '#06B6D4';           // O(n) - good
+  if (/o\(n\)$/.test(n)) return 'var(--cam-primary)';           // O(n) - good
   if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return '#7c3aed'; // O(n log n)
   if (/o\(n[\^²]2?\)/.test(n)) return '#d97706';     // O(n²) - fair
   if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return '#ea580c'; // O(n³) - poor
@@ -124,28 +124,28 @@ function useTheme(dark: boolean) {
   if (dark) {
     return {
       cardBg: '#0F172A', cardBorder: '#1E293B',
-      headerBg: 'rgba(34,211,238,0.08)', headerBorder: '#1E40AF',
-      headerText: '#22D3EE', badgeBg: 'rgba(34,211,238,0.12)', badgeText: '#22D3EE',
+      headerBg: 'rgba(0,71,171,0.08)', headerBorder: '#1E40AF',
+      headerText: 'var(--cam-primary)', badgeBg: 'rgba(0,71,171,0.12)', badgeText: 'var(--cam-primary)',
       text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
       codeBg: '#020617', codeText: '#E2E8F0',
       inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
       sectionBg: '#0F172A', surfaceBg: '#1E293B',
-      tabActive: '#22D3EE', tabActiveBg: '#1E293B', tabText: '#94A3B8',
-      dotColor: '#22D3EE',
+      tabActive: 'var(--cam-primary)', tabActiveBg: '#1E293B', tabText: '#94A3B8',
+      dotColor: 'var(--cam-primary)',
       passedBg: 'rgba(34,197,94,0.12)', passedBorder: 'rgba(34,197,94,0.35)', passedText: '#4ADE80',
       failedBg: 'rgba(239,68,68,0.12)', failedBorder: 'rgba(239,68,68,0.35)', failedText: '#F87171',
     };
   }
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(34,211,238,0.05)', headerBorder: '#BFDBFE',
-    headerText: '#22D3EE', badgeBg: '#22D3EE10', badgeText: '#22D3EE',
+    headerBg: 'rgba(0,71,171,0.05)', headerBorder: '#BFDBFE',
+    headerText: 'var(--cam-primary)', badgeBg: 'rgba(0,71,171,0.06)', badgeText: 'var(--cam-primary)',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#22D3EE', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#22D3EE',
+    tabActive: 'var(--cam-primary)', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: 'var(--cam-primary)',
     passedBg: '#f0fdf4', passedBorder: '#bbf7d0', passedText: '#16a34a',
     failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#0B5CFF',
   };
@@ -723,7 +723,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(90deg, #0e7490 0%, #06B6D4 50%, #0e7490 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(90deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,7 +741,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-[rgba(34,211,238,0.15)] border-[rgba(34,211,238,0.3)] text-[#67E8F9]'
+              'bg-[rgba(0,71,171,0.15)] border-[rgba(0,71,171,0.3)] text-[#87AAE0]'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -770,7 +770,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(34,211,238,0.06)] border border-[rgba(34,211,238,0.2)] rounded-lg">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(0,71,171,0.06)] border border-[rgba(0,71,171,0.2)] rounded-lg">
               <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
               <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
@@ -908,7 +908,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           </div>
                           {imageFile && (
                             <button onClick={handleExtractFromImage} disabled={isProcessing}
-                              className="w-full py-2 text-xs font-medium rounded-lg border border-[var(--border)] hover:bg-[rgba(34,211,238,0.04)] disabled:opacity-50 transition-all"
+                              className="w-full py-2 text-xs font-medium rounded-lg border border-[var(--border)] hover:bg-[rgba(0,71,171,0.04)] disabled:opacity-50 transition-all"
                               style={{ background: t.sectionBg, color: t.text }}>
                               {isProcessing ? 'Extracting...' : 'Extract Text'}
                             </button>
@@ -925,7 +925,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                 {/* Generate Button */}
                 <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #22D3EE, #22D3EE)', borderRadius: '10px' }}>
+                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
                   {isLoading ? (
                     <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                   ) : (
@@ -954,7 +954,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           onClick={() => { setStreamError(null); handleGenerateSolution(); }}
                           disabled={!problemText.trim() || isLoading}
                           className="mt-2 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors disabled:opacity-50"
-                          style={{ background: '#22D3EE', color: '#000' }}
+                          style={{ background: 'var(--cam-primary)', color: '#000' }}
                         >
                           Retry
                         </button>
@@ -967,7 +967,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     the solution has been structured. */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(34,211,238,0.08)', border: `1px solid ${t.cardBorder}` }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0,71,171,0.08)', border: `1px solid ${t.cardBorder}` }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
                       </div>
@@ -1003,8 +1003,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           // Brute → Optimized → Most Optimal difficulty progression.
                           // Same cyan family, stepped intensity so the tabs read as a progression
                           // (not rainbow — keeps Lumora Sharp Palette coherent).
-                          const tierAccents = ['#94A3B8', '#22D3EE', '#0891B2'];
-                          const accentColor = tierAccents[i] || '#22D3EE';
+                          const tierAccents = ['#94A3B8', 'var(--cam-primary)', 'var(--cam-primary-dk)'];
+                          const accentColor = tierAccents[i] || 'var(--cam-primary)';
                           return (
                             <button key={i}
                               onClick={() => {
@@ -1046,7 +1046,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             {activeSol.patternTag && (
                               <span className="text-[9px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5"
                                 title="Canonical interview pattern"
-                                style={{ color: '#FFFFFF', background: '#22D3EE', letterSpacing: '0.04em' }}>
+                                style={{ color: '#FFFFFF', background: 'var(--cam-primary)', letterSpacing: '0.04em' }}>
                                 {activeSol.patternTag}
                               </span>
                             )}
@@ -1074,14 +1074,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                               const narrBg = dark ? '#0B2534' : '#F0FDFF';
                               const narrBorder = dark ? 'rgba(103,232,249,0.55)' : 'rgba(14,116,144,0.35)';
                               const narrText = dark ? '#F1F5F9' : '#0F172A';
-                              const narrLabel = dark ? '#67E8F9' : '#0E7490';
-                              const narrCopy = dark ? '#A5F3FC' : '#0E7490';
+                              const narrLabel = dark ? '#87AAE0' : 'var(--cam-primary-dk)';
+                              const narrCopy = dark ? '#A5F3FC' : 'var(--cam-primary-dk)';
                               const narrDivider = dark ? 'rgba(103,232,249,0.2)' : 'rgba(14,116,144,0.18)';
                               return (
-                              <div className="rounded-lg mt-2" style={{ background: narrBg, border: `1px solid ${narrBorder}`, borderLeft: '3px solid #22D3EE' }}>
+                              <div className="rounded-lg mt-2" style={{ background: narrBg, border: `1px solid ${narrBorder}`, borderLeft: '3px solid var(--cam-primary)' }}>
                                 <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: `1px solid ${narrDivider}` }}>
                                   <div className="flex items-center gap-1.5">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
                                       <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                                       <line x1="12" y1="19" x2="12" y2="22" />
@@ -1309,7 +1309,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
         {/* ── Horizontal Resize Handle (desktop only) ── */}
         <div onMouseDown={() => setIsResizingH(true)}
-          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(34,211,238,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(0,71,171,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
           <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
 
@@ -1324,13 +1324,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               {isTranslating && (
-                <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#22D3EE' }}>
-                  <div className="w-3 h-3 border-2 border-[rgba(34,211,238,0.3)] border-t-[#22D3EE] rounded-full animate-spin" />
+                <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: 'var(--cam-primary)' }}>
+                  <div className="w-3 h-3 border-2 border-[rgba(0,71,171,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />
                   Translating…
                 </span>
               )}
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#22D3EE' }}
+                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--cam-primary)' }}
                 title="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
@@ -1353,7 +1353,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
-              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: '#22D3EE', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
+              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: 'var(--cam-primary)', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
                 {copyFeedback ? (
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                 ) : (
@@ -1380,7 +1380,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
             <div onMouseDown={() => setIsResizingV(true)}
-              className="h-1.5 hover:bg-[rgba(34,211,238,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
+              className="h-1.5 hover:bg-[rgba(0,71,171,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
               <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>
@@ -1573,7 +1573,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
   ];
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
-    accent: { header: 'bg-[rgba(34,211,238,0.04)]', border: 'border-[rgba(34,211,238,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
+    accent: { header: 'bg-[rgba(0,71,171,0.04)]', border: 'border-[rgba(0,71,171,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
     warning: { header: 'bg-[rgba(245,158,11,0.04)]', border: 'border-[rgba(245,158,11,0.15)]', bg: 'bg-white', text: 'text-[var(--warning)]' },
   };
 
@@ -1603,7 +1603,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
                       if (arrowMatch) {
                         return (
                           <button key={i} onClick={() => onTestCaseClick(arrowMatch[1].trim(), arrowMatch[2].trim())}
-                            className="w-full text-left px-2 py-1 bg-[rgba(34,211,238,0.04)] border border-[rgba(34,211,238,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-gray-600 font-mono hover:text-[var(--accent)] transition-colors">
+                            className="w-full text-left px-2 py-1 bg-[rgba(0,71,171,0.04)] border border-[rgba(0,71,171,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-gray-600 font-mono hover:text-[var(--accent)] transition-colors">
                             {line}
                           </button>
                         );
