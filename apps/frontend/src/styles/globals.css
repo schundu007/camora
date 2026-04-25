@@ -43,19 +43,19 @@
     --text-muted: #1E293B;
     --text-dimmed: #334155;
 
-    /* Accent — Camora violet-blue, single source of truth */
-    --accent: #3B36DC;
-    --accent-hover: #2A26B0;
-    --accent-subtle: rgba(59,54,220,0.10);
-    --accent-text: #2A26B0;
+    /* Accent — Camora vine-tomato (farmer-market red), single source of truth */
+    --accent: #E63946;
+    --accent-hover: #B91D2C;
+    --accent-subtle: rgba(230,57,70,0.10);
+    --accent-text: #B91D2C;
 
-    /* Semantic — Camora palette: violet-blue for positive, red for errors.
-       Warning + info fold onto the brand colour so the UI never shows
-       amber/yellow or an off-brand cyan. */
-    --success: #3B36DC;
-    --warning: #3B36DC;
-    --danger: #EF4444;
-    --info: #3B36DC;
+    /* Semantic — Camora palette: tomato red is the brand colour. Danger
+       still has to be visually distinct from accent, so danger shifts
+       to a magenta-pink to keep error states readable on the new bg. */
+    --success: #E63946;
+    --warning: #E63946;
+    --danger: #C2185B;
+    --info: #E63946;
 
     /* Difficulty — rank by weight in the chip, not by hue. Values below
        are back-compat shims for any code that reads them directly. */
@@ -65,15 +65,15 @@
     --medium: #0F172A;
     --medium-bg: rgba(15,23,42,0.06);
     --medium-border: rgba(15,23,42,0.15);
-    --hard: #3B36DC;
-    --hard-bg: rgba(59,54,220,0.10);
-    --hard-border: rgba(59,54,220,0.25);
+    --hard: #E63946;
+    --hard-bg: rgba(230,57,70,0.10);
+    --hard-border: rgba(230,57,70,0.25);
 
     /* Category — single accent plus two neutral slate shades. Pages
        with multiple categories side-by-side distinguish via typography
        and icons rather than color. */
-    --cat-primary: #3B36DC;
-    --cat-primary-bg: rgba(59,54,220,0.10);
+    --cat-primary: #E63946;
+    --cat-primary-bg: rgba(230,57,70,0.10);
     --cat-secondary: #334155;
     --cat-secondary-bg: rgba(51,65,85,0.06);
     --cat-tertiary: #64748B;
@@ -120,28 +120,28 @@
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
-    /* ── Camora brand palette — violet-blue ── */
-    --cam-primary:      #3B36DC;
-    --cam-primary-lt:   #6B65E8;
-    --cam-primary-dk:   #2A26B0;
-    --cam-primary-900:  #050C1A;
+    /* ── Camora brand palette — farmer's market (tomato + amber) ── */
+    --cam-primary:      #E63946;
+    --cam-primary-lt:   #FF6B7A;
+    --cam-primary-dk:   #B91D2C;
+    --cam-primary-900:  #1A0508;
 
     --cam-amber:        #AB6400;
     --cam-amber-lt:     #C07A00;
     --cam-amber-dk:     #864E00;
     --cam-amber-50:     #FAF0E0;
 
-    --cam-midnight:     #1F1B8C;
-    --cam-steel:        #4F4ACE;
-    --cam-mist:         #ECEBFB;
-    --cam-surface-lt:   #F2F0FF;
-    --cam-void:         #050C1A;
+    --cam-midnight:     #7A1419;
+    --cam-steel:        #C44536;
+    --cam-mist:         #FCE5E8;
+    --cam-surface-lt:   #FFF5F6;
+    --cam-void:         #1A0508;
 
     /* Single source of truth (kept in sync with --accent above) */
-    --accent:           #3B36DC;
-    --accent-hover:     #2A26B0;
-    --accent-subtle:    rgba(59, 54, 220, 0.10);
-    --accent-text:      #2A26B0;
+    --accent:           #E63946;
+    --accent-hover:     #B91D2C;
+    --accent-subtle:    rgba(230, 57, 70, 0.10);
+    --accent-text:      #B91D2C;
   }
 
   /* Light theme — opt-in via class on body or root container */
@@ -155,7 +155,7 @@
     --text-secondary: #334155;
     --text-muted: #7096BF;
     --text-dimmed: #B0CBE6;
-    --accent-subtle: rgba(59,54,220,0.10);
+    --accent-subtle: rgba(230,57,70,0.10);
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
     --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
     --shadow-md: 0 4px 12px rgba(56,189,248,0.10);

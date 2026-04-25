@@ -1,7 +1,7 @@
 /* ── Section helpers — visual primitives reused across DesignLayout
    SectionIcon: SVG glyph table keyed by section name.
-   tierColors / layerAccents: stepped cyan intensity for scalability tiers
-   and architecture layers (Lumora Sharp Palette — single-hue, not rainbow).
+   tierColors / layerAccents: stepped brand-color intensity for scalability
+   tiers and architecture layers (single-hue Camora navy, not rainbow).
    SectionCopyBtn: tiny copy-to-clipboard button placed on section headers.
 */
 import { useState } from 'react';
@@ -64,29 +64,29 @@ export const SectionIcon = ({ type }: { type: string }) => {
   return icons[type] || null;
 };
 
-/** Scalability tier colors — stepped cyan intensity so each tier is visually
- *  distinguishable while staying on-brand. */
+/** Scalability tier colors — stepped brand-color intensity so each tier is
+ *  visually distinguishable while staying on-brand. */
 export const tierColors = [
-  { bg: 'bg-[rgba(59,54,220,0.04)]', border: 'border-[rgba(59,54,220,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.06)]', border: 'border-[rgba(59,54,220,0.22)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.08)]', border: 'border-[rgba(59,54,220,0.30)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.10)]', border: 'border-[rgba(59,54,220,0.38)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.12)]', border: 'border-[rgba(59,54,220,0.46)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.14)]', border: 'border-[rgba(59,54,220,0.54)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.16)]', border: 'border-[rgba(59,54,220,0.62)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(59,54,220,0.18)]', border: 'border-[rgba(59,54,220,0.70)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.04)]', border: 'border-[rgba(230,57,70,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.06)]', border: 'border-[rgba(230,57,70,0.22)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.08)]', border: 'border-[rgba(230,57,70,0.30)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.10)]', border: 'border-[rgba(230,57,70,0.38)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.12)]', border: 'border-[rgba(230,57,70,0.46)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.14)]', border: 'border-[rgba(230,57,70,0.54)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.16)]', border: 'border-[rgba(230,57,70,0.62)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(230,57,70,0.18)]', border: 'border-[rgba(230,57,70,0.70)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
 ];
 
-/** Architecture layer accents — same stepped cyan intensity for layers. */
+/** Architecture layer accents — same stepped brand-color intensity for layers. */
 export const layerAccents = [
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.04)', border: 'rgba(59,54,220,0.15)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.06)', border: 'rgba(59,54,220,0.22)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.08)', border: 'rgba(59,54,220,0.30)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.10)', border: 'rgba(59,54,220,0.38)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.12)', border: 'rgba(59,54,220,0.46)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.14)', border: 'rgba(59,54,220,0.54)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.16)', border: 'rgba(59,54,220,0.62)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(59,54,220,0.18)', border: 'rgba(59,54,220,0.70)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.04)', border: 'rgba(230,57,70,0.15)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.06)', border: 'rgba(230,57,70,0.22)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.08)', border: 'rgba(230,57,70,0.30)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.10)', border: 'rgba(230,57,70,0.38)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.12)', border: 'rgba(230,57,70,0.46)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.14)', border: 'rgba(230,57,70,0.54)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.16)', border: 'rgba(230,57,70,0.62)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(230,57,70,0.18)', border: 'rgba(230,57,70,0.70)' },
 ];
 
 /** Tiny copy-to-clipboard button for section headers. Placed with ml-auto so

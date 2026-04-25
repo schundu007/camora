@@ -7,9 +7,9 @@ import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
   { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: 'var(--cam-primary)' },
-  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#9F9CEC' },
+  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#F49AA3' },
   { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: 'var(--cam-primary)' },
-  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#9F9CEC' },
+  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#F49AA3' },
   { text: 'Open to all developers worldwide', highlight: 'remote-first', color: 'var(--cam-primary)' },
 ];
 
@@ -38,7 +38,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const borderClass = isLight ? 'border-b border-[var(--border)]' : 'border-b border-white/[0.08]';
   const textColor = isLight ? 'var(--text-primary)' : '#FFFFFF';
   const textMuted = isLight ? 'var(--text-secondary)' : 'rgba(255,255,255,0.75)';
-  const activeBg = isLight ? 'var(--accent-subtle)' : 'rgba(59,54,220,0.18)';
+  const activeBg = isLight ? 'var(--accent-subtle)' : 'rgba(230,57,70,0.18)';
   const activeColor = isLight ? 'var(--accent)' : '#FFFFFF';
 
   const nav = (
@@ -123,8 +123,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
           background: isLight
-            ? 'linear-gradient(90deg, rgba(59,54,220,0.06) 0%, rgba(103,232,249,0.06) 50%, rgba(59,54,220,0.06) 100%)'
-            : 'linear-gradient(90deg, var(--cam-primary), #9F9CEC, var(--cam-primary), #9F9CEC)',
+            ? 'linear-gradient(90deg, rgba(230,57,70,0.06) 0%, rgba(103,232,249,0.06) 50%, rgba(230,57,70,0.06) 100%)'
+            : 'linear-gradient(90deg, var(--cam-primary), #F49AA3, var(--cam-primary), #F49AA3)',
           height: TICKER_HEIGHT,
           borderTop: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
           borderBottom: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,

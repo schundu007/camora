@@ -291,7 +291,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                   key={label}
                   onClick={() => set(!val)}
                   className="text-left px-3 py-2 rounded-md transition-colors"
-                  style={{ background: val ? '#F0FDFF' : '#FFFFFF', border: `1px solid ${val ? '#9F9CEC' : '#E2E8F0'}` }}
+                  style={{ background: val ? '#F0FDFF' : '#FFFFFF', border: `1px solid ${val ? '#F49AA3' : '#E2E8F0'}` }}
                   title={hint}
                 >
                   <div className="flex items-center justify-between">

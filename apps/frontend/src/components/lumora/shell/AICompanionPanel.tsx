@@ -12,7 +12,7 @@ import { MicButtonLarge } from './companion/mic-button-large';
 const C = {
   base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: 'var(--cam-primary)',
   text: '#0F172A', muted: '#64748B', accent: 'var(--cam-primary)',
-  accentBg: 'rgba(59,54,220,0.08)', border: 'rgba(0,0,0,0.15)',
+  accentBg: 'rgba(230,57,70,0.08)', border: 'rgba(0,0,0,0.15)',
 };
 
 /* ── Types ── */
@@ -26,10 +26,11 @@ interface AICompanionPanelProps {
 type AnswerMode = 'short' | 'detailed';
 
 /* ── SonaAvatar — enterprise wordmark ──
-   Hexagonal silhouette with a bold cyan "S" glyph over a deep-navy
+   Hexagonal silhouette with a bold violet-blue "S" glyph over a deep-navy
    field. Designed to read like a product wordmark — Stripe / Linear /
    Vercel weight class — rather than a cute portrait. Stays crisp at
-   14–64 px.
+   14–64 px. Glyph + ring colors come from --cam-primary so the avatar
+   tracks the active palette without hard-coded hex.
 
    Props:
      size   — px square dimension
@@ -65,13 +66,13 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
           <stop offset="0%" stopColor="#0F172A" />
           <stop offset="100%" stopColor="#020617" />
         </linearGradient>
-        {/* S glyph — single-tone cyan, no rainbow. */}
+        {/* S glyph — single-tone violet-blue, no rainbow. */}
         <linearGradient id={g.glyph} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#9F9CEC" />
+          <stop offset="0%" stopColor="#F49AA3" />
           <stop offset="100%" stopColor="var(--cam-primary)" />
         </linearGradient>
-        {/* Inner edge hairline — a thin cyan hint along the top edge of
-            the hex to suggest light catch. No glossy shine. */}
+        {/* Inner edge hairline — a thin brand-color hint along the top edge
+            of the hex to suggest light catch. No glossy shine. */}
         <linearGradient id={g.edge} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--cam-primary)" stopOpacity="0.7" />
           <stop offset="55%" stopColor="var(--cam-primary)" stopOpacity="0" />
@@ -106,7 +107,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
       {/* Top-edge light catch (enterprise depth cue, no gloss) */}
       <path d={hexPath} fill={`url(#${g.edge})`} style={{ mixBlendMode: 'screen' }} />
 
-      {/* S glyph — thick ribbon, single-tone cyan, crisp at 14 px */}
+      {/* S glyph — thick ribbon, single-tone violet-blue, crisp at 14 px */}
       <path
         d={sPath}
         fill="none"
@@ -312,7 +313,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(59,54,220,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
+        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(230,57,70,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
         title="Open Sona"
       >
         <SonaAvatar size={44} />
