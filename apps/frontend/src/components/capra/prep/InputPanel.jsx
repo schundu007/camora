@@ -82,11 +82,14 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
       const response = await fetch(API_URL + '/api/job-analyze/fetch-text', {
         method: 'POST',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ url }),
       });
       const data = await response.json();
       if (!response.ok || !data.success) {
-        setUrlError(data.error || 'Could not fetch this URL.');
+        setUrlError(response.status === 401
+          ? 'Please sign in again, then retry.'
+          : (data.error || 'Could not fetch this URL.'));
       } else {
         setEditText(data.text);
       }
@@ -122,11 +125,14 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
         const response = await fetch(API_URL + '/api/job-analyze/fetch-text', {
           method: 'POST',
           headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ url: clip }),
         });
         const data = await response.json();
         if (!response.ok || !data.success) {
-          setUrlError(data.error || 'Could not fetch this URL.');
+          setUrlError(response.status === 401
+            ? 'Please sign in again, then retry.'
+            : (data.error || 'Could not fetch this URL.'));
         } else {
           setEditText(data.text);
         }
