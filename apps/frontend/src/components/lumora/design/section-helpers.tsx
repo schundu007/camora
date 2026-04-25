@@ -67,26 +67,26 @@ export const SectionIcon = ({ type }: { type: string }) => {
 /** Scalability tier colors — stepped cyan intensity so each tier is visually
  *  distinguishable while staying on-brand. */
 export const tierColors = [
-  { bg: 'bg-[rgba(34,211,238,0.04)]', border: 'border-[rgba(34,211,238,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.06)]', border: 'border-[rgba(34,211,238,0.22)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.08)]', border: 'border-[rgba(34,211,238,0.30)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.10)]', border: 'border-[rgba(34,211,238,0.38)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.12)]', border: 'border-[rgba(34,211,238,0.46)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.14)]', border: 'border-[rgba(34,211,238,0.54)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.16)]', border: 'border-[rgba(34,211,238,0.62)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(34,211,238,0.18)]', border: 'border-[rgba(34,211,238,0.70)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.04)]', border: 'border-[rgba(0,71,171,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.06)]', border: 'border-[rgba(0,71,171,0.22)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.08)]', border: 'border-[rgba(0,71,171,0.30)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.10)]', border: 'border-[rgba(0,71,171,0.38)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.12)]', border: 'border-[rgba(0,71,171,0.46)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.14)]', border: 'border-[rgba(0,71,171,0.54)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.16)]', border: 'border-[rgba(0,71,171,0.62)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(0,71,171,0.18)]', border: 'border-[rgba(0,71,171,0.70)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
 ];
 
 /** Architecture layer accents — same stepped cyan intensity for layers. */
 export const layerAccents = [
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.04)', border: 'rgba(34,211,238,0.15)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.06)', border: 'rgba(34,211,238,0.22)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.08)', border: 'rgba(34,211,238,0.30)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.10)', border: 'rgba(34,211,238,0.38)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.12)', border: 'rgba(34,211,238,0.46)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.14)', border: 'rgba(34,211,238,0.54)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.16)', border: 'rgba(34,211,238,0.62)' },
-  { accent: '#22D3EE', bg: 'rgba(34,211,238,0.18)', border: 'rgba(34,211,238,0.70)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.04)', border: 'rgba(0,71,171,0.15)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.06)', border: 'rgba(0,71,171,0.22)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.08)', border: 'rgba(0,71,171,0.30)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.10)', border: 'rgba(0,71,171,0.38)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.12)', border: 'rgba(0,71,171,0.46)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.14)', border: 'rgba(0,71,171,0.54)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.16)', border: 'rgba(0,71,171,0.62)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(0,71,171,0.18)', border: 'rgba(0,71,171,0.70)' },
 ];
 
 /** Tiny copy-to-clipboard button for section headers. Placed with ml-auto so

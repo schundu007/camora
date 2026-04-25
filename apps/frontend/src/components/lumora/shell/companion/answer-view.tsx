@@ -80,7 +80,7 @@ function parseStar(text: string): { sections: { label: StarLabel; body: string }
 function StarBody({ text }: { text: string }) {
   if (!text) return null;
   const STAR_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const STAR_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.05)', color: '#0E7490', padding: '1px 5px', borderRadius: 3, fontSize: 12, fontFamily: "'JetBrains Mono',monospace" };
+  const STAR_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.05)', color: 'var(--cam-primary-dk)', padding: '1px 5px', borderRadius: 3, fontSize: 12, fontFamily: "'JetBrains Mono',monospace" };
   const inline = (s: string) => renderInlineSafe(s, { bold: STAR_BOLD, code: STAR_CODE });
   const lines = text.split('\n');
   const out: React.ReactNode[] = [];
@@ -91,7 +91,7 @@ function StarBody({ text }: { text: string }) {
       <ul key={key} className="my-1 flex flex-col gap-1 pl-1">
         {bulletGroup.map((b, bi) => (
           <li key={bi} className="flex gap-2">
-            <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: '#22D3EE' }} />
+            <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: 'var(--cam-primary)' }} />
             <span style={{ fontSize: '13px', lineHeight: '1.55', color: TEXT_PRIMARY }}>{inline(b)}</span>
           </li>
         ))}
@@ -128,17 +128,17 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
       {sections.map((s) => (
         <div key={s.label} className="rounded-lg overflow-hidden"
           style={{
-            background: 'rgba(34,211,238,0.04)',
-            border: '1px solid rgba(34,211,238,0.18)',
-            borderLeft: '3px solid #22D3EE',
+            background: 'rgba(0,71,171,0.04)',
+            border: '1px solid rgba(0,71,171,0.18)',
+            borderLeft: '3px solid var(--cam-primary)',
           }}>
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(34,211,238,0.06)', borderBottom: '1px solid rgba(34,211,238,0.1)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(0,71,171,0.06)', borderBottom: '1px solid rgba(0,71,171,0.1)' }}>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
-                style={{ background: '#22D3EE', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
+                style={{ background: 'var(--cam-primary)', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
                 {s.label[0]}
               </span>
-              <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: '#0E7490', fontFamily: "'Source Sans 3', sans-serif" }}>
+              <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
                 {labelCopy[s.label].short}
               </span>
               <span className="text-[10px]" style={{ color: '#64748B' }}>· {labelCopy[s.label].hint}</span>
@@ -159,7 +159,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
       ))}
       {streaming && sections.length < 4 && (
         <div className="text-[10px] px-2 py-1 flex items-center gap-1.5" style={{ color: '#64748B' }}>
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22D3EE' }} />
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-primary)' }} />
           Generating remaining STAR sections…
         </div>
       )}
@@ -171,13 +171,13 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
 function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
   return (
     <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg"
-      style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)' }}>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      style={{ background: 'rgba(0,71,171,0.08)', border: '1px solid rgba(0,71,171,0.2)' }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary-dk)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="8" x2="12" y2="12" />
         <line x1="12" y1="16" x2="12.01" y2="16" />
       </svg>
-      <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#0E7490', fontFamily: "'Source Sans 3', sans-serif" }}>
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
         {archetype} Question
       </span>
       <span className="text-[10px]" style={{ color: '#64748B' }}>· {ARCHETYPE_HINT[archetype]}</span>
@@ -243,11 +243,11 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
   return (
     <div className="border-b" style={{ borderColor: '#E2E8F0' }}>
       <div className="px-3 pt-3 pb-1.5 flex items-center gap-2">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
-        <span className="text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#0E7490' }}>Story Bank</span>
+        <span className="text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
         <span className="text-[9px]" style={{ color: '#94A3B8' }}>{stories.length}</span>
       </div>
       <div className="px-2 pb-2 space-y-1">
@@ -256,16 +256,16 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
           return (
             <div key={s.id} className="px-2 py-1.5 rounded-md transition-all"
               style={{
-                background: matches ? 'rgba(34,211,238,0.1)' : '#FFFFFF',
-                border: matches ? '1px solid #22D3EE' : '1px solid #E2E8F0',
+                background: matches ? 'rgba(0,71,171,0.1)' : '#FFFFFF',
+                border: matches ? '1px solid var(--cam-primary)' : '1px solid #E2E8F0',
               }}>
               <div className="flex items-start gap-1.5">
                 <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
                   {s.archetypes.slice(0, 2).map(t => (
                     <span key={t} className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
                       style={{
-                        background: (matches && t === activeArchetype) ? '#22D3EE' : 'rgba(34,211,238,0.15)',
-                        color: (matches && t === activeArchetype) ? '#FFFFFF' : '#0E7490',
+                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'rgba(0,71,171,0.15)',
+                        color: (matches && t === activeArchetype) ? '#FFFFFF' : 'var(--cam-primary-dk)',
                       }}>
                       {t}
                     </span>
@@ -275,7 +275,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
                   <p className="text-[10px] font-bold truncate" style={{ color: TEXT_PRIMARY, fontFamily: "'Source Sans 3', sans-serif" }}>
                     {s.title}
                   </p>
-                  {s.impact && <p className="text-[9px] truncate" style={{ color: '#0E7490' }}>{s.impact}</p>}
+                  {s.impact && <p className="text-[9px] truncate" style={{ color: 'var(--cam-primary-dk)' }}>{s.impact}</p>}
                 </div>
               </div>
             </div>
@@ -344,8 +344,8 @@ function RichText({ text }: { text: string }) {
   };
 
   const RICH_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700, fontFamily: "'Clash Display',sans-serif" };
-  const RICH_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.06)', color: '#0E7490', padding: '1px 5px', borderRadius: 3, fontSize: 10, fontFamily: "'JetBrains Mono',monospace", border: '1px solid rgba(0,0,0,0.08)' };
-  const RICH_LINK: React.CSSProperties = { color: '#22D3EE', textDecoration: 'underline' };
+  const RICH_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.06)', color: 'var(--cam-primary-dk)', padding: '1px 5px', borderRadius: 3, fontSize: 10, fontFamily: "'JetBrains Mono',monospace", border: '1px solid rgba(0,0,0,0.08)' };
+  const RICH_LINK: React.CSSProperties = { color: 'var(--cam-primary)', textDecoration: 'underline' };
   const renderInline = (s: string) => renderInlineSafe(s, { bold: RICH_BOLD, code: RICH_CODE, link: RICH_LINK, allowLinks: true });
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (

@@ -10,9 +10,9 @@ import { MicButtonLarge } from './companion/mic-button-large';
 
 /* White glass copilot — dark text */
 const C = {
-  base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: '#22D3EE',
-  text: '#0F172A', muted: '#64748B', accent: '#22D3EE',
-  accentBg: 'rgba(34,211,238,0.08)', border: 'rgba(0,0,0,0.15)',
+  base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: 'var(--cam-primary)',
+  text: '#0F172A', muted: '#64748B', accent: 'var(--cam-primary)',
+  accentBg: 'rgba(0,71,171,0.08)', border: 'rgba(0,0,0,0.15)',
 };
 
 /* ── Types ── */
@@ -67,14 +67,14 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
         </linearGradient>
         {/* S glyph — single-tone cyan, no rainbow. */}
         <linearGradient id={g.glyph} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#67E8F9" />
-          <stop offset="100%" stopColor="#22D3EE" />
+          <stop offset="0%" stopColor="#87AAE0" />
+          <stop offset="100%" stopColor="var(--cam-primary)" />
         </linearGradient>
         {/* Inner edge hairline — a thin cyan hint along the top edge of
             the hex to suggest light catch. No glossy shine. */}
         <linearGradient id={g.edge} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.7" />
-          <stop offset="55%" stopColor="#22D3EE" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--cam-primary)" stopOpacity="0.7" />
+          <stop offset="55%" stopColor="var(--cam-primary)" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -83,7 +83,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
         <path
           d={hexPath}
           fill="none"
-          stroke="#22D3EE"
+          stroke="var(--cam-primary)"
           strokeWidth="1.2"
           strokeLinejoin="round"
           opacity="0"
@@ -101,7 +101,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
       )}
 
       {/* Main hex field */}
-      <path d={hexPath} fill={`url(#${g.field})`} stroke="#22D3EE" strokeOpacity="0.35" strokeWidth="1" strokeLinejoin="round" />
+      <path d={hexPath} fill={`url(#${g.field})`} stroke="var(--cam-primary)" strokeOpacity="0.35" strokeWidth="1" strokeLinejoin="round" />
 
       {/* Top-edge light catch (enterprise depth cue, no gloss) */}
       <path d={hexPath} fill={`url(#${g.edge})`} style={{ mixBlendMode: 'screen' }} />
@@ -312,7 +312,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(34,211,238,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
+        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(0,71,171,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
         title="Open Sona"
       >
         <SonaAvatar size={44} />
@@ -393,7 +393,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
-                  background: answerMode === mode ? '#22D3EE' : 'transparent',
+                  background: answerMode === mode ? 'var(--cam-primary)' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -442,7 +442,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
                       <button key={s} onClick={() => ask(s)} className="w-full text-left px-3 py-2 rounded-lg text-[11px] transition-all" style={{ border: '1px solid #E2E8F0', color: '#475569' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#22D3EE'; }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#E2E8F0'; }}>{s}</button>
                     ))}
                   </div>
@@ -468,7 +468,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   <div key={i} className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
                     <div className="flex items-center gap-2 mb-3">
                       <SonaAvatar size={18} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#0E7490' }}>Sona</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona</span>
                     </div>
                     <AnswerView text={msg.text} />
                   </div>
@@ -477,9 +477,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   <div className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
                     <div className="flex items-center gap-2 mb-3">
                       <SonaAvatar size={18} active />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#0E7490' }}>Sona is answering…</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona is answering…</span>
                     </div>
-                    {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: '#29B5E8' }} /></>
+                    {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-primary)' }} /></>
                       : <span className="animate-pulse text-xs" style={{ color: '#94A3B8' }}>Thinking...</span>}
                   </div>
                 )}
@@ -560,7 +560,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Inter', sans-serif", color: '#0F172A', fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#22D3EE' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -572,7 +572,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#22D3EE' }} title="Assistant">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: 'var(--cam-primary)' }} title="Assistant">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}
     </button>

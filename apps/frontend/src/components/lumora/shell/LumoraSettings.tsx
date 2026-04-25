@@ -136,7 +136,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 {voiceMode === 'filter-candidate' ? (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#22D3EE' }}>Step 1</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>Step 1</span>
                       <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
@@ -147,7 +147,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 ) : (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#22D3EE' }}>Step 1</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>Step 1</span>
                       <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
@@ -193,10 +193,10 @@ function SettingCard({ icon, title, description, children }: {
 }) {
   return (
     <div className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: '#ffffff', border: '1px solid #e2e8f0' }}>
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: '#22D3EE' }}>
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: 'var(--cam-primary)' }}>
         {icon}
       </div>
-      <h4 className="text-sm font-bold mb-1" style={{ color: '#22D3EE', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
+      <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--cam-primary)', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
       <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{description}</p>
       {children}
     </div>
@@ -212,8 +212,8 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
       onClick={disabled ? undefined : onClick}
       className="p-5 rounded-xl text-left transition-all relative"
       style={{
-        background: active ? '#22D3EE08' : '#ffffff',
-        border: active ? '2px solid #22D3EE' : '1.5px solid #e2e8f0',
+        background: active ? 'rgba(0,71,171,0.03)' : '#ffffff',
+        border: active ? '2px solid var(--cam-primary)' : '1.5px solid #e2e8f0',
         boxShadow: 'none',
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -221,18 +221,18 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
     >
       {badge && (
         <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{ background: disabled ? '#00000010' : '#22D3EE15', color: disabled ? '#000000' : '#22D3EE' }}>
+          style={{ background: disabled ? '#00000010' : 'rgba(0,71,171,0.08)', color: disabled ? '#000000' : 'var(--cam-primary)' }}>
           {badge}
         </span>
       )}
       {/* Radio indicator */}
       <div className="flex items-start gap-3">
         <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-          style={{ borderColor: active ? '#22D3EE' : '#cbd5e1' }}>
-          {active && <div className="w-2 h-2 rounded-full" style={{ background: '#22D3EE' }} />}
+          style={{ borderColor: active ? 'var(--cam-primary)' : '#cbd5e1' }}>
+          {active && <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />}
         </div>
         <div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? '#22D3EE15' : '#f1f5f9', color: active ? '#22D3EE' : '#94a3b8' }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? 'rgba(0,71,171,0.08)' : '#f1f5f9', color: active ? 'var(--cam-primary)' : '#94a3b8' }}>
             {icon}
           </div>
           <h4 className="text-sm font-bold mb-1" style={{ color: '#0f172a', fontFamily: "'Inter', sans-serif" }}>{title}</h4>

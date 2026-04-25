@@ -266,7 +266,7 @@ export function AttendAnim() {
               width: 3,
               height: '100%',
               borderRadius: 2,
-              background: `linear-gradient(180deg, ${ACCENT}, #0EA5E9)`,
+              background: `linear-gradient(180deg, ${ACCENT}, #3D75CC)`,
               transformOrigin: 'center',
               animation: `card-wave ${0.85 + (i % 5) * 0.12}s ease-in-out ${(i % 7) * 0.07}s infinite`,
             }}
@@ -334,7 +334,7 @@ export function FeatureLiveAIAnim() {
                 width: 2,
                 height: '100%',
                 borderRadius: 1,
-                background: `linear-gradient(180deg, ${ACCENT}, #0EA5E9)`,
+                background: `linear-gradient(180deg, ${ACCENT}, #3D75CC)`,
                 transformOrigin: 'center',
                 animation: `card-wave ${0.85 + (i % 4) * 0.12}s ease-in-out ${(i % 5) * 0.08}s infinite`,
               }}
@@ -444,7 +444,7 @@ export function FeatureJobMatchAnim() {
             width: 26,
             height: 26,
             borderRadius: '50%',
-            background: `linear-gradient(135deg, ${ACCENT}, #0EA5E9)`,
+            background: `linear-gradient(135deg, ${ACCENT}, #3D75CC)`,
             boxShadow: '0 2px 8px rgba(0,71,171,0.27)',
             marginBottom: 4,
           }}

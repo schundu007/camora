@@ -244,7 +244,7 @@ export function LumoraShellPage() {
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
-          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(34,211,238,0.08)', borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(0,71,171,0.08)', borderBottom: '1px solid rgba(0,71,171,0.15)' }}>
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
               <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
@@ -361,7 +361,7 @@ export function LumoraShellPage() {
                           onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                         >
                           <span className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-bold shrink-0"
-                            style={{ background: '#22D3EE15', color: '#22D3EE', fontFamily: 'var(--font-code)' }}>
+                            style={{ background: 'rgba(0,71,171,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
                             {realIdx + 1}
                           </span>
                           <div className="flex-1 min-w-0">
@@ -372,7 +372,7 @@ export function LumoraShellPage() {
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setFocusedEntry(realIdx); navigate('/lumora'); }}
                             className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors shrink-0"
-                            style={{ color: '#0891B2', background: '#CFFAFE', border: '1px solid #A5F3FC' }}
+                            style={{ color: 'var(--cam-primary-dk)', background: '#CFFAFE', border: '1px solid #A5F3FC' }}
                           >View</button>
                           <button
                             type="button"
@@ -493,7 +493,7 @@ export function LumoraShellPage() {
 
       {/* Mobile bottom navigation — visible only on small screens */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 z-40 items-center justify-around"
-        style={{ background: '#22D3EE', borderTop: '1px solid rgba(255,255,255,0.2)', height: 'calc(64px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        style={{ background: 'var(--cam-primary)', borderTop: '1px solid rgba(255,255,255,0.2)', height: 'calc(64px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
@@ -542,7 +542,7 @@ export function LumoraShellPage() {
               ].map(item => (
                 <Link key={item.id} to={item.path} onClick={() => setMobileMoreOpen(false)}
                   className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-[#F1F5F9]"
-                  style={{ color: activeTab === item.id ? '#22D3EE' : '#0F172A' }}>
+                  style={{ color: activeTab === item.id ? 'var(--cam-primary)' : '#0F172A' }}>
                   <span>{item.label}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                 </Link>

@@ -56,7 +56,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   return (
     <nav
       className="hidden md:flex flex-col shrink-0 py-3 transition-all duration-200"
-      style={{ width: expanded ? 200 : 60, background: '#0e7490', borderRight: '1px solid rgba(255,255,255,0.1)' }}
+      style={{ width: expanded ? 200 : 60, background: 'var(--cam-primary-dk)', borderRight: '1px solid rgba(255,255,255,0.1)' }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}

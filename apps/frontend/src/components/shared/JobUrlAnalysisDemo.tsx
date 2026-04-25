@@ -6,7 +6,7 @@ const F = {
   body: "'Inter', sans-serif",
   mono: "'Source Code Pro', monospace",
 };
-const accent = '#29B5E8';
+const accent = 'var(--cam-primary)';
 
 const URL_TEXT = 'intel.wd1.myworkdayjobs.com/.../Senior-DevOps';
 

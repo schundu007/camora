@@ -403,7 +403,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           width: sidebarWidth,
           height: '100%',
           transition: 'width 0.2s ease-out',
-          background: '#22D3EE',
+          background: 'var(--cam-primary)',
           borderRight: '1px solid rgba(255,255,255,0.15)',
           overflow: 'hidden',
         }}
@@ -429,7 +429,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               width: '280px',
               height: '100vh',
               paddingTop: 'var(--topbar-height, 56px)',
-              background: '#22D3EE',
+              background: 'var(--cam-primary)',
               borderRight: '1px solid rgba(255,255,255,0.15)',
               boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
             }}
