@@ -117,9 +117,9 @@ interface CodingLayoutProps {
 // ── Main Component ───────────────────────────────────────────────────────────
 
 // ── Theme tokens — dark when embedded (live interview), light when standalone ──
-// The dark palette uses slate-900 surfaces and Camora-navy highlights so the
-// code editor, tabs, and solution cards read as a single coherent dark UI
-// during a live interview (matches Monaco's vs-dark theme).
+// The dark palette uses slate-900 surfaces and the brand accent (--cam-primary)
+// for highlights so the code editor, tabs, and solution cards read as a single
+// coherent dark UI during a live interview (matches Monaco's vs-dark theme).
 function useTheme(dark: boolean) {
   if (dark) {
     return {
@@ -1002,7 +1002,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                         {sd.solutions.map((sol: any, i: number) => {
                           // Brute → Optimized → Most Optimal difficulty progression.
                           // Same brand-color family, stepped intensity so the tabs read as a
-                          // progression (not rainbow — keeps the navy palette coherent).
+                          // progression (not rainbow — single-hue palette stays coherent).
                           const tierAccents = ['#94A3B8', 'var(--cam-primary)', 'var(--cam-primary-dk)'];
                           const accentColor = tierAccents[i] || 'var(--cam-primary)';
                           return (

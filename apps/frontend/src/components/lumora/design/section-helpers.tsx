@@ -1,7 +1,9 @@
 /* ── Section helpers — visual primitives reused across DesignLayout
    SectionIcon: SVG glyph table keyed by section name.
    tierColors / layerAccents: stepped brand-color intensity for scalability
-   tiers and architecture layers (single-hue Camora navy, not rainbow).
+   tiers and architecture layers (single-hue, not rainbow). Hex values are
+   regenerated when the palette changes — see globals.css for the current
+   --cam-primary.
    SectionCopyBtn: tiny copy-to-clipboard button placed on section headers.
 */
 import { useState } from 'react';
