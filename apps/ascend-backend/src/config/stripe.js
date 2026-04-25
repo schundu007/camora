@@ -11,11 +11,11 @@ export const stripe = stripeSecretKey
 
 // Price IDs from Stripe Dashboard — matches lumora-backend env vars
 export const STRIPE_PRICES = {
-  MONTHLY_STARTER: process.env.STRIPE_PRICE_STARTER,          // $29/mo — Frost (no desktop)
-  MONTHLY_PRO: process.env.STRIPE_PRICE_MONTHLY,              // $49/mo — Winter Lover (with desktop)
-  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY,           // $119/qtr — Blizzard (with desktop)
-  ANNUAL: process.env.STRIPE_PRICE_YEARLY,                     // $228/yr — Avalanche (no desktop)
-  ANNUAL_DESKTOP: process.env.STRIPE_PRICE_ANNUALLY,           // $299/yr — Avalanche+ (with desktop)
+  MONTHLY_STARTER: process.env.STRIPE_PRICE_STARTER,          // $29/mo  — Starter (no desktop)
+  MONTHLY_PRO: process.env.STRIPE_PRICE_MONTHLY,              // $49/mo  — Pro monthly (with desktop)
+  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY,           // $119/qtr — Pro quarterly (with desktop)
+  ANNUAL: process.env.STRIPE_PRICE_YEARLY,                     // $228/yr — Annual (no desktop)
+  ANNUAL_DESKTOP: process.env.STRIPE_PRICE_ANNUALLY,           // $299/yr — Annual + Desktop
   DESKTOP_LIFETIME: process.env.STRIPR_PRICE_DTOPLT,           // $99 one-time — Desktop only (BYOK)
 };
 

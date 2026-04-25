@@ -202,7 +202,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
         </div>
 
-        {/* Audio Controls — grouped with subtle frosted bg */}
+        {/* Audio Controls — grouped with a subtle translucent surface */}
         <div data-tour="audio" className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
