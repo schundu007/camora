@@ -189,7 +189,7 @@ export default function LandingPage() {
 
       {/* ═══════════ 2. COMPANY LOGOS — Scrolling ═══════════ */}
       <section className="py-10 overflow-hidden bg-white">
-        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: '#94A3B8' }}>Trusted by frost engineers at</p>
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: '#94A3B8' }}>Trusted by engineers at</p>
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, #FFFFFF, transparent)' }} />
           <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to left, #FFFFFF, transparent)' }} />

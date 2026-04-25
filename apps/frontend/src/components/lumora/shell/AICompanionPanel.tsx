@@ -78,7 +78,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
         </linearGradient>
       </defs>
 
-      {/* Active outer crystal ring — pulses while Sona streams */}
+      {/* Active outer indicator ring — pulses while Sona streams */}
       {active && (
         <path
           d={hexPath}
