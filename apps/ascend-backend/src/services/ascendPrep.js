@@ -1,17 +1,24 @@
-import Anthropic from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
-import * as cheerio from 'cheerio';
+import { getAnthropicClient, getOpenAIClient as getOpenAIClientFromShared } from '@camora/shared-llm';
 import { getApiKey as getClaudeApiKey } from './claude.js';
 import { getApiKey as getOpenAIApiKey } from './openai.js';
 import { SECTION_PROMPTS } from './ascend-prep/section-prompts.js';
+import {
+  searchInterviewQuestions,
+  extractCompanyName,
+  extractRoleName,
+  cleanupText,
+  cleanupResult,
+} from './ascend-prep/extractors.js';
 
+// Wrappers around shared-llm: ascend stores per-user API keys (Settings UI),
+// so we resolve at call time rather than at import. shared-llm caches the
+// resulting client per-key so we still get pooling.
 function getClaudeClient() {
   const apiKey = getClaudeApiKey();
-  console.log('[AscendPrep] Getting Claude API key:', !!apiKey);
   if (!apiKey) {
     throw new Error('Anthropic API key not configured. Please add your API key in Settings.');
   }
-  return new Anthropic({ apiKey });
+  return getAnthropicClient(apiKey);
 }
 
 function getOpenAIClient() {
@@ -19,7 +26,7 @@ function getOpenAIClient() {
   if (!apiKey) {
     throw new Error('OpenAI API key not configured. Please add your API key in Settings.');
   }
-  return new OpenAI({ apiKey });
+  return getOpenAIClientFromShared(apiKey);
 }
 
 const CLAUDE_SONNET = 'claude-sonnet-4-20250514';
@@ -44,145 +51,6 @@ function getModelForSection(sectionType) {
   return CLAUDE_HAIKU;
 }
 
-/**
- * Search for real interview questions from the internet
- * Searches Glassdoor, LeetCode discussions, and other sources
- */
-async function searchInterviewQuestions(companyName, roleName, questionType = 'coding') {
-  const results = [];
-  const searchQueries = [
-    `${companyName} ${roleName} ${questionType} interview questions`,
-    `${companyName} software engineer interview ${questionType}`,
-  ];
-
-  // Try to fetch from LeetCode discussions
-  try {
-    const leetcodeUrl = `https://leetcode.com/discuss/interview-question?currentPage=1&orderBy=hot&query=${encodeURIComponent(companyName)}`;
-    const response = await fetch(leetcodeUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    });
-    if (response.ok) {
-      const html = await response.text();
-      const $ = cheerio.load(html);
-      $('a[href*="/discuss/interview-question/"]').slice(0, 5).each((_, el) => {
-        const title = $(el).text().trim();
-        if (title && title.length > 10) {
-          results.push({ source: 'LeetCode', question: title });
-        }
-      });
-    }
-  } catch (err) {
-    console.log('[AscendPrep] LeetCode search failed:', err.message);
-  }
-
-  // Try to fetch from Glassdoor
-  try {
-    const glassdoorUrl = `https://www.glassdoor.com/Interview/${companyName.replace(/\s+/g, '-')}-Interview-Questions-E*.htm`;
-    const response = await fetch(`https://www.glassdoor.com/Interview/index.htm?sc.keyword=${encodeURIComponent(companyName + ' ' + roleName)}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    });
-    if (response.ok) {
-      const html = await response.text();
-      const $ = cheerio.load(html);
-      $('.interview-question, [class*="interviewQuestion"]').slice(0, 5).each((_, el) => {
-        const question = $(el).text().trim();
-        if (question && question.length > 10) {
-          results.push({ source: 'Glassdoor', question });
-        }
-      });
-    }
-  } catch (err) {
-    console.log('[AscendPrep] Glassdoor search failed:', err.message);
-  }
-
-  return results;
-}
-
-/**
- * Extract company name from job description
- */
-function extractCompanyName(jobDescription) {
-  // Try to find company name patterns
-  const patterns = [
-    /(?:company|employer|organization)[\s:]+([A-Z][A-Za-z0-9\s&]+?)(?:\s+is|\s+seeks|\s+looking|,|\n)/i,
-    /(?:join|work at|working at)\s+([A-Z][A-Za-z0-9\s&]+?)(?:\s+as|\s+and|,|\n|!)/i,
-    /^([A-Z][A-Za-z0-9\s&]{2,30})\s+(?:is seeking|is looking|seeks|hiring)/im,
-    /about\s+([A-Z][A-Za-z0-9\s&]+?)(?:\s*:|\s*\n)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = jobDescription.match(pattern);
-    if (match && match[1]) {
-      return match[1].trim();
-    }
-  }
-
-  return null;
-}
-
-/**
- * Extract role/position from job description
- */
-function extractRoleName(jobDescription) {
-  const patterns = [
-    /(?:position|role|title)[\s:]+([^\n,]+)/i,
-    /(?:seeking|hiring|looking for)(?:\s+a)?\s+([^\n,]+?)(?:\s+to|\s+who|\s+with|\.)/i,
-    /^([A-Za-z\s]+(?:Engineer|Developer|Architect|Manager|Lead|Senior|Staff|Principal)[^\n]*)/im,
-  ];
-
-  for (const pattern of patterns) {
-    const match = jobDescription.match(pattern);
-    if (match && match[1]) {
-      return match[1].trim();
-    }
-  }
-
-  return 'Software Engineer';
-}
-
-
-// Clean up text content - remove extra whitespace and empty lines
-function cleanupText(text) {
-  if (!text || typeof text !== 'string') return text;
-  return text
-    .replace(/[ \t]+/g, ' ')           // Multiple spaces to single
-    .replace(/\n\s*\n\s*\n/g, '\n\n')  // 3+ newlines to 2
-    .replace(/^\s+$/gm, '')            // Remove whitespace-only lines
-    .replace(/\n{3,}/g, '\n\n')        // Max 2 consecutive newlines
-    .trim();
-}
-
-// Recursively clean all string values in an object
-function cleanupResult(obj) {
-  if (!obj || typeof obj !== 'object') return obj;
-
-  if (Array.isArray(obj)) {
-    return obj.map(item => {
-      if (typeof item === 'string') return cleanupText(item);
-      if (typeof item === 'object') return cleanupResult(item);
-      return item;
-    }).filter(item => item !== ''); // Remove empty strings
-  }
-
-  const cleaned = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string') {
-      const cleanedValue = cleanupText(value);
-      if (cleanedValue) cleaned[key] = cleanedValue;
-    } else if (typeof value === 'object' && value !== null) {
-      cleaned[key] = cleanupResult(value);
-    } else {
-      cleaned[key] = value;
-    }
-  }
-  return cleaned;
-}
 
 // Build the context from inputs
 function buildContext(inputs, section = null) {
