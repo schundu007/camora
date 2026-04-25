@@ -8,7 +8,7 @@ import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
 const ACCENT = 'var(--cam-primary)';
-const ACCENT_BG = 'rgba(230,57,70,0.08)';
+const ACCENT_BG = 'rgba(236,72,153,0.08)';
 const MUTED = '#64748B';
 
 export function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {

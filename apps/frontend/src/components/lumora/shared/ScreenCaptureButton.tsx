@@ -115,7 +115,7 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
         title={tooltip}
         aria-label={tooltip}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${className || ''}`}
-        style={{ background: busy ? 'rgba(230,57,70,0.15)' : 'rgba(230,57,70,0.1)', color: 'var(--cam-primary)', border: '1px solid rgba(230,57,70,0.3)' }}
+        style={{ background: busy ? 'rgba(236,72,153,0.15)' : 'rgba(236,72,153,0.1)', color: 'var(--cam-primary)', border: '1px solid rgba(236,72,153,0.3)' }}
       >
         {busy ? (
           <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
