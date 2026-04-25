@@ -1886,7 +1886,7 @@ export default function TopicDetail({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="hidden sm:inline text-xs font-semibold px-3 py-1.5 rounded group-hover:bg-[var(--accent)] group-hover:text-white transition-colors" style={{ background: 'rgba(59,54,220,0.1)', color: 'var(--accent)' }}>
+                      <span className="hidden sm:inline text-xs font-semibold px-3 py-1.5 rounded group-hover:bg-[var(--accent)] group-hover:text-white transition-colors" style={{ background: 'rgba(230,57,70,0.1)', color: 'var(--accent)' }}>
                         Open Panel
                       </span>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7" /></svg>

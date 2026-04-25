@@ -212,7 +212,7 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
       onClick={disabled ? undefined : onClick}
       className="p-5 rounded-xl text-left transition-all relative"
       style={{
-        background: active ? 'rgba(59,54,220,0.03)' : '#ffffff',
+        background: active ? 'rgba(230,57,70,0.03)' : '#ffffff',
         border: active ? '2px solid var(--cam-primary)' : '1.5px solid #e2e8f0',
         boxShadow: 'none',
         opacity: disabled ? 0.5 : 1,
@@ -221,7 +221,7 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
     >
       {badge && (
         <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{ background: disabled ? '#00000010' : 'rgba(59,54,220,0.08)', color: disabled ? '#000000' : 'var(--cam-primary)' }}>
+          style={{ background: disabled ? '#00000010' : 'rgba(230,57,70,0.08)', color: disabled ? '#000000' : 'var(--cam-primary)' }}>
           {badge}
         </span>
       )}
@@ -232,7 +232,7 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
           {active && <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />}
         </div>
         <div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? 'rgba(59,54,220,0.08)' : '#f1f5f9', color: active ? 'var(--cam-primary)' : '#94a3b8' }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? 'rgba(230,57,70,0.08)' : '#f1f5f9', color: active ? 'var(--cam-primary)' : '#94a3b8' }}>
             {icon}
           </div>
           <h4 className="text-sm font-bold mb-1" style={{ color: '#0f172a', fontFamily: "'Inter', sans-serif" }}>{title}</h4>

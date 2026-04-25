@@ -33,9 +33,9 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
         <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-auto w-full mx-auto px-2 sm:px-3 py-2" style={{ maxWidth: 'min(700px, 100%)' }}>
           {/* Current streaming question */}
           {isStreaming && question && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(59,54,220,0.03)', border: '1px solid rgba(59,54,220,0.13)' }}>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(230,57,70,0.03)', border: '1px solid rgba(230,57,70,0.13)' }}>
               <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: 'rgba(59,54,220,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
+                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: 'rgba(230,57,70,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
                   •
                 </span>
                 <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: 'var(--cam-primary)' }} />
@@ -132,9 +132,9 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <p className="text-xs mb-4" style={{ color: '#94A3B8' }}>Start fast with ready-to-use interview co-pilots.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {COPILOTS.map(cp => (
-            <button key={cp.name} onClick={cp.onClick} className="group text-left p-5 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(59,54,220,0.04)', border: '1px solid rgba(59,54,220,0.15)' }}>
+            <button key={cp.name} onClick={cp.onClick} className="group text-left p-5 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(230,57,70,0.04)', border: '1px solid rgba(230,57,70,0.15)' }}>
               <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(59,54,220,0.1)' }}>{cp.icon}</div>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(230,57,70,0.1)' }}>{cp.icon}</div>
                 <span className="text-sm font-bold" style={{ color: '#0F172A' }}>{cp.name}</span>
               </div>
               <p className="text-xs leading-relaxed mb-3" style={{ color: '#64748B' }}>{cp.desc}</p>
@@ -155,9 +155,9 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {QUICK_PROMPTS.map(p => (
-            <button key={p.text} onClick={() => handlePromptClick(p)} className="text-left px-4 py-3 rounded-xl text-[12px] leading-snug transition-all" style={{ border: '1px solid rgba(59,54,220,0.2)', color: '#475569' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,54,220,0.5)'; e.currentTarget.style.background = 'rgba(59,54,220,0.04)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(59,54,220,0.2)'; e.currentTarget.style.background = 'transparent'; }}>
+            <button key={p.text} onClick={() => handlePromptClick(p)} className="text-left px-4 py-3 rounded-xl text-[12px] leading-snug transition-all" style={{ border: '1px solid rgba(230,57,70,0.2)', color: '#475569' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(230,57,70,0.5)'; e.currentTarget.style.background = 'rgba(230,57,70,0.04)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(230,57,70,0.2)'; e.currentTarget.style.background = 'transparent'; }}>
               {p.text}
             </button>
           ))}

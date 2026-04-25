@@ -128,11 +128,11 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
       {sections.map((s) => (
         <div key={s.label} className="rounded-lg overflow-hidden"
           style={{
-            background: 'rgba(59,54,220,0.04)',
-            border: '1px solid rgba(59,54,220,0.18)',
+            background: 'rgba(230,57,70,0.04)',
+            border: '1px solid rgba(230,57,70,0.18)',
             borderLeft: '3px solid var(--cam-primary)',
           }}>
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(59,54,220,0.06)', borderBottom: '1px solid rgba(59,54,220,0.1)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(230,57,70,0.06)', borderBottom: '1px solid rgba(230,57,70,0.1)' }}>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
                 style={{ background: 'var(--cam-primary)', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
@@ -171,7 +171,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
 function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
   return (
     <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg"
-      style={{ background: 'rgba(59,54,220,0.08)', border: '1px solid rgba(59,54,220,0.2)' }}>
+      style={{ background: 'rgba(230,57,70,0.08)', border: '1px solid rgba(230,57,70,0.2)' }}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary-dk)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="8" x2="12" y2="12" />
@@ -256,7 +256,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
           return (
             <div key={s.id} className="px-2 py-1.5 rounded-md transition-all"
               style={{
-                background: matches ? 'rgba(59,54,220,0.1)' : '#FFFFFF',
+                background: matches ? 'rgba(230,57,70,0.1)' : '#FFFFFF',
                 border: matches ? '1px solid var(--cam-primary)' : '1px solid #E2E8F0',
               }}>
               <div className="flex items-start gap-1.5">
@@ -264,7 +264,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
                   {s.archetypes.slice(0, 2).map(t => (
                     <span key={t} className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
                       style={{
-                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'rgba(59,54,220,0.15)',
+                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'rgba(230,57,70,0.15)',
                         color: (matches && t === activeArchetype) ? '#FFFFFF' : 'var(--cam-primary-dk)',
                       }}>
                       {t}
