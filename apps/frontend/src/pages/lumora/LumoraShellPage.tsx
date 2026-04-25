@@ -244,7 +244,7 @@ export function LumoraShellPage() {
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
-          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(0,71,171,0.08)', borderBottom: '1px solid rgba(0,71,171,0.15)' }}>
+          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(59,54,220,0.08)', borderBottom: '1px solid rgba(59,54,220,0.15)' }}>
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
               <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
@@ -361,7 +361,7 @@ export function LumoraShellPage() {
                           onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                         >
                           <span className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-bold shrink-0"
-                            style={{ background: 'rgba(0,71,171,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
+                            style={{ background: 'rgba(59,54,220,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
                             {realIdx + 1}
                           </span>
                           <div className="flex-1 min-w-0">

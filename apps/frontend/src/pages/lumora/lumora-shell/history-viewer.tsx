@@ -60,7 +60,7 @@ export function HistoryAnswerViewer({
           Back
         </button>
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded" style={{ background: 'rgba(0,71,171,0.1)', color: 'var(--cam-primary-dk)' }}>
+          <span className="text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded" style={{ background: 'rgba(59,54,220,0.1)', color: 'var(--cam-primary-dk)' }}>
             Past Answer
           </span>
           <span className="text-[13px] font-semibold truncate" style={{ color: '#0F172A' }}>{entry.question}</span>

@@ -86,7 +86,7 @@ export function ApplyAnim() {
           right: 0,
           top: 0,
           height: '48px',
-          background: 'linear-gradient(180deg, transparent, rgba(0,71,171,0.15), transparent)',
+          background: 'linear-gradient(180deg, transparent, rgba(59,54,220,0.15), transparent)',
           animation: 'card-scan 3.2s linear infinite',
           pointerEvents: 'none',
         }}
@@ -143,7 +143,7 @@ export function PrepareAnim() {
             key={t}
             style={{
               background: '#FFFFFF',
-              border: '1px solid rgba(0,71,171,0.20)',
+              border: '1px solid rgba(59,54,220,0.20)',
               borderRadius: 4,
               padding: '7px 4px',
               textAlign: 'center',
@@ -266,7 +266,7 @@ export function AttendAnim() {
               width: 3,
               height: '100%',
               borderRadius: 2,
-              background: `linear-gradient(180deg, ${ACCENT}, #3D75CC)`,
+              background: `linear-gradient(180deg, ${ACCENT}, #6B65E8)`,
               transformOrigin: 'center',
               animation: `card-wave ${0.85 + (i % 5) * 0.12}s ease-in-out ${(i % 7) * 0.07}s infinite`,
             }}
@@ -334,7 +334,7 @@ export function FeatureLiveAIAnim() {
                 width: 2,
                 height: '100%',
                 borderRadius: 1,
-                background: `linear-gradient(180deg, ${ACCENT}, #3D75CC)`,
+                background: `linear-gradient(180deg, ${ACCENT}, #6B65E8)`,
                 transformOrigin: 'center',
                 animation: `card-wave ${0.85 + (i % 4) * 0.12}s ease-in-out ${(i % 5) * 0.08}s infinite`,
               }}
@@ -366,9 +366,9 @@ export function FeatureLiveAIAnim() {
                 fontWeight: 700,
                 padding: '2px 7px',
                 borderRadius: 10,
-                background: 'rgba(0,71,171,0.13)',
+                background: 'rgba(59,54,220,0.13)',
                 color: ACCENT,
-                border: '1px solid rgba(0,71,171,0.33)',
+                border: '1px solid rgba(59,54,220,0.33)',
                 opacity: 0,
                 animation: `feat-chip-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${2 + i * 0.28}s forwards`,
               }}
@@ -444,8 +444,8 @@ export function FeatureJobMatchAnim() {
             width: 26,
             height: 26,
             borderRadius: '50%',
-            background: `linear-gradient(135deg, ${ACCENT}, #3D75CC)`,
-            boxShadow: '0 2px 8px rgba(0,71,171,0.27)',
+            background: `linear-gradient(135deg, ${ACCENT}, #6B65E8)`,
+            boxShadow: '0 2px 8px rgba(59,54,220,0.27)',
             marginBottom: 4,
           }}
         />
@@ -459,7 +459,7 @@ export function FeatureJobMatchAnim() {
               borderRadius: 3,
               background: '#FFFFFF',
               color: ACCENT,
-              border: '1px solid rgba(0,71,171,0.27)',
+              border: '1px solid rgba(59,54,220,0.27)',
               alignSelf: 'flex-start',
               opacity: 0,
               animation: `feat-chip-enter 0.4s ease-out ${0.2 + i * 0.12}s forwards`,

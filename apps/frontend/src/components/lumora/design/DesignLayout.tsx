@@ -441,7 +441,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-[rgba(0,71,171,0.06)] border-[rgba(0,71,171,0.2)] text-[var(--accent)]'
+              'bg-[rgba(59,54,220,0.06)] border-[rgba(59,54,220,0.2)] text-[var(--accent)]'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -470,7 +470,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(0,71,171,0.06)] border border-[rgba(0,71,171,0.2)] rounded-lg">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(59,54,220,0.06)] border border-[rgba(59,54,220,0.2)] rounded-lg">
               <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
               <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
@@ -655,7 +655,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 hover:bg-[rgba(0,71,171,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 hover:bg-[rgba(59,54,220,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
           style={{ background: t.sectionBg }}
         >
