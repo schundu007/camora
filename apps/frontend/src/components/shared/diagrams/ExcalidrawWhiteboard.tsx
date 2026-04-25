@@ -114,7 +114,7 @@ export default function ExcalidrawWhiteboard({
       style={{ width: '100%', height: '100%', minHeight: 400, position: 'relative' }}
     >
       <Excalidraw
-        excalidrawAPI={(api) => setExcalidrawAPI(api)}
+        excalidrawAPI={setExcalidrawAPI}
         initialData={{
           elements: initialElements ? [...initialElements] : [],
           appState: {
@@ -139,51 +139,27 @@ export default function ExcalidrawWhiteboard({
         renderTopRightUI={() =>
           onLoadAIDiagram ? (
             <button
+              type="button"
               onClick={handleLoadAIDiagram}
               disabled={loadingAI}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg border whitespace-nowrap transition-colors disabled:cursor-wait disabled:opacity-60"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 14px',
-                fontSize: 12,
-                fontWeight: 600,
-                color: loadingAI ? '#9ca3af' : 'var(--accent)',
-                background: loadingAI ? '#f3f4f6' : '#F8FAFC',
-                border: `1px solid ${loadingAI ? '#d1d5db' : '#a7f3d0'}`,
-                borderRadius: 8,
-                cursor: loadingAI ? 'wait' : 'pointer',
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                whiteSpace: 'nowrap',
+                color: 'var(--accent)',
+                background: 'var(--bg-elevated)',
+                borderColor: 'var(--border)',
+                fontFamily: 'var(--font-sans)',
               }}
             >
               {loadingAI ? (
                 <>
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    style={{ animation: 'spin 1s linear infinite' }}
-                  >
+                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
                   Loading...
                 </>
               ) : (
                 <>
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
                   </svg>
                   Load AI Diagram
@@ -193,15 +169,8 @@ export default function ExcalidrawWhiteboard({
           ) : null
         }
       />
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .excalidraw .layer-ui__library {
-          display: none !important;
-        }
-      `}</style>
+      {/* Hide the Excalidraw library sidebar — keeps the toolbar minimal. */}
+      <style>{`.excalidraw .layer-ui__library { display: none !important; }`}</style>
     </div>
   );
 }
