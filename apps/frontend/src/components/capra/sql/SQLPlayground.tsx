@@ -41,7 +41,7 @@ type OutputTab = 'output' | 'expected';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: 'bg-[rgba(45,140,255,0.08)]', text: 'text-[var(--accent)]', border: 'border-[rgba(45,140,255,0.3)]' },
+  Easy: { bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent)]', border: 'border-[var(--accent)]' },
   Medium: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   Hard: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
 };
@@ -106,7 +106,7 @@ function ResultTable({
   const displayRows = rows.slice(0, maxRows);
   return (
     <div className="overflow-auto max-h-[260px] rounded-lg border border-slate-200">
-      <table className="w-full text-sm border-collapse" style={{ fontFamily: "'Source Code Pro', monospace" }}>
+      <table className="w-full text-sm border-collapse" style={{ fontFamily: 'var(--font-mono)' }}>
         <thead>
           <tr className="bg-slate-50 sticky top-0">
             {columns.map((col, i) => (
@@ -158,14 +158,14 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
     <div className="mb-4">
       <div className="flex items-center gap-2 mb-1.5">
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.2)]"
-          style={{ fontFamily: "'Source Code Pro', monospace" }}
+          className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[var(--accent-subtle)] text-[var(--accent)] border border-[rgba(0,0,0,0.1)]"
+          style={{ fontFamily: 'var(--font-mono)' }}
         >
           {table.name}
         </span>
       </div>
       <div className="overflow-auto rounded-lg border border-slate-200">
-        <table className="w-full text-sm border-collapse" style={{ fontFamily: "'Source Code Pro', monospace" }}>
+        <table className="w-full text-sm border-collapse" style={{ fontFamily: 'var(--font-mono)' }}>
           <thead>
             <tr className="bg-slate-50">
               {table.columns.map((col, i) => (
@@ -464,7 +464,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                 </svg>
               </button>
               {solved.has(problem.id) && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.3)]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -568,8 +568,8 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                   </button>
                 </div>
                 <pre
-                  className="text-xs text-[var(--accent)] bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.2)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
+                  className="text-xs text-[var(--accent)] bg-[var(--accent-subtle)] border border-[rgba(0,0,0,0.1)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
+                  style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {problem.solution}
                 </pre>
@@ -680,7 +680,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             {submitResult && (
               <div className="ml-auto flex items-center gap-1.5">
                 {submitResult === 'correct' ? (
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.3)]">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9 12l2 2 4-4" />
@@ -810,7 +810,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                     <div className="text-[11px] font-bold uppercase tracking-wider text-red-400 mb-1">Error</div>
                     <pre
                       className="text-sm text-red-700 whitespace-pre-wrap"
-                      style={{ fontFamily: "'Source Code Pro', monospace" }}
+                      style={{ fontFamily: 'var(--font-mono)' }}
                     >
                       {error}
                     </pre>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
@@ -33,10 +33,6 @@ function timeAgo(date: string): string {
 }
 
 function Avatar({ name, image, size = 28 }: { name: string | null; image: string | null; size?: number }) {
-  const initial = (name || '?')[0].toUpperCase();
-  const colors = ['var(--accent)'];
-  const colorIndex = (name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
-
   if (image) {
     return (
       <img
@@ -54,9 +50,9 @@ function Avatar({ name, image, size = 28 }: { name: string | null; image: string
   return (
     <div
       className="rounded-full flex items-center justify-center flex-shrink-0 text-white font-medium"
-      style={{ width: size, height: size, fontSize: size * 0.4, backgroundColor: colors[colorIndex] }}
+      style={{ width: size, height: size, fontSize: size * 0.4, backgroundColor: 'var(--accent)' }}
     >
-      {initial}
+      {(name || '?')[0].toUpperCase()}
     </div>
   );
 }
@@ -141,17 +137,22 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
     }
   };
 
-  // Organize into threads: top-level comments + their replies
-  const topLevel = comments.filter(c => c.parent_id === null);
-  const repliesMap = new Map<number, Comment[]>();
-  for (const c of comments) {
-    if (c.parent_id !== null) {
-      const existing = repliesMap.get(c.parent_id) || [];
-      existing.push(c);
-      repliesMap.set(c.parent_id, existing);
+  // Organize into threads in a single pass; memoized so re-renders driven by
+  // input changes don't rebuild the map.
+  const { topLevel, repliesMap } = useMemo(() => {
+    const replies = new Map<number, Comment[]>();
+    const top: Comment[] = [];
+    for (const c of comments) {
+      if (c.parent_id === null) {
+        top.push(c);
+      } else {
+        const list = replies.get(c.parent_id) ?? [];
+        list.push(c);
+        replies.set(c.parent_id, list);
+      }
     }
-  }
-
+    return { topLevel: top, repliesMap: replies };
+  }, [comments]);
   const totalCount = comments.length;
 
   return (
@@ -220,7 +221,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
       )}
 
       {/* Comment list */}
-      <div className={isAuthenticated ? 'mt-4' : 'mt-4'}>
+      <div className="mt-4">
         {loading ? (
           <div className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             Loading comments...
@@ -305,7 +306,7 @@ function CommentItem({
   onDelete: () => void;
 }) {
   return (
-    <div className="flex gap-2.5 py-3 group">
+    <div className="flex gap-2.5 py-3">
       <Avatar name={comment.user_name} image={comment.user_image} size={28} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -322,11 +323,13 @@ function CommentItem({
         >
           {comment.content}
         </p>
+        {/* Action row — always visible per the project rule against
+            hover-reveal-only destructive buttons. */}
         <div className="flex items-center gap-3 mt-1.5">
           <button
             type="button"
             onClick={onReply}
-            className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+            className="text-xs font-medium hover:underline transition-colors"
             style={{ color: 'var(--text-muted)' }}
           >
             Reply
@@ -336,8 +339,8 @@ function CommentItem({
               type="button"
               onClick={onDelete}
               disabled={isDeleting}
-              className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
-              style={{ color: 'var(--text-muted)' }}
+              className="text-xs font-medium hover:underline disabled:opacity-50 transition-colors"
+              style={{ color: 'var(--danger)' }}
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </button>

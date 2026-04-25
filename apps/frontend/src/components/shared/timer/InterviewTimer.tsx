@@ -73,22 +73,22 @@ export function InterviewTimer({
     };
   }, [isRunning, paused]);
 
-  // Derived values
+  // Derived values — three-tier urgency: brand → caution amber → danger var.
   const percent = duration > 0 ? (secondsLeft / duration) * 100 : 0;
   const colorClass =
     percent > 50
       ? 'text-[var(--accent)]'
       : percent > 20
         ? 'text-amber-500'
-        : 'text-red-500';
+        : 'text-[var(--danger)]';
   const bgClass =
     percent > 50
-      ? 'bg-[rgba(45,140,255,0.08)] border-[rgba(45,140,255,0.3)]'
+      ? 'bg-[var(--accent-subtle)] border-[var(--accent)]/30'
       : percent > 20
         ? 'bg-amber-50 border-amber-200'
         : 'bg-red-50 border-red-200';
   const ringStroke =
-    percent > 50 ? 'var(--accent)' : percent > 20 ? 'var(--text-muted)' : '#ef4444';
+    percent > 50 ? 'var(--accent)' : percent > 20 ? 'var(--text-muted)' : 'var(--danger)';
 
   const togglePause = useCallback(() => {
     setPaused(p => !p);
