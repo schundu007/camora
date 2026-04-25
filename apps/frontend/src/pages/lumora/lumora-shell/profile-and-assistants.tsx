@@ -161,7 +161,7 @@ export function LumoraProfilePage() {
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: '#64748B' }}>Plan</span>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(230,57,70,0.1)', color: plan === 'free' ? '#64748B' : 'var(--cam-primary)' }}>{planLabel}</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(236,72,153,0.1)', color: plan === 'free' ? '#64748B' : 'var(--cam-primary)' }}>{planLabel}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: '#64748B' }}>Status</span>
@@ -393,7 +393,7 @@ export function AssistantsPage() {
             <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: '#fff', border: '1px solid #E2E8F0' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(230,57,70,0.1)' }}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(236,72,153,0.1)' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                   </div>
                   <div>
@@ -413,7 +413,7 @@ export function AssistantsPage() {
               </div>}
 
               {a.resume && (
-                <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(230,57,70,0.04)', border: '1px solid rgba(230,57,70,0.15)' }}>
+                <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(236,72,153,0.04)', border: '1px solid rgba(236,72,153,0.15)' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />

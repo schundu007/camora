@@ -26,8 +26,8 @@ export function useTheme(dark: boolean): DesignTheme {
   if (dark) {
     return {
       cardBg: '#0F172A', cardBorder: '#1E293B',
-      headerBg: 'rgba(230,57,70,0.08)', headerBorder: '#1E40AF',
-      headerText: 'var(--cam-primary)', badgeBg: 'rgba(230,57,70,0.12)', badgeText: 'var(--cam-primary)',
+      headerBg: 'rgba(236,72,153,0.08)', headerBorder: '#1E40AF',
+      headerText: 'var(--cam-primary)', badgeBg: 'rgba(236,72,153,0.12)', badgeText: 'var(--cam-primary)',
       text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
       codeBg: '#020617', codeText: '#E2E8F0',
       inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
@@ -38,8 +38,8 @@ export function useTheme(dark: boolean): DesignTheme {
   }
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(230,57,70,0.05)', headerBorder: '#BFDBFE',
-    headerText: 'var(--cam-primary)', badgeBg: 'rgba(230,57,70,0.06)', badgeText: 'var(--cam-primary)',
+    headerBg: 'rgba(236,72,153,0.05)', headerBorder: '#BFDBFE',
+    headerText: 'var(--cam-primary)', badgeBg: 'rgba(236,72,153,0.06)', badgeText: 'var(--cam-primary)',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',

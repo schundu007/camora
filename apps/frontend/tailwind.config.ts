@@ -13,10 +13,10 @@ export default {
       },
       colors: {
         accent: {
-          DEFAULT: '#E63946',
-          hover: '#B91D2C',
-          subtle: 'rgba(230,57,70,0.10)',
-          muted: 'rgba(230,57,70,0.18)',
+          DEFAULT: '#EC4899',
+          hover: '#BE185D',
+          subtle: 'rgba(236,72,153,0.10)',
+          muted: 'rgba(236,72,153,0.18)',
         },
         success: {
           DEFAULT: '#34D399',
@@ -29,9 +29,9 @@ export default {
           muted: 'rgba(251,191,36,0.18)',
         },
         danger: {
-          DEFAULT: '#C2185B',
-          subtle: 'rgba(194,24,91,0.10)',
-          muted: 'rgba(194,24,91,0.18)',
+          DEFAULT: '#EF4444',
+          subtle: 'rgba(239,68,68,0.10)',
+          muted: 'rgba(239,68,68,0.18)',
         },
         surface: {
           DEFAULT: '#FFFFFF',
@@ -52,33 +52,33 @@ export default {
           900: '#0F172A',
         },
         camora: {
-          // Brand accent — the only red in the palette.
-          primary:   '#E63946',
-          primaryLt: '#FF6B7A',
-          primaryDk: '#B91D2C',
+          // Brand accent — the only magenta in the palette.
+          primary:   '#EC4899',
+          primaryLt: '#F472B6',
+          primaryDk: '#BE185D',
           // Neutrals for chrome / surfaces — slate.
           void:      '#050C1A',
           midnight:  '#0F172A',
           steel:     '#475569',
           mist:      '#F1F5F9',
           surface:   '#F8FAFC',
-          // Amber accent — pairs with primary for the farmer/wheat feel.
+          // Amber — secondary accent for highlights / amber chips.
           amber:     '#AB6400',
           amberLt:   '#C07A00',
           amberDk:   '#864E00',
           amberMist: '#FAF0E0',
           // Tonal ramps. `blue` keeps its name for back-compat but is now
-          // the tomato/red ramp; `gold` is amber.
+          // the magenta-pink ramp; `gold` is amber.
           blue: {
-            50:  '#FCE5E8',
-            100: '#F9C5CC',
-            200: '#F49AA3',
-            300: '#FF6B7A',
-            400: '#E63946',
-            500: '#B91D2C',
-            600: '#7A1419',
-            700: '#5C0D11',
-            900: '#1A0508',
+            50:  '#FDF2F8',
+            100: '#FCE7F3',
+            200: '#FBCFE8',
+            300: '#F472B6',
+            400: '#EC4899',
+            500: '#BE185D',
+            600: '#9D174D',
+            700: '#831843',
+            900: '#500724',
           },
           gold: {
             50:  '#FAF0E0',
