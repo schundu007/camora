@@ -61,6 +61,41 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
   const [extractingDoc, setExtractingDoc] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [editText, setEditText] = useState('');
+  const [jdUrl, setJdUrl] = useState('');
+  const [fetchingUrl, setFetchingUrl] = useState(false);
+  const [urlError, setUrlError] = useState('');
+
+  const closeEditModal = () => {
+    setEditingField(null);
+    setEditText('');
+    setJdUrl('');
+    setUrlError('');
+    setFetchingUrl(false);
+  };
+
+  const fetchFromUrl = async () => {
+    const url = jdUrl.trim();
+    if (!url) return;
+    setFetchingUrl(true);
+    setUrlError('');
+    try {
+      const response = await fetch(API_URL + '/api/job-analyze/fetch-text', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setUrlError(data.error || 'Could not fetch this URL.');
+      } else {
+        setEditText(data.text);
+      }
+    } catch (err) {
+      setUrlError('Network error. Please try again.');
+    } finally {
+      setFetchingUrl(false);
+    }
+  };
 
   const extractTextFromFile = async (file, fieldId) => {
     const filename = file.name.toLowerCase();
@@ -113,8 +148,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
     if (file) {
       await extractTextFromFile(file, fieldId);
       // Close the modal after successful file upload
-      setEditingField(null);
-      setEditText('');
+      closeEditModal();
     }
     e.target.value = '';
   };
@@ -231,6 +265,8 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   if (!hasContent) {
                     setEditingField(field.id);
                     setEditText('');
+                    setJdUrl('');
+                    setUrlError('');
                   }
                 }}
               >
@@ -403,7 +439,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
         <div
           className="fixed inset-0 flex items-center justify-center z-50"
           style={{ background: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setEditingField(null)}
+          onClick={closeEditModal}
         >
           <div
             className="bg-[var(--bg-surface)] rounded-lg shadow-xl w-full max-w-2xl mx-4"
@@ -423,7 +459,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   Upload File
                 </button>
                 <button
-                  onClick={() => setEditingField(null)}
+                  onClick={closeEditModal}
                   className="p-1 rounded hover:bg-[var(--bg-elevated)]"
                 >
                   {ICONS.x}
@@ -431,6 +467,60 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
               </div>
             </div>
             <div className="p-4">
+              {editingField === 'jobDescription' && (
+                <div className="mb-3">
+                  <label
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: 'var(--text-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      display: 'block',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Paste job posting URL
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      value={jdUrl}
+                      onChange={(e) => { setJdUrl(e.target.value); setUrlError(''); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && jdUrl.trim() && !fetchingUrl) { e.preventDefault(); fetchFromUrl(); } }}
+                      placeholder="https://nvidia.wd5.myworkdayjobs.com/..."
+                      className="flex-1 rounded-lg px-3 py-2 text-sm"
+                      style={{
+                        border: '1px solid var(--border)',
+                        background: '#fafafa',
+                        color: 'var(--content-text)'
+                      }}
+                      disabled={fetchingUrl}
+                    />
+                    <button
+                      onClick={fetchFromUrl}
+                      disabled={!jdUrl.trim() || fetchingUrl}
+                      className="px-3 py-2 rounded text-sm font-medium"
+                      style={{
+                        background: 'var(--accent)',
+                        color: '#ffffff',
+                        opacity: (!jdUrl.trim() || fetchingUrl) ? 0.5 : 1,
+                        cursor: (!jdUrl.trim() || fetchingUrl) ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {fetchingUrl ? 'Fetching…' : 'Fetch JD'}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn, and most career pages.
+                  </div>
+                  {urlError && (
+                    <div style={{ fontSize: '0.8125rem', color: '#ef4444', marginTop: '6px' }}>
+                      {urlError}
+                    </div>
+                  )}
+                </div>
+              )}
               <textarea
                 autoFocus
                 value={editText}
@@ -438,7 +528,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 placeholder={`Paste your ${INPUT_FIELDS.find(f => f.id === editingField)?.label.toLowerCase()} here...`}
                 className="w-full rounded-lg p-3 text-sm resize-none"
                 style={{
-                  height: '300px',
+                  height: editingField === 'jobDescription' ? '240px' : '300px',
                   border: '1px solid var(--border)',
                   background: '#fafafa',
                   color: 'var(--content-text)'
@@ -447,7 +537,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
             </div>
             <div className="px-4 py-3 border-t flex justify-end gap-2">
               <button
-                onClick={() => setEditingField(null)}
+                onClick={closeEditModal}
                 className="px-4 py-2 rounded text-sm"
                 style={{ background: 'var(--bg-elevated)', color: '#666' }}
               >
@@ -458,8 +548,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   if (editText.trim()) {
                     onChange(editingField, editText.trim());
                   }
-                  setEditingField(null);
-                  setEditText('');
+                  closeEditModal();
                 }}
                 className="px-4 py-2 rounded text-sm text-[var(--text-primary)]"
                 style={{ background: 'var(--accent)' }}
