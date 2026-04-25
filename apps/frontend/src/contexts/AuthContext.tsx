@@ -144,21 +144,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // from document.cookie. Instead, call /auth/me with credentials:'include'
       // — the cookie rides along, the backend validates it, and returns a fresh
       // short-lived access_token in the response body which we use as Bearer.
+      //
+      // Resilience: if /me succeeds but the backend deploy hasn't shipped the
+      // access_token field yet, fall back to /refresh which has been returning
+      // access_token forever. We also handle the legacy case where the cookie
+      // is non-httpOnly (old sessions) by reading it directly as a last resort.
       try {
         const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
           credentials: 'include',
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.access_token) {
-            setToken(data.access_token);
+          let bearerToken: string | undefined = data.access_token;
+
+          if (!bearerToken) {
+            // Backend doesn't return access_token in /me response yet —
+            // hit /refresh which has been around longer and definitely returns it.
+            try {
+              const refreshRes = await fetch(`${LUMORA_API_URL}/api/v1/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include',
+              });
+              if (refreshRes.ok) {
+                const refreshData = await refreshRes.json();
+                bearerToken = refreshData.access_token;
+              }
+            } catch { /* fall through */ }
+          }
+
+          if (!bearerToken) {
+            // Last resort: read a non-httpOnly cookie if one exists (legacy session).
+            const m = document.cookie.match(/(?:^|; )cariara_sso=([^;]+)/);
+            if (m) bearerToken = decodeURIComponent(m[1]);
+          }
+
+          if (bearerToken) {
+            setToken(bearerToken);
             const { access_token, ...userData } = data;
+            void access_token;
             setUser(userData);
 
             // Fetch onboarding status from Capra backend using the fresh token
             try {
               const onboardingRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
-                headers: { Authorization: `Bearer ${data.access_token}` },
+                headers: { Authorization: `Bearer ${bearerToken}` },
                 credentials: 'include',
               });
               if (onboardingRes.ok) {
