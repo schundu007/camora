@@ -43,18 +43,19 @@
     --text-muted: #1E293B;
     --text-dimmed: #334155;
 
-    /* Accent — Camora magenta-pink, single source of truth */
+    /* Accent — Camora magenta, single source of truth */
     --accent: #EC4899;
     --accent-hover: #BE185D;
     --accent-subtle: rgba(236,72,153,0.10);
     --accent-text: #BE185D;
 
-    /* Semantic — Camora palette: magenta is the brand colour, plain red
-       is reserved for danger/error states so the two don't get confused. */
-    --success: #EC4899;
-    --warning: #EC4899;
-    --danger: #EF4444;
-    --info: #EC4899;
+    /* Semantic — three-accent brand system. Success uses teal so it's
+       visually distinct from the magenta primary; warning uses amber
+       (the third brand accent) for the warm-tone alert family. */
+    --success: #0F766E;
+    --warning: #AB6400;
+    --danger:  #EF4444;
+    --info:    #EC4899;
 
     /* Difficulty — rank by weight in the chip, not by hue. Values below
        are back-compat shims for any code that reads them directly. */
@@ -119,22 +120,54 @@
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
-    /* ── Camora brand palette — accent only is magenta; surfaces stay neutral ── */
+    /* ──────────────────────────────────────────────────────────
+       Camora brand system — three accents on a cream substrate.
+       Magenta = the verb (action, focus).
+       Teal    = the noun (trust, success, depth).
+       Amber   = the adjective (highlight, premium, warmth).
+       Cream   = the air (substrate, breathing room).
+       Warm ink = the bones (text, structure).
+       ────────────────────────────────────────────────────────── */
+
+    /* PRIMARY accent — magenta */
     --cam-primary:      #EC4899;
     --cam-primary-lt:   #F472B6;
     --cam-primary-dk:   #BE185D;
-    --cam-primary-900:  #050C1A;
+    --cam-primary-900:  #500724;
 
+    /* SECONDARY accent — deep teal (split-complement of magenta) */
+    --cam-teal:         #0F766E;
+    --cam-teal-lt:      #14B8A6;
+    --cam-teal-dk:      #134E4A;
+    --cam-teal-50:      #F0FDFA;
+
+    /* TERTIARY accent — amber (analogous warm pair with magenta) */
     --cam-amber:        #AB6400;
     --cam-amber-lt:     #C07A00;
     --cam-amber-dk:     #864E00;
     --cam-amber-50:     #FAF0E0;
 
+    /* SUBSTRATE — cream paper, not white */
+    --cam-cream:        #FAF7F0;
+    --cam-cream-lt:     #FDFCF7;
+
+    /* TEXT — warm ink, pairs with cream */
+    --cam-warm-ink:     #292524;
+    --cam-warm-ink-mid: #57534E;
+    --cam-warm-ink-lt:  #A8A29E;
+
+    /* DARK SURFACES — plum-void with 5% magenta echo */
+    --cam-plum-void:    #1A0B1F;
+    --cam-void:         #1A0B1F;
+
+    /* Neutral chrome (kept for low-contrast borders, never a fill) */
     --cam-midnight:     #0F172A;
     --cam-steel:        #475569;
-    --cam-mist:         #F1F5F9;
-    --cam-surface-lt:   #F8FAFC;
-    --cam-void:         #050C1A;
+
+    /* Mist/surface-lt now resolve to cream so existing consumers
+       (hero gradients, accent panels) pick up the painterly substrate */
+    --cam-mist:         #FAF7F0;
+    --cam-surface-lt:   #FDFCF7;
 
     /* Single source of truth (kept in sync with --accent above) */
     --accent:           #EC4899;
