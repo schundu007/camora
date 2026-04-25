@@ -117,8 +117,10 @@ router.post('/sync', async (req, res) => {
       user = result.rows[0];
     }
 
-    // Generate JWT
-    const token = createToken({ sub: user.id, email: user.email });
+    // Generate JWT — include `type: 'access'` so the ascend authenticate
+    // middleware (which strictly checks `payload.type === 'access'`) accepts
+    // this token on cross-service requests.
+    const token = createToken({ sub: user.id, email: user.email, type: 'access' });
 
     return res.json({
       access_token: token,
@@ -140,11 +142,16 @@ router.post('/sync', async (req, res) => {
 router.get('/me', authenticate, async (req, res) => {
   try {
     const user = formatUserResponse(req.user);
+    // type:'access' is required by the ascend backend's authenticate middleware
+    // (`payload.type === 'access'` strict check). Without it, a token minted
+    // here would auth on lumora but get 401 when used to call ascend endpoints
+    // like /api/onboarding/status.
     const accessToken = createToken({
       sub: req.user.id,
       email: req.user.email,
       name: req.user.name,
       picture: req.user.picture,
+      type: 'access',
     }, '24h');
     return res.json({ ...user, access_token: accessToken });
   } catch (err) {
@@ -158,7 +165,7 @@ router.get('/me', authenticate, async (req, res) => {
 // ---------------------------------------------------------------------------
 router.post('/refresh', authenticate, async (req, res) => {
   try {
-    const token = createToken({ sub: req.user.id, email: req.user.email });
+    const token = createToken({ sub: req.user.id, email: req.user.email, type: 'access' });
     return res.json({
       access_token: token,
       token_type: 'bearer',
