@@ -26,11 +26,11 @@ interface AICompanionPanelProps {
 type AnswerMode = 'short' | 'detailed';
 
 /* ── SonaAvatar — enterprise wordmark ──
-   Hexagonal silhouette with a bold violet-blue "S" glyph over a deep-navy
+   Hexagonal silhouette with a bold brand-color "S" glyph over a deep-navy
    field. Designed to read like a product wordmark — Stripe / Linear /
    Vercel weight class — rather than a cute portrait. Stays crisp at
-   14–64 px. Glyph + ring colors come from --cam-primary so the avatar
-   tracks the active palette without hard-coded hex.
+   14–64 px. The glyph and indicator ring read from --cam-primary so the
+   avatar tracks whatever the current palette is, without hard-coded hex.
 
    Props:
      size   — px square dimension
@@ -66,7 +66,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
           <stop offset="0%" stopColor="#0F172A" />
           <stop offset="100%" stopColor="#020617" />
         </linearGradient>
-        {/* S glyph — single-tone violet-blue, no rainbow. */}
+        {/* S glyph — single-tone brand color, no rainbow. */}
         <linearGradient id={g.glyph} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#F49AA3" />
           <stop offset="100%" stopColor="var(--cam-primary)" />
@@ -107,7 +107,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
       {/* Top-edge light catch (enterprise depth cue, no gloss) */}
       <path d={hexPath} fill={`url(#${g.edge})`} style={{ mixBlendMode: 'screen' }} />
 
-      {/* S glyph — thick ribbon, single-tone violet-blue, crisp at 14 px */}
+      {/* S glyph — thick ribbon, single-tone brand color, crisp at 14 px */}
       <path
         d={sPath}
         fill="none"
