@@ -52,21 +52,35 @@ export default {
           900: '#0F172A',
         },
         camora: {
-          // Brand accent — the only magenta in the palette.
+          // PRIMARY — magenta (the verb)
           primary:   '#EC4899',
           primaryLt: '#F472B6',
           primaryDk: '#BE185D',
-          // Neutrals for chrome / surfaces — slate.
-          void:      '#050C1A',
-          midnight:  '#0F172A',
-          steel:     '#475569',
-          mist:      '#F1F5F9',
-          surface:   '#F8FAFC',
-          // Amber — secondary accent for highlights / amber chips.
+          // SECONDARY — teal (the noun, split-complement of magenta)
+          teal:      '#0F766E',
+          tealLt:    '#14B8A6',
+          tealDk:    '#134E4A',
+          teal50:    '#F0FDFA',
+          // TERTIARY — amber (the adjective, analogous warm pair)
           amber:     '#AB6400',
           amberLt:   '#C07A00',
           amberDk:   '#864E00',
           amberMist: '#FAF0E0',
+          // SUBSTRATE — cream paper, replaces white where ink + warmth land
+          cream:     '#FAF7F0',
+          creamLt:   '#FDFCF7',
+          // TEXT — warm ink, pairs with cream
+          warmInk:   '#292524',
+          warmInkMid:'#57534E',
+          warmInkLt: '#A8A29E',
+          // DARK — plum-void with magenta echo
+          void:      '#1A0B1F',
+          plumVoid:  '#1A0B1F',
+          // Chrome neutrals (use sparingly — borders only, never fills)
+          midnight:  '#0F172A',
+          steel:     '#475569',
+          mist:      '#FAF7F0',
+          surface:   '#FDFCF7',
           // Tonal ramps. `blue` keeps its name for back-compat but is now
           // the magenta-pink ramp; `gold` is amber.
           blue: {
