@@ -24,6 +24,76 @@ interface AICompanionPanelProps {
 
 type AnswerMode = 'short' | 'detailed';
 
+/* ── Inline markdown renderer ──────────────────────────────────────────────
+   Replaces an earlier `dangerouslySetInnerHTML` path that ran a regex over
+   user/AI-supplied strings and dropped the result into innerHTML. That was
+   an XSS waiting to happen — a malformed JSON answer like
+   `**<img src=x onerror=alert(1)>**` would have escaped any wrapper.
+
+   This tokenizer walks the string, emits React nodes for **bold**, `code`,
+   and [text](url) segments, and lets React's auto-escaping handle every
+   character of plain text. Links are restricted to http(s) URLs so a
+   `javascript:` / `data:` payload can't hide inside `[click](javascript:…)`.
+*/
+interface InlineStyles {
+  bold?: React.CSSProperties;
+  code?: React.CSSProperties;
+  link?: React.CSSProperties;
+  allowLinks?: boolean;
+}
+
+function renderInlineSafe(s: string, opts: InlineStyles = {}): React.ReactNode[] {
+  if (!s) return [];
+  const nodes: React.ReactNode[] = [];
+  let i = 0;
+  let k = 0;
+  const len = s.length;
+  let buf = '';
+  const flush = () => { if (buf) { nodes.push(buf); buf = ''; } };
+  while (i < len) {
+    if (s[i] === '*' && s[i + 1] === '*') {
+      const end = s.indexOf('**', i + 2);
+      if (end !== -1) {
+        flush();
+        nodes.push(<strong key={`b-${k++}`} style={opts.bold}>{s.slice(i + 2, end)}</strong>);
+        i = end + 2;
+        continue;
+      }
+    }
+    if (s[i] === '`') {
+      const end = s.indexOf('`', i + 1);
+      if (end !== -1) {
+        flush();
+        nodes.push(<code key={`c-${k++}`} style={opts.code}>{s.slice(i + 1, end)}</code>);
+        i = end + 1;
+        continue;
+      }
+    }
+    if (opts.allowLinks && s[i] === '[') {
+      const closeBracket = s.indexOf(']', i + 1);
+      if (closeBracket !== -1 && s[closeBracket + 1] === '(') {
+        const closeParen = s.indexOf(')', closeBracket + 2);
+        if (closeParen !== -1) {
+          const text = s.slice(i + 1, closeBracket);
+          const url = s.slice(closeBracket + 2, closeParen);
+          // Allow only http/https — never javascript:, data:, vbscript:, etc.
+          if (/^https?:\/\//i.test(url)) {
+            flush();
+            nodes.push(
+              <a key={`a-${k++}`} href={url} target="_blank" rel="noopener noreferrer" style={opts.link}>{text}</a>
+            );
+            i = closeParen + 1;
+            continue;
+          }
+        }
+      }
+    }
+    buf += s[i++];
+  }
+  flush();
+  return nodes;
+}
+
 /* ── Text formatting ── */
 function extractAnswer(parsed: any): string {
   if (!parsed) return '';
@@ -243,10 +313,9 @@ function parseStar(text: string): { sections: { label: StarLabel; body: string }
    this renders at 13-14px and skips the code-detection machinery. */
 function StarBody({ text }: { text: string }) {
   if (!text) return null;
-  const renderInline = (s: string) =>
-    s
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700">$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.05);color:#0E7490;padding:1px 5px;border-radius:3px;font-size:12px;font-family:\'JetBrains Mono\',monospace">$1</code>');
+  const STAR_BOLD: React.CSSProperties = { color: '#0F172A', fontWeight: 700 };
+  const STAR_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.05)', color: '#0E7490', padding: '1px 5px', borderRadius: 3, fontSize: 12, fontFamily: "'JetBrains Mono',monospace" };
+  const inline = (s: string) => renderInlineSafe(s, { bold: STAR_BOLD, code: STAR_CODE });
   const lines = text.split('\n');
   const out: React.ReactNode[] = [];
   let bulletGroup: string[] = [];
@@ -257,7 +326,7 @@ function StarBody({ text }: { text: string }) {
         {bulletGroup.map((b, bi) => (
           <li key={bi} className="flex gap-2">
             <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: '#22D3EE' }} />
-            <span style={{ fontSize: '13px', lineHeight: '1.55', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(b) }} />
+            <span style={{ fontSize: '13px', lineHeight: '1.55', color: '#0F172A' }}>{inline(b)}</span>
           </li>
         ))}
       </ul>
@@ -273,7 +342,7 @@ function StarBody({ text }: { text: string }) {
     }
     flushBullets(`bl-${i}`);
     out.push(
-      <p key={`p-${i}`} style={{ fontSize: '13px', lineHeight: '1.55', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(t) }} />
+      <p key={`p-${i}`} style={{ fontSize: '13px', lineHeight: '1.55', color: '#0F172A' }}>{inline(t)}</p>
     );
   });
   flushBullets('bl-end');
@@ -541,12 +610,10 @@ function RichText({ text }: { text: string }) {
     return result;
   };
 
-  const renderInline = (s: string) => {
-    return s
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);color:#0E7490;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid rgba(0,0,0,0.08)">$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#22D3EE;text-decoration:underline">$1</a>');
-  };
+  const RICH_BOLD: React.CSSProperties = { color: '#0F172A', fontWeight: 700, fontFamily: "'Clash Display',sans-serif" };
+  const RICH_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.06)', color: '#0E7490', padding: '1px 5px', borderRadius: 3, fontSize: 10, fontFamily: "'JetBrains Mono',monospace", border: '1px solid rgba(0,0,0,0.08)' };
+  const RICH_LINK: React.CSSProperties = { color: '#22D3EE', textDecoration: 'underline' };
+  const renderInline = (s: string) => renderInlineSafe(s, { bold: RICH_BOLD, code: RICH_CODE, link: RICH_LINK, allowLinks: true });
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
     <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid rgba(0,0,0,0.1)' }}>
@@ -572,7 +639,7 @@ function RichText({ text }: { text: string }) {
     if (labelMatch) return (
       <div key={key} className="mt-1.5">
         <span style={{ fontSize: '10px', fontWeight: 700, color: '#0F172A', fontFamily: "'Source Sans 3', sans-serif" }}>{labelMatch[1].toUpperCase()}: </span>
-        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(labelMatch[2]) }} />
+        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }}>{renderInline(labelMatch[2])}</span>
       </div>
     );
 
@@ -590,7 +657,7 @@ function RichText({ text }: { text: string }) {
     if (numMatch) return (
       <div key={key} className="flex gap-1.5 pl-1 mt-0.5">
         <span style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A' }}>{numMatch[1]}.</span>
-        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(numMatch[2]) }} />
+        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }}>{renderInline(numMatch[2])}</span>
       </div>
     );
 
@@ -598,7 +665,7 @@ function RichText({ text }: { text: string }) {
     if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) return (
       <div key={key} className="flex gap-1.5 pl-2 mt-0.5">
         <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: '#0F172A' }} />
-        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(t.slice(2)) }} />
+        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }}>{renderInline(t.slice(2))}</span>
       </div>
     );
 
@@ -613,7 +680,7 @@ function RichText({ text }: { text: string }) {
     if (t === '---' || t === '***') return <div key={key} className="my-2 h-px" style={{ background: C.border }} />;
 
     // Regular paragraph
-    return <p key={key} style={{ fontSize: '11px', lineHeight: '1.6', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t) }} />;
+    return <p key={key} style={{ fontSize: '11px', lineHeight: '1.6', color: C.text }}>{renderInline(t)}</p>;
   };
 
   return (
