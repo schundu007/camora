@@ -45,7 +45,10 @@ export default function TopicIllustration({ name, className = '', style }: Topic
   const credit = photo.photographer ? `Photo: ${photo.photographer} on Unsplash` : '';
 
   const wrapperStyle: CSSProperties = {
-    aspectRatio: '16 / 9',
+    // 3:1 cinematic strip — about 130px tall on a 400px card. Tall
+    // enough to read as a hero accent, short enough that the title /
+    // bullets / progress bar below stay the visual focus of the card.
+    aspectRatio: '3 / 1',
     background: 'var(--cam-primary-dk)',
     ...style,
   };
