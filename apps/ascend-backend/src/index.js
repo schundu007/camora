@@ -259,6 +259,29 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_challenger_activity_user ON ascend_challenger_activity(user_id)');
     console.log('[Migrations] Challenger tables ensured');
 
+    // AI Hours metering — Phase 0 of pricing-v2 (fixed Capra content + metered LLM hours).
+    // Every LLM-touching surface (Lumora live, solve, analyze, prep, diagram, job-analyze)
+    // writes a row here. Phase 0 = log-only, no gating, no Stripe sync. The legacy-Pro
+    // fair-use cap reads 30-day rolling sums from this table.
+    await query(`CREATE TABLE IF NOT EXISTS ai_hours_usage (
+      id BIGSERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      surface VARCHAR(40) NOT NULL,
+      started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ended_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      seconds REAL NOT NULL DEFAULT 0,
+      tokens_in INTEGER NOT NULL DEFAULT 0,
+      tokens_out INTEGER NOT NULL DEFAULT 0,
+      model VARCHAR(80),
+      plan_at_charge VARCHAR(40),
+      metered_to_stripe BOOLEAN NOT NULL DEFAULT false,
+      stripe_usage_record_id VARCHAR(80),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_user_created ON ai_hours_usage(user_id, created_at DESC)');
+    await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_unsynced ON ai_hours_usage(metered_to_stripe) WHERE metered_to_stripe = false');
+    console.log('[Migrations] ai_hours_usage table ensured');
+
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
       id SERIAL PRIMARY KEY,

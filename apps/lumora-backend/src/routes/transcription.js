@@ -11,6 +11,7 @@ import multer from 'multer';
 import { authenticate } from '../middleware/authenticate.js';
 import { transcribe } from '../services/transcription.js';
 import { checkLimit, incrementUsage } from '../services/usage.js';
+import { recordUsage } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
@@ -206,6 +207,15 @@ router.post(
         `Transcribed audio user=${req.user.id}: ` +
         `${trimmed.length} chars in ${latencyMs}ms`,
       );
+
+      if (req.user?.id) {
+        recordUsage({
+          userId: req.user.id,
+          surface: 'lumora_transcribe',
+          seconds: latencyMs / 1000,
+          model: 'whisper-1',
+        });
+      }
 
       return res.json({ text: trimmed, latency_ms: latencyMs, skipped: false });
     } catch (err) {
