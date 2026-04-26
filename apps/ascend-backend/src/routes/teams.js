@@ -17,6 +17,7 @@ import {
   planSupportsTeam,
 } from '../services/teamService.js';
 import { sendTeamInviteEmail } from '../services/emailService.js';
+import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 
 const router = Router();
 
@@ -84,6 +85,10 @@ router.get('/me', jwtAuth, async (req, res) => {
         ...team,
         members: filteredMembers,
         pending_invites: isOwner ? team.pending_invites : [],
+        // Auto-topup is owner billing config — strip for members.
+        auto_topup_pack: isOwner ? team.auto_topup_pack : undefined,
+        auto_topup_monthly_cap_cents: isOwner ? team.auto_topup_monthly_cap_cents : undefined,
+        payg_rate_cents: isOwner ? team.payg_rate_cents : undefined,
         viewer_is_owner: isOwner,
       },
     });
@@ -277,6 +282,36 @@ router.delete('/invites/:token', jwtAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err: err.message }, '[teams] cancel invite failed');
     return res.status(500).json({ error: 'Failed to cancel invite' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH /api/v1/teams/:teamId/auto-topup — team owner configures auto top-up
+// Body: { pack: 'topup_5h' | null, monthly_cap_cents: number | null }
+// ─────────────────────────────────────────────────────────────────────────────
+router.patch('/:teamId/auto-topup', jwtAuth, async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { pack, monthly_cap_cents } = req.body || {};
+
+    const owner = await query('SELECT owner_user_id FROM teams WHERE id = $1', [teamId]);
+    if (!owner.rows[0]) return res.status(404).json({ error: 'Team not found' });
+    if (owner.rows[0].owner_user_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the team owner can configure auto top-up' });
+    }
+
+    const valid = validateAutoTopupConfig({ pack, monthlyCapCents: monthly_cap_cents });
+    if (!valid.ok) return res.status(400).json(valid);
+
+    await query(
+      `UPDATE teams SET auto_topup_pack = $1, auto_topup_monthly_cap_cents = $2, updated_at = NOW()
+        WHERE id = $3`,
+      [valid.pack, valid.monthly_cap_cents, teamId],
+    );
+    return res.json({ ok: true, pack: valid.pack, monthly_cap_cents: valid.monthly_cap_cents });
+  } catch (err) {
+    logger.error({ err: err.message }, '[teams] auto-topup config failed');
+    return res.status(500).json({ error: 'Failed to update auto top-up' });
   }
 });
 

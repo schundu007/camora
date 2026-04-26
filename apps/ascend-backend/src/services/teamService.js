@@ -93,7 +93,8 @@ export async function invalidateTeamCache(userId) {
 export async function getTeamWithMembers(teamId) {
   const teamRow = await query(
     `SELECT id, owner_user_id, name, plan_type, seat_limit,
-            hours_pool_total, hours_pool_period_start, payg_rate_cents, created_at
+            hours_pool_total, hours_pool_period_start, payg_rate_cents,
+            auto_topup_pack, auto_topup_monthly_cap_cents, created_at
        FROM teams WHERE id = $1`,
     [teamId],
   );

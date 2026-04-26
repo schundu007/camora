@@ -99,6 +99,10 @@ export default function TeamSettingsPage() {
   const [lastInviteEmail, setLastInviteEmail] = useState<string | null>(null);
   const [editingCapFor, setEditingCapFor] = useState<number | null>(null);
   const [capInput, setCapInput] = useState('');
+  const [autoPack, setAutoPack] = useState<string>('');
+  const [autoCapDollars, setAutoCapDollars] = useState<string>('');
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [autoLoaded, setAutoLoaded] = useState(false);
 
   useEffect(() => {
     document.title = 'Team — Camora';
@@ -125,6 +129,86 @@ export default function TeamSettingsPage() {
   }, [token]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Load current auto-topup config (team if owner, personal otherwise).
+  // Solo users: GET /api/v1/billing/auto-topup
+  // Team owners: read from team row directly when /me populates it
+  useEffect(() => {
+    if (!token || autoLoaded) return;
+    const loadAuto = async () => {
+      try {
+        // Solo users (no team yet): load from billing endpoint.
+        if (!team) {
+          const res = await fetch(`${API}/api/v1/billing/auto-topup`, {
+            credentials: 'include',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setAutoPack(data.pack || '');
+            setAutoCapDollars(data.monthly_cap_cents ? String(data.monthly_cap_cents / 100) : '');
+          }
+          setAutoLoaded(true);
+          return;
+        }
+        // Team users: backend includes auto_topup_pack on team row when owner.
+        // Fall back to a separate fetch for solo-mode shape if the field is absent.
+        const teamRow = team as TeamData & { auto_topup_pack?: string | null; auto_topup_monthly_cap_cents?: number | null };
+        setAutoPack(teamRow.auto_topup_pack || '');
+        setAutoCapDollars(teamRow.auto_topup_monthly_cap_cents ? String(teamRow.auto_topup_monthly_cap_cents / 100) : '');
+        setAutoLoaded(true);
+      } catch { setAutoLoaded(true); }
+    };
+    loadAuto();
+  }, [token, team, autoLoaded]);
+
+  async function saveAutoTopup() {
+    if (!token) return;
+    setAutoSaving(true);
+    const pack = autoPack || null;
+    const capCents = autoCapDollars ? Math.round(Number(autoCapDollars) * 100) : null;
+    // Disabling: clear both fields so the gate sees NOT_ENABLED.
+    const isEnabling = !!pack;
+    if (isEnabling && (!capCents || capCents <= 0)) {
+      await dialogAlert({
+        title: 'Monthly cap required',
+        message: 'Set a monthly cap (in dollars) before enabling auto top-up. This protects you from runaway charges.',
+        tone: 'danger',
+      });
+      setAutoSaving(false);
+      return;
+    }
+    const url = team
+      ? `${API}/api/v1/teams/${team.id}/auto-topup`
+      : `${API}/api/v1/billing/auto-topup`;
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ pack: isEnabling ? pack : null, monthly_cap_cents: isEnabling ? capCents : null }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        await dialogAlert({
+          title: 'Could not save',
+          message: data.message || data.error || data.reason || 'Try again',
+          tone: 'danger',
+        });
+      } else {
+        await dialogAlert({
+          title: pack ? 'Auto top-up enabled' : 'Auto top-up disabled',
+          message: pack
+            ? `When your AI hours run out, we'll automatically charge for a ${pack.replace('topup_', '').replace('h', '-hour')} pack — capped at $${capCents! / 100}/month.`
+            : 'You\'ll continue to get a pause prompt when hours run out, with a manual buy-pack button.',
+        });
+        await fetchAll();
+      }
+    } catch (err: unknown) {
+      await dialogAlert({ title: 'Save failed', message: err instanceof Error ? err.message : 'Network error', tone: 'danger' });
+    }
+    setAutoSaving(false);
+  }
 
   const planType = subscription?.plan || 'free';
   const teamEligiblePlan = ['pro_max_monthly', 'pro_max_yearly', 'business_starter', 'business_desktop_lifetime'].includes(planType);
@@ -372,6 +456,56 @@ export default function TeamSettingsPage() {
                 </p>
               </div>
             </div>
+
+            {/* Auto top-up (owner-only for teams; everyone else sees the personal version) */}
+            {isOwner && (
+              <section className="rounded-xl p-5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <h2 className="text-base font-bold mb-1">Auto top-up</h2>
+                <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
+                  When the team pool runs out, automatically charge a top-up pack so calls keep flowing. Off by default. Always capped — your card is never charged more than the monthly limit.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <select
+                    value={autoPack}
+                    onChange={(e) => setAutoPack(e.target.value)}
+                    className="px-3 py-2 text-sm rounded-lg"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="">Off (manual top-ups only)</option>
+                    <option value="topup_1h">1 hr · $10/charge</option>
+                    <option value="topup_5h">5 hrs · $50/charge</option>
+                    <option value="topup_25h">25 hrs · $250/charge</option>
+                  </select>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Cap $</span>
+                    <input
+                      type="number"
+                      placeholder="50"
+                      value={autoCapDollars}
+                      onChange={(e) => setAutoCapDollars(e.target.value)}
+                      min="0"
+                      step="10"
+                      className="w-20 px-2 py-2 text-sm rounded-lg"
+                      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                    />
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>/mo</span>
+                  </div>
+                  <button
+                    onClick={saveAutoTopup}
+                    disabled={autoSaving}
+                    className="px-4 py-2 text-sm font-bold rounded-lg text-white disabled:opacity-50"
+                    style={{ background: 'var(--accent)' }}
+                  >
+                    {autoSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                {autoPack && (
+                  <p className="mt-3 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    Charged to your saved card. Disable any time. Failed charges fall through to the normal "buy a top-up" prompt.
+                  </p>
+                )}
+              </section>
+            )}
 
             {/* Invite (owner only) */}
             {isOwner && (
