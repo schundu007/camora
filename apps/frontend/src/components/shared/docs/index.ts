@@ -33,3 +33,12 @@ export type { DocsPrevNextProps, DocsPrevNextLink } from './DocsPrevNext';
 
 export { default as DocsSection } from './DocsSection';
 export type { DocsSectionProps } from './DocsSection';
+
+export { default as PageHero } from './PageHero';
+export type { PageHeroProps } from './PageHero';
+
+export { default as BentoGrid, BentoCell } from './BentoGrid';
+export type { BentoGridProps, BentoCellProps, BentoSize } from './BentoGrid';
+
+export { default as FeatureMatrix } from './FeatureMatrix';
+export type { FeatureMatrixProps, FeatureMatrixPlan, FeatureMatrixRow, FeatureMatrixSection } from './FeatureMatrix';
