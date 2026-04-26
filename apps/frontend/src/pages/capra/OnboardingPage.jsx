@@ -324,10 +324,11 @@ export default function OnboardingPage() {
   const progressPercent = step === 1 ? 50 : 100;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-app)] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-2xl">
-        {/* Card */}
-        <div className="bg-[var(--bg-surface)] rounded-2xl shadow-lg overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+      <div className="relative w-full max-w-2xl">
+        {/* Card with gold-leaf top stripe */}
+        <div className="bg-[var(--bg-surface)] rounded-2xl overflow-hidden" style={{ borderTop: '3px solid var(--cam-gold-leaf)', boxShadow: '0 12px 40px rgba(0,0,0,0.35)' }}>
           {/* Progress bar */}
           <div className="h-1 bg-[var(--bg-elevated)]">
             <div

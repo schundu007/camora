@@ -260,9 +260,18 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
-      <div className="lg:max-w-[85%] mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="mb-6" style={{ color: 'var(--text-muted)' }}>Analytics, user management & emails</p>
+      {/* LeetCode hero band */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative lg:max-w-[85%] mx-auto px-4 pt-12 pb-16">
+          <h1 className="text-3xl font-bold text-white">Admin <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Dashboard</span></h1>
+          <p className="mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>Analytics, user management & emails</p>
+        </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '5vh', display: 'block' }}>
+          <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
+      <div className="lg:max-w-[85%] mx-auto px-4 py-8">
 
         {/* Tabs */}
         <div className="flex gap-1 mb-8 rounded-lg p-1 w-fit" style={{ background: 'var(--bg-elevated)' }}>

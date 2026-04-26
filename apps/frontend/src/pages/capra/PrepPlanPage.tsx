@@ -204,26 +204,36 @@ export default function PrepPlanPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1 pt-20 pb-12 px-4">
-        <div className="lg:max-w-[85%] mx-auto">
-          {/* Header */}
+      {/* LeetCode hero \u2014 navy band w/ diagonal cut */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative lg:max-w-[85%] mx-auto px-4 pt-20 pb-16">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-                {target_company} Interview Prep
+              <h1 className="text-2xl font-bold text-white tracking-tight">
+                {target_company} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Interview Prep</span>
               </h1>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">
+              <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 {target_role ? `${target_role} \u2022 ` : ''}{formattedDate}
               </p>
             </div>
             <button
               onClick={clearPlan}
               disabled={clearing}
-              className="px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors disabled:opacity-50"
+              style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.3)' }}
             >
               {clearing ? 'Clearing...' : 'Clear plan'}
             </button>
           </div>
+        </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '5vh', display: 'block' }}>
+          <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
+
+      <main className="flex-1 pt-6 pb-12 px-4">
+        <div className="lg:max-w-[85%] mx-auto">
 
           {/* Progress summary */}
           <div className="mt-6 bg-[var(--bg-surface)] border-0 rounded-2xl p-4">
