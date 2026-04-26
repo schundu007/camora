@@ -498,6 +498,120 @@ router.post('/admin/:teamId/disable-auto-topup', jwtAuth, adminGate, async (req,
   }
 });
 
+// GET /api/v1/teams/admin/refund-requests — pending refund queue
+router.get('/admin/refund-requests', jwtAuth, adminGate, async (req, res) => {
+  try {
+    const status = String(req.query.status || 'pending');
+    const r = await query(
+      `SELECT rr.id, rr.topup_id, rr.user_id, rr.reason, rr.status,
+              rr.requested_at, rr.processed_at, rr.processed_note,
+              t.hours, t.amount_cents, t.auto_charged, t.created_at AS topup_created_at,
+              t.stripe_session_id, t.team_id,
+              u.email AS user_email, u.name AS user_name
+         FROM topup_refund_requests rr
+         JOIN ai_hour_topups t ON t.id = rr.topup_id
+         JOIN users u ON u.id = rr.user_id
+        WHERE rr.status = $1
+        ORDER BY rr.requested_at DESC
+        LIMIT 200`,
+      [status],
+    );
+    return res.json({ requests: r.rows });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] list refund requests failed');
+    return res.status(500).json({ error: 'Failed to load' });
+  }
+});
+
+// POST /api/v1/teams/admin/refund-requests/:id/approve
+//   Issues the actual Stripe refund + marks the topup refunded.
+router.post('/admin/refund-requests/:id/approve', jwtAuth, adminGate, async (req, res) => {
+  try {
+    const requestId = Number(req.params.id);
+    const note = (req.body?.note || '').slice(0, 500);
+
+    const r = await query(
+      `SELECT rr.id, rr.topup_id, rr.status,
+              t.stripe_session_id, t.amount_cents, t.refunded_at
+         FROM topup_refund_requests rr
+         JOIN ai_hour_topups t ON t.id = rr.topup_id
+        WHERE rr.id = $1`,
+      [requestId],
+    );
+    const row = r.rows[0];
+    if (!row) return res.status(404).json({ error: 'Request not found' });
+    if (row.status !== 'pending') return res.status(400).json({ error: `Already ${row.status}` });
+    if (row.refunded_at) return res.status(400).json({ error: 'Top-up already refunded', code: 'ALREADY_REFUNDED' });
+
+    // Resolve PaymentIntent — Checkout sessions return cs_*, auto-topups
+    // already have pi_*. retrieve handles the conversion.
+    const { stripe } = await import('../config/stripe.js');
+    if (!stripe) return res.status(503).json({ error: 'Stripe not configured' });
+    let paymentIntentId = row.stripe_session_id;
+    if (paymentIntentId?.startsWith('cs_')) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(paymentIntentId);
+        paymentIntentId = session.payment_intent;
+      } catch { /* fallthrough */ }
+    }
+    let refund;
+    try {
+      refund = await stripe.refunds.create({
+        payment_intent: paymentIntentId,
+        reason: 'requested_by_customer',
+      });
+    } catch (err) {
+      logger.warn({ err: err.message, requestId }, '[admin] stripe refund failed');
+      return res.status(400).json({ error: 'Stripe refund failed', stripe_error: err.message });
+    }
+
+    // Mark request approved + topup refunded.
+    await query(
+      `UPDATE topup_refund_requests
+          SET status = 'approved',
+              processed_at = NOW(),
+              processed_by = $1,
+              processed_note = $2,
+              stripe_refund_id = $3
+        WHERE id = $4`,
+      [req.user.id, note || null, refund.id, requestId],
+    );
+    await query(
+      `UPDATE ai_hour_topups
+          SET refunded_at = NOW(),
+              refund_reason = 'admin_approved'
+        WHERE id = $1`,
+      [row.topup_id],
+    );
+
+    logger.info({ requestId, refundId: refund.id, admin: req.user.email }, 'Refund approved + Stripe refund issued');
+    return res.json({ ok: true, refund_id: refund.id, amount_refunded: refund.amount });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] approve failed');
+    return res.status(500).json({ error: 'Failed to approve' });
+  }
+});
+
+// POST /api/v1/teams/admin/refund-requests/:id/deny
+router.post('/admin/refund-requests/:id/deny', jwtAuth, adminGate, async (req, res) => {
+  try {
+    const note = (req.body?.note || '').slice(0, 500);
+    const r = await query(
+      `UPDATE topup_refund_requests
+          SET status = 'denied', processed_at = NOW(), processed_by = $1, processed_note = $2
+        WHERE id = $3 AND status = 'pending'
+        RETURNING id`,
+      [req.user.id, note || null, req.params.id],
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'Request not found or already processed' });
+    logger.info({ requestId: req.params.id, admin: req.user.email }, 'Refund denied');
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] deny failed');
+    return res.status(500).json({ error: 'Failed to deny' });
+  }
+});
+
 // POST /api/v1/teams/admin/:teamId/force-cap-member — set per_member cap admin-style
 router.post('/admin/:teamId/force-cap-member', jwtAuth, adminGate, async (req, res) => {
   try {

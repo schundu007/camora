@@ -26,6 +26,21 @@ interface AdminTeamRow {
   auto_charged_30d_cents: string;
 }
 
+interface RefundRequestRow {
+  id: number;
+  topup_id: number;
+  user_id: number;
+  reason: string | null;
+  status: string;
+  requested_at: string;
+  hours: number;
+  amount_cents: number;
+  auto_charged: boolean;
+  topup_created_at: string;
+  user_email: string;
+  user_name: string | null;
+}
+
 function fmtMoney(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
@@ -42,9 +57,11 @@ function fmtHours(seconds: number) {
 export default function AdminTeamsPage() {
   const { token, user } = useAuth();
   const [teams, setTeams] = useState<AdminTeamRow[]>([]);
+  const [refundRequests, setRefundRequests] = useState<RefundRequestRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [processingRefundId, setProcessingRefundId] = useState<number | null>(null);
 
   useEffect(() => { document.title = 'Teams admin — Camora'; }, []);
 
@@ -53,18 +70,69 @@ export default function AdminTeamsPage() {
     setLoading(true);
     setError(null);
     try {
-      const r = await fetch(`${API}/api/v1/teams/admin/all`, {
-        credentials: 'include',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (r.status === 403) { setError('Admin access required'); setLoading(false); return; }
-      const data = await r.json();
-      setTeams(data.teams || []);
+      const [teamsRes, refundsRes] = await Promise.all([
+        fetch(`${API}/api/v1/teams/admin/all`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/api/v1/teams/admin/refund-requests?status=pending`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (teamsRes.status === 403) { setError('Admin access required'); setLoading(false); return; }
+      const teamsData = await teamsRes.json();
+      setTeams(teamsData.teams || []);
+      if (refundsRes.ok) {
+        const refundsData = await refundsRes.json();
+        setRefundRequests(refundsData.requests || []);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load');
     }
     setLoading(false);
   }, [token]);
+
+  async function approveRefund(requestId: number, userEmail: string, amount: number) {
+    if (!(await dialogConfirm({
+      title: 'Approve refund?',
+      message: `${userEmail} will receive a $${(amount / 100).toFixed(2)} refund via Stripe. Their hours immediately stop counting toward the pool.`,
+      confirmLabel: 'Approve & refund',
+    }))) return;
+    setProcessingRefundId(requestId);
+    try {
+      const res = await fetch(`${API}/api/v1/teams/admin/refund-requests/${requestId}/approve`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ note: '' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await dialogAlert({ title: 'Refund issued', message: `Stripe refund ${data.refund_id} for $${(data.amount_refunded / 100).toFixed(2)}` });
+        await fetchAll();
+      } else {
+        await dialogAlert({ title: 'Approval failed', message: data.error || data.stripe_error || 'Try again', tone: 'danger' });
+      }
+    } catch (err: unknown) {
+      await dialogAlert({ title: 'Failed', message: err instanceof Error ? err.message : 'Network error', tone: 'danger' });
+    }
+    setProcessingRefundId(null);
+  }
+
+  async function denyRefund(requestId: number, userEmail: string) {
+    if (!(await dialogConfirm({
+      title: 'Deny refund request?',
+      message: `${userEmail} will see "refund denied" on their top-up. Add a note if you want to give them a reason.`,
+      confirmLabel: 'Deny',
+      tone: 'danger',
+    }))) return;
+    setProcessingRefundId(requestId);
+    try {
+      const res = await fetch(`${API}/api/v1/teams/admin/refund-requests/${requestId}/deny`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) await fetchAll();
+    } catch { /* swallow */ }
+    setProcessingRefundId(null);
+  }
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -142,6 +210,57 @@ export default function AdminTeamsPage() {
             Refresh
           </button>
         </div>
+
+        {/* Pending refund requests — top of page so admins see urgent work first */}
+        {refundRequests.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-base font-bold mb-3 flex items-center gap-2">
+              Pending refund requests
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#b45309' }}>
+                {refundRequests.length}
+              </span>
+            </h2>
+            <div className="rounded-xl divide-y" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              {refundRequests.map((rr) => (
+                <div key={rr.id} className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold">
+                      {rr.user_name || rr.user_email}
+                      <span className="ml-2 text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}>
+                        {rr.hours} hr · {fmtMoney(rr.amount_cents)}
+                        {rr.auto_charged && <span className="ml-1.5 px-1 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>}
+                      </span>
+                    </p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      {rr.user_email} · purchased {new Date(rr.topup_created_at).toLocaleDateString()} · requested {new Date(rr.requested_at).toLocaleDateString()}
+                    </p>
+                    {rr.reason && (
+                      <p className="text-[12px] mt-1 italic" style={{ color: 'var(--text-secondary)' }}>"{rr.reason}"</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => approveRefund(rr.id, rr.user_email, rr.amount_cents)}
+                      disabled={processingRefundId === rr.id}
+                      className="px-3 py-1.5 text-[12px] font-bold rounded-md text-white"
+                      style={{ background: 'var(--accent)' }}
+                    >
+                      Approve & refund
+                    </button>
+                    <button
+                      onClick={() => denyRefund(rr.id, rr.user_email)}
+                      disabled={processingRefundId === rr.id}
+                      className="px-3 py-1.5 text-[12px] font-semibold rounded-md"
+                      style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                    >
+                      Deny
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {loading && <div className="text-sm" style={{ color: 'var(--text-muted)' }}>Loading…</div>}
         {error && <div className="text-sm rounded-lg p-3" style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>{error}</div>}

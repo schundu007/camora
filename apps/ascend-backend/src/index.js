@@ -381,6 +381,27 @@ async function runMigrations() {
     await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS refund_reason VARCHAR(100)");
     console.log('[Migrations] refund tracking ensured');
 
+    // Refund requests are admin-approved, not auto-issued. User submits a
+    // request; an admin in /admin/refunds approves it (which then fires the
+    // actual Stripe refund and marks ai_hour_topups.refunded_at).
+    await query(`CREATE TABLE IF NOT EXISTS topup_refund_requests (
+      id BIGSERIAL PRIMARY KEY,
+      topup_id BIGINT NOT NULL REFERENCES ai_hour_topups(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason TEXT,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      processed_at TIMESTAMPTZ,
+      processed_by INTEGER REFERENCES users(id),
+      processed_note TEXT,
+      stripe_refund_id VARCHAR(80)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_refund_pending ON topup_refund_requests(requested_at DESC) WHERE status = \'pending\'');
+    await query('CREATE INDEX IF NOT EXISTS idx_refund_user ON topup_refund_requests(user_id, requested_at DESC)');
+    // One pending request per topup at a time — prevents duplicate spam.
+    await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_refund_pending_per_topup ON topup_refund_requests(topup_id) WHERE status = \'pending\'');
+    console.log('[Migrations] refund_requests table ensured');
+
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
       id SERIAL PRIMARY KEY,
