@@ -45,16 +45,16 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
   // via design tokens.
   // FLIPPED: white nav above navy hero band — high contrast separation.
-  // Crisp white surface, navy text, gold pill for the active link, and a
-  // 3px gold-leaf underline so the brand still carries through the chrome.
+  // Crisp white surface, dark navy text for max readability, gold pill
+  // for the active link, and a 3px gold-leaf underline.
   const navBg =
     'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)';
   const navShadow = '0 4px 18px rgba(5,28,64,0.12)';
   const borderClass = '';
-  const textColor = 'var(--cam-primary-dk)';
-  const textMuted = 'var(--text-secondary)';
+  const textColor = '#051C40';
+  const textMuted = '#1A4F86';
   const activeBg = 'var(--cam-gold-leaf)';
-  const activeColor = 'var(--cam-primary-dk)';
+  const activeColor = '#051C40';
 
   const nav = (
     <nav
