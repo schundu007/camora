@@ -482,7 +482,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     </div>
                     {/* Multi-column flow so a long answer fans left→right instead of
                         forcing 2–3 viewports of vertical scroll during a live interview. */}
-                    <div className="answer-flow gap-x-8 columns-1 lg:columns-2 2xl:columns-3">
+                    <div className="answer-flow gap-x-8 columns-1 lg:columns-2 2xl:columns-3 [&>div]:contents [&>div>div]:contents">
                       <AnswerView text={msg.text} />
                     </div>
                   </div>
@@ -494,7 +494,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona is answering…</span>
                     </div>
                     {streamText ? (
-                      <div className="answer-flow gap-x-8 columns-1 lg:columns-2 2xl:columns-3">
+                      <div className="answer-flow gap-x-8 columns-1 lg:columns-2 2xl:columns-3 [&>div]:contents [&>div>div]:contents">
                         <AnswerView text={cleanTags(streamText)} streaming />
                         <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-primary)' }} />
                       </div>
