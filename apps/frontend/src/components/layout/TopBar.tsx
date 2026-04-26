@@ -229,7 +229,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           </button>
 
           {/* Avatar — user dropdown menu */}
-          <UserDropdown variant="light" />
+          <UserDropdown variant="dark" />
 
         </div>
       </header>
