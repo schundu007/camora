@@ -142,10 +142,13 @@ function DialogOverlay({ pending, confirmBtnRef, onClose }: {
   const cancelLabel = isConfirm ? ((opts as ConfirmOpts).cancelLabel || 'Cancel') : null;
   const title = opts.title || (isConfirm ? (danger ? 'Are you sure?' : 'Confirm') : (danger ? 'Error' : success ? 'Done' : 'Notice'));
 
-  const primaryBg = danger ? '#DC2626' : success ? '#059669' : 'var(--cam-primary-dk)';
-  const primaryBgHover = danger ? '#B91C1C' : success ? '#3C7AAB' : 'var(--cam-primary-dk)';
-  const iconColor = danger ? '#DC2626' : success ? '#059669' : 'var(--cam-primary-dk)';
-  const iconBg = danger ? '#FEE2E2' : success ? '#D1FAE5' : '#CFFAFE';
+  // Route through semantic CSS vars so dialog colors flip with the theme
+  // (was hardcoded crimson/emerald hex; emerald violated the navy palette
+  // and the iconBg pastels disappeared on dark surfaces).
+  const primaryBg = danger ? 'var(--danger)' : success ? 'var(--success)' : 'var(--cam-primary-dk)';
+  const primaryBgHover = danger ? 'var(--danger)' : success ? 'var(--cam-primary-dk)' : 'var(--cam-primary-dk)';
+  const iconColor = danger ? 'var(--danger)' : success ? 'var(--success)' : 'var(--cam-primary-dk)';
+  const iconBg = 'var(--accent-subtle)';
 
   return (
     <div

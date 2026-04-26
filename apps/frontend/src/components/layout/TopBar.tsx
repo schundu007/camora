@@ -143,7 +143,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             <kbd
               className="hidden lg:inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded"
               style={{
-                background: 'var(--bg-app)',
+                background: 'var(--bg-surface)',
                 border: '1px solid var(--border)',
                 color: 'var(--text-muted)',
                 fontFamily: 'var(--font-sans)',

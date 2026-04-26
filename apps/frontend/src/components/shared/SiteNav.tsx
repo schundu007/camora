@@ -117,7 +117,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
         <>
           {/* Tap-outside backdrop — sits below the menu, covers the rest of the viewport */}
           <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-40 cursor-default" style={{ background: 'rgba(0,0,0,0.25)', top: 56 }} />
-        <div className="md:hidden relative z-50 px-6 py-3 space-y-1" style={{ background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }} role="menu">
+        <div className="md:hidden relative z-50 px-6 py-3 space-y-1" style={{ background: 'var(--bg-surface)', backdropFilter: 'blur(12px)', borderTop: '1px solid var(--border)' }} role="menu">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
