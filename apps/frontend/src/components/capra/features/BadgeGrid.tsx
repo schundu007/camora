@@ -94,8 +94,8 @@ function BadgeIcon({ name, earned }: { name: string; earned: boolean }) {
   const renderer = BADGE_ICONS[name] || fallbackIcon;
   return (
     <div
-      className={`mx-auto w-14 h-14 rounded-2xl flex items-center justify-center ${earned ? '' : 'grayscale opacity-50'}`}
-      style={{ background: earned ? 'rgba(38,97,156,0.08)' : 'var(--bg-elevated)' }}
+      className={`mx-auto w-14 h-14 rounded-2xl flex items-center justify-center ${earned ? '' : 'grayscale-[60%] opacity-60'}`}
+      style={{ background: earned ? 'var(--accent-subtle)' : 'var(--bg-elevated)' }}
     >
       {renderer(color)}
     </div>

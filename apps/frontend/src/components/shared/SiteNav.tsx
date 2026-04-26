@@ -5,7 +5,7 @@ import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from './CamoraLogo';
 import UserDropdown from './UserDropdown';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
-const TICKER_HEIGHT = 36;
+const TICKER_HEIGHT = 28;
 const TICKER_ITEMS = [
   { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: 'var(--cam-primary)' },
   { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#95B0CD' },
