@@ -214,17 +214,25 @@ export function LumoraShellPage() {
 
       {/* Main area — bottom padding accounts for fixed mobile nav + iOS home indicator */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
-        {/* Top bar — single row: audio controls (left) + tab pills (right) */}
-        <div className="flex items-center justify-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-          {/* Audio controls — left side, only on coding/design */}
-          {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
-            <div className="mr-auto">
-              <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} onCapturedProblem={handleCapturedProblem} inline />
-            </div>
-          )}
-
-          {/* Tab pills — centered (hidden on mobile where the bottom nav owns tab switching) */}
-          <div className="hidden md:flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        {/* Top bar — matches the Capra TopBar layout: tabs on the LEFT
+            (immediately after the icon-rail logo), page-specific
+            controls in the middle grow region, utility buttons on the
+            RIGHT. Same horizontal anchor across every shell so users
+            always find Home/Coding/Design/Behavioral at the same spot.
+            Gradient + shadow give the header a high-fidelity modern
+            feel in both themes via design tokens. */}
+        <div
+          className="flex items-center h-12 px-4 shrink-0 lumora-shell-topbar gap-4"
+          style={{
+            borderBottom: '1px solid var(--border)',
+            background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
+            boxShadow: '0 1px 3px rgba(38,97,156,0.06), 0 4px 16px rgba(38,97,156,0.04)',
+          }}
+        >
+          {/* LEFT — tab pills (hidden on mobile where the bottom nav owns
+              tab switching). Sits immediately after the logo rail like
+              Capra's Apply/Prepare/Practice/Attend group. */}
+          <div className="hidden md:flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
@@ -242,11 +250,17 @@ export function LumoraShellPage() {
             })}
           </div>
 
-          {/* Right-side controls — theme toggle then Go Invisible.
-              Theme toggle was previously only available in the mobile
-              "more" menu, so users on /lumora/* (Home / Coding / Design /
-              Behavioral) on desktop had no way to flip the theme. */}
-          <div className="ml-auto flex items-center gap-2">
+          {/* MIDDLE — page-specific audio controls (only on coding/design).
+              Takes the flex grow so it absorbs available space without
+              shoving the right-hand controls. */}
+          <div className="flex-1 flex items-center min-w-0 justify-center">
+            {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
+              <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} onCapturedProblem={handleCapturedProblem} inline />
+            )}
+          </div>
+
+          {/* RIGHT — theme toggle + Go Invisible, always at the far right. */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] flex items-center justify-center"
