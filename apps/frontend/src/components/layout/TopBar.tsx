@@ -50,7 +50,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
         className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
           height: 56,
-          background: '#FFFFFF',
+          background: 'var(--bg-surface)',
           borderBottom: '1px solid var(--border)',
           color: 'var(--text-primary)',
           fontFamily: 'var(--font-sans)',
