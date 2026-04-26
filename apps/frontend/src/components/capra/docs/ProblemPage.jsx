@@ -46,7 +46,7 @@ function TestCase({ testCase, index, isActive, onClick, result }) {
     ? 'bg-[var(--success)]/20 text-[var(--success)] border-[var(--success)]/30'
     : result?.error
     ? 'bg-[var(--danger)]/20 text-[var(--danger)] border-[var(--danger)]/30'
-    : 'bg-gray-800/50 text-[var(--text-muted)] border-[var(--border)]';
+    : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border)]';
 
   return (
     <button
@@ -85,7 +85,7 @@ function CodeBlock({ code, language }) {
     <div className="relative group">
       <button
         onClick={copyCode}
-        className="absolute top-3 right-3 px-3 py-1.5 rounded bg-gray-700/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100 touch:opacity-100 text-sm flex items-center gap-2"
+        className="absolute top-3 right-3 px-3 py-1.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors opacity-0 group-hover:opacity-100 touch:opacity-100 text-sm flex items-center gap-2"
       >
         <Icon name={copied ? 'check' : 'copy'} size={14} />
         {copied ? 'Copied!' : 'Copy'}
@@ -105,7 +105,7 @@ function CodeBlock({ code, language }) {
 function ExampleBlock({ example, index }) {
   return (
     <div className="bg-[var(--bg-surface)] rounded border border-[var(--border)] overflow-hidden">
-      <div className="px-4 py-2.5 bg-gray-800/30 border-b border-[var(--border)]">
+      <div className="px-4 py-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
         <span className="text-base font-semibold text-[var(--text-primary)]">Example {index + 1}</span>
       </div>
       <div className="p-4 space-y-3">
@@ -124,7 +124,7 @@ function ExampleBlock({ example, index }) {
         {example.explanation && (
           <div>
             <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Explanation</span>
-            <p className="mt-1.5 text-gray-300 text-sm leading-relaxed">{example.explanation}</p>
+            <p className="mt-1.5 text-[var(--text-secondary)] text-sm leading-relaxed">{example.explanation}</p>
           </div>
         )}
       </div>
@@ -142,7 +142,7 @@ function HintCard({ hint, index }) {
     <div className="bg-[var(--bg-surface)] rounded border border-[var(--border)] overflow-hidden">
       <button
         onClick={() => setRevealed(!revealed)}
-        className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors"
+        className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[var(--bg-elevated)] transition-colors"
       >
         <span className="font-medium text-[var(--text-primary)]">Hint {index + 1}</span>
         <Icon
@@ -153,7 +153,7 @@ function HintCard({ hint, index }) {
       </button>
       {revealed && (
         <div className="px-5 pb-4">
-          <p className="text-gray-300 text-sm leading-relaxed">{hint}</p>
+          <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{hint}</p>
         </div>
       )}
     </div>
@@ -331,15 +331,15 @@ export default function ProblemPage({ slug, onBack }) {
   };
 
   return (
-    <div className="h-screen bg-[#0a0c10] flex flex-col">
+    <div className="h-screen bg-[var(--bg-app)] flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 bg-[#0a0c10] border-b border-gray-800">
+      <div className="flex-shrink-0 bg-[var(--bg-app)] border-b border-[var(--border)]">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-gray-800 rounded transition-colors"
+                className="p-2 hover:bg-[var(--bg-elevated)] rounded transition-colors"
               >
                 <Icon name="arrowLeft" size={18} className="text-[var(--text-muted)]" />
               </button>
@@ -357,7 +357,7 @@ export default function ProblemPage({ slug, onBack }) {
                   href={problem.leetcodeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-sm font-medium transition-colors flex items-center gap-2"
+                  className="px-3 py-1.5 bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] rounded text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Icon name="externalLink" size={14} />
                   LeetCode
@@ -373,15 +373,15 @@ export default function ProblemPage({ slug, onBack }) {
         <Allotment>
           {/* Left Panel - Problem Description */}
           <Allotment.Pane minSize={300} preferredSize="45%">
-            <div className="h-full flex flex-col bg-[#0a0c10]">
+            <div className="h-full flex flex-col bg-[var(--bg-app)]">
               {/* Tabs */}
-              <div className="flex-shrink-0 flex gap-1 px-4 pt-3 border-b border-gray-800">
+              <div className="flex-shrink-0 flex gap-1 px-4 pt-3 border-b border-[var(--border)]">
                 <button
                   onClick={() => setActiveTab('description')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'description'
                       ? 'bg-[var(--bg-surface)] text-[var(--accent)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                   }`}
                 >
                   Description
@@ -391,7 +391,7 @@ export default function ProblemPage({ slug, onBack }) {
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'solution'
                       ? 'bg-[var(--bg-surface)] text-[var(--accent)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                   }`}
                 >
                   Solution
@@ -401,7 +401,7 @@ export default function ProblemPage({ slug, onBack }) {
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'hints'
                       ? 'bg-[var(--bg-surface)] text-[var(--accent)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                   }`}
                 >
                   Hints
@@ -415,10 +415,10 @@ export default function ProblemPage({ slug, onBack }) {
                     {/* Problem Description */}
                     <div className="prose prose-invert max-w-none">
                       {problem.description.split('\n').map((paragraph, i) => (
-                        <p key={i} className="text-gray-300 text-sm leading-relaxed mb-3">
+                        <p key={i} className="text-[var(--text-secondary)] text-sm leading-relaxed mb-3">
                           {paragraph.split('`').map((part, j) =>
                             j % 2 === 1 ? (
-                              <code key={j} className="px-1.5 py-0.5 bg-gray-800 rounded text-[var(--accent)] font-mono text-sm">
+                              <code key={j} className="px-1.5 py-0.5 bg-[var(--bg-elevated)] rounded text-[var(--accent)] font-mono text-sm">
                                 {part}
                               </code>
                             ) : (
@@ -439,16 +439,16 @@ export default function ProblemPage({ slug, onBack }) {
                         ))}
                       </div>
                     ) : problem.isDynamic ? (
-                      <div className="bg-gray-800/50 border border-[var(--border)] rounded p-5 text-center">
+                      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded p-5 text-center">
                         <Icon name="externalLink" size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
-                        <p className="text-gray-300 mb-4">
+                        <p className="text-[var(--text-secondary)] mb-4">
                           This problem is not in our practice database yet.
                         </p>
                         <a
                           href={`https://leetcode.com/problemset/?search=${encodeURIComponent(problem.name)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] rounded font-medium transition-colors inline-flex items-center gap-2"
+                          className="px-5 py-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] rounded font-medium transition-colors inline-flex items-center gap-2"
                         >
                           <Icon name="externalLink" size={16} />
                           Find on LeetCode
@@ -462,7 +462,7 @@ export default function ProblemPage({ slug, onBack }) {
                         <h3 className="text-base font-semibold text-[var(--text-primary)] mb-3">Constraints</h3>
                         <ul className="space-y-1.5">
                           {problem.constraints.map((constraint, i) => (
-                            <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
+                            <li key={i} className="flex items-start gap-2 text-[var(--text-secondary)] text-sm">
                               <span className="text-[var(--accent)] mt-0.5">•</span>
                               <code className="font-mono text-sm">{constraint}</code>
                             </li>
@@ -474,7 +474,7 @@ export default function ProblemPage({ slug, onBack }) {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 pt-2">
                       {problem.tags.map((tag, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-gray-800 text-[var(--text-muted)] text-xs rounded">
+                        <span key={i} className="px-2.5 py-1 bg-[var(--bg-surface)] text-[var(--text-muted)] text-xs rounded">
                           {tag}
                         </span>
                       ))}
@@ -493,7 +493,7 @@ export default function ProblemPage({ slug, onBack }) {
                           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                             selectedLanguage === key
                               ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
-                              : 'bg-gray-800/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800 border border-transparent'
+                              : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] border border-transparent'
                           }`}
                         >
                           {lang.name}
@@ -515,7 +515,7 @@ export default function ProblemPage({ slug, onBack }) {
                               );
                             }
                             return line ? (
-                              <p key={i} className="text-gray-300 text-sm leading-relaxed mb-1.5">
+                              <p key={i} className="text-[var(--text-secondary)] text-sm leading-relaxed mb-1.5">
                                 {line}
                               </p>
                             ) : null;
@@ -611,7 +611,7 @@ export default function ProblemPage({ slug, onBack }) {
                         onClick={() => setBottomTab('testcase')}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           bottomTab === 'testcase'
-                            ? 'bg-gray-700/50 text-[var(--text-primary)]'
+                            ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)]'
                             : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
@@ -621,7 +621,7 @@ export default function ProblemPage({ slug, onBack }) {
                         onClick={() => setBottomTab('output')}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           bottomTab === 'output'
-                            ? 'bg-gray-700/50 text-[var(--text-primary)]'
+                            ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)]'
                             : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
@@ -632,7 +632,7 @@ export default function ProblemPage({ slug, onBack }) {
                       <button
                         onClick={runCode}
                         disabled={isRunning}
-                        className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-4 py-1.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                       >
                         {isRunning ? (
                           <Icon name="loader" size={14} className="animate-spin" />
