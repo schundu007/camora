@@ -260,28 +260,31 @@ export function LumoraShellPage() {
             )}
           </div>
 
-          {/* RIGHT — theme toggle + Go Invisible, always at the far right. */}
+          {/* RIGHT — Go Invisible always; theme toggle only when the
+              inline LumoraTopBar isn't shown (which already has its
+              own toggle for coding/design tabs). Avoids the visible
+              duplicate user reported. */}
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] flex items-center justify-center"
-              style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-              title={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              aria-label={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {currentTheme === 'dark' ? (
-                /* Sun — light mode */
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-                </svg>
-              ) : (
-                /* Moon — dark mode */
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                </svg>
-              )}
-            </button>
+            {!(activeTab === 'coding' || activeTab === 'design') && (
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] flex items-center justify-center"
+                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                title={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {currentTheme === 'dark' ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                  </svg>
+                )}
+              </button>
+            )}
             <button onClick={() => setBlanked(true)} className="p-2 md:px-3 md:py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[var(--cam-primary-dk)] hover:text-white flex items-center gap-1.5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }} title="Go invisible (⌘B) — hides UI, audio keeps running" aria-label="Go invisible">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
