@@ -57,6 +57,7 @@ function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boo
       width={size}
       height={size}
       viewBox="0 0 64 64"
+      className="sona-breathe"
       style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgba(8,47,73,0.25))' }}
     >
       <defs>
