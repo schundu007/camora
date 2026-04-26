@@ -428,13 +428,23 @@ function GridCard({
     <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col rounded-lg ${className}`}>
       <button
         onClick={() => collapsible && setCollapsed(!collapsed)}
-        className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 pt-3 pb-2'} border-b border-border shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:bg-[var(--bg-surface)]/[0.02]' : 'cursor-default'}`}
+        className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:brightness-110' : 'cursor-default'}`}
+        style={{
+          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+        }}
       >
-        <span className={`font-mono text-[10px] font-bold tracking-widest uppercase ${titleColor}`}>
-          {title}
+        <span className="flex items-center gap-2">
+          {/* Per-section accent dot — keeps the existing titleColor
+              variation as a small visual code (PROBLEM accent, EDGE
+              CASES warning, FOLLOW-UP danger, etc.) */}
+          <span className={`inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`} />
+          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+            {title}
+          </span>
         </span>
         {collapsible && (
-          <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} style={{ color: 'rgba(255,255,255,0.75)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         )}
@@ -451,8 +461,17 @@ function GridCard({
 function ArchitectureCard({ question }: { question: string }) {
   return (
     <div className="border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden min-w-0 flex flex-col h-full rounded-lg" style={{ minHeight: '600px' }}>
-      <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-3 py-2 border-b border-border text-[var(--accent)] shrink-0">
-        Architecture
+      <div
+        className="flex items-center gap-2 px-3 py-2 shrink-0"
+        style={{
+          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+        }}
+      >
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
+        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+          Architecture
+        </span>
       </div>
       <div className="p-2 overflow-y-auto overflow-x-auto flex-1">
         {question ? (
