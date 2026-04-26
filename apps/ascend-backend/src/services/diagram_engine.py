@@ -361,14 +361,31 @@ def assemble_code(raw_output, provider, direction):
     return code
 
 
-BLOCKED = ["os.system", "__import__", "eval(", "exec(", "shutil", "importlib",
-           "requests.", "urllib", "socket", "http.client"]
+BLOCKED_PATTERNS = [
+    (r'\bos\.system\b', 'os.system'),
+    (r'\b__import__\b', '__import__'),
+    (r'\beval\s*\(', 'eval('),
+    (r'\bexec\s*\(', 'exec('),
+    (r'\b(?:import|from)\s+shutil\b|\bshutil\.', 'shutil'),
+    (r'\b(?:import|from)\s+importlib\b|\bimportlib\.', 'importlib'),
+    (r'\brequests\.', 'requests.'),
+    (r'\b(?:import|from)\s+urllib\b|\burllib\.', 'urllib'),
+    (r'\b(?:import|from)\s+socket\b|\bsocket\.', 'socket'),
+    (r'\b(?:import|from)\s+http\.client\b|\bhttp\.client\.', 'http.client'),
+]
+
+_STRING_LITERAL_RE = re.compile(
+    r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
+)
 
 
 def sanitize(code):
-    for pat in BLOCKED:
-        if pat in code:
-            raise ValueError(f"Blocked: {pat}")
+    # Strip string literals so node labels like "WebSocket connections"
+    # don't false-match dangerous-module substrings.
+    stripped = _STRING_LITERAL_RE.sub('""', code)
+    for pat, label in BLOCKED_PATTERNS:
+        if re.search(pat, stripped):
+            raise ValueError(f"Blocked: {label}")
     return code
 
 
