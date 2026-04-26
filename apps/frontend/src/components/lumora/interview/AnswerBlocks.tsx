@@ -73,7 +73,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
               return (
                 <div key={i} className="flex items-start gap-3">
                   <span className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 mt-0.5 font-mono" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{i + 1}</span>
-                  <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                     {label && <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{label}: </span>}
                     {text}
                   </div>
@@ -128,7 +128,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
                   <span className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 font-mono" style={{ background: 'var(--accent-subtle)', color: 'var(--warning-text)' }}>Q{i+1}</span>
                   <span className="text-[13px] font-semibold leading-relaxed" style={{ color: 'var(--text-primary)' }}>{pair.question}</span>
                 </div>
-                <div className="ml-7 text-[13px] leading-relaxed rounded-lg p-3" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>{pair.answer}</div>
+                <div className="ml-7 text-[13px] leading-relaxed rounded-lg p-3" style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}>{pair.answer}</div>
               </div>
             ))}
           </div>

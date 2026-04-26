@@ -189,7 +189,7 @@ export default function FormattedContent({ content }) {
             <ul key={`list-${elements.length}`} className="grid grid-cols-1 gap-1.5 my-2 ml-1">
               {currentList.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="w-1 h-1 rounded-full bg-[var(--text-muted)] mt-2.5 flex-shrink-0 opacity-60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
                   <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
                     {formatInlineText(item)}
                   </span>
