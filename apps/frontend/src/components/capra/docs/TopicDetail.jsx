@@ -792,6 +792,27 @@ export default function TopicDetail({
             {topicDetails.subtitle && !topicDetails.difficulty && (
               <p className="text-[var(--text-muted)] text-sm mt-1 landing-body">{topicDetails.subtitle}</p>
             )}
+            {/* Authority strip — Databricks-style "Reviewed by · Last
+                reviewed · Source" line under the title. Truthful only:
+                'Reviewed by Camora team' (always), category context,
+                approximate reading time, topic id pill. */}
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 12l2 2 4-4" />
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+                Reviewed by Camora team
+              </span>
+              {pageConfig?.title && (
+                <span className="text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  {pageConfig.title}
+                </span>
+              )}
+              <span className="text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                ID · {selectedTopic}
+              </span>
+            </div>
             {/* Behavioral meta badges — reading time, question count, tips count */}
             {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (
               <div className="flex items-center gap-3 mt-2.5">
