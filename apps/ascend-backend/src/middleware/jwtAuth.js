@@ -4,8 +4,14 @@ import { logger } from './requestLogger.js';
 
 // IMPORTANT: Read env vars lazily (not at module load time) to avoid race
 // conditions where dotenv hasn't loaded yet when this module is first imported.
+//
+// Honor BOTH env names: lumora-backend / shared-auth sign tokens using
+// `JWT_SECRET || JWT_SECRET_KEY`. If production sets only one of them and
+// ascend reads only the other, every lumora-issued access_token fails
+// verification → 401 cascade on every jwtAuth-protected route. Match the
+// canonical fallback chain used by packages/shared-auth and routes/auth.js.
 function getJwtSecret() {
-  return process.env.JWT_SECRET_KEY;
+  return process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
 }
 function getJwtAlgorithm() {
   return process.env.JWT_ALGORITHM || 'HS256';
