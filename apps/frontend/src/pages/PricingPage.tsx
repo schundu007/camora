@@ -128,7 +128,7 @@ export default function PricingPage() {
                           ) : val === false ? (
                             <span style={{ color: 'var(--border)', fontSize: 12 }}>—</span>
                           ) : (
-                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: '#A88817' }}>{val}</span>
+                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--cam-gold-leaf-text)' }}>{val}</span>
                           )}
                         </div>
                       );

@@ -34,12 +34,17 @@ const PRIZES = [
   { place: '3rd-7th', title: 'Top Contributor', amount: '$1,116 ea.', glow: '#D9B543', gradient: 'linear-gradient(135deg, #D9B543, #C9A227, #A88817)', desc: '5 winners for meaningful contributions.', winners: 5 },
 ];
 
+// Per-category accent. Used as both a fill tint (background: ${color}15) and
+// as the title text color, so each color must be readable as text on white
+// in light mode AND on dark navy in dark mode. All cyan / saturated-red
+// have been replaced with brand-safe variants per the navy-only palette
+// rule and the WCAG-AA gold/red text rules from the contrast pass.
 const CATEGORIES = [
-  { title: 'Bug Hunting', color: '#ef4444', glow: 'rgba(239,68,68,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
-  { title: 'UX / Design', color: 'var(--accent)', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
-  { title: 'Performance', color: 'var(--text-muted)', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
-  { title: 'Infrastructure', color: '#06b6d4', glow: 'rgba(6,182,212,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: 'var(--cam-primary)', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+  { title: 'Bug Hunting', color: '#B45454', glow: 'rgba(180,84,84,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
+  { title: 'UX / Design', color: 'var(--accent)', glow: 'rgba(38,97,156,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
+  { title: 'Performance', color: 'var(--cam-gold-leaf-text)', glow: 'rgba(122,92,10,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
+  { title: 'Infrastructure', color: 'var(--cam-primary-dk)', glow: 'rgba(26,79,134,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
+  { title: 'New Features', color: 'var(--cam-primary)', glow: 'rgba(38,97,156,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -65,11 +70,11 @@ const STEPS = [
 ];
 
 const SCORING = [
-  { category: 'Critical Bugs', points: '10 pts', color: '#ef4444' },
+  { category: 'Critical Bugs', points: '10 pts', color: '#B45454' },
   { category: 'Security Issues', points: '8 pts', color: 'var(--accent)' },
   { category: 'UX / Design', points: '5 pts', color: 'var(--accent)' },
-  { category: 'Performance', points: '5 pts', color: 'var(--text-muted)' },
-  { category: 'Infrastructure', points: '5 pts', color: '#06b6d4' },
+  { category: 'Performance', points: '5 pts', color: 'var(--cam-gold-leaf-text)' },
+  { category: 'Infrastructure', points: '5 pts', color: 'var(--cam-primary-dk)' },
   { category: 'Features', points: '3-10 pts', color: 'var(--cam-primary)' },
 ];
 
@@ -722,14 +727,18 @@ export default function ChallengePage() {
 
       <SiteFooter variant="light" />
 
-      {/* ═══ STYLES ═══ */}
+      {/* ═══ STYLES ═══
+           All hex literals replaced with design tokens so the page flips
+           cleanly between light + dark themes. Global text-color guard
+           in globals.css doesn't reach <style> blocks (only inline
+           style="..." attrs), so this file owns its own theme contract. */}
       <style>{`
         .ch-root {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
-          background: #FFFFFF;
-          color: #0F172A;
+          background: var(--bg-surface);
+          color: var(--text-primary);
           font-family: 'Source Sans 3', 'Inter', system-ui, sans-serif;
           overflow-x: hidden;
         }
@@ -739,7 +748,7 @@ export default function ChallengePage() {
           position: relative;
           padding: 100px 0 60px;
           overflow: hidden;
-          background: linear-gradient(180deg, #EBF8FF 0%, #FFFFFF 100%);
+          background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
         }
         .ch-hero-mesh, .ch-hero-orb, .ch-hero-grid { display: none; }
 
@@ -747,7 +756,7 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 20px; border-radius: 999px;
           font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
-          color: #64748B;
+          color: var(--text-muted);
           background: transparent;
           border: none;
           margin-bottom: 24px;
@@ -763,7 +772,7 @@ export default function ChallengePage() {
           font-weight: 800;
           letter-spacing: -0.04em;
           line-height: 1.05;
-          color: #0F172A;
+          color: var(--text-primary);
           text-transform: uppercase;
           letter-spacing: -0.02em;
         }
@@ -790,13 +799,13 @@ export default function ChallengePage() {
           border-radius: 12px;
           font-family: 'Source Code Pro', monospace;
           font-size: 28px; font-weight: 700;
-          color: #0F172A;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
+          color: var(--text-primary);
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
         }
         .ch-countdown-label {
           margin-top: 6px; font-size: 10px; font-weight: 700;
-          color: #94A3B8; letter-spacing: 0.15em; text-transform: uppercase;
+          color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase;
         }
 
         /* ── Prize pool badge ── */
@@ -804,8 +813,8 @@ export default function ChallengePage() {
           margin-top: 32px;
           display: flex; flex-direction: column; align-items: center; gap: 6px;
           padding: 20px 40px; border-radius: 12px;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
         }
         .ch-prize-amount {
           font-family: 'Source Sans 3', sans-serif;
@@ -832,9 +841,9 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; justify-content: center;
           padding: 14px 32px; border-radius: 999px;
           font-size: 14px; font-weight: 700;
-          color: #0F172A;
+          color: var(--text-primary);
           background: transparent;
-          border: 1.5px solid #CBD5E1;
+          border: 1.5px solid var(--border-hover);
           cursor: pointer; transition: all 0.2s;
           text-decoration: none;
           text-transform: uppercase; letter-spacing: 0.08em;
@@ -846,16 +855,16 @@ export default function ChallengePage() {
 
         /* ── Sections ── */
         .ch-section { padding: 60px 0; position: relative; }
-        .ch-section:nth-child(even) { background: #F8FAFC; }
+        .ch-section:nth-child(even) { background: var(--bg-elevated); }
         .ch-section-head { text-align: center; margin-bottom: 32px; }
-        .ch-section-tag { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.2em; font-family: 'Source Code Pro', monospace; }
-        .ch-section-title { font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800; color: #0F172A; letter-spacing: -0.02em; margin-top: 12px; text-transform: uppercase; }
-        .ch-section-sub { font-size: 16px; color: #475569; margin-top: 10px; line-height: 1.6; }
+        .ch-section-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em; font-family: 'Source Code Pro', monospace; }
+        .ch-section-title { font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-top: 12px; text-transform: uppercase; }
+        .ch-section-sub { font-size: 16px; color: var(--text-secondary); margin-top: 10px; line-height: 1.6; }
 
         /* ── Glass card ── */
         .ch-glass-card {
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           border-radius: 8px;
           transition: border-color 0.2s;
         }
@@ -864,21 +873,21 @@ export default function ChallengePage() {
         /* ── Inputs ── */
         .ch-input {
           padding: 12px 16px; border-radius: 8px;
-          font-size: 15px; color: #0F172A;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
+          font-size: 15px; color: var(--text-primary);
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           outline: none; transition: border-color 0.2s;
         }
         .ch-input:focus { border-color: var(--cam-primary); }
-        .ch-input::placeholder { color: #94A3B8; }
+        .ch-input::placeholder { color: var(--text-muted); }
 
         .ch-code-editor {
           min-height: 180px; padding: 16px; border-radius: 8px;
           font-family: 'Source Code Pro', monospace;
           font-size: 14px; line-height: 1.6;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
-          color: #0F172A; outline: none; resize: vertical;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
+          color: var(--text-primary); outline: none; resize: vertical;
         }
 
         /* ── Glow icon ── */
@@ -886,21 +895,21 @@ export default function ChallengePage() {
           width: 44px; height: 44px;
           border-radius: 8px;
           display: flex; align-items: center; justify-content: center;
-          background: #F8FAFC;
-          border: 1px solid #E2E8F0;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
         }
 
         /* ── Prize cards ── */
         .ch-prize-card {
           position: relative; border-radius: 12px;
-          border: 1px solid #E2E8F0;
-          background: #FFFFFF;
+          border: 1px solid var(--border);
+          background: var(--bg-surface);
           transition: all 0.2s;
         }
         .ch-prize-card::before { display: none; }
         .ch-prize-card:hover { transform: translateY(-2px); border-color: var(--cam-primary); }
         .ch-prize-card-inner {
-          background: #FFFFFF;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 32px; text-align: center;
         }
@@ -913,15 +922,15 @@ export default function ChallengePage() {
         }
         .ch-prize-amount-card {
           font-family: 'Source Sans 3', sans-serif;
-          font-size: 36px; font-weight: 800; color: #0F172A;
+          font-size: 36px; font-weight: 800; color: var(--text-primary);
           margin-bottom: 4px;
         }
 
         /* ── Category cards ── */
         .ch-category-card {
           padding: 24px; border-radius: 8px;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           transition: all 0.2s;
         }
         .ch-category-card:hover {
@@ -954,15 +963,15 @@ export default function ChallengePage() {
         }
         .ch-timeline-line {
           position: absolute; top: 18px; left: calc(50% + 18px); right: calc(-50% + 18px);
-          height: 2px; z-index: 1; background: #E2E8F0;
+          height: 2px; z-index: 1; background: var(--border);
         }
 
         /* ── Tech pills ── */
         .ch-tech-pill {
           display: flex; align-items: center; gap: 8px;
           padding: 8px 14px; border-radius: 8px;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           transition: all 0.2s;
         }
         .ch-tech-pill:hover {
@@ -972,8 +981,8 @@ export default function ChallengePage() {
 
         /* ── Referral wrapper ── */
         .ch-referral-wrapper > div {
-          background: #FFFFFF !important;
-          border-color: #E2E8F0 !important;
+          background: var(--bg-surface) !important;
+          border-color: var(--border) !important;
           border-radius: 8px;
         }
       `}</style>

@@ -328,12 +328,12 @@
   [data-theme="dark"] .bg-neutral-50 { background-color: var(--bg-surface) !important; }
   [data-theme="dark"] .bg-gray-100,
   [data-theme="dark"] .bg-slate-100 { background-color: var(--bg-elevated) !important; }
-  [data-theme="dark"] [style*="background: white"],
-  [data-theme="dark"] [style*="background:#fff"],
-  [data-theme="dark"] [style*="background: #fff"],
-  [data-theme="dark"] [style*="background: #FFFFFF"],
-  [data-theme="dark"] [style*="background-color: white"],
-  [data-theme="dark"] [style*="background-color:#fff"],
+  /* Inline literal-white backgrounds are intentionally NOT remapped:
+     pages use them deliberately for white pill/CTA buttons sitting on
+     dark hero blocks (PricingPage hero CTA, etc) where flipping them
+     would make the button vanish against the dark parent. Components
+     that genuinely need theme-aware surfaces should use the bg-* class
+     or var(--bg-surface) directly. */
   [data-theme="dark"] [style*="background: #F9FAFB"],
   [data-theme="dark"] [style*="background:#F9FAFB"],
   [data-theme="dark"] [style*="background: #F8FAFC"],
@@ -375,32 +375,12 @@
   [data-theme="dark"] .text-zinc-400,
   [data-theme="dark"] .text-neutral-400 { color: var(--text-muted) !important; }
 
-  /* Inline hex literals — slate-900 / 800 / 700 / 600 / 500 (lowercase
-     and uppercase variants) and a couple of common gray shades. */
-  [data-theme="dark"] [style*="color: #0F172A"],
-  [data-theme="dark"] [style*="color:#0F172A"],
-  [data-theme="dark"] [style*="color: #0f172a"],
-  [data-theme="dark"] [style*="color:#0f172a"],
-  [data-theme="dark"] [style*="color: #1E293B"],
-  [data-theme="dark"] [style*="color:#1E293B"],
-  [data-theme="dark"] [style*="color: #1e293b"],
-  [data-theme="dark"] [style*="color: #111827"],
-  [data-theme="dark"] [style*="color: #1F2937"],
-  [data-theme="dark"] [style*="color: #1f2937"] { color: var(--text-primary) !important; }
-
-  [data-theme="dark"] [style*="color: #334155"],
-  [data-theme="dark"] [style*="color: #475569"],
-  [data-theme="dark"] [style*="color:#475569"],
-  [data-theme="dark"] [style*="color: #374151"],
-  [data-theme="dark"] [style*="color: #4B5563"],
-  [data-theme="dark"] [style*="color: #4b5563"] { color: var(--text-secondary) !important; }
-
-  [data-theme="dark"] [style*="color: #64748B"],
-  [data-theme="dark"] [style*="color:#64748B"],
-  [data-theme="dark"] [style*="color: #64748b"],
-  [data-theme="dark"] [style*="color:#64748b"],
-  [data-theme="dark"] [style*="color: #6B7280"],
-  [data-theme="dark"] [style*="color: #6b7280"] { color: var(--text-muted) !important; }
+  /* Inline literal text colors are NOT remapped here. Same reason as
+     the literal-white background note above: the same hex (#0F172A,
+     #475569, etc.) is sometimes "default dark body text on light page"
+     and sometimes "intentional dark text on a white CTA pill sitting
+     on a dark hero". A blanket flip breaks the second case. Components
+     that need theme-aware text should use var(--text-primary) etc. */
 
   /* Legacy `.light-theme` class is now a no-op alias for the default
      (light) state. Components that still apply it won't break. */
