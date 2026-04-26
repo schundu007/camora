@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Camora pre-push guard — verifies pnpm-lock.yaml is in sync with every
+# package.json in the workspace BEFORE allowing a push to origin. Catches
+# the lockfile-drift class of bug that's broken Vercel deploys before
+# (e.g. a new dep added to apps/frontend/package.json without re-running
+# pnpm install). Vercel runs --frozen-lockfile in CI, so any drift fails
+# the deploy minutes after the push.
+#
+# To skip in an emergency:  git push --no-verify
+# To uninstall the hook:    git config --unset core.hooksPath
+
+set -e
+
+# Color helpers (only when stdout is a TTY)
+if [ -t 1 ]; then
+  RED=$'\033[31m'
+  GREEN=$'\033[32m'
+  YELLOW=$'\033[33m'
+  BOLD=$'\033[1m'
+  RESET=$'\033[0m'
+else
+  RED=''; GREEN=''; YELLOW=''; BOLD=''; RESET=''
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# Skip if pnpm isn't available (rare — only relevant for repos cloned
+# without a pnpm install). Print a warning rather than failing.
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "${YELLOW}[pre-push] pnpm not found on PATH — skipping lockfile check.${RESET}" >&2
+  exit 0
+fi
+
+# Quick check: any package.json or the lockfile changed in the commits
+# being pushed? If not, no need to run the install probe.
+range="origin/$(git rev-parse --abbrev-ref HEAD)..HEAD"
+changed_pkgs=$(git diff --name-only "$range" 2>/dev/null | grep -E '(^|/)package\.json$|^pnpm-lock\.yaml$' || true)
+
+if [ -z "$changed_pkgs" ]; then
+  exit 0
+fi
+
+echo "${BOLD}[pre-push]${RESET} dependency files changed — verifying pnpm-lock.yaml is in sync…"
+
+if pnpm install --frozen-lockfile --prefer-offline --reporter=silent >/dev/null 2>&1; then
+  echo "${GREEN}[pre-push] lockfile is in sync — push allowed.${RESET}"
+  exit 0
+fi
+
+echo ""
+echo "${RED}${BOLD}[pre-push] BLOCKED — pnpm-lock.yaml is out of sync with one or more package.json files.${RESET}"
+echo ""
+echo "Vercel runs --frozen-lockfile in CI and would fail this build."
+echo ""
+echo "Fix:"
+echo "  1. ${BOLD}pnpm install${RESET}              # regenerates the lockfile"
+echo "  2. ${BOLD}git add pnpm-lock.yaml${RESET}    # stage the regenerated file"
+echo "  3. ${BOLD}git commit --amend --no-edit${RESET}  # fold into the last commit (or commit fresh)"
+echo "  4. ${BOLD}git push${RESET}"
+echo ""
+echo "Emergency override (skips this check):  ${BOLD}git push --no-verify${RESET}"
+echo ""
+exit 1
