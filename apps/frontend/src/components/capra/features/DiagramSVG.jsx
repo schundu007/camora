@@ -1,9 +1,10 @@
 import React from 'react';
 
 // Color theme — single-ink editorial palette ("hand-drawn on paper"
-// aesthetic). All semantic categories collapse to lapis except true
-// error states (red). Cyan is removed per the navy-only palette rule.
-// Text colors read from design tokens so the diagram flips with theme.
+// aesthetic). Every box has a SOLID surface fill (var(--bg-surface)) so
+// labels sit on a guaranteed background regardless of where the diagram
+// lands on the page. Strokes use lapis. Text uses the primary token.
+// All three flip cleanly with [data-theme="dark"].
 const COLORS = {
   primary:   'var(--accent)',
   secondary: 'var(--accent)',
@@ -15,12 +16,13 @@ const COLORS = {
   text:      'var(--text-primary)',
   textLight: 'var(--text-secondary)',
   bg:        'var(--bg-elevated)',
+  // Solid box surface — same in both themes via design token. White card
+  // in light, dark navy card in dark. Gives strokes + text a guaranteed
+  // contrasting background instead of a near-invisible 8% tint.
+  boxFill:   'var(--bg-surface)',
 };
 
-// Faint fill tint — was 25% (saturated, "neon card"), now 10% so the
-// shapes read as ink-on-paper rather than colored cells.
-const FILL_ALPHA = '14'; // hex 14 ≈ 8% opacity
-const STROKE_WIDTH = 1.5; // was 2 — thinner, sketchier
+const STROKE_WIDTH = 1.6; // sketchy-thin; bumped 1.5 -> 1.6 for AA visibility
 
 // Helper components
 const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11 }) => (
@@ -30,7 +32,7 @@ const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11
       y={y}
       width={width}
       height={height}
-      fill={`${color.startsWith('var(') ? `rgba(38,97,156,0.08)` : `${color}${FILL_ALPHA}`}`}
+      fill={COLORS.boxFill}
       stroke={color}
       strokeWidth={STROKE_WIDTH}
       rx="6"
@@ -53,7 +55,7 @@ const Diamond = ({ x, y, size, label, color = COLORS.warning }) => (
   <g>
     <polygon
       points={`${x + size/2},${y} ${x + size},${y + size/2} ${x + size/2},${y + size} ${x},${y + size/2}`}
-      fill={`${color.startsWith('var(') ? `rgba(38,97,156,0.08)` : `${color}${FILL_ALPHA}`}`}
+      fill={COLORS.boxFill}
       stroke={color}
       strokeWidth={STROKE_WIDTH}
     />
@@ -2734,8 +2736,14 @@ export default function DiagramSVG({ template, className = '' }) {
     <div
       className={`diagram-svg p-6 rounded-lg ${className}`}
       style={{
-        background: 'rgba(15, 23, 42, 0.8)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        // Backdrop is one shade darker than the box surface so the boxes
+        // (var(--bg-surface), set inside the SVG primitives) look
+        // "embossed" against the wrapper. In light mode that's white
+        // boxes on a slate-100 wrapper; in dark mode it's near-black
+        // boxes on a slightly lighter dark-navy wrapper. Both flip
+        // cleanly with theme — no rgba(15,23,42) hardcode any more.
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
         overflowX: 'auto',
         overflowY: 'visible',
       }}
