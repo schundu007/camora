@@ -614,9 +614,13 @@ async function handleCheckoutComplete(session) {
       const r = await query('SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1', [userId]);
       teamIdForTopup = r.rows[0]?.team_id || null;
     } catch { /* swallow */ }
+    // ON CONFLICT guards against duplicate processing if the same checkout
+    // session is delivered twice. The unique partial index on
+    // stripe_session_id makes this a no-op on retry.
     await query(
       `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (stripe_session_id) WHERE stripe_session_id IS NOT NULL DO NOTHING`,
       [userId, teamIdForTopup, hours, amount || hours * 1000, session.id, expiresAt],
     );
     logger.info({ userId, hours, teamId: teamIdForTopup, sessionId: session.id }, 'Top-up credited');
