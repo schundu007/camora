@@ -332,6 +332,23 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_team_created ON ai_hours_usage(team_id, created_at DESC) WHERE team_id IS NOT NULL');
     console.log('[Migrations] team tables + ai_hours_usage.team_id ensured');
 
+    // Top-up credits — purchased one-time hour packs that extend either a
+    // personal budget (team_id NULL) or a team's pool. 90-day expiry from
+    // purchase. Budget calc sums unexpired topup hours into the pool.
+    await query(`CREATE TABLE IF NOT EXISTS ai_hour_topups (
+      id BIGSERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL,
+      hours REAL NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      stripe_session_id VARCHAR(255),
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND expires_at > NOW()');
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND expires_at > NOW()');
+    console.log('[Migrations] ai_hour_topups table ensured');
+
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
       id SERIAL PRIMARY KEY,
