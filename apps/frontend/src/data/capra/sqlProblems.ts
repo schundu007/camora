@@ -1,6 +1,11 @@
 // SQL Playground problems — categorized with schemas, seed data, and solutions
 // Uses SQLite-compatible syntax throughout
 
+// Top SQL 50 catalog is imported and merged into SQL_PROBLEMS at the
+// export site (not via post-hoc mutation) so Vite's tree-shaker can't
+// drop the merge. See bottom of file for the export expression.
+import { SQL_TOP50_PROBLEMS } from './sqlProblemsTop50';
+
 export interface SqlTable {
   name: string;
   columns: string[];
@@ -40,7 +45,7 @@ export const SQL_CATEGORIES = [
   { id: 'window-functions', label: 'Window Functions' },
 ] as const;
 
-export const SQL_PROBLEMS: SqlProblem[] = [
+const _LEGACY_PROBLEMS: SqlProblem[] = [
   // ─────────────────────────────────────────────────────────────────────────────
   // BASIC JOINS
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1274,17 +1279,16 @@ SELECT`,
 ];
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Top SQL 50 — full LeetCode study-plan catalog
-   Imported from sqlProblemsTop50.ts and merged with the legacy items
-   above so the editor's filter sidebar shows one combined catalog.
-   The legacy items 1-18 already cover ~18 of the 50; the new file
-   contributes the remaining ~32 that LeetCode lists.
+   Top SQL 50 catalog merge — built as part of the SQL_PROBLEMS export
+   expression so Vite's tree-shaker treats it as a live dependency
+   (post-hoc mutations of an exported const can be dropped during
+   minification — restructured to a computed export to avoid that risk).
+   The legacy items 1-18 already cover ~17 of the 50; sqlProblemsTop50
+   contributes the remaining ~33 that LeetCode lists.
    ───────────────────────────────────────────────────────────────────── */
-import { SQL_TOP50_PROBLEMS } from './sqlProblemsTop50';
+const _LEGACY_TITLES = new Set(_LEGACY_PROBLEMS.map(p => p.title.toLowerCase()));
 
-const _legacyTitles = new Set(SQL_PROBLEMS.map(p => p.title.toLowerCase()));
-for (const p of SQL_TOP50_PROBLEMS) {
-  if (_legacyTitles.has(p.title.toLowerCase())) continue;
-  SQL_PROBLEMS.push(p);
-  _legacyTitles.add(p.title.toLowerCase());
-}
+export const SQL_PROBLEMS: SqlProblem[] = [
+  ..._LEGACY_PROBLEMS,
+  ...SQL_TOP50_PROBLEMS.filter(p => !_LEGACY_TITLES.has(p.title.toLowerCase())),
+];
