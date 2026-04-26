@@ -210,14 +210,15 @@
        --cam-hero-bg    → tall heroes (Landing, Pricing, Challenge, etc.)
        --cam-hero-strip → thin chrome (top bars, tab bars, sub-page heads) */
     --cam-hero-bg:
-      radial-gradient(ellipse 70% 60% at 18% 30%, rgba(201,162,39,0.14), transparent 55%),
-      radial-gradient(ellipse 65% 55% at 82% 70%, rgba(201,162,39,0.10), transparent 60%),
-      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.12), transparent 70%),
-      linear-gradient(135deg, #051C40 0%, var(--cam-primary-dk) 22%, var(--cam-primary) 50%, var(--cam-primary-dk) 78%, #051C40 100%);
+      radial-gradient(ellipse 60% 70% at 15% 25%, rgba(201,162,39,0.28), transparent 55%),
+      radial-gradient(ellipse 55% 60% at 85% 75%, rgba(201,162,39,0.22), transparent 60%),
+      radial-gradient(ellipse 90% 55% at 50% 0%, rgba(255,255,255,0.18), transparent 65%),
+      linear-gradient(135deg, #051C40 0%, var(--cam-primary-dk) 20%, var(--cam-primary) 45%, var(--cam-primary-lt) 55%, var(--cam-primary) 70%, var(--cam-primary-dk) 85%, #051C40 100%);
     --cam-hero-strip:
-      radial-gradient(ellipse 60% 200% at 20% 50%, rgba(201,162,39,0.12), transparent 60%),
-      radial-gradient(ellipse 60% 200% at 80% 50%, rgba(201,162,39,0.08), transparent 60%),
-      linear-gradient(180deg, #051C40 0%, var(--cam-primary-dk) 50%, var(--cam-primary) 100%);
+      radial-gradient(ellipse 50% 240% at 15% 50%, rgba(201,162,39,0.30), transparent 65%),
+      radial-gradient(ellipse 45% 240% at 85% 50%, rgba(201,162,39,0.22), transparent 65%),
+      radial-gradient(ellipse 100% 100% at 50% 0%, rgba(255,255,255,0.10), transparent 80%),
+      linear-gradient(90deg, #051C40 0%, var(--cam-primary-dk) 25%, var(--cam-primary) 50%, var(--cam-primary-dk) 75%, #051C40 100%);
   }
 
   /* ──────────────────────────────────────────────────────────

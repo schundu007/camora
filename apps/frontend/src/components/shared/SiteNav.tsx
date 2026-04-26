@@ -44,13 +44,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
   // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
   // via design tokens.
-  const navBg = 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)';
-  const navShadow = '0 1px 2px rgba(38,97,156,0.05), 0 4px 16px rgba(38,97,156,0.06)';
-  const borderClass = 'border-b border-[var(--border)]';
-  const textColor = 'var(--text-primary)';
-  const textMuted = 'var(--text-secondary)';
-  const activeBg = 'var(--accent-subtle)';
-  const activeColor = 'var(--accent)';
+  // LeetCode-style navy gradient + 2px gold-leaf underline. Same vocabulary
+  // as the Lumora top bar so chrome is consistent across the entire app.
+  const navBg = 'var(--cam-hero-strip)';
+  const navShadow = '0 4px 16px rgba(0,0,0,0.18)';
+  const borderClass = '';
+  const textColor = '#FFFFFF';
+  const textMuted = 'rgba(255,255,255,0.85)';
+  const activeBg = 'var(--cam-gold-leaf)';
+  const activeColor = 'var(--cam-primary-dk)';
 
   const nav = (
     <nav
