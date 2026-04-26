@@ -161,19 +161,19 @@ export default function PrepTab({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden shadow-2xl border border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3" style={{ background: 'var(--cam-primary-dk)', borderBottom: '1px solid var(--border)' }}>
+        {/* Header — theme-aware surface gradient instead of solid lapis */}
+        <div className="flex items-center justify-between px-4 py-3" style={{ background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)', borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
-            <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#FFFFFF' }}>Coding Platforms</span>
+            <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>Coding Platforms</span>
             <span className="px-2 py-0.5 text-xs font-semibold rounded" style={{ background: 'var(--accent)', color: '#FFFFFF' }}>
               {connectedCount} connected
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded transition-colors hover:bg-[var(--bg-surface)]/10"
-            style={{ color: 'var(--text-dimmed)' }}
+            className="p-1.5 rounded transition-colors hover:bg-[var(--bg-elevated)]"
+            style={{ color: 'var(--text-muted)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
