@@ -6,6 +6,7 @@ import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
+import OnThisPage from '../../shared/docs/OnThisPage';
 import { RoughLayeredDiagram } from './RoughLayeredDiagram';
 import { RoughFlowDiagram } from './RoughFlowDiagram';
 import { GENERATED_LAYERED_DESIGN } from '../../../data/capra/topics/__generated/layered-design';
@@ -651,97 +652,19 @@ export default function TopicDetail({
     return s;
   }, [topicDetails, activePage, isSDStyle, isCodingStyle]);
 
-  // Track active TOC section on scroll — find the section currently visible in viewport
-  const [activeTocId, setActiveTocId] = useState('');
-  const [scrollProgress, setScrollProgress] = useState(0);
-
-  // Scroll-based TOC tracking with IntersectionObserver
-  useEffect(() => {
-    if (!tocSections.length) return;
-    const scrollContainer = document.getElementById('app-scroll-container');
-    const headingStates = {};
-
-    const callback = (entries) => {
-      entries.forEach((entry) => { headingStates[entry.target.id] = entry.isIntersecting; });
-      const allIds = tocSections.map(s => s.id);
-      const firstVisible = allIds.find(id => headingStates[id]);
-      if (firstVisible) setActiveTocId(firstVisible);
-    };
-
-    const observer = new IntersectionObserver(callback, {
-      root: scrollContainer || null,
-      rootMargin: '-80px 0px -60% 0px',
-      threshold: 0,
-    });
-
-    const timeoutId = setTimeout(() => {
-      tocSections.forEach(({ id }) => {
-        const el = document.getElementById(id);
-        if (el) observer.observe(el);
-      });
-    }, 200);
-
-    // Scroll progress
-    const handleProgress = () => {
-      const el = scrollContainer || document.documentElement;
-      const scrollH = el.scrollHeight - el.clientHeight;
-      setScrollProgress(scrollH > 0 ? Math.min(1, (scrollContainer ? scrollContainer.scrollTop : window.scrollY) / scrollH) : 0);
-    };
-    (scrollContainer || window).addEventListener('scroll', handleProgress, { passive: true });
-
-    return () => {
-      clearTimeout(timeoutId);
-      observer.disconnect();
-      (scrollContainer || window).removeEventListener('scroll', handleProgress);
-    };
-  }, [tocSections, selectedTopic]);
+  // OnThisPage primitive owns the scroll-spy now — drop the local observer +
+  // scrollProgress state. Drop nested-children-on-active too: NVIDIA's docs
+  // use a flat single-level rail, and the children context still renders
+  // inside the actual section content below.
+  const onThisPageItems = useMemo(
+    () => tocSections.map((s) => ({ id: s.id, label: s.label })),
+    [tocSections],
+  );
 
   return (
     <div className="landing-root animate-fade-in flex gap-8">
-      {/* Left: Table of Contents sidebar */}
-      {tocSections.length > 2 && (
-        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '80px', width: '240px' }}>
-          <nav>
-            {/* Header */}
-            <div className="pb-3 mb-2 border-b border-[var(--border)]">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] landing-mono mb-2">On This Page</h4>
-              <div className="h-0.5 rounded-full bg-[var(--border)] overflow-hidden">
-                <div className="h-full rounded-full bg-[var(--accent)] transition-colors duration-300" style={{ width: `${scrollProgress * 100}%` }} />
-              </div>
-            </div>
-            {/* Section links */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-              {tocSections.map(({ id, label, children }) => {
-                const isActive = activeTocId === id;
-                return (
-                  <div key={id}>
-                    <a
-                      href={`#${id}`}
-                      onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                      className={`flex items-center gap-2 px-4 py-2 text-[13px] leading-snug transition-colors landing-body border-l-[3px] ${
-                        isActive
-                          ? 'border-[var(--accent)] text-[var(--accent)] font-semibold bg-[var(--accent)]/5'
-                          : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
-                      }`}
-                    >
-                      {label}
-                    </a>
-                    {children?.length > 0 && isActive && (
-                      <div className="pl-7 pb-1">
-                        {children.map((child, ci) => (
-                          <span key={ci} className="block py-[3px] px-2 text-[11px] text-[var(--text-muted)] landing-body leading-snug truncate" title={child}>{child}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </nav>
-        </aside>
-      )}
-
-      {/* Right: Topic content */}
+      {/* Right: Topic content (rendered first; OnThisPage rail anchors to
+          the right per NVIDIA-style docs convention). */}
       <div className="flex-1 min-w-0">
       {/* Topic Header — flush left, no card */}
       <div className="pb-4 mb-6 border-b border-[var(--border)]">
@@ -3198,6 +3121,15 @@ export default function TopicDetail({
         </div>
       )}
       </div>
+
+      {/* On-this-page rail — NVIDIA-style sticky right sidebar with
+          scroll-spy. Hidden under xl; primitive owns the active-id
+          tracking via IntersectionObserver. */}
+      {onThisPageItems.length > 2 && (
+        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '80px', width: '220px' }}>
+          <OnThisPage items={onThisPageItems} />
+        </aside>
+      )}
 
       {/* ── Diagram Side Panel (Railway-style slide-out) ── */}
       {diagramPanelOpen && isSDStyle && (
