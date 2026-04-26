@@ -28,8 +28,20 @@ router.get('/events', (req, res) => {
   sseClients.add(res);
   console.log('[Extension] SSE client connected, total:', sseClients.size);
 
+  // Keep-alive pings every 20s — Railway's HTTP/2 proxy drops idle streams
+  // and surfaces them as ERR_HTTP2_PROTOCOL_ERROR to the browser.
+  const keepAlive = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      clearInterval(keepAlive);
+      sseClients.delete(res);
+    }
+  }, 20000);
+
   // Handle client disconnect
   req.on('close', () => {
+    clearInterval(keepAlive);
     sseClients.delete(res);
     console.log('[Extension] SSE client disconnected, total:', sseClients.size);
   });
