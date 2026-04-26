@@ -7,10 +7,10 @@ import { getAuthHeaders as getBaseAuthHeaders } from '../../utils/authHeaders.js
 const ROLES = ['user', 'developer', 'manager', 'admin'];
 
 const ROLE_COLORS = {
-  user: { bg: '#eff6ff', color: 'var(--accent)', border: '#bfdbfe' },
-  developer: { bg: 'var(--bg-elevated)', color: 'var(--accent)', border: '#95B0CD' },
-  manager: { bg: '#fef9c3', color: '#ca8a04', border: '#fde047' },
-  admin: { bg: '#fef2f2', color: '#ef4444', border: '#fecaca' },
+  user: { bg: 'var(--accent-subtle)', color: 'var(--accent)', border: 'var(--border)' },
+  developer: { bg: 'var(--bg-elevated)', color: 'var(--accent)', border: 'var(--border-hover)' },
+  manager: { bg: 'var(--bg-elevated)', color: 'var(--warning-text)', border: 'var(--warning)' },
+  admin: { bg: 'var(--bg-elevated)', color: 'var(--danger)', border: 'var(--border)' },
 };
 
 export default function AdminPanel({ token, onClose }) {
@@ -167,7 +167,7 @@ export default function AdminPanel({ token, onClose }) {
           >
             Pending Approval
             {pendingUsers.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs rounded-full" style={{ background: '#fef9c3', color: '#ca8a04' }}>
+              <span className="ml-2 px-2 py-0.5 text-xs rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--warning-text)' }}>
                 {pendingUsers.length}
               </span>
             )}
@@ -189,8 +189,8 @@ export default function AdminPanel({ token, onClose }) {
 
         {/* Messages */}
         {error && (
-          <div className="mx-6 mt-4 p-3 rounded" style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
-            <p className="text-sm" style={{ color: '#dc2626' }}>{error}</p>
+          <div className="mx-6 mt-4 p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <p className="text-sm" style={{ color: 'var(--danger)' }}>{error}</p>
           </div>
         )}
         {success && (
@@ -241,7 +241,7 @@ export default function AdminPanel({ token, onClose }) {
                       <button
                         onClick={() => handleDeleteUser(user.username)}
                         className="px-4 py-2 text-sm font-medium rounded transition-colors"
-                        style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca' }}
+                        style={{ background: 'var(--bg-elevated)', color: 'var(--danger)', border: '1px solid var(--border)' }}
                       >
                         Reject
                       </button>
@@ -264,7 +264,7 @@ export default function AdminPanel({ token, onClose }) {
                       <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
                         {user.name}
                         {user.isEnvUser && (
-                          <span className="ml-2 px-2 py-0.5 text-xs rounded" style={{ background: '#fef9c3', color: '#ca8a04' }}>
+                          <span className="ml-2 px-2 py-0.5 text-xs rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--warning-text)' }}>
                             ENV
                           </span>
                         )}
@@ -277,7 +277,7 @@ export default function AdminPanel({ token, onClose }) {
                       <button
                         onClick={() => handleDeleteUser(user.username)}
                         className="px-2 py-1 text-xs font-medium rounded transition-colors"
-                        style={{ color: '#ef4444' }}
+                        style={{ color: 'var(--danger)' }}
                         title="Delete user"
                       >
                         Delete

@@ -167,15 +167,15 @@ function scoreColor(s) {
 }
 
 function scoreBg(s) {
-  if (s >= 70) return 'rgba(5,150,105,0.12)';
-  if (s >= 40) return 'rgba(217,119,6,0.12)';
-  return 'rgba(220,38,38,0.12)';
+  if (s >= 70) return 'var(--accent-subtle)';
+  if (s >= 40) return 'var(--bg-elevated)';
+  return 'var(--bg-elevated)';
 }
 
 function diffColor(d) {
-  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: 'var(--accent)' };
-  if (d === 'medium') return { bg: 'rgba(217,119,6,0.12)', text: 'var(--warning)' };
-  return { bg: 'rgba(220,38,38,0.12)', text: 'var(--danger)' };
+  if (d === 'easy') return { bg: 'var(--accent-subtle)', text: 'var(--accent)' };
+  if (d === 'medium') return { bg: 'var(--bg-elevated)', text: 'var(--warning-text)' };
+  return { bg: 'var(--bg-elevated)', text: 'var(--danger)' };
 }
 
 function catLabel(cat) {
@@ -224,10 +224,10 @@ function RadarChart({ values, labels, size = 200 }) {
         return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--border)" strokeWidth={1} />;
       })}
       {/* Data shape */}
-      <path d={dataPath} fill="rgba(45,140,255,0.15)" stroke="var(--accent)" strokeWidth={2} />
+      <path d={dataPath} fill="var(--accent-subtle)" stroke="var(--accent)" strokeWidth={2} />
       {/* Data dots */}
       {dataPoints.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={4} fill="var(--accent)" stroke="#fff" strokeWidth={2} />
+        <circle key={i} cx={p[0]} cy={p[1]} r={4} fill="var(--accent)" stroke="var(--bg-surface)" strokeWidth={2} />
       ))}
       {/* Labels */}
       {labels.map((label, i) => {
@@ -623,7 +623,7 @@ export default function PracticePage() {
                   padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12, fontWeight: 600,
                   background: activeView === tab.key ? 'var(--accent)' : 'transparent',
-                  color: activeView === tab.key ? '#fff' : 'var(--text-secondary)',
+                  color: activeView === tab.key ? '#FFFFFF' : 'var(--text-secondary)',
                   transition: 'all 0.15s',
                 }}
               >
@@ -717,7 +717,7 @@ export default function PracticePage() {
                     <div key={cat} style={{ flex: 1, minWidth: 80 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{catLabel(cat)}</span>
-                        <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? 'var(--success)' : '#94a3b8' }}>{s}%</span>
+                        <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? 'var(--success)' : 'var(--text-dimmed)' }}>{s}%</span>
                       </div>
                       <div style={{ height: 4, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
                         <div style={{ height: '100%', borderRadius: 99, background: colors[cat], width: `${Math.max(s, 2)}%`, opacity: s > 0 ? 1 : 0.2 }} />
@@ -742,7 +742,7 @@ export default function PracticePage() {
                         <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                             <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? 'var(--accent)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : 'var(--text-muted)' }} />
+                              <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#FFFFFF' : 'var(--text-muted)' }} />
                             </div>
                             <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? 'var(--accent)' : 'var(--text-primary)' }}>{m.label}</span>
                           </div>
@@ -799,8 +799,8 @@ export default function PracticePage() {
 
                 {/* CTA Footer */}
                 <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
-                    <Icon name="play" size={16} style={{ color: '#fff' }} />
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', color: '#FFFFFF', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                    <Icon name="play" size={16} style={{ color: '#FFFFFF' }} />
                     Start Challenge
                   </button>
                 </div>
@@ -831,7 +831,7 @@ export default function PracticePage() {
                             setStats(getStats());
                           }
                         }}
-                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: 'var(--danger)', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
+                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: 'var(--danger)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
                       >
                         Reset History
                       </button>
@@ -922,7 +922,7 @@ export default function PracticePage() {
                     ) : null;
                   })}
                   {questions[currentIdx].topics?.slice(0, 2).map(t => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: 'var(--accent)' }}>{t}</span>
+                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{t}</span>
                   ))}
                 </div>
                 <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
@@ -936,7 +936,7 @@ export default function PracticePage() {
                 <div style={{ position: 'relative', marginBottom: 8 }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, width: 36, height: '100%', background: 'var(--bg-elevated)', borderRadius: '12px 0 0 12px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, pointerEvents: 'none' }}>
                     {Array.from({ length: Math.max(10, (answers[currentIdx] || '').split('\n').length) }, (_, i) => (
-                      <div key={i} style={{ fontSize: 11, color: '#c0c5ce', lineHeight: '22.1px', fontFamily: "'Source Code Pro', monospace", userSelect: 'none' }}>{i + 1}</div>
+                      <div key={i} style={{ fontSize: 11, color: 'var(--text-dimmed)', lineHeight: '22.1px', fontFamily: "'Source Code Pro', monospace", userSelect: 'none' }}>{i + 1}</div>
                     ))}
                   </div>
                   <textarea
@@ -956,7 +956,7 @@ export default function PracticePage() {
                   { label: 'Functional Req.', icon: 'clipboard', color: 'var(--accent)', placeholder: 'List core functional requirements...' },
                   { label: 'Non-Functional Req.', icon: 'shield', color: 'var(--accent)', placeholder: 'Latency, availability, consistency, scale...' },
                   { label: 'Components', icon: 'layers', color: 'var(--success)', placeholder: 'Key services, databases, caches...' },
-                  { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
+                  { label: 'Data Flow', icon: 'gitBranch', color: 'var(--accent)', placeholder: 'Request path, data pipeline...' },
                   { label: 'Layered Design', icon: 'server', color: 'var(--text-muted)', placeholder: 'API layer, business logic, storage...' },
                   { label: 'Scalability', icon: 'trendingUp', color: 'var(--text-muted)', placeholder: 'Sharding, replication, CDN, load balancing...' },
                   { label: 'Trade-offs', icon: 'scale', color: 'var(--danger)', placeholder: 'CAP, consistency vs availability...' },
@@ -1098,7 +1098,7 @@ export default function PracticePage() {
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : 'var(--accent)', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
+                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : 'var(--accent)', background: sdGenerating ? 'var(--bg-elevated)' : 'var(--accent-subtle)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'var(--border)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
                         {sdGenerating ? (
                           <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating...</>
                         ) : (
@@ -1209,7 +1209,7 @@ export default function PracticePage() {
 
                   {/* Improvement tips */}
                   {inlineEval.improvementTips && inlineEval.improvementTips.length > 0 && (
-                    <div style={{ marginTop: 14, padding: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 10, border: '1px solid rgba(245,158,11,0.25)' }}>
+                    <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--warning)' }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
                       {inlineEval.improvementTips.map((tip, ti) => (
                         <div key={ti} style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 2 }}>
@@ -1237,11 +1237,11 @@ export default function PracticePage() {
 
                   {/* Next button */}
                   <div style={{ marginTop: 16 }}>
-                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', color: '#FFFFFF', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {currentIdx < questions.length - 1 ? (
-                        <>Next Question <Icon name="arrowRight" size={14} style={{ color: '#fff' }} /></>
+                        <>Next Question <Icon name="arrowRight" size={14} style={{ color: '#FFFFFF' }} /></>
                       ) : (
-                        <>View Results <Icon name="arrowRight" size={14} style={{ color: '#fff' }} /></>
+                        <>View Results <Icon name="arrowRight" size={14} style={{ color: '#FFFFFF' }} /></>
                       )}
                     </button>
                   </div>
@@ -1251,15 +1251,15 @@ export default function PracticePage() {
               {/* Controls (only when not showing inline eval) */}
               {!inlineEval && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', color: '#FFFFFF', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {evaluating ? (
-                      <><Icon name="loader" size={14} style={{ color: '#fff', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
+                      <><Icon name="loader" size={14} style={{ color: '#FFFFFF', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
                     ) : 'Submit Answer'}
                   </button>
                   <button onClick={skipQuestion} disabled={evaluating} style={{ padding: '10px 20px', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer' }}>
                     Skip
                   </button>
-                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: 'rgba(220,38,38,0.1)', color: 'var(--danger)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
+                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: 'var(--bg-elevated)', color: 'var(--danger)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid var(--border)', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
                     End Session
                   </button>
                 </div>
@@ -1276,7 +1276,7 @@ export default function PracticePage() {
             return (
             <div>
               {/* ── Hero Result Card ── */}
-              <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
                 {/* Decorative grid */}
                 <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -1285,16 +1285,16 @@ export default function PracticePage() {
                     <div style={{ position: 'relative', display: 'inline-block' }}>
                       <ScoreRing value={finalAvgScore} size={160} strokeW={12} animated />
                       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={{ fontSize: 36, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{finalAvgScore}%</span>
+                        <span style={{ fontSize: 36, fontWeight: 800, color: '#FFFFFF', lineHeight: 1 }}>{finalAvgScore}%</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: gradeColor, marginTop: 2 }}>Grade {grade}</span>
                       </div>
                     </div>
                     <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{passed}/{total}</div>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: '#FFFFFF' }}>{passed}/{total}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>Passed</div>
                       </div>
-                      <div style={{ width: 1, height: 28, background: '#334155' }} />
+                      <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{catLabel(category)}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, textTransform: 'capitalize' }}>{difficulty}</div>
@@ -1316,13 +1316,13 @@ export default function PracticePage() {
 
                 {/* Actions */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 28, position: 'relative' }}>
-                  <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
+                  <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
-                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>
+                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'var(--accent)', color: '#FFFFFF', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
-                  <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: 'var(--accent)', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'var(--accent-subtle)', color: 'var(--accent)', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s' }}>
                     Practice Weak Areas
                   </button>
                 </div>
@@ -1352,14 +1352,14 @@ export default function PracticePage() {
 
               {/* ── Improvement Tips ── */}
               {aiModelAnswers.some(a => a.improvementTips && a.improvementTips.length > 0) && (
-                <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 16, padding: '18px 22px', marginBottom: 20 }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--warning)', borderRadius: 16, padding: '18px 22px', marginBottom: 20 }}>
                   <h3 className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Icon name="lightbulb" size={15} style={{ color: 'var(--text-muted)' }} />
                     Focus Areas
                   </h3>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[...new Set(aiModelAnswers.flatMap(a => a.improvementTips || []))].slice(0, 5).map((tip, i) => (
-                      <span key={i} style={{ fontSize: 12, color: 'var(--text-muted)', padding: '5px 12px', borderRadius: 99, background: 'rgba(245,158,11,0.12)', fontWeight: 500 }}>
+                      <span key={i} style={{ fontSize: 12, color: 'var(--warning-text)', padding: '5px 12px', borderRadius: 99, background: 'var(--bg-elevated)', fontWeight: 500 }}>
                         {tip}
                       </span>
                     ))}
@@ -1383,7 +1383,7 @@ export default function PracticePage() {
                     <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
                       <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? 'var(--accent)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'var(--accent-subtle)' : 'var(--bg-elevated)', color: pass ? 'var(--accent)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
                             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{q.q}</span>
                             {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
@@ -1396,7 +1396,7 @@ export default function PracticePage() {
                           <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: scoreBg(sc), color: scoreColor(sc), minWidth: 42, textAlign: 'center' }}>
                             {sc}%
                           </span>
-                          <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: '#cbd5e1' }} />
+                          <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: 'var(--text-dimmed)' }} />
                         </div>
                       </button>
                       {isExpanded && (
@@ -1415,7 +1415,7 @@ export default function PracticePage() {
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>
                               {showModelAnswer === `r-${i}` && (
-                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid rgba(45,140,255,0.25)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                                   {ma.modelAnswer}
                                 </div>
                               )}
@@ -1442,7 +1442,7 @@ export default function PracticePage() {
         .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Inter', system-ui, sans-serif; }
         .practice-display { font-family: 'Inter', system-ui, sans-serif; }
         .practice-mono { font-family: 'Source Code Pro', monospace; }
-        textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(45,140,255,0.1); }
+        textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-subtle); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>

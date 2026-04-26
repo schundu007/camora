@@ -5,7 +5,7 @@ const isElectron = false; // Electron removed in unified frontend
 
 // Platform categories - using initials instead of generic icons
 const CODING_PLATFORMS = {
-  hackerrank: { name: 'HackerRank', color: '#1ba94c', url: 'hackerrank.com' },
+  hackerrank: { name: 'HackerRank', color: 'var(--accent)', url: 'hackerrank.com' },
   leetcode: { name: 'LeetCode', color: 'var(--accent)', url: 'leetcode.com' },
   coderpad: { name: 'CoderPad', color: 'var(--accent)', url: 'coderpad.io' },
   codesignal: { name: 'CodeSignal', color: 'var(--accent)', url: 'codesignal.com' },
@@ -15,11 +15,11 @@ const PREP_PLATFORMS = {
   techprep: { name: 'TechPrep', color: 'var(--accent)', url: 'techprep.app' },
   algomaster: { name: 'AlgoMaster', color: 'var(--accent)', url: 'algomaster.io' },
   neetcode: { name: 'NeetCode', color: 'var(--text-muted)', url: 'neetcode.io' },
-  designgurus: { name: 'DesignGurus', color: '#0ea5e9', url: 'designgurus.io' },
+  designgurus: { name: 'DesignGurus', color: 'var(--accent)', url: 'designgurus.io' },
   educative: { name: 'Educative', color: 'var(--accent)', url: 'educative.io' },
   interviewbit: { name: 'InterviewBit', color: 'var(--accent)', url: 'interviewbit.com' },
-  interviewingio: { name: 'Interviewing.io', color: '#4a90d9', url: 'interviewing.io', googleAuth: true },
-  exponent: { name: 'Exponent', color: '#1a1a2e', url: 'tryexponent.com', googleAuth: true },
+  interviewingio: { name: 'Interviewing.io', color: 'var(--accent)', url: 'interviewing.io', googleAuth: true },
+  exponent: { name: 'Exponent', color: 'var(--cam-primary-dk)', url: 'tryexponent.com', googleAuth: true },
 };
 
 export default function PrepTab({ isOpen, onClose }) {
@@ -162,18 +162,18 @@ export default function PrepTab({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden shadow-2xl border border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3" style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ background: 'var(--cam-primary-dk)', borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
-            <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#ffffff' }}>Coding Platforms</span>
-            <span className="px-2 py-0.5 text-xs font-semibold rounded" style={{ background: 'var(--accent)', color: '#ffffff' }}>
+            <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#FFFFFF' }}>Coding Platforms</span>
+            <span className="px-2 py-0.5 text-xs font-semibold rounded" style={{ background: 'var(--accent)', color: '#FFFFFF' }}>
               {connectedCount} connected
             </span>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded transition-colors hover:bg-[var(--bg-surface)]/10"
-            style={{ color: '#94a3b8' }}
+            style={{ color: 'var(--text-dimmed)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -211,10 +211,10 @@ export default function PrepTab({ isOpen, onClose }) {
         <div className="p-4 max-h-[60vh] overflow-y-auto bg-[var(--bg-elevated)]">
           {/* Browser Extension Notice - Webapp only */}
           {!isElectron && (
-            <div className="mb-4 p-4 rounded-lg" style={{ background: '#fffbeb', border: '1px solid var(--text-muted)' }}>
+            <div className="mb-4 p-4 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--text-muted)' }}>
-                  <svg className="w-4 h-4" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--warning)' }}>
+                  <svg className="w-4 h-4" style={{ color: '#FFFFFF' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -227,14 +227,14 @@ export default function PrepTab({ isOpen, onClose }) {
                     <button
                       onClick={() => setShowExtensionInfo(!showExtensionInfo)}
                       className="px-3 py-1.5 text-xs font-medium rounded transition-colors"
-                      style={{ background: 'var(--text-muted)', color: '#ffffff' }}
+                      style={{ background: 'var(--accent)', color: '#FFFFFF' }}
                     >
                       {showExtensionInfo ? 'Hide Instructions' : 'How to Install'}
                     </button>
                     <button
                       onClick={handleRefreshStatus}
                       className="px-3 py-1.5 text-xs font-medium rounded transition-colors"
-                      style={{ background: 'var(--bg-surface)', color: '#A88817', border: '1px solid var(--text-muted)' }}
+                      style={{ background: 'var(--bg-surface)', color: 'var(--warning-text)', border: '1px solid var(--border)' }}
                     >
                       Refresh Status
                     </button>
@@ -243,11 +243,11 @@ export default function PrepTab({ isOpen, onClose }) {
               </div>
 
               {showExtensionInfo && (
-                <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--text-muted)' }}>
-                  <ol className="text-xs space-y-2" style={{ color: '#A88817' }}>
+                <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                  <ol className="text-xs space-y-2" style={{ color: 'var(--warning-text)' }}>
                     <li className="flex gap-2">
                       <span className="font-bold">1.</span>
-                      <span>Download the extension folder from the project's <code className="px-1 py-0.5 rounded" style={{ background: '#F8FAFC' }}>/extension</code> directory</span>
+                      <span>Download the extension folder from the project's <code className="px-1 py-0.5 rounded" style={{ background: 'var(--bg-elevated)' }}>/extension</code> directory</span>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold">2.</span>
@@ -311,7 +311,7 @@ export default function PrepTab({ isOpen, onClose }) {
                             <button
                               onClick={() => handleLogout(key)}
                               className="px-2 py-1 text-xs font-medium rounded transition-colors"
-                              style={{ color: '#ef4444', background: 'transparent' }}
+                              style={{ color: 'var(--danger)', background: 'transparent' }}
                             >
                               Disconnect
                             </button>
@@ -320,7 +320,7 @@ export default function PrepTab({ isOpen, onClose }) {
                               onClick={() => handleLogin(key)}
                               disabled={isLoggingIn}
                               className="px-2 py-1 text-xs font-medium rounded transition-colors disabled:opacity-50"
-                              style={{ background: platform.color, color: '#ffffff' }}
+                              style={{ background: platform.color, color: '#FFFFFF' }}
                             >
                               {isLoggingIn ? '...' : 'Login'}
                             </button>
@@ -367,12 +367,12 @@ export default function PrepTab({ isOpen, onClose }) {
                   <div
                     className="p-3 rounded-lg text-sm"
                     style={{
-                      background: fetchedContent.error ? '#fef2f2' : 'var(--bg-elevated)',
-                      border: fetchedContent.error ? '1px solid #fecaca' : '1px solid var(--border)'
+                      background: fetchedContent.error ? 'var(--bg-elevated)' : 'var(--bg-elevated)',
+                      border: fetchedContent.error ? '1px solid var(--border)' : '1px solid var(--border)'
                     }}
                   >
                     {fetchedContent.error ? (
-                      <p style={{ color: '#0B5CFF' }}>{fetchedContent.error}</p>
+                      <p style={{ color: 'var(--danger)' }}>{fetchedContent.error}</p>
                     ) : (
                       <>
                         <div className="font-medium mb-1" style={{ color: 'var(--accent)' }}>{fetchedContent.title}</div>
