@@ -863,18 +863,15 @@ export default function DocsPage({ onBack }) {
                         <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-5" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoFlow: 'dense' }}>
-                          {overviewCategories.map((cat, idx) => {
+                          {overviewCategories.map((cat) => {
                             const radius = 20;
                             const circumference = 2 * Math.PI * radius;
                             const strokeDashoffset = circumference - (cat.progress / 100) * circumference;
-                            // First category (typically the largest catalog — coding)
-                            // gets the "wide" bento slot on desktop.
-                            const isWide = idx === 0;
                             return (
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className={`card-lift group relative rounded-lg overflow-hidden flex flex-col ${isWide ? 'lg:col-span-2' : ''}`}
+                              className="card-lift group relative rounded-lg overflow-hidden flex flex-col"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
                               {/* Top accent bar */}
