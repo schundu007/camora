@@ -46,27 +46,21 @@ export default function FeatureMatrix({
   highlightPlanId,
   className = '',
 }: FeatureMatrixProps) {
-  // Scale the wrapper to plan count so a 3-plan table doesn't stretch sparsely
-  // across a 1152px container. ~220px per plan column + ~280px feature column
-  // is the sweet spot before content starts feeling wasted.
+  // Sizing strategy: FeatureMatrix fills 100% of whatever container it's given.
+  // The consumer (e.g. PricingPage) is responsible for capping width with a
+  // wrapper like `<div className="max-w-4xl mx-auto">`. Keeps this component
+  // composable across pages with different layout constraints.
   const planCols = plans.length;
-  const wrapperMaxWidth = Math.min(220 * planCols + 300, 1200);
-  // Feature column is 1.5× a plan column — narrower than the old 2:1 ratio
-  // so 3-plan tables don't have a bloated left column.
+  // Feature column is 1.5× a plan column.
   const featureColPct = (1.5 / (planCols + 1.5)) * 100;
   const planColPct = (1 / (planCols + 1.5)) * 100;
-  // Only force a horizontal-scroll min-width on tables wide enough to need it
-  // (5+ plans). Smaller tables fit comfortably on mobile without scrolling.
+  // Only force a horizontal-scroll min-width on tables wide enough to need it.
   const minWidth = planCols >= 5 ? 720 : undefined;
 
   return (
     <div
-      className={`overflow-x-auto rounded-xl mx-auto ${className}`}
-      style={{
-        border: '1px solid var(--border)',
-        background: 'var(--bg-surface)',
-        maxWidth: wrapperMaxWidth,
-      }}
+      className={`overflow-x-auto rounded-xl ${className}`}
+      style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
     >
       <table
         className="w-full text-sm"

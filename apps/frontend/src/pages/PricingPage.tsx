@@ -88,7 +88,7 @@ export default function PricingPage() {
 
       {/* ═══════════ FEATURE MATRIX — per-plan side-by-side ═══════════ */}
       <section className="px-6 pb-24 w-full">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: accent, fontFamily: F.mono }}>WHAT'S INCLUDED</p>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>Compare plans</h2>

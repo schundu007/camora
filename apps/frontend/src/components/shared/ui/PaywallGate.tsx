@@ -17,7 +17,7 @@ interface PaywallGateProps {
  * Handles post-checkout polling to wait for webhook sync.
  */
 export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
-  const { token, user, subscription, subscriptionLoading, refreshSubscription } = useAuth();
+  const { token, user, subscription, subscriptionLoading, hasTeamAccess, refreshSubscription } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [polling, setPolling] = useState(false);
@@ -27,12 +27,15 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
 
   const isCheckoutReturn = searchParams.get('checkout') === 'success';
 
-  // Use AuthContext subscription (already fetched on mount). Owner emails
-  // bypass the gate unconditionally — defense in depth on top of the
-  // AuthContext-level admin synthesis, so even if the subscription state
-  // glitches the project owner is never paywalled.
+  // Access can come from THREE sources:
+  //   1. Owner email (always allowed — defense in depth)
+  //   2. Personal subscription is paid (Pro / Pro Max / Business)
+  //   3. User belongs to a team whose plan_type grants access (a free user
+  //      who accepted an invite to a Pro Max team should not be paywalled)
+  // hasTeamAccess (from AuthContext) collapses 2+3 into one boolean.
   const plan = subscription?.plan || 'free';
-  const hasAccess = isOwner(user) || (plan !== 'free' && plan !== null && plan !== undefined && plan !== '');
+  const personalAccess = plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
+  const hasAccess = isOwner(user) || personalAccess || hasTeamAccess;
 
   // After checkout success, poll for subscription activation (webhook may take a few seconds)
   const pollSubscription = useCallback(async () => {

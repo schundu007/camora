@@ -39,6 +39,8 @@ const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const TeamSettingsPage = lazy(() => import('./pages/account/TeamSettingsPage'));
+const JoinTeamPage = lazy(() => import('./pages/account/JoinTeamPage'));
 
 function Loading() {
   return (
@@ -248,6 +250,10 @@ export function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
           <Route path="/download" element={<DownloadPage />} />
+
+          {/* ── Team / group sharing (auth required) ─────────── */}
+          <Route path="/account/team" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
+          <Route path="/teams/join/:token" element={<JoinTeamPage />} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
