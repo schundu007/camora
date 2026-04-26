@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# build-marker: 2026-04-26T05:55:00Z (forces Railway to invalidate stale Nixpacks snapshot)
 # Custom Dockerfile (replaces nixpacks.toml). See ascend-backend/Dockerfile
 # for the full rationale — short version: Nixpacks bakes every Railway service
 # variable into the image as ARG/ENV, leaking secrets into the layer history.
