@@ -514,26 +514,33 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
         {/* Left: Problem Input - full width on mobile */}
         <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[45dvh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
-          {/* Input Tab Header — LeetCode-style navy gradient + 2px gold
-              underline. Embedded path: this is the brand chrome users
-              see on /lumora/design. */}
+          {/* Input Tab Header — LeetCode-style sharp pill toolbar. Same
+              grammar as the Lumora top bar + the Coding tabs bar. */}
           <div
-            className="flex items-center justify-between px-3 py-1.5"
+            className="flex items-center justify-between px-3 py-2"
             style={{
-              background: 'var(--cam-hero-strip)',
+              background: 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)',
               borderBottom: '2px solid var(--cam-gold-leaf)',
             }}
           >
-            <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div
+              className="flex items-center gap-1 px-1 py-1"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                borderRadius: 999,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+              }}
+            >
               {(['text', 'url', 'image'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
-                  className="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all"
+                  className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all"
                   style={
                     inputTab === tab
-                      ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }
-                      : { color: 'rgba(255,255,255,0.75)' }
+                      ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                      : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
                   }
                 >
                   {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
@@ -542,8 +549,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             </div>
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}
-              className="p-1 rounded transition-colors hover:bg-white/10"
-              style={{ color: 'rgba(255,255,255,0.75)' }}
+              className="flex items-center justify-center w-7 h-7 transition-all hover:bg-white/10"
+              style={{
+                color: '#FFFFFF',
+                border: '1px solid rgba(255,255,255,0.16)',
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.06)',
+              }}
             >
               <svg className={`w-3 h-3 transition-transform ${inputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />

@@ -795,37 +795,47 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
         <div className={`w-full md:w-auto flex flex-col min-w-0 md:border-r border-b md:border-b-0 coding-left-panel max-h-[45dvh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
-          {/* Tabs — LeetCode-style navy gradient + 2px gold underline.
-              Embedded path: this is the only header users see on
-              /lumora/coding so it carries the brand signature. */}
+          {/* Tabs — LeetCode-style sharp pill toolbar matching the Lumora
+              top bar grammar. Navy band + gold underline + bezelled pill
+              container holding the Description / Solution toggles. */}
           <div
-            className="flex items-center gap-1 px-3 py-1.5"
+            className="flex items-center px-3 py-2"
             style={{
-              background: 'var(--cam-hero-strip)',
+              background: 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)',
               borderBottom: '2px solid var(--cam-gold-leaf)',
             }}
           >
-            <button
-              onClick={() => setProblemTab('description')}
-              className="px-3 py-1 text-xs font-semibold rounded-md transition-all"
-              style={
-                problemTab === 'description'
-                  ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }
-                  : { color: 'rgba(255,255,255,0.75)' }
-              }
-            >Description</button>
-            <button
-              onClick={() => setProblemTab('solution')}
-              className="px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5"
-              style={
-                problemTab === 'solution'
-                  ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }
-                  : { color: 'rgba(255,255,255,0.75)' }
-              }
+            <div
+              className="flex items-center gap-1 px-1 py-1"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                borderRadius: 999,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+              }}
             >
-              Solution
-              {isStreaming && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: problemTab === 'solution' ? 'var(--cam-primary-dk)' : '#FFFFFF' }} />}
-            </button>
+              <button
+                onClick={() => setProblemTab('description')}
+                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-all"
+                style={
+                  problemTab === 'description'
+                    ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                    : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                }
+              >Description</button>
+              <button
+                onClick={() => setProblemTab('solution')}
+                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5"
+                style={
+                  problemTab === 'solution'
+                    ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                    : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                }
+              >
+                Solution
+                {isStreaming && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: problemTab === 'solution' ? '#020617' : 'var(--cam-gold-leaf-lt)' }} />}
+              </button>
+            </div>
           </div>
 
           {/* Tab Content */}
