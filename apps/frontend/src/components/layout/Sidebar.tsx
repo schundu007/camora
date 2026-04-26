@@ -208,20 +208,25 @@ function SidebarSection({
 
   return (
     <div className="mt-3 first:mt-0">
-      {/* Section header — hidden when collapsed */}
+      {/* Section header — hidden when collapsed.
+          Uses design tokens so the label flips between cream-on-dark and
+          slate-on-light cleanly with [data-theme]. The "border around a
+          collapsible label" pattern was a leftover from the lapis-bg
+          era; on the new --bg-elevated surface a plain text label reads
+          better and sits flat in the panel. */}
       {!collapsed && (
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-between w-full mb-1 px-2 cursor-pointer select-none group"
           style={{
-            fontSize: '11px',
-            fontWeight: 600,
+            fontSize: '10px',
+            fontWeight: 700,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            color: 'rgba(255,255,255,0.7)',
+            letterSpacing: '0.12em',
+            color: 'var(--text-muted)',
             background: 'none',
-            border: '1px solid var(--border)',
+            border: 'none',
           }}
         >
           <span>{section.title}</span>
@@ -229,7 +234,7 @@ function SidebarSection({
             className="transition-transform duration-150"
             style={{
               transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-              color: 'rgba(255,255,255,0.5)',
+              color: 'var(--text-muted)',
             }}
           >
             {icons.chevron}
@@ -250,23 +255,23 @@ function SidebarSection({
               alignItems: 'center',
               justifyContent: 'center',
               margin: '2px auto',
-              color: active ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+              color: active ? 'var(--accent)' : 'var(--text-secondary)',
               background: active ? 'var(--accent-subtle)' : 'transparent',
               borderRadius: '8px',
               transition: 'background 0.12s, color 0.12s',
             } : {
               height: '32px',
               fontSize: '13px',
-              fontWeight: 500,
-              color: active ? '#FFFFFF' : 'rgba(255,255,255,0.85)',
+              fontWeight: active ? 600 : 500,
+              color: active ? 'var(--accent)' : 'var(--text-secondary)',
               background: active ? 'var(--accent-subtle)' : 'transparent',
-              borderLeft: active ? '2px solid #FFFFFF' : '2px solid transparent',
+              borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
               borderRadius: '6px',
               transition: 'background 0.12s, color 0.12s',
             };
 
             const iconEl = (
-              <span className="flex-shrink-0" style={{ color: active ? '#FFFFFF' : 'rgba(255,255,255,0.7)' }}>
+              <span className="flex-shrink-0" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}>
                 {item.icon}
               </span>
             );
@@ -368,8 +373,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             style={{
               width: '100%',
               height: '32px',
-              color: pinned ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
-              background: pinned ? 'rgba(255,255,255,0.15)' : 'none',
+              color: pinned ? 'var(--accent)' : 'var(--text-secondary)',
+              background: pinned ? 'var(--accent-subtle)' : 'none',
               border: '1px solid var(--border)',
               cursor: 'pointer',
               fontSize: '13px',
@@ -384,7 +389,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         )}
         {!isCollapsed && (
-          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>
+          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
             &copy; 2026 Cariara
           </span>
         )}
@@ -394,7 +399,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* ── Desktop sidebar ─────────────────────────────────── */}
+      {/* ── Desktop sidebar ───────────────────────────────────
+          Background switched from var(--cam-primary) (lapis) to
+          var(--bg-elevated) so the sidebar reads as part of the same
+          surface system as topbar / cards / panels rather than an
+          out-of-place solid-blue strip. Border uses var(--border) for
+          the same reason — flips light/dark with the rest of the chrome. */}
       <aside
         className="hidden md:flex flex-col shrink-0"
         onMouseEnter={() => setHovered(true)}
@@ -403,8 +413,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           width: sidebarWidth,
           height: '100%',
           transition: 'width 0.2s ease-out',
-          background: 'var(--cam-primary)',
-          borderRight: '1px solid rgba(255,255,255,0.15)',
+          background: 'var(--bg-elevated)',
+          borderRight: '1px solid var(--border)',
           overflow: 'hidden',
         }}
       >
@@ -429,9 +439,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               width: '280px',
               height: '100vh',
               paddingTop: 'var(--topbar-height, 56px)',
-              background: 'var(--cam-primary)',
-              borderRight: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+              background: 'var(--bg-elevated)',
+              borderRight: '1px solid var(--border)',
+              boxShadow: '4px 0 20px rgba(0,0,0,0.25)',
             }}
           >
             {renderSidebarContent(false, onClose)}
@@ -439,11 +449,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </>
       )}
 
-      {/* ── Hover styles (injected once) ────────────────────── */}
+      {/* ── Hover styles (injected once) ──────────────────────
+          Hover uses --bg-surface so items pop a layer ABOVE the
+          --bg-elevated panel surface in either theme — instead of the
+          old white-overlay-on-blue trick which only worked when the
+          panel was lapis. */}
       <style>{`
         .sidebar-item:hover {
-          background: rgba(255,255,255,0.15) !important;
-          color: #FFFFFF !important;
+          background: var(--bg-surface) !important;
+          color: var(--text-primary) !important;
         }
       `}</style>
     </>
