@@ -115,10 +115,10 @@ function CapacityPlanningGrid({ estimation }) {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-[var(--bg-elevated)]/70">
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display w-[100px]">Value</th>
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell w-[180px]">Scale</th>
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden md:table-cell">Calculation</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display w-[100px]">Value</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell w-[180px]">Scale</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden md:table-cell">Calculation</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,14 +127,14 @@ function CapacityPlanningGrid({ estimation }) {
                   const color = CHART_COLORS[i % CHART_COLORS.length];
                   return (
                     <tr key={i} className="hover:bg-[var(--bg-elevated)]/30 transition-colors">
-                      <td className="px-3 py-2.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
-                      <td className="px-3 py-2.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)] whitespace-nowrap">{row.value}</td>
-                      <td className="px-3 py-2.5 border-b border-[var(--border)] hidden lg:table-cell">
+                      <td className="px-2 py-1.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
+                      <td className="px-2 py-1.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)] whitespace-nowrap">{row.value}</td>
+                      <td className="px-2 py-1.5 border-b border-[var(--border)] hidden lg:table-cell">
                         <div className="h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
                           <div className="h-full rounded-full transition-colors duration-700 bg-[var(--accent)]" style={{ width: `${pct}%` }} />
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden md:table-cell">{row.detail}</td>
+                      <td className="px-2 py-1.5 text-[var(--text-muted)] text-xs border-b border-[var(--border)] hidden md:table-cell">{row.detail}</td>
                     </tr>
                   );
                 })}

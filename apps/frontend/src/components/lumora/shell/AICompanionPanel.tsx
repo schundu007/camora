@@ -472,10 +472,10 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 <p className="text-xs">Answers will appear here</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {messages.filter(m => m.role === 'ai').map((msg, i) => (
-                  <div key={i} className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <div className="flex items-center gap-2 mb-3">
+                  <div key={i} className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-2 mb-2">
                       <SonaAvatar size={18} />
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona</span>
                     </div>
@@ -483,8 +483,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 ))}
                 {streaming && (
-                  <div className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <div className="flex items-center gap-2 mb-3">
+                  <div className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-2 mb-2">
                       <SonaAvatar size={18} active />
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona is answering…</span>
                     </div>

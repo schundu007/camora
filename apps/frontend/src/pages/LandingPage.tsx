@@ -143,7 +143,7 @@ export default function LandingPage() {
       <SiteNav variant="light" />
 
       {/* ═══════════ 1. HERO ═══════════ */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-6 text-center" style={{ background: 'linear-gradient(180deg, var(--cam-mist) 0%, var(--bg-app) 100%)' }}>
+      <section className="pt-24 pb-16 md:pt-32 md:pb-20 px-6 text-center" style={{ background: 'linear-gradient(180deg, var(--cam-mist) 0%, var(--bg-app) 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
@@ -161,7 +161,7 @@ export default function LandingPage() {
             </span>
           </motion.h1>
 
-          <motion.p className="mt-6 text-lg md:text-xl max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}
+          <motion.p className="mt-6 text-lg md:text-xl max-w-4xl mx-auto" style={{ color: 'var(--text-secondary)' }}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
             Job discovery, interview prep, mock practice, and live AI assistance — all in one place.
           </motion.p>

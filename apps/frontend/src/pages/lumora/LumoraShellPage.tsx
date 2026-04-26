@@ -213,7 +213,7 @@ export function LumoraShellPage() {
       )}
 
       {/* Main area — bottom padding accounts for fixed mobile nav + iOS home indicator */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
         {/* Top bar — single row: audio controls (left) + tab pills (right) */}
         <div className="flex items-center justify-center h-11 px-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
           {/* Audio controls — left side, only on coding/design */}
@@ -529,7 +529,7 @@ export function LumoraShellPage() {
 
       {/* Mobile bottom navigation — visible only on small screens */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 z-40 items-center justify-around"
-        style={{ background: 'var(--cam-primary)', borderTop: '1px solid rgba(255,255,255,0.2)', height: 'calc(64px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        style={{ background: 'var(--cam-primary)', borderTop: '1px solid rgba(255,255,255,0.2)', height: 'calc(56px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
@@ -541,7 +541,7 @@ export function LumoraShellPage() {
             <Link key={tab.id} to={tab.path} className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1"
               style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }}>
               {tab.icon}
-              <span className="text-[11px] font-bold">{tab.label}</span>
+              <span className="text-[10px] font-bold">{tab.label}</span>
               {isActive && <span aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b" style={{ background: '#FFFFFF' }} />}
             </Link>
           );
@@ -551,7 +551,7 @@ export function LumoraShellPage() {
           style={{ color: ['calendar','assistants','profile','credits','pricing','sessions'].includes(activeTab) ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }}
           aria-label="More" aria-haspopup="menu" aria-expanded={mobileMoreOpen}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></svg>
-          <span className="text-[11px] font-bold">More</span>
+          <span className="text-[10px] font-bold">More</span>
           {['calendar','assistants','profile','credits','pricing','sessions'].includes(activeTab) && <span aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b" style={{ background: '#FFFFFF' }} />}
         </button>
       </div>
