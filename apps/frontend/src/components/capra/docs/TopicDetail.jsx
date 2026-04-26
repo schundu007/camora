@@ -6,6 +6,7 @@ import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
+import { RoughLayeredDiagram } from './RoughLayeredDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -1963,6 +1964,11 @@ export default function TopicDetail({
                     <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Layered Design</h3>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.layeredDesign.length} layers</span>
                   </div>
+                  <RoughLayeredDiagram
+                    layers={topicDetails.layeredDesign}
+                    title="Layered Design"
+                    className="mb-3"
+                  />
                   <div className="p-2.5 space-y-0">
                     {topicDetails.layeredDesign.map((layer, i) => {
                       const LAYER_COLORS = ['var(--accent)'];
@@ -2008,12 +2014,20 @@ export default function TopicDetail({
                       </div>
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
-                        <ContentDiagram
-                          src={topicDetails.basicImplementation.diagramSrc}
-                          template={topicDetails.basicImplementation.svgTemplate}
-                          alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
-                          className="mb-3"
-                        />
+                        {topicDetails.basicImplementation.components && !topicDetails.basicImplementation.diagramSrc && !topicDetails.basicImplementation.svgTemplate ? (
+                          <RoughLayeredDiagram
+                            components={topicDetails.basicImplementation.components}
+                            title="Basic Architecture"
+                            className="mb-3"
+                          />
+                        ) : (
+                          <ContentDiagram
+                            src={topicDetails.basicImplementation.diagramSrc}
+                            template={topicDetails.basicImplementation.svgTemplate}
+                            alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
+                            className="mb-3"
+                          />
+                        )}
                         {topicDetails.basicImplementation.problems && (
                           <div>
                             <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-1.5 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues</h4>
@@ -2038,12 +2052,20 @@ export default function TopicDetail({
                       </div>
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
-                        <ContentDiagram
-                          src={topicDetails.advancedImplementation.diagramSrc}
-                          template={topicDetails.advancedImplementation.svgTemplate}
-                          alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
-                          className="mb-3"
-                        />
+                        {topicDetails.advancedImplementation.components && !topicDetails.advancedImplementation.diagramSrc && !topicDetails.advancedImplementation.svgTemplate ? (
+                          <RoughLayeredDiagram
+                            components={topicDetails.advancedImplementation.components}
+                            title="Advanced Architecture"
+                            className="mb-3"
+                          />
+                        ) : (
+                          <ContentDiagram
+                            src={topicDetails.advancedImplementation.diagramSrc}
+                            template={topicDetails.advancedImplementation.svgTemplate}
+                            alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
+                            className="mb-3"
+                          />
+                        )}
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-3">
                             <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>
@@ -3036,6 +3058,42 @@ export default function TopicDetail({
           )}
         </div>
       )}
+
+      {/* Related topics — Databricks "See also" pattern. Picks up to 3
+          topics from the same category, excluding the current topic and
+          the prev/next pair (which already render in the bottom nav).
+          Hidden when the category has too few topics to fill a row. */}
+      {(() => {
+        if (!filteredTopics || filteredTopics.length < 4) return null;
+        const skip = new Set([selectedTopic, prevTopic?.id, nextTopic?.id].filter(Boolean));
+        const related = filteredTopics.filter(t => !skip.has(t.id)).slice(0, 3);
+        if (related.length === 0) return null;
+        return (
+          <div className="mt-10 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-1.5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>RELATED</p>
+            <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>You might also explore</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {related.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedTopic(t.id)}
+                  className="card-lift text-left rounded-lg p-4 flex flex-col"
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                >
+                  {t.difficulty && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{t.difficulty}</span>
+                  )}
+                  <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{t.title}</h4>
+                  {t.description && (
+                    <p className="text-[12px] leading-snug line-clamp-2" style={{ color: 'var(--text-muted)' }}>{t.description}</p>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* "Was this helpful?" — Databricks-style feedback row above prev/next */}
       {topicDetails && (
