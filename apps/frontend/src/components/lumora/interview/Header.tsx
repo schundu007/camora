@@ -353,9 +353,9 @@ function UserBadge() {
           <div className="absolute right-0 top-full mt-1 w-48 rounded-2xl shadow-xl border z-50 py-1 overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary) 0%, #111111 100%)', borderColor: 'rgba(255,255,255,0.12)' }}>
             <div className="px-3 py-2 border-b border-white/10">
               <p className="font-display text-sm font-semibold text-white truncate">{user.name || 'User'}</p>
-              <p className="font-code text-xs text-white/50 truncate">{user.email}</p>
+              <p className="font-code text-xs text-white/85 truncate">{user.email}</p>
             </div>
-            <Link to="/pricing" className="block px-3 py-2 text-sm font-display text-white/70 hover:bg-white/5">Pricing</Link>
+            <Link to="/pricing" className="block px-3 py-2 text-sm font-display text-white/90 hover:bg-white/5">Pricing</Link>
             <button
               onClick={() => logout()}
               className="w-full text-left px-3 py-2 text-sm font-display text-red-400 hover:bg-red-500/10"
