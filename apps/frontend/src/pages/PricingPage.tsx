@@ -5,6 +5,8 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import SharedPricingCards from '../components/shared/PricingCards';
 import { FeatureMatrix } from '../components/shared/docs';
+import { DiagonalDivider } from '../components/shared/DiagonalDivider';
+import { MadeWithLove } from '../components/shared/MadeWithLove';
 
 const accent = 'var(--cam-primary)';
 const F = {
@@ -51,15 +53,32 @@ export default function PricingPage() {
       <SEO title="Pricing" description="Interview prep plans starting free. Monthly, Quarterly Pro, and Desktop Lifetime options." path="/pricing" />
       <SiteNav variant="light" />
 
-      {/* ═══════════ HEADER ═══════════ */}
-      <section className="pt-32 pb-16 px-6 text-center">
-        <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>PRICING</span>
-        <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
-          SIMPLE, TRANSPARENT<br /><span style={{ color: accent }}>PRICING.</span>
-        </h1>
-        <p className="mt-5 text-lg max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-          Start free. Upgrade when you're ready. No hidden fees.
-        </p>
+      {/* ═══════════ HEADER — LeetCode-style dark band w/ diagonal cut ═══════════ */}
+      <section
+        className="relative pt-32 pb-32 px-6 text-center overflow-hidden"
+        style={{
+          background:
+            'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+        }}
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+          }}
+        />
+        <div className="relative">
+          <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: F.mono }}>PRICING</span>
+          <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight uppercase text-white" style={{ fontFamily: F.display }}>
+            SIMPLE, TRANSPARENT<br /><span style={{ color: 'var(--cam-gold-leaf-lt)' }}>PRICING.</span>
+          </h1>
+          <p className="mt-5 text-lg max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            Start free. Upgrade when you're ready. No hidden fees.
+          </p>
+        </div>
+        <DiagonalDivider fill="var(--bg-surface)" slope="tr-to-bl" position="bottom" height="9vh" />
       </section>
 
       {/* ═══════════ PLANS ═══════════ */}
@@ -240,16 +259,19 @@ export default function PricingPage() {
               </h2>
               <p className="mt-2 text-sm text-white/70">No credit card required. Cancel anytime.</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Link to="/signup" className="px-7 py-3.5 text-sm font-bold uppercase tracking-[0.08em] rounded-full" style={{ background: '#FFFFFF', color: '#0F172A' }}>
+            <div className="flex items-center">
+              <Link to="/signup" className="inline-flex items-center gap-2 px-9 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-transform hover:scale-[1.02]" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 8px 22px rgba(0,0,0,0.25)' }}>
                 GET STARTED FREE
-              </Link>
-              <Link to="/" className="px-7 py-3.5 text-sm font-bold uppercase tracking-[0.08em] rounded-full" style={{ border: '1.5px solid rgba(255,255,255,0.3)', color: '#FFFFFF' }}>
-                LEARN MORE
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
               </Link>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ═══════════ MADE WITH ❤ IN SAN JOSE ═══════════ */}
+      <section className="bg-[var(--bg-surface)] border-t" style={{ borderColor: 'var(--border)' }}>
+        <MadeWithLove city="San Jose" />
       </section>
 
       <SiteFooter variant="light" />
