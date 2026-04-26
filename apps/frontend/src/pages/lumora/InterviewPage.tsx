@@ -119,7 +119,7 @@ export function InterviewPage() {
             <div className="px-3 sm:px-4 pb-3 pt-1">
               <div className="mx-auto" style={{ maxWidth: 'min(90%, 100% - 16px)' }}>
                 {isExpanded ? (
-                  <div className="rounded-2xl overflow-hidden" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
+                  <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
                     <textarea
                       ref={textareaRef}
                       value={inputValue}
@@ -145,7 +145,7 @@ export function InterviewPage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 rounded-2xl px-3 sm:px-4 h-12 sm:h-12 transition-all focus-within:shadow-[0_0_0_2px_rgba(38,97,156,0.3)]"
-                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
                     {isStreaming && (
                       <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(38,97,156,0.4)' }} />
                     )}

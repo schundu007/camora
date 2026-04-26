@@ -422,7 +422,7 @@ export default function CompanyPrepPage() {
                 <span style={{ color: 'var(--text-secondary)' }}>{displayName}</span>
               </div>
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}>
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                   <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-muted)' }}>
                     {displayName.charAt(0).toUpperCase()}
                   </span>
@@ -544,9 +544,9 @@ export default function CompanyPrepPage() {
           <div style={{ padding: '16px 0 0' }}>
             <nav className="practice-body" style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <Link to="/" className="breadcrumb-link" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.15s' }}>Home</Link>
-              <span style={{ color: '#d1d5db' }}>/</span>
+              <span style={{ color: 'var(--text-muted)' }}>/</span>
               <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.15s' }}>Interview Questions</Link>
-              <span style={{ color: '#d1d5db' }}>/</span>
+              <span style={{ color: 'var(--text-muted)' }}>/</span>
               <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{companyData.name}</span>
             </nav>
           </div>
@@ -702,7 +702,7 @@ export default function CompanyPrepPage() {
                           style={{
                             fontSize: 11,
                             fontWeight: 500,
-                            color: '#d1d5db',
+                            color: 'var(--text-muted)',
                             minWidth: 24,
                             textAlign: 'right',
                             flexShrink: 0,
@@ -723,7 +723,7 @@ export default function CompanyPrepPage() {
                             fontSize: 11,
                             fontWeight: 500,
                             color: 'var(--text-muted)',
-                            background: '#f3f4f6',
+                            background: 'var(--bg-elevated)',
                             padding: '3px 8px',
                             borderRadius: 4,
                             whiteSpace: 'nowrap',

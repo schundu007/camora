@@ -1202,7 +1202,7 @@ export default function Blind75Page() {
                       padding: '3px 10px',
                       borderRadius: '20px',
                       background: 'rgba(45,140,255,0.08)',
-                      color: '#2563eb',
+                      color: 'var(--accent)',
                       border: '1px solid rgba(45,140,255,0.3)',
                       whiteSpace: 'nowrap',
                     }}>
@@ -1729,7 +1729,7 @@ export default function Blind75Page() {
                       border: '2px solid rgba(45,140,255,0.3)', background: 'rgba(45,140,255,0.08)', flexShrink: 0, marginTop: '1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <span style={{ fontSize: '10px', color: '#2563eb', fontWeight: 700 }}>{i + 1}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 700 }}>{i + 1}</span>
                     </div>
                     <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item}</span>
                   </div>

@@ -141,12 +141,12 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
               <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
                 {labelCopy[s.label].short}
               </span>
-              <span className="text-[10px]" style={{ color: '#64748B' }}>· {labelCopy[s.label].hint}</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>· {labelCopy[s.label].hint}</span>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(s.body)}
               className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-colors"
-              style={{ color: '#64748B' }}
+              style={{ color: 'var(--text-muted)' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
               Copy
@@ -158,7 +158,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
         </div>
       ))}
       {streaming && sections.length < 4 && (
-        <div className="text-[10px] px-2 py-1 flex items-center gap-1.5" style={{ color: '#64748B' }}>
+        <div className="text-[10px] px-2 py-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-primary)' }} />
           Generating remaining STAR sections…
         </div>
@@ -180,7 +180,7 @@ function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
       <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
         {archetype} Question
       </span>
-      <span className="text-[10px]" style={{ color: '#64748B' }}>· {ARCHETYPE_HINT[archetype]}</span>
+      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>· {ARCHETYPE_HINT[archetype]}</span>
     </div>
   );
 }
@@ -223,7 +223,7 @@ function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
               <span className="font-mono shrink-0" style={{ color: '#C9A227' }}>Q{i + 1}.</span>
               <span>{r.probe}</span>
             </p>
-            <p className="pl-5" style={{ color: '#334155' }}>→ {r.handling}</p>
+            <p className="pl-5" style={{ color: 'var(--text-secondary)' }}>→ {r.handling}</p>
           </div>
         ))}
       </div>
@@ -241,14 +241,14 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
     return aMatch - bMatch;
   });
   return (
-    <div className="border-b" style={{ borderColor: '#E2E8F0' }}>
+    <div className="border-b" style={{ borderColor: 'var(--border)' }}>
       <div className="px-3 pt-3 pb-1.5 flex items-center gap-2">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
         <span className="text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
-        <span className="text-[9px]" style={{ color: '#94A3B8' }}>{stories.length}</span>
+        <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{stories.length}</span>
       </div>
       <div className="px-2 pb-2 space-y-1">
         {sorted.map(s => {
@@ -351,8 +351,8 @@ function RichText({ text }: { text: string }) {
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
     <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid rgba(0,0,0,0.1)' }}>
       <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(0,0,0,0.04)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>{lang || 'code'}</span>
-        <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-black/5" style={{ color: '#64748B' }}>Copy</button>
+        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{lang || 'code'}</span>
+        <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }}>Copy</button>
       </div>
       <pre className="px-3 py-2 overflow-x-auto" style={{ background: 'rgba(15,23,42,0.95)', color: '#7DD3FC', fontSize: '11px', lineHeight: '1.6', fontFamily: "'Source Code Pro', monospace" }}><code>{content}</code></pre>
     </div>

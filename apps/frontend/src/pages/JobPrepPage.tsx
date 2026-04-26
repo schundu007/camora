@@ -621,11 +621,11 @@ export default function JobPrepPage() {
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {urlAnalysis.coding_focus?.length > 0 && (
-                  <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', padding: '12px' }}>
                     <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.coding_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#F8FAFC', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: 'var(--success)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
@@ -645,7 +645,7 @@ export default function JobPrepPage() {
                     <p style={{ fontSize: '11px', fontWeight: 700, color: '#D9B543', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#A88817', background: '#F8FAFC', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: '#A88817', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
@@ -892,9 +892,9 @@ export default function JobPrepPage() {
                           <div style={{
                             width: '24px',
                             height: '24px',
-                            background: '#f3f4f6',
+                            background: 'var(--bg-elevated)',
                             borderRadius: '50%',
-                            border: '2px solid #e5e7eb',
+                            border: '2px solid var(--border)',
                             flexShrink: 0,
                           }} />
                         )}
@@ -904,7 +904,7 @@ export default function JobPrepPage() {
                           <div style={{
                             fontSize: '14px',
                             fontWeight: 600,
-                            color: isDone ? '#111827' : '#6b7280',
+                            color: isDone ? 'var(--text-primary)' : 'var(--text-muted)',
                             fontFamily: "'Inter', system-ui, sans-serif",
                           }}>
                             {sec.label}
@@ -1139,16 +1139,16 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 /* ──────────────────────────────── Styled helpers for book-style prep content ──────────────────────────────── */
 
 const S = {
-  h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
+  h2: { fontSize: '18px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
   h3: { fontSize: '15px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
   h4: { fontSize: '12px', fontWeight: 600 as const, color: 'var(--accent)', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
-  p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
-  li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
+  p: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
+  li: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
-  callout: (color: string) => ({ background: color === 'green' ? '#F8FAFC' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? 'var(--accent)' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
+  callout: (color: string) => ({ background: color === 'green' ? 'var(--bg-elevated)' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? 'var(--accent)' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'Source Code Pro', monospace" },
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#D9B543' ? '#fffbeb' : '#F8FAFC', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#D9B543' ? '#fffbeb' : 'var(--bg-elevated)', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
@@ -1403,7 +1403,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                 {q.capacityEstimation.calculations && (
                   <div style={{ margin: '8px 0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                     <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
-                      <thead><tr style={{ background: '#F8FAFC' }}>
+                      <thead><tr style={{ background: 'var(--bg-elevated)' }}>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #95B0CD' }}>Metric</th>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #95B0CD' }}>Result</th>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #95B0CD' }}>Calculation</th>
@@ -1427,7 +1427,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                 {q.architecture.components.map((c: any, j: number) => (
                   <div key={j} style={{ marginLeft: '20px', marginBottom: '8px', paddingLeft: '10px', borderLeft: '2px solid #d1fae5' }}>
                     <p style={{ ...S.p, margin: '0 0 2px' }}><strong>{c.name}</strong> <span style={{ color: 'var(--text-muted)' }}>({c.technology})</span></p>
-                    <p style={{ ...S.p, margin: 0, fontSize: '13px', color: '#4b5563' }}>{c.responsibility}{c.whyThisChoice ? ` — ${c.whyThisChoice}` : ''}</p>
+                    <p style={{ ...S.p, margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>{c.responsibility}{c.whyThisChoice ? ` — ${c.whyThisChoice}` : ''}</p>
                   </div>
                 ))}
               </div>
@@ -1479,7 +1479,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
           <div key={i} style={{ marginBottom: '24px' }}>
             <h3 style={S.h3}>
               {t.technology || t.name || t.topic || (typeof t === 'string' ? t : `Topic ${i + 1}`)}
-              {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
+              {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
             </h3>
             {(t.description || t.detail || t.overview) && <p style={S.p}>{t.description || t.detail || t.overview}</p>}
             {t.keyConceptsToReview && Array.isArray(t.keyConceptsToReview) && (
@@ -1514,13 +1514,13 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
 function renderObject(obj: any, depth = 0): any {
   if (obj === null || obj === undefined) return null;
   if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-    return <span style={{ fontSize: '14px', color: '#1f2937', lineHeight: 1.8 }}>{String(obj)}</span>;
+    return <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>{String(obj)}</span>;
   }
   if (Array.isArray(obj)) {
     return (
       <ul style={{ margin: '4px 0', paddingLeft: '24px' }}>
         {obj.map((item, i) => (
-          <li key={i} style={{ fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' }}>
+          <li key={i} style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '4px' }}>
             {typeof item === 'object' ? renderObject(item, depth + 1) : String(item)}
           </li>
         ))}
@@ -1533,9 +1533,9 @@ function renderObject(obj: any, depth = 0): any {
         const humanKey = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
         return (
           <div key={key} style={{ marginBottom: '8px' }}>
-            <strong style={{ fontSize: '13px', color: '#000', textTransform: 'capitalize' }}>{humanKey}: </strong>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)', textTransform: 'capitalize' }}>{humanKey}: </strong>
             {typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean'
-              ? <span style={{ fontSize: '14px', color: '#1f2937' }}>{String(val)}</span>
+              ? <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{String(val)}</span>
               : renderObject(val, depth + 1)
             }
           </div>

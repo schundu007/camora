@@ -1453,7 +1453,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                       }}
                       placeholder="Company name..."
                       className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-green-500"
-                      style={{ background: '#f9fafb', color: '#111827', border: '1px solid #e5e7eb' }}
+                      style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                     />
                     <div className="flex gap-2 mt-2">
                       <button
@@ -1470,7 +1470,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                           setNewCompanyName('');
                         }}
                         className="flex-1 py-1.5 text-xs font-medium rounded-lg"
-                        style={{ background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}
+                        style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
                       >
                         Cancel
                       </button>
@@ -1714,7 +1714,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               <p className="text-sm">Add a company to start</p>
-              <p className="text-xs mt-1" style={{ color: '#999999' }}>preparing for interviews</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>preparing for interviews</p>
             </div>
           </div>
         )}
@@ -1849,7 +1849,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               <button
                 onClick={() => setShowJDPopup(false)}
                 className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-[var(--bg-elevated)]"
-                style={{ color: '#9ca3af' }}
+                style={{ color: 'var(--text-muted)' }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

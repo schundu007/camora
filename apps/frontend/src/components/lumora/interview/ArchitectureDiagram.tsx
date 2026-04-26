@@ -256,7 +256,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             </button>
           </div>
           <pre className="text-[11px] leading-[1.5] overflow-auto p-2 rounded font-mono whitespace-pre"
-            style={{ background: '#F8FAFC', border: '1px solid var(--border)', color: '#334155', maxHeight: '600px' }}>
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', maxHeight: '600px' }}>
             {mermaidCode}
           </pre>
         </div>

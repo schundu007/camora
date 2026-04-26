@@ -40,7 +40,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 </span>
                 <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: 'var(--cam-primary)' }} />
               </div>
-              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#0F172A' }}>
+              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
                 {question}
               </span>
               <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: 'var(--cam-primary)' }}>generating...</span>
@@ -116,28 +116,28 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     <div className="flex-1 overflow-auto px-4 sm:px-6 md:px-8 py-4 md:py-6">
       {/* Greeting */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: '#0F172A' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
-        <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>Launch an AI assistant for your next interview.</p>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Launch an AI assistant for your next interview.</p>
       </div>
 
       {/* Divider */}
-      <div className="h-px mb-6" style={{ background: '#E2E8F0' }} />
+      <div className="h-px mb-6" style={{ background: 'var(--border)' }} />
 
       {/* Launch Now */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="1.5"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
-          <span className="text-sm font-bold" style={{ color: '#0F172A' }}>Launch Now</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Launch Now</span>
         </div>
-        <p className="text-xs mb-4" style={{ color: '#94A3B8' }}>Start fast with ready-to-use interview co-pilots.</p>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use interview co-pilots.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {COPILOTS.map(cp => (
             <button key={cp.name} onClick={cp.onClick} className="group text-left p-5 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(38,97,156,0.04)', border: '1px solid rgba(38,97,156,0.15)' }}>
               <div className="flex items-center gap-2.5 mb-2">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(38,97,156,0.1)' }}>{cp.icon}</div>
-                <span className="text-sm font-bold" style={{ color: '#0F172A' }}>{cp.name}</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{cp.name}</span>
               </div>
-              <p className="text-xs leading-relaxed mb-3" style={{ color: '#64748B' }}>{cp.desc}</p>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{cp.desc}</p>
               <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--cam-primary)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
                 Launch
@@ -151,11 +151,11 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-          <span className="text-sm font-bold" style={{ color: '#0F172A' }}>Try Asking</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Try Asking</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {QUICK_PROMPTS.map(p => (
-            <button key={p.text} onClick={() => handlePromptClick(p)} className="text-left px-4 py-3 rounded-xl text-[12px] leading-snug transition-all" style={{ border: '1px solid rgba(38,97,156,0.2)', color: '#475569' }}
+            <button key={p.text} onClick={() => handlePromptClick(p)} className="text-left px-4 py-3 rounded-xl text-[12px] leading-snug transition-all" style={{ border: '1px solid rgba(38,97,156,0.2)', color: 'var(--text-secondary)' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(38,97,156,0.5)'; e.currentTarget.style.background = 'rgba(38,97,156,0.04)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(38,97,156,0.2)'; e.currentTarget.style.background = 'transparent'; }}>
               {p.text}
@@ -165,10 +165,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       </div>
 
       {/* Keyboard hints — hidden on mobile (no physical keyboard) */}
-      <div className="hidden md:flex items-center gap-4 text-[10px]" style={{ color: '#94A3B8' }}>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘K</kbd> focus</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘M</kbd> mic</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘B</kbd> blank screen</span>
+      <div className="hidden md:flex items-center gap-4 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘K</kbd> focus</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘M</kbd> mic</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank screen</span>
       </div>
     </div>
   );

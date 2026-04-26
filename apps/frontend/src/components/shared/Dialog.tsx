@@ -158,7 +158,7 @@ function DialogOverlay({ pending, confirmBtnRef, onClose }: {
     >
       <div
         className="w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
-        style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', fontFamily: "'Inter', var(--font-sans)" }}
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', fontFamily: "'Inter', var(--font-sans)" }}
       >
         {/* Body */}
         <div className="p-5 flex gap-3">
@@ -182,20 +182,20 @@ function DialogOverlay({ pending, confirmBtnRef, onClose }: {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 id="camora-dialog-title" className="text-[15px] font-bold mb-1" style={{ color: '#0F172A' }}>{title}</h3>
-            <p className="text-[13px] whitespace-pre-wrap" style={{ color: '#334155', lineHeight: 1.5 }}>{opts.message}</p>
+            <h3 id="camora-dialog-title" className="text-[15px] font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+            <p className="text-[13px] whitespace-pre-wrap" style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>{opts.message}</p>
           </div>
         </div>
         {/* Actions */}
-        <div className="px-5 py-3 flex items-center justify-end gap-2" style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+        <div className="px-5 py-3 flex items-center justify-end gap-2" style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)' }}>
           {cancelLabel && (
             <button
               type="button"
               onClick={() => onClose(false)}
               className="px-4 py-1.5 text-[13px] font-semibold rounded-md transition-colors"
-              style={{ color: '#334155', background: '#FFFFFF', border: '1px solid #E2E8F0' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; }}
+              style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-surface)'; }}
             >
               {cancelLabel}
             </button>

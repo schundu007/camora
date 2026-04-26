@@ -884,7 +884,7 @@ export default function JobsPage() {
 
                 {/* Error message */}
                 {analyzeError && (
-                  <div style={{ fontSize: '13px', color: '#0B5CFF', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--danger)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px' }}>
                     {analyzeError}
                   </div>
                 )}

@@ -187,9 +187,9 @@ export default function PrepTab({ isOpen, onClose }) {
             onClick={() => setActiveTab('coding')}
             className="flex-1 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
             style={{
-              color: activeTab === 'coding' ? 'var(--accent)' : '#64748b',
+              color: activeTab === 'coding' ? 'var(--accent)' : 'var(--text-muted)',
               borderBottom: activeTab === 'coding' ? '2px solid var(--accent)' : '2px solid transparent',
-              background: activeTab === 'coding' ? '#F8FAFC' : 'transparent',
+              background: activeTab === 'coding' ? 'var(--bg-elevated)' : 'transparent',
             }}
           >
             Coding Platforms
@@ -198,9 +198,9 @@ export default function PrepTab({ isOpen, onClose }) {
             onClick={() => setActiveTab('prep')}
             className="flex-1 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
             style={{
-              color: activeTab === 'prep' ? 'var(--accent)' : '#64748b',
+              color: activeTab === 'prep' ? 'var(--accent)' : 'var(--text-muted)',
               borderBottom: activeTab === 'prep' ? '2px solid var(--accent)' : '2px solid transparent',
-              background: activeTab === 'prep' ? '#F8FAFC' : 'transparent',
+              background: activeTab === 'prep' ? 'var(--bg-elevated)' : 'transparent',
             }}
           >
             Interview Prep Sites
@@ -341,7 +341,7 @@ export default function PrepTab({ isOpen, onClose }) {
 
               {/* Fetch Content Section */}
               <div className="p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)]">
-                <h3 className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#475569' }}>
+                <h3 className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--text-secondary)' }}>
                   Fetch Problem by URL
                 </h3>
                 <div className="flex gap-2 mb-3">
@@ -367,8 +367,8 @@ export default function PrepTab({ isOpen, onClose }) {
                   <div
                     className="p-3 rounded-lg text-sm"
                     style={{
-                      background: fetchedContent.error ? '#fef2f2' : '#F8FAFC',
-                      border: fetchedContent.error ? '1px solid #fecaca' : '1px solid #95B0CD'
+                      background: fetchedContent.error ? '#fef2f2' : 'var(--bg-elevated)',
+                      border: fetchedContent.error ? '1px solid #fecaca' : '1px solid var(--border)'
                     }}
                   >
                     {fetchedContent.error ? (
@@ -390,7 +390,7 @@ export default function PrepTab({ isOpen, onClose }) {
 
         {/* Footer */}
         <div className="px-4 py-3 bg-[var(--bg-elevated)] border-t border-[var(--border)]">
-          <p className="text-xs text-center" style={{ color: '#64748b' }}>
+          <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
             {isElectron
               ? 'Connect to platforms to auto-fetch problems • Sessions persist across restarts'
               : 'Install the browser extension to sync your platform logins and auto-fetch problems'

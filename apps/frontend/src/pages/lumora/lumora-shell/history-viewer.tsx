@@ -46,12 +46,12 @@ export function HistoryAnswerViewer({
   const ts = entry.timestamp instanceof Date ? entry.timestamp : new Date(entry.timestamp);
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col" style={{ background: '#FFFFFF' }}>
-      <div className="flex items-center gap-3 h-12 px-5 shrink-0" style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+    <div className="absolute inset-0 z-30 flex flex-col" style={{ background: 'var(--bg-surface)' }}>
+      <div className="flex items-center gap-3 h-12 px-5 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         <button
           onClick={onClose}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors hover:bg-black/5"
-          style={{ color: '#0F172A', border: '1px solid #E2E8F0', background: '#FFFFFF' }}
+          style={{ color: 'var(--text-primary)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
           title="Back to home"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -63,17 +63,17 @@ export function HistoryAnswerViewer({
           <span className="text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--cam-primary-dk)' }}>
             Past Answer
           </span>
-          <span className="text-[13px] font-semibold truncate" style={{ color: '#0F172A' }}>{entry.question}</span>
+          <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.question}</span>
         </div>
-        <span className="ml-auto text-[10px] shrink-0" style={{ color: '#94A3B8' }}>
+        <span className="ml-auto text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>
           {!isNaN(ts.getTime()) ? ts.toLocaleString() : ''}
         </span>
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto px-5 py-5">
         {blocks.length === 0 ? (
-          <div className="max-w-2xl mx-auto text-center py-16" style={{ color: '#94A3B8' }}>
-            <p className="text-sm font-medium" style={{ color: '#0F172A' }}>No answer saved</p>
+          <div className="max-w-2xl mx-auto text-center py-16" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No answer saved</p>
             <p className="text-xs mt-1">This entry has no stored answer blocks. Re-ask the question to regenerate.</p>
           </div>
         ) : (
@@ -88,7 +88,7 @@ export function HistoryAnswerViewer({
 
 export function TabLoading({ label }: { label: string }) {
   return (
-    <div className="flex-1 flex items-center justify-center" style={{ background: '#FFFFFF' }}>
+    <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--bg-surface)' }}>
       <div className="flex items-center gap-3">
         <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         <span className="text-sm text-slate-400" style={{ fontFamily: 'var(--font-sans)' }}>Loading {label}...</span>

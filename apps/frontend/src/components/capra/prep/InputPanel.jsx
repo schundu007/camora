@@ -271,7 +271,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           <span style={{
             fontSize: '0.875rem',
             padding: '2px 8px',
-            background: '#F8FAFC',
+            background: 'var(--bg-elevated)',
             color: 'var(--accent)',
             borderRadius: '4px',
             fontWeight: 500
@@ -379,12 +379,12 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           <div
             className="rounded-lg transition-all"
             style={{
-              background: inputs.documentation?.length > 0 ? '#F8FAFC' : 'var(--bg-surface)',
+              background: inputs.documentation?.length > 0 ? 'var(--bg-elevated)' : 'var(--bg-surface)',
               border: dragOver === 'documentation'
                 ? '2px dashed var(--accent)'
                 : inputs.documentation?.length > 0
                   ? '1px solid var(--accent)'
-                  : '1px dashed #d1d5db',
+                  : '1px dashed var(--border)',
               padding: '12px',
             }}
             onDragOver={(e) => { e.preventDefault(); setDragOver('documentation'); }}
@@ -505,7 +505,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 <button
                   onClick={() => fileInputRefs.current[editingField]?.click()}
                   className="px-3 py-1.5 rounded text-sm"
-                  style={{ background: 'var(--bg-elevated)', color: '#666' }}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
                 >
                   Upload File
                 </button>
@@ -543,7 +543,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                       className="flex-1 rounded-lg px-3 py-2 text-sm"
                       style={{
                         border: '1px solid var(--border)',
-                        background: '#fafafa',
+                        background: 'var(--bg-elevated)',
                         color: 'var(--content-text)'
                       }}
                       disabled={fetchingUrl}
@@ -596,7 +596,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 style={{
                   height: editingField === 'jobDescription' ? '240px' : '300px',
                   border: '1px solid var(--border)',
-                  background: '#fafafa',
+                  background: 'var(--bg-elevated)',
                   color: 'var(--content-text)'
                 }}
               />

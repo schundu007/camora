@@ -8,7 +8,7 @@ const ROLES = ['user', 'developer', 'manager', 'admin'];
 
 const ROLE_COLORS = {
   user: { bg: '#eff6ff', color: 'var(--accent)', border: '#bfdbfe' },
-  developer: { bg: '#F8FAFC', color: 'var(--accent)', border: '#95B0CD' },
+  developer: { bg: 'var(--bg-elevated)', color: 'var(--accent)', border: '#95B0CD' },
   manager: { bg: '#fef9c3', color: '#ca8a04', border: '#fde047' },
   admin: { bg: '#fef2f2', color: '#ef4444', border: '#fecaca' },
 };
@@ -159,7 +159,7 @@ export default function AdminPanel({ token, onClose }) {
             className="px-4 py-2 text-sm font-medium rounded-t transition-colors"
             style={{
               background: activeTab === 'pending' ? 'transparent' : 'transparent',
-              color: activeTab === 'pending' ? '#333333' : '#999999',
+              color: activeTab === 'pending' ? 'var(--text-primary)' : 'var(--text-muted)',
               border: activeTab === 'pending' ? '1px dashed var(--accent)' : '1px solid transparent',
               borderBottom: 'none',
               marginBottom: '-1px',
@@ -177,7 +177,7 @@ export default function AdminPanel({ token, onClose }) {
             className="px-4 py-2 text-sm font-medium rounded-t transition-colors"
             style={{
               background: activeTab === 'all' ? 'transparent' : 'transparent',
-              color: activeTab === 'all' ? '#333333' : '#999999',
+              color: activeTab === 'all' ? 'var(--text-primary)' : 'var(--text-muted)',
               border: activeTab === 'all' ? '1px dashed var(--accent)' : '1px solid transparent',
               borderBottom: 'none',
               marginBottom: '-1px',
@@ -194,7 +194,7 @@ export default function AdminPanel({ token, onClose }) {
           </div>
         )}
         {success && (
-          <div className="mx-6 mt-4 p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #95B0CD' }}>
+          <div className="mx-6 mt-4 p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             <p className="text-sm" style={{ color: 'var(--accent)' }}>{success}</p>
           </div>
         )}
@@ -203,7 +203,7 @@ export default function AdminPanel({ token, onClose }) {
         <div className="p-6 overflow-y-auto max-h-[60vh]" style={{ background: 'var(--bg-elevated)' }}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid #e5e5e5', borderTopColor: 'var(--accent)' }} />
+              <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid var(--border)', borderTopColor: 'var(--accent)' }} />
             </div>
           ) : activeTab === 'pending' ? (
             // Pending Users
@@ -297,9 +297,9 @@ export default function AdminPanel({ token, onClose }) {
                           disabled={user.isEnvUser}
                           className="px-3 py-1 text-xs font-medium rounded-full border transition-all"
                           style={{
-                            background: hasRole ? roleColor.bg : '#f5f5f5',
-                            color: hasRole ? roleColor.color : '#999999',
-                            borderColor: hasRole ? roleColor.border : '#e5e5e5',
+                            background: hasRole ? roleColor.bg : 'var(--bg-elevated)',
+                            color: hasRole ? roleColor.color : 'var(--text-muted)',
+                            borderColor: hasRole ? roleColor.border : 'var(--border)',
                             cursor: user.isEnvUser ? 'not-allowed' : 'pointer',
                             opacity: user.isEnvUser ? 0.6 : 1,
                           }}

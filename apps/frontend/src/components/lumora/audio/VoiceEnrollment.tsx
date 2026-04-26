@@ -251,7 +251,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
             <div className="h-full rounded-full transition-all" style={{ width: `${recordingProgress}%`, background: '#FF0000' }} />
           </div>
         )}
-        {error && <span className="text-xs max-w-full truncate" style={{ color: '#FF0000' }} title={error}>{error}</span>}
+        {error && <span className="text-xs max-w-full truncate" style={{ color: 'var(--danger)' }} title={error}>{error}</span>}
       </div>
     );
   }
@@ -287,9 +287,9 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         style={isLight ? {
           fontSize: '12px',
           padding: '8px 16px',
-          color: '#FF0000',
+          color: 'var(--danger)',
           background: 'transparent',
-          border: '1.5px solid #FF0000',
+          border: '1.5px solid var(--danger)',
         } : {
           fontSize: '12px',
           padding: '4px 6px',

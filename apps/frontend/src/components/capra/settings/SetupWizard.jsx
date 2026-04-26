@@ -108,7 +108,7 @@ export default function SetupWizard({ onComplete }) {
           {step === 2 && (
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: '#F8FAFC' }}>
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: 'var(--bg-elevated)' }}>
                   <svg className="w-8 h-8" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>

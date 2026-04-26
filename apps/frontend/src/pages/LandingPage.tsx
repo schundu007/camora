@@ -135,7 +135,7 @@ export default function LandingPage() {
   useEffect(() => { document.title = 'Camora — Apply, Prepare, Practice & Attend'; return () => { document.title = 'Camora'; }; }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: F.body, color: '#0F172A' }}>
+    <div className="min-h-screen flex flex-col" style={{ fontFamily: F.body, color: 'var(--text-primary)', background: 'var(--bg-surface)' }}>
       <SEO path="/" />
 
       <style>{`@keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
@@ -146,7 +146,7 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-6 text-center" style={{ background: 'linear-gradient(180deg, var(--cam-mist) 0%, #FFFFFF 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
               THE CAREER PLATFORM
             </span>
           </motion.div>
@@ -161,7 +161,7 @@ export default function LandingPage() {
             </span>
           </motion.h1>
 
-          <motion.p className="mt-6 text-lg md:text-xl max-w-2xl mx-auto" style={{ color: '#475569' }}
+          <motion.p className="mt-6 text-lg md:text-xl max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
             Job discovery, interview prep, mock practice, and live AI assistance — all in one place.
           </motion.p>
@@ -179,9 +179,9 @@ export default function LandingPage() {
           </motion.div>
 
           {visitorCount !== null && visitorCount > 0 && (
-            <motion.p className="mt-8 text-sm" style={{ color: '#94A3B8' }}
+            <motion.p className="mt-8 text-sm" style={{ color: 'var(--text-muted)' }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-              Trusted by <strong style={{ color: '#0F172A' }}>{visitorCount.toLocaleString()}+</strong> engineers worldwide
+              Trusted by <strong style={{ color: 'var(--text-primary)' }}>{visitorCount.toLocaleString()}+</strong> engineers worldwide
             </motion.p>
           )}
         </div>
@@ -189,7 +189,7 @@ export default function LandingPage() {
 
       {/* ═══════════ 2. COMPANY LOGOS — Scrolling ═══════════ */}
       <section className="py-10 overflow-hidden bg-white">
-        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: '#94A3B8' }}>Trusted by engineers at</p>
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: 'var(--text-muted)' }}>Trusted by engineers at</p>
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, #FFFFFF, transparent)' }} />
           <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to left, #FFFFFF, transparent)' }} />
@@ -219,7 +219,7 @@ export default function LandingPage() {
             {STATS.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.06}>
                 <div className="text-center">
-                  <p className="text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: F.display, color: '#0F172A' }}>{s.value}</p>
+                  <p className="text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>{s.value}</p>
                   <p className="text-xs font-bold mt-3 uppercase tracking-[0.15em] text-camora-primary" style={{ fontFamily: F.mono }}>{s.label}</p>
                 </div>
               </Reveal>
@@ -232,7 +232,7 @@ export default function LandingPage() {
       <section className="px-6 py-28 bg-white">
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-16">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>THE PROCESS</span>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>THE PROCESS</span>
             <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
               YOUR PATH TO <span style={{ color: 'var(--cam-primary)' }}>THE OFFER.</span>
             </h2>
@@ -241,15 +241,15 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {APPA.map((step, i) => (
               <Reveal key={step.key} delay={i * 0.06}>
-                <Link to={step.href} className="block rounded-lg h-full transition-all bg-white border border-[#E2E8F0] hover:border-camora-primary group overflow-hidden">
-                  <div className="w-full h-40 overflow-hidden relative" style={{ background: '#F1F5F9' }}>
+                <Link to={step.href} className="block rounded-lg h-full transition-all bg-white border border-[var(--border)] hover:border-camora-primary group overflow-hidden">
+                  <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <step.Anim />
                   </div>
                   <div className="p-8">
                     <div className="mb-5">{step.icon}</div>
                     <span className="text-xs font-bold tracking-[0.15em] uppercase text-camora-primary" style={{ fontFamily: F.mono }}>{step.label}</span>
                     <h3 className="mt-2 text-lg font-bold tracking-tight" style={{ fontFamily: F.display }}>{step.headline}</h3>
-                    <p className="mt-3 text-sm leading-relaxed" style={{ color: '#64748B' }}>{step.desc}</p>
+                    <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
                     <span className="inline-flex items-center gap-1 mt-5 text-xs font-bold uppercase tracking-wider group-hover:gap-2 transition-all text-camora-primary">
                       Explore &rsaquo;
                     </span>
@@ -268,11 +268,11 @@ export default function LandingPage() {
             {/* Left: text */}
             <div className="lg:w-[38%]">
               <Reveal>
-                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>CAMORA · AI COPILOT</span>
+                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>CAMORA · AI COPILOT</span>
                 <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
                   ONE TOOL.<br /><span style={{ color: 'var(--cam-primary)' }}>EVERY INTERVIEW.</span>
                 </h2>
-                <p className="mt-6 text-base leading-relaxed" style={{ color: '#475569' }}>
+                <p className="mt-6 text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems — requirements through API. Company-specific prep for the full loop: HR, Hiring Manager, Coding, Design, Behavioral. Mock-interview scoring across every dimension.
                 </p>
                 <div className="mt-8 flex items-center gap-4">
@@ -300,7 +300,7 @@ export default function LandingPage() {
       <section className="px-6 py-28 bg-white">
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-16">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>ONLY ON CAMORA</span>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>ONLY ON CAMORA</span>
             <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
               FEATURES THAT <span style={{ color: 'var(--cam-primary)' }}>SET US APART.</span>
             </h2>
@@ -309,15 +309,15 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.06}>
-                <div className="rounded-lg h-full overflow-hidden flex flex-col bg-white border border-[#E2E8F0]">
-                  <div className="w-full h-40 overflow-hidden relative" style={{ background: '#F1F5F9' }}>
+                <div className="rounded-lg h-full overflow-hidden flex flex-col bg-white border border-[var(--border)]">
+                  <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <f.Anim />
                   </div>
                   <div className="p-8 flex-1">
                     <div className="mb-5">{f.icon}</div>
                     <span className="text-xs font-bold tracking-[0.15em] uppercase text-camora-primary" style={{ fontFamily: F.mono }}>{f.label}</span>
                     <h3 className="mt-2 text-base font-bold" style={{ fontFamily: F.display }}>{f.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed" style={{ color: '#64748B' }}>{f.desc}</p>
+                    <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
                   </div>
                 </div>
               </Reveal>
@@ -338,7 +338,7 @@ export default function LandingPage() {
 
           {/* Skills covered — what you'll master */}
           <Reveal className="mt-8 text-center">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
               SKILLS YOU'LL MASTER
             </span>
             <div className="mt-4 flex items-center justify-center gap-2 flex-wrap max-w-4xl mx-auto">
@@ -348,7 +348,7 @@ export default function LandingPage() {
                   className="text-xs font-bold px-3 py-1.5 rounded-full transition-all hover:scale-105 bg-white border border-camora-blue-100"
                   style={{
                     fontFamily: F.mono,
-                    color: '#0F172A',
+                    color: 'var(--text-primary)',
                     letterSpacing: '0.04em',
                   }}
                 >
@@ -374,11 +374,11 @@ export default function LandingPage() {
             {/* Right: text */}
             <div className="lg:w-[45%]">
               <Reveal delay={0.12}>
-                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: '#64748B', fontFamily: F.mono }}>SMART PREP</span>
+                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>SMART PREP</span>
                 <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
                   PASTE A JOB URL.<br /><span style={{ color: 'var(--cam-primary)' }}>GET A PREP PLAN.</span>
                 </h2>
-                <p className="mt-6 text-base leading-relaxed" style={{ color: '#475569' }}>
+                <p className="mt-6 text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   AI analyzes the job description, identifies required skills, and generates a tailored preparation plan with coding topics, system design patterns, and behavioral questions.
                 </p>
                 <div className="mt-8">

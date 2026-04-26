@@ -448,7 +448,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             </p>
                           )}
                           {section?.duration && (
-                            <span className="inline-block mt-1 text-xs px-1.5 py-0.5 rounded" style={{ background: '#f1f5f9', color: '#64748b' }}>{section.duration}</span>
+                            <span className="inline-block mt-1 text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{section.duration}</span>
                           )}
                         </div>
                       </div>
@@ -537,7 +537,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                           <div className="mb-3">
                             <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: colors.textLight }}>Examples</p>
                             {safeArray(q.examples).filter(ex => ex && typeof ex === 'object').map((ex, j) => (
-                              <div key={j} className="text-xs font-mono p-2 rounded mb-1" style={{ background: '#f1f5f9' }}>
+                              <div key={j} className="text-xs font-mono p-2 rounded mb-1" style={{ background: 'var(--bg-elevated)' }}>
                                 <span style={{ color: '#0369a1' }}>Input:</span> {ex?.input || ''}<br/>
                                 <span style={{ color: '#3C7AAB' }}>Output:</span> {ex?.output || ''}
                                 {ex?.explanation && <><br/><span style={{ color: colors.textMuted }}>→ {ex.explanation}</span></>}
@@ -642,7 +642,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Capacity Estimation */}
                         {q.capacityEstimation && typeof q.capacityEstimation === 'object' && (
-                          <div className="mt-3 p-3 rounded" style={{ background: '#F8FAFC' }}>
+                          <div className="mt-3 p-3 rounded" style={{ background: 'var(--bg-elevated)' }}>
                             <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Capacity Estimation</p>
                             {safeArray(q.capacityEstimation.calculations).filter(calc => calc && typeof calc === 'object').map((calc, j) => (
                               <p key={j} className="text-xs font-mono">{calc?.metric || ''}: {calc?.result || ''}</p>
@@ -664,7 +664,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                   onError={() => !q.diagramBase64 && handleDiagramError(i)}
                                 />
                                 {q.diagramBase64 && (
-                                  <p className="text-xs p-2 flex items-center gap-1" style={{ background: '#F8FAFC', color: 'var(--accent)' }}>
+                                  <p className="text-xs p-2 flex items-center gap-1" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)' }}>
                                     <span>✓</span> Cached locally
                                   </p>
                                 )}
@@ -1033,7 +1033,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     ) : (
                       <div className="space-y-2">
                         {safeArray(displayContent.practiceRecommendations).filter(rec => rec && typeof rec === 'object').map((rec, i) => (
-                          <div key={i} className="p-2 rounded" style={{ background: '#F8FAFC' }}>
+                          <div key={i} className="p-2 rounded" style={{ background: 'var(--bg-elevated)' }}>
                             <span className="font-semibold" style={{ color: '#3C7AAB' }}>{rec?.platform || ''}</span>
                             {safeArray(rec?.problems).length > 0 && (
                               <p className="text-xs mt-1">{safeArray(rec.problems).join(', ')}</p>
@@ -1048,7 +1048,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                 {/* Interview Tips */}
                 {safeArray(displayContent.interviewTips).length > 0 && (
-                  <div className="p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #95B0CD' }}>
+                  <div className="p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                     <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Interview Tips</p>
                     {safeArray(displayContent.interviewTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
@@ -1058,7 +1058,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                 {/* General Tips (system design) */}
                 {safeArray(displayContent.generalTips).length > 0 && (
-                  <div className="p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #95B0CD' }}>
+                  <div className="p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                     <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Tips</p>
                     {safeArray(displayContent.generalTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
@@ -1168,14 +1168,14 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             }
                             if (item.type === 'sd-question') {
                               return (
-                                <div key={i} className="p-3 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid var(--accent)' }}>
+                                <div key={i} className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--accent)' }}>
                                   <span className="font-bold text-base" style={{ color: '#166534' }}>{item.title}</span>
                                 </div>
                               );
                             }
                             if (item.type === 'diagram') {
                               return (
-                                <div key={i} className="p-3 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid var(--text-muted)' }}>
+                                <div key={i} className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--text-muted)' }}>
                                   <p className="text-sm" style={{ color: '#A88817' }}>{item.description}</p>
                                 </div>
                               );

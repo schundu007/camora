@@ -29,8 +29,8 @@ const VARIANTS: Record<
   note: {
     label: 'Note',
     bg: 'rgba(15,23,42,0.04)',
-    border: '#0F172A',
-    iconColor: '#0F172A',
+    border: 'var(--text-primary)',
+    iconColor: 'var(--text-primary)',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />

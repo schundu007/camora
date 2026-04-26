@@ -3,7 +3,7 @@ import SiteNav from '../components/shared/SiteNav';
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen" style={{ background: '#FFFFFF', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
       <SiteNav variant="light" />
 
       {/* Content */}
