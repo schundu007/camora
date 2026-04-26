@@ -719,16 +719,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(38,97,156,0.05), 0 4px 16px rgba(38,97,156,0.06)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-secondary)' }}>
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="h-4 w-px" style={{ background: 'var(--border)' }} />
-          <span className="font-extrabold text-xs md:text-sm" style={{ color: 'var(--text-primary)', fontFamily: "'Source Sans 3', sans-serif" }}>Coding</span>
+          <div className="h-4 w-px" style={{ background: 'rgba(255,255,255,0.25)' }} />
+          <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Coding</span>
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
