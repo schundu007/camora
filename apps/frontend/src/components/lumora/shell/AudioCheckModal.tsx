@@ -199,7 +199,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   const levelPct = Math.round(level * 100);
-  const levelColor = level < 0.15 ? '#94A3B8' : level < 0.6 ? '#10B981' : level < 0.85 ? '#F59E0B' : '#EF4444';
+  const levelColor = level < 0.15 ? 'var(--text-dimmed)' : level < 0.6 ? '#10B981' : level < 0.85 ? '#F59E0B' : 'var(--danger)';
 
   return (
     <div
@@ -214,7 +214,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#CFFAFE', color: 'var(--cam-primary-dk)' }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)' }}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -241,11 +241,11 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
         <div className="flex-1 overflow-auto p-5 space-y-5">
           {/* Permission status */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[12px]" style={{
-            background: permission === 'granted' ? '#F0FDF4' : permission === 'denied' ? '#FEF2F2' : '#F8FAFC',
-            border: `1px solid ${permission === 'granted' ? '#BBF7D0' : permission === 'denied' ? '#FCA5A5' : '#E2E8F0'}`,
-            color: permission === 'granted' ? '#166534' : permission === 'denied' ? '#991B1B' : '#475569',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            color: permission === 'granted' ? 'var(--success)' : permission === 'denied' ? 'var(--danger)' : 'var(--text-muted)',
           }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: permission === 'granted' ? '#16A34A' : permission === 'denied' ? '#DC2626' : '#94A3B8' }} />
+            <span className="w-2 h-2 rounded-full" style={{ background: permission === 'granted' ? 'var(--success)' : permission === 'denied' ? 'var(--danger)' : 'var(--text-dimmed)' }} />
             {permission === 'granted' ? 'Microphone permission granted' :
              permission === 'denied' ? 'Microphone blocked — update your browser site settings and reload' :
              permission === 'prompt' ? 'Waiting for microphone permission' : 'Checking microphone…'}
@@ -291,12 +291,12 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                   key={label}
                   onClick={() => set(!val)}
                   className="text-left px-3 py-2 rounded-md transition-colors"
-                  style={{ background: val ? '#F0FDFF' : '#FFFFFF', border: `1px solid ${val ? '#95B0CD' : '#E2E8F0'}` }}
+                  style={{ background: val ? 'var(--accent-subtle)' : 'var(--bg-surface)', border: `1px solid ${val ? 'var(--cam-primary-lt)' : 'var(--border)'}` }}
                   title={hint}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</span>
-                    <span className="w-8 h-4 rounded-full relative transition-colors" style={{ background: val ? 'var(--cam-primary)' : '#CBD5E1' }}>
+                    <span className="w-8 h-4 rounded-full relative transition-colors" style={{ background: val ? 'var(--cam-primary)' : 'var(--text-dimmed)' }}>
                       <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-[left]" style={{ left: val ? 18 : 2 }} />
                     </span>
                   </div>
@@ -351,13 +351,13 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                 disabled={permission === 'denied'}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors disabled:opacity-40"
                 style={recState === 'recording'
-                  ? { color: '#FFFFFF', background: '#DC2626', border: '1px solid #B91C1C' }
+                  ? { color: '#FFFFFF', background: 'var(--danger)', border: '1px solid var(--danger)' }
                   : { color: 'var(--text-primary)', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
               >
                 {recState === 'recording' ? (
                   <><span className="w-2 h-2 rounded-full bg-white animate-pulse" />Stop recording</>
                 ) : (
-                  <><span className="w-2 h-2 rounded-full" style={{ background: '#DC2626' }} />{recState === 'ready' ? 'Record again' : 'Start recording'}</>
+                  <><span className="w-2 h-2 rounded-full" style={{ background: 'var(--danger)' }} />{recState === 'ready' ? 'Record again' : 'Start recording'}</>
                 )}
               </button>
               {recUrl && (
@@ -378,7 +378,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
           </section>
 
           {toast && (
-            <div className="px-3 py-2 rounded-md text-[12px]" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }}>
+            <div className="px-3 py-2 rounded-md text-[12px]" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>
               {toast}
               <button onClick={() => setToast(null)} className="ml-2 font-bold hover:underline">Dismiss</button>
             </div>

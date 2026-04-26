@@ -33,9 +33,9 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #F8FAFC, #EFF6FF)', borderBottom: '1px solid var(--border)' }}>
+      <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#E0F2FE', color: '#0284C7' }}>{lines.length} lines</span>
+        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{lines.length} lines</span>
       </div>
       <div className="px-4 py-3 max-h-[500px] overflow-auto text-[13px] leading-[1.8]" style={{ color: 'var(--text-secondary)' }}>
         {sections.map((section, si) => (
@@ -161,11 +161,11 @@ export function LumoraProfilePage() {
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Plan</span>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(38,97,156,0.1)', color: plan === 'free' ? '#64748B' : 'var(--cam-primary)' }}>{planLabel}</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? 'var(--bg-elevated)' : 'var(--accent-subtle)', color: plan === 'free' ? 'var(--text-muted)' : 'var(--cam-primary)' }}>{planLabel}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Status</span>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#F0FDF4', color: '#16A34A' }}>{subscription?.status || 'Active'}</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--success)' }}>{subscription?.status || 'Active'}</span>
             </div>
           </div>
         </div>
@@ -205,21 +205,21 @@ export function LumoraProfilePage() {
           <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <Link to="/lumora/pricing" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
               <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Manage Subscription</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
             <Link to="/lumora/credits" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
               <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Credits & Usage</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
             <Link to="/lumora/assistants" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
               <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Interview Assistants</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
           </div>
         </div>
 
         {/* Sign out */}
-        <button onClick={logout} className="w-full text-center py-3 text-xs font-semibold rounded-xl transition-colors hover:bg-red-50" style={{ color: '#EF4444', border: '1px solid #FEE2E2' }}>
+        <button onClick={logout} className="w-full text-center py-3 text-xs font-semibold rounded-xl transition-colors hover:bg-[var(--accent-subtle)]" style={{ color: 'var(--danger)', border: '1px solid var(--border)' }}>
           Sign Out
         </button>
       </div>
@@ -335,13 +335,13 @@ export function AssistantsPage() {
           <div className="mb-3">
             <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-muted)' }}>AI Model</label>
             <div className="flex gap-2">{AI_MODELS.map(m => (
-              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid #E2E8F0', color: form.model === m.value ? m.color : '#64748B', background: form.model === m.value ? m.color + '08' : '#fff' }}>{m.label}</button>
+              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid var(--border)', color: form.model === m.value ? m.color : 'var(--text-muted)', background: form.model === m.value ? m.color + '14' : 'var(--bg-surface)' }}>{m.label}</button>
             ))}</div>
           </div>
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your Resume</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -359,7 +359,7 @@ export function AssistantsPage() {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Job Description</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -381,8 +381,8 @@ export function AssistantsPage() {
         </div>
       )}
       {assistants.length === 0 && !showCreate ? (
-        <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed #E2E8F0' }}>
-          <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
+        <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed var(--border)' }}>
+          <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth="1"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
           <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No assistants yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Add your resume + job description for personalized AI answers.</p>
           <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>Create Your First Assistant</button>
@@ -394,7 +394,7 @@ export function AssistantsPage() {
             <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(38,97,156,0.1)' }}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-subtle)' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                   </div>
                   <div>
@@ -414,7 +414,7 @@ export function AssistantsPage() {
               </div>}
 
               {a.resume && (
-                <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(38,97,156,0.04)', border: '1px solid rgba(38,97,156,0.15)' }}>
+                <div className="mt-4 p-3 rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -428,7 +428,7 @@ export function AssistantsPage() {
                       </span>
                     )}
                     {a.storyParseStatus === 'failed' && (
-                      <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: '#B91C1C' }}>
+                      <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: 'var(--danger)' }}>
                         Parse failed — retry
                       </button>
                     )}
