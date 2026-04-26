@@ -9,5 +9,8014 @@
 import type { Layer } from '../../../../components/capra/docs/RoughLayeredDiagram.types';
 
 export const GENERATED_LAYERED_DESIGN: Record<string, Layer[]> = {
-
+  '2d-vector': [
+    {
+      "name": "API Layer",
+      "purpose": "Expose vector operations through clean mathematical interface",
+      "components": [
+        "Arithmetic operators",
+        "Product operations",
+        "Transformation methods",
+        "Query methods"
+      ]
+    },
+    {
+      "name": "Core Vector Layer",
+      "purpose": "Store immutable x,y coordinates with value semantics",
+      "components": [
+        "x,y properties",
+        "Magnitude calculation",
+        "Normalization",
+        "Equality comparison"
+      ]
+    },
+    {
+      "name": "Factory & Utility Layer",
+      "purpose": "Create vectors and handle special cases",
+      "components": [
+        "Static factories",
+        "Angle conversion",
+        "Epsilon tolerance",
+        "Distance helpers"
+      ]
+    }
+  ],
+  'abstract-factory': [
+    {
+      "name": "Client Layer",
+      "purpose": "Uses factory interface to request product families",
+      "components": [
+        "Application Code",
+        "Client Request Handler"
+      ]
+    },
+    {
+      "name": "Abstract Factory Layer",
+      "purpose": "Defines interface for creating related product families",
+      "components": [
+        "Abstract Factory Interface",
+        "Abstract Product Interfaces"
+      ]
+    },
+    {
+      "name": "Concrete Factory Layer",
+      "purpose": "Implements factory methods for specific product families",
+      "components": [
+        "ConcreteFactoryA",
+        "ConcreteFactoryB",
+        "ConcreteFactoryN"
+      ]
+    },
+    {
+      "name": "Concrete Product Layer",
+      "purpose": "Implements actual product objects within families",
+      "components": [
+        "ProductA1",
+        "ProductA2",
+        "ProductB1",
+        "ProductB2"
+      ]
+    }
+  ],
+  'abstraction': [
+    {
+      "name": "Public Interface Layer",
+      "purpose": "Define contracts exposing only essential operations",
+      "components": [
+        "Method signatures",
+        "Abstract classes",
+        "Interface definitions"
+      ]
+    },
+    {
+      "name": "Implementation Layer",
+      "purpose": "Encapsulate complexity and internal logic details",
+      "components": [
+        "Business logic",
+        "Data structures",
+        "Helper methods"
+      ]
+    },
+    {
+      "name": "Hidden Complexity Layer",
+      "purpose": "Manage low-level mechanics invisible to users",
+      "components": [
+        "Resource management",
+        "Error handling",
+        "Optimization logic"
+      ]
+    }
+  ],
+  'access-control-tree': [
+    {
+      "name": "API Layer",
+      "purpose": "Expose permission checks and tree operations to clients",
+      "components": [
+        "checkPermission",
+        "setPermission",
+        "listAccessible",
+        "createPath"
+      ]
+    },
+    {
+      "name": "Permission Resolution Layer",
+      "purpose": "Traverse tree and resolve effective permissions hierarchically",
+      "components": [
+        "resolvePermission",
+        "inheritFromParent",
+        "checkExplicitOverride"
+      ]
+    },
+    {
+      "name": "Tree Structure Layer",
+      "purpose": "Manage hierarchical nodes with parent-child relationships",
+      "components": [
+        "Node",
+        "addChild",
+        "getParent",
+        "findNode"
+      ]
+    },
+    {
+      "name": "Permission Storage Layer",
+      "purpose": "Store and retrieve user permissions per node",
+      "components": [
+        "PermissionMap",
+        "setUserPerm",
+        "getExplicitPerm",
+        "clearPerm"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist tree structure and permissions to storage",
+      "components": [
+        "TreeRepository",
+        "PermissionRepository",
+        "NodeCache"
+      ]
+    }
+  ],
+  'access-management': [
+    {
+      "name": "Client Layer",
+      "purpose": "Exposes access control operations to application",
+      "components": [
+        "AccessManager API",
+        "User Interface",
+        "Permission Checker"
+      ]
+    },
+    {
+      "name": "Access Control Layer",
+      "purpose": "Manages roles, permissions, and user assignments",
+      "components": [
+        "User Service",
+        "Role Service",
+        "Permission Service",
+        "Assignment Service"
+      ]
+    },
+    {
+      "name": "Resolution Layer",
+      "purpose": "Evaluates permission inheritance and resolves access",
+      "components": [
+        "Role Hierarchy Resolver",
+        "Permission Aggregator",
+        "Access Evaluator"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Stores users, roles, permissions, and relationships",
+      "components": [
+        "User Store",
+        "Role Store",
+        "Permission Store",
+        "Assignment Store"
+      ]
+    }
+  ],
+  'account-balance-tracker': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accept user requests for account operations",
+      "components": [
+        "Account Service API",
+        "Transaction Requests",
+        "Query Interface"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Validate operations and enforce financial invariants",
+      "components": [
+        "Deposit Handler",
+        "Withdrawal Handler",
+        "Transfer Coordinator",
+        "Balance Validator"
+      ]
+    },
+    {
+      "name": "Concurrency Layer",
+      "purpose": "Ensure thread-safe access with deadlock prevention",
+      "components": [
+        "Lock Manager",
+        "Lock Ordering",
+        "Atomic Transaction",
+        "Synchronization Guard"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store accounts, balances, and immutable transaction records",
+      "components": [
+        "Account Registry",
+        "Balance Store",
+        "Transaction Ledger",
+        "History Log"
+      ]
+    }
+  ],
+  'active-active-vs-active-passive': [
+    {
+      "name": "Client Layer",
+      "purpose": "Route requests to active nodes based on topology",
+      "components": [
+        "Load Balancer",
+        "DNS Router",
+        "Client SDK",
+        "Health Checker"
+      ]
+    },
+    {
+      "name": "Active Node Layer",
+      "purpose": "Handle reads and writes with role-aware processing",
+      "components": [
+        "Primary/Active Node",
+        "Standby/Secondary Node",
+        "Write Handler",
+        "Read Handler"
+      ]
+    },
+    {
+      "name": "Replication Layer",
+      "purpose": "Synchronize state between nodes via topology strategy",
+      "components": [
+        "Unidirectional Replication",
+        "Bidirectional Replication",
+        "Conflict Resolver",
+        "Write-Ahead Log"
+      ]
+    },
+    {
+      "name": "Conflict Resolution Layer",
+      "purpose": "Resolve simultaneous writes in active-active topologies",
+      "components": [
+        "Last-Write-Wins",
+        "CRDT Engine",
+        "Vector Clocks",
+        "Application Merge Logic"
+      ]
+    },
+    {
+      "name": "Data Storage Layer",
+      "purpose": "Persist replicated state across all nodes",
+      "components": [
+        "Local Database",
+        "Replication Log",
+        "Snapshot Store",
+        "Metadata Store"
+      ]
+    }
+  ],
+  'active-users': [
+    {
+      "name": "API Layer",
+      "purpose": "Expose activity recording and querying endpoints",
+      "components": [
+        "Record Activity Endpoint",
+        "Query Active Count",
+        "Get User IDs",
+        "Activity Histogram"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Implement sliding window logic and counting strategies",
+      "components": [
+        "Sliding Window Manager",
+        "Exact Counter (Set-Based)",
+        "Approximate Counter (HyperLogLog)",
+        "Data Cleanup Service"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Store time-bucketed activity data with efficient retrieval",
+      "components": [
+        "Time-Bucketed Sets",
+        "Bucket Index",
+        "Metadata Store",
+        "Cleanup Scheduler"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Handle distributed caching and persistence",
+      "components": [
+        "In-Memory Cache (Redis)",
+        "Persistent Database",
+        "Message Queue"
+      ]
+    }
+  ],
+  'activity-diagram': [
+    {
+      "name": "Diagram Elements Layer",
+      "purpose": "Define visual symbols and notation components",
+      "components": [
+        "Activities",
+        "Decision Nodes",
+        "Fork/Join Bars",
+        "Initial/Final Nodes",
+        "Transitions"
+      ]
+    },
+    {
+      "name": "Flow Control Layer",
+      "purpose": "Express sequencing, branching, and parallel execution",
+      "components": [
+        "Sequential Flow",
+        "Conditional Branching",
+        "Parallel Paths",
+        "Merge Points",
+        "Loop Structures"
+      ]
+    },
+    {
+      "name": "Process Modeling Layer",
+      "purpose": "Represent real-world workflows and business processes",
+      "components": [
+        "Business Processes",
+        "Algorithm Workflows",
+        "System Operations",
+        "User Interactions",
+        "Integration Flows"
+      ]
+    },
+    {
+      "name": "Synchronization Layer",
+      "purpose": "Manage concurrent activities and execution coordination",
+      "components": [
+        "Fork Points",
+        "Join Synchronization",
+        "Guard Conditions",
+        "Activity Partitions",
+        "Concurrency Control"
+      ]
+    }
+  ],
+  'actor-component': [
+    {
+      "name": "Actor Interface Layer",
+      "purpose": "Define actor behavior and message handling contracts",
+      "components": [
+        "Actor interface",
+        "Message trait",
+        "ActorRef",
+        "ActorContext"
+      ]
+    },
+    {
+      "name": "Mailbox & Dispatch Layer",
+      "purpose": "Queue messages and dispatch them sequentially to actors",
+      "components": [
+        "Mailbox queue",
+        "Message dispatcher",
+        "Event loop",
+        "Thread pool"
+      ]
+    },
+    {
+      "name": "Actor Lifecycle Layer",
+      "purpose": "Manage actor creation, supervision, and termination",
+      "components": [
+        "ActorSystem",
+        "Supervisor strategy",
+        "Restart handler",
+        "Dead letter queue"
+      ]
+    },
+    {
+      "name": "Concurrency & Isolation Layer",
+      "purpose": "Ensure thread-safe message passing without shared mutable state",
+      "components": [
+        "Actor state isolation",
+        "Non-blocking send",
+        "Location transparency",
+        "Remote messaging"
+      ]
+    }
+  ],
+  'adapter': [
+    {
+      "name": "Client Layer",
+      "purpose": "Requests adapted interface without knowing adaptee exists",
+      "components": [
+        "Client Code",
+        "Expected Interface"
+      ]
+    },
+    {
+      "name": "Adapter Layer",
+      "purpose": "Translates calls between incompatible interfaces bidirectionally",
+      "components": [
+        "Object Adapter",
+        "Class Adapter",
+        "Interface Translation",
+        "Request Delegation"
+      ]
+    },
+    {
+      "name": "Adaptee Layer",
+      "purpose": "Provides existing incompatible interface implementation",
+      "components": [
+        "Legacy Service",
+        "Existing Interface",
+        "Adaptee Logic"
+      ]
+    }
+  ],
+  'aggregation': [
+    {
+      "name": "Container Object",
+      "purpose": "Holds references to independent child objects",
+      "components": [
+        "Parent Class",
+        "Reference Collection",
+        "Constructor/Setter"
+      ]
+    },
+    {
+      "name": "Child Objects",
+      "purpose": "Exist independently with their own lifecycle",
+      "components": [
+        "Child Class",
+        "Standalone Instance",
+        "External Ownership"
+      ]
+    },
+    {
+      "name": "Relationship Management",
+      "purpose": "Manages associations without lifecycle control",
+      "components": [
+        "Reference Holder",
+        "Getter Methods",
+        "Query Interface"
+      ]
+    }
+  ],
+  'airline-management': [
+    {
+      "name": "Client Layer",
+      "purpose": "User interfaces for booking, check-in, and operations",
+      "components": [
+        "Web Portal",
+        "Mobile App",
+        "Kiosk Interface",
+        "Gate Agent System"
+      ]
+    },
+    {
+      "name": "API & Orchestration Layer",
+      "purpose": "Route requests and coordinate business workflows",
+      "components": [
+        "Booking API",
+        "Check-in API",
+        "Boarding API",
+        "Flight Status API",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "Core Service Layer",
+      "purpose": "Implement flight, seat, and passenger business logic",
+      "components": [
+        "Flight Service",
+        "Seat Inventory Manager",
+        "Booking Engine",
+        "Passenger Service",
+        "Payment Processor"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and manage airline operational data",
+      "components": [
+        "Flight Database",
+        "Booking Database",
+        "Seat Allocation Cache",
+        "Passenger Records",
+        "Transaction Log"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide system reliability and external integrations",
+      "components": [
+        "Message Queue",
+        "Payment Gateway",
+        "Email/SMS Gateway",
+        "Airport Systems",
+        "Monitoring & Logging"
+      ]
+    }
+  ],
+  'amazon-locker': [
+    {
+      "name": "Client Layer",
+      "purpose": "Enable customers to retrieve packages and manage returns",
+      "components": [
+        "Mobile App",
+        "Web Portal",
+        "Kiosk Interface",
+        "QR Code Scanner"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "Handle locker assignment, code validation, and status queries",
+      "components": [
+        "Assignment Service",
+        "Code Generator",
+        "Validation Service",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Manage locker allocation, time windows, and package state",
+      "components": [
+        "Locker Allocator",
+        "Size Matcher",
+        "Time Window Manager",
+        "Return Handler"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist locker inventory, packages, and delivery records",
+      "components": [
+        "Locker DB",
+        "Package DB",
+        "Location DB",
+        "Audit Log"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Coordinate hardware, messaging, and distributed state",
+      "components": [
+        "Locker Controllers",
+        "Message Queue",
+        "Cache Layer",
+        "Lock Service"
+      ]
+    }
+  ],
+  'amazon-shopping-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Deliver product browsing and checkout experience",
+      "components": [
+        "Web Frontend",
+        "Mobile App",
+        "Admin Portal"
+      ]
+    },
+    {
+      "name": "API Gateway & Services",
+      "purpose": "Route requests and orchestrate core business operations",
+      "components": [
+        "API Gateway",
+        "Product Service",
+        "Cart Service",
+        "Order Service",
+        "Payment Service"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Execute fulfillment, recommendations, and inventory rules",
+      "components": [
+        "Inventory Manager",
+        "Recommendation Engine",
+        "Pricing Engine",
+        "Shipping Calculator",
+        "Review System"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and retrieve user, product, and transaction data",
+      "components": [
+        "Product Catalog DB",
+        "User DB",
+        "Order DB",
+        "Cache Layer",
+        "Search Index"
+      ]
+    },
+    {
+      "name": "Infrastructure & Messaging",
+      "purpose": "Enable async processing and inter-service communication",
+      "components": [
+        "Message Queue",
+        "Warehouse Service",
+        "Analytics Pipeline",
+        "CDN",
+        "Object Storage"
+      ]
+    }
+  ],
+  'apache-flink-deep-dive': [
+    {
+      "name": "Application Layer",
+      "purpose": "Define stream processing logic and transformations",
+      "components": [
+        "DataStream API",
+        "SQL API",
+        "CEP Library",
+        "Window Operators"
+      ]
+    },
+    {
+      "name": "Runtime & Execution Layer",
+      "purpose": "Coordinate job execution and manage task scheduling",
+      "components": [
+        "JobManager",
+        "TaskManager",
+        "Scheduler",
+        "State Backend"
+      ]
+    },
+    {
+      "name": "Stream Processing Core",
+      "purpose": "Handle event ordering, watermarks, and state snapshots",
+      "components": [
+        "Watermark Generator",
+        "Event Time Processor",
+        "Barrier Injector",
+        "Chandy-Lamport Snapshots"
+      ]
+    },
+    {
+      "name": "Connector & I/O Layer",
+      "purpose": "Integrate with external data sources and sinks",
+      "components": [
+        "Kafka Connector",
+        "JDBC Source/Sink",
+        "S3 Connector",
+        "Elasticsearch Sink"
+      ]
+    },
+    {
+      "name": "Distributed Storage Layer",
+      "purpose": "Persist state and checkpoint data durably",
+      "components": [
+        "HDFS",
+        "RocksDB",
+        "S3 Backend",
+        "State Store"
+      ]
+    }
+  ],
+  'api-gateway': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accept incoming HTTP requests from clients",
+      "components": [
+        "HTTP Listener",
+        "Request Parser",
+        "Connection Handler"
+      ]
+    },
+    {
+      "name": "Middleware Pipeline",
+      "purpose": "Execute cross-cutting concerns in sequence",
+      "components": [
+        "JWT Authenticator",
+        "Rate Limiter",
+        "Request Logger",
+        "Circuit Breaker",
+        "Response Cache"
+      ]
+    },
+    {
+      "name": "Routing & Transformation",
+      "purpose": "Match routes and transform requests for backends",
+      "components": [
+        "Route Matcher",
+        "Path Router",
+        "Header Router",
+        "Request Transformer",
+        "Response Transformer"
+      ]
+    },
+    {
+      "name": "Backend Proxy Layer",
+      "purpose": "Forward requests to microservices and handle responses",
+      "components": [
+        "Service Registry",
+        "Load Balancer",
+        "Connection Pool",
+        "Health Checker"
+      ]
+    },
+    {
+      "name": "Storage & Persistence",
+      "purpose": "Store configuration, cache, and operational data",
+      "components": [
+        "Config Store",
+        "Cache Layer",
+        "Circuit Breaker State",
+        "Audit Log"
+      ]
+    }
+  ],
+  'api-gateway-pattern': [
+    {
+      "name": "Client Layer",
+      "purpose": "Submit requests through single gateway entry point",
+      "components": [
+        "Web Client",
+        "Mobile App",
+        "Third-party API",
+        "Internal Services"
+      ]
+    },
+    {
+      "name": "Gateway Layer",
+      "purpose": "Route, authenticate, rate-limit, and transform requests",
+      "components": [
+        "Request Router",
+        "Authentication Handler",
+        "Rate Limiter",
+        "Request Transformer",
+        "Response Aggregator",
+        "Logging & Monitoring"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Execute business logic for routed microservices",
+      "components": [
+        "User Service",
+        "Order Service",
+        "Payment Service",
+        "Inventory Service",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and retrieve service-specific data",
+      "components": [
+        "User Database",
+        "Order Database",
+        "Cache Layer",
+        "Message Queue"
+      ]
+    }
+  ],
+  'association': [
+    {
+      "name": "Class Definition Layer",
+      "purpose": "Define independent classes with their own attributes and lifecycle",
+      "components": [
+        "Class A",
+        "Class B",
+        "Properties",
+        "Methods"
+      ]
+    },
+    {
+      "name": "Relationship Layer",
+      "purpose": "Establish connections between classes through references",
+      "components": [
+        "Unidirectional Reference",
+        "Bidirectional Reference",
+        "Multiplicity Constraint"
+      ]
+    },
+    {
+      "name": "Lifecycle Layer",
+      "purpose": "Manage independent creation and destruction of associated objects",
+      "components": [
+        "Object Creation",
+        "Object Deletion",
+        "Reference Management"
+      ]
+    }
+  ],
+  'atm-system': [
+    {
+      "name": "User Interface Layer",
+      "purpose": "Display prompts and capture user interactions",
+      "components": [
+        "Card Reader",
+        "Keypad Input",
+        "Display Screen",
+        "Receipt Printer"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Control ATM workflow through defined state transitions",
+      "components": [
+        "Idle State",
+        "Card Inserted State",
+        "PIN Validated State",
+        "Transaction State",
+        "State Dispatcher"
+      ]
+    },
+    {
+      "name": "Transaction Service Layer",
+      "purpose": "Execute withdrawal, deposit, transfer, and inquiry operations",
+      "components": [
+        "Withdrawal Strategy",
+        "Deposit Strategy",
+        "Transfer Strategy",
+        "Balance Inquiry",
+        "Transaction Validator"
+      ]
+    },
+    {
+      "name": "Cash Dispensing Layer",
+      "purpose": "Dispense exact cash amounts using denomination handlers",
+      "components": [
+        "$100 Handler",
+        "$50 Handler",
+        "$20 Handler",
+        "$10 Handler",
+        "Cash Dispenser"
+      ]
+    },
+    {
+      "name": "Data & Security Layer",
+      "purpose": "Authenticate users and persist account and transaction data",
+      "components": [
+        "PIN Authenticator",
+        "Account Repository",
+        "Transaction Logger",
+        "Card Block Manager"
+      ]
+    }
+  ],
+  'barriers-latches': [
+    {
+      "name": "Application Layer",
+      "purpose": "Coordinate threads at synchronization checkpoints",
+      "components": [
+        "Parallel Initialization",
+        "Batch Processing",
+        "Load Testing",
+        "Multi-Phase Algorithms"
+      ]
+    },
+    {
+      "name": "Synchronization Constructs",
+      "purpose": "Provide thread coordination mechanisms and barriers",
+      "components": [
+        "CountDownLatch",
+        "CyclicBarrier",
+        "Phaser",
+        "Exchanger"
+      ]
+    },
+    {
+      "name": "Core Threading",
+      "purpose": "Manage thread execution and state",
+      "components": [
+        "Thread Pool",
+        "Wait Queues",
+        "Lock Mechanisms",
+        "State Management"
+      ]
+    }
+  ],
+  'bff-pattern': [
+    {
+      "name": "Client Layer",
+      "purpose": "Consume tailored APIs optimized for device capabilities",
+      "components": [
+        "Web Browser",
+        "Mobile App",
+        "IoT Device",
+        "Smart TV"
+      ]
+    },
+    {
+      "name": "BFF Layer",
+      "purpose": "Transform backend data into client-specific formats",
+      "components": [
+        "Web BFF",
+        "Mobile BFF",
+        "IoT BFF",
+        "GraphQL Federation"
+      ]
+    },
+    {
+      "name": "API Gateway Layer",
+      "purpose": "Route requests, enforce auth, manage cross-cutting concerns",
+      "components": [
+        "Request Router",
+        "Authentication",
+        "Rate Limiting",
+        "Load Balancer"
+      ]
+    },
+    {
+      "name": "Core Services Layer",
+      "purpose": "Provide shared business logic and domain operations",
+      "components": [
+        "User Service",
+        "Product Service",
+        "Order Service",
+        "Payment Service"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and retrieve data across databases",
+      "components": [
+        "Primary Database",
+        "Cache Layer",
+        "Search Index",
+        "Message Queue"
+      ]
+    }
+  ],
+  'blackjack-card-game': [
+    {
+      "name": "Game Controller Layer",
+      "purpose": "Orchestrate game flow and player interactions",
+      "components": [
+        "GameEngine",
+        "PlayerController",
+        "DealerController",
+        "BettingManager"
+      ]
+    },
+    {
+      "name": "Hand & Action Layer",
+      "purpose": "Evaluate hands and execute player actions",
+      "components": [
+        "Hand",
+        "HandEvaluator",
+        "ActionProcessor",
+        "SplitHandler"
+      ]
+    },
+    {
+      "name": "Card & Deck Layer",
+      "purpose": "Manage cards, deck shoe, and reshuffling",
+      "components": [
+        "Card",
+        "Deck",
+        "Shoe",
+        "CardDistributor"
+      ]
+    },
+    {
+      "name": "Game Logic Layer",
+      "purpose": "Implement rules, payouts, and dealer AI",
+      "components": [
+        "RuleEngine",
+        "DealerStrategy",
+        "PayoutCalculator"
+      ]
+    }
+  ],
+  'bloom-filter': [
+    {
+      "name": "Query Layer",
+      "purpose": "Test membership with configurable false positive rates",
+      "components": [
+        "Membership Test",
+        "Lookup Query",
+        "Result Decoder"
+      ]
+    },
+    {
+      "name": "Hash Function Layer",
+      "purpose": "Generate k independent hash values for elements",
+      "components": [
+        "Hash Function 1",
+        "Hash Function 2",
+        "Hash Function k",
+        "Index Mapper"
+      ]
+    },
+    {
+      "name": "Bit Array Layer",
+      "purpose": "Store bit positions for set membership encoding",
+      "components": [
+        "Bit Array",
+        "Bit Setter",
+        "Bit Checker"
+      ]
+    }
+  ],
+  'bridge': [
+    {
+      "name": "Abstraction Layer",
+      "purpose": "Define high-level interface and delegate to implementation",
+      "components": [
+        "Shape",
+        "Circle",
+        "Square",
+        "Triangle"
+      ]
+    },
+    {
+      "name": "Bridge Interface",
+      "purpose": "Connect abstraction to implementation hierarchies",
+      "components": [
+        "Renderer",
+        "draw()",
+        "compose"
+      ]
+    },
+    {
+      "name": "Implementation Layer",
+      "purpose": "Provide concrete rendering strategies and algorithms",
+      "components": [
+        "VectorRenderer",
+        "RasterRenderer",
+        "SVGRenderer"
+      ]
+    }
+  ],
+  'builder': [
+    {
+      "name": "Client Layer",
+      "purpose": "Request object creation with readable, chainable method calls",
+      "components": [
+        "Client Code",
+        "Fluent API Calls"
+      ]
+    },
+    {
+      "name": "Builder Layer",
+      "purpose": "Accept parameters step-by-step and validate construction rules",
+      "components": [
+        "Builder Class",
+        "Parameter Setters",
+        "Validation Logic"
+      ]
+    },
+    {
+      "name": "Director Layer",
+      "purpose": "Define and orchestrate complex multi-step construction sequences",
+      "components": [
+        "Director",
+        "Construction Algorithm",
+        "Builder Coordination"
+      ]
+    },
+    {
+      "name": "Product Layer",
+      "purpose": "Immutable complex objects with validated state",
+      "components": [
+        "Product Object",
+        "Immutable Fields",
+        "State Integrity"
+      ]
+    }
+  ],
+  'bulkhead-pattern': [
+    {
+      "name": "Application Layer",
+      "purpose": "Route requests and manage service boundaries",
+      "components": [
+        "Request Router",
+        "Service Dispatcher",
+        "Endpoint Handler"
+      ]
+    },
+    {
+      "name": "Isolation Layer",
+      "purpose": "Partition resources into independent compartments",
+      "components": [
+        "Thread Pool Isolator",
+        "Connection Pool Isolator",
+        "Resource Limiter",
+        "Compartment Manager"
+      ]
+    },
+    {
+      "name": "Monitoring & Control",
+      "purpose": "Detect failures and enforce isolation policies",
+      "components": [
+        "Health Monitor",
+        "Threshold Enforcer",
+        "Failure Detector",
+        "Circuit Breaker Integration"
+      ]
+    },
+    {
+      "name": "Dependency Layer",
+      "purpose": "Execute isolated calls to downstream services",
+      "components": [
+        "Service Client",
+        "Timeout Handler",
+        "Fallback Strategy"
+      ]
+    }
+  ],
+  'cache-stampede': [
+    {
+      "name": "Client Layer",
+      "purpose": "Issue concurrent requests and handle responses",
+      "components": [
+        "Request Pool",
+        "Response Handler",
+        "Retry Logic"
+      ]
+    },
+    {
+      "name": "Cache Layer",
+      "purpose": "Store and expire keys, detect stampede conditions",
+      "components": [
+        "Key-Value Store",
+        "TTL Manager",
+        "Expiration Detector"
+      ]
+    },
+    {
+      "name": "Stampede Prevention Layer",
+      "purpose": "Prevent multiple backend hits on cache miss",
+      "components": [
+        "Distributed Lock",
+        "Request Coalescing",
+        "Early Refresh",
+        "Stale-While-Revalidate"
+      ]
+    },
+    {
+      "name": "Backend Layer",
+      "purpose": "Compute expensive values on cache miss",
+      "components": [
+        "Database Query",
+        "API Call",
+        "Computation Service"
+      ]
+    }
+  ],
+  'car-rental': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide interfaces for customers and staff interactions",
+      "components": [
+        "Web Portal",
+        "Mobile App",
+        "Admin Dashboard",
+        "Staff Interface"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "Expose rental operations and query endpoints",
+      "components": [
+        "Reservation API",
+        "Vehicle Search API",
+        "Booking API",
+        "Billing API",
+        "Maintenance API"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Execute core business logic for rentals",
+      "components": [
+        "Reservation Engine",
+        "Availability Manager",
+        "Pricing Calculator",
+        "Billing Service",
+        "Maintenance Scheduler",
+        "Insurance Manager"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and query rental domain entities",
+      "components": [
+        "Vehicle Catalog",
+        "Reservation Store",
+        "Customer Profiles",
+        "Billing Records",
+        "Maintenance Logs",
+        "Location Data"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide foundational services and external integrations",
+      "components": [
+        "Database",
+        "Cache",
+        "Message Queue",
+        "Payment Gateway",
+        "Notification Service",
+        "Search Index"
+      ]
+    }
+  ],
+  'cassandra-deep-dive': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accept queries and return results to applications",
+      "components": [
+        "CQL Driver",
+        "Connection Pool",
+        "Load Balancer"
+      ]
+    },
+    {
+      "name": "Query Layer",
+      "purpose": "Parse, validate, and coordinate distributed query execution",
+      "components": [
+        "CQL Parser",
+        "Query Coordinator",
+        "Consistency Manager",
+        "Paxos Engine"
+      ]
+    },
+    {
+      "name": "Storage Engine Layer",
+      "purpose": "Manage in-memory and on-disk data structures efficiently",
+      "components": [
+        "Commit Log",
+        "Memtable",
+        "SSTable",
+        "Bloom Filter",
+        "Cache (Key/Row)"
+      ]
+    },
+    {
+      "name": "Distribution & Replication Layer",
+      "purpose": "Distribute data across nodes and replicate across datacenters",
+      "components": [
+        "Consistent Hash Ring",
+        "Gossip Protocol",
+        "Token Manager",
+        "Replica Placement",
+        "Compaction"
+      ]
+    },
+    {
+      "name": "Cluster Coordination Layer",
+      "purpose": "Monitor node health and maintain cluster topology awareness",
+      "components": [
+        "Failure Detector",
+        "Cluster State",
+        "Schema Management",
+        "Peer Discovery"
+      ]
+    }
+  ],
+  'chain-of-responsibility': [
+    {
+      "name": "Client Layer",
+      "purpose": "Submit requests without knowing handler details",
+      "components": [
+        "Request Sender",
+        "Request Object"
+      ]
+    },
+    {
+      "name": "Handler Chain Layer",
+      "purpose": "Process or forward requests through handlers",
+      "components": [
+        "Handler Interface",
+        "Concrete Handlers",
+        "Chain Builder",
+        "Next Pointer"
+      ]
+    },
+    {
+      "name": "Processing Layer",
+      "purpose": "Execute business logic or decision logic",
+      "components": [
+        "Validation Logic",
+        "Processing Logic",
+        "Decision Gate"
+      ]
+    },
+    {
+      "name": "Result Layer",
+      "purpose": "Return processed result or escalate request",
+      "components": [
+        "Success Response",
+        "Forward Signal",
+        "Fallback Handler"
+      ]
+    }
+  ],
+  'chat-application': [
+    {
+      "name": "Client Layer",
+      "purpose": "Display messages and enable user interactions",
+      "components": [
+        "Web UI",
+        "Mobile App",
+        "Message Input",
+        "Notification Handler",
+        "WebSocket Client"
+      ]
+    },
+    {
+      "name": "API & Gateway Layer",
+      "purpose": "Route requests and manage persistent connections",
+      "components": [
+        "WebSocket Gateway",
+        "REST API",
+        "Connection Manager",
+        "Load Balancer",
+        "Message Router"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Handle messaging logic and delivery coordination",
+      "components": [
+        "Chat Service",
+        "Delivery Service",
+        "User Presence Service",
+        "Notification Service",
+        "Media Handler"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist messages and maintain system state",
+      "components": [
+        "Message Store",
+        "User Metadata DB",
+        "Conversation Index",
+        "Delivery Receipts DB",
+        "Message Queue"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Enable real-time distribution and caching",
+      "components": [
+        "Redis Cache",
+        "Message Broker",
+        "File Storage",
+        "CDN",
+        "Search Index"
+      ]
+    }
+  ],
+  'chatgpt-clone': [
+    {
+      "name": "Client Layer",
+      "purpose": "Render chat UI with real-time token updates",
+      "components": [
+        "Chat Interface",
+        "Message Renderer",
+        "Markdown Parser",
+        "Syntax Highlighter",
+        "Session Sidebar"
+      ]
+    },
+    {
+      "name": "API & Transport Layer",
+      "purpose": "Stream tokens via HTTP with Server-Sent Events",
+      "components": [
+        "SSE Endpoint",
+        "Stream Handler",
+        "Token Buffer",
+        "Error Recovery"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Orchestrate LLM calls and conversation logic",
+      "components": [
+        "LLM Proxy",
+        "Prompt Engineer",
+        "Context Manager",
+        "Session Handler"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist conversations and user sessions",
+      "components": [
+        "Conversation Store",
+        "Message History",
+        "Session Index",
+        "Cache Layer"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Deploy and monitor application stack",
+      "components": [
+        "Docker Container",
+        "API Gateway",
+        "Database",
+        "Logging & Telemetry"
+      ]
+    }
+  ],
+  'chess': [
+    {
+      "name": "UI/Game Controller Layer",
+      "purpose": "Render board state and handle player input interactions",
+      "components": [
+        "Board Display",
+        "Move Input Handler",
+        "Game Status View",
+        "Observer Notifier"
+      ]
+    },
+    {
+      "name": "Game Engine Layer",
+      "purpose": "Orchestrate game flow, enforce rules, detect win conditions",
+      "components": [
+        "Game Manager",
+        "Move Validator",
+        "Check Detector",
+        "Checkmate/Stalemate Detector"
+      ]
+    },
+    {
+      "name": "Piece Logic Layer",
+      "purpose": "Encapsulate individual piece movement and capture rules",
+      "components": [
+        "Piece Interface",
+        "King",
+        "Queen",
+        "Rook",
+        "Bishop",
+        "Knight"
+      ]
+    },
+    {
+      "name": "Board State Layer",
+      "purpose": "Maintain board representation and coordinate movement",
+      "components": [
+        "Chess Board",
+        "Square Tracker",
+        "Move History",
+        "Command Stack"
+      ]
+    },
+    {
+      "name": "Game Rules Layer",
+      "purpose": "Implement special moves and turn-based enforcement",
+      "components": [
+        "Castling Rules",
+        "En Passant",
+        "Pawn Promotion",
+        "Turn Manager"
+      ]
+    }
+  ],
+  'circuit-breaker': [
+    {
+      "name": "Client Layer",
+      "purpose": "Initiates requests and handles circuit breaker responses",
+      "components": [
+        "Client Application",
+        "Request Caller",
+        "Response Handler"
+      ]
+    },
+    {
+      "name": "Circuit Breaker Layer",
+      "purpose": "Monitors failures and manages state transitions",
+      "components": [
+        "State Machine",
+        "Failure Detector",
+        "Threshold Counter",
+        "State Manager"
+      ]
+    },
+    {
+      "name": "Request Handling Layer",
+      "purpose": "Executes calls or fast-fails based on circuit state",
+      "components": [
+        "Closed Handler",
+        "Open Handler",
+        "Half-Open Handler",
+        "Timeout Manager"
+      ]
+    },
+    {
+      "name": "Fallback & Recovery Layer",
+      "purpose": "Provides alternatives and recovery mechanisms",
+      "components": [
+        "Fallback Logic",
+        "Recovery Timer",
+        "Retry Policy",
+        "Metrics Collector"
+      ]
+    },
+    {
+      "name": "Remote Service Layer",
+      "purpose": "Target service being protected by the pattern",
+      "components": [
+        "Downstream Service",
+        "Health Check Endpoint"
+      ]
+    }
+  ],
+  'circular-queue': [
+    {
+      "name": "Client API Layer",
+      "purpose": "Expose queue operations with clean, simple interface",
+      "components": [
+        "enqueue()",
+        "dequeue()",
+        "peek()",
+        "isEmpty()",
+        "isFull()"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Track front, rear, and size with modular arithmetic",
+      "components": [
+        "front pointer",
+        "rear pointer",
+        "size counter",
+        "capacity constant"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Hold fixed-size array and manage circular wrapping",
+      "components": [
+        "fixed array",
+        "modulo wraparound",
+        "index calculation"
+      ]
+    }
+  ],
+  'class-diagram': [
+    {
+      "name": "Class Definition Layer",
+      "purpose": "Define classes with attributes, methods, and visibility modifiers",
+      "components": [
+        "Class Name",
+        "Attributes",
+        "Methods",
+        "Visibility Modifiers"
+      ]
+    },
+    {
+      "name": "Relationship Layer",
+      "purpose": "Express connections between classes through typed relationships",
+      "components": [
+        "Inheritance",
+        "Implementation",
+        "Association",
+        "Aggregation",
+        "Composition"
+      ]
+    },
+    {
+      "name": "Diagram Notation Layer",
+      "purpose": "Represent structure using standardized UML visual symbols",
+      "components": [
+        "Class Rectangle",
+        "Line Styles",
+        "Arrow Types",
+        "Diamond Shapes",
+        "Symbol Legend"
+      ]
+    }
+  ],
+  'classic-problems': [
+    {
+      "name": "Problem Layer",
+      "purpose": "Define concurrent access patterns and shared resource constraints",
+      "components": [
+        "Producer-Consumer",
+        "Readers-Writers",
+        "Dining Philosophers"
+      ]
+    },
+    {
+      "name": "Synchronization Layer",
+      "purpose": "Coordinate thread access using locks and signaling primitives",
+      "components": [
+        "Mutex",
+        "Semaphore",
+        "Monitor",
+        "Condition Variable"
+      ]
+    },
+    {
+      "name": "Shared Resource Layer",
+      "purpose": "Manage bounded buffers and protected critical sections",
+      "components": [
+        "Bounded Buffer",
+        "Shared Queue",
+        "Critical Section"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Execute concurrent threads with proper acquire-release semantics",
+      "components": [
+        "Producer Thread",
+        "Consumer Thread",
+        "Reader Thread",
+        "Writer Thread"
+      ]
+    }
+  ],
+  'coffee-roastery-dashboard': [
+    {
+      "name": "Client Layer",
+      "purpose": "Display inventory, roasts, orders with interactive filtering and visualization",
+      "components": [
+        "Bean Table",
+        "Roast Profile Charts",
+        "Order Status Board",
+        "Filter Controls",
+        "Data Visualization"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "Expose typed endpoints for CRUD operations with pagination and filtering",
+      "components": [
+        "Bean Routes",
+        "Roast Routes",
+        "Order Routes",
+        "Query Parser",
+        "Error Handler"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Validate domain rules, enforce constraints, process inventory transactions",
+      "components": [
+        "Bean Service",
+        "Roast Manager",
+        "Order Processor",
+        "Inventory Validator",
+        "Status Lifecycle"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist beans, roasts, orders with relationships and atomic updates",
+      "components": [
+        "Bean Table",
+        "Roast Profile Table",
+        "Order Table",
+        "Flavor Notes Array",
+        "Composite Indexes"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Containerize application, manage database connections and deployments",
+      "components": [
+        "PostgreSQL",
+        "Docker",
+        "Connection Pool",
+        "Migration Runner",
+        "Environment Config"
+      ]
+    }
+  ],
+  'coffee-vending': [
+    {
+      "name": "User Interface Layer",
+      "purpose": "Display beverage options and accept user selections",
+      "components": [
+        "Display Screen",
+        "Button Panel",
+        "Card Reader",
+        "Coin Slot"
+      ]
+    },
+    {
+      "name": "Payment & Order Layer",
+      "purpose": "Process payments and manage beverage selection requests",
+      "components": [
+        "Payment Processor",
+        "Order Manager",
+        "Price Calculator",
+        "Transaction Logger"
+      ]
+    },
+    {
+      "name": "Beverage Preparation Layer",
+      "purpose": "Execute recipes and dispense selected beverages",
+      "components": [
+        "Recipe Engine",
+        "Dispenser Controller",
+        "Brew Timer",
+        "Quality Validator"
+      ]
+    },
+    {
+      "name": "Inventory & Maintenance Layer",
+      "purpose": "Track ingredient levels and manage restocking operations",
+      "components": [
+        "Ingredient Inventory",
+        "Stock Monitor",
+        "Depletion Alerts",
+        "Maintenance Logger"
+      ]
+    },
+    {
+      "name": "Hardware & State Layer",
+      "purpose": "Control physical mechanisms and manage machine state",
+      "components": [
+        "Ingredient Pumps",
+        "Temperature Sensors",
+        "Waste Management",
+        "State Machine"
+      ]
+    }
+  ],
+  'command': [
+    {
+      "name": "Client Layer",
+      "purpose": "Trigger commands through various user interaction points",
+      "components": [
+        "Button",
+        "Menu Item",
+        "Keyboard Shortcut",
+        "Automation Script"
+      ]
+    },
+    {
+      "name": "Invoker Layer",
+      "purpose": "Execute commands and manage command history stack",
+      "components": [
+        "Command Invoker",
+        "History Stack",
+        "Undo Manager",
+        "Redo Manager"
+      ]
+    },
+    {
+      "name": "Command Layer",
+      "purpose": "Encapsulate requests as executable objects with state",
+      "components": [
+        "Command Interface",
+        "Concrete Commands",
+        "Macro Commands",
+        "Command Metadata"
+      ]
+    },
+    {
+      "name": "Receiver Layer",
+      "purpose": "Perform actual business logic when commands execute",
+      "components": [
+        "Document",
+        "Editor State",
+        "Business Objects",
+        "Side Effects"
+      ]
+    }
+  ],
+  'composite': [
+    {
+      "name": "Client Layer",
+      "purpose": "Use tree structures uniformly without type checking",
+      "components": [
+        "Client Code",
+        "Tree Traversal",
+        "Uniform Operations"
+      ]
+    },
+    {
+      "name": "Component Interface",
+      "purpose": "Define common contract for leaf and composite objects",
+      "components": [
+        "Component Interface",
+        "Operation Methods",
+        "Polymorphic Behavior"
+      ]
+    },
+    {
+      "name": "Leaf & Composite Objects",
+      "purpose": "Implement interface; leaves are terminal, composites hold children",
+      "components": [
+        "Leaf Objects",
+        "Composite Objects",
+        "Child Collection",
+        "Recursive Methods"
+      ]
+    }
+  ],
+  'concurrency-coding-problems': [
+    {
+      "name": "Problem Analysis Layer",
+      "purpose": "Identify shared state, ordering constraints, edge cases",
+      "components": [
+        "Shared State Mapping",
+        "Ordering Constraints",
+        "Deadlock Risk Analysis",
+        "Race Condition Detection"
+      ]
+    },
+    {
+      "name": "Synchronization Primitives Layer",
+      "purpose": "Select and apply appropriate thread coordination mechanisms",
+      "components": [
+        "Locks/Mutexes",
+        "Semaphores",
+        "Condition Variables",
+        "Barriers",
+        "Atomic Operations"
+      ]
+    },
+    {
+      "name": "Thread Coordination Layer",
+      "purpose": "Ensure correct thread execution order and resource sharing",
+      "components": [
+        "Thread Scheduling",
+        "Critical Section Protection",
+        "Producer-Consumer",
+        "Read-Write Coordination"
+      ]
+    },
+    {
+      "name": "Validation & Robustness Layer",
+      "purpose": "Handle edge cases and prevent common concurrency failures",
+      "components": [
+        "Spurious Wakeup Handling",
+        "Starvation Prevention",
+        "Deadlock Avoidance",
+        "Testing Under Load"
+      ]
+    }
+  ],
+  'concurrency-control': [
+    {
+      "name": "Transaction Isolation Layer",
+      "purpose": "Ensure transactions see consistent data snapshots",
+      "components": [
+        "MVCC snapshots",
+        "Version chains",
+        "Tuple visibility"
+      ]
+    },
+    {
+      "name": "Lock Management Layer",
+      "purpose": "Acquire and enforce locks on resources",
+      "components": [
+        "Pessimistic locks",
+        "Optimistic locks",
+        "Intent locks",
+        "Lock queue"
+      ]
+    },
+    {
+      "name": "Conflict Detection Layer",
+      "purpose": "Detect and resolve transaction conflicts",
+      "components": [
+        "Read/write sets",
+        "Deadlock detector",
+        "Conflict resolution",
+        "Retry logic"
+      ]
+    },
+    {
+      "name": "Version Storage Layer",
+      "purpose": "Maintain multiple row versions for snapshot isolation",
+      "components": [
+        "Version chains",
+        "Tuple headers",
+        "Undo/rollback logs",
+        "VACUUM cleanup"
+      ]
+    }
+  ],
+  'concurrency-fundamentals': [
+    {
+      "name": "Task Abstraction Layer",
+      "purpose": "Define concurrency models and execution units",
+      "components": [
+        "Processes",
+        "Threads",
+        "Goroutines",
+        "Async Tasks"
+      ]
+    },
+    {
+      "name": "Synchronization Layer",
+      "purpose": "Coordinate access and prevent data races",
+      "components": [
+        "Mutexes",
+        "Semaphores",
+        "Condition Variables",
+        "Atomic Operations"
+      ]
+    },
+    {
+      "name": "Safety & Correctness Layer",
+      "purpose": "Detect and prevent concurrency bugs",
+      "components": [
+        "Race Condition Detection",
+        "Deadlock Prevention",
+        "Memory Ordering",
+        "Happens-Before Relations"
+      ]
+    },
+    {
+      "name": "Execution & Scheduling Layer",
+      "purpose": "Schedule tasks across CPU cores",
+      "components": [
+        "Time-Slicing",
+        "Context Switching",
+        "Core Affinity",
+        "Work Stealing"
+      ]
+    }
+  ],
+  'concurrent-data-structures': [
+    {
+      "name": "Client Layer",
+      "purpose": "Multi-threaded applications access shared data safely",
+      "components": [
+        "Reader Threads",
+        "Writer Threads",
+        "Mixed Access Patterns"
+      ]
+    },
+    {
+      "name": "Concurrent Collections Layer",
+      "purpose": "Provide thread-safe collection abstractions and operations",
+      "components": [
+        "ConcurrentHashMap",
+        "CopyOnWriteList",
+        "BlockingQueue",
+        "ConcurrentSkipListMap"
+      ]
+    },
+    {
+      "name": "Synchronization Primitives Layer",
+      "purpose": "Enable atomic operations and thread coordination",
+      "components": [
+        "Atomic Variables",
+        "Locks",
+        "Semaphores",
+        "Condition Variables",
+        "Memory Barriers"
+      ]
+    },
+    {
+      "name": "Lock-Free Algorithms Layer",
+      "purpose": "Implement wait-free and non-blocking operations",
+      "components": [
+        "Compare-and-Swap",
+        "Load-Link Store-Conditional",
+        "Hazard Pointers",
+        "ABA Prevention"
+      ]
+    },
+    {
+      "name": "Hardware Layer",
+      "purpose": "Provide atomic CPU instructions and cache coherence",
+      "components": [
+        "CPU Cache Lines",
+        "Memory Ordering",
+        "Atomic Instructions",
+        "CPU Cores"
+      ]
+    }
+  ],
+  'condition-variables': [
+    {
+      "name": "Application Layer",
+      "purpose": "Coordinate thread synchronization logic and workflows",
+      "components": [
+        "Producer Thread",
+        "Consumer Thread",
+        "Task Orchestration"
+      ]
+    },
+    {
+      "name": "Condition Variable Layer",
+      "purpose": "Manage wait/notify signaling between synchronized threads",
+      "components": [
+        "Lock Acquisition",
+        "Wait Mechanism",
+        "Notify/NotifyAll",
+        "Spurious Wakeup Handling"
+      ]
+    },
+    {
+      "name": "Synchronization Primitives Layer",
+      "purpose": "Provide mutual exclusion and atomic state transitions",
+      "components": [
+        "Mutex/Monitor",
+        "Atomic Operations",
+        "Thread Scheduling"
+      ]
+    },
+    {
+      "name": "Operating System Layer",
+      "purpose": "Execute thread context switching and kernel signaling",
+      "components": [
+        "Thread Scheduler",
+        "Kernel Signals",
+        "System Calls"
+      ]
+    }
+  ],
+  'configuration-externalization': [
+    {
+      "name": "Client Layer",
+      "purpose": "Applications consume configuration from centralized sources",
+      "components": [
+        "Config Client Library",
+        "Feature Flag SDK",
+        "Runtime Config Resolver"
+      ]
+    },
+    {
+      "name": "Configuration Server Layer",
+      "purpose": "Stores, versions, and serves configuration to clients",
+      "components": [
+        "Config Repository",
+        "REST/gRPC API",
+        "Encryption Handler",
+        "Version Control"
+      ]
+    },
+    {
+      "name": "Storage & State Layer",
+      "purpose": "Persists configuration data and tracks changes",
+      "components": [
+        "Configuration Store",
+        "Audit Log",
+        "Change History",
+        "Secret Vault"
+      ]
+    },
+    {
+      "name": "Distribution Layer",
+      "purpose": "Pushes updates to clients and maintains consistency",
+      "components": [
+        "Event Pub/Sub",
+        "Cache Layer",
+        "Change Notifier",
+        "Load Balancer"
+      ]
+    }
+  ],
+  'consensus-algorithms': [
+    {
+      "name": "Application Layer",
+      "purpose": "Expose consensus results to clients and services",
+      "components": [
+        "State Machine",
+        "Client Interface",
+        "Command Log"
+      ]
+    },
+    {
+      "name": "Consensus Protocol Layer",
+      "purpose": "Coordinate agreement among distributed nodes safely",
+      "components": [
+        "Leader Election",
+        "Log Replication",
+        "Commit Logic",
+        "Safety Rules"
+      ]
+    },
+    {
+      "name": "Message & State Layer",
+      "purpose": "Manage node state, terms, and inter-node communication",
+      "components": [
+        "RPC Handler",
+        "Persistent State",
+        "Volatile State",
+        "Message Queue"
+      ]
+    },
+    {
+      "name": "Failure & Recovery Layer",
+      "purpose": "Handle node crashes, timeouts, and message delays",
+      "components": [
+        "Timeout Detection",
+        "Snapshot & Restore",
+        "Majority Quorum",
+        "Heartbeat Mechanism"
+      ]
+    }
+  ],
+  'conways-game-of-life': [
+    {
+      "name": "Interaction Layer",
+      "purpose": "Capture user input and render visual feedback",
+      "components": [
+        "Mouse Event Handler",
+        "Keyboard Controls",
+        "Canvas Renderer",
+        "UI Controls"
+      ]
+    },
+    {
+      "name": "Simulation Layer",
+      "purpose": "Execute rules and manage generation state transitions",
+      "components": [
+        "Rule Engine",
+        "Neighbor Counter",
+        "State Buffer",
+        "Generation Manager"
+      ]
+    },
+    {
+      "name": "Grid Data Layer",
+      "purpose": "Store and access cell state efficiently",
+      "components": [
+        "Current Grid",
+        "Next Generation Grid",
+        "Boundary Handler",
+        "Cell Accessor"
+      ]
+    },
+    {
+      "name": "Animation Loop Layer",
+      "purpose": "Coordinate timing and frame updates",
+      "components": [
+        "RequestAnimationFrame",
+        "Speed Controller",
+        "Frame Limiter"
+      ]
+    }
+  ],
+  'cqrs': [
+    {
+      "name": "Client Layer",
+      "purpose": "Routes commands and queries to respective handlers",
+      "components": [
+        "Command Interface",
+        "Query Interface",
+        "Request Router"
+      ]
+    },
+    {
+      "name": "Command Side (Write Model)",
+      "purpose": "Executes writes, enforces business rules, appends events",
+      "components": [
+        "Command Handler",
+        "Aggregate Root",
+        "Event Store",
+        "Validation Engine"
+      ]
+    },
+    {
+      "name": "Query Side (Read Model)",
+      "purpose": "Serves optimized read queries from materialized views",
+      "components": [
+        "Query Handler",
+        "Materialized View",
+        "Denormalized Cache",
+        "Read Repository"
+      ]
+    },
+    {
+      "name": "Event Synchronization",
+      "purpose": "Projects events from write side to read side views",
+      "components": [
+        "Event Publisher",
+        "Projection Engine",
+        "Event Subscriber",
+        "View Updater"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persists events, read models, and maintains eventual consistency",
+      "components": [
+        "Event Database",
+        "Read Database",
+        "Message Bus",
+        "Snapshot Store"
+      ]
+    }
+  ],
+  'cricinfo': [
+    {
+      "name": "Client Layer",
+      "purpose": "Deliver live scores and match data to users",
+      "components": [
+        "Web App",
+        "Mobile App",
+        "Commentary Feed",
+        "Notifications"
+      ]
+    },
+    {
+      "name": "API Gateway Layer",
+      "purpose": "Route requests and manage concurrent user sessions",
+      "components": [
+        "REST API",
+        "WebSocket Server",
+        "Rate Limiter",
+        "Load Balancer"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Execute cricket domain logic and real-time processing",
+      "components": [
+        "Match Service",
+        "Scoring Engine",
+        "Commentary Service",
+        "Statistics Aggregator",
+        "Player Service"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store and stream match state and historical records",
+      "components": [
+        "Match Cache",
+        "Time-Series DB",
+        "Statistics DB",
+        "Event Stream",
+        "Search Index"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Support distributed processing and data persistence",
+      "components": [
+        "Message Queue",
+        "Cache Layer",
+        "Database Cluster",
+        "Object Storage"
+      ]
+    }
+  ],
+  'database-indexing-deep-dive': [
+    {
+      "name": "Query Layer",
+      "purpose": "Optimize query execution with appropriate index selection",
+      "components": [
+        "Query Planner",
+        "Index Selection",
+        "Execution Strategy"
+      ]
+    },
+    {
+      "name": "Index Type Layer",
+      "purpose": "Provide specialized index structures for different data patterns",
+      "components": [
+        "B-tree Index",
+        "Hash Index",
+        "GIN Index",
+        "GiST Index",
+        "Expression Index"
+      ]
+    },
+    {
+      "name": "Index Design Layer",
+      "purpose": "Refine indexes for specific workload characteristics and constraints",
+      "components": [
+        "Composite Indexes",
+        "Covering Indexes",
+        "Partial Indexes"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Maintain index data structures and optimize access patterns",
+      "components": [
+        "Index Pages",
+        "Leaf Nodes",
+        "Internal Nodes",
+        "Heap Reference"
+      ]
+    },
+    {
+      "name": "Maintenance Layer",
+      "purpose": "Keep indexes efficient during writes and compaction cycles",
+      "components": [
+        "Index Vacuuming",
+        "Compaction",
+        "Write Overhead",
+        "Storage Management"
+      ]
+    }
+  ],
+  'database-partitioning-sharding': [
+    {
+      "name": "Application Layer",
+      "purpose": "Route queries to correct shard based on key",
+      "components": [
+        "Shard Router",
+        "Query Dispatcher",
+        "Key Extractor"
+      ]
+    },
+    {
+      "name": "Partitioning Strategy Layer",
+      "purpose": "Distribute data across partitions using chosen method",
+      "components": [
+        "Range Partitioning",
+        "Hash Partitioning",
+        "Directory Partitioning"
+      ]
+    },
+    {
+      "name": "Distribution Layer",
+      "purpose": "Map partitions to nodes and manage placement",
+      "components": [
+        "Hash Ring",
+        "Virtual Nodes",
+        "Shard Map",
+        "Rebalancing Engine"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Store partition data on individual nodes",
+      "components": [
+        "Shard 1",
+        "Shard 2",
+        "Shard N"
+      ]
+    }
+  ],
+  'database-recovery': [
+    {
+      "name": "Application Layer",
+      "purpose": "Issue transactions and receive durability guarantees",
+      "components": [
+        "Transaction requests",
+        "Commit signals",
+        "Durability acknowledgment"
+      ]
+    },
+    {
+      "name": "Write-Ahead Log (WAL)",
+      "purpose": "Record all changes sequentially before applying to pages",
+      "components": [
+        "WAL buffer",
+        "Log records",
+        "Segment files",
+        "LSN tracking"
+      ]
+    },
+    {
+      "name": "ARIES Recovery Engine",
+      "purpose": "Restore consistent database state after crash",
+      "components": [
+        "Analysis phase",
+        "Redo phase",
+        "Undo phase",
+        "Checkpoint manager"
+      ]
+    },
+    {
+      "name": "Buffer & Data Page Layer",
+      "purpose": "Cache hot data and lazily persist changes to disk",
+      "components": [
+        "Buffer pool",
+        "Dirty pages",
+        "Page writes",
+        "Eviction policy"
+      ]
+    },
+    {
+      "name": "Backup & PITR Layer",
+      "purpose": "Archive logs and enable recovery to any point in time",
+      "components": [
+        "Base backup",
+        "WAL archive",
+        "Remote storage",
+        "Point-in-time restore"
+      ]
+    }
+  ],
+  'database-replication-strategies': [
+    {
+      "name": "Replication Strategy Layer",
+      "purpose": "Choose topology and consistency model for data copies",
+      "components": [
+        "Single-Leader",
+        "Multi-Leader",
+        "Leaderless",
+        "Hybrid Topology"
+      ]
+    },
+    {
+      "name": "Synchronization Layer",
+      "purpose": "Manage write propagation and replica consistency guarantees",
+      "components": [
+        "Synchronous Replication",
+        "Asynchronous Replication",
+        "Semi-Sync",
+        "Quorum Writes"
+      ]
+    },
+    {
+      "name": "Conflict & Consistency Layer",
+      "purpose": "Resolve divergent replica states and ensure read coherence",
+      "components": [
+        "Conflict Detection",
+        "CRDT Resolution",
+        "Merge Functions",
+        "Causal Consistency",
+        "Session Affinity"
+      ]
+    },
+    {
+      "name": "Replication Transport Layer",
+      "purpose": "Deliver write operations to replicas with ordering guarantees",
+      "components": [
+        "Log Shipping",
+        "Write-Ahead Log",
+        "Replication Stream",
+        "Heartbeat Protocol"
+      ]
+    },
+    {
+      "name": "Data Storage Layer",
+      "purpose": "Persist replicated data locally on each node",
+      "components": [
+        "Leader Store",
+        "Follower Store",
+        "Replica Index",
+        "Snapshot Storage"
+      ]
+    }
+  ],
+  'database-storage-engines': [
+    {
+      "name": "Query Interface Layer",
+      "purpose": "Accept read/write requests and route to engine",
+      "components": [
+        "Point Lookup",
+        "Range Scan",
+        "Insert/Update",
+        "Delete"
+      ]
+    },
+    {
+      "name": "Memory Layer",
+      "purpose": "Cache hot pages and stage writes before persistence",
+      "components": [
+        "Buffer Pool",
+        "MemTable",
+        "Write-Ahead Log"
+      ]
+    },
+    {
+      "name": "Index & Lookup Layer",
+      "purpose": "Accelerate data retrieval via tree structures and filters",
+      "components": [
+        "B-tree Index",
+        "LSM-tree Levels",
+        "Bloom Filters"
+      ]
+    },
+    {
+      "name": "Storage Format Layer",
+      "purpose": "Organize and persist data pages to disk",
+      "components": [
+        "Page Structure",
+        "SSTable Format",
+        "Compaction Strategy"
+      ]
+    },
+    {
+      "name": "Disk I/O Layer",
+      "purpose": "Read/write disk pages and manage sequential access",
+      "components": [
+        "Sequential Write",
+        "Random Read",
+        "Disk Controller"
+      ]
+    }
+  ],
+  'decorator-pattern': [
+    {
+      "name": "Client Layer",
+      "purpose": "Orders coffee with selected decorators dynamically",
+      "components": [
+        "Order Request",
+        "Decorator Selection",
+        "Runtime Assembly"
+      ]
+    },
+    {
+      "name": "Component Layer",
+      "purpose": "Defines base component and decorator interface",
+      "components": [
+        "Component Interface",
+        "Concrete Component",
+        "Decorator Abstract Class"
+      ]
+    },
+    {
+      "name": "Decorator Layer",
+      "purpose": "Wraps components adding specific behaviors",
+      "components": [
+        "Milk Decorator",
+        "Whip Decorator",
+        "Caramel Decorator"
+      ]
+    },
+    {
+      "name": "Composition Layer",
+      "purpose": "Chains decorators and computes final properties",
+      "components": [
+        "Decorator Stack",
+        "Cost Calculator",
+        "Description Builder"
+      ]
+    }
+  ],
+  'delivery-semantics': [
+    {
+      "name": "Producer Layer",
+      "purpose": "Send messages with delivery guarantees and retry logic",
+      "components": [
+        "Idempotent Producer",
+        "Retry Policy",
+        "Acknowledgment Handler"
+      ]
+    },
+    {
+      "name": "Message Broker Layer",
+      "purpose": "Store and distribute messages with delivery semantics",
+      "components": [
+        "At-Most-Once Queue",
+        "At-Least-Once Queue",
+        "Exactly-Once Broker",
+        "Deduplication Store"
+      ]
+    },
+    {
+      "name": "Consumer Layer",
+      "purpose": "Process messages with idempotency and offset management",
+      "components": [
+        "Idempotent Consumer",
+        "Deduplication Cache",
+        "Offset Tracker",
+        "Error Handler"
+      ]
+    },
+    {
+      "name": "Application Layer",
+      "purpose": "Enforce exactly-once semantics at application level",
+      "components": [
+        "Idempotency Keys",
+        "Unique Constraints",
+        "Transaction Manager",
+        "State Verification"
+      ]
+    }
+  ],
+  'design-hashmap': [
+    {
+      "name": "Public API Layer",
+      "purpose": "Expose put, get, remove operations to users",
+      "components": [
+        "put(key, value)",
+        "get(key)",
+        "remove(key)",
+        "size()",
+        "isEmpty()"
+      ]
+    },
+    {
+      "name": "Hashing & Collision Layer",
+      "purpose": "Compute hash codes and resolve collisions via chaining",
+      "components": [
+        "hashFunction(key)",
+        "bucketIndex(hash)",
+        "LinkedListNode",
+        "collisionChain"
+      ]
+    },
+    {
+      "name": "Bucket Management Layer",
+      "purpose": "Manage array of buckets and load factor tracking",
+      "components": [
+        "bucketArray[]",
+        "loadFactor",
+        "currentSize",
+        "capacity"
+      ]
+    },
+    {
+      "name": "Resizing & Rehashing Layer",
+      "purpose": "Expand capacity and redistribute entries when threshold exceeded",
+      "components": [
+        "resize()",
+        "rehash()",
+        "loadFactorThreshold",
+        "growthFactor"
+      ]
+    }
+  ],
+  'design-system-library': [
+    {
+      "name": "Documentation & Theming",
+      "purpose": "Provide interactive examples and visual theme customization",
+      "components": [
+        "Storybook",
+        "Theme Provider",
+        "Docs Site",
+        "CSS Variables"
+      ]
+    },
+    {
+      "name": "Component Layer",
+      "purpose": "Reusable UI components with TypeScript and accessibility",
+      "components": [
+        "Button",
+        "Input",
+        "Select",
+        "Modal",
+        "Toast",
+        "DataTable"
+      ]
+    },
+    {
+      "name": "Composition & Utilities",
+      "purpose": "Shared hooks, styling, and compound component patterns",
+      "components": [
+        "Hooks",
+        "Classname Utils",
+        "Compound Components",
+        "Prop Helpers"
+      ]
+    },
+    {
+      "name": "Accessibility & Testing",
+      "purpose": "WAI-ARIA compliance and component validation",
+      "components": [
+        "ARIA Attributes",
+        "Keyboard Handlers",
+        "Focus Management",
+        "A11y Tests"
+      ]
+    },
+    {
+      "name": "Build & Distribution",
+      "purpose": "Package bundling, versioning, and npm publishing",
+      "components": [
+        "TypeScript Compiler",
+        "Bundler",
+        "Type Definitions",
+        "Package Registry"
+      ]
+    }
+  ],
+  'dip': [
+    {
+      "name": "High-Level Module Layer",
+      "purpose": "Contain business logic independent of implementation details",
+      "components": [
+        "UserService",
+        "OrderService",
+        "PaymentService"
+      ]
+    },
+    {
+      "name": "Abstraction Layer",
+      "purpose": "Define interfaces that both layers depend on",
+      "components": [
+        "Repository Interface",
+        "Logger Interface",
+        "Cache Interface"
+      ]
+    },
+    {
+      "name": "Low-Level Module Layer",
+      "purpose": "Implement concrete details for specific technologies",
+      "components": [
+        "MySQLRepository",
+        "FileLogger",
+        "RedisCache"
+      ]
+    }
+  ],
+  'disk-space-manager': [
+    {
+      "name": "Client API Layer",
+      "purpose": "Expose allocation, deallocation, and defrag operations",
+      "components": [
+        "DiskManager",
+        "AllocationRequest",
+        "FileBlockMap"
+      ]
+    },
+    {
+      "name": "Allocation Strategy Layer",
+      "purpose": "Implement different block allocation policies",
+      "components": [
+        "FirstFitStrategy",
+        "ContiguousStrategy",
+        "AllocationPolicy"
+      ]
+    },
+    {
+      "name": "Block Tracking Layer",
+      "purpose": "Track block status and file ownership efficiently",
+      "components": [
+        "Bitmap",
+        "BlockMetadata",
+        "FileBlockRegistry"
+      ]
+    },
+    {
+      "name": "Defragmentation Layer",
+      "purpose": "Compact allocated blocks and reduce fragmentation",
+      "components": [
+        "Defragmenter",
+        "FragmentationCalculator",
+        "CompactionEngine"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persist block data and allocation state",
+      "components": [
+        "DiskBlocks",
+        "BlockStateStore",
+        "PersistenceManager"
+      ]
+    }
+  ],
+  'distributed-task-queue': [
+    {
+      "name": "Client Layer",
+      "purpose": "Enqueue tasks with priority, metadata, and idempotency keys",
+      "components": [
+        "Task Producer",
+        "Priority Encoder",
+        "Idempotency Manager"
+      ]
+    },
+    {
+      "name": "Queue & Broker Layer",
+      "purpose": "Store tasks, enforce priority ordering, route to workers",
+      "components": [
+        "Priority Queue",
+        "Message Broker",
+        "Dead Letter Queue",
+        "Queue Persistence"
+      ]
+    },
+    {
+      "name": "Worker & Execution Layer",
+      "purpose": "Consume tasks, execute handlers, implement retry and backoff logic",
+      "components": [
+        "Task Worker Pool",
+        "Retry Engine",
+        "Exponential Backoff",
+        "Failure Router"
+      ]
+    },
+    {
+      "name": "Monitoring & Observability Layer",
+      "purpose": "Track queue metrics, worker health, task outcomes in real time",
+      "components": [
+        "Metrics Collector",
+        "Dashboard API",
+        "Health Monitor",
+        "Event Logger"
+      ]
+    },
+    {
+      "name": "Storage & State Layer",
+      "purpose": "Persist task state, results, retries, and audit logs durably",
+      "components": [
+        "Task State Store",
+        "Result Cache",
+        "Retry History",
+        "Audit Log"
+      ]
+    }
+  ],
+  'dynamodb-deep-dive': [
+    {
+      "name": "Client Layer",
+      "purpose": "Applications submit requests to DynamoDB API",
+      "components": [
+        "Lambda Functions",
+        "API Gateway",
+        "Mobile Apps",
+        "Microservices"
+      ]
+    },
+    {
+      "name": "API & Query Layer",
+      "purpose": "Parse and optimize queries before execution",
+      "components": [
+        "Item Operations",
+        "Query API",
+        "Batch Operations",
+        "Transaction Manager"
+      ]
+    },
+    {
+      "name": "Indexing & Access Layer",
+      "purpose": "Route requests to correct partition using indexes",
+      "components": [
+        "Partition Key Router",
+        "Global Secondary Indexes",
+        "Local Secondary Indexes",
+        "Streams Engine"
+      ]
+    },
+    {
+      "name": "Storage & Consistency Layer",
+      "purpose": "Persist data with replication and consistency controls",
+      "components": [
+        "SSD Storage",
+        "Replica Nodes",
+        "TTL Processor",
+        "ACID Transactions"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Manage underlying compute and fault tolerance",
+      "components": [
+        "Auto Scaling",
+        "Partition Management",
+        "Data Replication",
+        "Backup & Recovery"
+      ]
+    }
+  ],
+  'ecommerce-product-page': [
+    {
+      "name": "UI Layer",
+      "purpose": "Render product pages with interactive components and user feedback",
+      "components": [
+        "Product Grid",
+        "Image Gallery",
+        "Variant Picker",
+        "Cart Sidebar",
+        "Checkout Form"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Track product selection, cart contents, and checkout progress",
+      "components": [
+        "Product State",
+        "Cart Store",
+        "Variant Matrix",
+        "Form State",
+        "Persistence Layer"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "Fetch product data, manage cart, and process orders",
+      "components": [
+        "Product Service",
+        "Cart API",
+        "Inventory Service",
+        "Checkout Service",
+        "Payment Gateway"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store products, SKUs, inventory, orders, and user data",
+      "components": [
+        "Product Database",
+        "SKU Catalog",
+        "Inventory Table",
+        "Order Records",
+        "User Sessions"
+      ]
+    }
+  ],
+  'elevator-system': [
+    {
+      "name": "User Interface Layer",
+      "purpose": "Accept user requests and display elevator status",
+      "components": [
+        "Hall Buttons",
+        "Cabin Buttons",
+        "Floor Display",
+        "Direction Indicator"
+      ]
+    },
+    {
+      "name": "Dispatch & Control Layer",
+      "purpose": "Route requests to elevators using scheduling algorithms",
+      "components": [
+        "Dispatch Strategy",
+        "LOOK Algorithm",
+        "Request Queue Manager",
+        "Elevator Selector"
+      ]
+    },
+    {
+      "name": "Elevator State Layer",
+      "purpose": "Manage individual elevator movement and operational states",
+      "components": [
+        "Elevator State Machine",
+        "Movement Controller",
+        "Door Controller",
+        "Current Position Tracker"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Execute elevator motion and handle concurrent operations",
+      "components": [
+        "Elevator Thread",
+        "Motor Control",
+        "Sensor Reader",
+        "Event Notifier"
+      ]
+    }
+  ],
+  'encapsulation': [
+    {
+      "name": "Public Interface Layer",
+      "purpose": "Define controlled access points for external interaction",
+      "components": [
+        "Public Methods",
+        "Getters",
+        "Setters"
+      ]
+    },
+    {
+      "name": "Validation & Business Logic Layer",
+      "purpose": "Enforce rules and maintain object invariants",
+      "components": [
+        "Input Validation",
+        "State Guards",
+        "Transaction Logic"
+      ]
+    },
+    {
+      "name": "Internal State Layer",
+      "purpose": "Store and manage private data attributes",
+      "components": [
+        "Private Fields",
+        "Internal Variables",
+        "State Representation"
+      ]
+    }
+  ],
+  'event-driven-architecture': [
+    {
+      "name": "Event Producer Layer",
+      "purpose": "Generate and publish domain events from services",
+      "components": [
+        "Domain Services",
+        "Event Emitters",
+        "Event Serializers"
+      ]
+    },
+    {
+      "name": "Event Streaming Layer",
+      "purpose": "Transport and distribute events across services",
+      "components": [
+        "Message Broker",
+        "Topic/Channel Management",
+        "Event Routing"
+      ]
+    },
+    {
+      "name": "Event Store Layer",
+      "purpose": "Persist immutable event logs as source of truth",
+      "components": [
+        "Event Log",
+        "Snapshots",
+        "Event Versioning"
+      ]
+    },
+    {
+      "name": "Event Consumer Layer",
+      "purpose": "React to events and update read models",
+      "components": [
+        "Event Handlers",
+        "Projections",
+        "CQRS Read Models"
+      ]
+    },
+    {
+      "name": "Query & State Layer",
+      "purpose": "Serve optimized views for application reads",
+      "components": [
+        "Materialized Views",
+        "Query Cache",
+        "Denormalized State"
+      ]
+    }
+  ],
+  'event-notification-system': [
+    {
+      "name": "Event Ingestion Layer",
+      "purpose": "Receive and validate domain events from application sources",
+      "components": [
+        "Event API",
+        "Event Validator",
+        "Event Router"
+      ]
+    },
+    {
+      "name": "Notification Processing Layer",
+      "purpose": "Transform events into notifications using templates and preferences",
+      "components": [
+        "Template Engine",
+        "Preference Manager",
+        "Notification Builder"
+      ]
+    },
+    {
+      "name": "Delivery Layer",
+      "purpose": "Send notifications through multiple channels with retry logic",
+      "components": [
+        "Email Handler",
+        "Push Handler",
+        "In-App Handler",
+        "SMS Handler",
+        "Retry Manager"
+      ]
+    },
+    {
+      "name": "Tracking & Storage Layer",
+      "purpose": "Persist notification state and track delivery status",
+      "components": [
+        "Notification Store",
+        "Delivery Log",
+        "Status Tracker"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide messaging, caching, and scheduling foundations",
+      "components": [
+        "Message Queue",
+        "Cache",
+        "Task Scheduler",
+        "Database"
+      ]
+    }
+  ],
+  'facade': [
+    {
+      "name": "Client Layer",
+      "purpose": "Calls simplified facade interface methods",
+      "components": [
+        "Client Code",
+        "Application Logic"
+      ]
+    },
+    {
+      "name": "Facade Layer",
+      "purpose": "Exposes unified interface, orchestrates subsystem",
+      "components": [
+        "Facade Class",
+        "Method Routing",
+        "Coordination Logic"
+      ]
+    },
+    {
+      "name": "Subsystem Layer",
+      "purpose": "Implements complex business logic and operations",
+      "components": [
+        "Component A",
+        "Component B",
+        "Component C",
+        "Component D",
+        "Component E"
+      ]
+    }
+  ],
+  'factory-method': [
+    {
+      "name": "Client Layer",
+      "purpose": "Request object creation through factory interface",
+      "components": [
+        "Client Code",
+        "Logistics Handler"
+      ]
+    },
+    {
+      "name": "Factory Layer",
+      "purpose": "Define creation interface and delegate to concrete factories",
+      "components": [
+        "Factory Interface",
+        "Concrete Factories",
+        "Factory Methods"
+      ]
+    },
+    {
+      "name": "Product Layer",
+      "purpose": "Define common interface for all created objects",
+      "components": [
+        "Product Interface",
+        "Concrete Products",
+        "Product Behavior"
+      ]
+    }
+  ],
+  'fb-live-comments': [
+    {
+      "name": "Client Layer",
+      "purpose": "Connect viewers and collect comment submissions",
+      "components": [
+        "WebSocket Client",
+        "Comment Input UI",
+        "Reaction Handler",
+        "Sampled Feed Renderer"
+      ]
+    },
+    {
+      "name": "API & Ingestion Layer",
+      "purpose": "Validate, rate-limit, and queue incoming comments",
+      "components": [
+        "Comment API Gateway",
+        "Rate Limiter",
+        "Input Validator",
+        "Event Producer"
+      ]
+    },
+    {
+      "name": "Processing & Moderation Layer",
+      "purpose": "Filter spam, detect profanity, analyze sentiment in real-time",
+      "components": [
+        "Spam Detector",
+        "Profanity Filter",
+        "Sentiment Analyzer",
+        "Moderation Queue"
+      ]
+    },
+    {
+      "name": "Distribution Layer",
+      "purpose": "Fan-out approved comments to millions of concurrent viewers",
+      "components": [
+        "Comment Broker",
+        "Edge Aggregators",
+        "Sampling Engine",
+        "WebSocket Router"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store comments, reactions, and moderation state persistently",
+      "components": [
+        "Comment Store",
+        "Reaction Cache",
+        "Stream Metadata DB",
+        "Moderation Log"
+      ]
+    }
+  ],
+  'fb-post-search': [
+    {
+      "name": "Query Layer",
+      "purpose": "Handle user search requests and typeahead suggestions",
+      "components": [
+        "Query Parser",
+        "Typeahead Service",
+        "Query Validator",
+        "Auto-complete Engine"
+      ]
+    },
+    {
+      "name": "Ranking & Personalization Layer",
+      "purpose": "Score and rank results by relevance and social signals",
+      "components": [
+        "BM25 Relevance Scorer",
+        "Social Graph Booster",
+        "Personalization Engine",
+        "Engagement Ranker"
+      ]
+    },
+    {
+      "name": "Privacy & Access Control Layer",
+      "purpose": "Filter results respecting user privacy settings in real-time",
+      "components": [
+        "Privacy Filter",
+        "Access Control Checker",
+        "Permission Cache",
+        "Graph Resolver"
+      ]
+    },
+    {
+      "name": "Search Index Layer",
+      "purpose": "Index and retrieve posts with fast lookup and aggregation",
+      "components": [
+        "Elasticsearch Cluster",
+        "Sharded Indices",
+        "Posting Lists",
+        "Real-time Indexer"
+      ]
+    },
+    {
+      "name": "Data & Infrastructure Layer",
+      "purpose": "Store posts, metadata, social graphs, and privacy policies",
+      "components": [
+        "Post Store",
+        "Social Graph DB",
+        "Metadata Cache",
+        "Message Queue"
+      ]
+    }
+  ],
+  'file-storage-service': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide user interface for file operations and management",
+      "components": [
+        "Web UI",
+        "Mobile App",
+        "File Explorer",
+        "Preview Widget"
+      ]
+    },
+    {
+      "name": "API Gateway & Auth Layer",
+      "purpose": "Route requests, validate tokens, enforce access control",
+      "components": [
+        "API Gateway",
+        "JWT Validator",
+        "Rate Limiter",
+        "Request Router"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Execute core file operations and business logic",
+      "components": [
+        "File Service",
+        "Folder Service",
+        "Share Service",
+        "Quota Manager"
+      ]
+    },
+    {
+      "name": "Storage & Data Layer",
+      "purpose": "Persist metadata, manage object storage, track usage",
+      "components": [
+        "PostgreSQL",
+        "S3/MinIO",
+        "Redis Cache",
+        "Metadata Store"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Handle async jobs, monitoring, and system reliability",
+      "components": [
+        "Message Queue",
+        "Background Workers",
+        "Logging",
+        "Metrics"
+      ]
+    }
+  ],
+  'flyweight': [
+    {
+      "name": "Client Layer",
+      "purpose": "Request flyweight objects with extrinsic state",
+      "components": [
+        "Client Code",
+        "Context/Request Handler"
+      ]
+    },
+    {
+      "name": "Flyweight Factory Layer",
+      "purpose": "Manage pool of shared flyweight instances",
+      "components": [
+        "FlyweightFactory",
+        "Object Pool",
+        "Cache/Registry"
+      ]
+    },
+    {
+      "name": "Flyweight Objects Layer",
+      "purpose": "Store immutable intrinsic state for sharing",
+      "components": [
+        "ConcreteFlyweight",
+        "Intrinsic State",
+        "Shared Instances"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Execute operations with runtime extrinsic state",
+      "components": [
+        "Operation Methods",
+        "Extrinsic State",
+        "Context Data"
+      ]
+    }
+  ],
+  'food-delivery': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide interfaces for customers, restaurants, and drivers",
+      "components": [
+        "Customer App",
+        "Restaurant Portal",
+        "Driver App",
+        "Web Browser"
+      ]
+    },
+    {
+      "name": "API & Orchestration Layer",
+      "purpose": "Route requests and coordinate three-party workflow",
+      "components": [
+        "Order API",
+        "Restaurant API",
+        "Driver API",
+        "Order Orchestrator",
+        "Payment Gateway"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Execute order, restaurant, and delivery domain logic",
+      "components": [
+        "Order Service",
+        "Restaurant Service",
+        "Driver Service",
+        "Matching Engine",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "Data & Cache Layer",
+      "purpose": "Persist and quickly retrieve order, menu, and location data",
+      "components": [
+        "Order Database",
+        "Restaurant Database",
+        "Cache (Redis)",
+        "Search Index"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Enable real-time tracking, messaging, and system resilience",
+      "components": [
+        "Message Queue (Kafka)",
+        "Geolocation Service",
+        "Real-time Socket",
+        "Monitoring & Logging"
+      ]
+    }
+  ],
+  'fork-join-framework': [
+    {
+      "name": "Task Definition Layer",
+      "purpose": "Define recursive divide-and-conquer tasks and base cases",
+      "components": [
+        "RecursiveTask",
+        "RecursiveAction",
+        "Task threshold",
+        "Base case logic"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Coordinate fork, join, and result combination",
+      "components": [
+        "Fork operation",
+        "Join operation",
+        "Result merging",
+        "Parallel dispatch"
+      ]
+    },
+    {
+      "name": "Work-Stealing Layer",
+      "purpose": "Balance load across threads using lock-free deques",
+      "components": [
+        "Worker deque",
+        "Task stealing",
+        "Idle detection",
+        "Contention avoidance"
+      ]
+    },
+    {
+      "name": "Thread Pool Layer",
+      "purpose": "Manage worker threads and coordinate task distribution",
+      "components": [
+        "ForkJoinPool",
+        "Worker threads",
+        "Queue management",
+        "Thread lifecycle"
+      ]
+    }
+  ],
+  'go-fish': [
+    {
+      "name": "Game Controller Layer",
+      "purpose": "Orchestrate turn sequence and enforce game rules",
+      "components": [
+        "Game",
+        "Turn Manager",
+        "Win Condition Checker"
+      ]
+    },
+    {
+      "name": "Player Management Layer",
+      "purpose": "Track player state, hands, and book collections",
+      "components": [
+        "Player",
+        "Hand Manager",
+        "Book Detector"
+      ]
+    },
+    {
+      "name": "Card & Deck Layer",
+      "purpose": "Represent cards and manage deck operations",
+      "components": [
+        "Card",
+        "Rank Enum",
+        "Suit Enum",
+        "Deck"
+      ]
+    }
+  ],
+  'gpu-credits': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accept user requests for credits and GPU launches",
+      "components": [
+        "Credit Purchase API",
+        "Instance Launch API",
+        "Balance Query",
+        "Ledger View"
+      ]
+    },
+    {
+      "name": "Credit Management Layer",
+      "purpose": "Manage user balances and enforce quota limits",
+      "components": [
+        "Balance Manager",
+        "Quota Enforcer",
+        "Low Balance Observer",
+        "Concurrent Lock Manager"
+      ]
+    },
+    {
+      "name": "Billing Engine Layer",
+      "purpose": "Calculate rates and deduct credits atomically",
+      "components": [
+        "Rate Calculator",
+        "Billing Scheduler",
+        "Atomic Deductor",
+        "Preemption Handler"
+      ]
+    },
+    {
+      "name": "Ledger & Audit Layer",
+      "purpose": "Record immutable double-entry transactions for all movements",
+      "components": [
+        "Ledger Writer",
+        "Debit-Credit Entry",
+        "Transaction Logger",
+        "Audit Query"
+      ]
+    },
+    {
+      "name": "Data & Storage Layer",
+      "purpose": "Persist accounts, instances, rates, and ledger entries",
+      "components": [
+        "User Accounts DB",
+        "Instance State DB",
+        "Rate Catalog",
+        "Ledger Store"
+      ]
+    }
+  ],
+  'gslb-geodns-anycast': [
+    {
+      "name": "Client Layer",
+      "purpose": "Initiate DNS queries and HTTP requests globally",
+      "components": [
+        "User clients",
+        "DNS resolvers",
+        "Browser caches"
+      ]
+    },
+    {
+      "name": "GeoDNS Layer",
+      "purpose": "Route DNS queries to nearest regional endpoint",
+      "components": [
+        "Authoritative nameservers",
+        "Geo IP lookup",
+        "DNS response cache"
+      ]
+    },
+    {
+      "name": "Anycast Layer",
+      "purpose": "Advertise same IP across regions via BGP",
+      "components": [
+        "BGP announcements",
+        "Edge nodes",
+        "Route propagation"
+      ]
+    },
+    {
+      "name": "Regional Load Balancing",
+      "purpose": "Distribute traffic across instances in region",
+      "components": [
+        "ALB/NLB",
+        "Health checks",
+        "Local routing"
+      ]
+    },
+    {
+      "name": "Data Center Layer",
+      "purpose": "Process requests and serve application content",
+      "components": [
+        "API servers",
+        "App instances",
+        "Databases"
+      ]
+    }
+  ],
+  'hotel-management-lld': [
+    {
+      "name": "Guest Interface Layer",
+      "purpose": "Enable guests to search, book, and manage reservations",
+      "components": [
+        "Booking Portal",
+        "Guest Mobile App",
+        "Check-in/Check-out Kiosk",
+        "Guest Account Dashboard"
+      ]
+    },
+    {
+      "name": "Reservation & Billing Layer",
+      "purpose": "Process bookings, manage rates, and calculate charges",
+      "components": [
+        "Reservation Engine",
+        "Rate Manager",
+        "Billing Engine",
+        "Invoice Generator",
+        "Payment Processor"
+      ]
+    },
+    {
+      "name": "Operations Layer",
+      "purpose": "Coordinate rooms, housekeeping, and inventory management",
+      "components": [
+        "Room State Manager",
+        "Housekeeping Scheduler",
+        "Room Type Classifier",
+        "Occupancy Tracker",
+        "Upgrade Manager"
+      ]
+    },
+    {
+      "name": "Integration Layer",
+      "purpose": "Synchronize with external booking channels and systems",
+      "components": [
+        "OTA Connector",
+        "Channel Manager",
+        "Webhook Handler",
+        "Data Sync Service"
+      ]
+    },
+    {
+      "name": "Data & Storage Layer",
+      "purpose": "Persist guests, rooms, reservations, and billing records",
+      "components": [
+        "Guest Database",
+        "Room Inventory Store",
+        "Reservation Log",
+        "Billing Database",
+        "Rate Calendar"
+      ]
+    }
+  ],
+  'idempotency': [
+    {
+      "name": "Client Layer",
+      "purpose": "Generate and send idempotency key with requests",
+      "components": [
+        "UUID Generator",
+        "Request Builder",
+        "Idempotency-Key Header"
+      ]
+    },
+    {
+      "name": "API Gateway & Validation",
+      "purpose": "Extract and validate idempotency key and request integrity",
+      "components": [
+        "Key Extraction",
+        "Parameter Validation",
+        "Duplicate Detection"
+      ]
+    },
+    {
+      "name": "Idempotency Service",
+      "purpose": "Store results and enforce exactly-once execution semantics",
+      "components": [
+        "Key-Result Mapper",
+        "Parameter Matcher",
+        "Retry Handler"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Execute operation only on first valid request arrival",
+      "components": [
+        "Operation Executor",
+        "State Transition",
+        "Error Handler"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persist idempotency keys, results, and metadata durably",
+      "components": [
+        "Key-Value Store",
+        "Result Cache",
+        "TTL Cleanup"
+      ]
+    }
+  ],
+  'in-memory-filesystem': [
+    {
+      "name": "Command Interface Layer",
+      "purpose": "Parse and execute user commands like ls, mkdir, cat, write",
+      "components": [
+        "Command Parser",
+        "Path Resolver",
+        "Operation Dispatcher"
+      ]
+    },
+    {
+      "name": "File System Operations Layer",
+      "purpose": "Implement core operations on directory and file structures",
+      "components": [
+        "Mkdir Handler",
+        "Ls Handler",
+        "Cat Handler",
+        "Write Handler",
+        "Navigation Handler"
+      ]
+    },
+    {
+      "name": "Data Structure Layer",
+      "purpose": "Maintain hierarchical tree of files and directories in memory",
+      "components": [
+        "Directory Node",
+        "File Node",
+        "Tree Traversal",
+        "Content Storage"
+      ]
+    }
+  ],
+  'infinite-image-gallery': [
+    {
+      "name": "Client Layer",
+      "purpose": "Handle user interactions and viewport rendering",
+      "components": [
+        "Scroll Detection",
+        "Click Handlers",
+        "Keyboard Navigation",
+        "Touch Events"
+      ]
+    },
+    {
+      "name": "Layout & Rendering Layer",
+      "purpose": "Arrange images masonry-style and manage responsive columns",
+      "components": [
+        "Masonry Algorithm",
+        "Column Height Tracker",
+        "Responsive Breakpoints",
+        "Aspect Ratio Placeholders"
+      ]
+    },
+    {
+      "name": "Image Loading Layer",
+      "purpose": "Load and display images with progressive optimization",
+      "components": [
+        "Lazy Load Observer",
+        "Image Fetcher",
+        "Blur-Up Preview",
+        "Lightbox Viewer"
+      ]
+    },
+    {
+      "name": "DOM & Virtualization Layer",
+      "purpose": "Manage DOM elements and prevent memory bloat",
+      "components": [
+        "Virtual Scroller",
+        "DOM Recycler",
+        "Fragment Renderer",
+        "Scroll Buffer"
+      ]
+    },
+    {
+      "name": "Data & API Layer",
+      "purpose": "Fetch and cache image metadata and URLs",
+      "components": [
+        "Infinite Pagination",
+        "Image API Client",
+        "Response Cache",
+        "Prefetch Queue"
+      ]
+    }
+  ],
+  'interfaces': [
+    {
+      "name": "Contract Definition Layer",
+      "purpose": "Define method signatures and behavioral expectations",
+      "components": [
+        "Method Signatures",
+        "Return Types",
+        "Parameters",
+        "Exception Contracts"
+      ]
+    },
+    {
+      "name": "Implementation Layer",
+      "purpose": "Provide concrete implementations of interface contracts",
+      "components": [
+        "Concrete Classes",
+        "Multiple Implementations",
+        "Algorithm Variants"
+      ]
+    },
+    {
+      "name": "Consumption Layer",
+      "purpose": "Use implementations through interface abstraction",
+      "components": [
+        "Dependency Injection",
+        "Polymorphic Calls",
+        "Client Code"
+      ]
+    },
+    {
+      "name": "Testing & Flexibility Layer",
+      "purpose": "Enable mocking, testing, and runtime swapping",
+      "components": [
+        "Mock Implementations",
+        "Test Doubles",
+        "Runtime Substitution"
+      ]
+    }
+  ],
+  'inventory-management': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide user interfaces for warehouse operations and reporting",
+      "components": [
+        "Web Dashboard",
+        "Mobile App",
+        "Barcode Scanner",
+        "Reporting Interface"
+      ]
+    },
+    {
+      "name": "API & Orchestration Layer",
+      "purpose": "Expose inventory operations and coordinate business workflows",
+      "components": [
+        "REST API",
+        "Order Processing",
+        "Receiving Service",
+        "Replenishment Engine",
+        "Allocation Service"
+      ]
+    },
+    {
+      "name": "Core Business Logic Layer",
+      "purpose": "Enforce inventory rules and maintain data consistency",
+      "components": [
+        "Stock Calculator",
+        "Location Manager",
+        "Expiry Tracker",
+        "Audit Logger",
+        "Threshold Monitor"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist inventory state and transaction history",
+      "components": [
+        "Product Repository",
+        "Stock Ledger",
+        "Warehouse Locations",
+        "Transaction Log",
+        "Expiry Index"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide data storage, caching, and system reliability",
+      "components": [
+        "SQL Database",
+        "Cache Layer",
+        "Message Queue",
+        "Search Index"
+      ]
+    }
+  ],
+  'iterator': [
+    {
+      "name": "Client Layer",
+      "purpose": "Consume collections using uniform iterator interface",
+      "components": [
+        "Client Code",
+        "For-Each Loop",
+        "Manual Iteration"
+      ]
+    },
+    {
+      "name": "Iterator Interface",
+      "purpose": "Define standard methods for sequential element access",
+      "components": [
+        "hasNext()",
+        "next()",
+        "remove()"
+      ]
+    },
+    {
+      "name": "Concrete Iterators",
+      "purpose": "Implement traversal logic for specific data structures",
+      "components": [
+        "ArrayIterator",
+        "LinkedListIterator",
+        "TreeIterator",
+        "GraphIterator"
+      ]
+    },
+    {
+      "name": "Collection Layer",
+      "purpose": "Store elements and create appropriate iterators",
+      "components": [
+        "Array",
+        "LinkedList",
+        "Tree",
+        "Graph",
+        "HashMap"
+      ]
+    }
+  ],
+  'job-board-api': [
+    {
+      "name": "Client Layer",
+      "purpose": "Render UI for employers, candidates, and admins",
+      "components": [
+        "Job Listings Page",
+        "Application Dashboard",
+        "Admin Panel",
+        "Auth Forms",
+        "Search & Filter"
+      ]
+    },
+    {
+      "name": "API Gateway & Auth Layer",
+      "purpose": "Authenticate users and enforce role-based access",
+      "components": [
+        "JWT Token Handler",
+        "Role Validator",
+        "Permission Checker",
+        "Auth Middleware"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Manage jobs, applications, and workflow transitions",
+      "components": [
+        "Job Service",
+        "Application Service",
+        "State Machine",
+        "Search Engine",
+        "Audit Logger"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and query jobs, users, and applications",
+      "components": [
+        "User Repository",
+        "Job Repository",
+        "Application Repository",
+        "Audit Trail",
+        "Search Index"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Support persistence, caching, and external services",
+      "components": [
+        "Relational Database",
+        "Cache Layer",
+        "Full-Text Search",
+        "Email Service"
+      ]
+    }
+  ],
+  'kanban-board': [
+    {
+      "name": "Presentation Layer",
+      "purpose": "Render interactive board UI with drag-and-drop feedback",
+      "components": [
+        "Card Component",
+        "Column Component",
+        "Board Grid",
+        "Drag Overlay",
+        "Modal Editor"
+      ]
+    },
+    {
+      "name": "Interaction Layer",
+      "purpose": "Handle drag-and-drop, reordering, and user gestures",
+      "components": [
+        "Drag Detector",
+        "Drop Target Resolver",
+        "Position Calculator",
+        "Animation Engine",
+        "Keyboard Handler"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Manage board state, cards, columns, and mutations",
+      "components": [
+        "Board Store",
+        "Card Reducer",
+        "Optimistic Updates",
+        "Undo/Redo Stack",
+        "Conflict Resolution"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and synchronize board state with backend",
+      "components": [
+        "Local Storage Cache",
+        "API Client",
+        "Sync Queue",
+        "Change Tracker",
+        "Debouncer"
+      ]
+    },
+    {
+      "name": "Backend Layer",
+      "purpose": "Store board, columns, cards, and metadata durably",
+      "components": [
+        "Board Service",
+        "Card Service",
+        "Persistence DB",
+        "Real-time Events",
+        "Validation Rules"
+      ]
+    }
+  ],
+  'learning-platform': [
+    {
+      "name": "Client Layer",
+      "purpose": "Deliver interactive learning interface to students and instructors",
+      "components": [
+        "Student Portal",
+        "Instructor Dashboard",
+        "Video Player",
+        "Quiz Interface",
+        "Progress View"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "Expose course content and progress operations via REST endpoints",
+      "components": [
+        "Course Service API",
+        "Enrollment API",
+        "Progress API",
+        "Assessment API",
+        "Certificate API"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Execute business logic for learning workflows and tracking",
+      "components": [
+        "Course Manager",
+        "Progress Tracker",
+        "Quiz Engine",
+        "Certification Service",
+        "Recommendation Engine"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist courses, users, progress, and assessment data",
+      "components": [
+        "Course Schema",
+        "User Progress Store",
+        "Quiz Submissions",
+        "Enrollment Records",
+        "Certificate Registry"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide storage, caching, and messaging for platform scalability",
+      "components": [
+        "PostgreSQL",
+        "Redis Cache",
+        "S3 Media Storage",
+        "Message Queue",
+        "Search Index"
+      ]
+    }
+  ],
+  'leetcode-online-judge': [
+    {
+      "name": "Client Layer",
+      "purpose": "Handle user submissions and display results",
+      "components": [
+        "Web UI",
+        "Code Editor",
+        "Result Display",
+        "Leaderboard View"
+      ]
+    },
+    {
+      "name": "API & Orchestration Layer",
+      "purpose": "Route submissions and manage execution queue",
+      "components": [
+        "REST API",
+        "Submission Queue",
+        "Job Scheduler",
+        "Websocket Server"
+      ]
+    },
+    {
+      "name": "Execution Service Layer",
+      "purpose": "Compile and execute code in isolated environments",
+      "components": [
+        "Compiler Service",
+        "Sandbox Manager",
+        "Resource Limiter",
+        "Test Runner",
+        "Language Runtime"
+      ]
+    },
+    {
+      "name": "Data & Analytics Layer",
+      "purpose": "Store results and track user progress",
+      "components": [
+        "Result Store",
+        "User Progress DB",
+        "Plagiarism Detector",
+        "Leaderboard Cache"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide compute and storage at scale",
+      "components": [
+        "Container Orchestration",
+        "Worker Pool",
+        "cgroups Isolator",
+        "Persistent Storage",
+        "Message Queue"
+      ]
+    }
+  ],
+  'library-management-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Member and librarian interfaces for system interaction",
+      "components": [
+        "Member Portal",
+        "Librarian Dashboard",
+        "Search Interface",
+        "Notification UI"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Manage borrowing, reservations, fines, and member eligibility",
+      "components": [
+        "Checkout Manager",
+        "Return Manager",
+        "Reservation Queue",
+        "Fine Calculator",
+        "Member Validator"
+      ]
+    },
+    {
+      "name": "Entity Model Layer",
+      "purpose": "Model library entities and their relationships",
+      "components": [
+        "Book Catalog",
+        "BookCopy Instance",
+        "Member Registry",
+        "Borrowing Record",
+        "Reservation Record"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Store and retrieve library data durably",
+      "components": [
+        "Book Store",
+        "Member Store",
+        "Borrowing Store",
+        "Reservation Store",
+        "Fine Store"
+      ]
+    },
+    {
+      "name": "Notification Layer",
+      "purpose": "Alert members of availability and overdue events",
+      "components": [
+        "Availability Notifier",
+        "Overdue Alert",
+        "Reservation Alert",
+        "Email Service"
+      ]
+    }
+  ],
+  'linkedin-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "User interfaces for profiles, feed, jobs, and messaging",
+      "components": [
+        "Web App",
+        "Mobile App",
+        "Desktop Client",
+        "Admin Portal"
+      ]
+    },
+    {
+      "name": "API Gateway & Auth Layer",
+      "purpose": "Route requests, authenticate users, enforce permissions",
+      "components": [
+        "API Gateway",
+        "Auth Service",
+        "Permission Manager",
+        "Rate Limiter"
+      ]
+    },
+    {
+      "name": "Core Service Layer",
+      "purpose": "Handle profiles, connections, jobs, feed, and messaging",
+      "components": [
+        "Profile Service",
+        "Connection Service",
+        "Job Service",
+        "Feed Service",
+        "Message Service",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "Data & Cache Layer",
+      "purpose": "Persist and quickly retrieve user data, graphs, and feed",
+      "components": [
+        "User Database",
+        "Graph Database",
+        "Job Index",
+        "Cache Layer",
+        "Search Index"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Scale, monitor, and support platform reliability",
+      "components": [
+        "Message Queue",
+        "Batch Processor",
+        "Logging",
+        "Monitoring",
+        "CDN"
+      ]
+    }
+  ],
+  'locker-allocation': [
+    {
+      "name": "Client Layer",
+      "purpose": "Handle delivery driver and customer interactions",
+      "components": [
+        "Delivery Driver",
+        "Package Recipient",
+        "Admin Portal"
+      ]
+    },
+    {
+      "name": "Allocation Service Layer",
+      "purpose": "Manage locker allocation and access control",
+      "components": [
+        "Allocation Manager",
+        "Strategy Engine",
+        "Access Code Generator",
+        "Expiry Handler"
+      ]
+    },
+    {
+      "name": "Locker Management Layer",
+      "purpose": "Track locker state and availability",
+      "components": [
+        "Locker Registry",
+        "State Machine",
+        "Observer Notifier"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist allocations and locker metadata",
+      "components": [
+        "Allocation Store",
+        "Locker Store",
+        "Access Log"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide concurrency and timeout handling",
+      "components": [
+        "Thread Pool",
+        "Timeout Manager",
+        "Lock Manager"
+      ]
+    }
+  ],
+  'logging-framework': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provides simple API for applications to emit log messages",
+      "components": [
+        "Logger Interface",
+        "LogLevel Enum",
+        "LogMessage Class"
+      ]
+    },
+    {
+      "name": "Processing Layer",
+      "purpose": "Filters messages by level and routes to appropriate appenders",
+      "components": [
+        "Logger Implementation",
+        "Level Filter",
+        "Dispatcher"
+      ]
+    },
+    {
+      "name": "Formatting & Output Layer",
+      "purpose": "Formats messages and sends to destinations via appenders",
+      "components": [
+        "Formatter Interface",
+        "Appender Interface",
+        "AsyncQueue"
+      ]
+    },
+    {
+      "name": "Destination Layer",
+      "purpose": "Writes formatted logs to concrete targets",
+      "components": [
+        "ConsoleAppender",
+        "FileAppender",
+        "DatabaseAppender"
+      ]
+    },
+    {
+      "name": "Configuration Layer",
+      "purpose": "Manages framework setup and appender lifecycle",
+      "components": [
+        "LoggerConfig",
+        "AppenderRegistry",
+        "ConfigBuilder"
+      ]
+    }
+  ],
+  'lru-cache': [
+    {
+      "name": "API Layer",
+      "purpose": "Expose get and put operations to clients",
+      "components": [
+        "get(key)",
+        "put(key, value)",
+        "capacity constraint"
+      ]
+    },
+    {
+      "name": "Cache Logic Layer",
+      "purpose": "Coordinate lookup and eviction with recency tracking",
+      "components": [
+        "access tracking",
+        "eviction policy",
+        "capacity enforcement"
+      ]
+    },
+    {
+      "name": "Data Structure Layer",
+      "purpose": "Store mappings and maintain access order efficiently",
+      "components": [
+        "HashMap (key→node)",
+        "Doubly Linked List",
+        "Node (key, value, pointers)"
+      ]
+    }
+  ],
+  'markdown-editor': [
+    {
+      "name": "UI Layer",
+      "purpose": "Render editor interface and live preview panes",
+      "components": [
+        "Editor Pane",
+        "Preview Pane",
+        "Toolbar",
+        "Split Resizer",
+        "Theme Toggle"
+      ]
+    },
+    {
+      "name": "Editor Logic Layer",
+      "purpose": "Handle text input, formatting, and synchronization",
+      "components": [
+        "Input Handler",
+        "Debouncer",
+        "Cursor Tracker",
+        "Format Injector",
+        "Scroll Sync"
+      ]
+    },
+    {
+      "name": "Markdown Processing Layer",
+      "purpose": "Parse Markdown and render HTML with syntax highlighting",
+      "components": [
+        "Markdown Parser",
+        "HTML Sanitizer",
+        "Syntax Highlighter",
+        "Renderer"
+      ]
+    },
+    {
+      "name": "Storage & Export Layer",
+      "purpose": "Persist editor state and export to multiple formats",
+      "components": [
+        "LocalStorage Manager",
+        "HTML Exporter",
+        "PDF Exporter",
+        "File Handler"
+      ]
+    }
+  ],
+  'mediator': [
+    {
+      "name": "Colleague Layer",
+      "purpose": "Objects that communicate through mediator instead of directly",
+      "components": [
+        "Colleague A",
+        "Colleague B",
+        "Colleague C",
+        "Colleague N"
+      ]
+    },
+    {
+      "name": "Mediator Layer",
+      "purpose": "Central hub that handles all object interactions and coordination",
+      "components": [
+        "Mediator Interface",
+        "Concrete Mediator",
+        "Interaction Logic"
+      ]
+    },
+    {
+      "name": "Control Flow Layer",
+      "purpose": "Manages state transitions and notification routing between colleagues",
+      "components": [
+        "State Manager",
+        "Event Router",
+        "Notification Handler"
+      ]
+    }
+  ],
+  'meeting-scheduler': [
+    {
+      "name": "Client Layer",
+      "purpose": "User interfaces for scheduling and calendar management",
+      "components": [
+        "Web UI",
+        "Mobile App",
+        "Calendar Sync",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "REST endpoints for meeting and availability operations",
+      "components": [
+        "Meeting API",
+        "Calendar API",
+        "Room API",
+        "Participant API"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Core scheduling logic and conflict resolution",
+      "components": [
+        "Scheduler Engine",
+        "Availability Finder",
+        "Conflict Resolver",
+        "Room Allocator",
+        "Reminder Manager",
+        "Timezone Converter"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persistent storage for meetings, calendars, and resources",
+      "components": [
+        "Meeting Store",
+        "Calendar Store",
+        "Room Store",
+        "Participant Store",
+        "Audit Log"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "External integrations and system support",
+      "components": [
+        "Email Service",
+        "Calendar Sync",
+        "Message Queue",
+        "Cache Layer"
+      ]
+    }
+  ],
+  'memento': [
+    {
+      "name": "Client Layer",
+      "purpose": "Requests state capture and restoration operations",
+      "components": [
+        "Caretaker",
+        "User Interface"
+      ]
+    },
+    {
+      "name": "Pattern Layer",
+      "purpose": "Manages state snapshots and restoration logic",
+      "components": [
+        "Originator",
+        "Memento",
+        "Caretaker"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persists and retrieves memento objects",
+      "components": [
+        "Memory Store",
+        "File System",
+        "Database"
+      ]
+    }
+  ],
+  'memory-allocator': [
+    {
+      "name": "Allocation API Layer",
+      "purpose": "Expose malloc and free operations to clients",
+      "components": [
+        "malloc()",
+        "free()",
+        "MemoryRequest"
+      ]
+    },
+    {
+      "name": "Allocation Strategy Layer",
+      "purpose": "Execute allocation algorithm and block splitting",
+      "components": [
+        "FirstFitAllocator",
+        "BestFitAllocator",
+        "BlockSplitter"
+      ]
+    },
+    {
+      "name": "Free List Management Layer",
+      "purpose": "Track free and allocated blocks by address",
+      "components": [
+        "FreeList",
+        "Block",
+        "BlockCoalescer"
+      ]
+    },
+    {
+      "name": "Memory Storage Layer",
+      "purpose": "Manage contiguous memory heap and metadata",
+      "components": [
+        "MemoryHeap",
+        "BlockMetadata",
+        "AddressTracker"
+      ]
+    }
+  ],
+  'movie-ticket-booking': [
+    {
+      "name": "Client Layer",
+      "purpose": "Users browse movies, select shows, choose seats",
+      "components": [
+        "Movie Browser",
+        "Showtime Selector",
+        "Seat Map UI",
+        "Booking Cart"
+      ]
+    },
+    {
+      "name": "API & Orchestration Layer",
+      "purpose": "Route requests, manage seat locks, coordinate transactions",
+      "components": [
+        "Booking API",
+        "Seat Lock Manager",
+        "Payment Orchestrator",
+        "Cancellation Handler"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Validate availability, calculate pricing, process reservations",
+      "components": [
+        "Seat Availability Engine",
+        "Dynamic Pricing Service",
+        "Reservation Validator",
+        "Concurrency Controller"
+      ]
+    },
+    {
+      "name": "Data & Persistence Layer",
+      "purpose": "Store theaters, shows, seats, bookings, payment records",
+      "components": [
+        "Theater Database",
+        "Seat State Cache",
+        "Booking Store",
+        "Payment Log",
+        "Lock Registry"
+      ]
+    },
+    {
+      "name": "External & Infrastructure Layer",
+      "purpose": "Process payments, send notifications, ensure reliability",
+      "components": [
+        "Payment Gateway",
+        "Notification Service",
+        "Message Queue",
+        "Error Recovery"
+      ]
+    }
+  ],
+  'multi-step-form-wizard': [
+    {
+      "name": "Presentation Layer",
+      "purpose": "Render step UI, progress indicator, navigation buttons",
+      "components": [
+        "Step Component",
+        "Progress Bar",
+        "Navigation Controls",
+        "Error Display"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Manage form data, validation state, current step tracking",
+      "components": [
+        "Form State",
+        "Validation State",
+        "Step Navigator",
+        "Conditional Logic"
+      ]
+    },
+    {
+      "name": "Validation & Rules Layer",
+      "purpose": "Define per-step validation schemas, conditional rules, data cleanup",
+      "components": [
+        "Zod Schemas",
+        "Step Validators",
+        "Conditional Rules",
+        "Data Transformer"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Auto-save drafts, restore state, finalize submission",
+      "components": [
+        "LocalStorage Manager",
+        "Draft Serializer",
+        "Auto-save Handler",
+        "Submit Service"
+      ]
+    }
+  ],
+  'music-visualizer': [
+    {
+      "name": "User Input Layer",
+      "purpose": "Capture audio from file upload or microphone",
+      "components": [
+        "File Input Handler",
+        "Microphone Capture",
+        "Audio Source Manager"
+      ]
+    },
+    {
+      "name": "Audio Analysis Layer",
+      "purpose": "Extract frequency, waveform, and beat data in real time",
+      "components": [
+        "AudioContext Graph",
+        "Frequency Analyzer",
+        "Waveform Extractor",
+        "Beat Detector"
+      ]
+    },
+    {
+      "name": "Visualization Layer",
+      "purpose": "Render spectrum bars, oscilloscope, particles on canvas",
+      "components": [
+        "Frequency Renderer",
+        "Waveform Renderer",
+        "Particle System",
+        "Canvas Manager"
+      ]
+    },
+    {
+      "name": "Rendering Engine",
+      "purpose": "Handle animation loop and WebGL/Canvas graphics",
+      "components": [
+        "Animation Loop",
+        "Canvas Context",
+        "Transform Pipeline",
+        "Effect Compositor"
+      ]
+    }
+  ],
+  'mvcc': [
+    {
+      "name": "Transaction Interface",
+      "purpose": "Assign snapshot isolation level and transaction boundaries",
+      "components": [
+        "BEGIN",
+        "COMMIT",
+        "ROLLBACK",
+        "Isolation Level"
+      ]
+    },
+    {
+      "name": "Version Management",
+      "purpose": "Create and track multiple row versions with visibility rules",
+      "components": [
+        "Row Versioning",
+        "Visibility Check",
+        "Snapshot ID",
+        "Write Intent"
+      ]
+    },
+    {
+      "name": "Concurrency Control",
+      "purpose": "Enable non-blocking reads and writes via version selection",
+      "components": [
+        "Reader Lock-Free",
+        "Writer Lock-Free",
+        "Conflict Detection",
+        "Timestamp Ordering"
+      ]
+    },
+    {
+      "name": "Storage & Cleanup",
+      "purpose": "Store versions and reclaim dead tuple space via garbage collection",
+      "components": [
+        "Version Storage",
+        "Tuple Heap",
+        "VACUUM Process",
+        "Dead Tuple Purge"
+      ]
+    }
+  ],
+  'negative-caching': [
+    {
+      "name": "Client Layer",
+      "purpose": "Sends requests for resources and receives cached responses",
+      "components": [
+        "HTTP Client",
+        "Request Router",
+        "Response Handler"
+      ]
+    },
+    {
+      "name": "Cache Layer",
+      "purpose": "Stores sentinel values and miss results with short TTL",
+      "components": [
+        "Negative Cache Store",
+        "Bloom Filter",
+        "TTL Manager",
+        "Sentinel Value Generator"
+      ]
+    },
+    {
+      "name": "Backend Layer",
+      "purpose": "Queries origin only on cache miss, returns empty or 404",
+      "components": [
+        "Query Executor",
+        "Empty Result Handler",
+        "404 Response Builder"
+      ]
+    }
+  ],
+  'newsql-databases': [
+    {
+      "name": "SQL Interface Layer",
+      "purpose": "Provide familiar SQL queries and ACID transactions",
+      "components": [
+        "SQL Parser",
+        "Query Planner",
+        "Transaction Manager",
+        "ACID Guarantees"
+      ]
+    },
+    {
+      "name": "Distributed Consensus Layer",
+      "purpose": "Ensure data consistency across replicated nodes",
+      "components": [
+        "Raft Protocol",
+        "Log Replication",
+        "Leader Election",
+        "Leaseholder"
+      ]
+    },
+    {
+      "name": "Clock & Ordering Layer",
+      "purpose": "Establish global causal ordering with time synchronization",
+      "components": [
+        "TrueTime API",
+        "Atomic Clocks",
+        "Uncertainty Intervals",
+        "Commit Wait"
+      ]
+    },
+    {
+      "name": "Distributed Storage Layer",
+      "purpose": "Partition and replicate data across cluster nodes",
+      "components": [
+        "Key-Value Store",
+        "Auto Sharding",
+        "Range Distribution",
+        "Replica Management"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Coordinate nodes and handle fault tolerance",
+      "components": [
+        "Node Cluster",
+        "Network Communication",
+        "Failure Detection",
+        "Region Topology"
+      ]
+    }
+  ],
+  'nosql-internals': [
+    {
+      "name": "Query Layer",
+      "purpose": "Parse queries and route to appropriate storage engine",
+      "components": [
+        "Query Parser",
+        "Query Router",
+        "Index Selector",
+        "Execution Planner"
+      ]
+    },
+    {
+      "name": "Storage Engine",
+      "purpose": "Organize and retrieve data from disk efficiently",
+      "components": [
+        "B-tree Index",
+        "LSM Tree",
+        "Column Store",
+        "Graph Store",
+        "BSON Encoder"
+      ]
+    },
+    {
+      "name": "Replication & Consistency",
+      "purpose": "Distribute data across nodes and manage consistency",
+      "components": [
+        "Token Ring",
+        "Replication Factor",
+        "Consistency Tuning",
+        "Anti-entropy Repair",
+        "Quorum Logic"
+      ]
+    },
+    {
+      "name": "Data Distribution",
+      "purpose": "Partition data across cluster nodes horizontally",
+      "components": [
+        "Partitioning Strategy",
+        "Node Membership",
+        "Gossip Protocol",
+        "Merkle Tree"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Write and read data from disk with durability",
+      "components": [
+        "Write-ahead Log",
+        "Memtable",
+        "SSTable",
+        "Compaction"
+      ]
+    }
+  ],
+  'notepad-system': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accepts user input and displays notepad state",
+      "components": [
+        "UI Controller",
+        "Input Handler",
+        "Display Manager"
+      ]
+    },
+    {
+      "name": "Command & History Layer",
+      "purpose": "Encapsulates reversible operations and manages undo/redo stacks",
+      "components": [
+        "Command Interface",
+        "Insert Command",
+        "Delete Command",
+        "Format Command",
+        "CommandHistory"
+      ]
+    },
+    {
+      "name": "Core Notepad Layer",
+      "purpose": "Manages note CRUD, search, tagging, and state snapshots",
+      "components": [
+        "Notepad Manager",
+        "Note",
+        "SearchEngine",
+        "TagManager",
+        "Memento"
+      ]
+    },
+    {
+      "name": "Observer & Storage Layer",
+      "purpose": "Triggers auto-save on changes and persists data",
+      "components": [
+        "Observer Pattern",
+        "AutoSave Handler",
+        "Storage Service",
+        "Serializer"
+      ]
+    }
+  ],
+  'notification-system-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Receive user interactions and display notifications",
+      "components": [
+        "Web App",
+        "Mobile App",
+        "Push SDK",
+        "In-App Widget"
+      ]
+    },
+    {
+      "name": "API & Orchestration Layer",
+      "purpose": "Accept notification requests and route to processors",
+      "components": [
+        "Notification API",
+        "Event Listener",
+        "Preference Resolver",
+        "Channel Router"
+      ]
+    },
+    {
+      "name": "Processing Layer",
+      "purpose": "Format messages and prepare for delivery",
+      "components": [
+        "Message Formatter",
+        "Template Engine",
+        "Retry Handler",
+        "Batch Processor"
+      ]
+    },
+    {
+      "name": "Channel Provider Layer",
+      "purpose": "Send notifications through external providers",
+      "components": [
+        "Email Service",
+        "SMS Gateway",
+        "Push Service",
+        "In-App Queue"
+      ]
+    },
+    {
+      "name": "Data & State Layer",
+      "purpose": "Store preferences, logs, and delivery status",
+      "components": [
+        "User Preferences DB",
+        "Notification Log",
+        "Delivery Status Store",
+        "Message Queue"
+      ]
+    }
+  ],
+  'observer': [
+    {
+      "name": "Observer Layer",
+      "purpose": "Register and receive state change notifications",
+      "components": [
+        "Observer Interface",
+        "Concrete Observers",
+        "Update Handler"
+      ]
+    },
+    {
+      "name": "Subject Layer",
+      "purpose": "Manage observers and broadcast state changes",
+      "components": [
+        "Subject Interface",
+        "Concrete Subject",
+        "State",
+        "Notify Method"
+      ]
+    },
+    {
+      "name": "Event Dispatch Layer",
+      "purpose": "Decouple subject from observer communication",
+      "components": [
+        "Event Emitter",
+        "Subscription Manager",
+        "Listener Registry"
+      ]
+    }
+  ],
+  'ocp': [
+    {
+      "name": "Client Layer",
+      "purpose": "Uses payment processing without knowing concrete implementations",
+      "components": [
+        "Application Code",
+        "Client Request Handler"
+      ]
+    },
+    {
+      "name": "Abstraction Layer",
+      "purpose": "Defines contracts for extension without modification",
+      "components": [
+        "PaymentProcessor Interface",
+        "Abstract Base Classes",
+        "Type Contracts"
+      ]
+    },
+    {
+      "name": "Implementation Layer",
+      "purpose": "Concrete payment methods extend abstraction independently",
+      "components": [
+        "CreditCard Processor",
+        "PayPal Processor",
+        "Bitcoin Processor",
+        "ApplePay Processor"
+      ]
+    },
+    {
+      "name": "Composition Layer",
+      "purpose": "Wires implementations to abstractions at runtime",
+      "components": [
+        "Dependency Injection",
+        "Factory Pattern",
+        "Plugin Registry"
+      ]
+    }
+  ],
+  'online-auction': [
+    {
+      "name": "Client Layer",
+      "purpose": "Enable real-time bidding, browsing, and auction monitoring",
+      "components": [
+        "Web Browser",
+        "Mobile App",
+        "WebSocket Client",
+        "Notification Handler"
+      ]
+    },
+    {
+      "name": "API & Gateway Layer",
+      "purpose": "Route requests, authenticate users, and coordinate auction operations",
+      "components": [
+        "API Gateway",
+        "Auth Service",
+        "Bid Handler",
+        "Search Service"
+      ]
+    },
+    {
+      "name": "Auction Engine Layer",
+      "purpose": "Manage bidding logic, anti-sniping, and auction lifecycle events",
+      "components": [
+        "Bid Validator",
+        "Proxy Bidder",
+        "Anti-Sniping Engine",
+        "Auction Scheduler",
+        "Fraud Detector"
+      ]
+    },
+    {
+      "name": "Data & State Layer",
+      "purpose": "Persist auction data, bids, and maintain strong consistency",
+      "components": [
+        "Auction Store (PostgreSQL)",
+        "Bid Log (PostgreSQL)",
+        "Escrow Ledger",
+        "Redis Cache",
+        "Event Stream (Kafka)"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Distribute load, enable real-time messaging, and handle payments",
+      "components": [
+        "Load Balancer",
+        "WebSocket Server",
+        "Message Queue",
+        "Payment Gateway",
+        "Notification Service"
+      ]
+    }
+  ],
+  'online-stock-brokerage': [
+    {
+      "name": "Client Layer",
+      "purpose": "Deliver real-time trading UI and market data to traders",
+      "components": [
+        "Web Portal",
+        "Mobile App",
+        "WebSocket Feed",
+        "Order Entry UI"
+      ]
+    },
+    {
+      "name": "API & Gateway Layer",
+      "purpose": "Route and authenticate user requests with rate limiting",
+      "components": [
+        "REST API",
+        "WebSocket Gateway",
+        "Auth Service",
+        "Rate Limiter"
+      ]
+    },
+    {
+      "name": "Trading Engine Layer",
+      "purpose": "Execute order matching and manage portfolio state",
+      "components": [
+        "Order Manager",
+        "Order Matching Engine",
+        "Portfolio Service",
+        "Risk Checker"
+      ]
+    },
+    {
+      "name": "Market Data Layer",
+      "purpose": "Ingest, normalize, and broadcast live market data",
+      "components": [
+        "Data Ingestion",
+        "Price Cache",
+        "Market Feed Distributor",
+        "Historical Data Store"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Persist state and enable distributed processing",
+      "components": [
+        "Order Event Log",
+        "Portfolio Database",
+        "Message Queue",
+        "Time-Series DB"
+      ]
+    }
+  ],
+  'pagination-strategies': [
+    {
+      "name": "Client Layer",
+      "purpose": "Request and consume paginated result sets with pagination parameters",
+      "components": [
+        "Page Request",
+        "Cursor Token",
+        "Result Display",
+        "Navigation Controls"
+      ]
+    },
+    {
+      "name": "API Layer",
+      "purpose": "Accept pagination queries and return pages with metadata",
+      "components": [
+        "Offset Endpoint",
+        "Cursor Endpoint",
+        "Keyset Endpoint",
+        "Response Formatter"
+      ]
+    },
+    {
+      "name": "Query Layer",
+      "purpose": "Translate pagination strategy into optimized database queries",
+      "components": [
+        "Offset Builder",
+        "Cursor Decoder",
+        "Keyset Filter",
+        "Sort Optimizer"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Execute queries and retrieve paginated records efficiently",
+      "components": [
+        "Index Scan",
+        "Sequential Scan",
+        "Sort Operations",
+        "Limit Fetch"
+      ]
+    }
+  ],
+  'parking-lot': [
+    {
+      "name": "Client Layer",
+      "purpose": "Handle user interactions and parking operations",
+      "components": [
+        "Entry Gate",
+        "Exit Gate",
+        "Display Board",
+        "User Interface"
+      ]
+    },
+    {
+      "name": "Management Layer",
+      "purpose": "Coordinate parking lot operations and ticket lifecycle",
+      "components": [
+        "ParkingLot (Singleton)",
+        "Floor Manager",
+        "Ticket Manager",
+        "Availability Tracker"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Enforce parking rules and allocation strategies",
+      "components": [
+        "SpotAllocator",
+        "PricingStrategy",
+        "Vehicle Validator",
+        "Concurrency Handler"
+      ]
+    },
+    {
+      "name": "Data Model Layer",
+      "purpose": "Represent core entities and their relationships",
+      "components": [
+        "Vehicle Hierarchy",
+        "ParkingSpot",
+        "ParkingTicket",
+        "Floor",
+        "SpotSize Mapper"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Store and retrieve parking records",
+      "components": [
+        "Ticket Repository",
+        "Vehicle Registry",
+        "Payment Ledger",
+        "Audit Log"
+      ]
+    }
+  ],
+  'pathfinding-visualizer': [
+    {
+      "name": "Interaction Layer",
+      "purpose": "Capture user input for grid manipulation and control",
+      "components": [
+        "Mouse Handler",
+        "Touch Handler",
+        "Keyboard Controls",
+        "Node Placement",
+        "Wall Drawer"
+      ]
+    },
+    {
+      "name": "Visualization Layer",
+      "purpose": "Render grid cells and animate pathfinding exploration in real time",
+      "components": [
+        "Grid Renderer",
+        "Cell Animator",
+        "Path Highlighter",
+        "DOM Manager",
+        "Animation Loop"
+      ]
+    },
+    {
+      "name": "Algorithm Layer",
+      "purpose": "Execute pathfinding and maze generation algorithms on graph",
+      "components": [
+        "BFS Explorer",
+        "DFS Explorer",
+        "Dijkstra Engine",
+        "A* Pathfinder",
+        "Maze Generator"
+      ]
+    },
+    {
+      "name": "Grid State Layer",
+      "purpose": "Maintain grid structure, nodes, walls, and exploration metadata",
+      "components": [
+        "Grid Data",
+        "Node Registry",
+        "Wall Map",
+        "Visit Tracker",
+        "Distance Cache"
+      ]
+    },
+    {
+      "name": "Coordination Layer",
+      "purpose": "Orchestrate algorithm execution, animation, and state synchronization",
+      "components": [
+        "Algorithm Runner",
+        "Animation Sequencer",
+        "Event Dispatcher",
+        "State Sync"
+      ]
+    }
+  ],
+  'payment-gateway-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Merchant applications initiate payment requests",
+      "components": [
+        "Web Checkout",
+        "Mobile SDK",
+        "API Client",
+        "Server-to-Server"
+      ]
+    },
+    {
+      "name": "API Gateway Layer",
+      "purpose": "Validate, route, and manage idempotency keys",
+      "components": [
+        "Request Validator",
+        "Idempotency Store",
+        "Rate Limiter",
+        "Request Router"
+      ]
+    },
+    {
+      "name": "Payment Processing Layer",
+      "purpose": "Execute authorization, capture, refund workflows",
+      "components": [
+        "Authorization Engine",
+        "Capture Handler",
+        "Refund Processor",
+        "Void Manager",
+        "3D Secure Handler"
+      ]
+    },
+    {
+      "name": "Payment Method Layer",
+      "purpose": "Integrate with diverse payment method providers",
+      "components": [
+        "Card Processor",
+        "UPI Gateway",
+        "Wallet Connector",
+        "Bank Adapter",
+        "Provider Router"
+      ]
+    },
+    {
+      "name": "Data & Audit Layer",
+      "purpose": "Store transactions, maintain audit trails, ensure compliance",
+      "components": [
+        "Transaction Store",
+        "Audit Log",
+        "State Machine",
+        "Reconciliation Service",
+        "Encryption Service"
+      ]
+    }
+  ],
+  'price-tracking-service': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide interfaces for users to track and manage price alerts",
+      "components": [
+        "Web Dashboard",
+        "Browser Extension",
+        "Mobile App",
+        "API Clients"
+      ]
+    },
+    {
+      "name": "Alert & Notification Layer",
+      "purpose": "Detect price changes and deliver timely multi-channel alerts",
+      "components": [
+        "Price Change Detector",
+        "Alert Engine",
+        "Email Service",
+        "Push Notifications",
+        "SMS Gateway"
+      ]
+    },
+    {
+      "name": "Crawler & Extraction Layer",
+      "purpose": "Crawl e-commerce sites and extract current product prices",
+      "components": [
+        "Web Crawler",
+        "JavaScript Renderer",
+        "HTML Parser",
+        "Anti-bot Handler",
+        "Rate Limiter"
+      ]
+    },
+    {
+      "name": "Data & History Layer",
+      "purpose": "Store price history, user preferences, and crawl metadata",
+      "components": [
+        "Time-series DB",
+        "Product Cache",
+        "User Preferences",
+        "Crawl Queue",
+        "Job Scheduler"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Distribute crawling workload and scale data persistence",
+      "components": [
+        "Crawler Workers",
+        "Message Queue",
+        "Proxy Pool",
+        "Data Warehouse",
+        "Monitoring"
+      ]
+    }
+  ],
+  'prototype': [
+    {
+      "name": "Client Layer",
+      "purpose": "Requests cloned objects from prototype registry",
+      "components": [
+        "Client Code",
+        "Prototype Registry",
+        "Clone Request Handler"
+      ]
+    },
+    {
+      "name": "Prototype Layer",
+      "purpose": "Manages cloneable objects and implements copy logic",
+      "components": [
+        "Prototype Interface",
+        "Concrete Prototypes",
+        "Clone Method"
+      ]
+    },
+    {
+      "name": "Copy Strategy Layer",
+      "purpose": "Executes shallow or deep copy operations",
+      "components": [
+        "Shallow Copier",
+        "Deep Copier",
+        "Field Resolver"
+      ]
+    }
+  ],
+  'proxy': [
+    {
+      "name": "Client Layer",
+      "purpose": "Requests objects through proxy interface",
+      "components": [
+        "Client Code",
+        "Request Handler"
+      ]
+    },
+    {
+      "name": "Proxy Layer",
+      "purpose": "Intercepts requests and controls access",
+      "components": [
+        "Access Control",
+        "Caching",
+        "Lazy Loading",
+        "Request Logger"
+      ]
+    },
+    {
+      "name": "Real Subject Layer",
+      "purpose": "Performs actual business logic and operations",
+      "components": [
+        "Real Object",
+        "Resource Handler"
+      ]
+    }
+  ],
+  'pub-sub': [
+    {
+      "name": "Client Layer",
+      "purpose": "Publish messages and consume subscribed topic events",
+      "components": [
+        "Publisher Client",
+        "Subscriber Client",
+        "Consumer Group Manager"
+      ]
+    },
+    {
+      "name": "Broker API Layer",
+      "purpose": "Handle publish, subscribe, and acknowledgment requests",
+      "components": [
+        "Publish Endpoint",
+        "Subscribe Endpoint",
+        "Acknowledgment Handler",
+        "Topic Registry"
+      ]
+    },
+    {
+      "name": "Message Routing Layer",
+      "purpose": "Route messages to subscribers and manage delivery guarantees",
+      "components": [
+        "Topic Partitioner",
+        "Message Router",
+        "Delivery Guarantor",
+        "Rebalancer"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persist messages and subscription state durably",
+      "components": [
+        "Message Log",
+        "Subscription State",
+        "Offset Tracker",
+        "Dead Letter Queue"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide distributed coordination and fault tolerance",
+      "components": [
+        "Broker Cluster",
+        "Replication",
+        "Consensus Manager",
+        "Health Monitor"
+      ]
+    }
+  ],
+  'queue-using-array': [
+    {
+      "name": "Client Layer",
+      "purpose": "Interact with queue operations via public API",
+      "components": [
+        "enqueue()",
+        "dequeue()",
+        "peek()",
+        "isEmpty()",
+        "isFull()"
+      ]
+    },
+    {
+      "name": "Queue Logic Layer",
+      "purpose": "Manage queue state and validate operations",
+      "components": [
+        "front pointer",
+        "rear pointer",
+        "size tracker",
+        "operation validators"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Store elements in fixed-size circular array",
+      "components": [
+        "fixed array",
+        "modular index wrapping",
+        "capacity management"
+      ]
+    }
+  ],
+  'rare-book-library': [
+    {
+      "name": "Presentation Layer",
+      "purpose": "Render UI components and handle user interactions",
+      "components": [
+        "Book Grid",
+        "List View",
+        "Search Bar",
+        "Filter Panel",
+        "Detail Modal",
+        "Wishlist Button"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Manage filter, search, sort, and wishlist state",
+      "components": [
+        "Filter State",
+        "Search Debouncer",
+        "Sort State",
+        "Wishlist Store",
+        "URL Sync",
+        "localStorage Persistence"
+      ]
+    },
+    {
+      "name": "Data Processing Layer",
+      "purpose": "Filter, search, and sort book dataset efficiently",
+      "components": [
+        "Search Engine",
+        "Multi-filter Engine",
+        "Sort Engine",
+        "Availability Checker",
+        "Genre Classifier",
+        "Year Range Filter"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Provide book catalog dataset and wishlist records",
+      "components": [
+        "JSON Dataset",
+        "Book Schema",
+        "Wishlist Cache",
+        "Local Storage",
+        "Session State",
+        "Index/Metadata"
+      ]
+    }
+  ],
+  'rate-limiter-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accept incoming requests and enforce rate limits",
+      "components": [
+        "API Gateway",
+        "Request Handler",
+        "Client Identifier"
+      ]
+    },
+    {
+      "name": "Rate Limiting Logic",
+      "purpose": "Calculate and check request quotas against configured limits",
+      "components": [
+        "Algorithm Engine",
+        "Quota Checker",
+        "Decision Enforcer"
+      ]
+    },
+    {
+      "name": "State Management",
+      "purpose": "Track request counts and algorithm state per user",
+      "components": [
+        "Token Bucket",
+        "Sliding Window Counter",
+        "Request Log"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persist and retrieve rate limit state durably",
+      "components": [
+        "Redis Cache",
+        "Local Memory",
+        "Distributed State"
+      ]
+    }
+  ],
+  'rate-limiter-service': [
+    {
+      "name": "Client Layer",
+      "purpose": "Receives requests and enforces rate limit decisions",
+      "components": [
+        "HTTP Client",
+        "SDK Library",
+        "Request Validator"
+      ]
+    },
+    {
+      "name": "API Gateway Layer",
+      "purpose": "Routes requests and applies rate limit checks",
+      "components": [
+        "Request Router",
+        "Rule Matcher",
+        "Decision Engine"
+      ]
+    },
+    {
+      "name": "Rate Limiter Layer",
+      "purpose": "Implements algorithms and enforces per-client limits",
+      "components": [
+        "Token Bucket",
+        "Sliding Window",
+        "Fixed Window",
+        "Lua Scripts"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Stores distributed state with atomic operations",
+      "components": [
+        "Redis Cluster",
+        "Counters",
+        "Sorted Sets",
+        "TTL Manager"
+      ]
+    },
+    {
+      "name": "Monitoring Layer",
+      "purpose": "Tracks usage metrics and throttled requests",
+      "components": [
+        "Metrics Collector",
+        "Usage Dashboard",
+        "Alert Engine"
+      ]
+    }
+  ],
+  'read-write-locks': [
+    {
+      "name": "Client Layer",
+      "purpose": "Acquire read or write locks for protected resources",
+      "components": [
+        "Reader Threads",
+        "Writer Threads",
+        "Lock Requesters"
+      ]
+    },
+    {
+      "name": "Lock Management Layer",
+      "purpose": "Track and arbitrate shared vs exclusive access modes",
+      "components": [
+        "Read Lock Counter",
+        "Write Lock Flag",
+        "Waitqueue Manager"
+      ]
+    },
+    {
+      "name": "Scheduling Policy Layer",
+      "purpose": "Enforce reader-preference, writer-preference, or fair ordering",
+      "components": [
+        "Policy Selector",
+        "FIFO Queue",
+        "Starvation Prevention"
+      ]
+    },
+    {
+      "name": "Synchronization Primitives Layer",
+      "purpose": "Provide low-level mutual exclusion and condition signaling",
+      "components": [
+        "Mutex",
+        "Condition Variables",
+        "Atomic Operations"
+      ]
+    }
+  ],
+  'realtime-chat-app': [
+    {
+      "name": "Client Layer",
+      "purpose": "Render UI, manage local state, send and receive real-time events",
+      "components": [
+        "Chat UI Component",
+        "Message List & History",
+        "Typing Indicators",
+        "Presence Panel",
+        "Socket.io Client",
+        "Optimistic Rendering"
+      ]
+    },
+    {
+      "name": "Real-time Transport Layer",
+      "purpose": "Establish and maintain persistent bidirectional connections",
+      "components": [
+        "WebSocket Server",
+        "Socket.io Middleware",
+        "Connection Manager",
+        "Event Router",
+        "Reconnection Handler",
+        "Message Queue"
+      ]
+    },
+    {
+      "name": "Application Logic Layer",
+      "purpose": "Handle rooms, presence, typing, and message broadcasting",
+      "components": [
+        "Room Manager",
+        "User Presence Tracker",
+        "Typing Indicator Service",
+        "Message Deduplicator",
+        "Broadcast Engine",
+        "Event Validator"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and retrieve messages, users, and room state",
+      "components": [
+        "MongoDB Messages Collection",
+        "User Sessions Store",
+        "Room Configuration DB",
+        "Presence Cache (Redis)",
+        "Message Index",
+        "Pagination Handler"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Deploy, scale, and monitor the application",
+      "components": [
+        "Load Balancer",
+        "Horizontal Scaling",
+        "Redis Pub/Sub",
+        "Health Checks",
+        "Logging & Monitoring",
+        "Error Recovery"
+      ]
+    }
+  ],
+  'realtime-dashboard': [
+    {
+      "name": "Client Layer",
+      "purpose": "Render live charts, manage panels, accept user interactions",
+      "components": [
+        "Chart Renderer",
+        "Panel Grid",
+        "Time Range Picker",
+        "Alert Notifications",
+        "Panel Config UI"
+      ]
+    },
+    {
+      "name": "API & WebSocket Layer",
+      "purpose": "Serve dashboard config, stream metrics, evaluate alerts",
+      "components": [
+        "REST API",
+        "WebSocket Server",
+        "Dashboard Service",
+        "Alert Evaluator",
+        "Session Manager"
+      ]
+    },
+    {
+      "name": "Metrics Processing Layer",
+      "purpose": "Query, aggregate, and downsample time-series data",
+      "components": [
+        "Query Engine",
+        "Aggregation Pipeline",
+        "Downsampling Logic",
+        "Cache Layer",
+        "Data Transformer"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persist raw metrics, aggregates, and alert configurations",
+      "components": [
+        "Time-Series Database",
+        "Metadata Store",
+        "Alert Rules Store",
+        "Config Cache",
+        "Archive Storage"
+      ]
+    },
+    {
+      "name": "Data Ingestion Layer",
+      "purpose": "Collect, validate, and buffer incoming metric data",
+      "components": [
+        "Metric Collector",
+        "Input Validator",
+        "Write Buffer",
+        "Batch Processor",
+        "Error Handler"
+      ]
+    }
+  ],
+  'restaurant-management': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide interfaces for staff and customer interactions",
+      "components": [
+        "POS Terminal",
+        "Host Station",
+        "Kitchen Display",
+        "Mobile App",
+        "Payment Kiosk"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Manage core business logic and workflows",
+      "components": [
+        "Order Manager",
+        "Table Manager",
+        "Menu Service",
+        "Kitchen Coordinator",
+        "Billing Engine"
+      ]
+    },
+    {
+      "name": "Domain Layer",
+      "purpose": "Model restaurant entities and business rules",
+      "components": [
+        "Guest",
+        "Table",
+        "Order",
+        "MenuItem",
+        "Bill",
+        "KitchenTicket"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist and retrieve restaurant operational data",
+      "components": [
+        "Order Store",
+        "Table Store",
+        "Menu Store",
+        "Guest Store",
+        "Transaction Log"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Enable real-time communication and system reliability",
+      "components": [
+        "Message Queue",
+        "Cache",
+        "Load Balancer",
+        "Backup System"
+      ]
+    }
+  ],
+  'retry-pattern': [
+    {
+      "name": "Client Layer",
+      "purpose": "Detect failures and initiate retry logic flow",
+      "components": [
+        "Failure Detector",
+        "Retry Trigger",
+        "Request Handler"
+      ]
+    },
+    {
+      "name": "Retry Strategy Layer",
+      "purpose": "Calculate backoff timing and enforce retry constraints",
+      "components": [
+        "Exponential Backoff",
+        "Jitter Generator",
+        "Retry Budget",
+        "Attempt Counter"
+      ]
+    },
+    {
+      "name": "Request Execution Layer",
+      "purpose": "Execute operations with idempotency guarantees",
+      "components": [
+        "Idempotency Key",
+        "Request Executor",
+        "State Validator"
+      ]
+    },
+    {
+      "name": "Failure Handling Layer",
+      "purpose": "Classify errors and decide retry eligibility",
+      "components": [
+        "Error Classifier",
+        "Transient Check",
+        "Circuit Breaker"
+      ]
+    }
+  ],
+  'ride-hailing': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide rider and driver interfaces for trip management",
+      "components": [
+        "Rider App",
+        "Driver App",
+        "Web Portal",
+        "Push Notifications"
+      ]
+    },
+    {
+      "name": "API Gateway & Services Layer",
+      "purpose": "Route requests and orchestrate core business logic",
+      "components": [
+        "Ride Request Service",
+        "Driver Matching Service",
+        "Payment Service",
+        "Trip Management Service",
+        "Rating Service"
+      ]
+    },
+    {
+      "name": "Real-Time & Geospatial Layer",
+      "purpose": "Track locations and compute distance-based matching",
+      "components": [
+        "Location Tracking Service",
+        "Geospatial Index",
+        "Fare Calculator",
+        "ETA Engine"
+      ]
+    },
+    {
+      "name": "Data & Caching Layer",
+      "purpose": "Store user data, trips, and cache hot location data",
+      "components": [
+        "User Database",
+        "Trip History Database",
+        "Redis Cache",
+        "Location Cache"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide messaging, monitoring, and scalable compute",
+      "components": [
+        "Message Queue",
+        "Load Balancer",
+        "Logging & Monitoring",
+        "Cloud Storage"
+      ]
+    }
+  ],
+  'rock-paper-scissors': [
+    {
+      "name": "Presentation Layer",
+      "purpose": "Display game state and accept player input",
+      "components": [
+        "Game UI",
+        "Input Handler",
+        "Score Display"
+      ]
+    },
+    {
+      "name": "Game Logic Layer",
+      "purpose": "Manage game flow, rounds, and match state",
+      "components": [
+        "Game Manager",
+        "Round Evaluator",
+        "Match Scorer"
+      ]
+    },
+    {
+      "name": "Strategy Layer",
+      "purpose": "Define moves and determine win relationships",
+      "components": [
+        "Move Enum",
+        "Win Mapping",
+        "AI Strategy"
+      ]
+    },
+    {
+      "name": "Player Layer",
+      "purpose": "Represent human and computer players",
+      "components": [
+        "Player Interface",
+        "Human Player",
+        "Computer Player"
+      ]
+    }
+  ],
+  'rpo-rto': [
+    {
+      "name": "Business Requirements",
+      "purpose": "Define acceptable data loss and downtime thresholds",
+      "components": [
+        "RPO targets",
+        "RTO targets",
+        "Service tier classification",
+        "Impact assessment"
+      ]
+    },
+    {
+      "name": "Data Protection Layer",
+      "purpose": "Implement mechanisms to minimize data loss exposure",
+      "components": [
+        "Synchronous replication",
+        "Continuous backups",
+        "Transaction logging",
+        "Point-in-time recovery"
+      ]
+    },
+    {
+      "name": "Failover & Recovery Layer",
+      "purpose": "Enable rapid detection and automatic system restoration",
+      "components": [
+        "Health monitoring",
+        "Automated failover",
+        "DNS/routing switchover",
+        "Recovery orchestration"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide redundant resources across failure domains",
+      "components": [
+        "Multi-region deployment",
+        "Hot standby systems",
+        "Backup storage",
+        "Network redundancy"
+      ]
+    }
+  ],
+  'saga-pattern': [
+    {
+      "name": "Client Layer",
+      "purpose": "Initiates business transactions spanning multiple services",
+      "components": [
+        "Order Request",
+        "Transaction Command",
+        "Client Handler"
+      ]
+    },
+    {
+      "name": "Orchestration Layer",
+      "purpose": "Coordinates saga execution and compensation logic",
+      "components": [
+        "Saga Orchestrator",
+        "State Machine",
+        "Compensation Manager"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Executes local transactions within service boundaries",
+      "components": [
+        "Inventory Service",
+        "Payment Service",
+        "Shipping Service",
+        "Compensating Actions"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persists local transaction state and saga events",
+      "components": [
+        "Service Database",
+        "Saga Event Log",
+        "Compensation Record"
+      ]
+    },
+    {
+      "name": "Communication Layer",
+      "purpose": "Routes messages between orchestrator and services",
+      "components": [
+        "Message Broker",
+        "Event Bus",
+        "Retry Handler"
+      ]
+    }
+  ],
+  'search-autocomplete': [
+    {
+      "name": "Client Layer",
+      "purpose": "Capture user input and render suggestions in real-time",
+      "components": [
+        "Input Field",
+        "Suggestion Dropdown",
+        "Request Debouncer",
+        "Display Renderer"
+      ]
+    },
+    {
+      "name": "API Gateway Layer",
+      "purpose": "Route autocomplete requests and enforce rate limits",
+      "components": [
+        "Request Router",
+        "Rate Limiter",
+        "Request Logger",
+        "Response Formatter"
+      ]
+    },
+    {
+      "name": "Search Service Layer",
+      "purpose": "Execute prefix matching and rank suggestions by relevance",
+      "components": [
+        "Trie Traversal Engine",
+        "Relevance Ranker",
+        "Suggestion Aggregator",
+        "Cache Manager"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store and retrieve trie structure and suggestion metadata",
+      "components": [
+        "Trie Index",
+        "Query Frequency Cache",
+        "Metadata Store",
+        "Hot Data Cache"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Distribute load and sync data across multiple regions",
+      "components": [
+        "Load Balancer",
+        "Distributed Cache",
+        "Index Replication",
+        "Monitoring System"
+      ]
+    }
+  ],
+  'sequence-diagram': [
+    {
+      "name": "Participants Layer",
+      "purpose": "Define actors and objects involved in interaction",
+      "components": [
+        "Actors",
+        "Objects",
+        "Systems",
+        "Services"
+      ]
+    },
+    {
+      "name": "Message Flow Layer",
+      "purpose": "Show synchronous and asynchronous calls between participants",
+      "components": [
+        "Synchronous Messages",
+        "Asynchronous Messages",
+        "Return Messages",
+        "Self-Calls"
+      ]
+    },
+    {
+      "name": "Activation Layer",
+      "purpose": "Track when objects are actively processing requests",
+      "components": [
+        "Lifelines",
+        "Activation Bars",
+        "Processing Duration",
+        "Nested Calls"
+      ]
+    },
+    {
+      "name": "Control Flow Layer",
+      "purpose": "Express conditionals, loops, and interaction fragments",
+      "components": [
+        "Alt Fragments",
+        "Loop Fragments",
+        "Opt Fragments",
+        "Break Conditions"
+      ]
+    }
+  ],
+  'service-discovery': [
+    {
+      "name": "Client Layer",
+      "purpose": "Services query registry to locate dependencies dynamically",
+      "components": [
+        "Service Instance",
+        "Discovery Client",
+        "Load Balancer"
+      ]
+    },
+    {
+      "name": "Discovery Pattern Layer",
+      "purpose": "Route requests via client-side or server-side lookup",
+      "components": [
+        "Client-Side Discovery",
+        "Server-Side Discovery",
+        "DNS Resolver"
+      ]
+    },
+    {
+      "name": "Service Registry Layer",
+      "purpose": "Store, maintain, and query live service locations",
+      "components": [
+        "Consul",
+        "Eureka",
+        "etcd",
+        "Service Registry API"
+      ]
+    },
+    {
+      "name": "Health Check Layer",
+      "purpose": "Monitor service availability and update registry state",
+      "components": [
+        "Health Check Agent",
+        "Heartbeat Monitor",
+        "Failure Detector"
+      ]
+    },
+    {
+      "name": "Storage & Coordination Layer",
+      "purpose": "Persist registry state with consistency guarantees",
+      "components": [
+        "Distributed Store",
+        "Consensus Protocol",
+        "Replication"
+      ]
+    }
+  ],
+  'shopping-cart': [
+    {
+      "name": "Client Layer",
+      "purpose": "Display cart UI and handle user interactions",
+      "components": [
+        "Cart View",
+        "Item Display",
+        "Checkout Form",
+        "Promo Input"
+      ]
+    },
+    {
+      "name": "Cart Management Layer",
+      "purpose": "Manage items, quantities, and cart state",
+      "components": [
+        "Cart Service",
+        "Item Manager",
+        "Quantity Validator",
+        "Cart Persistence"
+      ]
+    },
+    {
+      "name": "Pricing Engine Layer",
+      "purpose": "Calculate totals with rules and discounts applied",
+      "components": [
+        "Price Calculator",
+        "Discount Rule Engine",
+        "Coupon Validator",
+        "Tax Calculator"
+      ]
+    },
+    {
+      "name": "Promotion Layer",
+      "purpose": "Define and evaluate dynamic promotion rules",
+      "components": [
+        "Promotion Registry",
+        "BOGO Rules",
+        "Tiered Discounts",
+        "Loyalty Evaluator"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist cart, inventory, and pricing data",
+      "components": [
+        "Cart Repository",
+        "Product Catalog",
+        "Promotion Store",
+        "Audit Log"
+      ]
+    }
+  ],
+  'sidecar-pattern': [
+    {
+      "name": "Application Layer",
+      "purpose": "Run core business logic without infrastructure concerns",
+      "components": [
+        "Service Container",
+        "Application Code",
+        "Business Logic"
+      ]
+    },
+    {
+      "name": "Sidecar Layer",
+      "purpose": "Intercept and handle cross-cutting concerns transparently",
+      "components": [
+        "Envoy Proxy",
+        "Traffic Interception",
+        "Request/Response Processing"
+      ]
+    },
+    {
+      "name": "Control Plane Layer",
+      "purpose": "Distribute configuration and policies to all sidecars",
+      "components": [
+        "Istio Control",
+        "Policy Engine",
+        "Service Registry"
+      ]
+    },
+    {
+      "name": "Observability Layer",
+      "purpose": "Collect metrics, logs, and traces from sidecar traffic",
+      "components": [
+        "Distributed Tracing",
+        "Metrics Collection",
+        "Log Aggregation"
+      ]
+    },
+    {
+      "name": "Network Layer",
+      "purpose": "Enforce encryption, load balancing, and resilience",
+      "components": [
+        "mTLS Encryption",
+        "Load Balancing",
+        "Circuit Breaking"
+      ]
+    }
+  ],
+  'sli-slo-sla': [
+    {
+      "name": "Business Commitment Layer",
+      "purpose": "Define contractual service guarantees and financial penalties",
+      "components": [
+        "SLA Definition",
+        "Penalty Terms",
+        "Contract Scope"
+      ]
+    },
+    {
+      "name": "Engineering Target Layer",
+      "purpose": "Set reliability goals and error budget allocation",
+      "components": [
+        "SLO Target",
+        "Error Budget",
+        "Measurement Window"
+      ]
+    },
+    {
+      "name": "Measurement & Monitoring Layer",
+      "purpose": "Collect and track real service health metrics",
+      "components": [
+        "SLI Definition",
+        "Metric Collection",
+        "Alerting Rules"
+      ]
+    },
+    {
+      "name": "Decision & Action Layer",
+      "purpose": "Drive feature velocity versus reliability investment trade-offs",
+      "components": [
+        "Budget Tracking",
+        "Deployment Velocity",
+        "Incident Response"
+      ]
+    }
+  ],
+  'snake-ladder': [
+    {
+      "name": "Game Controller",
+      "purpose": "Orchestrate game flow, turn management, and win conditions",
+      "components": [
+        "Game",
+        "Turn Queue",
+        "Win Validator"
+      ]
+    },
+    {
+      "name": "Game Logic",
+      "purpose": "Execute player moves, dice rolls, and board transitions",
+      "components": [
+        "Dice Roller",
+        "Player",
+        "Board Transitions"
+      ]
+    },
+    {
+      "name": "Board Entities",
+      "purpose": "Define snakes, ladders, and their position mappings",
+      "components": [
+        "BoardEntity",
+        "Snake",
+        "Ladder",
+        "Transitions Map"
+      ]
+    },
+    {
+      "name": "Domain Models",
+      "purpose": "Represent core game concepts and player state",
+      "components": [
+        "Player Position",
+        "Dice",
+        "Board"
+      ]
+    }
+  ],
+  'social-media-feed': [
+    {
+      "name": "Client Layer",
+      "purpose": "Render feed UI with infinite scroll and optimistic updates",
+      "components": [
+        "Feed View",
+        "Post Component",
+        "Infinite Scroll",
+        "Optimistic UI",
+        "WebSocket Listener"
+      ]
+    },
+    {
+      "name": "API Gateway & Services",
+      "purpose": "Handle feed queries, posts, likes, comments, and follow operations",
+      "components": [
+        "Feed Service",
+        "Post Service",
+        "Like Service",
+        "Comment Service",
+        "Follow Service",
+        "Real-time Service"
+      ]
+    },
+    {
+      "name": "Caching Layer",
+      "purpose": "Cache feed data, counters, and follow graph for fast reads",
+      "components": [
+        "Redis Cache",
+        "Feed Cache",
+        "Counter Cache",
+        "Follow Graph Cache"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persist posts, users, relationships, and engagement data",
+      "components": [
+        "User Store",
+        "Post Store",
+        "Follow Graph DB",
+        "Like/Comment Store",
+        "Feed Timeline DB"
+      ]
+    },
+    {
+      "name": "Infrastructure & Background Jobs",
+      "purpose": "Fan-out feeds, process real-time updates, store images",
+      "components": [
+        "Fan-out Worker",
+        "Message Queue",
+        "Image Storage",
+        "Event Stream",
+        "Analytics Pipeline"
+      ]
+    }
+  ],
+  'social-network': [
+    {
+      "name": "Client Layer",
+      "purpose": "User interfaces for browsing profiles, feeds, and messaging",
+      "components": [
+        "Web App",
+        "Mobile App",
+        "API Gateway",
+        "WebSocket Server"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Core business logic for social features and content",
+      "components": [
+        "User Service",
+        "Friendship Service",
+        "Post Service",
+        "Feed Service",
+        "Messaging Service",
+        "Notification Service"
+      ]
+    },
+    {
+      "name": "Cache Layer",
+      "purpose": "Accelerate feed, profile, and friendship lookups",
+      "components": [
+        "Redis Cache",
+        "Feed Cache",
+        "User Cache",
+        "Friendship Cache"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persistent storage for users, graphs, posts, and messages",
+      "components": [
+        "User DB",
+        "Social Graph DB",
+        "Post DB",
+        "Message DB"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Async processing, searching, and event streaming",
+      "components": [
+        "Message Queue",
+        "Search Index",
+        "Event Stream",
+        "Blob Storage"
+      ]
+    }
+  ],
+  'soft-vs-hard-ttl': [
+    {
+      "name": "Request Layer",
+      "purpose": "Handle incoming requests and serve cached responses",
+      "components": [
+        "Client Request",
+        "Cache Lookup",
+        "Response Routing"
+      ]
+    },
+    {
+      "name": "Cache Expiry Logic",
+      "purpose": "Evaluate staleness and decide refresh or eviction",
+      "components": [
+        "Soft TTL Check",
+        "Hard TTL Check",
+        "Staleness Validator"
+      ]
+    },
+    {
+      "name": "Refresh & Invalidation",
+      "purpose": "Trigger background updates and event-driven invalidation",
+      "components": [
+        "Background Refresh",
+        "Event Publisher",
+        "Jitter Randomizer"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Store cached entries with metadata and timestamps",
+      "components": [
+        "Cache Store",
+        "Metadata Tracker",
+        "TTL Index"
+      ]
+    }
+  ],
+  'sorting-visualizer': [
+    {
+      "name": "UI/Interaction Layer",
+      "purpose": "Handle user input and display real-time visualization feedback",
+      "components": [
+        "Algorithm Selector",
+        "Speed Slider",
+        "Array Size Input",
+        "Control Buttons",
+        "Stats Display"
+      ]
+    },
+    {
+      "name": "Animation Engine Layer",
+      "purpose": "Coordinate frame-by-frame rendering and DOM element transitions",
+      "components": [
+        "Animation Frame Manager",
+        "Transition Scheduler",
+        "Bar Renderer",
+        "Highlight Controller",
+        "Performance Monitor"
+      ]
+    },
+    {
+      "name": "Algorithm Execution Layer",
+      "purpose": "Execute sorting logic and emit comparison/swap events",
+      "components": [
+        "Bubble Sort",
+        "Quick Sort",
+        "Merge Sort",
+        "Heap Sort",
+        "Insertion Sort",
+        "Selection Sort"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Track array state, algorithm progress, and execution flow",
+      "components": [
+        "Array State",
+        "Comparison Counter",
+        "Swap Counter",
+        "Execution Queue",
+        "Pause/Resume Manager"
+      ]
+    },
+    {
+      "name": "Rendering Layer",
+      "purpose": "Convert algorithm events into visual bar animations and CSS updates",
+      "components": [
+        "Canvas/DOM Renderer",
+        "Color Mapper",
+        "Position Calculator",
+        "CSS Transition Engine"
+      ]
+    }
+  ],
+  'specialized-databases': [
+    {
+      "name": "Application Layer",
+      "purpose": "Route queries to appropriate specialized database",
+      "components": [
+        "Query Router",
+        "Data Mapper",
+        "ORM/Client Library"
+      ]
+    },
+    {
+      "name": "Specialized Database Layer",
+      "purpose": "Execute domain-specific queries with optimized indexes",
+      "components": [
+        "Time-Series DB",
+        "Search Engine",
+        "Spatial DB",
+        "Vector DB",
+        "Cache Layer"
+      ]
+    },
+    {
+      "name": "Indexing & Query Engine",
+      "purpose": "Accelerate lookups using specialized index structures",
+      "components": [
+        "Inverted Index",
+        "R-Tree Index",
+        "B-Tree Index",
+        "ANN Algorithm",
+        "Time-Series Compression"
+      ]
+    },
+    {
+      "name": "Storage & Persistence",
+      "purpose": "Store and retrieve data with format optimization",
+      "components": [
+        "Column Store",
+        "Document Store",
+        "Time-Bucketed Store",
+        "Vector Store",
+        "Write-Ahead Log"
+      ]
+    }
+  ],
+  'splitwise': [
+    {
+      "name": "Presentation Layer",
+      "purpose": "Display balances, expenses, and settlement summaries to users",
+      "components": [
+        "Balance Sheet UI",
+        "Expense History View",
+        "Settlement Summary",
+        "Group Dashboard"
+      ]
+    },
+    {
+      "name": "Application Layer",
+      "purpose": "Manage expenses, splits, and coordinate business logic operations",
+      "components": [
+        "ExpenseManager Facade",
+        "SplitStrategy Handler",
+        "GroupManager",
+        "BalanceCalculator"
+      ]
+    },
+    {
+      "name": "Domain Model Layer",
+      "purpose": "Represent core entities and relationships in the system",
+      "components": [
+        "User",
+        "Expense",
+        "Split",
+        "Group",
+        "Transaction"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Execute debt simplification and settlement optimization algorithms",
+      "components": [
+        "Debt Simplifier",
+        "Settlement Matcher",
+        "Balance Graph",
+        "Precision Handler"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Store and retrieve users, expenses, balances, and transaction history",
+      "components": [
+        "User Store",
+        "Expense Store",
+        "Balance Sheet Map",
+        "Settlement Log"
+      ]
+    }
+  ],
+  'spotify-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Deliver UI for playback, playlists, and social discovery",
+      "components": [
+        "Web Player",
+        "Mobile App",
+        "Desktop Client",
+        "Offline Cache"
+      ]
+    },
+    {
+      "name": "API Gateway & Auth Layer",
+      "purpose": "Route requests, authenticate users, enforce rate limits",
+      "components": [
+        "API Gateway",
+        "Authentication Service",
+        "Rate Limiter",
+        "Session Manager"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Handle playback, playlists, recommendations, and social features",
+      "components": [
+        "Playback Service",
+        "Playlist Manager",
+        "Recommendation Engine",
+        "Social Service",
+        "Search Service"
+      ]
+    },
+    {
+      "name": "Data & Cache Layer",
+      "purpose": "Store and retrieve user data, music metadata, and cache hot data",
+      "components": [
+        "User Database",
+        "Music Catalog DB",
+        "Cache Layer",
+        "Message Queue"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Distribute content, store blobs, monitor system health",
+      "components": [
+        "CDN",
+        "Object Storage",
+        "Message Broker",
+        "Monitoring & Logging"
+      ]
+    }
+  ],
+  'sql-isolation-levels': [
+    {
+      "name": "Application Layer",
+      "purpose": "Execute concurrent transactions and retry on conflicts",
+      "components": [
+        "Transaction Logic",
+        "Retry Handler",
+        "Conflict Detection"
+      ]
+    },
+    {
+      "name": "Isolation Level Layer",
+      "purpose": "Define visibility rules between concurrent transactions",
+      "components": [
+        "Read Uncommitted",
+        "Read Committed",
+        "Repeatable Read",
+        "Serializable"
+      ]
+    },
+    {
+      "name": "Concurrency Control Layer",
+      "purpose": "Enforce consistency using snapshots and conflict detection",
+      "components": [
+        "MVCC Snapshots",
+        "Predicate Locks",
+        "RW-Conflict Tracking",
+        "Write Skew Detection"
+      ]
+    },
+    {
+      "name": "Storage Engine Layer",
+      "purpose": "Manage transaction versions and detect anomalies",
+      "components": [
+        "Gap Locks",
+        "Version Store",
+        "Anomaly Detector",
+        "Abort Handler"
+      ]
+    }
+  ],
+  'sql-isolation-levels-deep-dive': [
+    {
+      "name": "Application Layer",
+      "purpose": "Define transaction boundaries and consistency requirements",
+      "components": [
+        "Transaction logic",
+        "Explicit locking (FOR UPDATE)",
+        "Retry logic",
+        "Invariant checks"
+      ]
+    },
+    {
+      "name": "Isolation Level Layer",
+      "purpose": "Control visibility of concurrent writes between transactions",
+      "components": [
+        "Read Uncommitted",
+        "Read Committed",
+        "Repeatable Read",
+        "Serializable"
+      ]
+    },
+    {
+      "name": "Concurrency Control Layer",
+      "purpose": "Manage row/version visibility and lock scheduling",
+      "components": [
+        "MVCC engine",
+        "Snapshot isolation",
+        "Gap locks",
+        "2PL locks",
+        "SSI detection"
+      ]
+    },
+    {
+      "name": "Storage Engine Layer",
+      "purpose": "Persist versions and enforce write ordering",
+      "components": [
+        "Version store",
+        "Undo log",
+        "Lock manager",
+        "Transaction log"
+      ]
+    }
+  ],
+  'stack-overflow': [
+    {
+      "name": "Client Layer",
+      "purpose": "User interface and interaction endpoints for Q&A operations",
+      "components": [
+        "Web UI",
+        "Mobile App",
+        "API Gateway"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Orchestrate business logic and manage cross-entity operations",
+      "components": [
+        "StackOverflowService",
+        "QuestionService",
+        "AnswerService",
+        "VotingService",
+        "ReputationManager",
+        "SearchService"
+      ]
+    },
+    {
+      "name": "Domain Model Layer",
+      "purpose": "Define core entities and their relationships with behavior",
+      "components": [
+        "User",
+        "Question",
+        "Answer",
+        "Comment",
+        "Vote",
+        "Tag"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Store and retrieve entities with transaction support",
+      "components": [
+        "UserRepository",
+        "PostRepository",
+        "VoteRepository",
+        "CommentRepository",
+        "TagRepository",
+        "SearchIndex"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Provide caching, messaging, and consistency mechanisms",
+      "components": [
+        "Cache",
+        "Event Queue",
+        "Transaction Manager",
+        "Lock Manager"
+      ]
+    }
+  ],
+  'state-diagram': [
+    {
+      "name": "State Definition Layer",
+      "purpose": "Define possible states and their internal activities",
+      "components": [
+        "State nodes",
+        "Entry actions",
+        "Exit actions",
+        "Do activities"
+      ]
+    },
+    {
+      "name": "Transition Layer",
+      "purpose": "Model events and conditions triggering state changes",
+      "components": [
+        "Event triggers",
+        "Guard conditions",
+        "Transition actions",
+        "Transition arrows"
+      ]
+    },
+    {
+      "name": "State Machine Engine Layer",
+      "purpose": "Execute state transitions and manage state lifecycle",
+      "components": [
+        "Current state tracker",
+        "Event handler",
+        "Guard evaluator",
+        "Action executor"
+      ]
+    },
+    {
+      "name": "Application Domain Layer",
+      "purpose": "Apply state machine to real-world entities",
+      "components": [
+        "Order workflow",
+        "Elevator control",
+        "Protocol handler",
+        "Entity lifecycle"
+      ]
+    }
+  ],
+  'state-pattern': [
+    {
+      "name": "Context Layer",
+      "purpose": "Maintains state and delegates behavior to current state",
+      "components": [
+        "Context Object",
+        "Current State Reference",
+        "Public Interface"
+      ]
+    },
+    {
+      "name": "State Abstraction Layer",
+      "purpose": "Defines common interface for all state implementations",
+      "components": [
+        "State Interface",
+        "Behavior Contracts",
+        "Transition Methods"
+      ]
+    },
+    {
+      "name": "Concrete State Layer",
+      "purpose": "Implements specific behavior for each distinct state",
+      "components": [
+        "State A Implementation",
+        "State B Implementation",
+        "State C Implementation",
+        "State N Implementation"
+      ]
+    }
+  ],
+  'sticky-sessions': [
+    {
+      "name": "Client Layer",
+      "purpose": "Initiates requests with session identifier or IP",
+      "components": [
+        "Browser",
+        "Mobile App",
+        "API Client"
+      ]
+    },
+    {
+      "name": "Load Balancer Layer",
+      "purpose": "Routes requests to same backend using affinity",
+      "components": [
+        "Cookie-based Routing",
+        "IP Hash Routing",
+        "Session Identifier Hashing"
+      ]
+    },
+    {
+      "name": "Backend Server Layer",
+      "purpose": "Processes requests and maintains in-memory session state",
+      "components": [
+        "Web Server",
+        "In-Memory Session Store",
+        "Application Logic"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persists session data and application state",
+      "components": [
+        "Local Memory Cache",
+        "Database",
+        "Session Storage"
+      ]
+    }
+  ],
+  'strangler-fig': [
+    {
+      "name": "Client & Routing Layer",
+      "purpose": "Direct traffic between legacy and new systems intelligently",
+      "components": [
+        "API Gateway",
+        "Feature Toggles",
+        "Routing Rules",
+        "Load Balancer"
+      ]
+    },
+    {
+      "name": "New System Layer",
+      "purpose": "Build modern functionality incrementally alongside legacy",
+      "components": [
+        "New Services",
+        "Modern APIs",
+        "Database Facade",
+        "Event Adapters"
+      ]
+    },
+    {
+      "name": "Legacy System Layer",
+      "purpose": "Existing system continues running during migration",
+      "components": [
+        "Legacy Monolith",
+        "Legacy APIs",
+        "Legacy Database",
+        "Adapters"
+      ]
+    },
+    {
+      "name": "Coordination Layer",
+      "purpose": "Manage migration state and gradual traffic cutover",
+      "components": [
+        "Feature Flag Service",
+        "Migration Registry",
+        "Dual-write Handler",
+        "Rollback Mechanism"
+      ]
+    }
+  ],
+  'strategy': [
+    {
+      "name": "Client Layer",
+      "purpose": "Uses strategy without knowing implementation details",
+      "components": [
+        "Context",
+        "Client Code"
+      ]
+    },
+    {
+      "name": "Strategy Interface Layer",
+      "purpose": "Defines common contract for all algorithms",
+      "components": [
+        "Strategy Interface",
+        "Algorithm Contract"
+      ]
+    },
+    {
+      "name": "Concrete Strategy Layer",
+      "purpose": "Implements specific algorithm variations",
+      "components": [
+        "Strategy A",
+        "Strategy B",
+        "Strategy C"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Executes selected algorithm at runtime",
+      "components": [
+        "Algorithm Logic",
+        "Result Handler"
+      ]
+    }
+  ],
+  'strava-fitness-tracking': [
+    {
+      "name": "Client Layer",
+      "purpose": "Capture GPS data, display activities, manage real-time tracking",
+      "components": [
+        "Mobile App",
+        "Web Dashboard",
+        "Live Tracking UI",
+        "Activity Recorder"
+      ]
+    },
+    {
+      "name": "API & Real-time Layer",
+      "purpose": "Serve activities, leaderboards, feed; handle live location streams",
+      "components": [
+        "REST API",
+        "WebSocket Server",
+        "Feed API",
+        "Segment Query API"
+      ]
+    },
+    {
+      "name": "Processing & Business Logic Layer",
+      "purpose": "Match routes to segments, compute stats, rank athletes",
+      "components": [
+        "Route Matcher",
+        "Segment Detector",
+        "Stats Calculator",
+        "Leaderboard Ranker",
+        "Activity Processor"
+      ]
+    },
+    {
+      "name": "Data & Search Layer",
+      "purpose": "Store activities, segments, rankings; enable fast geospatial queries",
+      "components": [
+        "Activity Database",
+        "PostGIS Spatial Index",
+        "Segment Index",
+        "Redis Cache",
+        "Time-series DB"
+      ]
+    },
+    {
+      "name": "Message & Stream Layer",
+      "purpose": "Decouple processing; fan-out activities to followers asynchronously",
+      "components": [
+        "Message Queue",
+        "Activity Stream",
+        "Feed Fanout",
+        "Notification Service"
+      ]
+    }
+  ],
+  'synchronization-primitives': [
+    {
+      "name": "Application Layer",
+      "purpose": "Uses primitives to protect shared resource access safely",
+      "components": [
+        "Critical Section",
+        "Shared Data",
+        "Thread Pool",
+        "Task Queue"
+      ]
+    },
+    {
+      "name": "Synchronization Primitives Layer",
+      "purpose": "Provides low-level mechanisms for thread coordination",
+      "components": [
+        "Mutex",
+        "Semaphore",
+        "Lock",
+        "Condition Variable",
+        "Barrier",
+        "Monitor"
+      ]
+    },
+    {
+      "name": "OS/Runtime Layer",
+      "purpose": "Implements primitives with kernel support and scheduling",
+      "components": [
+        "Kernel Locks",
+        "Context Switching",
+        "Wait Queues",
+        "Scheduler"
+      ]
+    }
+  ],
+  'task-scheduler': [
+    {
+      "name": "Client Layer",
+      "purpose": "Submit and manage tasks with scheduling requests",
+      "components": [
+        "Task Scheduler Interface",
+        "Task Definition",
+        "Recurrence Policy",
+        "Task Observer"
+      ]
+    },
+    {
+      "name": "Scheduling Layer",
+      "purpose": "Determine execution timing and task readiness",
+      "components": [
+        "Priority Queue (Min-Heap)",
+        "Scheduler Loop",
+        "Timing Calculator",
+        "Task Comparator"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Execute tasks concurrently with lifecycle management",
+      "components": [
+        "Thread Pool Executor",
+        "Task Runner",
+        "Execution Context",
+        "Lifecycle Manager"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Track task state and execution history",
+      "components": [
+        "Task Status Store",
+        "Execution Log",
+        "Cancellation Registry",
+        "Recurring Task Tracker"
+      ]
+    }
+  ],
+  'template-method': [
+    {
+      "name": "Client Layer",
+      "purpose": "Invoke template method on concrete miner subclasses",
+      "components": [
+        "Client Code",
+        "Miner Request"
+      ]
+    },
+    {
+      "name": "Template Method Layer",
+      "purpose": "Define algorithm skeleton and orchestrate step execution",
+      "components": [
+        "Base Miner Class",
+        "Template Method",
+        "Step Sequence"
+      ]
+    },
+    {
+      "name": "Implementation Layer",
+      "purpose": "Override algorithm steps for specific data formats",
+      "components": [
+        "CSV Miner",
+        "JSON Miner",
+        "Database Miner"
+      ]
+    },
+    {
+      "name": "Step Execution Layer",
+      "purpose": "Execute concrete and abstract algorithm steps",
+      "components": [
+        "Open Source",
+        "Extract Data",
+        "Parse Data",
+        "Analyze",
+        "Generate Report"
+      ]
+    }
+  ],
+  'thread-lifecycle': [
+    {
+      "name": "Thread Creation & Configuration",
+      "purpose": "Initialize threads and set daemon/priority properties",
+      "components": [
+        "Thread Constructor",
+        "Daemon Flag",
+        "Priority Setting",
+        "Thread Name"
+      ]
+    },
+    {
+      "name": "Thread State Machine",
+      "purpose": "Manage transitions through six distinct thread states",
+      "components": [
+        "NEW State",
+        "RUNNABLE State",
+        "BLOCKED State",
+        "WAITING State",
+        "TIMED_WAITING State",
+        "TERMINATED State"
+      ]
+    },
+    {
+      "name": "Scheduling & Execution",
+      "purpose": "Execute runnable threads and yield CPU to scheduler",
+      "components": [
+        "Thread Scheduler",
+        "Context Switching",
+        "Runnable Queue",
+        "CPU Allocation"
+      ]
+    },
+    {
+      "name": "Synchronization & State Changes",
+      "purpose": "Coordinate state transitions via locks and notifications",
+      "components": [
+        "Monitor Locks",
+        "wait/notify",
+        "Condition Variables",
+        "Interruption Signals"
+      ]
+    },
+    {
+      "name": "Lifecycle Management",
+      "purpose": "Handle daemon threads and JVM/process termination behavior",
+      "components": [
+        "Daemon Threads",
+        "Non-daemon Threads",
+        "JVM Exit Logic",
+        "Thread Cleanup"
+      ]
+    }
+  ],
+  'thread-pools': [
+    {
+      "name": "Client Layer",
+      "purpose": "Submit tasks to thread pool for asynchronous execution",
+      "components": [
+        "Task Submission",
+        "Future Handling",
+        "Callback Registration"
+      ]
+    },
+    {
+      "name": "Thread Pool Management",
+      "purpose": "Coordinate worker threads and distribute queued work",
+      "components": [
+        "Worker Threads",
+        "Task Queue",
+        "Thread Scheduler",
+        "Lifecycle Manager"
+      ]
+    },
+    {
+      "name": "Execution Layer",
+      "purpose": "Execute tasks and manage thread synchronization primitives",
+      "components": [
+        "Runnable Execution",
+        "Locks/Semaphores",
+        "Condition Variables",
+        "Thread Context"
+      ]
+    },
+    {
+      "name": "Resource Layer",
+      "purpose": "Allocate and monitor system resources for threads",
+      "components": [
+        "Memory Allocation",
+        "CPU Scheduling",
+        "OS Thread Binding"
+      ]
+    }
+  ],
+  'tic-tac-toe': [
+    {
+      "name": "Presentation Layer",
+      "purpose": "Display board state and game results to players",
+      "components": [
+        "Game UI",
+        "Board Renderer",
+        "Result Display"
+      ]
+    },
+    {
+      "name": "Game Logic Layer",
+      "purpose": "Orchestrate turns, validate moves, and manage game flow",
+      "components": [
+        "Game Controller",
+        "Move Validator",
+        "Turn Manager"
+      ]
+    },
+    {
+      "name": "Domain Layer",
+      "purpose": "Encapsulate core game entities and win detection",
+      "components": [
+        "Board",
+        "Player",
+        "Win Strategy",
+        "Scoreboard"
+      ]
+    },
+    {
+      "name": "Detection Layer",
+      "purpose": "Evaluate game outcomes using pluggable strategies",
+      "components": [
+        "Row Strategy",
+        "Column Strategy",
+        "Diagonal Strategy",
+        "Draw Detector"
+      ]
+    }
+  ],
+  'traffic-control': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide user interfaces for monitoring and manual control",
+      "components": [
+        "Traffic Dashboard",
+        "Mobile App",
+        "Emergency Dispatch Portal",
+        "Admin Console"
+      ]
+    },
+    {
+      "name": "Control Logic Layer",
+      "purpose": "Manage signal timing, phase sequencing, and adaptive algorithms",
+      "components": [
+        "Signal Controller",
+        "Phase Manager",
+        "Adaptive Optimizer",
+        "Emergency Preemptor",
+        "Safety Validator"
+      ]
+    },
+    {
+      "name": "Data & Integration Layer",
+      "purpose": "Collect sensor data and coordinate with external systems",
+      "components": [
+        "Sensor Aggregator",
+        "Vehicle Detector",
+        "Emergency Vehicle Detector",
+        "Weather Integrator",
+        "Event Queue"
+      ]
+    },
+    {
+      "name": "Hardware & Field Layer",
+      "purpose": "Execute signal commands and gather real-world sensor inputs",
+      "components": [
+        "Traffic Signal Actuators",
+        "Vehicle Detection Sensors",
+        "GPS/Emergency Receivers",
+        "Communication Module",
+        "Edge Processor"
+      ]
+    }
+  ],
+  'transaction-management': [
+    {
+      "name": "Transaction Interface Layer",
+      "purpose": "Expose transaction lifecycle and isolation controls",
+      "components": [
+        "BEGIN/COMMIT",
+        "ROLLBACK",
+        "Savepoints",
+        "Isolation Levels"
+      ]
+    },
+    {
+      "name": "Concurrency Control Layer",
+      "purpose": "Enforce isolation and prevent conflicts",
+      "components": [
+        "MVCC",
+        "Lock Manager",
+        "Version Chains",
+        "Conflict Detection"
+      ]
+    },
+    {
+      "name": "Transaction Coordination Layer",
+      "purpose": "Coordinate multi-node and compensating transactions",
+      "components": [
+        "2PC Coordinator",
+        "3PC Protocol",
+        "Compensating Transactions",
+        "Event Log"
+      ]
+    },
+    {
+      "name": "Durability & Recovery Layer",
+      "purpose": "Guarantee atomicity and durability with write-ahead logs",
+      "components": [
+        "WAL",
+        "Checkpoint Manager",
+        "Recovery Engine",
+        "Constraint Validator"
+      ]
+    },
+    {
+      "name": "Storage Engine Layer",
+      "purpose": "Persist data and maintain consistency guarantees",
+      "components": [
+        "Page Manager",
+        "Index Structures",
+        "Transaction State",
+        "Data Files"
+      ]
+    }
+  ],
+  'url-shortener': [
+    {
+      "name": "Client Layer",
+      "purpose": "User interface for link creation and analytics viewing",
+      "components": [
+        "Web Dashboard",
+        "Mobile App",
+        "API Client Library"
+      ]
+    },
+    {
+      "name": "API & Gateway Layer",
+      "purpose": "Handle requests, enforce rate limits, route traffic",
+      "components": [
+        "REST API Server",
+        "Rate Limiter",
+        "Load Balancer",
+        "Request Router"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Core business logic for URLs, redirects, analytics",
+      "components": [
+        "URL Shortener Service",
+        "Redirect Service",
+        "Analytics Aggregator",
+        "Code Generator"
+      ]
+    },
+    {
+      "name": "Cache & Queue Layer",
+      "purpose": "Fast retrieval and asynchronous event processing",
+      "components": [
+        "Redis Cache",
+        "Message Queue",
+        "Click Event Buffer"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Persistent storage for URLs, users, and analytics",
+      "components": [
+        "PostgreSQL URLs DB",
+        "Time-Series Analytics DB",
+        "Click Events Log"
+      ]
+    }
+  ],
+  'url-shortener-lld': [
+    {
+      "name": "Client Layer",
+      "purpose": "Accept URL shortening requests and redirect to original URLs",
+      "components": [
+        "Web Browser",
+        "Mobile App",
+        "API Client",
+        "QR Scanner"
+      ]
+    },
+    {
+      "name": "API Gateway Layer",
+      "purpose": "Route requests and enforce rate limiting and validation",
+      "components": [
+        "Request Router",
+        "Rate Limiter",
+        "Input Validator",
+        "Load Balancer"
+      ]
+    },
+    {
+      "name": "Service Layer",
+      "purpose": "Generate short codes and handle redirection with analytics",
+      "components": [
+        "Short Code Generator",
+        "URL Mapper",
+        "Redirect Handler",
+        "Analytics Processor",
+        "Custom Alias Manager"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store URL mappings, analytics, and metadata persistently",
+      "components": [
+        "Primary Database",
+        "Cache Layer",
+        "Analytics Store",
+        "Session Store"
+      ]
+    },
+    {
+      "name": "Infrastructure Layer",
+      "purpose": "Support scalability, monitoring, and distributed operations",
+      "components": [
+        "Message Queue",
+        "Background Workers",
+        "CDN",
+        "Monitoring",
+        "Distributed Lock"
+      ]
+    }
+  ],
+  'use-case-diagram': [
+    {
+      "name": "Actor Layer",
+      "purpose": "Represent external users and systems interacting",
+      "components": [
+        "End Users",
+        "External Systems",
+        "Admin Actors",
+        "Third-party Services"
+      ]
+    },
+    {
+      "name": "Use Case Layer",
+      "purpose": "Define discrete system functionalities and behaviors",
+      "components": [
+        "Primary Use Cases",
+        "Secondary Use Cases",
+        "Include Relations",
+        "Extend Relations"
+      ]
+    },
+    {
+      "name": "System Boundary Layer",
+      "purpose": "Establish scope and encapsulation of system",
+      "components": [
+        "Boundary Definition",
+        "Scope Delimitation",
+        "Requirement Containment"
+      ]
+    }
+  ],
+  'uuid-ulid-snowflake': [
+    {
+      "name": "ID Format Layer",
+      "purpose": "Define structure and bit allocation for unique identifiers",
+      "components": [
+        "UUID v4 (random)",
+        "UUID v7 (time-ordered)",
+        "ULID",
+        "Snowflake ID"
+      ]
+    },
+    {
+      "name": "Generation Layer",
+      "purpose": "Generate IDs with uniqueness and sortability guarantees",
+      "components": [
+        "Randomness source",
+        "Timestamp component",
+        "Sequence counter",
+        "Machine/node ID"
+      ]
+    },
+    {
+      "name": "Distribution Layer",
+      "purpose": "Coordinate ID generation across multiple nodes",
+      "components": [
+        "Centralized service",
+        "Decentralized generation",
+        "Clock synchronization",
+        "Collision avoidance"
+      ]
+    },
+    {
+      "name": "Storage & Indexing Layer",
+      "purpose": "Persist IDs with optimal database performance",
+      "components": [
+        "B-tree index",
+        "Sequential write patterns",
+        "Random ID fragmentation",
+        "Time-ordered clustering"
+      ]
+    }
+  ],
+  'vector-databases-deep-dive': [
+    {
+      "name": "Client & Query Layer",
+      "purpose": "Accept queries and return ranked similarity results",
+      "components": [
+        "Query Parser",
+        "Distance Metric Selector",
+        "Filter Engine",
+        "Result Ranker"
+      ]
+    },
+    {
+      "name": "API & Indexing Layer",
+      "purpose": "Expose vector operations and manage index structures",
+      "components": [
+        "Vector Insert/Update/Delete",
+        "ANN Index Manager",
+        "Metadata Indexer",
+        "Hybrid Search Orchestrator"
+      ]
+    },
+    {
+      "name": "Search & ANN Algorithms Layer",
+      "purpose": "Execute approximate nearest neighbor search efficiently",
+      "components": [
+        "HNSW Algorithm",
+        "IVF Index",
+        "Product Quantization",
+        "Vector Quantizer"
+      ]
+    },
+    {
+      "name": "Storage & Serialization Layer",
+      "purpose": "Persist vectors, metadata, and index structures",
+      "components": [
+        "Vector Store",
+        "Metadata Store",
+        "Index Serializer",
+        "Memory Cache"
+      ]
+    },
+    {
+      "name": "Distribution & Scalability Layer",
+      "purpose": "Partition data and coordinate queries across nodes",
+      "components": [
+        "Shard Manager",
+        "Replication Handler",
+        "Query Coordinator",
+        "Load Balancer"
+      ]
+    }
+  ],
+  'vending-machine': [
+    {
+      "name": "User Interaction Layer",
+      "purpose": "Accept user inputs and display machine status",
+      "components": [
+        "Coin Slot",
+        "Button Controller",
+        "Display Screen",
+        "Refund Chute"
+      ]
+    },
+    {
+      "name": "State Machine Layer",
+      "purpose": "Manage state transitions and delegate actions to states",
+      "components": [
+        "Vending Machine",
+        "State Interface",
+        "Idle State",
+        "Accepting Money State",
+        "Item Selected State",
+        "Dispensing State"
+      ]
+    },
+    {
+      "name": "Business Logic Layer",
+      "purpose": "Handle payments, inventory, and transaction processing",
+      "components": [
+        "Payment Processor",
+        "Inventory Manager",
+        "Product Catalog",
+        "Change Calculator"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store and retrieve machine configuration and inventory",
+      "components": [
+        "Coin Denominations",
+        "Product Stock",
+        "Transaction Log",
+        "Machine Config"
+      ]
+    }
+  ],
+  'version-control': [
+    {
+      "name": "Client Layer",
+      "purpose": "Provide command-line interface for user operations",
+      "components": [
+        "CLI Parser",
+        "Command Handler",
+        "User Input Validator"
+      ]
+    },
+    {
+      "name": "VCS Operations Layer",
+      "purpose": "Execute core version control commands and logic",
+      "components": [
+        "Commit Engine",
+        "Branch Manager",
+        "Merge Engine",
+        "Diff Calculator"
+      ]
+    },
+    {
+      "name": "Repository State Layer",
+      "purpose": "Manage commit DAG, branches, HEAD, working directory",
+      "components": [
+        "Commit Graph",
+        "Branch Pointers",
+        "HEAD Reference",
+        "Working Directory"
+      ]
+    },
+    {
+      "name": "Storage Layer",
+      "purpose": "Persist commits, file snapshots, and metadata",
+      "components": [
+        "Commit Store",
+        "File Snapshot Store",
+        "Index",
+        "Reference Database"
+      ]
+    }
+  ],
+  'virtual-scroll-table': [
+    {
+      "name": "UI Layer",
+      "purpose": "Render visible rows and interactive table controls",
+      "components": [
+        "Virtual Row Renderer",
+        "Column Headers",
+        "Selection Checkboxes",
+        "Resize Handles"
+      ]
+    },
+    {
+      "name": "Interaction Layer",
+      "purpose": "Handle user input for sorting, filtering, and selection",
+      "components": [
+        "Sort Manager",
+        "Filter Engine",
+        "Column Resizer",
+        "Row Selection Handler"
+      ]
+    },
+    {
+      "name": "Virtualization Layer",
+      "purpose": "Calculate visible range and manage scroll position mapping",
+      "components": [
+        "Scroll Position Tracker",
+        "Visible Range Calculator",
+        "DOM Recycler",
+        "Buffer Manager"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "purpose": "Store and transform dataset with efficient lookups",
+      "components": [
+        "Row Data Store",
+        "Index Manager",
+        "Filtered View",
+        "Sort Comparator"
+      ]
+    }
+  ],
+  'visitor': [
+    {
+      "name": "Client Layer",
+      "purpose": "Orchestrate visitor operations on object structures",
+      "components": [
+        "Client Code",
+        "Operation Requests"
+      ]
+    },
+    {
+      "name": "Visitor Layer",
+      "purpose": "Define and execute operations across element types",
+      "components": [
+        "Visitor Interface",
+        "Concrete Visitors",
+        "Visit Methods"
+      ]
+    },
+    {
+      "name": "Element Layer",
+      "purpose": "Accept visitors and enable double dispatch",
+      "components": [
+        "Element Interface",
+        "Concrete Elements",
+        "Accept Method"
+      ]
+    }
+  ],
+  'wal-durability': [
+    {
+      "name": "Transaction Layer",
+      "purpose": "Accept commits and coordinate durability guarantees",
+      "components": [
+        "Commit Request",
+        "Durability Policy",
+        "Group Commit Coordinator"
+      ]
+    },
+    {
+      "name": "WAL Layer",
+      "purpose": "Write and manage sequential append-only log records",
+      "components": [
+        "Log Buffer",
+        "WAL Writer",
+        "Fsync Manager",
+        "Log Rotation"
+      ]
+    },
+    {
+      "name": "Persistence Layer",
+      "purpose": "Store log and checkpoint data on durable media",
+      "components": [
+        "Log Segment Files",
+        "Checkpoint Snapshots",
+        "Recovery Index"
+      ]
+    },
+    {
+      "name": "Recovery Layer",
+      "purpose": "Replay logs and restore consistent database state",
+      "components": [
+        "Log Replay Engine",
+        "Crash Detection",
+        "State Reconstruction"
+      ]
+    }
+  ],
+  'youtube-top-k-trending': [
+    {
+      "name": "Client Layer",
+      "purpose": "Display trending videos and metrics to users",
+      "components": [
+        "Trending Page UI",
+        "Regional Leaderboards",
+        "Velocity Indicators",
+        "Mobile App"
+      ]
+    },
+    {
+      "name": "API & Query Layer",
+      "purpose": "Serve trending rankings and handle real-time requests",
+      "components": [
+        "Trending API",
+        "Region/Category Router",
+        "Cache Layer",
+        "Hot-Path Optimizer"
+      ]
+    },
+    {
+      "name": "Scoring & Aggregation Layer",
+      "purpose": "Compute trending scores with decay and detect manipulation",
+      "components": [
+        "Time-Decay Scorer",
+        "Fraud Detector",
+        "Heavy Hitter Detector",
+        "Diversity Enforcer",
+        "Regional Aggregator"
+      ]
+    },
+    {
+      "name": "Event Stream Processing",
+      "purpose": "Ingest and process billions of view events in real-time",
+      "components": [
+        "Event Ingester",
+        "Stream Processor",
+        "Time-Window Aggregator",
+        "State Store",
+        "Kafka/Pub-Sub"
+      ]
+    },
+    {
+      "name": "Storage & Persistence",
+      "purpose": "Store rankings, event logs, and historical data",
+      "components": [
+        "Hot Leaderboard DB",
+        "Time-Series DB",
+        "Event Log Storage",
+        "Fraud Signals Cache"
+      ]
+    }
+  ],
+  'zookeeper-deep-dive': [
+    {
+      "name": "Client Layer",
+      "purpose": "Connect to ZooKeeper and issue coordination requests",
+      "components": [
+        "Client Connection",
+        "Session Manager",
+        "Request Queue",
+        "Watch Listener"
+      ]
+    },
+    {
+      "name": "Coordination API Layer",
+      "purpose": "Expose primitives for distributed coordination recipes",
+      "components": [
+        "Znode Operations",
+        "Watch Mechanism",
+        "ACL Manager",
+        "Sequential/Ephemeral Handler"
+      ]
+    },
+    {
+      "name": "Consensus & Replication Layer",
+      "purpose": "Ensure consistency via leader-based atomic broadcast",
+      "components": [
+        "ZAB Protocol",
+        "Leader Election",
+        "Quorum Voting",
+        "Log Replication"
+      ]
+    },
+    {
+      "name": "State Management Layer",
+      "purpose": "Maintain znode hierarchy and session state durably",
+      "components": [
+        "Znode Tree",
+        "Session Store",
+        "Snapshot",
+        "Transaction Log"
+      ]
+    },
+    {
+      "name": "Cluster Coordination Layer",
+      "purpose": "Manage ensemble membership and network communication",
+      "components": [
+        "Peer Discovery",
+        "Ensemble Manager",
+        "Network Transport",
+        "Failure Detector"
+      ]
+    }
+  ]
 };
