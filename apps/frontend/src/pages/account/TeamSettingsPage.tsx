@@ -81,6 +81,8 @@ export default function TeamSettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
   const [lastInviteUrl, setLastInviteUrl] = useState<string | null>(null);
+  const [lastInviteDelivery, setLastInviteDelivery] = useState<'email' | 'manual' | null>(null);
+  const [lastInviteEmail, setLastInviteEmail] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = 'Team — Camora';
@@ -152,6 +154,8 @@ export default function TeamSettingsPage() {
         }
       } else {
         setLastInviteUrl(data.invite_url);
+        setLastInviteDelivery(data.delivery === 'email' ? 'email' : 'manual');
+        setLastInviteEmail(inviteEmail.trim());
         setInviteEmail('');
         await fetchAll();
       }
@@ -300,15 +304,28 @@ export default function TeamSettingsPage() {
                   </button>
                 </form>
                 {lastInviteUrl && (
-                  <div className="mt-3 p-3 rounded-lg flex items-center justify-between gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                    <code className="text-[11px] truncate flex-1" style={{ color: 'var(--text-secondary)' }}>{lastInviteUrl}</code>
-                    <button
-                      onClick={() => copyInviteLink(lastInviteUrl)}
-                      className="px-3 py-1.5 text-[11px] font-semibold rounded-md text-white shrink-0"
-                      style={{ background: 'var(--accent)' }}
-                    >
-                      Copy link
-                    </button>
+                  <div className="mt-3 space-y-2">
+                    {lastInviteDelivery === 'email' && (
+                      <p className="text-[12px] flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        Email sent to <strong>{lastInviteEmail}</strong> — link below as backup.
+                      </p>
+                    )}
+                    {lastInviteDelivery === 'manual' && (
+                      <p className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+                        Email delivery isn't configured — share this link with <strong>{lastInviteEmail}</strong> manually:
+                      </p>
+                    )}
+                    <div className="p-3 rounded-lg flex items-center justify-between gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <code className="text-[11px] truncate flex-1" style={{ color: 'var(--text-secondary)' }}>{lastInviteUrl}</code>
+                      <button
+                        onClick={() => copyInviteLink(lastInviteUrl)}
+                        className="px-3 py-1.5 text-[11px] font-semibold rounded-md text-white shrink-0"
+                        style={{ background: 'var(--accent)' }}
+                      >
+                        Copy link
+                      </button>
+                    </div>
                   </div>
                 )}
                 {team.members.length >= team.seat_limit && (

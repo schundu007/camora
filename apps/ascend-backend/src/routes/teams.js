@@ -13,6 +13,7 @@ import {
   removeMember,
   planSupportsTeam,
 } from '../services/teamService.js';
+import { sendTeamInviteEmail } from '../services/emailService.js';
 
 const router = Router();
 
@@ -115,12 +116,51 @@ router.post('/:teamId/invite', jwtAuth, async (req, res) => {
       email,
       invitedBy: req.user.id,
     });
+    const inviteUrl = getInviteUrl(token);
+
+    // Fetch the team name + owner display info for a humane subject line.
+    // Falls back gracefully if any of these reads fail — the invite still
+    // succeeds even if the email step doesn't.
+    let ownerName = req.user.name || null;
+    let ownerEmail = req.user.email || null;
+    let teamName = null;
+    try {
+      const ctx = await query(
+        `SELECT t.name AS team_name, u.name AS owner_name, u.email AS owner_email
+           FROM teams t JOIN users u ON u.id = t.owner_user_id
+          WHERE t.id = $1`,
+        [teamId],
+      );
+      if (ctx.rows[0]) {
+        teamName = ctx.rows[0].team_name;
+        ownerName = ctx.rows[0].owner_name || ownerName;
+        ownerEmail = ctx.rows[0].owner_email || ownerEmail;
+      }
+    } catch { /* fall through to defaults */ }
+
+    // Fire the email — non-blocking. If RESEND_API_KEY is unset, the helper
+    // returns null and the response advertises 'manual' delivery so the
+    // frontend keeps surfacing the copy-link UI.
+    let delivery = 'manual';
+    try {
+      const sent = await sendTeamInviteEmail({
+        to: email,
+        ownerName,
+        ownerEmail,
+        teamName,
+        inviteUrl,
+        expiresAt: expires_at,
+      });
+      if (sent) delivery = 'email';
+    } catch (err) {
+      logger.warn({ err: err.message }, '[teams] email send failed; falling back to manual link');
+    }
+
     return res.json({
       token,
       expires_at,
-      invite_url: getInviteUrl(token),
-      // Phase 2 will auto-send via Resend; for now the owner shares the link.
-      delivery: 'manual',
+      invite_url: inviteUrl,
+      delivery,
     });
   } catch (err) {
     if (err.code === 'SEAT_LIMIT') {
