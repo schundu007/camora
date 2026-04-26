@@ -135,23 +135,27 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
             border: '1px solid var(--border)',
             borderLeft: '3px solid var(--cam-primary)',
           }}>
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+          <div
+            className="flex items-center justify-between px-3 py-1.5"
+            style={{
+              background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+              borderBottom: '2px solid var(--cam-gold-leaf)',
+            }}
+          >
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
-                style={{ background: 'var(--cam-primary)', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
+                style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
                 {s.label[0]}
               </span>
-              <span className="text-[11px] font-bold tracking-[0.08em] uppercase" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
+              <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
                 {labelCopy[s.label].short}
               </span>
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>· {labelCopy[s.label].hint}</span>
+              <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.7)' }}>· {labelCopy[s.label].hint}</span>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(s.body)}
-              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-colors"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-colors hover:bg-white/15"
+              style={{ color: 'rgba(255,255,255,0.85)' }}>
               Copy
             </button>
           </div>

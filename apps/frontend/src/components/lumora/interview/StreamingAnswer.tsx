@@ -78,28 +78,34 @@ function StreamingQAView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
         )}
       </div>
 
-      {/* Answer Card */}
-      <div className="rounded-md border border-[var(--accent)]/15 bg-[var(--accent)]/[0.02] p-3">
-        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--accent)]">
-          KEY POINTS
+      {/* Answer Card — LeetCode header */}
+      <div className="rounded-md border border-[var(--accent)]/15 overflow-hidden">
+        <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
+          <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">KEY POINTS</span>
         </div>
-        {blocks.ANSWER ? (
-          <StreamingAnswerList content={blocks.ANSWER.content} isComplete={blocks.ANSWER.isComplete} />
-        ) : (
-          <ShimmerBlock lines={4} />
-        )}
+        <div className="bg-[var(--accent)]/[0.02] p-3">
+          {blocks.ANSWER ? (
+            <StreamingAnswerList content={blocks.ANSWER.content} isComplete={blocks.ANSWER.isComplete} />
+          ) : (
+            <ShimmerBlock lines={4} />
+          )}
+        </div>
       </div>
 
-      {/* Follow-up Card */}
-      <div className="rounded-md border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] p-3">
-        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning-text)]">
-          FOLLOW-UP Q&A
+      {/* Follow-up Card — LeetCode header */}
+      <div className="rounded-md border border-[var(--warning)]/15 overflow-hidden">
+        <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+          <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--warning-text, var(--cam-gold-leaf-lt))' }} />
+          <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">FOLLOW-UP Q&amp;A</span>
         </div>
-        {blocks.FOLLOWUP ? (
-          <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
-        ) : (
-          <ShimmerBlock lines={3} />
-        )}
+        <div className="bg-[var(--warning)]/[0.02] p-3">
+          {blocks.FOLLOWUP ? (
+            <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
+          ) : (
+            <ShimmerBlock lines={3} />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -221,16 +227,28 @@ function StreamingCodingCard({
   block?: ParsedBlock;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-bg2 p-4">
-      <div className={`font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border ${titleColor}`}>
-        {title}
+    <div className="rounded-lg border border-border bg-bg2 overflow-hidden">
+      {/* LeetCode-style header: navy gradient, gold underline, white title */}
+      <div
+        className="flex items-center gap-2 px-4 py-2"
+        style={{
+          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+        }}
+      >
+        <span className={`inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`} />
+        <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">
+          {title}
+        </span>
       </div>
-      {block ? (
-        <p className="text-base text-[var(--text-muted)] leading-relaxed">
-          {cleanText(block.content)}
-          {!block.isComplete && <Cursor />}
-        </p>
-      ) : <ShimmerBlock lines={2} />}
+      <div className="p-4">
+        {block ? (
+          <p className="text-base text-[var(--text-muted)] leading-relaxed">
+            {cleanText(block.content)}
+            {!block.isComplete && <Cursor />}
+          </p>
+        ) : <ShimmerBlock lines={2} />}
+      </div>
     </div>
   );
 }
@@ -319,8 +337,17 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
         {/* LEFT: Architecture diagram */}
         <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
           <div className="border border-[var(--accent)]/15 bg-[var(--accent)]/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
-            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-[var(--accent)] shrink-0">
-              ARCHITECTURE
+            <div
+              className="flex items-center gap-2 px-4 py-2 shrink-0"
+              style={{
+                background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+                borderBottom: '2px solid var(--cam-gold-leaf)',
+              }}
+            >
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
+              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+                ARCHITECTURE
+              </span>
             </div>
             <div className="p-4 overflow-y-auto overflow-x-auto flex-1 flex flex-col items-center justify-center">
               <div className="text-center py-6">
@@ -353,10 +380,11 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
           {/* LAYER DESIGN */}
           <StreamingGridCard title="LAYER DESIGN" titleColor="text-[var(--text-secondary)]" block={blocks.DEEPDESIGN} type="deepdesign" />
 
-          {/* FOLLOW-UP Q&A */}
+          {/* FOLLOW-UP Q&A — LeetCode header */}
           <div className="border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] overflow-hidden min-w-0">
-            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-[var(--warning-text)] shrink-0">
-              FOLLOW-UP Q&A
+            <div className="flex items-center gap-2 px-4 py-2 shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--warning-text, var(--cam-gold-leaf-lt))' }} />
+              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">FOLLOW-UP Q&amp;A</span>
             </div>
             <div className="p-4 overflow-y-auto max-h-[420px]">
               {blocks.FOLLOWUP ? (
@@ -403,8 +431,17 @@ function StreamingGridCard({
 
   return (
     <div className={`border border-border bg-bg2 overflow-hidden min-w-0 rounded-lg ${className}`}>
-      <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border ${titleColor}`}>
-        {title}
+      <div
+        className="flex items-center gap-2 px-4 py-2"
+        style={{
+          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+        }}
+      >
+        <span className={`inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`} />
+        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+          {title}
+        </span>
       </div>
       <div className="p-4 overflow-y-auto overflow-x-auto max-h-[420px]">
         {content || <ShimmerBlock lines={4} />}
