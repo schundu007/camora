@@ -133,13 +133,13 @@ const darkTheme = {
   ...vscDarkPlus,
   'pre[class*="language-"]': {
     ...vscDarkPlus['pre[class*="language-"]'],
-    background: 'var(--cam-primary-dk)',
+    background: 'var(--bg-elevated)',
     margin: 0,
     padding: '12px',
   },
   'code[class*="language-"]': {
     ...vscDarkPlus['code[class*="language-"]'],
-    color: 'var(--border)',
+    color: 'var(--text-primary)',
     background: 'transparent',
   },
 };
@@ -149,13 +149,13 @@ const lightTheme = {
   ...vs,
   'pre[class*="language-"]': {
     ...vs['pre[class*="language-"]'],
-    background: 'var(--cam-primary-dk)',
+    background: 'var(--bg-elevated)',
     margin: 0,
     padding: '12px',
   },
   'code[class*="language-"]': {
     ...vs['code[class*="language-"]'],
-    color: 'var(--border)',
+    color: 'var(--text-primary)',
     background: 'transparent',
   },
 };
@@ -514,7 +514,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           customStyle={{
             margin: 0,
             padding: '8px',
-            background: 'var(--cam-primary-dk)',
+            background: 'var(--bg-elevated)',
             fontSize: `${Math.max(editorSettings?.fontSize || 12, window.matchMedia?.('(max-width: 767px)')?.matches ? 14 : 12)}px`,
             lineHeight: '1.6',
             minHeight: '100%',

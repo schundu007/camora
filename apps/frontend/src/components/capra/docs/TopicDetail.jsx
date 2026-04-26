@@ -7,6 +7,7 @@ import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
 import { RoughLayeredDiagram } from './RoughLayeredDiagram';
+import { RoughFlowDiagram } from './RoughFlowDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -2099,6 +2100,13 @@ export default function TopicDetail({
                         </div>
                       ) : (
                         <div className="pt-2">
+                          {topicDetails.createFlow.steps && topicDetails.createFlow.steps.length > 0 && (
+                            <RoughFlowDiagram
+                              steps={topicDetails.createFlow.steps}
+                              title={topicDetails.createFlow.title}
+                              className="mb-3"
+                            />
+                          )}
                           <ol className="space-y-1">
                             {topicDetails.createFlow.steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 py-1">
@@ -2122,6 +2130,13 @@ export default function TopicDetail({
                         </div>
                       ) : (
                         <div className="pt-2">
+                          {topicDetails.redirectFlow.steps && topicDetails.redirectFlow.steps.length > 0 && (
+                            <RoughFlowDiagram
+                              steps={topicDetails.redirectFlow.steps}
+                              title={topicDetails.redirectFlow.title}
+                              className="mb-3"
+                            />
+                          )}
                           <ol className="space-y-1">
                             {topicDetails.redirectFlow.steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 py-1">
