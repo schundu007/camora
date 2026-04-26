@@ -29,9 +29,9 @@ const CHALLENGE_START = new Date('2026-05-07T00:00:00Z');
 const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
 
 const PRIZES = [
-  { place: '1st', title: 'Grand Champion', amount: '$11,116', glow: 'var(--text-muted)', gradient: 'linear-gradient(135deg, var(--text-muted), var(--text-muted), #D9B543)', desc: 'Best overall contributor.' },
-  { place: '2nd', title: 'Runner Up', amount: '$5,116', glow: '#94a3b8', gradient: 'linear-gradient(135deg, #e2e8f0, #94a3b8, #64748b)', desc: 'Outstanding contributions.' },
-  { place: '3rd-7th', title: 'Top Contributor', amount: '$1,116 ea.', glow: '#D9B543', gradient: 'linear-gradient(135deg, #D9B543, #C9A227, #A88817)', desc: '5 winners for meaningful contributions.', winners: 5 },
+  { place: '1st', title: 'Grand Champion', amount: '$11,116', glow: 'var(--cam-primary)', gradient: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', desc: 'Best overall contributor.' },
+  { place: '2nd', title: 'Runner Up', amount: '$5,116', glow: 'var(--text-dimmed)', gradient: 'linear-gradient(135deg, var(--border), var(--text-dimmed))', desc: 'Outstanding contributions.' },
+  { place: '3rd-7th', title: 'Top Contributor', amount: '$1,116 ea.', glow: 'var(--warning)', gradient: 'linear-gradient(135deg, var(--cam-gold-leaf-lt), var(--cam-gold-leaf-dk))', desc: '5 winners for meaningful contributions.', winners: 5 },
 ];
 
 // Per-category accent. Used as both a fill tint (background: ${color}15) and
@@ -40,11 +40,11 @@ const PRIZES = [
 // have been replaced with brand-safe variants per the navy-only palette
 // rule and the WCAG-AA gold/red text rules from the contrast pass.
 const CATEGORIES = [
-  { title: 'Bug Hunting', color: '#B45454', glow: 'rgba(180,84,84,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
-  { title: 'UX / Design', color: 'var(--accent)', glow: 'rgba(38,97,156,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
+  { title: 'Bug Hunting', color: 'var(--danger)', glow: 'rgba(239,68,68,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
+  { title: 'UX / Design', color: 'var(--accent)', glow: 'var(--accent-subtle)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
   { title: 'Performance', color: 'var(--cam-gold-leaf-text)', glow: 'rgba(122,92,10,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
-  { title: 'Infrastructure', color: 'var(--cam-primary-dk)', glow: 'rgba(26,79,134,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: 'var(--cam-primary)', glow: 'rgba(38,97,156,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+  { title: 'Infrastructure', color: 'var(--cam-primary-dk)', glow: 'var(--accent-subtle)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
+  { title: 'New Features', color: 'var(--cam-primary)', glow: 'var(--accent-subtle)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -70,7 +70,7 @@ const STEPS = [
 ];
 
 const SCORING = [
-  { category: 'Critical Bugs', points: '10 pts', color: '#B45454' },
+  { category: 'Critical Bugs', points: '10 pts', color: 'var(--danger)' },
   { category: 'Security Issues', points: '8 pts', color: 'var(--accent)' },
   { category: 'UX / Design', points: '5 pts', color: 'var(--accent)' },
   { category: 'Performance', points: '5 pts', color: 'var(--cam-gold-leaf-text)' },
@@ -111,7 +111,7 @@ function useCountdown(target: Date) {
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="ch-glass-card" style={{ borderColor: open ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)' }}>
+    <div className="ch-glass-card" style={{ borderColor: open ? 'var(--accent)' : 'var(--border)' }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-4 text-left" aria-expanded={open}>
         <span className="text-base font-semibold text-[var(--text-primary)]">{q}</span>
         <svg className={`w-4 h-4 text-[var(--cam-primary)]/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -353,9 +353,9 @@ export default function ChallengePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-base text-[var(--text-muted)]">Credits:</span>
                   <div className="w-32 h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : '#EF4444', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : '#EF4444'}` }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : 'var(--danger)', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : 'var(--danger)'}` }} />
                   </div>
-                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : '#EF4444' }}>{challengeStatus.creditsRemaining}/100</span>
+                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? 'var(--accent)' : challengeStatus.creditsRemaining > 20 ? 'var(--text-muted)' : 'var(--danger)' }}>{challengeStatus.creditsRemaining}/100</span>
                 </div>
               </div>
               <div className="border-t border-[var(--border)] pt-5">
@@ -388,14 +388,14 @@ export default function ChallengePage() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   {quizQuestions.map((_, i) => (
-                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? 'var(--accent)' : i === quizIdx ? 'var(--accent)' : 'rgba(255,255,255,0.08)', boxShadow: 'none' }} />
+                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? 'var(--accent)' : i === quizIdx ? 'var(--accent)' : 'var(--bg-elevated)', boxShadow: 'none' }} />
                   ))}
                 </div>
-                <span style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : '#EF4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : '#EF4444'}` }}>
+                <span style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : 'var(--danger)', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : 'var(--danger)'}` }}>
                   {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
                 </span>
               </div>
-              <div className="p-5 rounded-xl mb-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
+              <div className="p-5 rounded-xl mb-5" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                 <span className="text-base font-bold text-[var(--cam-primary)] uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
                 <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">{quizQuestions[quizIdx]?.q}</h3>
                 <p className="text-base text-[var(--text-muted)] mt-1">{quizQuestions[quizIdx]?.desc}</p>
@@ -425,7 +425,7 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'failed' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#EF4444', width: 56, height: 56 } as any}>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--danger)', width: 56, height: 56 } as any}>
                 <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Not Quite Yet</h3>
@@ -487,7 +487,7 @@ export default function ChallengePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-            <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
+            <div className="ch-glass-card p-6" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
@@ -503,7 +503,7 @@ export default function ChallengePage() {
                 ))}
               </ul>
             </div>
-            <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(45,140,255,0.2)' }}>
+            <div className="ch-glass-card p-6" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="ch-glow-icon" style={{ '--glow': 'var(--cam-primary)' } as any}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
@@ -634,10 +634,10 @@ export default function ChallengePage() {
             {[1, 2, 3, 4, 5].map((rank) => (
               <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-elevated)] transition-colors">
                 <div className="col-span-1">
-                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--text-muted)' : rank === 2 ? '#94a3b8' : rank === 3 ? 'var(--cam-gold-leaf-text)' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
+                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--accent)' : rank === 2 ? 'var(--text-dimmed)' : rank === 3 ? 'var(--cam-gold-leaf-text)' : 'var(--text-dimmed)' }}>{rank}</span>
                 </div>
-                <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
-                <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
+                <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'var(--bg-elevated)' }} /></div>
+                <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'var(--bg-elevated)' }} /></div>
                 <div className="col-span-3 flex justify-end"><span className="text-base font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>Pending</span></div>
               </div>
             ))}
@@ -657,7 +657,7 @@ export default function ChallengePage() {
               { title: 'Eligibility', color: 'var(--accent)', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
               { title: 'Submissions', color: 'var(--cam-primary)', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
               { title: 'Timeline', color: 'var(--text-muted)', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
-              { title: 'Judging', color: '#EF4444', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
+              { title: 'Judging', color: 'var(--danger)', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
             ].map((r) => (
               <div key={r.title} className="ch-glass-card p-5">
                 <h3 className="text-base font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">

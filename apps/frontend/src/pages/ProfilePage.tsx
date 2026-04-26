@@ -32,14 +32,14 @@ function ActivityHeatmap() {
 
   const getColor = (v: number) => {
     if (v === 0) return 'var(--bg-elevated)';
-    if (v === 1) return 'rgba(38,97,156,0.2)';
-    if (v === 2) return 'rgba(38,97,156,0.4)';
-    if (v === 3) return 'rgba(38,97,156,0.6)';
-    return 'rgba(38,97,156,0.85)';
+    if (v === 1) return 'var(--accent-subtle)';
+    if (v === 2) return 'color-mix(in srgb, var(--accent) 30%, transparent)';
+    if (v === 3) return 'color-mix(in srgb, var(--accent) 60%, transparent)';
+    return 'var(--accent)';
   };
 
   return (
-    <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+    <div className="rounded-2xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Activity</h3>
         <select value={year} onChange={e => setYear(e.target.value)} className="text-xs px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]">
@@ -127,16 +127,16 @@ function SubscriptionCard() {
     } catch { /* ignore */ }
   };
 
-  if (loading) return <div className="rounded-2xl p-5 animate-pulse" style={{ background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(56,189,248,0.12)' }}><div className="h-5 bg-[var(--bg-elevated)] rounded w-40" /></div>;
+  if (loading) return <div className="rounded-2xl p-5 animate-pulse" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}><div className="h-5 bg-[var(--bg-elevated)] rounded w-40" /></div>;
 
   const endDate = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'rgba(38,97,156,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
         <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Subscription</h3>
         {endDate && sub?.status === 'active' && (
-          <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--text-muted)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--warning-text)', background: 'var(--bg-elevated)', border: '1px solid var(--warning)' }}>
             Your access to premium content will end on {endDate}
           </span>
         )}
@@ -148,7 +148,7 @@ function SubscriptionCard() {
             Subscription Details
           </button>
           {sub?.status === 'active' && (
-            <button onClick={openPortal} className="text-xs px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:text-red-500 hover:border-red-200 transition-colors font-medium">
+            <button onClick={openPortal} className="text-xs px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors font-medium">
               Cancel Subscription
             </button>
           )}
@@ -164,8 +164,8 @@ function ProfileSettings() {
   const [language, setLanguage] = useState('Python');
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-      <div className="px-5 py-3" style={{ background: 'rgba(38,97,156,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
         <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Profile settings</h3>
       </div>
       <div className="divide-y divide-[var(--border)]">
@@ -201,19 +201,19 @@ function DeleteAccount() {
   };
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-      <div className="px-5 py-3" style={{ background: 'rgba(239,68,68,0.04)', borderBottom: '1px solid rgba(239,68,68,0.1)' }}>
-        <h3 className="text-base font-bold text-red-600" style={{ fontFamily: 'var(--font-display)' }}>Delete Account</h3>
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="px-5 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--danger)' }}>
+        <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--danger)' }}>Delete Account</h3>
       </div>
       <div className="px-5 py-4 flex items-center justify-between">
         <span className="text-sm text-[var(--text-muted)]">Once you delete your account, there is no going back.</span>
         {!confirming ? (
-          <button onClick={() => setConfirming(true)} className="text-xs px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:text-red-500 hover:border-red-200 transition-colors font-medium">
+          <button onClick={() => setConfirming(true)} className="text-xs px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors font-medium">
             Delete your account
           </button>
         ) : (
           <div className="flex items-center gap-2">
-            <button onClick={handleDelete} className="text-xs px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors">
+            <button onClick={handleDelete} className="text-xs px-4 py-2 rounded-lg text-white font-medium transition-colors" style={{ background: 'var(--danger)' }}>
               Confirm Delete
             </button>
             <button onClick={() => setConfirming(false)} className="text-xs px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text-muted)] font-medium">
@@ -232,8 +232,8 @@ function ContributionsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-        <div className="px-5 py-3" style={{ background: 'rgba(38,97,156,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
           <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Problem Contributions</h3>
         </div>
         <div className="px-5 py-4">
@@ -264,7 +264,7 @@ function ContributionsTab() {
                   <div className="px-4 py-2.5 text-[var(--text-primary)]">{c.company}</div>
                   <div className="px-4 py-2.5 text-[var(--text-muted)]">{c.role_level}</div>
                   <div className="px-4 py-2.5 text-[var(--text-muted)]">{c.round_type}</div>
-                  <div className="px-4 py-2.5"><span className={`text-xs px-2 py-0.5 rounded-full ${c.status === 'approved' ? 'bg-green-50 text-green-600' : c.status === 'rejected' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-600'}`}>{c.status}</span></div>
+                  <div className="px-4 py-2.5"><span className="text-xs px-2 py-0.5 rounded-full" style={c.status === 'approved' ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)' } : c.status === 'rejected' ? { background: 'var(--bg-elevated)', color: 'var(--danger)' } : { background: 'var(--bg-elevated)', color: 'var(--warning-text)' }}>{c.status}</span></div>
                   <div className="px-4 py-2.5 text-[var(--text-muted)]">{c.submitted}</div>
                 </div>
               ))
@@ -290,7 +290,7 @@ export default function ProfilePage() {
   useEffect(() => { document.title = 'Profile — Camora'; return () => { document.title = 'Camora'; }; }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-page, #F0F7FF)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-app)' }}>
       <SiteNav variant="light" />
 
       <div className="max-w-3xl mx-auto px-6 pt-28 pb-20 flex-1">
@@ -314,8 +314,8 @@ export default function ProfilePage() {
         {activeTab === 'general' && (
           <div className="space-y-6">
             {/* Account Info */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-              <div className="px-5 py-3" style={{ background: 'rgba(38,97,156,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
                 <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Account Information</h3>
               </div>
               <div className="px-5 py-4 flex items-center justify-between">
@@ -342,8 +342,8 @@ export default function ProfilePage() {
         {activeTab === 'referrals' && (
           <div className="space-y-6">
             {/* Invite section */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-              <div className="px-5 py-3" style={{ background: 'rgba(38,97,156,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
                 <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Invite Friends to Get Free Access</h3>
               </div>
               <div className="px-5 py-4">
@@ -353,8 +353,8 @@ export default function ProfilePage() {
                 <div className="flex flex-col gap-2 mb-4">
                   {['Each successful referral gives you 30% off your next invoice', 'Discounts stack across multiple billing cycles', 'Your friends also get 30% off their subscription'].map(t => (
                     <div key={t} className="flex items-center gap-2 text-sm text-[var(--text-primary)]">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(16,185,129,0.15)' }}>
-                        <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)' }}>
+                        <svg className="w-3 h-3" style={{ color: 'var(--accent)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       </span>
                       {t}
                     </div>

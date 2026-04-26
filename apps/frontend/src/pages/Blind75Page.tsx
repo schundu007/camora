@@ -80,7 +80,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Binary Search',
-    color: '#06b6d4',
+    color: 'var(--accent)',
     problems: [
       { id: 17, title: 'Search in Rotated Sorted Array', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/search-in-rotated-sorted-array/' },
       { id: 18, title: 'Find Minimum in Rotated Sorted Array', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/' },
@@ -154,7 +154,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Dynamic Programming',
-    color: '#0B5CFF',
+    color: 'var(--accent)',
     problems: [
       { id: 49, title: 'Climbing Stairs', difficulty: 'Easy', leetcode: 'https://leetcode.com/problems/climbing-stairs/' },
       { id: 50, title: 'House Robber', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/house-robber/' },
@@ -169,7 +169,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Greedy',
-    color: '#84cc16',
+    color: 'var(--accent)',
     problems: [
       { id: 58, title: 'Maximum Subarray', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/maximum-subarray/' },
       { id: 59, title: 'Maximum Product Subarray', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/maximum-product-subarray/' },
@@ -177,7 +177,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Intervals',
-    color: '#0ea5e9',
+    color: 'var(--accent)',
     problems: [
       { id: 60, title: 'Insert Interval', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/insert-interval/' },
       { id: 61, title: 'Merge Intervals', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/merge-intervals/' },
@@ -188,7 +188,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Math & Geometry',
-    color: '#78716c',
+    color: 'var(--text-muted)',
     problems: [
       { id: 65, title: 'Rotate Image', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/rotate-image/' },
       { id: 66, title: 'Spiral Matrix', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/spiral-matrix/' },
@@ -197,7 +197,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Bit Manipulation',
-    color: '#64748b',
+    color: 'var(--text-muted)',
     problems: [
       { id: 68, title: 'Number of 1 Bits', difficulty: 'Easy', leetcode: 'https://leetcode.com/problems/number-of-1-bits/' },
       { id: 69, title: 'Counting Bits', difficulty: 'Easy', leetcode: 'https://leetcode.com/problems/counting-bits/' },
@@ -208,7 +208,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Advanced',
-    color: '#b91c1c',
+    color: 'var(--danger)',
     problems: [
       { id: 73, title: 'Task Scheduler', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/task-scheduler/' },
       { id: 74, title: 'Palindromic Substrings', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/palindromic-substrings/' },
@@ -275,9 +275,9 @@ const PLACEHOLDER_CODE: Record<Language, string> = {
 };
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: 'rgba(5,150,105,0.12)', text: 'var(--accent)', border: 'rgba(5,150,105,0.3)' },
-  Medium: { bg: 'rgba(217,119,6,0.12)', text: '#D9B543', border: 'rgba(217,119,6,0.3)' },
-  Hard: { bg: 'rgba(220,38,38,0.12)', text: '#0B5CFF', border: 'rgba(220,38,38,0.3)' },
+  Easy: { bg: 'var(--accent-subtle)', text: 'var(--accent)', border: 'var(--border)' },
+  Medium: { bg: 'var(--cam-gold-leaf-50)', text: 'var(--cam-gold-leaf-text)', border: 'var(--warning)' },
+  Hard: { bg: 'var(--bg-elevated)', text: 'var(--danger)', border: 'var(--danger)' },
 };
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -496,10 +496,10 @@ export default function Blind75Page() {
                 </h1>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                   {[
-                    { label: '75 Problems', color: 'var(--success)', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
-                    { label: `${techInterviewTopics.length} Algorithms`, color: 'var(--accent)', bg: 'rgba(45,140,255,0.12)', border: 'rgba(45,140,255,0.3)' },
-                    { label: `${totalBehavioralQuestions} Behavioral`, color: 'var(--accent)', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)' },
-                    { label: 'Cheatsheet', color: 'var(--cam-gold-leaf-text)', bg: 'rgba(217,119,6,0.12)', border: 'rgba(217,119,6,0.3)' },
+                    { label: '75 Problems', color: 'var(--success)', bg: 'var(--accent-subtle)', border: 'var(--border)' },
+                    { label: `${techInterviewTopics.length} Algorithms`, color: 'var(--accent)', bg: 'var(--accent-subtle)', border: 'var(--border)' },
+                    { label: `${totalBehavioralQuestions} Behavioral`, color: 'var(--accent)', bg: 'var(--accent-subtle)', border: 'var(--border)' },
+                    { label: 'Cheatsheet', color: 'var(--cam-gold-leaf-text)', bg: 'var(--cam-gold-leaf-50)', border: 'var(--warning)' },
                   ].map((stat) => (
                     <span
                       key={stat.label}
@@ -755,8 +755,8 @@ export default function Blind75Page() {
                               alignItems: 'center',
                               gap: '12px',
                               padding: '12px 16px',
-                              background: isComplete ? 'rgba(5,150,105,0.08)' : 'var(--bg-surface)',
-                              border: `1px solid ${isOpen ? cat.color : isComplete ? 'rgba(5,150,105,0.3)' : 'var(--border)'}`,
+                              background: isComplete ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                              border: `1px solid ${isOpen ? cat.color : isComplete ? 'var(--border)' : 'var(--border)'}`,
                               borderRadius: isOpen ? '12px 12px 0 0' : '12px',
                               transition: 'all 0.15s',
                               flexWrap: 'wrap',
@@ -864,8 +864,8 @@ export default function Blind75Page() {
                                   fontWeight: 600,
                                   padding: '5px 14px',
                                   borderRadius: '8px',
-                                  border: `1px solid ${isOpen && viewMode === 'solution' ? 'var(--accent)' : 'rgba(45,140,255,0.19)'}`,
-                                  background: isOpen && viewMode === 'solution' ? 'var(--accent)' : 'rgba(45,140,255,0.03)',
+                                  border: `1px solid ${isOpen && viewMode === 'solution' ? 'var(--accent)' : 'var(--border)'}`,
+                                  background: isOpen && viewMode === 'solution' ? 'var(--accent)' : 'var(--accent-subtle)',
                                   color: isOpen && viewMode === 'solution' ? '#ffffff' : 'var(--accent)',
                                   cursor: 'pointer',
                                   transition: 'all 0.15s',
@@ -944,8 +944,8 @@ export default function Blind75Page() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{approach.name}</span>
                                               <div style={{ display: 'flex', gap: '8px' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(45,140,255,0.12)', color: 'var(--accent)' }}>Time: {approach.complexity.time}</span>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(38,97,156,0.12)', color: 'var(--text-muted)' }}>Space: {approach.complexity.space}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'var(--accent-subtle)', color: 'var(--accent)' }}>Time: {approach.complexity.time}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'var(--accent-subtle)', color: 'var(--text-muted)' }}>Space: {approach.complexity.space}</span>
                                               </div>
                                             </div>
                                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{approach.description}</p>
@@ -957,7 +957,7 @@ export default function Blind75Page() {
                                                   setOutput('Copied to clipboard!');
                                                   setTimeout(() => setOutput(''), 1500);
                                                 }}
-                                                style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, background: '#21262d', color: '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', zIndex: 1 }}
+                                                style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, background: 'rgba(255,255,255,0.08)', color: 'var(--text-dimmed)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', zIndex: 1 }}
                                               >
                                                 Copy
                                               </button>
@@ -1021,7 +1021,7 @@ export default function Blind75Page() {
                                     padding: '6px 16px',
                                     borderRadius: '8px',
                                     border: '1px solid var(--border)',
-                                    background: isRunning ? '#9ca3af' : 'var(--success)',
+                                    background: isRunning ? 'var(--text-dimmed)' : 'var(--success)',
                                     color: 'var(--bg-surface)',
                                     cursor: isRunning ? 'not-allowed' : 'pointer',
                                     display: 'flex',
@@ -1182,7 +1182,7 @@ export default function Blind75Page() {
                     }}
                   >
                     <svg
-                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2}
+                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth={2}
                       style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}
                     >
                       <polyline points="6 9 12 15 18 9" />
@@ -1195,7 +1195,7 @@ export default function Blind75Page() {
                       fontWeight: 600,
                       padding: '3px 10px',
                       borderRadius: '20px',
-                      background: 'rgba(5,150,105,0.08)',
+                      background: 'var(--accent-subtle)',
                       color: 'var(--accent)',
                       border: '1px solid rgba(16,185,129,0.3)',
                       whiteSpace: 'nowrap',
@@ -1207,7 +1207,7 @@ export default function Blind75Page() {
                       fontWeight: 600,
                       padding: '3px 10px',
                       borderRadius: '20px',
-                      background: 'rgba(45,140,255,0.08)',
+                      background: 'var(--accent-subtle)',
                       color: 'var(--accent)',
                       border: '1px solid rgba(45,140,255,0.3)',
                       whiteSpace: 'nowrap',
@@ -1481,7 +1481,7 @@ export default function Blind75Page() {
                       to={`/lumora?q=${encodeURIComponent(question)}`}
                       className="b75-action-btn"
                       onClick={(e) => e.stopPropagation()}
-                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(45,140,255,0.19)', background: 'rgba(45,140,255,0.03)', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(45,140,255,0.19)', background: 'var(--accent-subtle)', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       Practice with AI
                     </Link>
@@ -1505,7 +1505,7 @@ export default function Blind75Page() {
 
                     {/* Chevron */}
                     <svg
-                      width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={2}
+                      width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth={2}
                       style={{ flexShrink: 0, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -1548,7 +1548,7 @@ export default function Blind75Page() {
                               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
                             }}>S</span>
                           </div>
-                          <div style={{ flex: 1, background: 'rgba(45,140,255,0.08)', borderLeft: '3px solid var(--accent)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                          <div style={{ flex: 1, background: 'var(--accent-subtle)', borderLeft: '3px solid var(--accent)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situation</div>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.star.situation}</div>
                           </div>
@@ -1562,7 +1562,7 @@ export default function Blind75Page() {
                               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
                             }}>T</span>
                           </div>
-                          <div style={{ flex: 1, background: 'rgba(217,119,6,0.12)', borderLeft: '3px solid var(--warning)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                          <div style={{ flex: 1, background: 'var(--cam-gold-leaf-50)', borderLeft: '3px solid var(--warning)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--warning-text)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Task</div>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.star.task}</div>
                           </div>
@@ -1576,7 +1576,7 @@ export default function Blind75Page() {
                               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
                             }}>A</span>
                           </div>
-                          <div style={{ flex: 1, background: 'rgba(5,150,105,0.08)', borderLeft: '3px solid var(--success)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                          <div style={{ flex: 1, background: 'var(--accent-subtle)', borderLeft: '3px solid var(--success)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--success)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Action</div>
                             <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {item.star.action.map((step: string, ai: number) => (
@@ -1594,7 +1594,7 @@ export default function Blind75Page() {
                               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
                             }}>R</span>
                           </div>
-                          <div style={{ flex: 1, background: 'rgba(220,38,38,0.12)', borderLeft: '3px solid var(--danger)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                          <div style={{ flex: 1, background: 'var(--bg-elevated)', borderLeft: '3px solid var(--danger)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Result</div>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.star.result}</div>
                           </div>
@@ -1613,7 +1613,7 @@ export default function Blind75Page() {
                           {item.tips.map((tip: string, ti: number) => (
                             <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                               <span style={{
-                                width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', color: 'var(--accent)',
+                                width: '22px', height: '22px', borderRadius: '6px', background: 'var(--accent-subtle)', color: 'var(--accent)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '11px', fontWeight: 700, flexShrink: 0, marginTop: '1px',
                               }}>{ti + 1}</span>
@@ -1655,7 +1655,7 @@ export default function Blind75Page() {
             }}>
               <div style={{
                 padding: '16px 20px',
-                background: 'rgba(5,150,105,0.08)',
+                background: 'var(--accent-subtle)',
                 borderBottom: '1px solid rgba(5,150,105,0.3)',
                 display: 'flex',
                 alignItems: 'center',
@@ -1704,7 +1704,7 @@ export default function Blind75Page() {
             }}>
               <div style={{
                 padding: '16px 20px',
-                background: 'rgba(45,140,255,0.08)',
+                background: 'var(--accent-subtle)',
                 borderBottom: '1px solid rgba(45,140,255,0.3)',
                 display: 'flex',
                 alignItems: 'center',
@@ -1732,7 +1732,7 @@ export default function Blind75Page() {
                   >
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '6px',
-                      border: '2px solid rgba(45,140,255,0.3)', background: 'rgba(45,140,255,0.08)', flexShrink: 0, marginTop: '1px',
+                      border: '2px solid rgba(45,140,255,0.3)', background: 'var(--accent-subtle)', flexShrink: 0, marginTop: '1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 700 }}>{i + 1}</span>
@@ -1753,7 +1753,7 @@ export default function Blind75Page() {
             }}>
               <div style={{
                 padding: '16px 20px',
-                background: 'rgba(124,58,237,0.08)',
+                background: 'var(--accent-subtle)',
                 borderBottom: '1px solid rgba(124,58,237,0.3)',
                 display: 'flex',
                 alignItems: 'center',
@@ -1781,7 +1781,7 @@ export default function Blind75Page() {
                   >
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '6px',
-                      border: '2px solid rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.08)', flexShrink: 0, marginTop: '1px',
+                      border: '2px solid rgba(124,58,237,0.3)', background: 'var(--accent-subtle)', flexShrink: 0, marginTop: '1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 700 }}>{i + 1}</span>
