@@ -8,6 +8,7 @@ import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
 import { RoughLayeredDiagram } from './RoughLayeredDiagram';
 import { RoughFlowDiagram } from './RoughFlowDiagram';
+import { GENERATED_LAYERED_DESIGN } from '../../../data/capra/topics/__generated/layered-design';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -456,6 +457,17 @@ export default function TopicDetail({
   const [diagramPanelOpen, setDiagramPanelOpen] = useState(false);
 
   if (!topicDetails) return null;
+
+  // Layered-design fallback: when a topic data file doesn't carry an inline
+  // `layeredDesign` array, fall through to the build-time generated map
+  // populated by apps/frontend/scripts/extract-layered-design.mjs (Phase 1
+  // of the diagram pipeline). The renderer (RoughLayeredDiagram) reads
+  // this exact shape so swapping in the generated array is invisible.
+  const effectiveLayeredDesign = (Array.isArray(topicDetails.layeredDesign) && topicDetails.layeredDesign.length)
+    ? topicDetails.layeredDesign
+    : (selectedTopic && GENERATED_LAYERED_DESIGN[selectedTopic])
+      ? GENERATED_LAYERED_DESIGN[selectedTopic]
+      : null;
 
   const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -1959,19 +1971,19 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {topicDetails.layeredDesign && (
+              {effectiveLayeredDesign && (
                 <div className="">
                   <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
                     <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{effectiveLayeredDesign.length} layers</span>
                   </div>
                   <RoughLayeredDiagram
-                    layers={topicDetails.layeredDesign}
+                    layers={effectiveLayeredDesign}
                     title="Layered Design"
                     className="mb-3"
                   />
                   <div className="p-2.5 space-y-0">
-                    {topicDetails.layeredDesign.map((layer, i) => {
+                    {effectiveLayeredDesign.map((layer, i) => {
                       const LAYER_COLORS = ['var(--accent)'];
                       const lc = LAYER_COLORS[i % LAYER_COLORS.length];
                       return (
