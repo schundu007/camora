@@ -73,11 +73,12 @@ export default function JoinTeamPage() {
   }, [inviteToken, authToken, isAuthenticated, isLoading, navigate, refreshTeam]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)', color: '#FFFFFF' }}>
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <SEO title="Join team" description="Accept your invite to join a Camora team." path={`/teams/join/${inviteToken}`} />
       <SiteNav variant="light" />
 
-      <main className="flex-1 flex items-center justify-center px-6 py-16">
+      <main className="relative flex-1 flex items-center justify-center px-6 py-16">
         <div className="max-w-md w-full text-center">
           {(status === 'pending' || status === 'accepting' || isLoading) && (
             <>

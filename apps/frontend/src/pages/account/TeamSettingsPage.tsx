@@ -210,14 +210,22 @@ export default function TeamSettingsPage() {
       <SEO title="Team" description="Manage your Camora team — invite mates, share AI hours, and see per-member usage." path="/account/team" />
       <SiteNav variant="light" />
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
-        <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)' }}>ACCOUNT</p>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Team sharing</h1>
-          <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+      {/* LeetCode hero */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative max-w-4xl mx-auto px-6 pt-16 pb-20">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--cam-gold-leaf-lt)' }}>ACCOUNT</p>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">Team <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharing</span></h1>
+          <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
             Pool your AI hours with up to {team ? team.seat_limit : 5} mates. Per-member usage is broken out below.
           </p>
         </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '5vh', display: 'block' }}>
+          <polygon fill="var(--bg-surface)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
+
+      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-8">
 
         {loading && (
           <div className="rounded-xl p-8 flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
