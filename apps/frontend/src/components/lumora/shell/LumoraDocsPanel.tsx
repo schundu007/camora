@@ -42,7 +42,7 @@ const INITIAL_STATE: PrepData = {
 const SIDEBAR_SECTIONS = [
   { id: 'input', label: 'Input Materials', color: 'var(--cam-primary)' },
   { id: 'jd-view', label: 'Job Description', color: 'var(--cam-primary)' },
-  { id: 'pitch', label: 'Elevator Pitch', color: '#064E3B' },
+  { id: 'pitch', label: 'Elevator Pitch', color: '#26619C' },
   { id: 'hr', label: 'HR Questions', color: '#f59e0b' },
   { id: 'hiring-manager', label: 'Hiring Manager', color: '#06b6d4' },
   { id: 'coding', label: 'Coding', color: 'var(--cam-primary)' },
@@ -236,7 +236,7 @@ function PrepContentRenderer({ content }: { content: any }) {
   if (data.summary) {
     mark('summary');
     els.push(
-      <div key="summary" className="rounded-lg p-4" style={{ background: 'rgba(6,78,59,0.03)', border: '1px solid #e2e8f0' }}>
+      <div key="summary" className="rounded-lg p-4" style={{ background: 'rgba(38,97,156,0.03)', border: '1px solid #e2e8f0' }}>
         <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>Summary</div>
         <p className="text-sm leading-relaxed" style={{ color: '#0f172a' }}>{data.summary}</p>
       </div>
@@ -319,7 +319,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                   const stars = [
                     { key: 'situation', label: 'SITUATION', bg: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: 'rgba(34,197,94,0.2)', color: '#166534' },
                     { key: 'task', label: 'TASK', bg: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: 'rgba(59,130,246,0.2)', color: '#1e40af' },
-                    { key: 'action', label: 'ACTION', bg: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)', border: 'rgba(245,158,11,0.2)', color: '#92400e' },
+                    { key: 'action', label: 'ACTION', bg: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)', border: 'rgba(245,158,11,0.2)', color: '#A88817' },
                     { key: 'result', label: 'RESULT', bg: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: 'rgba(16,185,129,0.2)', color: '#059669' },
                   ];
                   return (
@@ -412,7 +412,7 @@ function PrepContentRenderer({ content }: { content: any }) {
   // Box fields
   const boxFields = [
     { key: 'tips', label: 'Tips', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
-    { key: 'deliveryTips', label: 'Delivery Tips', bg: 'rgba(6,78,59,0.06)', border: 'rgba(6,78,59,0.15)', color: 'var(--cam-primary)' },
+    { key: 'deliveryTips', label: 'Delivery Tips', bg: 'rgba(38,97,156,0.06)', border: 'rgba(38,97,156,0.15)', color: 'var(--cam-primary)' },
     { key: 'recentNews', label: 'Recent News', bg: '#f0fdf4', border: 'rgba(16,185,129,0.15)', color: '#10b981' },
   ];
   for (const f of boxFields) {
@@ -503,7 +503,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste, onCli
   return (
     <div
       className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
-      style={{ background: value ? 'rgba(6,78,59,0.03)' : '#f8fafc', border: `1px solid ${value ? 'var(--cam-primary)' : '#e2e8f0'}` }}
+      style={{ background: value ? 'rgba(38,97,156,0.03)' : '#f8fafc', border: `1px solid ${value ? 'var(--cam-primary)' : '#e2e8f0'}` }}
       onClick={() => { if (onClickOverride) onClickOverride(); else ref.current?.click(); }}
       onDrop={handleDrop}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -587,7 +587,7 @@ function FormattedJD({ text }: { text: string }) {
       {sections.map((sec, i) => (
         <div key={i} className="rounded-xl overflow-hidden" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
           {sec.title && (
-            <div className="px-4 py-2.5" style={{ background: 'rgba(6,78,59,0.03)', borderBottom: '1px solid #e2e8f0' }}>
+            <div className="px-4 py-2.5" style={{ background: 'rgba(38,97,156,0.03)', borderBottom: '1px solid #e2e8f0' }}>
               <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>{sec.title}</h4>
             </div>
           )}
@@ -872,7 +872,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                     {prepData.companies.map(c => (
                       <button key={c} onClick={() => switchCompany(c)}
                         className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors"
-                        style={{ color: c === prepData.activeCompany ? 'var(--cam-primary)' : '#475569', background: c === prepData.activeCompany ? 'rgba(6,78,59,0.03)' : 'transparent' }}>
+                        style={{ color: c === prepData.activeCompany ? 'var(--cam-primary)' : '#475569', background: c === prepData.activeCompany ? 'rgba(38,97,156,0.03)' : 'transparent' }}>
                         <span className="truncate">{c}</span>
                         {prepData.companies.length > 1 && (
                           <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
@@ -916,7 +916,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <button key={s.id} onClick={() => setActiveSection(s.id)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
-                  background: isActive ? 'rgba(6,78,59,0.03)' : 'transparent',
+                  background: isActive ? 'rgba(38,97,156,0.03)' : 'transparent',
                   color: isActive ? 'var(--cam-primary)' : '#475569',
                   borderLeft: isActive ? `3px solid var(--cam-primary)` : '3px solid transparent',
                 }}>
@@ -1020,7 +1020,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           <div className="flex-1 flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
               <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>Job Description</h3>
-              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'rgba(6,78,59,0.03)' }}>Edit</button>
+              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'rgba(38,97,156,0.03)' }}>Edit</button>
             </div>
             <div className="flex-1 overflow-auto p-6">
               <FormattedJD text={state.jd} />
@@ -1035,7 +1035,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               </h3>
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(6,78,59,0.03)', color: 'var(--cam-primary)' }}>Generated</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(38,97,156,0.03)', color: 'var(--cam-primary)' }}>Generated</span>
                 )}
                 {hasRequiredDocs && (
                   <button

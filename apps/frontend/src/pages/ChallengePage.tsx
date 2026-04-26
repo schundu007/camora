@@ -29,9 +29,9 @@ const CHALLENGE_START = new Date('2026-05-07T00:00:00Z');
 const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
 
 const PRIZES = [
-  { place: '1st', title: 'Grand Champion', amount: '$11,116', glow: 'var(--text-muted)', gradient: 'linear-gradient(135deg, var(--text-muted), var(--text-muted), #d97706)', desc: 'Best overall contributor.' },
+  { place: '1st', title: 'Grand Champion', amount: '$11,116', glow: 'var(--text-muted)', gradient: 'linear-gradient(135deg, var(--text-muted), var(--text-muted), #D9B543)', desc: 'Best overall contributor.' },
   { place: '2nd', title: 'Runner Up', amount: '$5,116', glow: '#94a3b8', gradient: 'linear-gradient(135deg, #e2e8f0, #94a3b8, #64748b)', desc: 'Outstanding contributions.' },
-  { place: '3rd-7th', title: 'Top Contributor', amount: '$1,116 ea.', glow: '#d97706', gradient: 'linear-gradient(135deg, #d97706, #b45309, #92400e)', desc: '5 winners for meaningful contributions.', winners: 5 },
+  { place: '3rd-7th', title: 'Top Contributor', amount: '$1,116 ea.', glow: '#D9B543', gradient: 'linear-gradient(135deg, #D9B543, #C9A227, #A88817)', desc: '5 winners for meaningful contributions.', winners: 5 },
 ];
 
 const CATEGORIES = [
@@ -625,7 +625,7 @@ export default function ChallengePage() {
             {[1, 2, 3, 4, 5].map((rank) => (
               <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-[#E2E8F0] last:border-0 hover:bg-[#F1F5F9] transition-colors">
                 <div className="col-span-1">
-                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--text-muted)' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
+                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--text-muted)' : rank === 2 ? '#94a3b8' : rank === 3 ? '#D9B543' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
                 </div>
                 <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
                 <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>

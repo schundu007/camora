@@ -1348,7 +1348,7 @@ export default function JobsPage() {
                             {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
                           </span>
                         )}
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? 'var(--accent)' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(45,140,255,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? 'var(--accent)' : workType === 'Hybrid' ? '#D9B543' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(45,140,255,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
                       {/* Salary + Posted date row */}

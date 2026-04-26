@@ -432,7 +432,7 @@ function UnifiedMicButton({
             background: isLive || isRec ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
             border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
             color: isLive || isRec ? 'var(--accent)' : 'var(--text-muted)',
-            boxShadow: isLive ? '0 0 0 3px rgba(6,78,59,0.18)' : 'none',
+            boxShadow: isLive ? '0 0 0 3px rgba(38,97,156,0.18)' : 'none',
             opacity: continuousMode ? 0.5 : 1,
             cursor: continuousMode ? 'not-allowed' : 'pointer',
           }}

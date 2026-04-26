@@ -85,7 +85,7 @@ function getComplexityColor(notation: string): string {
   if (/o\(log/.test(n) && !/o\(n/.test(n)) return '#0891b2'; // O(log n) - great
   if (/o\(n\)$/.test(n)) return 'var(--cam-primary)';           // O(n) - good
   if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return '#7c3aed'; // O(n log n)
-  if (/o\(n[\^²]2?\)/.test(n)) return '#d97706';     // O(n²) - fair
+  if (/o\(n[\^²]2?\)/.test(n)) return '#D9B543';     // O(n²) - fair
   if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return '#ea580c'; // O(n³) - poor
   if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return '#0B5CFF'; // exponential - bad
   return '#6b7280';
@@ -124,8 +124,8 @@ function useTheme(dark: boolean) {
   if (dark) {
     return {
       cardBg: '#0F172A', cardBorder: '#1E293B',
-      headerBg: 'rgba(6,78,59,0.08)', headerBorder: '#1E40AF',
-      headerText: 'var(--cam-primary)', badgeBg: 'rgba(6,78,59,0.12)', badgeText: 'var(--cam-primary)',
+      headerBg: 'rgba(38,97,156,0.08)', headerBorder: '#1E40AF',
+      headerText: 'var(--cam-primary)', badgeBg: 'rgba(38,97,156,0.12)', badgeText: 'var(--cam-primary)',
       text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
       codeBg: '#020617', codeText: '#E2E8F0',
       inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
@@ -138,8 +138,8 @@ function useTheme(dark: boolean) {
   }
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(6,78,59,0.05)', headerBorder: '#BFDBFE',
-    headerText: 'var(--cam-primary)', badgeBg: 'rgba(6,78,59,0.06)', badgeText: 'var(--cam-primary)',
+    headerBg: 'rgba(38,97,156,0.05)', headerBorder: '#BFDBFE',
+    headerText: 'var(--cam-primary)', badgeBg: 'rgba(38,97,156,0.06)', badgeText: 'var(--cam-primary)',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
@@ -741,7 +741,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-[rgba(6,78,59,0.15)] border-[rgba(6,78,59,0.3)] text-[#A7F3D0]'
+              'bg-[rgba(38,97,156,0.15)] border-[rgba(38,97,156,0.3)] text-[#95B0CD]'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -770,7 +770,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(6,78,59,0.06)] border border-[rgba(6,78,59,0.2)] rounded-lg">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(38,97,156,0.06)] border border-[rgba(38,97,156,0.2)] rounded-lg">
               <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
               <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
@@ -908,7 +908,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           </div>
                           {imageFile && (
                             <button onClick={handleExtractFromImage} disabled={isProcessing}
-                              className="w-full py-2 text-xs font-medium rounded-lg border border-[var(--border)] hover:bg-[rgba(6,78,59,0.04)] disabled:opacity-50 transition-all"
+                              className="w-full py-2 text-xs font-medium rounded-lg border border-[var(--border)] hover:bg-[rgba(38,97,156,0.04)] disabled:opacity-50 transition-all"
                               style={{ background: t.sectionBg, color: t.text }}>
                               {isProcessing ? 'Extracting...' : 'Extract Text'}
                             </button>
@@ -967,7 +967,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     the solution has been structured. */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(6,78,59,0.08)', border: `1px solid ${t.cardBorder}` }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(38,97,156,0.08)', border: `1px solid ${t.cardBorder}` }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
                       </div>
@@ -1074,7 +1074,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                               const narrBg = dark ? '#0B2534' : '#F0FDFF';
                               const narrBorder = dark ? 'rgba(103,232,249,0.55)' : 'rgba(14,116,144,0.35)';
                               const narrText = dark ? '#F1F5F9' : '#0F172A';
-                              const narrLabel = dark ? '#A7F3D0' : 'var(--cam-primary-dk)';
+                              const narrLabel = dark ? '#95B0CD' : 'var(--cam-primary-dk)';
                               const narrCopy = dark ? '#A5F3FC' : 'var(--cam-primary-dk)';
                               const narrDivider = dark ? 'rgba(103,232,249,0.2)' : 'rgba(14,116,144,0.18)';
                               return (
@@ -1309,7 +1309,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
         {/* ── Horizontal Resize Handle (desktop only) ── */}
         <div onMouseDown={() => setIsResizingH(true)}
-          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(6,78,59,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(38,97,156,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
           <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
 
@@ -1325,7 +1325,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               </select>
               {isTranslating && (
                 <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: 'var(--cam-primary)' }}>
-                  <div className="w-3 h-3 border-2 border-[rgba(6,78,59,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />
                   Translating…
                 </span>
               )}
@@ -1380,7 +1380,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
             <div onMouseDown={() => setIsResizingV(true)}
-              className="h-1.5 hover:bg-[rgba(6,78,59,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
+              className="h-1.5 hover:bg-[rgba(38,97,156,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
               <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>
@@ -1573,7 +1573,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
   ];
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
-    accent: { header: 'bg-[rgba(6,78,59,0.04)]', border: 'border-[rgba(6,78,59,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
+    accent: { header: 'bg-[rgba(38,97,156,0.04)]', border: 'border-[rgba(38,97,156,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
     warning: { header: 'bg-[rgba(245,158,11,0.04)]', border: 'border-[rgba(245,158,11,0.15)]', bg: 'bg-white', text: 'text-[var(--warning)]' },
   };
 
@@ -1603,7 +1603,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
                       if (arrowMatch) {
                         return (
                           <button key={i} onClick={() => onTestCaseClick(arrowMatch[1].trim(), arrowMatch[2].trim())}
-                            className="w-full text-left px-2 py-1 bg-[rgba(6,78,59,0.04)] border border-[rgba(6,78,59,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-gray-600 font-mono hover:text-[var(--accent)] transition-colors">
+                            className="w-full text-left px-2 py-1 bg-[rgba(38,97,156,0.04)] border border-[rgba(38,97,156,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-gray-600 font-mono hover:text-[var(--accent)] transition-colors">
                             {line}
                           </button>
                         );

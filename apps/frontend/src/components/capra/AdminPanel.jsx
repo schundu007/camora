@@ -8,7 +8,7 @@ const ROLES = ['user', 'developer', 'manager', 'admin'];
 
 const ROLE_COLORS = {
   user: { bg: '#eff6ff', color: 'var(--accent)', border: '#bfdbfe' },
-  developer: { bg: '#F8FAFC', color: 'var(--accent)', border: '#a7f3d0' },
+  developer: { bg: '#F8FAFC', color: 'var(--accent)', border: '#95B0CD' },
   manager: { bg: '#fef9c3', color: '#ca8a04', border: '#fde047' },
   admin: { bg: '#fef2f2', color: '#ef4444', border: '#fecaca' },
 };
@@ -190,7 +190,7 @@ export default function AdminPanel({ token, onClose }) {
           </div>
         )}
         {success && (
-          <div className="mx-6 mt-4 p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #a7f3d0' }}>
+          <div className="mx-6 mt-4 p-3 rounded" style={{ background: '#F8FAFC', border: '1px solid #95B0CD' }}>
             <p className="text-sm" style={{ color: 'var(--accent)' }}>{success}</p>
           </div>
         )}

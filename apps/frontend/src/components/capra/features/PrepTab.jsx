@@ -213,8 +213,8 @@ export default function PrepTab({ isOpen, onClose }) {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm mb-1" style={{ color: '#92400e' }}>Browser Extension Required</h3>
-                  <p className="text-xs mb-2" style={{ color: '#b45309' }}>
+                  <h3 className="font-semibold text-sm mb-1" style={{ color: '#A88817' }}>Browser Extension Required</h3>
+                  <p className="text-xs mb-2" style={{ color: '#C9A227' }}>
                     Install the Ascend browser extension to sync your platform logins. The extension captures cookies from your logged-in sessions.
                   </p>
                   <div className="flex gap-2">
@@ -228,7 +228,7 @@ export default function PrepTab({ isOpen, onClose }) {
                     <button
                       onClick={handleRefreshStatus}
                       className="px-3 py-1.5 text-xs font-medium rounded transition-colors"
-                      style={{ background: '#ffffff', color: '#92400e', border: '1px solid var(--text-muted)' }}
+                      style={{ background: '#ffffff', color: '#A88817', border: '1px solid var(--text-muted)' }}
                     >
                       Refresh Status
                     </button>
@@ -238,7 +238,7 @@ export default function PrepTab({ isOpen, onClose }) {
 
               {showExtensionInfo && (
                 <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--text-muted)' }}>
-                  <ol className="text-xs space-y-2" style={{ color: '#92400e' }}>
+                  <ol className="text-xs space-y-2" style={{ color: '#A88817' }}>
                     <li className="flex gap-2">
                       <span className="font-bold">1.</span>
                       <span>Download the extension folder from the project's <code className="px-1 py-0.5 rounded" style={{ background: '#F8FAFC' }}>/extension</code> directory</span>
@@ -362,7 +362,7 @@ export default function PrepTab({ isOpen, onClose }) {
                     className="p-3 rounded-lg text-sm"
                     style={{
                       background: fetchedContent.error ? '#fef2f2' : '#F8FAFC',
-                      border: fetchedContent.error ? '1px solid #fecaca' : '1px solid #a7f3d0'
+                      border: fetchedContent.error ? '1px solid #fecaca' : '1px solid #95B0CD'
                     }}
                   >
                     {fetchedContent.error ? (

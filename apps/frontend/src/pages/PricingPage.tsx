@@ -120,7 +120,7 @@ export default function PricingPage() {
                     {keys.map((k, ci) => {
                       const val = (row as any)[k];
                       return (
-                        <div key={k} className="px-2 py-3 flex items-center justify-center" style={{ background: ci === 0 ? 'rgba(6,78,59,0.04)' : ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
+                        <div key={k} className="px-2 py-3 flex items-center justify-center" style={{ background: ci === 0 ? 'rgba(38,97,156,0.04)' : ri % 2 === 0 ? '#FFFFFF' : '#FAFBFC' }}>
                           {val === true ? (
                             ci === 0
                               ? <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: accent }}><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
@@ -128,7 +128,7 @@ export default function PricingPage() {
                           ) : val === false ? (
                             <span style={{ color: '#E2E8F0', fontSize: 12 }}>—</span>
                           ) : (
-                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#F8FAFC', color: '#92400E' }}>{val}</span>
+                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#F8FAFC', color: '#A88817' }}>{val}</span>
                           )}
                         </div>
                       );
