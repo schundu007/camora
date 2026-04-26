@@ -211,19 +211,19 @@
     --border-hover:  #4A5C7A;
     --border-focus:  #5985B6;
 
-    /* Text — warm cream-tinted whites; all stay above WCAG AA on bg-app */
+    /* Text — warm cream-tinted whites. Tightened so secondary copy and
+       chip counters don't read as washed-out tan against dark navy. */
     --text-primary:  #F5F0E5;   /* 14.7:1 on bg-app */
-    --text-secondary:#D6CFC0;   /* 11.0:1 */
-    --text-muted:    #ADA68F;   /*  6.4:1 */
-    --text-dimmed:   #847C68;   /*  4.5:1 — disabled / captions only */
+    --text-secondary:#E5DFD0;   /* 12.8:1 — was #D6CFC0 */
+    --text-muted:    #C8C2B0;   /*  9.6:1 — was #ADA68F (the "tan-on-navy" issue) */
+    --text-dimmed:   #ADA68F;   /*  6.4:1 — was #847C68 (now safely above AA-large) */
 
-    /* Accent — lapis-300 (#5985B6) is too low on void; use 6E96C0 hover.
-       For inline TEXT against dark, use --accent-text = lapis-200 (#95B0CD)
-       which clears 7:1 AAA. */
-    --accent:        #6E96C0;
-    --accent-hover:  #87AAE0;
-    --accent-subtle: rgba(110,150,192,0.18);
-    --accent-text:   #95B0CD;
+    /* Accent — bumped from lapis-300/500 → lapis-200 ramp for stronger
+       readability against the dark substrate. Was #6E96C0 (~5:1). */
+    --accent:        #87AAE0;   /* lapis-200, ~7.4:1 on bg-app */
+    --accent-hover:  #A3BFE7;
+    --accent-subtle: rgba(135,170,224,0.18);
+    --accent-text:   #B5CCEC;
 
     /* Semantic */
     --success: #6E96C0;
