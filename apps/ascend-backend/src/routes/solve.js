@@ -18,6 +18,18 @@ const router = Router();
 // Daily solve cap for paid users to prevent abuse
 const PAID_DAILY_LIMIT = 15;
 
+// Owner accounts bypass the daily solve cap. Comma-separated env override.
+const OWNER_EMAILS = new Set(
+  (process.env.OWNER_EMAILS || 'chundubabu@gmail.com')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+function isOwnerEmail(email) {
+  return !!email && OWNER_EMAILS.has(String(email).toLowerCase());
+}
+
 // ──────────────────────────────────────────────────────────────────
 // Redis-backed full-answer cache
 //
@@ -44,7 +56,8 @@ function answerCacheKey({ problem, language, ascendMode, detailLevel, designDeta
   return `${ANSWER_CACHE_PREFIX}${hash}`;
 }
 
-async function checkDailySolveLimit(userId) {
+async function checkDailySolveLimit(userId, email) {
+  if (isOwnerEmail(email)) return true;
   const today = new Date().toISOString().slice(0, 10);
   const key = `solve_daily:${userId}:${today}`;
   const count = (await cacheGet(key)) || 0;
@@ -78,7 +91,7 @@ router.post('/', validate('solve'), async (req, res, next) => {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
       // Paid users: daily cap to prevent abuse
-      if (canUse.hasSubscription && !(await checkDailySolveLimit(userId))) {
+      if (canUse.hasSubscription && !(await checkDailySolveLimit(userId, req.user?.email))) {
         return res.status(429).json({ error: 'Daily solve limit reached (15/day). Try again tomorrow.', dailyLimitReached: true });
       }
     }
@@ -179,7 +192,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
             return;
           }
           // Paid users: daily cap to prevent abuse
-          if (canUseResult.hasSubscription && !(await checkDailySolveLimit(webappUserId))) {
+          if (canUseResult.hasSubscription && !(await checkDailySolveLimit(webappUserId, decoded.email))) {
             logger.info({ userId: webappUserId }, 'Daily solve limit reached');
             res.setHeader('Content-Type', 'text/event-stream');
             res.write(`data: ${JSON.stringify({
