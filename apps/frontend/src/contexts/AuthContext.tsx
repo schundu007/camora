@@ -4,6 +4,12 @@ import { setStoredToken } from '../utils/tokenStore';
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://camora.cariara.com';
+// Auth + billing-subscription must call the SAME backend that mints the cookie
+// during OAuth — otherwise a JWT_SECRET drift between services causes silent
+// 401 on /me even though login itself succeeded. Route those through CAPRA
+// (where Google OAuth callback runs); other lumora-specific routes still use
+// LUMORA_API_URL as before.
+const AUTH_API_URL = CAPRA_API_URL;
 const DEV_MODE = import.meta.env.DEV && !import.meta.env.VITE_REQUIRE_AUTH;
 
 interface AuthUser {
@@ -65,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (DEV_MODE) {
         let authed = false;
         try {
-          const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/sync`, {
+          const res = await fetch(`${AUTH_API_URL}/api/v1/auth/sync`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -112,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.history.replaceState(null, '', window.location.pathname);
           // Validate with backend
           try {
-            const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
+            const res = await fetch(`${AUTH_API_URL}/api/v1/auth/me`, {
               headers: { Authorization: `Bearer ${hashToken}` },
               credentials: 'include',
             });
@@ -162,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // access_token forever. We also handle the legacy case where the cookie
       // is non-httpOnly (old sessions) by reading it directly as a last resort.
       try {
-        const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
+        const res = await fetch(`${AUTH_API_URL}/api/v1/auth/me`, {
           credentials: 'include',
         });
         if (res.ok) {
@@ -173,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Backend doesn't return access_token in /me response yet —
             // hit /refresh which has been around longer and definitely returns it.
             try {
-              const refreshRes = await fetch(`${LUMORA_API_URL}/api/v1/auth/refresh`, {
+              const refreshRes = await fetch(`${AUTH_API_URL}/api/v1/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
               });
@@ -218,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch subscription status
   const fetchSubscription = useCallback(async (authToken: string) => {
     try {
-      const res = await fetch(`${LUMORA_API_URL}/api/v1/billing/subscription`, {
+      const res = await fetch(`${AUTH_API_URL}/api/v1/billing/subscription`, {
         credentials: 'include',
         headers: { Authorization: `Bearer ${authToken}` },
       });
