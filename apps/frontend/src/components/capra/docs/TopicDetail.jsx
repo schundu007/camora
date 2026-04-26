@@ -777,7 +777,7 @@ export default function TopicDetail({
               {/* Design in App button for system design topics */}
               {isSDStyle && (
                 <Link
-                  to={`/capra?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&mode=system-design&autosolve=true`}
+                  to={`/capra/design?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&autosolve=true`}
                   className="ml-auto px-3 py-1.5 rounded text-sm font-medium bg-[var(--accent)]/100 text-white hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-2 flex-shrink-0 landing-body"
                 >
                   <Icon name="zap" size={14} />
@@ -1587,7 +1587,7 @@ export default function TopicDetail({
 
                   const fullProblem = problemsFull[slug];
                   const problemText = fullProblem?.description || problemData?.description || `Solve: ${problemName}`;
-                  const href = `/capra?problem=${encodeURIComponent(problemText)}&autosolve=true`;
+                  const href = `/capra/coding?problem=${encodeURIComponent(problemText)}&autosolve=true`;
 
                   return (
                     <Link

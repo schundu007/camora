@@ -1610,7 +1610,7 @@ export default function DocsPage({ onBack }) {
                                       {design.difficulty}
                                     </span>
                                     <Link
-                                      to={`/capra?problem=${encodeURIComponent(designProblem)}&mode=system-design&autosolve=true`}
+                                      to={`/capra/design?problem=${encodeURIComponent(designProblem)}&autosolve=true`}
                                       className="px-3 py-1.5 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5 landing-body"
                                       onClick={(e) => e.stopPropagation()}
                                     >
