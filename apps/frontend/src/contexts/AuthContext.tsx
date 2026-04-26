@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { setStoredToken } from '../utils/tokenStore';
 
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -42,7 +43,16 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setTokenState] = useState<string | null>(null);
+
+  // Mirror the token to the module-level tokenStore so non-hook helpers
+  // (utils/authHeaders.js, used by Profile / Practice / BadgeGrid /
+  // ResumeOptimizer / etc.) can read it without React hooks. Required
+  // because the SSO cookie is httpOnly so document.cookie can't see it.
+  const setToken = useCallback((next: string | null) => {
+    setTokenState(next);
+    setStoredToken(next);
+  }, []);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
