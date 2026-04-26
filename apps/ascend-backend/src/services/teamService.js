@@ -181,7 +181,139 @@ export async function getTeamUsageBreakdown(teamId) {
   };
 }
 
-// ── Pool exhaustion enforcement (Phase 2A) ─────────────────────────────────
+// ── Personal-plan hour budgets (Phase 3A) ──────────────────────────────────
+
+// Hour budget per personal plan_type. Free is a 30-min lifetime cap; paid
+// tiers reset on billing-period boundary (driven by Stripe invoice.paid).
+const PERSONAL_HOUR_BUDGETS = {
+  free: { hours: 0.5, period: 'lifetime' },
+  pro_monthly: { hours: 2, period: 'monthly' },
+  pro_yearly: { hours: 24, period: 'yearly' },
+  pro_max_monthly: { hours: 8, period: 'monthly' },
+  pro_max_yearly: { hours: 96, period: 'yearly' },
+  // Capra Content (was a separate SKU earlier, kept for backwards compat
+  // in case any user holds it) — content-only, no AI hours.
+  capra_content_monthly: { hours: 0, period: 'monthly' },
+  capra_content_yearly: { hours: 0, period: 'yearly' },
+};
+
+/**
+ * Sum unexpired top-up hours for a personal budget (team_id IS NULL) or for
+ * a team pool (team_id matches). Uses the dedicated partial indexes for
+ * efficient lookup.
+ */
+async function sumUnexpiredTopups({ userId = null, teamId = null }) {
+  try {
+    if (teamId) {
+      const r = await query(
+        `SELECT COALESCE(SUM(hours), 0) AS h FROM ai_hour_topups
+          WHERE team_id = $1 AND expires_at > NOW()`,
+        [teamId],
+      );
+      return Number(r.rows[0]?.h || 0);
+    }
+    if (userId) {
+      const r = await query(
+        `SELECT COALESCE(SUM(hours), 0) AS h FROM ai_hour_topups
+          WHERE user_id = $1 AND team_id IS NULL AND expires_at > NOW()`,
+        [userId],
+      );
+      return Number(r.rows[0]?.h || 0);
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Personal hour-budget check for solo users (no team).
+ * Returns same shape as checkTeamHourBudget so the gate code is uniform.
+ */
+export async function checkPersonalHourBudget(userId) {
+  try {
+    const sub = await query(
+      `SELECT plan_type, current_period_start
+         FROM ascend_subscriptions WHERE user_id = $1`,
+      [userId],
+    );
+    const planType = sub.rows[0]?.plan_type || 'free';
+    const budget = PERSONAL_HOUR_BUDGETS[planType] || PERSONAL_HOUR_BUDGETS.free;
+    const periodStart = sub.rows[0]?.current_period_start || null;
+
+    // Sum used seconds in the relevant window.
+    let usedSeconds = 0;
+    if (budget.period === 'lifetime' || !periodStart) {
+      const r = await query(
+        `SELECT COALESCE(SUM(seconds), 0) AS s FROM ai_hours_usage WHERE user_id = $1`,
+        [userId],
+      );
+      usedSeconds = Number(r.rows[0]?.s || 0);
+    } else {
+      const r = await query(
+        `SELECT COALESCE(SUM(seconds), 0) AS s FROM ai_hours_usage
+          WHERE user_id = $1 AND created_at >= $2`,
+        [userId, periodStart],
+      );
+      usedSeconds = Number(r.rows[0]?.s || 0);
+    }
+
+    const topupHours = await sumUnexpiredTopups({ userId });
+    const usedHours = usedSeconds / 3600;
+    const totalBudget = budget.hours + topupHours;
+    const remaining = totalBudget - usedHours;
+
+    return {
+      ok: remaining > 0,
+      pool_hours: totalBudget,
+      used_hours: usedHours,
+      remaining_hours: Math.max(0, remaining),
+      plan_type: planType,
+      period: budget.period,
+      topup_hours: topupHours,
+      reason: remaining > 0 ? null : 'PERSONAL_POOL_EXHAUSTED',
+    };
+  } catch (err) {
+    logger.warn({ err: err.message, userId }, '[teamService] checkPersonalHourBudget failed');
+    return { ok: true, fail_open: true };
+  }
+}
+
+/**
+ * Per-member cap check (Phase 3C). If team_members.per_member_hour_cap is
+ * set for this user, gate them once they've consumed it for the period —
+ * even if the team pool still has hours.
+ */
+async function checkPerMemberCap({ userId, teamId, periodStart }) {
+  try {
+    const capRow = await query(
+      `SELECT per_member_hour_cap FROM team_members WHERE team_id = $1 AND user_id = $2`,
+      [teamId, userId],
+    );
+    const cap = capRow.rows[0]?.per_member_hour_cap;
+    if (cap === null || cap === undefined) return { ok: true };
+
+    const usageRow = await query(
+      `SELECT COALESCE(SUM(seconds), 0) AS s FROM ai_hours_usage
+        WHERE user_id = $1 AND team_id = $2 AND created_at >= $3`,
+      [userId, teamId, periodStart],
+    );
+    const usedHours = Number(usageRow.rows[0]?.s || 0) / 3600;
+    if (usedHours >= Number(cap)) {
+      return {
+        ok: false,
+        reason: 'MEMBER_CAP_EXCEEDED',
+        cap_hours: Number(cap),
+        used_hours: usedHours,
+      };
+    }
+    return { ok: true, cap_hours: Number(cap), used_hours: usedHours };
+  } catch {
+    return { ok: true }; // fail open
+  }
+}
+
+// ── Pool exhaustion enforcement (Phase 2A, extended) ───────────────────────
 
 /**
  * Check whether the user's team still has hours in their current period.
@@ -210,7 +342,19 @@ export async function checkTeamHourBudget(userId) {
     );
     if (!r.rows[0]) return { has_team: false };
     const t = r.rows[0];
-    const poolHours = Number(t.hours_pool_total || 0);
+    const periodStart = t.hours_pool_period_start;
+
+    // Per-member cap takes precedence over pool — if Bob is capped at 4hr/mo
+    // and used 4hr, block Bob even if the team pool has hours.
+    const capCheck = await checkPerMemberCap({ userId, teamId, periodStart });
+    if (!capCheck.ok) {
+      return { has_team: true, ok: false, ...capCheck, team_id: teamId };
+    }
+
+    const planPoolHours = Number(t.hours_pool_total || 0);
+    const topupHours = await sumUnexpiredTopups({ teamId });
+    const poolHours = planPoolHours + topupHours;
+
     if (poolHours <= 0) {
       // business_desktop_lifetime has no AI pool — let calls through (the
       // owner is expected to top up via packs or a Business Starter sub).
@@ -225,6 +369,8 @@ export async function checkTeamHourBudget(userId) {
         reason: 'TEAM_POOL_EXHAUSTED',
         team_id: teamId,
         pool_hours: poolHours,
+        plan_pool_hours: planPoolHours,
+        topup_hours: topupHours,
         used_hours: usedHours,
         remaining_hours: 0,
       };
@@ -234,8 +380,12 @@ export async function checkTeamHourBudget(userId) {
       ok: true,
       team_id: teamId,
       pool_hours: poolHours,
+      plan_pool_hours: planPoolHours,
+      topup_hours: topupHours,
       used_hours: usedHours,
       remaining_hours: remaining,
+      member_cap_hours: capCheck.cap_hours,
+      member_used_hours: capCheck.used_hours,
     };
   } catch (err) {
     logger.warn({ err: err.message, userId }, '[teamService] checkTeamHourBudget failed');
@@ -404,6 +554,30 @@ export async function cancelInvite({ token, ownerUserId }) {
     [token, ownerUserId],
   );
   return r.rows.length > 0;
+}
+
+/**
+ * Owner sets / clears a per-member hour cap. Pass null to remove the cap.
+ * Returns { ok, member?, reason? }.
+ */
+export async function setMemberCap({ teamId, targetUserId, requestingUserId, capHours }) {
+  const owner = await query('SELECT owner_user_id FROM teams WHERE id = $1', [teamId]);
+  if (!owner.rows[0]) return { ok: false, reason: 'NO_TEAM' };
+  if (owner.rows[0].owner_user_id !== requestingUserId) return { ok: false, reason: 'NOT_OWNER' };
+
+  const cap = capHours === null || capHours === undefined ? null : Number(capHours);
+  if (cap !== null && (!Number.isFinite(cap) || cap < 0)) {
+    return { ok: false, reason: 'INVALID_CAP' };
+  }
+
+  const r = await query(
+    `UPDATE team_members SET per_member_hour_cap = $1
+      WHERE team_id = $2 AND user_id = $3
+      RETURNING user_id, per_member_hour_cap`,
+    [cap, teamId, targetUserId],
+  );
+  if (!r.rows[0]) return { ok: false, reason: 'NOT_A_MEMBER' };
+  return { ok: true, member: r.rows[0] };
 }
 
 export async function removeMember({ teamId, targetUserId, requestingUserId }) {

@@ -15,6 +15,7 @@ interface MemberRow {
   name: string | null;
   avatar?: string | null;
   joined_at: string;
+  per_member_hour_cap?: number | null;
 }
 
 interface InviteRow {
@@ -83,6 +84,8 @@ export default function TeamSettingsPage() {
   const [lastInviteUrl, setLastInviteUrl] = useState<string | null>(null);
   const [lastInviteDelivery, setLastInviteDelivery] = useState<'email' | 'manual' | null>(null);
   const [lastInviteEmail, setLastInviteEmail] = useState<string | null>(null);
+  const [editingCapFor, setEditingCapFor] = useState<number | null>(null);
+  const [capInput, setCapInput] = useState('');
 
   useEffect(() => {
     document.title = 'Team — Camora';
@@ -186,6 +189,33 @@ export default function TeamSettingsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) await fetchAll();
+    } catch { /* swallow */ }
+  }
+
+  // Save a per-member cap. Empty input = clear the cap (unlimited within pool).
+  async function saveCap(memberId: number) {
+    if (!token || !team) return;
+    const trimmed = capInput.trim();
+    const cap = trimmed === '' ? null : Number(trimmed);
+    if (cap !== null && (!Number.isFinite(cap) || cap < 0)) {
+      await dialogAlert({ title: 'Invalid cap', message: 'Enter a non-negative number of hours, or leave blank to remove the cap.', tone: 'danger' });
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/api/v1/teams/${team.id}/members/${memberId}`, {
+        credentials: 'include',
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ per_member_hour_cap: cap }),
+      });
+      if (res.ok) {
+        setEditingCapFor(null);
+        setCapInput('');
+        await fetchAll();
+      } else {
+        const data = await res.json();
+        await dialogAlert({ title: 'Could not set cap', message: data.error || 'Try again', tone: 'danger' });
+      }
     } catch { /* swallow */ }
   }
 
@@ -391,16 +421,66 @@ export default function TeamSettingsPage() {
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
                           <p className="text-sm font-semibold">{formatHours(memberUsage?.hours_used || 0)}</p>
-                          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{memberUsage?.calls || 0} calls</p>
+                          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                            {memberUsage?.calls || 0} calls
+                            {m.per_member_hour_cap != null && (
+                              <span className="ml-1.5">· cap {m.per_member_hour_cap}h</span>
+                            )}
+                          </p>
                         </div>
                         {isOwner && m.role !== 'owner' && (
-                          <button
-                            onClick={() => removeMember(m.user_id, m.email)}
-                            className="px-2.5 py-1 text-[10px] font-semibold rounded-md"
-                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                          >
-                            Remove
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            {editingCapFor === m.user_id ? (
+                              <>
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="0"
+                                  placeholder="hr"
+                                  value={capInput}
+                                  onChange={(e) => setCapInput(e.target.value)}
+                                  className="w-16 px-2 py-1 text-[11px] rounded-md"
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => saveCap(m.user_id)}
+                                  className="px-2 py-1 text-[10px] font-semibold rounded-md text-white"
+                                  style={{ background: 'var(--accent)' }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => { setEditingCapFor(null); setCapInput(''); }}
+                                  className="px-2 py-1 text-[10px] font-semibold rounded-md"
+                                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setEditingCapFor(m.user_id);
+                                    setCapInput(m.per_member_hour_cap != null ? String(m.per_member_hour_cap) : '');
+                                  }}
+                                  className="px-2 py-1 text-[10px] font-semibold rounded-md"
+                                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                                  title="Set or clear an hour cap for this member"
+                                >
+                                  {m.per_member_hour_cap != null ? 'Edit cap' : 'Set cap'}
+                                </button>
+                                <button
+                                  onClick={() => removeMember(m.user_id, m.email)}
+                                  className="px-2 py-1 text-[10px] font-semibold rounded-md"
+                                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                                >
+                                  Remove
+                                </button>
+                              </>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

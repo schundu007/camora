@@ -600,6 +600,29 @@ async function handleCheckoutComplete(session) {
 
   logger.info({ userId, priceId, type }, 'Processing checkout completion');
 
+  // Top-up packs (Phase 3B): record an ai_hour_topups row that extends
+  // either the user's personal budget OR their team pool (if they're in
+  // one) for the next 90 days. The hourBudgetGate sums unexpired topups
+  // into the pool when checking exhaustion.
+  const TOPUP_HOURS = { topup_1h: 1, topup_5h: 5, topup_25h: 25 };
+  if (TOPUP_HOURS[type]) {
+    const hours = TOPUP_HOURS[type];
+    const amount = invoice ? null : (session.amount_total || hours * 1000);
+    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+    let teamIdForTopup = null;
+    try {
+      const r = await query('SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1', [userId]);
+      teamIdForTopup = r.rows[0]?.team_id || null;
+    } catch { /* swallow */ }
+    await query(
+      `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, teamIdForTopup, hours, amount || hours * 1000, session.id, expiresAt],
+    );
+    logger.info({ userId, hours, teamId: teamIdForTopup, sessionId: session.id }, 'Top-up credited');
+    return; // top-ups don't change subscription state
+  }
+
   if (type === 'desktop_lifetime') {
     await query(
       `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)

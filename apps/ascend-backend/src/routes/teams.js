@@ -11,6 +11,7 @@ import {
   acceptInvite,
   cancelInvite,
   removeMember,
+  setMemberCap,
   planSupportsTeam,
 } from '../services/teamService.js';
 import { sendTeamInviteEmail } from '../services/emailService.js';
@@ -203,6 +204,30 @@ router.delete('/invites/:token', jwtAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err: err.message }, '[teams] cancel invite failed');
     return res.status(500).json({ error: 'Failed to cancel invite' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH /api/v1/teams/:teamId/members/:userId — owner sets per-member hour cap
+// Body: { per_member_hour_cap: number | null }
+// ─────────────────────────────────────────────────────────────────────────────
+router.patch('/:teamId/members/:userId', jwtAuth, async (req, res) => {
+  try {
+    const { per_member_hour_cap: cap } = req.body || {};
+    const result = await setMemberCap({
+      teamId: Number(req.params.teamId),
+      targetUserId: Number(req.params.userId),
+      requestingUserId: req.user.id,
+      capHours: cap === null ? null : Number(cap),
+    });
+    if (!result.ok) {
+      const map = { NO_TEAM: 404, NOT_OWNER: 403, INVALID_CAP: 400, NOT_A_MEMBER: 404 };
+      return res.status(map[result.reason] || 400).json({ error: result.reason });
+    }
+    return res.json({ ok: true, member: result.member });
+  } catch (err) {
+    logger.error({ err: err.message }, '[teams] set cap failed');
+    return res.status(500).json({ error: 'Failed to set cap' });
   }
 });
 
