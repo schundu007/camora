@@ -169,39 +169,44 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'var(--text-muted)' }}
+            className="flex items-center justify-center w-10 h-10 min-h-[40px] transition-all hover:bg-white/15"
+            style={{
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.08)',
+            }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
             {theme === 'dark' ? (
               /* Sun icon */
               <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <circle cx="8" cy="8" r="3" />
-                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" />
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
               </svg>
             ) : (
               /* Moon icon */
               <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M14 8.5A6.5 6.5 0 017.5 2 6 6 0 1014 8.5z" />
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
               </svg>
             )}
           </button>
