@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from './CamoraLogo';
 import UserDropdown from './UserDropdown';
+import { HourMeterChip } from './ui/HourMeterChip';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 28;
 const TICKER_ITEMS = [
@@ -44,17 +45,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
   // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
   // via design tokens.
-  // FLIPPED: white nav above navy hero band — high contrast separation.
-  // Crisp white surface, dark navy text for max readability, gold pill
-  // for the active link, and a 3px gold-leaf underline.
-  const navBg =
-    'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)';
+  const navBg = 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)';
   const navShadow = '0 4px 18px rgba(5,28,64,0.12)';
   const borderClass = '';
-  const textColor = '#051C40';
-  const textMuted = '#1A4F86';
+  // High-contrast text — pure dark navy on white. Inline styles below
+  // pin font-weight: 700 so links read clearly at the 14px scale.
+  const textColor = '#020617';
+  const textMuted = '#020617';
   const activeBg = 'var(--cam-gold-leaf)';
-  const activeColor = '#051C40';
+  const activeColor = '#020617';
 
   const nav = (
     <nav
@@ -78,10 +77,10 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             <Link
               key={link.label}
               to={link.href}
-              className="px-3 py-1.5 text-[13px] rounded-lg transition-colors"
+              className="px-3.5 py-1.5 text-sm rounded-full transition-colors"
               style={{
                 color: isActive(link.href) ? activeColor : textMuted,
-                fontWeight: isActive(link.href) ? 700 : 600,
+                fontWeight: 700,
                 background: isActive(link.href) ? activeBg : 'transparent',
               }}
             >
@@ -111,6 +110,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               </svg>
             )}
           </button>
+          {isAuthenticated && <HourMeterChip variant={isLight ? 'light' : 'dark'} />}
           {isAuthenticated ? (
             <UserDropdown variant={isLight ? 'light' : 'dark'} />
           ) : (
