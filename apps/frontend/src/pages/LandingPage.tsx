@@ -10,6 +10,10 @@ import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, 
 import CapabilityDeck from '../components/landing/CapabilityDeck';
 import CountUp from '../components/shared/animation/CountUp';
 import { BentoCell } from '../components/shared/docs';
+import { HexBadge, type HexColor } from '../components/shared/HexBadge';
+import { DiagonalDivider } from '../components/shared/DiagonalDivider';
+import { MadeWithLove } from '../components/shared/MadeWithLove';
+import { StrengthsRow } from '../components/landing/StrengthsRow';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE
@@ -22,34 +26,52 @@ const F = {
 };
 
 /* ── APPA Steps ───────────────────────────────────────── */
-const APPA = [
+type AppaStep = {
+  key: string;
+  label: string;
+  href: string;
+  headline: string;
+  desc: string;
+  Anim: () => JSX.Element;
+  hexColor: HexColor;
+  glyph: JSX.Element;
+};
+// White-stroke glyphs render inside HexBadge (badge fill provides the colour).
+const G = (path: JSX.Element) => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">{path}</svg>
+);
+const APPA: AppaStep[] = [
   {
     key: 'apply', label: 'APPLY', href: '/jobs',
     headline: 'Discover roles matched to your skills',
     desc: 'Browse 1,000+ engineering roles with AI-powered matching. Auto-generate tailored resumes and cover letters.',
     Anim: ApplyAnim,
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></svg>,
+    hexColor: 'navy-lt',
+    glyph: G(<><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></>),
   },
   {
     key: 'prepare', label: 'PREPARE', href: '/capra/prepare',
     headline: 'Study 800+ curated interview topics',
     desc: 'System design, DSA, behavioral, databases, and low-level design with AI-powered explanations and architecture diagrams.',
     Anim: PrepareAnim,
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
+    hexColor: 'navy',
+    glyph: G(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
   {
     key: 'practice', label: 'PRACTICE', href: '/capra/practice',
     headline: 'Solve 1,850+ problems with AI feedback',
     desc: 'Real interview problems with multi-approach solutions. Timed mock interviews scored on communication and accuracy.',
     Anim: PracticeAnim,
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></svg>,
+    hexColor: 'gold',
+    glyph: G(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
   {
     key: 'attend', label: 'ATTEND', href: '/lumora',
     headline: 'Real-time AI during your live interview',
     desc: 'Voice transcription captures the question. AI generates instant answers — system design diagrams, coding solutions, and STAR coaching.',
     Anim: AttendAnim,
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,
+    hexColor: 'navy-dk',
+    glyph: G(<><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>),
   },
 ];
 
@@ -144,49 +166,67 @@ export default function LandingPage() {
       <CardAnimationStyles />
       <SiteNav variant="light" />
 
-      {/* ═══════════ 1. HERO ═══════════ */}
-      <section className="pt-24 pb-16 md:pt-32 md:pb-20 px-6 text-center" style={{ background: 'linear-gradient(180deg, var(--cam-mist) 0%, var(--bg-app) 100%)' }}>
-        <div className="max-w-4xl mx-auto">
+      {/* ═══════════ 1. HERO — LeetCode-style dark band w/ diagonal cut ═══════════ */}
+      <section
+        className="relative pt-24 pb-32 md:pt-32 md:pb-40 px-6 text-center overflow-hidden"
+        style={{
+          background:
+            'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+        }}
+      >
+        {/* Subtle navy noise/glow — keeps the band from looking flat */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+          }}
+        />
+
+        <div className="relative max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: F.mono }}>
               THE CAREER PLATFORM
             </span>
           </motion.div>
 
           <motion.h1 className="mt-6" style={{ fontFamily: F.display }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase">
+            <span className="block text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase text-white">
               ALL YOUR PREP.
             </span>
-            <span className="block text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase" style={{ color: 'var(--cam-primary)' }}>
+            <span className="block text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
               ONE TRUSTED PLATFORM.
             </span>
           </motion.h1>
 
-          <motion.p className="mt-7 text-lg md:text-xl max-w-3xl mx-auto" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}
+          <motion.p className="mt-7 text-lg md:text-xl max-w-3xl mx-auto" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.55 }}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
             Job discovery, interview prep, mock practice, and live AI assistance — all in one place.
           </motion.p>
 
-          <motion.div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          {/* Single big CTA — LeetCode rule: one pill, no eye-split */}
+          <motion.div className="mt-10 flex items-center justify-center"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'}
-              className="press px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all bg-camora-primary text-camora-mist hover:bg-camora-primaryDk">
+              className="press inline-flex items-center gap-2 px-10 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all hover:scale-[1.02]"
+              style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 8px 22px rgba(0,0,0,0.25)' }}>
               {isAuthenticated ? 'GO TO DASHBOARD' : 'GET STARTED FREE'}
-            </Link>
-            <Link to="/pricing"
-              className="press px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all border border-camora-primaryDk text-camora-primary hover:bg-camora-mist">
-              VIEW PRICING &rsaquo;
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
             </Link>
           </motion.div>
 
           {visitorCount !== null && visitorCount > 0 && (
-            <motion.p className="mt-8 text-sm" style={{ color: 'var(--text-muted)' }}
+            <motion.p className="mt-8 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-              Trusted by <strong style={{ color: 'var(--text-primary)' }}>{visitorCount.toLocaleString()}+</strong> engineers worldwide
+              Trusted by <strong className="text-white">{visitorCount.toLocaleString()}+</strong> engineers worldwide
             </motion.p>
           )}
         </div>
+
+        {/* Diagonal cut into the next (logos) section */}
+        <DiagonalDivider fill="var(--bg-surface)" slope="tl-to-br" position="bottom" height="9vh" />
       </section>
 
       {/* ═══════════ 2. COMPANY LOGOS — Scrolling ═══════════ */}
@@ -250,7 +290,9 @@ export default function LandingPage() {
                     <step.Anim />
                   </div>
                   <div className="p-8">
-                    <div className="mb-5">{step.icon}</div>
+                    <div className="mb-5">
+                      <HexBadge color={step.hexColor} size={56} icon={step.glyph} />
+                    </div>
                     <span className="text-xs font-bold tracking-[0.15em] uppercase text-camora-primary" style={{ fontFamily: F.mono }}>{step.label}</span>
                     <h3 className="mt-2 text-lg font-bold tracking-tight" style={{ fontFamily: F.display }}>{step.headline}</h3>
                     <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
@@ -433,6 +475,63 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ═══════════ 9. STRENGTHS — "Companies & Candidates" pattern ═══════════ */}
+      <section className="px-6 pt-24 pb-20 bg-[var(--bg-surface)]">
+        <Reveal className="text-center mb-14 max-w-3xl mx-auto">
+          <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
+            BUILT FOR BOTH SIDES OF THE TABLE
+          </span>
+          <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.15 }}>
+            One platform.<br /><span style={{ color: 'var(--cam-primary)' }}>Two audiences.</span>
+          </h2>
+        </Reveal>
+
+        <StrengthsRow
+          columns={[
+            {
+              hexes: [
+                { color: 'navy-lt', icon: G(<><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></>) },
+                { color: 'navy', icon: G(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>) },
+                { color: 'gold', icon: G(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>) },
+              ],
+              heading: 'Roles, Practice & Live AI',
+              headingColor: 'navy',
+              body: (
+                <>
+                  1,000+ engineering roles matched to your skills, 800+ curated study topics
+                  with diagrams, and 1,850+ problems with AI feedback. Then live transcription
+                  assistance during the interview itself — the moment that decides the offer.
+                </>
+              ),
+              linkText: 'Start free',
+              linkHref: isAuthenticated ? '/capra/prepare' : '/signup',
+            },
+            {
+              hexes: [
+                { color: 'gold', icon: G(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>) },
+                { color: 'navy-dk', icon: G(<><path d="M3 3v18h18" /><path d="M7 14l4-4 4 4 5-5" /></>) },
+              ],
+              heading: 'Identify Top Technical Talent',
+              headingColor: 'gold',
+              body: (
+                <>
+                  Camora trains engineers — sponsor coding contests, surface candidates ready
+                  for the loop, and shorten time-to-hire. The same platform that shapes the
+                  candidate is the one that helps you spot them.
+                </>
+              ),
+              linkText: 'Partnerships',
+              linkHref: '/pricing',
+            },
+          ]}
+        />
+      </section>
+
+      {/* ═══════════ 10. MADE WITH ❤ IN SAN JOSE ═══════════ */}
+      <section className="bg-[var(--bg-surface)] border-t" style={{ borderColor: 'var(--border)' }}>
+        <MadeWithLove city="San Jose" />
       </section>
 
       <SiteFooter variant="light" />
