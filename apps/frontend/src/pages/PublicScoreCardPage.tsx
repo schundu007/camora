@@ -121,23 +121,31 @@ export default function PublicScoreCardPage() {
     <div className="min-h-screen bg-[var(--bg-surface)] flex flex-col">
       <SiteNav variant="light" />
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col items-center px-4 sm:px-6 pt-24 pb-16">
-        <div className="w-full max-w-md">
-          <ScoreCard
-            type={card.type}
-            title={card.title}
-            score={card.score}
-            category={card.category}
-            userName={card.user_name}
-            userAvatar={card.user_avatar}
-            date={card.created_at}
-          />
+      {/* LeetCode hero band — score card sits on navy */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative flex flex-col items-center px-4 sm:px-6 pt-24 pb-20">
+          <div className="w-full max-w-md">
+            <ScoreCard
+              type={card.type}
+              title={card.title}
+              score={card.score}
+              category={card.category}
+              userName={card.user_name}
+              userAvatar={card.user_avatar}
+              date={card.created_at}
+            />
+          </div>
         </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '6vh', display: 'block' }}>
+          <polygon fill="var(--bg-surface)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
 
-        {/* CTA */}
-        <div className="mt-12 text-center max-w-sm">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(45,140,255,0.08)] text-[var(--accent)] text-xs font-medium rounded-full mb-4">
+      {/* CTA */}
+      <main className="flex-1 flex flex-col items-center px-4 sm:px-6 pt-12 pb-16">
+        <div className="text-center max-w-sm">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full mb-4" style={{ background: 'rgba(199,162,39,0.15)', color: 'var(--cam-gold-leaf-text)' }}>
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
             </svg>
@@ -147,18 +155,13 @@ export default function PublicScoreCardPage() {
           <p className="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
             Practice coding, system design, and behavioral questions with AI-powered feedback. Track your progress and earn score cards.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+          <div className="flex justify-center mt-6">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--accent)] hover:opacity-90 text-white text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-bold uppercase tracking-[0.06em] rounded-full transition-all hover:scale-[1.02]"
+              style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}
             >
               Get Started Free
-            </Link>
-            <Link
-              to="/pricing"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--bg-surface)] border border-[var(--border)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
-            >
-              View Plans
             </Link>
           </div>
         </div>

@@ -18,9 +18,10 @@ export default function ReferralLandingPage() {
   }, [code, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-surface)]">
-      <div className="w-12 h-12 border-4 border-[rgba(45,140,255,0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
-      <p className="text-sm text-[var(--text-muted)]">Setting up your referral...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+      <div className="relative w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(255,255,255,0.2)', borderTopColor: 'var(--cam-gold-leaf-lt)' }} />
+      <p className="relative text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Setting up your referral...</p>
     </div>
   );
 }

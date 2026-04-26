@@ -69,27 +69,31 @@ export default function InterviewQuestionsPage() {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-app)' }}>
       <SiteNav variant="light" />
 
-      {/* ── Hero ─────────────────────────────────────────── */}
-      <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.06) 0%, rgba(45,140,255,0.03) 100%)' }}>
-        <div className="lg:max-w-[85%] mx-auto text-center">
-          <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
-            {company.name} Interview Questions
+      {/* ── Hero — LeetCode dark navy band ───────────────── */}
+      <section className="relative pt-24 pb-24 px-4 overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative lg:max-w-[85%] mx-auto text-center">
+          <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto bg-white p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            {company.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Interview Questions</span>
           </h1>
-          <p className="mt-2 text-lg text-[var(--text-secondary)]">{company.tagline}</p>
+          <p className="mt-2 text-lg" style={{ color: 'rgba(255,255,255,0.85)' }}>{company.tagline}</p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${diffColor.bg} ${diffColor.text}`}>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
               {company.difficulty}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}>
               {company.avgSalary}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}>
               {company.interviewRounds} rounds
             </span>
           </div>
         </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '6vh', display: 'block' }}>
+          <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
+        </svg>
       </section>
 
       {/* ── Main content ─────────────────────────────────── */}
