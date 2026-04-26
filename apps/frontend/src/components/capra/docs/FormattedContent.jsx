@@ -244,19 +244,22 @@ export default function FormattedContent({ content }) {
             elements.push(
               <div
                 key={`star-${blockIdx}-${lineIdx}`}
-                className="mt-4 mb-1 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
+                className="mt-6 mb-2 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
               >
                 {keyword}
               </div>,
             );
           } else {
+            // NVIDIA-style section heading: bold display sans, ~20px,
+            // generous top margin so it visually separates from the
+            // paragraph above. Was font-semibold text-sm — too quiet.
             elements.push(
-              <div
+              <h3
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--text-primary)] font-semibold text-sm mt-4 mb-1 first:mt-0 landing-display"
+                className="text-[var(--text-primary)] font-bold text-[20px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
               >
                 {headerText}
-              </div>,
+              </h3>,
             );
           }
           return;
@@ -280,13 +283,15 @@ export default function FormattedContent({ content }) {
 
         if (trimmed.endsWith(':') && trimmed.length < 50 && !trimmed.includes('.')) {
           flushList();
+          // h4-rank inline subhead — slightly smaller than the bold-marker
+          // headers above so the hierarchy reads two levels.
           elements.push(
-            <div
+            <h4
               key={`h-${blockIdx}-${lineIdx}`}
-              className="text-[var(--text-primary)] font-semibold text-sm mt-4 mb-1 first:mt-0 landing-display"
+              className="text-[var(--text-primary)] font-bold text-[16px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
             >
               {trimmed.replace(/:\s*$/, '')}
-            </div>,
+            </h4>,
           );
           return;
         }
@@ -297,10 +302,13 @@ export default function FormattedContent({ content }) {
         }
 
         flushList();
+        // Body copy: 15px / 1.6 line-height — closer to NVIDIA / Stripe docs
+        // body rhythm than the previous text-sm (13px). text-primary instead
+        // of text-secondary so the body is genuinely readable, not a caption.
         elements.push(
           <p
             key={`p-${blockIdx}-${lineIdx}`}
-            className="text-[var(--text-secondary)] text-sm leading-relaxed my-2 landing-body"
+            className="text-[var(--text-primary)] text-[15px] leading-[1.6] my-3 landing-body"
           >
             {formatInlineText(trimmed)}
           </p>,
