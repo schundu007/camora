@@ -42,6 +42,10 @@ import interviewCountdownRouter from './routes/interviewCountdown.js';
 import gamificationRouter from './routes/gamification.js';
 import scoreCardsRouter from './routes/scoreCards.js';
 import challengeRouter from './routes/challenge.js';
+// Jobs router copied from lumora-backend so the lumorab.cariara.com service
+// (which currently runs ascend code) can answer /api/v1/jobs requests from
+// the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
+import jobsRouter from './routes/jobs.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -797,6 +801,12 @@ app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
 app.use('/api/v1/usage', apiLimiter, usageRouter);
+
+// Jobs proxy — copied from lumora-backend. Returns 503 cleanly if
+// JOBS_DATABASE_URL is unset, so the frontend's /jobs page surfaces a
+// "jobs db not configured" message instead of an opaque 404.
+app.use('/api/v1/jobs', apiLimiter, jobsRouter);
+
 app.use('/api/topic-reads', apiLimiter, topicReadsRouter);
 app.use('/api/topic-comments', apiLimiter, topicCommentsRouter);
 
