@@ -94,46 +94,47 @@ export default function PricingPage() {
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>Compare plans</h2>
           </div>
           <FeatureMatrix
-            highlightPlanId="annual"
+            highlightPlanId="pro"
             plans={[
-              { id: 'free',           name: 'Free' },
-              { id: 'monthly_starter', name: 'Starter' },
-              { id: 'monthly_pro',    name: 'Pro', highlight: 'Popular' },
-              { id: 'quarterly',      name: 'Quarterly' },
-              { id: 'annual',         name: 'Annual', highlight: 'Best value' },
-              { id: 'annual_desktop', name: 'Annual+' },
+              { id: 'free',                  name: 'Free' },
+              { id: 'capra_content_monthly', name: 'Content' },
+              { id: 'starter',               name: 'Starter' },
+              { id: 'pro',                   name: 'Pro',        highlight: 'Popular' },
+              { id: 'pro_max',               name: 'Pro Max' },
+              { id: 'annual_pro',            name: 'Annual Pro', highlight: 'Best value' },
             ]}
             sections={[
               {
                 title: 'Prep content',
                 rows: [
-                  { feature: 'Browse 800+ prep topics', values: { free: true, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
-                  { feature: 'Unlimited prep topics', hint: 'Free tier limited to 3 topics per category', values: { free: false, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
-                  { feature: 'Architecture diagrams', values: { free: false, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
-                  { feature: 'Company-specific prep', values: { free: false, monthly_starter: false, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Browse 800+ prep topics', values: { free: true, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Unlimited prep topics', hint: 'Free tier limited to 1 topic per category', values: { free: false, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Architecture diagrams', values: { free: false, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Company-specific prep', values: { free: false, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
                 ],
               },
               {
-                title: 'AI assistance',
+                title: 'AI hours',
                 rows: [
-                  { feature: 'AI explanations', values: { free: 'Limited', monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
-                  { feature: 'Live interview AI', values: { free: false, monthly_starter: '10 / mo', monthly_pro: 'Unlimited', quarterly: 'Unlimited', annual: 'Unlimited', annual_desktop: 'Unlimited' } },
-                  { feature: 'Voice filtering', values: { free: false, monthly_starter: false, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Included AI hours', hint: 'Lumora live + coding helper + prep generation', values: { free: '30 min lifetime', capra_content_monthly: 'PAYG only', starter: '4 / mo', pro: '10 / mo', pro_max: '25 / mo', annual_pro: '120 / yr pooled' } },
+                  { feature: 'Overage rate', hint: 'After included hours run out', values: { free: '—', capra_content_monthly: '$10/hr', starter: '$9/hr', pro: '$8/hr', pro_max: '$7/hr', annual_pro: '$7/hr' } },
+                  { feature: 'Effective $/hr in bundle', values: { free: '—', capra_content_monthly: '$10', starter: '$7.25', pro: '$5.90', pro_max: '$3.96', annual_pro: '$4.16' } },
+                  { feature: 'Voice filtering', values: { free: false, capra_content_monthly: false, starter: false, pro: true, pro_max: true, annual_pro: true } },
                 ],
               },
               {
                 title: 'Apps & access',
                 rows: [
-                  { feature: 'Web app', values: { free: true, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
-                  { feature: 'Desktop app (stealth mode)', values: { free: false, monthly_starter: false, monthly_pro: true, quarterly: true, annual: false, annual_desktop: true } },
-                  { feature: 'Priority support', values: { free: false, monthly_starter: false, monthly_pro: false, quarterly: false, annual: true, annual_desktop: true } },
+                  { feature: 'Web app', values: { free: true, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Desktop app (stealth mode)', values: { free: false, capra_content_monthly: false, starter: false, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Priority support', values: { free: false, capra_content_monthly: false, starter: false, pro: false, pro_max: true, annual_pro: true } },
                 ],
               },
               {
                 title: 'Billing',
                 rows: [
-                  { feature: 'Cancel anytime', values: { free: true, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
-                  { feature: 'Locked-in pricing', hint: 'Future price increases do not apply', values: { free: false, monthly_starter: false, monthly_pro: false, quarterly: false, annual: true, annual_desktop: true } },
+                  { feature: 'Cancel anytime', values: { free: true, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Locked-in pricing', hint: 'Future price increases do not apply', values: { free: false, capra_content_monthly: false, starter: false, pro: false, pro_max: false, annual_pro: true } },
                 ],
               },
             ]}

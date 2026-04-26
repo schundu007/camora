@@ -51,7 +51,19 @@ export default function FeatureMatrix({
       className={`overflow-x-auto rounded-xl ${className}`}
       style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
     >
-      <table className="w-full text-sm" style={{ minWidth: 720, borderCollapse: 'separate', borderSpacing: 0 }}>
+      <table
+        className="w-full text-sm"
+        style={{ minWidth: 720, borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed' }}
+      >
+        {/* Explicit column widths so the table fills its container instead
+            of auto-shrinking to content widths and leaving whitespace on
+            the right of the wrapper. Feature column is 2× a plan column. */}
+        <colgroup>
+          <col style={{ width: `${(2 / (plans.length + 2)) * 100}%` }} />
+          {plans.map((p) => (
+            <col key={p.id} style={{ width: `${(1 / (plans.length + 2)) * 100}%` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr style={{ background: 'var(--bg-elevated)' }}>
             <th

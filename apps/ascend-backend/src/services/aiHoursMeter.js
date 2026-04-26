@@ -7,16 +7,6 @@ import { logger } from '../middleware/requestLogger.js';
 const SECONDS_PER_1K_OUTPUT_TOKENS = Number(process.env.AI_HOURS_SEC_PER_1K_OUT) || 20;
 const SECONDS_PER_1K_INPUT_TOKENS = Number(process.env.AI_HOURS_SEC_PER_1K_IN) || 2;
 
-// Legacy unlimited plans grandfathered from pre-2026-04 pricing. Heavy users on
-// these plans cost more than they pay; cap at 60h/30d then downgrade model.
-const LEGACY_UNLIMITED_PLANS = new Set([
-  'monthly',
-  'monthly_pro',
-  'pro',
-  'quarterly_pro',
-]);
-const LEGACY_FAIR_USE_HOURS = Number(process.env.LEGACY_FAIR_USE_HOURS) || 60;
-
 export function tokensToSeconds(tokensIn = 0, tokensOut = 0) {
   return (
     (tokensIn / 1000) * SECONDS_PER_1K_INPUT_TOKENS
@@ -62,7 +52,8 @@ export function recordTokens({ userId, surface, tokensIn, tokensOut, model, plan
   });
 }
 
-// Used by legacy-Pro fair-use cap. Returns hours used in last `days` days.
+// Sum of seconds the user has consumed in the last `days` days.
+// Returned as hours. Used by the upcoming usage dashboard.
 export async function getRecentHours(userId, days = 30) {
   if (!userId) return 0;
   try {
@@ -78,13 +69,4 @@ export async function getRecentHours(userId, days = 30) {
     logger.warn({ err: err.message, userId }, '[aiHoursMeter] getRecentHours failed');
     return 0;
   }
-}
-
-// Returns true if this user is on a grandfathered "unlimited" plan AND has
-// burned past the fair-use ceiling. Caller switches to Haiku for the next
-// request and surfaces an X-Fair-Use-Throttled header.
-export async function shouldThrottleLegacyPro(userId, planType) {
-  if (!planType || !LEGACY_UNLIMITED_PLANS.has(planType)) return false;
-  const hours = await getRecentHours(userId, 30);
-  return hours >= LEGACY_FAIR_USE_HOURS;
 }

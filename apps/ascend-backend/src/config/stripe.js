@@ -9,21 +9,48 @@ export const stripe = stripeSecretKey
     })
   : null;
 
-// Price IDs from Stripe Dashboard — matches lumora-backend env vars
+// Pricing v2 — fixed Capra content + metered AI hours.
+// Set each STRIPE_PRICE_* env var to the matching Stripe Dashboard price ID.
 export const STRIPE_PRICES = {
-  MONTHLY_STARTER: process.env.STRIPE_PRICE_STARTER,          // $29/mo  — Starter (no desktop)
-  MONTHLY_PRO: process.env.STRIPE_PRICE_MONTHLY,              // $49/mo  — Pro monthly (with desktop)
-  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY,           // $119/qtr — Pro quarterly (with desktop)
-  ANNUAL: process.env.STRIPE_PRICE_YEARLY,                     // $228/yr — Annual (no desktop)
-  ANNUAL_DESKTOP: process.env.STRIPE_PRICE_ANNUALLY,           // $299/yr — Annual + Desktop
-  DESKTOP_LIFETIME: process.env.STRIPR_PRICE_DTOPLT,           // $99 one-time — Desktop only (BYOK)
+  CAPRA_CONTENT_MONTHLY: process.env.STRIPE_PRICE_CAPRA_CONTENT_MONTHLY,    // $19/mo  — content only, no hours
+  CAPRA_CONTENT_YEARLY: process.env.STRIPE_PRICE_CAPRA_CONTENT_YEARLY,      // $99/yr  — content only, no hours
+  STARTER: process.env.STRIPE_PRICE_STARTER,                                // $29/mo  — content + 4 hrs
+  PRO: process.env.STRIPE_PRICE_PRO,                                        // $59/mo  — content + 10 hrs (popular)
+  PRO_MAX: process.env.STRIPE_PRICE_PRO_MAX,                                // $99/mo  — content + 25 hrs
+  ANNUAL_PRO: process.env.STRIPE_PRICE_ANNUAL_PRO,                          // $499/yr — content + 120 hrs pooled
+  DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT, // $99 one-time
+
+  // Hour top-up packs (one-time, 90-day expiry enforced server-side)
+  TOPUP_5H: process.env.STRIPE_PRICE_TOPUP_5H,
+  TOPUP_10H: process.env.STRIPE_PRICE_TOPUP_10H,
+  TOPUP_25H: process.env.STRIPE_PRICE_TOPUP_25H,
 };
 
 /**
- * Check if Stripe is configured
+ * Boot-time sanity check — logs which subscription price IDs are missing
+ * so the operator can populate them in Stripe Dashboard.
  */
+export function warnMissingPriceIds() {
+  const required = [
+    'CAPRA_CONTENT_MONTHLY',
+    'CAPRA_CONTENT_YEARLY',
+    'STARTER',
+    'PRO',
+    'PRO_MAX',
+    'ANNUAL_PRO',
+  ];
+  const missing = required.filter((k) => !STRIPE_PRICES[k]);
+  if (missing.length) {
+    console.warn(
+      `[stripe] Missing price IDs for SKUs: ${missing.join(', ')}. `
+      + `Set the matching STRIPE_PRICE_* env vars from the Stripe Dashboard.`,
+    );
+  }
+}
+
 export function isStripeConfigured() {
-  return !!(stripeSecretKey && (STRIPE_PRICES.MONTHLY_STARTER || STRIPE_PRICES.MONTHLY_PRO));
+  if (!stripeSecretKey) return false;
+  return !!(STRIPE_PRICES.CAPRA_CONTENT_MONTHLY || STRIPE_PRICES.STARTER || STRIPE_PRICES.PRO);
 }
 
 export default stripe;

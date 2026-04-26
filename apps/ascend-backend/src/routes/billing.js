@@ -6,9 +6,16 @@ import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
 import { logger } from '../middleware/requestLogger.js';
 
-// Valid paid plan_type values — kept here as source of truth; any new plan added
-// to Stripe must be added here so subscription-verify recognises it.
-const PAID_PLAN_TYPES = new Set(['monthly', 'monthly_starter', 'monthly_pro', 'quarterly_pro']);
+// Valid paid plan_type values — source of truth; add any new Stripe SKU here
+// so subscription-verify recognises it.
+const PAID_PLAN_TYPES = new Set([
+  'capra_content_monthly',
+  'capra_content_yearly',
+  'starter',
+  'pro',
+  'pro_max',
+  'annual_pro',
+]);
 
 // Admin emails get full plan access without a Stripe subscription record.
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
@@ -56,40 +63,61 @@ router.get('/prices', (req, res) => {
   }
 
   res.json({
-    monthly_starter: {
-      priceId: STRIPE_PRICES.MONTHLY_STARTER,
+    // ── Pricing v2 ────────────────────────────────────────────
+    capra_content_monthly: {
+      priceId: STRIPE_PRICES.CAPRA_CONTENT_MONTHLY,
+      amount: 1900,
+      currency: 'usd',
+      interval: 'month',
+      ai_hours_included: 0,
+      overage_per_hour: 1000,
+    },
+    capra_content_yearly: {
+      priceId: STRIPE_PRICES.CAPRA_CONTENT_YEARLY,
+      amount: 9900,
+      currency: 'usd',
+      interval: 'year',
+      ai_hours_included: 0,
+      overage_per_hour: 1000,
+    },
+    starter: {
+      priceId: STRIPE_PRICES.STARTER,
       amount: 2900,
       currency: 'usd',
       interval: 'month',
+      ai_hours_included: 4,
+      overage_per_hour: 900,
       includes_desktop: false,
     },
-    monthly_pro: {
-      priceId: STRIPE_PRICES.MONTHLY_PRO,
-      amount: 4900,
+    pro: {
+      priceId: STRIPE_PRICES.PRO,
+      amount: 5900,
       currency: 'usd',
       interval: 'month',
+      ai_hours_included: 10,
+      overage_per_hour: 800,
+      includes_desktop: true,
+      popular: true,
+    },
+    pro_max: {
+      priceId: STRIPE_PRICES.PRO_MAX,
+      amount: 9900,
+      currency: 'usd',
+      interval: 'month',
+      ai_hours_included: 25,
+      overage_per_hour: 700,
       includes_desktop: true,
     },
-    quarterly_pro: {
-      priceId: STRIPE_PRICES.QUARTERLY_PRO,
-      amount: 11900,
-      currency: 'usd',
-      interval: 'quarter',
-      includes_desktop: true,
-    },
-    annual: {
-      priceId: STRIPE_PRICES.ANNUAL,
-      amount: 22800,
-      currency: 'usd',
-      interval: 'year',
-      includes_desktop: false,
-    },
-    annual_desktop: {
-      priceId: STRIPE_PRICES.ANNUAL_DESKTOP,
-      amount: 29900,
+    annual_pro: {
+      priceId: STRIPE_PRICES.ANNUAL_PRO,
+      amount: 49900,
       currency: 'usd',
       interval: 'year',
+      ai_hours_included: 120,
+      overage_per_hour: 700,
       includes_desktop: true,
+      pooled_annually: true,
+      best_value: true,
     },
     desktop_lifetime: {
       priceId: STRIPE_PRICES.DESKTOP_LIFETIME,
@@ -99,6 +127,30 @@ router.get('/prices', (req, res) => {
       desktop_only: true,
       web_content: false,
     },
+
+    // ── Top-up hour packs ─────────────────────────────────────
+    topup_5h: {
+      priceId: STRIPE_PRICES.TOPUP_5H,
+      amount: 4500,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 5,
+    },
+    topup_10h: {
+      priceId: STRIPE_PRICES.TOPUP_10H,
+      amount: 8000,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 10,
+    },
+    topup_25h: {
+      priceId: STRIPE_PRICES.TOPUP_25H,
+      amount: 17500,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 25,
+    },
+
   });
 });
 
@@ -125,14 +177,18 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid redirect URL domain' });
     }
 
-    // Validate price ID
+    // Validate price ID against the active SKU list.
     const validPrices = [
-      STRIPE_PRICES.MONTHLY_STARTER,
-      STRIPE_PRICES.MONTHLY_PRO,
-      STRIPE_PRICES.QUARTERLY_PRO,
-      STRIPE_PRICES.ANNUAL,
-      STRIPE_PRICES.ANNUAL_DESKTOP,
+      STRIPE_PRICES.CAPRA_CONTENT_MONTHLY,
+      STRIPE_PRICES.CAPRA_CONTENT_YEARLY,
+      STRIPE_PRICES.STARTER,
+      STRIPE_PRICES.PRO,
+      STRIPE_PRICES.PRO_MAX,
+      STRIPE_PRICES.ANNUAL_PRO,
       STRIPE_PRICES.DESKTOP_LIFETIME,
+      STRIPE_PRICES.TOPUP_5H,
+      STRIPE_PRICES.TOPUP_10H,
+      STRIPE_PRICES.TOPUP_25H,
     ].filter(Boolean);
 
     if (!validPrices.includes(priceId)) {
@@ -166,23 +222,24 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       );
     }
 
-    // Determine purchase type for metadata
+    // Determine purchase type for metadata.
     let purchaseType = 'subscription';
-    if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) {
-      purchaseType = 'desktop_lifetime';
-    } else if (priceId === STRIPE_PRICES.MONTHLY_STARTER) {
-      purchaseType = 'monthly_starter';
-    } else if (priceId === STRIPE_PRICES.MONTHLY_PRO) {
-      purchaseType = 'monthly_pro';
-    } else if (priceId === STRIPE_PRICES.QUARTERLY_PRO) {
-      purchaseType = 'quarterly_pro';
-    } else if (priceId === STRIPE_PRICES.ANNUAL) {
-      purchaseType = 'annual';
-    } else if (priceId === STRIPE_PRICES.ANNUAL_DESKTOP) {
-      purchaseType = 'annual_desktop';
-    }
+    if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) purchaseType = 'desktop_lifetime';
+    else if (priceId === STRIPE_PRICES.CAPRA_CONTENT_MONTHLY) purchaseType = 'capra_content_monthly';
+    else if (priceId === STRIPE_PRICES.CAPRA_CONTENT_YEARLY) purchaseType = 'capra_content_yearly';
+    else if (priceId === STRIPE_PRICES.STARTER) purchaseType = 'starter';
+    else if (priceId === STRIPE_PRICES.PRO) purchaseType = 'pro';
+    else if (priceId === STRIPE_PRICES.PRO_MAX) purchaseType = 'pro_max';
+    else if (priceId === STRIPE_PRICES.ANNUAL_PRO) purchaseType = 'annual_pro';
+    else if (priceId === STRIPE_PRICES.TOPUP_5H) purchaseType = 'topup_5h';
+    else if (priceId === STRIPE_PRICES.TOPUP_10H) purchaseType = 'topup_10h';
+    else if (priceId === STRIPE_PRICES.TOPUP_25H) purchaseType = 'topup_25h';
 
-    const isOneTime = purchaseType === 'desktop_lifetime';
+    // One-time purchases (Stripe `mode: 'payment'` instead of subscription).
+    const isOneTime = purchaseType === 'desktop_lifetime'
+      || purchaseType === 'topup_5h'
+      || purchaseType === 'topup_10h'
+      || purchaseType === 'topup_25h';
 
     // For subscriptions, don't allow if already subscribed
     if (!isOneTime) {
@@ -612,11 +669,12 @@ async function handleSubscriptionUpdated(subscription) {
   let planType = 'free';
   const priceId = subscription.items.data[0]?.price?.id;
 
-  if (priceId === STRIPE_PRICES.MONTHLY_STARTER) planType = 'monthly_starter';
-  else if (priceId === STRIPE_PRICES.MONTHLY_PRO) planType = 'monthly_pro';
-  else if (priceId === STRIPE_PRICES.QUARTERLY_PRO) planType = 'quarterly_pro';
-  else if (priceId === STRIPE_PRICES.ANNUAL) planType = 'annual';
-  else if (priceId === STRIPE_PRICES.ANNUAL_DESKTOP) planType = 'annual_desktop';
+  if (priceId === STRIPE_PRICES.CAPRA_CONTENT_MONTHLY) planType = 'capra_content_monthly';
+  else if (priceId === STRIPE_PRICES.CAPRA_CONTENT_YEARLY) planType = 'capra_content_yearly';
+  else if (priceId === STRIPE_PRICES.STARTER) planType = 'starter';
+  else if (priceId === STRIPE_PRICES.PRO) planType = 'pro';
+  else if (priceId === STRIPE_PRICES.PRO_MAX) planType = 'pro_max';
+  else if (priceId === STRIPE_PRICES.ANNUAL_PRO) planType = 'annual_pro';
 
   // Map Stripe status to our status
   let status = subscription.status;
