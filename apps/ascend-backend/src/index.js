@@ -366,6 +366,15 @@ async function runMigrations() {
     await query("ALTER TABLE teams ADD COLUMN IF NOT EXISTS auto_topup_monthly_cap_cents INTEGER");
     console.log('[Migrations] auto-topup columns ensured');
 
+    // Pool-low reminder timestamps (Phase 7). Set when an 80% / 95% email is
+    // sent for the current period; cleared on period rollover so each new
+    // period gets fresh warnings.
+    await query("ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS pool_reminder_80_sent_at TIMESTAMPTZ");
+    await query("ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS pool_reminder_95_sent_at TIMESTAMPTZ");
+    await query("ALTER TABLE teams ADD COLUMN IF NOT EXISTS pool_reminder_80_sent_at TIMESTAMPTZ");
+    await query("ALTER TABLE teams ADD COLUMN IF NOT EXISTS pool_reminder_95_sent_at TIMESTAMPTZ");
+    console.log('[Migrations] pool reminder timestamps ensured');
+
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
       id SERIAL PRIMARY KEY,

@@ -182,6 +182,66 @@ export async function getTeamUsageBreakdown(teamId) {
   };
 }
 
+// ── Pool-low reminders (Phase 7) ───────────────────────────────────────────
+
+const POOL_REMINDER_WARN_THRESHOLD = 0.80;     // 80% used → heads-up email
+const POOL_REMINDER_CRITICAL_THRESHOLD = 0.95; // 95% used → urgent email
+
+/**
+ * Lazily fire a pool-low email reminder if appropriate. Called from the
+ * /me/budget read so we don't need a cron — the email goes out when the
+ * user (or owner) checks their usage. Once per threshold per period:
+ * pool_reminder_*_sent_at columns deduplicate; period rollover clears them.
+ *
+ * Fire-and-forget — never blocks the request. Internal failures swallowed.
+ */
+export async function maybeSendPoolReminder({ scope, scopeId, ownerEmail, ownerName, poolHours, usedHours }) {
+  if (!ownerEmail || poolHours <= 0) return;
+  const ratio = usedHours / poolHours;
+  if (ratio < POOL_REMINDER_WARN_THRESHOLD) return;
+
+  const level = ratio >= POOL_REMINDER_CRITICAL_THRESHOLD ? 'critical' : 'warn';
+  const table = scope === 'team' ? 'teams' : 'ascend_subscriptions';
+  const idCol = scope === 'team' ? 'id' : 'user_id';
+  const sentCol = level === 'critical' ? 'pool_reminder_95_sent_at' : 'pool_reminder_80_sent_at';
+
+  // Atomic compare-and-set: only proceed if not already sent this period.
+  // Returns one row if we won the race, zero rows if another concurrent read
+  // already triggered. Avoids double-sending under concurrent /me/budget reads.
+  let claimed;
+  try {
+    claimed = await query(
+      `UPDATE ${table} SET ${sentCol} = NOW()
+        WHERE ${idCol} = $1 AND ${sentCol} IS NULL
+        RETURNING 1`,
+      [scopeId],
+    );
+  } catch (err) {
+    logger.warn({ err: err.message, scope, scopeId, level }, '[teamService] reminder claim failed');
+    return;
+  }
+  if (claimed.rows.length === 0) return; // already sent this period
+
+  // Late import to avoid circular deps (emailService → ... → teamService).
+  try {
+    const { sendPoolReminderEmail } = await import('./emailService.js');
+    const remainingHours = Math.max(0, poolHours - usedHours);
+    const accountUrl = `${process.env.FRONTEND_URL || 'https://camora.cariara.com'}/account/team`;
+    await sendPoolReminderEmail({
+      to: ownerEmail,
+      name: ownerName,
+      level,
+      isTeam: scope === 'team',
+      poolHours,
+      usedHours,
+      remainingHours,
+      accountUrl,
+    });
+  } catch (err) {
+    logger.warn({ err: err.message, scope, scopeId, level }, '[teamService] reminder send failed');
+  }
+}
+
 // ── Personal-plan hour budgets (Phase 3A) ──────────────────────────────────
 
 // Hour budget per personal plan_type. Free is a 30-min lifetime cap; paid
@@ -409,6 +469,8 @@ export async function rollOverTeamPoolForUser(userId) {
     const r = await query(
       `UPDATE teams
           SET hours_pool_period_start = NOW(),
+              pool_reminder_80_sent_at = NULL,
+              pool_reminder_95_sent_at = NULL,
               updated_at = NOW()
         WHERE owner_user_id = $1
           AND plan_type IN ('pro_max_monthly', 'pro_max_yearly')
@@ -419,6 +481,26 @@ export async function rollOverTeamPoolForUser(userId) {
   } catch (err) {
     logger.warn({ err: err.message, userId }, '[teamService] rollover failed');
     return null;
+  }
+}
+
+/**
+ * Reset personal pool-low reminder flags on subscription renewal so the
+ * solo user gets fresh warnings the next period. Called from
+ * handleInvoicePaid alongside the team rollover.
+ */
+export async function rollOverPersonalRemindersForUser(userId) {
+  try {
+    await query(
+      `UPDATE ascend_subscriptions
+          SET pool_reminder_80_sent_at = NULL,
+              pool_reminder_95_sent_at = NULL,
+              updated_at = NOW()
+        WHERE user_id = $1`,
+      [userId],
+    );
+  } catch (err) {
+    logger.warn({ err: err.message, userId }, '[teamService] personal reminder reset failed');
   }
 }
 

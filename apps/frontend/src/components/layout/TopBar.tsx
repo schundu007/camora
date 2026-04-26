@@ -50,14 +50,13 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
         className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
           height: 60,
-          // White chrome above navy hero bands — same flip pattern as the
-          // marketing SiteNav so all app shell chrome reads as a distinct
-          // strip above the gradient page heroes. 3px gold-leaf underline
-          // carries the brand accent.
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+          // Dark navy chrome — same look in both light and dark themes,
+          // near-black so it sits visibly above the brighter cam-primary
+          // hero gradients below. 3px gold-leaf underline.
+          background: 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)',
           borderBottom: '3px solid var(--cam-gold-leaf)',
-          boxShadow: '0 4px 18px rgba(5,28,64,0.12)',
-          color: 'var(--cam-primary-dk)',
+          boxShadow: '0 6px 22px rgba(0,0,0,0.45)',
+          color: '#FFFFFF',
           fontFamily: 'var(--font-sans)',
         }}
       >
@@ -97,12 +96,11 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="px-3.5 py-1.5 text-[13px] rounded-full transition-all no-underline"
+                  className="px-3.5 py-1.5 text-sm rounded-full transition-all no-underline"
                   style={{
-                    color: active ? 'var(--cam-primary-dk)' : 'var(--text-secondary)',
-                    fontWeight: active ? 700 : 600,
+                    color: active ? '#020617' : '#FFFFFF',
+                    fontWeight: 700,
                     background: active ? 'var(--cam-gold-leaf)' : 'transparent',
-                    letterSpacing: active ? '0.005em' : 'normal',
                   }}
                 >
                   {link.label}

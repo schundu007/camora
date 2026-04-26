@@ -792,6 +792,13 @@ async function handleInvoicePaid(invoice) {
     }
   }
 
+  // Phase 7: clear personal pool-low reminder flags so the user gets fresh
+  // warnings in the new period. Cheap update; runs for every paid plan.
+  try {
+    const { rollOverPersonalRemindersForUser } = await import('../services/teamService.js');
+    await rollOverPersonalRemindersForUser(subscription.user_id);
+  } catch { /* swallow */ }
+
   logger.info({ userId: subscription.user_id, planType }, 'Invoice paid — subscription renewed');
 }
 
