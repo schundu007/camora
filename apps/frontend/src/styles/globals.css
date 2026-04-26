@@ -334,6 +334,69 @@
   [data-theme="dark"] [style*="background: #F8FAFC"],
   [data-theme="dark"] [style*="background:#F8FAFC"] { background-color: var(--bg-surface) !important; }
 
+  /* Same root issue, text side: components hard-coded slate/gray Tailwind
+     text classes or inline hex literals like color:'#0F172A' assuming a
+     light substrate. After the bg-* remap above, those cards now have a
+     dark substrate but the text stays slate-900 → unreadable. Remap the
+     dark slate/gray ramp to the design tokens so it flips with theme.
+     The 700-900 band reads as primary; 500-600 as secondary; 400 as muted.
+     Lighter (50-300) and darker (950) are left alone — they're either
+     already light enough for dark mode or used as inverse text on dark
+     gradient cards where the original color was correct. */
+  [data-theme="dark"] .text-slate-700,
+  [data-theme="dark"] .text-slate-800,
+  [data-theme="dark"] .text-slate-900,
+  [data-theme="dark"] .text-gray-700,
+  [data-theme="dark"] .text-gray-800,
+  [data-theme="dark"] .text-gray-900,
+  [data-theme="dark"] .text-zinc-700,
+  [data-theme="dark"] .text-zinc-800,
+  [data-theme="dark"] .text-zinc-900,
+  [data-theme="dark"] .text-neutral-700,
+  [data-theme="dark"] .text-neutral-800,
+  [data-theme="dark"] .text-neutral-900 { color: var(--text-primary) !important; }
+
+  [data-theme="dark"] .text-slate-500,
+  [data-theme="dark"] .text-slate-600,
+  [data-theme="dark"] .text-gray-500,
+  [data-theme="dark"] .text-gray-600,
+  [data-theme="dark"] .text-zinc-500,
+  [data-theme="dark"] .text-zinc-600,
+  [data-theme="dark"] .text-neutral-500,
+  [data-theme="dark"] .text-neutral-600 { color: var(--text-secondary) !important; }
+
+  [data-theme="dark"] .text-slate-400,
+  [data-theme="dark"] .text-gray-400,
+  [data-theme="dark"] .text-zinc-400,
+  [data-theme="dark"] .text-neutral-400 { color: var(--text-muted) !important; }
+
+  /* Inline hex literals — slate-900 / 800 / 700 / 600 / 500 (lowercase
+     and uppercase variants) and a couple of common gray shades. */
+  [data-theme="dark"] [style*="color: #0F172A"],
+  [data-theme="dark"] [style*="color:#0F172A"],
+  [data-theme="dark"] [style*="color: #0f172a"],
+  [data-theme="dark"] [style*="color:#0f172a"],
+  [data-theme="dark"] [style*="color: #1E293B"],
+  [data-theme="dark"] [style*="color:#1E293B"],
+  [data-theme="dark"] [style*="color: #1e293b"],
+  [data-theme="dark"] [style*="color: #111827"],
+  [data-theme="dark"] [style*="color: #1F2937"],
+  [data-theme="dark"] [style*="color: #1f2937"] { color: var(--text-primary) !important; }
+
+  [data-theme="dark"] [style*="color: #334155"],
+  [data-theme="dark"] [style*="color: #475569"],
+  [data-theme="dark"] [style*="color:#475569"],
+  [data-theme="dark"] [style*="color: #374151"],
+  [data-theme="dark"] [style*="color: #4B5563"],
+  [data-theme="dark"] [style*="color: #4b5563"] { color: var(--text-secondary) !important; }
+
+  [data-theme="dark"] [style*="color: #64748B"],
+  [data-theme="dark"] [style*="color:#64748B"],
+  [data-theme="dark"] [style*="color: #64748b"],
+  [data-theme="dark"] [style*="color:#64748b"],
+  [data-theme="dark"] [style*="color: #6B7280"],
+  [data-theme="dark"] [style*="color: #6b7280"] { color: var(--text-muted) !important; }
+
   /* Legacy `.light-theme` class is now a no-op alias for the default
      (light) state. Components that still apply it won't break. */
   .light-theme { color-scheme: light; }
