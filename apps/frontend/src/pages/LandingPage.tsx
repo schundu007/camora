@@ -143,7 +143,7 @@ export default function LandingPage() {
       <SiteNav variant="light" />
 
       {/* ═══════════ 1. HERO ═══════════ */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-6 text-center" style={{ background: 'linear-gradient(180deg, var(--cam-mist) 0%, #FFFFFF 100%)' }}>
+      <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-6 text-center" style={{ background: 'linear-gradient(180deg, var(--cam-mist) 0%, var(--bg-app) 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
@@ -191,8 +191,8 @@ export default function LandingPage() {
       <section className="py-10 overflow-hidden bg-white">
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: 'var(--text-muted)' }}>Trusted by engineers at</p>
         <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, #FFFFFF, transparent)' }} />
-          <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to left, #FFFFFF, transparent)' }} />
+          <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, var(--bg-surface), transparent)' }} />
+          <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to left, var(--bg-surface), transparent)' }} />
           <div className="flex" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
             {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
               <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}

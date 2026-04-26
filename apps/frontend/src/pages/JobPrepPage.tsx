@@ -631,21 +631,21 @@ export default function JobPrepPage() {
                   </div>
                 )}
                 {urlAnalysis.system_design_focus?.length > 0 && (
-                  <div style={{ background: '#eff6ff', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>System Design Focus</p>
+                  <div style={{ background: 'var(--accent-subtle)', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>System Design Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.system_design_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#1e40af', background: '#dbeafe', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: 'var(--accent)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>{t}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {urlAnalysis.behavioral_focus?.length > 0 && (
-                  <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border)' }}>
                     <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--cam-gold-leaf-text)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: 'var(--cam-gold-leaf-text)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: 'var(--cam-gold-leaf-text)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>{t}</span>
                       ))}
                     </div>
                   </div>
