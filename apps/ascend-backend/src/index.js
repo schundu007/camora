@@ -68,6 +68,7 @@ import lumoraAnalyticsRouter from './lumora/routes/analytics.js';
 import lumoraStoriesRouter from './lumora/routes/stories.js';
 
 import { authenticate } from './middleware/authenticate.js';
+import { hourBudgetGate } from './middleware/hourBudgetGate.js';
 
 // Initialize Redis for problem caching
 initRedis();
@@ -955,17 +956,18 @@ app.get('/api/diagram/test', authenticate, async (req, res) => {
 
 // ─── Protected routes (require authentication) ───
 
-// AI-intensive routes get stricter rate limiting
-app.use('/api/solve', authenticate, aiLimiter, solveRouter);
-app.use('/api/analyze', authenticate, aiLimiter, analyzeRouter);
+// AI-intensive routes get stricter rate limiting + team-pool gating.
+// hourBudgetGate sits AFTER authenticate (needs req.user) and BEFORE aiLimiter.
+app.use('/api/solve', authenticate, hourBudgetGate, aiLimiter, solveRouter);
+app.use('/api/analyze', authenticate, hourBudgetGate, aiLimiter, analyzeRouter);
 app.use('/api/fetch', authenticate, apiLimiter, fetchRouter);
 app.use('/api/run', authenticate, apiLimiter, runRouter);
-app.use('/api/fix', authenticate, aiLimiter, fixRouter);
-app.use('/api/transcribe', authenticate, aiLimiter, transcribeRouter);
-app.use('/api/ascend/prep', authenticate, apiLimiter, ascendPrepRouter);
-app.use('/api/ascend', authenticate, aiLimiter, ascendRouter);
-app.use('/api/diagram', authenticate, aiLimiter, diagramRouter);
-app.use('/api/extract', authenticate, aiLimiter, extractRouter);
+app.use('/api/fix', authenticate, hourBudgetGate, aiLimiter, fixRouter);
+app.use('/api/transcribe', authenticate, hourBudgetGate, aiLimiter, transcribeRouter);
+app.use('/api/ascend/prep', authenticate, hourBudgetGate, apiLimiter, ascendPrepRouter);
+app.use('/api/ascend', authenticate, hourBudgetGate, aiLimiter, ascendRouter);
+app.use('/api/diagram', authenticate, hourBudgetGate, aiLimiter, diagramRouter);
+app.use('/api/extract', authenticate, hourBudgetGate, aiLimiter, extractRouter);
 
 // Onboarding routes (require authentication)
 app.use('/api/onboarding', authenticate, apiLimiter, onboardingRouter);
@@ -994,6 +996,10 @@ app.use('/api/v1/jobs', apiLimiter, jobsRouter);
 // so the frontend's VITE_LUMORA_API_URL=https://lumorab.cariara.com
 // (which actually points at this ascend service) gets real responses
 // instead of 404s for every Lumora page.
+// Lumora LLM routes: pool gate runs after their internal authenticate
+// middleware (mounted inside the router), so we can't put hourBudgetGate
+// before authenticate at this level. Instead we attach it as the LAST
+// middleware before the router so req.user is populated by then.
 app.use('/api/v1/transcribe', aiLimiter, lumoraTranscriptionRouter);
 app.use('/api/v1/inference', aiLimiter, lumoraInferenceRouter);
 // Frontend posts to /api/v1/stream — forward to the inference router's

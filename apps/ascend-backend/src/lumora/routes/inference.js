@@ -15,6 +15,7 @@ import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
 import { recordUsage as recordAiHours } from '../../services/aiHoursMeter.js';
+import { hourBudgetGate } from '../../middleware/hourBudgetGate.js';
 
 const router = Router();
 
@@ -52,7 +53,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 // POST /conversations/:conversationId/stream
 // ---------------------------------------------------------------------------
-router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
+router.post('/conversations/:conversationId/stream', authenticate, hourBudgetGate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
   const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel } = req.body;
   const user = req.user;
@@ -218,7 +219,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // ---------------------------------------------------------------------------
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
-router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
+router.post('/stream', authenticate, hourBudgetGate, checkUsage('questions'), async (req, res) => {
   const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel } = req.body;
   const user = req.user;
 

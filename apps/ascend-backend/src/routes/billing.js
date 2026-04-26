@@ -707,6 +707,21 @@ async function handleInvoicePaid(invoice) {
     );
   }
 
+  // Phase 2B: roll over the team's hour pool so the next period starts fresh.
+  // Only Pro Max teams have a recurring pool; one-time SKUs (Business Starter,
+  // Business Desktop) intentionally don't reset.
+  if (planType === 'pro_max_monthly' || planType === 'pro_max_yearly') {
+    try {
+      const { rollOverTeamPoolForUser } = await import('../services/teamService.js');
+      const rolled = await rollOverTeamPoolForUser(subscription.user_id);
+      if (rolled) {
+        logger.info({ userId: subscription.user_id, teamId: rolled.id, planType }, 'Team pool rolled over');
+      }
+    } catch (err) {
+      logger.warn({ err: err.message, userId: subscription.user_id }, '[teams] rollover skipped on invoice.paid');
+    }
+  }
+
   logger.info({ userId: subscription.user_id, planType }, 'Invoice paid — subscription renewed');
 }
 

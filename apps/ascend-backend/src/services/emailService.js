@@ -105,3 +105,86 @@ export async function sendTrialEmail({ to, name, days, trialEndsAt }) {
     return null;
   }
 }
+
+/**
+ * Team invite — sent when a Pro Max owner or Business buyer invites a mate.
+ * Returns the Resend response on success, null on failure or if the API key
+ * isn't configured (caller treats that as the manual-share fallback).
+ */
+export async function sendTeamInviteEmail({ to, ownerName, ownerEmail, teamName, inviteUrl, expiresAt }) {
+  if (!resend) {
+    console.warn('[Email] RESEND_API_KEY not set, falling back to manual invite share');
+    return null;
+  }
+
+  const owner = ownerName || ownerEmail || 'Someone';
+  const team = teamName || 'their Camora team';
+  const expires = expiresAt ? new Date(expiresAt).toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  }) : null;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+
+    <div style="text-align:center;margin-bottom:32px;">
+      <img src="https://camora.cariara.com/camora-logo.png" alt="Camora" width="48" height="48" style="border-radius:12px;">
+    </div>
+
+    <div style="background:#111111;border:1px solid #222;border-radius:16px;padding:36px 32px;">
+      <h1 style="color:#ffffff;font-size:22px;font-weight:700;margin:0 0 12px;line-height:1.3;">
+        ${owner} invited you to ${team}.
+      </h1>
+      <p style="color:#a1a1aa;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        You'll share their pool of AI hours — Lumora live interview help, coding solutions,
+        and prep generation — at no extra cost to you. Click below to join.
+      </p>
+
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${inviteUrl}"
+           style="display:inline-block;background:#26619C;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:13px 28px;border-radius:10px;">
+          Join the team
+        </a>
+      </div>
+
+      ${expires ? `<p style="color:#71717a;font-size:12px;margin:24px 0 0;text-align:center;">This invite expires on ${expires}.</p>` : ''}
+
+      <p style="color:#52525b;font-size:11px;margin:24px 0 0;line-height:1.6;">
+        If the button doesn't work, paste this link in your browser:<br>
+        <span style="color:#71717a;word-break:break-all;">${inviteUrl}</span>
+      </p>
+    </div>
+
+    <div style="text-align:center;margin-top:24px;">
+      <p style="color:#52525b;font-size:11px;margin:0;">
+        Camora — interview prep, live AI help, in one tool.
+      </p>
+      <p style="color:#3f3f46;font-size:11px;margin:8px 0 0;">
+        <a href="https://camora.cariara.com" style="color:#3f3f46;text-decoration:underline;">camora.cariara.com</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>`;
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: `${owner} invited you to ${team} on Camora`,
+      html,
+    });
+    console.log(`[Email] Team invite sent to ${to}:`, result);
+    return result;
+  } catch (err) {
+    console.error(`[Email] Failed to send team invite to ${to}:`, err.message);
+    return null;
+  }
+}

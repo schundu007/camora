@@ -12,6 +12,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { transcribe } from '../services/transcription.js';
 import { checkLimit, incrementUsage } from '../services/usage.js';
 import { recordUsage } from '../../services/aiHoursMeter.js';
+import { hourBudgetGate } from '../../middleware/hourBudgetGate.js';
 
 const router = Router();
 
@@ -127,6 +128,7 @@ async function diarizeSpeaker(userId, audioBuffer, filename) {
 router.post(
   '/',
   authenticate,
+  hourBudgetGate,
   upload.single('file'),
   async (req, res) => {
     const start = performance.now();

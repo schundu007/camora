@@ -181,6 +181,96 @@ export async function getTeamUsageBreakdown(teamId) {
   };
 }
 
+// ── Pool exhaustion enforcement (Phase 2A) ─────────────────────────────────
+
+/**
+ * Check whether the user's team still has hours in their current period.
+ * Returns:
+ *   { has_team: false }                        — solo user (caller decides what to do)
+ *   { has_team: true, ok: true, ... }          — pool has hours remaining
+ *   { has_team: true, ok: false, reason: ... } — pool exhausted; caller should 429
+ *
+ * Cheap query — single round-trip joining teams + ai_hours_usage by team_id +
+ * created_at >= period_start. Acceptable on every LLM call; if it ever shows up
+ * as a hot-path concern, the result can be cached in Redis with a 30s TTL.
+ */
+export async function checkTeamHourBudget(userId) {
+  const teamId = await getTeamIdForUser(userId);
+  if (!teamId) return { has_team: false };
+
+  try {
+    const r = await query(
+      `SELECT t.id, t.plan_type, t.hours_pool_total, t.hours_pool_period_start,
+              COALESCE((
+                SELECT SUM(seconds) FROM ai_hours_usage
+                 WHERE team_id = t.id AND created_at >= t.hours_pool_period_start
+              ), 0) AS used_seconds
+         FROM teams t WHERE t.id = $1`,
+      [teamId],
+    );
+    if (!r.rows[0]) return { has_team: false };
+    const t = r.rows[0];
+    const poolHours = Number(t.hours_pool_total || 0);
+    if (poolHours <= 0) {
+      // business_desktop_lifetime has no AI pool — let calls through (the
+      // owner is expected to top up via packs or a Business Starter sub).
+      return { has_team: true, ok: true, pool_hours: 0, used_hours: 0, remaining_hours: Infinity };
+    }
+    const usedHours = Number(t.used_seconds || 0) / 3600;
+    const remaining = poolHours - usedHours;
+    if (remaining <= 0) {
+      return {
+        has_team: true,
+        ok: false,
+        reason: 'TEAM_POOL_EXHAUSTED',
+        team_id: teamId,
+        pool_hours: poolHours,
+        used_hours: usedHours,
+        remaining_hours: 0,
+      };
+    }
+    return {
+      has_team: true,
+      ok: true,
+      team_id: teamId,
+      pool_hours: poolHours,
+      used_hours: usedHours,
+      remaining_hours: remaining,
+    };
+  } catch (err) {
+    logger.warn({ err: err.message, userId }, '[teamService] checkTeamHourBudget failed');
+    // Fail open: an internal error checking the budget shouldn't block a paying
+    // user from making a call. The metering record will still write.
+    return { has_team: false };
+  }
+}
+
+// ── Period rollover (Phase 2B) ─────────────────────────────────────────────
+
+/**
+ * Reset a team's hours_pool_period_start to NOW() so usage rolls forward.
+ * Called from the Stripe invoice.paid webhook on subscription renewal.
+ * One-time SKUs (business_starter, business_desktop_lifetime) are explicitly
+ * not rolled over — those packs are spent until the owner buys another.
+ */
+export async function rollOverTeamPoolForUser(userId) {
+  try {
+    const r = await query(
+      `UPDATE teams
+          SET hours_pool_period_start = NOW(),
+              updated_at = NOW()
+        WHERE owner_user_id = $1
+          AND plan_type IN ('pro_max_monthly', 'pro_max_yearly')
+        RETURNING id, plan_type`,
+      [userId],
+    );
+    return r.rows[0] || null;
+  } catch (err) {
+    logger.warn({ err: err.message, userId }, '[teamService] rollover failed');
+    return null;
+  }
+}
+
 // ── Team CRUD ──────────────────────────────────────────────────────────────
 
 /**
