@@ -46,9 +46,12 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
     .toUpperCase();
 
   const isDark = variant === 'dark';
-  const textColor = isDark ? 'rgba(255,255,255,0.9)' : 'var(--text-primary)';
-  const mutedColor = isDark ? 'rgba(255,255,255,0.6)' : 'var(--text-muted)';
-  const hoverBg = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)';
+  // Hardcode high-contrast values so the username/email read clearly on
+  // any surface — bypassing data-theme cascade that was occasionally
+  // flipping --text-primary to a light value on the white nav.
+  const textColor = isDark ? '#FFFFFF' : '#020617';
+  const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : '#475569';
+  const hoverBg = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(2,6,23,0.06)';
 
   const positionStyles: Record<string, string> = {
     'below-right': 'right-0 top-full mt-2',
@@ -79,7 +82,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
           </div>
         )}
         {showName && !compact && (
-          <span className="text-[13px] font-bold truncate max-w-[120px] hidden md:inline" style={{ color: textColor }}>
+          <span className="text-sm font-bold truncate max-w-[140px] hidden md:inline" style={{ color: textColor }}>
             {user.name?.split(' ')[0] || 'Account'}
           </span>
         )}
