@@ -4,13 +4,10 @@
    Maps a topic id -> layeredDesign array, used by TopicDetail.jsx as the
    FALLBACK source of truth when the topic data file itself doesn't carry
    an inline layeredDesign. The renderer (RoughLayeredDiagram) consumes
-   this shape directly.
-
-   First commit ships an EMPTY map — runs of the extractor script will
-   populate it. Topics without an inline `layeredDesign` and without an
-   entry here continue to render their PNG / Python-generated diagram. */
+   this shape directly. */
 
 import type { Layer } from '../../../../components/capra/docs/RoughLayeredDiagram.types';
 
 export const GENERATED_LAYERED_DESIGN: Record<string, Layer[]> = {
+
 };

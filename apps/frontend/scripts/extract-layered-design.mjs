@@ -241,8 +241,12 @@ async function writeOutput(allEntries) {
    this shape directly. */
 `;
 
+  // The relative path from __generated/layered-design.ts up to the
+  // RoughLayeredDiagram.types module needs to climb 4 dirs:
+  //   src/data/capra/topics/__generated/layered-design.ts
+  //   -> ../../../../components/capra/docs/RoughLayeredDiagram.types
   const out = `${banner}
-import type { Layer } from '../../../components/capra/docs/RoughLayeredDiagram.types';
+import type { Layer } from '../../../../components/capra/docs/RoughLayeredDiagram.types';
 
 export const GENERATED_LAYERED_DESIGN: Record<string, Layer[]> = {
 ${body}
