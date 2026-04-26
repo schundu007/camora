@@ -1219,20 +1219,21 @@ export default function DocsPage({ onBack }) {
 
                   {/* Category Introduction Heroes */}
                   {activePage === 'coding' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="cpu" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Master the building blocks of technical interviews. From arrays and strings to trees, graphs, and dynamic programming — practice the patterns that top companies like Google, Meta, and Amazon test most frequently.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1242,20 +1243,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'system-design' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="systemDesign" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="systemDesign" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>System Design</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Learn to design scalable, reliable systems from the ground up. Study real-world architectures like URL shorteners, messaging platforms, and distributed databases — the exact problems asked at senior-level interviews.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1265,20 +1267,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'behavioral' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="users" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Behavioral Interviews</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Interviews</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Craft compelling stories using the STAR method. Prepare answers for leadership, conflict resolution, and teamwork questions — the human side that determines culture fit at every company from startups to FAANG.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1288,20 +1291,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'low-level' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="layers" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Deep-dive into object-oriented design, SOLID principles, and design patterns. Practice designing class hierarchies for parking lots, elevators, and chess games — the LLD round that separates mid from senior engineers.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1311,20 +1315,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'microservices' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="grid" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="grid" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Understand distributed system patterns used by Netflix, Uber, and Spotify. Learn service discovery, circuit breakers, saga patterns, and event-driven architectures that power modern cloud-native applications.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1334,20 +1339,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'databases' && !selectedTopic && !sqlPlaygroundOpen && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="database" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="database" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Master database internals and SQL queries for interviews. Understand indexing, replication, partitioning, consistency models, window functions, CTEs, and complex joins — the exact topics asked at Meta, Amazon, and top firms.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1357,20 +1363,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'projects' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="code" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Build impressive projects that showcase real engineering skills. From full-stack web apps to CLI tools and API services — create the portfolio pieces that make hiring managers take notice.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1380,20 +1387,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'roadmaps' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="trendingUp" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="trendingUp" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Follow structured learning paths tailored to your target role. Whether you're aiming for frontend, backend, DevOps, or ML engineering — get a clear roadmap from where you are to where you want to be.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
@@ -1403,20 +1411,21 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'eng-blogs' && !selectedTopic && (
-                    <div className="mb-6 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                      <div className="rounded-[15px] p-6" style={{ background: 'var(--bg-elevated)', }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
-                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                            <Icon name="bookOpen" size={28} style={{ color: 'var(--accent)' }} />
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="bookOpen" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Learn from the engineers who built the systems you'll be asked about. Curated posts from Netflix, Uber, Stripe, and more — real-world context that elevates your system design answers beyond textbook theory.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
                               ))}
                             </div>
                           </div>
