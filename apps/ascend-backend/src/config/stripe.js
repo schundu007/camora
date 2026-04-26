@@ -9,23 +9,21 @@ export const stripe = stripeSecretKey
     })
   : null;
 
-// Pricing v2 — fixed Capra content + metered AI hours.
+// Pricing v2 — 3 plans (Free / Pro / Pro Max) with monthly + yearly billing.
+// Yearly is ~17% cheaper than 12× monthly; Pro Max gets a 10% subscriber
+// discount on hours ($9/hr vs $10/hr standard).
+//
 // Set each STRIPE_PRICE_* env var to the matching Stripe Dashboard price ID.
 export const STRIPE_PRICES = {
-  CAPRA_CONTENT_MONTHLY: process.env.STRIPE_PRICE_CAPRA_CONTENT_MONTHLY,    // $19/mo  — content only, no hours
-  CAPRA_CONTENT_YEARLY: process.env.STRIPE_PRICE_CAPRA_CONTENT_YEARLY,      // $99/yr  — content only, no hours
-  STARTER: process.env.STRIPE_PRICE_STARTER,                                // $29/mo  — content + 4 hrs
-  PRO: process.env.STRIPE_PRICE_PRO,                                        // $59/mo  — content + 10 hrs (popular)
-  PRO_MAX: process.env.STRIPE_PRICE_PRO_MAX,                                // $99/mo  — content + 25 hrs
-  ANNUAL_PRO: process.env.STRIPE_PRICE_ANNUAL_PRO,                          // $499/yr — content + 120 hrs pooled
+  PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,                 // $29/mo  — 2 AI hrs
+  PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,                   // $290/yr — 24 AI hrs
+  PRO_MAX_MONTHLY: process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,         // $79/mo  — 8 AI hrs (10% off)
+  PRO_MAX_YEARLY: process.env.STRIPE_PRICE_PRO_MAX_YEARLY,           // $790/yr — 96 AI hrs (10% off)
   DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT, // $99 one-time
 
-  // Hour top-up packs (one-time, 90-day expiry enforced server-side).
-  // 1H/3H are student-friendly entry points; per-hour rate decreases with volume.
+  // Hour top-up packs (one-time, 90-day expiry, flat $10/hr)
   TOPUP_1H: process.env.STRIPE_PRICE_TOPUP_1H,
-  TOPUP_3H: process.env.STRIPE_PRICE_TOPUP_3H,
   TOPUP_5H: process.env.STRIPE_PRICE_TOPUP_5H,
-  TOPUP_10H: process.env.STRIPE_PRICE_TOPUP_10H,
   TOPUP_25H: process.env.STRIPE_PRICE_TOPUP_25H,
 };
 
@@ -35,12 +33,10 @@ export const STRIPE_PRICES = {
  */
 export function warnMissingPriceIds() {
   const required = [
-    'CAPRA_CONTENT_MONTHLY',
-    'CAPRA_CONTENT_YEARLY',
-    'STARTER',
-    'PRO',
-    'PRO_MAX',
-    'ANNUAL_PRO',
+    'PRO_MONTHLY',
+    'PRO_YEARLY',
+    'PRO_MAX_MONTHLY',
+    'PRO_MAX_YEARLY',
   ];
   const missing = required.filter((k) => !STRIPE_PRICES[k]);
   if (missing.length) {
@@ -53,7 +49,7 @@ export function warnMissingPriceIds() {
 
 export function isStripeConfigured() {
   if (!stripeSecretKey) return false;
-  return !!(STRIPE_PRICES.CAPRA_CONTENT_MONTHLY || STRIPE_PRICES.STARTER || STRIPE_PRICES.PRO);
+  return !!(STRIPE_PRICES.PRO_MONTHLY || STRIPE_PRICES.PRO_MAX_MONTHLY);
 }
 
 export default stripe;

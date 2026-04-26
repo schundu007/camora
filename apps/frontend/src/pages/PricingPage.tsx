@@ -96,45 +96,50 @@ export default function PricingPage() {
           <FeatureMatrix
             highlightPlanId="pro"
             plans={[
-              { id: 'free',                  name: 'Free' },
-              { id: 'capra_content_monthly', name: 'Content' },
-              { id: 'starter',               name: 'Starter' },
-              { id: 'pro',                   name: 'Pro',        highlight: 'Popular' },
-              { id: 'pro_max',               name: 'Pro Max' },
-              { id: 'annual_pro',            name: 'Annual Pro', highlight: 'Best value' },
+              { id: 'free',    name: 'Free' },
+              { id: 'pro',     name: 'Pro',     highlight: 'Popular' },
+              { id: 'pro_max', name: 'Pro Max', highlight: 'Best value' },
             ]}
             sections={[
               {
-                title: 'Prep content',
+                title: 'Pricing',
                 rows: [
-                  { feature: 'Browse 800+ prep topics', values: { free: true, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
-                  { feature: 'Unlimited prep topics', hint: 'Free tier limited to 1 topic per category', values: { free: false, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
-                  { feature: 'Architecture diagrams', values: { free: false, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
-                  { feature: 'Company-specific prep', values: { free: false, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Monthly', values: { free: '$0', pro: '$29/mo', pro_max: '$79/mo' } },
+                  { feature: 'Yearly', hint: 'Save 17% vs paying monthly', values: { free: '$0', pro: '$290/yr', pro_max: '$790/yr' } },
                 ],
               },
               {
                 title: 'AI hours',
                 rows: [
-                  { feature: 'Included AI hours', hint: 'Lumora live + coding helper + prep generation', values: { free: '30 min lifetime', capra_content_monthly: 'PAYG only', starter: '1 / mo', pro: '4 / mo', pro_max: '8 / mo', annual_pro: '50 / yr pooled' } },
-                  { feature: 'Per-hour rate', hint: 'PAYG ceiling is $10/hr; subscribers earn loyalty discount', values: { free: '—', capra_content_monthly: '$10/hr', starter: '$10/hr', pro: '$9.50/hr', pro_max: '$9.00/hr', annual_pro: '$9.00/hr' } },
-                  { feature: 'Subscriber discount', values: { free: '—', capra_content_monthly: '—', starter: '—', pro: 'Save 5%', pro_max: 'Save 10%', annual_pro: 'Save 10%' } },
-                  { feature: 'Voice filtering', values: { free: false, capra_content_monthly: false, starter: false, pro: true, pro_max: true, annual_pro: true } },
+                  { feature: 'Included monthly', hint: 'Lumora live + coding helper + prep generation', values: { free: '30 min lifetime', pro: '2 / mo', pro_max: '8 / mo' } },
+                  { feature: 'Included yearly', values: { free: '30 min lifetime', pro: '24 / yr', pro_max: '96 / yr' } },
+                  { feature: 'Per-hour rate', hint: 'PAYG ceiling is $10/hr', values: { free: '—', pro: '$10/hr', pro_max: '$9/hr' } },
+                  { feature: 'Loyalty discount', values: { free: '—', pro: '—', pro_max: 'Save 10%' } },
                 ],
               },
               {
-                title: 'Apps & access',
+                title: 'Prep content',
                 rows: [
-                  { feature: 'Web app', values: { free: true, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
-                  { feature: 'Desktop app (stealth mode)', values: { free: false, capra_content_monthly: false, starter: false, pro: true, pro_max: true, annual_pro: true } },
-                  { feature: 'Priority support', values: { free: false, capra_content_monthly: false, starter: false, pro: false, pro_max: true, annual_pro: true } },
+                  { feature: 'Browse 800+ prep topics', values: { free: true, pro: true, pro_max: true } },
+                  { feature: 'Unlimited prep topics', hint: 'Free tier limited to 1 topic per category', values: { free: false, pro: true, pro_max: true } },
+                  { feature: 'Architecture diagrams', values: { free: false, pro: true, pro_max: true } },
+                  { feature: 'Company-specific prep', values: { free: false, pro: true, pro_max: true } },
+                ],
+              },
+              {
+                title: 'Apps & support',
+                rows: [
+                  { feature: 'Web app', values: { free: true, pro: true, pro_max: true } },
+                  { feature: 'Desktop app (stealth mode)', values: { free: false, pro: false, pro_max: true } },
+                  { feature: 'Voice filtering', values: { free: false, pro: false, pro_max: true } },
+                  { feature: 'Priority support', values: { free: false, pro: false, pro_max: true } },
                 ],
               },
               {
                 title: 'Billing',
                 rows: [
-                  { feature: 'Cancel anytime', values: { free: true, capra_content_monthly: true, starter: true, pro: true, pro_max: true, annual_pro: true } },
-                  { feature: 'Locked-in pricing', hint: 'Future price increases do not apply', values: { free: false, capra_content_monthly: false, starter: false, pro: false, pro_max: false, annual_pro: true } },
+                  { feature: 'Cancel anytime', values: { free: true, pro: true, pro_max: true } },
+                  { feature: 'Top-ups stack with plan', hint: 'Buy 1h $10 / 5h $50 / 25h $250 anytime', values: { free: true, pro: true, pro_max: true } },
                 ],
               },
             ]}
