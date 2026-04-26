@@ -549,9 +549,15 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                         </div>
                         <ResultTable columns={problem.expectedOutput.columns} rows={problem.expectedOutput.rows} />
                       </>
-                    ) : (
+                    ) : problem.tables[slot] ? (
+                      // Guard the slot lookup. cardOrder is reset in a useEffect
+                      // AFTER render, so the first render after switching to a
+                      // problem with fewer tables can have stale slot indices
+                      // pointing past the new problem.tables array. Render null
+                      // for that frame; the effect rebuilds cardOrder on the
+                      // next pass and the missing card reappears correctly.
                       <SchemaTable table={problem.tables[slot]} />
-                    )}
+                    ) : null}
                   </div>
                 );
               })}
