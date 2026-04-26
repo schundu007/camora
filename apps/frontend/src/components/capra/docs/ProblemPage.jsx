@@ -332,21 +332,22 @@ export default function ProblemPage({ slug, onBack }) {
 
   return (
     <div className="h-screen bg-[var(--bg-app)] flex flex-col">
-      {/* Header */}
-      <div className="flex-shrink-0 bg-[var(--bg-app)] border-b border-[var(--border)]">
+      {/* Header — LeetCode navy + 2px gold underline */}
+      <div className="flex-shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-[var(--bg-elevated)] rounded transition-colors"
+                className="p-2 hover:bg-white/10 rounded transition-colors"
+                style={{ color: 'rgba(255,255,255,0.85)' }}
               >
-                <Icon name="arrowLeft" size={18} className="text-[var(--text-muted)]" />
+                <Icon name="arrowLeft" size={18} />
               </button>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-[var(--text-muted)] font-mono">#{problem.id}</span>
-                <h1 className="text-xl font-bold text-[var(--text-primary)]">{problem.name}</h1>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColor.bg} ${difficultyColor.text}`}>
+                <span className="text-sm font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>#{problem.id}</span>
+                <h1 className="text-xl font-bold text-white">{problem.name}</h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
                   {problem.difficulty}
                 </span>
               </div>
@@ -357,7 +358,8 @@ export default function ProblemPage({ slug, onBack }) {
                   href={problem.leetcodeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] rounded text-sm font-medium transition-colors flex items-center gap-2"
+                  className="px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.25)' }}
                 >
                   <Icon name="externalLink" size={14} />
                   LeetCode

@@ -606,10 +606,10 @@ export default function PracticePage() {
 
       {/* ═══════════ Main Content ═══════════ */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* ── View Tabs — compact bar ── */}
-        <div className="flex items-center gap-4 px-4 sm:px-6 py-2 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)', flexShrink: 0 }}>
-          <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Practice</h1>
-          <div style={{ display: 'flex', gap: 2, padding: 2, background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
+        {/* ── View Tabs — LeetCode navy + gold underline ── */}
+        <div className="flex items-center gap-4 px-4 sm:px-6 py-2 flex-shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+          <h1 style={{ fontSize: 16, fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Practice</h1>
+          <div style={{ display: 'flex', gap: 2, padding: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 8 }}>
             {[
               { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
@@ -623,8 +623,8 @@ export default function PracticePage() {
                   display: 'flex', alignItems: 'center', gap: 4,
                   padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12, fontWeight: 600,
-                  background: activeView === tab.key ? 'var(--accent)' : 'transparent',
-                  color: activeView === tab.key ? '#FFFFFF' : 'var(--text-secondary)',
+                  background: activeView === tab.key ? 'var(--cam-gold-leaf)' : 'transparent',
+                  color: activeView === tab.key ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
                   transition: 'all 0.15s',
                 }}
               >
