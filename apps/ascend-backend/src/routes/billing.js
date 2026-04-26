@@ -4,6 +4,7 @@ import { stripe, STRIPE_PRICES, isStripeConfigured } from '../config/stripe.js';
 import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
+import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { logger } from '../middleware/requestLogger.js';
 
 // Valid paid plan_type values — source of truth; add any new Stripe SKU here
@@ -349,6 +350,48 @@ router.post('/portal', jwtAuth, async (req, res) => {
   } catch (error) {
     logger.error({ error: error.message }, 'Portal session creation failed');
     res.status(500).json({ error: 'Failed to create portal session' });
+  }
+});
+
+/**
+ * Auto-topup config for solo users (team owners use the per-team endpoint).
+ * GET /api/billing/auto-topup → current config
+ * PATCH /api/billing/auto-topup → { pack, monthly_cap_cents }
+ */
+router.get('/auto-topup', jwtAuth, async (req, res) => {
+  try {
+    const r = await query(
+      'SELECT auto_topup_pack, auto_topup_monthly_cap_cents FROM ascend_subscriptions WHERE user_id = $1',
+      [req.user.id],
+    );
+    return res.json({
+      pack: r.rows[0]?.auto_topup_pack || null,
+      monthly_cap_cents: r.rows[0]?.auto_topup_monthly_cap_cents || null,
+    });
+  } catch (err) {
+    logger.error({ err: err.message }, '[billing] auto-topup get failed');
+    return res.status(500).json({ error: 'Failed to load auto top-up config' });
+  }
+});
+
+router.patch('/auto-topup', jwtAuth, async (req, res) => {
+  try {
+    const { pack, monthly_cap_cents } = req.body || {};
+    const valid = validateAutoTopupConfig({ pack, monthlyCapCents: monthly_cap_cents });
+    if (!valid.ok) return res.status(400).json(valid);
+    await query(
+      `INSERT INTO ascend_subscriptions (user_id, plan_type, status, auto_topup_pack, auto_topup_monthly_cap_cents)
+       VALUES ($1, 'free', 'active', $2, $3)
+       ON CONFLICT (user_id) DO UPDATE
+         SET auto_topup_pack = $2,
+             auto_topup_monthly_cap_cents = $3,
+             updated_at = NOW()`,
+      [req.user.id, valid.pack, valid.monthly_cap_cents],
+    );
+    return res.json({ ok: true, pack: valid.pack, monthly_cap_cents: valid.monthly_cap_cents });
+  } catch (err) {
+    logger.error({ err: err.message }, '[billing] auto-topup patch failed');
+    return res.status(500).json({ error: 'Failed to update auto top-up' });
   }
 });
 

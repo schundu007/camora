@@ -1,4 +1,5 @@
 import { checkTeamHourBudget, checkPersonalHourBudget } from '../services/teamService.js';
+import { tryAutoTopup } from '../services/autoTopupService.js';
 
 /**
  * Pool exhaustion gate for AI-hour-using routes.
@@ -24,8 +25,17 @@ export async function hourBudgetGate(req, res, next) {
     const team = await checkTeamHourBudget(userId);
     if (team.has_team) {
       if (!team.ok) {
-        const status = team.reason === 'MEMBER_CAP_EXCEEDED' ? 429 : 429;
-        return res.status(status).json({
+        // Per-member cap can NEVER be unblocked by an auto-topup — that
+        // belongs to the individual member and the cap is owner policy.
+        // Pool exhaustion CAN attempt auto-topup if the team owner enabled it.
+        if (team.reason === 'TEAM_POOL_EXHAUSTED') {
+          const charged = await tryAutoTopup({ userId, teamId: team.team_id });
+          if (charged.ok) {
+            res.setHeader('X-Auto-Topup-Charged', `${charged.hours}`);
+            return next();
+          }
+        }
+        return res.status(429).json({
           error: team.reason === 'MEMBER_CAP_EXCEEDED'
             ? `You've used your per-member cap (${team.cap_hours} hr) for this period.`
             : 'Your team has used all of its AI hours for this period.',
@@ -45,6 +55,12 @@ export async function hourBudgetGate(req, res, next) {
     const personal = await checkPersonalHourBudget(userId);
     if (personal.fail_open) return next(); // internal error → don't block paying user
     if (!personal.ok) {
+      // Same auto-topup escape hatch for solo users who opted in.
+      const charged = await tryAutoTopup({ userId });
+      if (charged.ok) {
+        res.setHeader('X-Auto-Topup-Charged', `${charged.hours}`);
+        return next();
+      }
       return res.status(429).json({
         error: personal.plan_type === 'free'
           ? "You've used your 30 minutes of free AI time. Subscribe to Pro for 2 hrs/mo, or buy a top-up pack."

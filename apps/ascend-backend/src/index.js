@@ -351,7 +351,20 @@ async function runMigrations() {
     // (ascend_stripe_events) is bypassed somehow (manual replay), the same
     // checkout session can't credit twice.
     await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_session ON ai_hour_topups(stripe_session_id) WHERE stripe_session_id IS NOT NULL');
+    // Auto-charge tracking — distinguishes auto-topups from manual checkout
+    // top-ups so the monthly cap is enforced correctly.
+    await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS auto_charged BOOLEAN NOT NULL DEFAULT false");
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_auto ON ai_hour_topups(user_id, created_at DESC) WHERE auto_charged = true');
     console.log('[Migrations] ai_hour_topups table ensured');
+
+    // Auto-topup preferences (Phase 6) — opt-in by definition. NULLs mean
+    // the user has never enabled it. auto_topup_monthly_cap_cents protects
+    // against runaway charges; default OFF when columns are added.
+    await query("ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS auto_topup_pack VARCHAR(20)");
+    await query("ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS auto_topup_monthly_cap_cents INTEGER");
+    await query("ALTER TABLE teams ADD COLUMN IF NOT EXISTS auto_topup_pack VARCHAR(20)");
+    await query("ALTER TABLE teams ADD COLUMN IF NOT EXISTS auto_topup_monthly_cap_cents INTEGER");
+    console.log('[Migrations] auto-topup columns ensured');
 
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
