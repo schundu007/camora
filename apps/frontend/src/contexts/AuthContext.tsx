@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { setStoredToken } from '../utils/tokenStore';
+import { isOwnerEmail } from '../lib/owner';
 
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -256,11 +257,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSubscriptionLoading(false);
   }, []);
 
-  // Fetch on token availability
+  // Fetch on token availability. Owner emails (configured in src/lib/owner.ts
+  // via VITE_OWNER_EMAILS or the founder fallback) skip the network call and
+  // get an 'admin' plan synthesized in-memory — so the project owner is never
+  // paywalled out of their own product when a comp/admin DB row is missing
+  // or the billing endpoint hiccups.
   useEffect(() => {
     if (!token) { setSubscriptionLoading(false); setSubscription({ plan: 'free' }); return; }
+    if (isOwnerEmail(user?.email)) {
+      setSubscription({ plan: 'admin', status: 'active' });
+      setSubscriptionLoading(false);
+      return;
+    }
     fetchSubscription(token);
-  }, [token, fetchSubscription]);
+  }, [token, user?.email, fetchSubscription]);
 
   // Refresh subscription after Stripe checkout return (URL contains session_id or checkout=success)
   useEffect(() => {
