@@ -5,6 +5,7 @@ import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { LumoraSettings } from './LumoraSettings';
 import ScreenCaptureButton from '@/components/lumora/shared/ScreenCaptureButton';
 import { useTheme } from '@/hooks/useTheme';
+import { HourMeterChip } from '@/components/shared/ui/HourMeterChip';
 import type { LumoraTab } from './LumoraIconRail';
 
 function ThemeToggleButton() {
@@ -141,6 +142,11 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
           }`} />
           <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.92)' }}>{status.message}</span>
         </div>
+
+        {/* AI hour budget chip — shown during live interview when running
+            low matters most. Always uses dark variant since LumoraTopBar
+            is fixed dark navy regardless of theme. */}
+        <HourMeterChip variant="dark" />
 
         <ThemeToggleButton />
 

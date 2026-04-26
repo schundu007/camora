@@ -611,6 +611,64 @@ router.post('/webhook', async (req, res) => {
           break;
         }
 
+        // Phase 8: async failure of an off-session auto-topup charge.
+        // Synchronous failures already fall through to 429 inside hourBudgetGate,
+        // but Stripe can also fire this event later (3DS challenge that times
+        // out, bank decline that resolves async). When this happens, disable
+        // auto-topup for the customer + email them so they can update their
+        // payment method before their next exhaustion.
+        case 'payment_intent.payment_failed': {
+          const pi = event.data.object;
+          // Only act on auto-topup charges we initiated — they're tagged in
+          // metadata. Manual checkout failures take a different path.
+          if (pi.metadata?.auto_charged !== 'true') break;
+
+          const billingUserId = pi.metadata?.user_id ? parseInt(pi.metadata.user_id, 10) : null;
+          const teamIdStr = pi.metadata?.team_id;
+          if (!billingUserId) break;
+
+          // Disable auto-topup at the right scope so we don't keep retrying
+          // a broken card.
+          if (teamIdStr) {
+            await query(
+              'UPDATE teams SET auto_topup_pack = NULL WHERE id = $1',
+              [parseInt(teamIdStr, 10)],
+            );
+          } else {
+            await query(
+              'UPDATE ascend_subscriptions SET auto_topup_pack = NULL WHERE user_id = $1',
+              [billingUserId],
+            );
+          }
+
+          // Email the user so they know to update their card.
+          try {
+            const userRow = await query('SELECT email, name FROM users WHERE id = $1', [billingUserId]);
+            const user = userRow.rows[0];
+            if (user?.email) {
+              const { sendPoolReminderEmail } = await import('../services/emailService.js');
+              // Reuse the pool-low template with a synthetic critical state —
+              // visually it conveys urgency and routes to /account/team where
+              // the user can fix the card and re-enable auto-topup.
+              await sendPoolReminderEmail({
+                to: user.email,
+                name: user.name,
+                level: 'critical',
+                isTeam: !!teamIdStr,
+                poolHours: 0,
+                usedHours: 0,
+                remainingHours: 0,
+                accountUrl: `${process.env.FRONTEND_URL || 'https://camora.cariara.com'}/account/team?auto_topup_failed=1`,
+              });
+            }
+          } catch (err) {
+            logger.warn({ err: err.message, billingUserId }, '[autoTopup] failure email skipped');
+          }
+
+          logger.info({ billingUserId, teamId: teamIdStr, paymentIntent: pi.id }, 'Auto-topup async failure — disabled, user notified');
+          break;
+        }
+
         default:
           logger.info({ type: event.type }, 'Unhandled webhook event');
       }
