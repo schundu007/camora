@@ -7,6 +7,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { getAuthHeaders } from '../utils/authHeaders.js';
 import ReferralDashboard from '../components/capra/features/ReferralDashboard';
 import CountUp from '../components/shared/animation/CountUp';
+import { HexBadge, type HexColor } from '../components/shared/HexBadge';
+import { DiagonalDivider } from '../components/shared/DiagonalDivider';
+import { MadeWithLove } from '../components/shared/MadeWithLove';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -40,12 +43,23 @@ const PRIZES = [
 // in light mode AND on dark navy in dark mode. All cyan / saturated-red
 // have been replaced with brand-safe variants per the navy-only palette
 // rule and the WCAG-AA gold/red text rules from the contrast pass.
-const CATEGORIES = [
-  { title: 'Bug Hunting', color: 'var(--danger)', glow: 'rgba(239,68,68,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
-  { title: 'UX / Design', color: 'var(--accent)', glow: 'var(--accent-subtle)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
-  { title: 'Performance', color: 'var(--cam-gold-leaf-text)', glow: 'rgba(122,92,10,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
-  { title: 'Infrastructure', color: 'var(--cam-primary-dk)', glow: 'var(--accent-subtle)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: 'var(--cam-primary)', glow: 'var(--accent-subtle)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+// Custom-stroke glyphs render inside HexBadge (badge fill carries the colour).
+const CG = (path: JSX.Element) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">{path}</svg>
+);
+const CATEGORIES: Array<{
+  title: string;
+  color: string;
+  glow: string;
+  hexColor: HexColor;
+  glyph: JSX.Element;
+  examples: string[];
+}> = [
+  { title: 'Bug Hunting',   color: 'var(--danger)',              glow: 'rgba(239,68,68,0.3)',  hexColor: 'red',     glyph: CG(<><rect x="6" y="9" width="12" height="10" rx="3" /><path d="M9 9V7a3 3 0 0 1 6 0v2" /><path d="M3 13h3M18 13h3M3 17h3M18 17h3M3 9h3M18 9h3" /></>), examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
+  { title: 'UX / Design',   color: 'var(--accent)',              glow: 'var(--accent-subtle)', hexColor: 'navy-lt', glyph: CG(<><circle cx="12" cy="12" r="9" /><circle cx="8" cy="9.5" r="1" /><circle cx="14" cy="9.5" r="1" /><circle cx="17.5" cy="13.5" r="1" /><circle cx="11" cy="17" r="1" /></>), examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
+  { title: 'Performance',   color: 'var(--cam-gold-leaf-text)',  glow: 'rgba(122,92,10,0.3)',  hexColor: 'gold',    glyph: CG(<><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></>), examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
+  { title: 'Infrastructure',color: 'var(--cam-primary-dk)',      glow: 'var(--accent-subtle)', hexColor: 'navy-dk', glyph: CG(<><rect x="3" y="4" width="18" height="6" rx="1.5" /><rect x="3" y="14" width="18" height="6" rx="1.5" /><circle cx="7" cy="7" r="0.8" fill="currentColor" /><circle cx="7" cy="17" r="0.8" fill="currentColor" /></>), examples: ['Health checks', 'Env misconfigs', 'Docker'] },
+  { title: 'New Features',  color: 'var(--cam-primary)',         glow: 'var(--accent-subtle)', hexColor: 'navy',    glyph: CG(<><polygon points="12 2 15 9 22 10 17 15 18 22 12 19 6 22 7 15 2 10 9 9 12 2" /></>), examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -325,6 +339,7 @@ export default function ChallengePage() {
             <a href="#rules" className="ch-cta-secondary">View Rules</a>
           </div>
         </div>
+        <DiagonalDivider fill="var(--bg-surface)" slope="tl-to-br" position="bottom" height="7vh" />
       </section>
 
       {/* ═══ QUALIFICATION ═══ */}
@@ -546,9 +561,7 @@ export default function ChallengePage() {
             {CATEGORIES.map((c) => (
               <div key={c.title} className="ch-category-card" style={{ '--cat-color': c.color, '--cat-glow': c.glow } as any}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${c.color}15`, border: `1px solid ${c.color}30` }}>
-                    <img src={c.logo} alt={c.title} width={20} height={20} style={{ objectFit: 'contain' }} />
-                  </div>
+                  <HexBadge color={c.hexColor} size={40} icon={c.glyph} title={c.title} />
                   <h3 className="text-base font-bold text-[var(--text-primary)]">{c.title}</h3>
                 </div>
                 <div className="space-y-1.5">
@@ -724,6 +737,10 @@ export default function ChallengePage() {
             </a>
           </div>
         </div>
+      </section>
+
+      <section className="border-t" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+        <MadeWithLove city="San Jose" />
       </section>
 
       <SiteFooter variant="light" />
