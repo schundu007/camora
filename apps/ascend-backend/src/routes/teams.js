@@ -68,7 +68,23 @@ router.get('/me', jwtAuth, async (req, res) => {
     const teamId = await getTeamIdForUser(req.user.id);
     if (!teamId) return res.json({ team: null });
     const team = await getTeamWithMembers(teamId);
-    return res.json({ team });
+    if (!team) return res.json({ team: null });
+
+    const isOwner = team.owner_user_id === req.user.id;
+    // Privacy: non-owners see the roster but not other members' caps or
+    // pending invites (those are owner-only management info).
+    const filteredMembers = isOwner ? team.members : team.members.map((m) => ({
+      ...m,
+      per_member_hour_cap: m.user_id === req.user.id ? m.per_member_hour_cap : undefined,
+    }));
+    return res.json({
+      team: {
+        ...team,
+        members: filteredMembers,
+        pending_invites: isOwner ? team.pending_invites : [],
+        viewer_is_owner: isOwner,
+      },
+    });
   } catch (err) {
     logger.error({ err: err.message, userId: req.user?.id }, '[teams] /me failed');
     return res.status(500).json({ error: 'Failed to load team' });
@@ -83,7 +99,21 @@ router.get('/me/usage', jwtAuth, async (req, res) => {
     const teamId = await getTeamIdForUser(req.user.id);
     if (!teamId) return res.json({ team: null, usage: null });
     const usage = await getTeamUsageBreakdown(teamId);
-    return res.json({ team_id: teamId, usage });
+    if (!usage) return res.json({ team_id: teamId, usage: null });
+
+    // Privacy: only the team owner sees every member's hours. Members see
+    // total pool stats + their own row, never other members'.
+    const owner = await query('SELECT owner_user_id FROM teams WHERE id = $1', [teamId]);
+    const isOwner = owner.rows[0]?.owner_user_id === req.user.id;
+    const filteredMembers = isOwner
+      ? usage.members
+      : usage.members.filter((m) => m.user_id === req.user.id);
+
+    return res.json({
+      team_id: teamId,
+      is_owner: isOwner,
+      usage: { ...usage, members: filteredMembers },
+    });
   } catch (err) {
     logger.error({ err: err.message, userId: req.user?.id }, '[teams] /me/usage failed');
     return res.status(500).json({ error: 'Failed to load usage' });

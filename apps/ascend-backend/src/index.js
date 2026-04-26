@@ -347,6 +347,10 @@ async function runMigrations() {
     )`);
     await query('CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND expires_at > NOW()');
     await query('CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND expires_at > NOW()');
+    // Belt-and-suspenders idempotency: even if the webhook event-dedup
+    // (ascend_stripe_events) is bypassed somehow (manual replay), the same
+    // checkout session can't credit twice.
+    await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_session ON ai_hour_topups(stripe_session_id) WHERE stripe_session_id IS NOT NULL');
     console.log('[Migrations] ai_hour_topups table ensured');
 
     // Universal page-view tracking

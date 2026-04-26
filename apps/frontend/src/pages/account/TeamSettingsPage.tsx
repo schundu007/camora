@@ -407,7 +407,7 @@ export default function TeamSettingsPage() {
                 {team.members.map((m) => {
                   const memberUsage = usage?.members.find((mu) => mu.user_id === m.user_id);
                   return (
-                    <div key={m.user_id} className="p-3 flex items-center justify-between gap-3">
+                    <div key={m.user_id} className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="min-w-0 flex items-center gap-3">
                         {m.avatar && <img src={m.avatar} alt="" className="w-8 h-8 rounded-full" />}
                         <div className="min-w-0">
@@ -418,8 +418,8 @@ export default function TeamSettingsPage() {
                           <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{m.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="text-right">
+                      <div className="flex flex-wrap items-center gap-3 sm:shrink-0 sm:flex-nowrap">
+                        <div className="sm:text-right">
                           <p className="text-sm font-semibold">{formatHours(memberUsage?.hours_used || 0)}</p>
                           <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
                             {memberUsage?.calls || 0} calls
