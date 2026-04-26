@@ -780,9 +780,9 @@ export default function DocsPage({ onBack }) {
                             const circumference = 2 * Math.PI * radius;
                             const strokeDashoffset = circumference - (cat.progress / 100) * circumference;
                             return (
-                            <a
+                            <Link
                               key={cat.id}
-                              href={`/capra/prepare/${cat.href}`}
+                              to={`/capra/prepare/${cat.href}`}
                               className="group relative rounded overflow-hidden transition-colors duration-300  "
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
@@ -816,7 +816,7 @@ export default function DocsPage({ onBack }) {
                                   <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                 </div>
                               </div>
-                            </a>
+                            </Link>
                             );
                           })}
                         </div>
@@ -942,9 +942,9 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Continue Where You Left Off</h2>
                             <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                               {recentItems.map((topic) => (
-                                <a
+                                <Link
                                   key={topic.id}
-                                  href={`/capra/prepare?topic=${topic.id}`}
+                                  to={`/capra/prepare?topic=${topic.id}`}
                                   className="flex items-center justify-between px-5 py-3.5 hover:bg-[var(--bg-elevated)] transition-colors border-b border-[var(--border)] last:border-0 group"
                                 >
                                   <div className="flex items-center gap-3">
@@ -966,7 +966,7 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <Icon name="chevronRight" size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                   </div>
-                                </a>
+                                </Link>
                               ))}
                             </div>
                           </div>
@@ -1609,14 +1609,14 @@ export default function DocsPage({ onBack }) {
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>
                                       {design.difficulty}
                                     </span>
-                                    <a
-                                      href={`/capra?problem=${encodeURIComponent(designProblem)}&mode=system-design&autosolve=true`}
+                                    <Link
+                                      to={`/capra?problem=${encodeURIComponent(designProblem)}&mode=system-design&autosolve=true`}
                                       className="px-3 py-1.5 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5 landing-body"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <Icon name="zap" size={12} />
                                       Design
-                                    </a>
+                                    </Link>
                                   </div>
                                 </div>
                               );
