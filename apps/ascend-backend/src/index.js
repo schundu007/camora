@@ -787,9 +787,16 @@ app.use('/api/onboarding', authenticate, apiLimiter, onboardingRouter);
 // Billing & Credits routes (JWT auth - uses cariara OAuth tokens)
 // Payment routes get strict rate limiting to prevent abuse
 app.use('/api/billing', paymentLimiter, billingRouter);
+// Frontend (PaywallGate, AuthContext, ProfilePage) calls
+// /api/v1/billing/subscription against LUMORA_API_URL. The lumorab.cariara.com
+// service is currently running ascend-backend code, so alias the same router
+// at the v1 prefix so subscription checks resolve regardless of which backend
+// answers. Purely additive — no behavior change for existing /api/billing callers.
+app.use('/api/v1/billing', paymentLimiter, billingRouter);
 app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
+app.use('/api/v1/usage', apiLimiter, usageRouter);
 app.use('/api/topic-reads', apiLimiter, topicReadsRouter);
 app.use('/api/topic-comments', apiLimiter, topicCommentsRouter);
 
