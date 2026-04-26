@@ -8,6 +8,7 @@ import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
 import OnThisPage from '../../shared/docs/OnThisPage';
 import DocsTabs from '../../shared/docs/DocsTabs';
+import DocsPrevNext from '../../shared/docs/DocsPrevNext';
 import { RoughLayeredDiagram } from './RoughLayeredDiagram';
 import { RoughFlowDiagram } from './RoughFlowDiagram';
 import { GENERATED_LAYERED_DESIGN } from '../../../data/capra/topics/__generated/layered-design';
@@ -3092,41 +3093,17 @@ export default function TopicDetail({
       {/* Comments */}
       <TopicComments topicId={selectedTopic} />
 
-      {/* Bottom prev/next topic navigation */}
+      {/* Bottom prev/next topic navigation — NVIDIA-style two-panel rail
+          via the shared DocsPrevNext primitive. State-nav (setSelectedTopic)
+          instead of URL nav since topic browsing is component-state, not
+          a route. The hand-rolled "All Topics" middle button is dropped —
+          NVIDIA docs don't have it, and the breadcrumb at the top of the
+          page already provides that escape hatch. */}
       {filteredTopics && filteredTopics.length > 1 && (
-        <div className="mt-6 pt-4 border-t border-[var(--border)] flex items-stretch gap-3">
-          {prevTopic ? (
-            <button
-              onClick={() => setSelectedTopic(prevTopic.id)}
-              className="flex-1 flex items-center gap-3 px-4 py-3 rounded border border-[var(--border)] bg-white hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10/30 transition-colors group text-left"
-            >
-              <Icon name="chevronLeft" size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" />
-              <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono block">Previous</span>
-                <span className="text-sm font-medium text-[var(--text-primary)] truncate block landing-body">{prevTopic.title}</span>
-              </div>
-            </button>
-          ) : <div className="flex-1" />}
-          <button
-            onClick={() => setSelectedTopic(null)}
-            className="px-4 py-3 rounded border border-[var(--border)] bg-white hover:border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-colors text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] landing-body flex items-center gap-1.5 flex-shrink-0"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-            All Topics
-          </button>
-          {nextTopic ? (
-            <button
-              onClick={() => setSelectedTopic(nextTopic.id)}
-              className="flex-1 flex items-center justify-end gap-3 px-4 py-3 rounded border border-[var(--border)] bg-white hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10/30 transition-colors group text-right"
-            >
-              <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono block">Next</span>
-                <span className="text-sm font-medium text-[var(--text-primary)] truncate block landing-body">{nextTopic.title}</span>
-              </div>
-              <Icon name="chevronRight" size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" />
-            </button>
-          ) : <div className="flex-1" />}
-        </div>
+        <DocsPrevNext
+          prev={prevTopic ? { label: prevTopic.title, onClick: () => setSelectedTopic(prevTopic.id) } : undefined}
+          next={nextTopic ? { label: nextTopic.title, onClick: () => setSelectedTopic(nextTopic.id) } : undefined}
+        />
       )}
       </div>
 
