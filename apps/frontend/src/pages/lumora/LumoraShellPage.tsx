@@ -88,7 +88,8 @@ export function LumoraShellPage() {
   // Sync behavioral fullscreen to URL:
   //   /lumora/behavioral       → open (starter question if none set)
   //   /lumora/behavioral?q=... → open with that question
-  //   anywhere else            → close
+  //   anywhere else            → close + scrub the ?q= so a stale question
+  //                              doesn't reappear when the user comes back.
   useEffect(() => {
     if (activeTab === 'behavioral') {
       const q = new URLSearchParams(location.search).get('q') || undefined;
@@ -97,8 +98,14 @@ export function LumoraShellPage() {
     } else {
       setCopilotFullscreen(false);
       setCopilotQuestion(undefined);
+      if (location.search.includes('q=')) {
+        const params = new URLSearchParams(location.search);
+        params.delete('q');
+        const next = params.toString();
+        window.history.replaceState(null, '', location.pathname + (next ? `?${next}` : ''));
+      }
     }
-  }, [activeTab, location.search]);
+  }, [activeTab, location.search, location.pathname]);
 
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
