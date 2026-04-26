@@ -6,11 +6,11 @@ import SiteNav from '../components/shared/SiteNav';
 /* ── APPA Colors ─────────────────────────────────────────── */
 const C = {
   accent: 'var(--accent)',
-  indigo: 'var(--accent)',
-  cyan: '#38bdf8',
-  amber: 'var(--text-muted)',
-  dark: '#0a0b14',
-  light: '#ffffff',
+  indigo: 'var(--cam-primary-lt)',
+  cyan: 'var(--cam-primary)',
+  amber: 'var(--cam-primary-dk)',
+  dark: 'var(--cam-primary-900)',
+  light: 'var(--bg-surface)',
 };
 
 /* ════════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ function Wordmark1({ dark = true }: { dark?: boolean }) {
 }
 
 function Wordmark2({ dark = true }: { dark?: boolean }) {
-  const textColor = dark ? '#ffffff' : '#111827';
+  const textColor = dark ? 'var(--bg-surface)' : 'var(--text-primary)';
   const subColor = dark ? 'text-gray-500' : 'text-gray-400';
   return (
     <div>
@@ -218,7 +218,7 @@ function Wordmark2({ dark = true }: { dark?: boolean }) {
 }
 
 function Wordmark3({ dark = true }: { dark?: boolean }) {
-  const textColor = dark ? '#ffffff' : '#111827';
+  const textColor = dark ? 'var(--bg-surface)' : 'var(--text-primary)';
   const subColor = dark ? 'text-gray-500' : 'text-gray-400';
   return (
     <div>
@@ -316,7 +316,7 @@ export default function BrandPage() {
                     <span className="text-xs text-gray-600 mt-3 font-medium" style={{ fontFamily: "'Source Code Pro', monospace" }}>DARK</span>
                   </div>
                   {/* Light bg */}
-                  <div className="flex flex-col items-center justify-center py-10 px-6 border-l border-white/[0.06]" style={{ background: '#f8f9fa' }}>
+                  <div className="flex flex-col items-center justify-center py-10 px-6 border-l border-white/[0.06]" style={{ background: 'var(--bg-elevated)' }}>
                     <logo.Component size={96} />
                     <span className="text-xs text-gray-400 mt-3 font-medium" style={{ fontFamily: "'Source Code Pro', monospace" }}>LIGHT</span>
                   </div>
@@ -365,7 +365,7 @@ export default function BrandPage() {
                     <wm.Component dark={true} />
                   </div>
                   {/* Light */}
-                  <div className="flex items-center justify-center py-10 px-8 border-l border-white/[0.06]" style={{ background: '#f8f9fa' }}>
+                  <div className="flex items-center justify-center py-10 px-8 border-l border-white/[0.06]" style={{ background: 'var(--bg-elevated)' }}>
                     <wm.Component dark={false} />
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export default function BrandPage() {
                 {(() => { const W = WORDMARKS[selectedWordmark].Component; return <W dark={true} />; })()}
               </div>
               {/* Light preview */}
-              <div className="rounded-2xl border border-gray-200 py-16 px-12 flex items-center gap-6" style={{ background: '#ffffff' }}>
+              <div className="rounded-2xl border border-[var(--border)] py-16 px-12 flex items-center gap-6" style={{ background: 'var(--bg-surface)' }}>
                 {(() => { const L = LOGOS[selectedLogo].Component; return <L size={56} />; })()}
                 {(() => { const W = WORDMARKS[selectedWordmark].Component; return <W dark={false} />; })()}
               </div>

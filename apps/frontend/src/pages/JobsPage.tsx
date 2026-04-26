@@ -73,7 +73,7 @@ function getCompanyLogoPath(companyName: string): string | null {
 
 /** Generate a deterministic color from company name for the initial fallback */
 function getCompanyColor(name: string): string {
-  const colors = ['var(--accent)', 'var(--accent)', 'var(--accent)', '#06b6d4', 'var(--text-muted)', 'var(--accent)', 'var(--success)', 'var(--danger)', 'var(--warning)', 'var(--accent)'];
+  const colors = ['var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--text-muted)', 'var(--accent)', 'var(--success)', 'var(--danger)', 'var(--warning)', 'var(--accent)'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -120,8 +120,8 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  devops: '#06b6d4',
-  backend: 'var(--success)',
+  devops: 'var(--accent)',
+  backend: 'var(--accent)',
   frontend: 'var(--accent)',
   fullstack: 'var(--accent)',
   data: 'var(--warning)',
@@ -130,24 +130,24 @@ const CATEGORY_COLORS: Record<string, string> = {
   mobile: 'var(--accent)',
   ios: 'var(--accent)',
   android: 'var(--accent)',
-  qa: '#84cc16',
-  sre: '#e11d48',
+  qa: 'var(--accent)',
+  sre: 'var(--danger)',
   platform: 'var(--accent)',
   cloud: 'var(--accent)',
-  network: '#0ea5e9',
+  network: 'var(--accent)',
   blockchain: 'var(--warning)',
   game_dev: 'var(--text-muted)',
   tech_lead: 'var(--accent)',
   staff: 'var(--accent)',
-  principal: '#6d28d9',
-  em: '#0891b2',
-  architect: '#2563eb',
+  principal: 'var(--accent)',
+  em: 'var(--accent)',
+  architect: 'var(--accent)',
   tpm: 'var(--accent)',
-  product_manager: '#d946ef',
+  product_manager: 'var(--accent)',
   embedded: 'var(--accent)',
 };
 
-const DEFAULT_COLOR = '#6b7280';
+const DEFAULT_COLOR = 'var(--text-muted)';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -896,7 +896,7 @@ export default function JobsPage() {
 
                 {/* Error message */}
                 {analyzeError && (
-                  <div style={{ fontSize: '13px', color: 'var(--danger)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--danger)', background: 'var(--bg-elevated)', border: '1px solid var(--danger)', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px' }}>
                     {analyzeError}
                   </div>
                 )}
@@ -1027,7 +1027,7 @@ export default function JobsPage() {
                 fontSize: '13px',
                 fontWeight: 600,
                 color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
-                background: activeFilterCount > 0 ? 'rgba(45,140,255,0.1)' : 'var(--bg-elevated)',
+                background: activeFilterCount > 0 ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
                 border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -1051,7 +1051,7 @@ export default function JobsPage() {
               { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: 'var(--accent)' },
               { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: 'var(--accent)' },
               { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: 'var(--text-muted)' },
-              { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: '#06b6d4' },
+              { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: 'var(--accent)' },
               { val: salaryMinFilter, set: setSalaryMinFilter, label: `Min $${Math.round(Number(salaryMinFilter) / 1000)}K`, color: 'var(--accent)' },
               { val: salaryMaxFilter, set: setSalaryMaxFilter, label: `Max $${Math.round(Number(salaryMaxFilter) / 1000)}K`, color: 'var(--accent)' },
             ].filter(f => f.val).map((f, i) => (
@@ -1301,7 +1301,7 @@ export default function JobsPage() {
                       flexDirection: 'column',
                       cursor: 'default',
                       boxShadow: 'none',
-                      '--glow-hover': '0 20px 60px rgba(45,140,255,0.22)',
+                      '--glow-hover': '0 20px 60px var(--accent-subtle)',
                     } as React.CSSProperties}
                   >
                     {/* Compact colored strip + title row */}
@@ -1361,7 +1361,7 @@ export default function JobsPage() {
                             {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
                           </span>
                         )}
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? 'var(--accent)' : workType === 'Hybrid' ? 'var(--cam-gold-leaf-text)' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(45,140,255,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? 'var(--accent)' : workType === 'Hybrid' ? 'var(--cam-gold-leaf-text)' : 'var(--text-muted)', background: workType === 'Remote' ? 'var(--accent-subtle)' : workType === 'Hybrid' ? 'var(--cam-gold-leaf-50)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
                       {/* Salary + Posted date row */}
@@ -1396,7 +1396,7 @@ export default function JobsPage() {
                       {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
                           {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
-                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(45,140,255,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(45,140,255,0.15)' }}>
+                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'var(--accent-subtle)', padding: '2px 7px', borderRadius: '4px', border: '1px solid var(--border)' }}>
                               {tech}
                             </span>
                           ))}
@@ -1478,7 +1478,7 @@ export default function JobsPage() {
         }
         .jobs-card:hover {
           box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
-          border-color: #7c8db5 !important;
+          border-color: var(--border-hover) !important;
           z-index: 10;
         }
         .jobs-grid { column-count: 4; }
@@ -1517,7 +1517,7 @@ export default function JobsPage() {
         .jobs-filter-input:focus,
         .jobs-filter-select:focus {
           border-color: var(--accent);
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+          box-shadow: 0 0 0 2px var(--accent-subtle);
         }
         .jobs-filter-select {
           cursor: pointer;
@@ -1545,7 +1545,7 @@ export default function JobsPage() {
         /* Search bar focus-within */
         .jobs-search-bar:focus-within {
           border-color: var(--accent) !important;
-          box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12) !important;
+          box-shadow: 0 4px 20px var(--accent-subtle) !important;
         }
 
         /* Nav link hover */

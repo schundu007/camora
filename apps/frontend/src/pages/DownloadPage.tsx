@@ -339,8 +339,8 @@ export default function DownloadPage() {
     <div
       className="min-h-screen"
       style={{
-        background: '#0D0C14',
-        color: '#F2F1F3',
+        background: 'var(--cam-primary-900)',
+        color: 'var(--text-primary)',
         fontFamily: "'Inter', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
@@ -351,11 +351,7 @@ export default function DownloadPage() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background: [
-            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(45,140,255,0.08) 0%, transparent 60%)',
-            'radial-gradient(ellipse 60% 40% at 20% 50%, rgba(16,185,129,0.04) 0%, transparent 60%)',
-            'radial-gradient(ellipse 50% 40% at 80% 70%, rgba(139,92,246,0.04) 0%, transparent 60%)',
-          ].join(', '),
+          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-subtle) 0%, transparent 60%)',
         }}
       />
 
@@ -363,8 +359,8 @@ export default function DownloadPage() {
       <nav
         className="relative z-10"
         style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(13,12,20,0.8)',
+          borderBottom: '1px solid var(--border)',
+          background: 'rgba(15,27,45,0.8)',
           backdropFilter: 'blur(12px)',
           position: 'sticky',
           top: 0,
@@ -414,7 +410,7 @@ export default function DownloadPage() {
           <FadeInSection delay={0.1}>
             <h1
               className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight"
-              style={{ color: '#F2F1F3' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               Camora for Desktop
             </h1>
@@ -423,7 +419,7 @@ export default function DownloadPage() {
           <FadeInSection delay={0.2}>
             <p
               className="mt-5 text-lg sm:text-xl max-w-xl mx-auto leading-relaxed"
-              style={{ color: '#A1A0AB' }}
+              style={{ color: 'var(--text-muted)' }}
             >
               Your AI interview co-pilot, running natively. Faster, always-on, and screen-share safe.
             </p>
@@ -449,7 +445,7 @@ export default function DownloadPage() {
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(45,140,255,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(38,97,156,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                     }}
                   >
@@ -487,7 +483,7 @@ export default function DownloadPage() {
                       style={{
                         background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                         color: '#ffffff',
-                        boxShadow: '0 4px 24px rgba(139,92,246,0.35)',
+                        boxShadow: '0 4px 24px rgba(38,97,156,0.35)',
                       }}
                     >
                       {annualLoading ? (
@@ -510,14 +506,14 @@ export default function DownloadPage() {
                     style={{
                       background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                       color: '#ffffff',
-                      boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                      boxShadow: '0 4px 24px rgba(38,97,156,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(16,185,129,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(38,97,156,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(38,97,156,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                     }}
                   >
@@ -539,14 +535,14 @@ export default function DownloadPage() {
                       color: '#ffffff',
                       border: '1px solid var(--border)',
                       cursor: proLoading ? 'wait' : 'pointer',
-                      boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                      boxShadow: '0 4px 24px rgba(38,97,156,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(16,185,129,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(38,97,156,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(38,97,156,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                     }}
                   >
@@ -586,10 +582,10 @@ export default function DownloadPage() {
                     className="relative rounded-2xl p-6 flex flex-col items-center text-center transition-all duration-200"
                     style={{
                       background: isRecommended
-                        ? 'rgba(45,140,255,0.08)'
+                        ? 'var(--accent-subtle)'
                         : 'rgba(255,255,255,0.03)',
                       border: isRecommended
-                        ? '1px solid rgba(45,140,255,0.3)'
+                        ? '1px solid var(--accent)'
                         : '1px solid rgba(255,255,255,0.08)',
                       boxShadow: 'none',
                     }}
@@ -626,7 +622,7 @@ export default function DownloadPage() {
                     </div>
 
                     {/* Platform name */}
-                    <h3 className="text-base font-bold mb-1" style={{ color: '#F2F1F3' }}>
+                    <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                       {p.label}
                     </h3>
 
@@ -743,13 +739,13 @@ export default function DownloadPage() {
           <FadeInSection>
             <h2
               className="text-center text-2xl sm:text-3xl font-bold mb-3"
-              style={{ color: '#F2F1F3' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               Built for Interviews
             </h2>
             <p
               className="text-center text-sm mb-12 max-w-md mx-auto"
-              style={{ color: '#A1A0AB' }}
+              style={{ color: 'var(--text-muted)' }}
             >
               Every feature designed to give you an unfair advantage during technical interviews.
             </p>
@@ -776,16 +772,16 @@ export default function DownloadPage() {
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                     style={{
-                      background: 'rgba(45,140,255,0.1)',
+                      background: 'var(--accent-subtle)',
                       color: 'var(--accent)',
                     }}
                   >
                     {f.icon}
                   </div>
-                  <h3 className="text-sm font-bold mb-1.5" style={{ color: '#F2F1F3' }}>
+                  <h3 className="text-sm font-bold mb-1.5" style={{ color: 'var(--text-primary)' }}>
                     {f.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: '#6C6B7B' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dimmed)' }}>
                     {f.desc}
                   </p>
                 </div>
@@ -803,7 +799,7 @@ export default function DownloadPage() {
           <FadeInSection>
             <h2
               className="text-center text-2xl sm:text-3xl font-bold mb-12"
-              style={{ color: '#F2F1F3' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               System Requirements
             </h2>
@@ -823,7 +819,7 @@ export default function DownloadPage() {
                   <div style={{ color: 'rgba(255,255,255,0.6)' }}>
                     <AppleLogo size={24} />
                   </div>
-                  <h3 className="text-base font-bold" style={{ color: '#F2F1F3' }}>macOS</h3>
+                  <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>macOS</h3>
                 </div>
                 <ul className="space-y-3">
                   {[
@@ -832,7 +828,7 @@ export default function DownloadPage() {
                     '200 MB available disk space',
                     'Microphone access for transcription',
                   ].map(item => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: '#A1A0AB' }}>
+                    <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: 'var(--text-muted)' }}>
                       <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--success)' }}><CheckIcon /></span>
                       {item}
                     </li>
@@ -854,7 +850,7 @@ export default function DownloadPage() {
                   <div style={{ color: 'rgba(255,255,255,0.6)' }}>
                     <WindowsLogo size={24} />
                   </div>
-                  <h3 className="text-base font-bold" style={{ color: '#F2F1F3' }}>Windows</h3>
+                  <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Windows</h3>
                 </div>
                 <ul className="space-y-3">
                   {[
@@ -863,7 +859,7 @@ export default function DownloadPage() {
                     '200 MB available disk space',
                     'Microphone access for transcription',
                   ].map(item => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: '#A1A0AB' }}>
+                    <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: 'var(--text-muted)' }}>
                       <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--success)' }}><CheckIcon /></span>
                       {item}
                     </li>
