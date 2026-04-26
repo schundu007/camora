@@ -11,7 +11,13 @@ const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cari
  *   - Capra Content (monthly/yearly): content access, no AI hours
  *   - Hour bundles (Starter/Pro/Pro Max/Annual Pro): content + included hours
  * Free tier = 30 min lifetime AI hours, content limited to 1 topic per category.
- * Hour PAYG: $10/hr (10 USD per hour). Bundles each get a lower effective rate.
+ *
+ * Per-hour floor: $15. PAYG and top-ups both billed at $15/hr flat. Bundles
+ * include hours at the same $15 rate so the total is content fee + hours×$15;
+ * annual subscription's saving lives in the content portion, not the hour rate.
+ *
+ * Market positioning: undercuts OfferGoose / Parakeet ($35/hr) by ~57% while
+ * matching the $15/hr floor most competitors quote.
  */
 export interface Plan {
   name: string;
@@ -48,7 +54,7 @@ export const CONTENT_MONTHLY: Plan = {
   features: [
     'All 800+ prep topics',
     'Architecture diagrams',
-    'AI hours at $10/hr (PAYG)',
+    'AI hours at $15/hr (PAYG)',
   ],
   cta: 'Subscribe',
   priceKey: 'capra_content_monthly',
@@ -63,7 +69,7 @@ export const CONTENT_YEARLY: Plan = {
   features: [
     'All 800+ prep topics',
     'Architecture diagrams',
-    'AI hours at $10/hr (PAYG)',
+    'AI hours at $15/hr (PAYG)',
     'Locked-in pricing',
   ],
   cta: 'Subscribe yearly',
@@ -73,28 +79,28 @@ export const CONTENT_YEARLY: Plan = {
 export const BUNDLE_PLANS: Plan[] = [
   {
     name: 'Starter',
-    price: '$29',
+    price: '$34',
     period: '/mo',
-    subtitle: 'Effective $7.25/hr',
-    description: 'Light interview prep',
+    subtitle: 'All content + 1 AI hr',
+    description: 'First mock interview',
     features: [
-      'All prep content',
-      '4 AI hours / month',
-      '$9/hr overage',
+      'All 800+ prep topics',
+      '1 AI hour / month',
+      'Overage at $15/hr',
     ],
     cta: 'Get Starter',
     priceKey: 'starter',
   },
   {
     name: 'Pro',
-    price: '$59',
+    price: '$79',
     period: '/mo',
-    subtitle: 'Effective $5.90/hr',
+    subtitle: 'All content + 4 AI hrs',
     description: 'Active job seeker',
     features: [
-      'All prep content',
-      '10 AI hours / month',
-      '$8/hr overage',
+      'All 800+ prep topics',
+      '4 AI hours / month',
+      'Overage at $15/hr',
       'Desktop app included',
     ],
     cta: 'Upgrade to Pro',
@@ -103,14 +109,14 @@ export const BUNDLE_PLANS: Plan[] = [
   },
   {
     name: 'Pro Max',
-    price: '$99',
+    price: '$139',
     period: '/mo',
-    subtitle: 'Effective $3.96/hr',
+    subtitle: 'All content + 8 AI hrs',
     description: 'Heavy interviewer',
     features: [
-      'All prep content',
-      '25 AI hours / month',
-      '$7/hr overage',
+      'All 800+ prep topics',
+      '8 AI hours / month',
+      'Overage at $15/hr',
       'Desktop app included',
       'Priority support',
     ],
@@ -119,14 +125,14 @@ export const BUNDLE_PLANS: Plan[] = [
   },
   {
     name: 'Annual Pro',
-    price: '$499',
+    price: '$699',
     period: '/yr',
-    subtitle: '~$41.58/mo · 120h pooled',
-    description: 'Save 30% vs Pro monthly',
+    subtitle: '~$58.25/mo · 40 AI hrs pooled',
+    description: 'Save $249 vs Pro monthly × 12',
     features: [
-      'All prep content',
-      '120 AI hours / year (pooled)',
-      '$7/hr overage',
+      'Yearly content access',
+      '40 AI hours / year (pooled)',
+      'Overage at $15/hr',
       'Desktop app included',
       'Locked-in pricing',
     ],
@@ -147,14 +153,15 @@ export const DESKTOP_LIFETIME = {
   priceKey: 'desktop_lifetime',
 };
 
-// Per-hour rate decreases monotonically with volume so larger packs always
-// look like a better deal: $9 → $8.33 → $8 → $7.50 → $7.
+// All packs at the $15/hr floor — the value of a pack is convenience and
+// the 90-day expiry, not a volume discount. Bigger packs simply mean fewer
+// checkouts.
 export const TOPUPS = [
-  { name: '1 AI hour',   price: '$9',   rate: '$9.00/hr',  desc: '90-day expiry',  priceKey: 'topup_1h' },
-  { name: '3 AI hours',  price: '$25',  rate: '$8.33/hr',  desc: '90-day expiry',  priceKey: 'topup_3h' },
-  { name: '5 AI hours',  price: '$40',  rate: '$8.00/hr',  desc: '90-day expiry',  priceKey: 'topup_5h' },
-  { name: '10 AI hours', price: '$75',  rate: '$7.50/hr',  desc: '90-day expiry',  priceKey: 'topup_10h' },
-  { name: '25 AI hours', price: '$175', rate: '$7.00/hr',  desc: '90-day expiry',  priceKey: 'topup_25h' },
+  { name: '1 AI hour',   price: '$15',  rate: '$15/hr',  desc: '90-day expiry',  priceKey: 'topup_1h' },
+  { name: '3 AI hours',  price: '$45',  rate: '$15/hr',  desc: '90-day expiry',  priceKey: 'topup_3h' },
+  { name: '5 AI hours',  price: '$75',  rate: '$15/hr',  desc: '90-day expiry',  priceKey: 'topup_5h' },
+  { name: '10 AI hours', price: '$150', rate: '$15/hr',  desc: '90-day expiry',  priceKey: 'topup_10h' },
+  { name: '25 AI hours', price: '$375', rate: '$15/hr',  desc: '90-day expiry',  priceKey: 'topup_25h' },
 ];
 
 /* ── Shared price fetching hook ── */
@@ -367,7 +374,7 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
       {/* ── Hour top-up packs ─────────────────────────────────────────── */}
       <div>
         <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
-          Hour top-ups · stack with any plan, pay-as-you-go starts at $9/hr
+          Hour top-ups · flat $15/hr · undercuts OfferGoose &amp; Parakeet by 57%
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {TOPUPS.map(pack => {
@@ -423,7 +430,7 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
         </div>
 
         <p className="mt-4 text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
-          AI hours apply to Lumora live interview, coding helper, and prep generation. Free tier includes 30 min lifetime. Pay-as-you-go is $10/hr.
+          AI hours apply to Lumora live interview, coding helper, and prep generation. Free tier includes 30 min lifetime. Pay-as-you-go is $15/hr.
         </p>
       </div>
     </div>
