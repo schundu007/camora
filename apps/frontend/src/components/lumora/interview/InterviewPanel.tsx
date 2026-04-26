@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { StreamingAnswer } from './StreamingAnswer';
@@ -88,8 +89,15 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   onSwitchToDesign?: (problem?: string) => void;
 }) {
   const { user } = useAuth();
-  const hour = new Date().getHours();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const hour = now.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
   const COPILOTS = [
     { name: 'Coding', desc: 'Real-time coding solutions with multi-approach answers and complexity analysis.', image: '/topic-heroes/coding.jpg', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>, onClick: () => onSwitchToCoding?.() },
@@ -114,10 +122,16 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
   return (
     <div className="flex-1 overflow-auto px-3 sm:px-4 md:px-6 py-2 md:py-3">
-      {/* Greeting */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Launch an AI assistant for your next interview.</p>
+      {/* Greeting + live clock */}
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Launch an AI assistant for your next interview.</p>
+        </div>
+        <div className="text-right shrink-0">
+          <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-code)' }}>{timeStr}</div>
+          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{dateStr}</div>
+        </div>
       </div>
 
       {/* Divider */}
