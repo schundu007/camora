@@ -115,7 +115,7 @@ export function InterviewPage() {
 
           {/* ═══ BOTTOM COMPOSER ═══ */}
           <div className="shrink-0 relative z-20">
-            <div className="absolute -top-8 left-0 right-0 h-8 pointer-events-none" style={{ background: 'linear-gradient(to top, #ffffff, transparent)' }} />
+            <div className="absolute -top-8 left-0 right-0 h-8 pointer-events-none" style={{ background: 'linear-gradient(to top, var(--bg-app), transparent)' }} />
             <div className="px-3 sm:px-4 pb-3 pt-1">
               <div className="mx-auto" style={{ maxWidth: 'min(90%, 100% - 16px)' }}>
                 {isExpanded ? (
@@ -126,18 +126,18 @@ export function InterviewPage() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleInputSubmit(); }}
                       placeholder="Paste a coding problem, system design question, or multi-line prompt..."
-                      className="w-full bg-transparent text-slate-900 text-sm placeholder:text-slate-600 px-4 py-3 resize-none focus:outline-none font-code"
+                      className="w-full bg-transparent text-sm px-4 py-3 resize-none focus:outline-none font-code"
                       rows={4}
-                      style={{ minHeight: 80, maxHeight: 240 }}
+                      style={{ minHeight: 80, maxHeight: 240, color: 'var(--text-primary)' }}
                       autoFocus
                     />
-                    <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200">
-                      <span className="text-[10px] font-code text-slate-700">{inputValue.length > 0 ? `${inputValue.length} chars` : 'Cmd+Enter to send'}</span>
+                    <div className="flex items-center justify-between px-3 py-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                      <span className="text-[10px] font-code" style={{ color: 'var(--text-muted)' }}>{inputValue.length > 0 ? `${inputValue.length} chars` : 'Cmd+Enter to send'}</span>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setIsExpanded(false)} className="text-xs text-slate-700 hover:text-slate-900 transition-colors px-2 py-1">Collapse</button>
+                        <button onClick={() => setIsExpanded(false)} className="text-xs transition-colors px-2 py-1" style={{ color: 'var(--text-muted)' }}>Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
-                          className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
-                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, var(--accent), var(--accent))' : '#e2e8f0' }}>
+                          className="px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-30 transition-all"
+                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, var(--accent), var(--accent))' : 'var(--border)', color: '#FFFFFF' }}>
                           Send
                         </button>
                       </div>
@@ -157,11 +157,13 @@ export function InterviewPage() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleInputSubmit(); }}
                       placeholder={isStreaming ? 'AI is generating...' : showEmptyState ? 'Ask an interview question...' : 'Ask a follow-up question...'}
-                      className="flex-1 bg-transparent text-slate-900 text-sm placeholder:text-slate-600 focus:outline-none min-w-0"
+                      className="flex-1 bg-transparent text-sm focus:outline-none min-w-0"
+                      style={{ color: 'var(--text-primary)' }}
                       disabled={isStreaming}
                     />
                     <button onClick={() => { setIsExpanded(true); setTimeout(() => textareaRef.current?.focus(), 50); }}
-                      className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
+                      className="p-1.5 rounded-lg transition-colors shrink-0"
+                      style={{ color: 'var(--text-muted)' }}
                       title="Expand for multi-line input">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -171,13 +173,13 @@ export function InterviewPage() {
                       <button onClick={handleInputSubmit}
                         className="p-1.5 rounded-lg transition-all shrink-0"
                         style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', boxShadow: '0 2px 8px rgba(38,97,156,0.3)' }}>
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#FFFFFF' }}>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                       </button>
                     )}
                     {!inputValue && !isStreaming && (
-                      <kbd className="hidden sm:inline text-[10px] font-code text-slate-700 border border-slate-200 rounded px-1.5 py-0.5 shrink-0">Cmd+K</kbd>
+                      <kbd className="hidden sm:inline text-[10px] font-code rounded px-1.5 py-0.5 shrink-0" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Cmd+K</kbd>
                     )}
                   </div>
                 )}
@@ -186,15 +188,15 @@ export function InterviewPage() {
             <div className="flex items-center justify-between h-6 px-3 lumora-status-bar">
               <div className="flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-[var(--accent)] animate-pulse' : 'bg-[var(--accent)]'}`} style={!isStreaming ? { boxShadow: '0 0 4px rgba(38,97,156,0.4)' } : {}} />
-                <span className="text-[10px] font-code text-slate-700">{isStreaming ? 'Generating...' : 'Ready'}</span>
+                <span className="text-[10px] font-code" style={{ color: 'var(--text-muted)' }}>{isStreaming ? 'Generating...' : 'Ready'}</span>
                 {history.length > 0 && (
-                  <span className="text-[10px] font-code text-slate-700 border-l border-slate-200 pl-2">{history.length} Q&A</span>
+                  <span className="text-[10px] font-code pl-2" style={{ color: 'var(--text-muted)', borderLeft: '1px solid var(--border)' }}>{history.length} Q&A</span>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-[10px] font-code text-slate-700">
-                <span><kbd className="px-1 py-0.5 rounded border border-slate-200 text-slate-700 bg-slate-50">⌘M</kbd> mic</span>
-                <span><kbd className="px-1 py-0.5 rounded border border-slate-200 text-slate-700 bg-slate-50">⌘K</kbd> focus</span>
-                <span><kbd className="px-1 py-0.5 rounded border border-slate-200 text-slate-700 bg-slate-50">⌘B</kbd> blank</span>
+              <div className="flex items-center gap-3 text-[10px] font-code" style={{ color: 'var(--text-muted)' }}>
+                <span><kbd className="px-1 py-0.5 rounded" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>⌘M</kbd> mic</span>
+                <span><kbd className="px-1 py-0.5 rounded" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>⌘K</kbd> focus</span>
+                <span><kbd className="px-1 py-0.5 rounded" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank</span>
               </div>
             </div>
           </div>

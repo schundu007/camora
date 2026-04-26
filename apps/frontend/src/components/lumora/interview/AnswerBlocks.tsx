@@ -45,9 +45,9 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'HEADLINE':
       return (
         <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)', backdropFilter: 'blur(8px)'}}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, var(--cam-primary), var(--cam-primary), #95B0CD)' }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, var(--cam-primary), var(--cam-primary), var(--cam-primary-lt))' }} />
           <div className="p-5">
-            <p className="text-[15px] text-slate-800 leading-relaxed font-medium" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
+            <p className="text-[15px] leading-relaxed font-medium" style={{ fontFamily: "'Inter', system-ui, sans-serif", color: 'var(--text-primary)' }}>{cleanText(block.content)}</p>
           </div>
         </div>
       );
@@ -61,8 +61,8 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b">
             <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Key Points</h4>
-            <span className="ml-auto text-[10px] font-mono text-slate-700 border rounded-full px-2 py-0.5">{lines.length}</span>
+            <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>Key Points</h4>
+            <span className="ml-auto text-[10px] font-mono border rounded-full px-2 py-0.5" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>{lines.length}</span>
           </div>
           <div className="p-4 space-y-2.5">
             {lines.map((line, i) => {
@@ -72,9 +72,9 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
               const text = hasLabel ? line.slice(colonIdx + 1).trim() : line;
               return (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-[rgba(38,97,156,0.15)] text-[#95B0CD] text-[10px] font-bold shrink-0 mt-0.5 font-mono">{i + 1}</span>
-                  <div className="text-[13px] text-slate-600 leading-relaxed">
-                    {label && <span className="font-semibold text-slate-800">{label}: </span>}
+                  <span className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 mt-0.5 font-mono" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{i + 1}</span>
+                  <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    {label && <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{label}: </span>}
                     {text}
                   </div>
                 </div>
@@ -89,7 +89,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b">
             <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Flow</h4>
+            <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>Flow</h4>
           </div>
           <MermaidDiagram content={block.content} />
         </div>
@@ -102,9 +102,10 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
           <div className="flex items-center justify-between px-4 py-2 border-b">
             <div className="flex items-center gap-2">
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" /></div>
-              <span className="font-mono text-[10px] font-bold text-[#95B0CD]/80 uppercase tracking-widest">{lang}</span>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>{lang}</span>
             </div>
-            <button className="text-[10px] font-mono text-slate-700 hover:text-slate-900 px-2 py-0.5 border rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
+            <button className="text-[10px] font-mono px-2 py-0.5 border rounded transition-all opacity-0 group-hover:opacity-100"
+              style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
           </div>
           <pre className="p-4 overflow-x-auto" style={{ background: '#0F172A' }}><code ref={codeRef} className={`language-${lang} text-[13px] leading-relaxed`}>{block.content}</code></pre>
@@ -117,17 +118,17 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b">
             <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Follow-up Q&A</h4>
-            <span className="ml-auto text-[10px] font-mono text-slate-700 border rounded-full px-2 py-0.5">{pairs.length}</span>
+            <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>Follow-up Q&A</h4>
+            <span className="ml-auto text-[10px] font-mono border rounded-full px-2 py-0.5" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>{pairs.length}</span>
           </div>
           <div className="divide-y divide-[var(--border)]">
             {pairs.map((pair, i) => (
               <div key={i} className="px-4 py-3">
                 <div className="flex items-start gap-2 mb-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-amber-500/15 text-amber-300 text-[10px] font-bold shrink-0 font-mono">Q{i+1}</span>
-                  <span className="text-[13px] font-semibold text-slate-800 leading-relaxed">{pair.question}</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 font-mono" style={{ background: 'var(--accent-subtle)', color: 'var(--warning-text)' }}>Q{i+1}</span>
+                  <span className="text-[13px] font-semibold leading-relaxed" style={{ color: 'var(--text-primary)' }}>{pair.question}</span>
                 </div>
-                <div className="ml-7 text-[13px] text-slate-700 leading-relaxed rounded-lg p-3" style={{ background: 'var(--bg-elevated)' }}>{pair.answer}</div>
+                <div className="ml-7 text-[13px] leading-relaxed rounded-lg p-3" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>{pair.answer}</div>
               </div>
             ))}
           </div>
@@ -137,7 +138,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     default:
       return (
         <div className="rounded-xl p-4 animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
-          <p className="text-[13px] text-slate-600 leading-relaxed">{cleanText(block.content)}</p>
+          <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{cleanText(block.content)}</p>
         </div>
       );
   }
@@ -177,7 +178,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
       </div>
 
       {/* Code Block - Full Width */}
-      <div className="rounded-md border border-[var(--accent)]/20 bg-[#0d1117] overflow-hidden">
+      <div className="rounded-md border border-[var(--accent)]/20 overflow-hidden" style={{ background: '#0d1117' }}>
         <div className="flex items-center justify-between px-3 py-2 border-b bg-[var(--bg-surface)]/[0.02]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
@@ -526,7 +527,7 @@ function ScaleMathList({ content }: { content: string }) {
   const renderTable = (items: typeof metrics) => (
     <table className="w-full text-left font-mono" style={{ borderCollapse: 'collapse' }}>
       <thead>
-        <tr style={{ borderBottom: '1px solid rgba(38,97,156,0.15)' }}>
+        <tr style={{ borderBottom: '1px solid var(--border)' }}>
           <th className="text-[9px] font-bold uppercase tracking-wider py-1.5 pr-3" style={{ color: 'var(--text-muted)' }}>Metric</th>
           <th className="text-[9px] font-bold uppercase tracking-wider py-1.5" style={{ color: 'var(--text-muted)' }}>Estimate</th>
         </tr>
@@ -719,7 +720,7 @@ function FollowupList({ content }: { content: string }) {
             </span>
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
-          <div className="ml-9 border-l-2 border-[rgba(38,97,156,0.3)] pl-4 py-1">
+          <div className="ml-9 pl-4 py-1" style={{ borderLeft: '2px solid var(--accent)' }}>
             <span className="text-[13px] text-[var(--text-muted)] leading-relaxed">{pair.answer}</span>
           </div>
         </div>

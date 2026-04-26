@@ -183,7 +183,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {loading && (
         <div className="flex items-center justify-center p-8 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)]">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
             <span className="text-sm text-[var(--text-muted)] font-mono">Looking up cached diagram...</span>
           </div>
         </div>
@@ -191,10 +191,10 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* No cached diagram — show generate button */}
       {noCache && !loading && !generating && (
-        <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
           <button onClick={handleGenerate}
-            className="px-5 py-2.5 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(38,97,156,0.3)' }}>
+            className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all hover:opacity-90"
+            style={{ background: 'var(--accent)', color: '#FFFFFF', boxShadow: '0 2px 12px rgba(38,97,156,0.3)' }}>
             Generate Architecture Diagram
           </button>
         </div>
@@ -202,9 +202,9 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* Generating */}
       {generating && (
-        <div className="flex items-center justify-center p-8 border border-[rgba(38,97,156,0.2)] rounded-lg bg-[rgba(38,97,156,0.08)]">
+        <div className="flex items-center justify-center p-8 rounded-lg" style={{ border: '1px solid var(--border)', background: 'var(--accent-subtle)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
             <span className="text-sm text-[var(--accent)] font-mono">Generating {cloudProvider === 'auto' ? '' : cloudProvider.toUpperCase()} diagram...</span>
           </div>
         </div>
@@ -212,10 +212,11 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* Error */}
       {error && !loading && !generating && (
-        <div className="p-4 border border-amber-200 rounded-lg bg-amber-50">
-          <p className="text-sm text-amber-700 mb-2">{error}</p>
+        <div className="p-4 rounded-lg" style={{ border: '1px solid var(--warning)', background: 'var(--bg-elevated)' }}>
+          <p className="text-sm mb-2" style={{ color: 'var(--warning-text)' }}>{error}</p>
           <button onClick={handleGenerate}
-            className="px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors">
+            className="px-3 py-1 text-xs font-medium rounded transition-colors"
+            style={{ background: 'var(--bg-elevated)', color: 'var(--warning-text)', border: '1px solid var(--warning)' }}>
             Retry
           </button>
         </div>
@@ -243,15 +244,15 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {mermaidCode && !imageUrl && !loading && !generating && (
         <div className="rounded-lg p-3" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
           <div className="flex items-center gap-2 mb-2">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--warning)' }}>
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-gold-leaf-text)' }}>Text architecture (diagram service unavailable)</span>
             <button onClick={handleGenerate}
-              className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded hover:bg-amber-100"
-              style={{ color: 'var(--cam-gold-leaf-text)', border: '1px solid #FCD34D' }}>
+              className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded"
+              style={{ color: 'var(--warning-text)', border: '1px solid var(--warning)' }}>
               Retry diagram
             </button>
           </div>
