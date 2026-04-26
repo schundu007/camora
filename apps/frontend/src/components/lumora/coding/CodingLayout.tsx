@@ -756,7 +756,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 text-white/50 hover:text-red-400 transition-colors" title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 text-white/75 hover:text-red-400 transition-colors" title="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -766,7 +766,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -1444,14 +1444,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}
                               placeholder="nums = [2,7], target = 9"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-500 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                           <div>
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
                             <textarea value={tc.expected} onChange={(e) => updateTestCase(i, 'expected', e.target.value)}
                               placeholder="[0, 1]"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-500 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                         </div>
@@ -1613,7 +1613,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
                           </button>
                         );
                       }
-                      return <div key={i} className="text-[10px] text-gray-500 font-mono">{line}</div>;
+                      return <div key={i} className="text-[10px] text-gray-700 font-mono">{line}</div>;
                     })}
                   </div>
                 ) : (

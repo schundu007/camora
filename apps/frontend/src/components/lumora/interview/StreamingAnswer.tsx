@@ -119,7 +119,7 @@ function StreamingAnswerList({ content, isComplete }: { content: string; isCompl
         const text = hasLabel ? line.slice(colonIdx + 1).trim() : line;
 
         return (
-          <div key={i} className="text-base text-text-muted leading-relaxed">
+          <div key={i} className="text-base text-[var(--text-muted)] leading-relaxed">
             {label && <span className="font-semibold text-[var(--accent)] mr-1">{label}:</span>}
             {text}
           </div>
@@ -226,7 +226,7 @@ function StreamingCodingCard({
         {title}
       </div>
       {block ? (
-        <p className="text-base text-text-muted leading-relaxed">
+        <p className="text-base text-[var(--text-muted)] leading-relaxed">
           {cleanText(block.content)}
           {!block.isComplete && <Cursor />}
         </p>
@@ -259,7 +259,7 @@ function StreamingComplexityList({ content, isComplete }: { content: string; isC
             </div>
           );
         }
-        return <div key={i} className="text-base text-text-muted">{line}</div>;
+        return <div key={i} className="text-base text-[var(--text-muted)]">{line}</div>;
       })}
       {!isComplete && <Cursor />}
     </div>
@@ -280,7 +280,7 @@ function StreamingTestCasesList({ content, isComplete }: { content: string; isCo
             <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">IN</span>
-                <code className="font-mono text-base text-text-muted">{arrowMatch[1]}</code>
+                <code className="font-mono text-base text-[var(--text-muted)]">{arrowMatch[1]}</code>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">OUT</span>
@@ -289,7 +289,7 @@ function StreamingTestCasesList({ content, isComplete }: { content: string; isCo
             </div>
           );
         }
-        return <div key={i} className="text-base text-text-muted font-mono">{line}</div>;
+        return <div key={i} className="text-base text-[var(--text-muted)] font-mono">{line}</div>;
       })}
       {!isComplete && <Cursor />}
     </div>
@@ -327,7 +327,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
                 <svg className="w-10 h-10 text-[var(--accent)]/30 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                <p className="text-xs text-gray-400 font-mono">Diagram generates after answer completes</p>
+                <p className="text-xs text-gray-600 font-mono">Diagram generates after answer completes</p>
               </div>
             </div>
           </div>
@@ -432,7 +432,7 @@ function RequirementsList({ content, reqType, isComplete }: { content: string; r
   return (
     <ul className="space-y-1">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2 text-base text-text-muted leading-snug">
+        <li key={i} className="flex items-start gap-2 text-base text-[var(--text-muted)] leading-snug">
           <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${reqType === 'functional' ? 'bg-[var(--accent)]' : 'bg-[var(--text-muted)]'}`} />
           {item}
         </li>
@@ -495,7 +495,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
           return (
             <div key={i} className="flex items-start gap-2 py-0.5">
               <span className="font-mono text-base font-bold text-[var(--text-secondary)] w-4 text-right shrink-0">{match[1]}</span>
-              <span className="text-base text-text-muted leading-snug">{match[2]}</span>
+              <span className="text-base text-[var(--text-muted)] leading-snug">{match[2]}</span>
             </div>
           );
         }
@@ -505,7 +505,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
           return (
             <div key={i} className="flex items-start gap-2 py-0.5 pl-5">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 shrink-0 mt-1.5" />
-              <span className="text-base text-text-muted leading-snug">{subLine}</span>
+              <span className="text-base text-[var(--text-muted)] leading-snug">{subLine}</span>
             </div>
           );
         }
@@ -514,7 +514,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
         return (
           <div key={i} className="flex items-start gap-2 py-0.5">
             <span className="font-mono text-base font-bold text-[var(--text-secondary)] w-4 text-right shrink-0">{itemNum}</span>
-            <span className="text-base text-text-muted leading-snug">{line}</span>
+            <span className="text-base text-[var(--text-muted)] leading-snug">{line}</span>
           </div>
         );
       })}
@@ -538,11 +538,11 @@ function EdgeCasesList({ content, isComplete }: { content: string; isComplete: b
               <span className="font-mono text-base font-semibold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">
                 {line.slice(0, colonIdx)}
               </span>
-              <span className="text-base text-text-muted leading-snug">{line.slice(colonIdx + 1).trim()}</span>
+              <span className="text-base text-[var(--text-muted)] leading-snug">{line.slice(colonIdx + 1).trim()}</span>
             </div>
           );
         }
-        return <div key={i} className="text-base text-text-muted leading-snug">{line}</div>;
+        return <div key={i} className="text-base text-[var(--text-muted)] leading-snug">{line}</div>;
       })}
       {!isComplete && <Cursor />}
     </div>
@@ -598,7 +598,7 @@ function TradeoffsList({ content, isComplete }: { content: string; isComplete: b
           }
         }
 
-        if (!pick) return <div key={i} className="text-base text-text-muted leading-snug">{line}</div>;
+        if (!pick) return <div key={i} className="text-base text-[var(--text-muted)] leading-snug">{line}</div>;
 
         return (
           <div key={i} className="py-1 border-b border-[var(--border)] last:border-b-0">
@@ -611,7 +611,7 @@ function TradeoffsList({ content, isComplete }: { content: string; isComplete: b
                 </>
               )}
             </div>
-            {reason && <div className="text-base text-text-muted mt-1 leading-snug">{reason}</div>}
+            {reason && <div className="text-base text-[var(--text-muted)] mt-1 leading-snug">{reason}</div>}
           </div>
         );
       })}
@@ -656,7 +656,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
         <div key={i} className="py-1.5 border-b border-[var(--border)] last:border-b-0">
           <div className="flex items-start gap-2 text-base">
             <span className="font-mono font-bold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{i + 1}</span>
-            <span className="text-text-muted leading-snug">{pair.question}</span>
+            <span className="text-[var(--text-muted)] leading-snug">{pair.question}</span>
           </div>
           <div className="flex items-start gap-2 text-base mt-1.5 pl-8">
             <span className="text-text-subtle leading-snug">{pair.answer}</span>
@@ -667,7 +667,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
         <div className="py-1.5">
           <div className="flex items-start gap-2 text-base">
             <span className="font-mono font-bold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{pairs.length + 1}</span>
-            <span className="text-text-muted leading-snug">{currentQ}<Cursor /></span>
+            <span className="text-[var(--text-muted)] leading-snug">{currentQ}<Cursor /></span>
           </div>
         </div>
       )}

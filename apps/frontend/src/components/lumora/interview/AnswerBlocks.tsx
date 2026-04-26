@@ -61,8 +61,8 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
             <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Key Points</h4>
-            <span className="ml-auto text-[10px] font-mono text-slate-400 border border-slate-200 rounded-full px-2 py-0.5">{lines.length}</span>
+            <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Key Points</h4>
+            <span className="ml-auto text-[10px] font-mono text-slate-700 border border-slate-200 rounded-full px-2 py-0.5">{lines.length}</span>
           </div>
           <div className="p-4 space-y-2.5">
             {lines.map((line, i) => {
@@ -89,7 +89,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
             <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Flow</h4>
+            <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Flow</h4>
           </div>
           <MermaidDiagram content={block.content} />
         </div>
@@ -104,7 +104,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" /></div>
               <span className="font-mono text-[10px] font-bold text-[#95B0CD]/80 uppercase tracking-widest">{lang}</span>
             </div>
-            <button className="text-[10px] font-mono text-slate-400 hover:text-slate-600 px-2 py-0.5 border border-slate-200 rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
+            <button className="text-[10px] font-mono text-slate-700 hover:text-slate-900 px-2 py-0.5 border border-slate-200 rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
           </div>
           <pre className="p-4 overflow-x-auto" style={{ background: '#0F172A' }}><code ref={codeRef} className={`language-${lang} text-[13px] leading-relaxed`}>{block.content}</code></pre>
@@ -117,8 +117,8 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
             <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Follow-up Q&A</h4>
-            <span className="ml-auto text-[10px] font-mono text-slate-400 border border-slate-200 rounded-full px-2 py-0.5">{pairs.length}</span>
+            <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Follow-up Q&A</h4>
+            <span className="ml-auto text-[10px] font-mono text-slate-700 border border-slate-200 rounded-full px-2 py-0.5">{pairs.length}</span>
           </div>
           <div className="divide-y divide-slate-200">
             {pairs.map((pair, i) => (
@@ -127,7 +127,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
                   <span className="flex items-center justify-center w-5 h-5 rounded-md bg-amber-500/15 text-amber-300 text-[10px] font-bold shrink-0 font-mono">Q{i+1}</span>
                   <span className="text-[13px] font-semibold text-slate-800 leading-relaxed">{pair.question}</span>
                 </div>
-                <div className="ml-7 text-[13px] text-slate-500 leading-relaxed rounded-lg p-3" style={{ background: '#F1F5F9' }}>{pair.answer}</div>
+                <div className="ml-7 text-[13px] text-slate-700 leading-relaxed rounded-lg p-3" style={{ background: '#F1F5F9' }}>{pair.answer}</div>
               </div>
             ))}
           </div>
@@ -162,14 +162,14 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <GridCard title="PROBLEM" titleColor="text-[var(--accent)]">
           {byType.PROBLEM ? (
-            <p className="text-[13px] text-text-muted leading-relaxed">
+            <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
               {cleanText(byType.PROBLEM.content)}
             </p>
           ) : <Shimmer />}
         </GridCard>
         <GridCard title="APPROACH" titleColor="text-[var(--text-secondary)]">
           {byType.APPROACH ? (
-            <p className="text-[13px] text-text-muted leading-relaxed">
+            <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
               {cleanText(byType.APPROACH.content)}
             </p>
           ) : <Shimmer />}
@@ -267,7 +267,7 @@ function ComplexityList({ content }: { content: string }) {
             </div>
           );
         }
-        return <div key={i} className="text-[13px] text-text-muted">{line}</div>;
+        return <div key={i} className="text-[13px] text-[var(--text-muted)]">{line}</div>;
       })}
     </div>
   );
@@ -287,11 +287,11 @@ function WalkthroughList({ content }: { content: string }) {
               <span className="font-mono text-xs font-semibold text-[var(--text-secondary)] bg-[var(--accent)]/10 px-2 py-0.5 rounded shrink-0">
                 {lineMatch[1]}
               </span>
-              <span className="text-[13px] text-text-muted leading-snug">{lineMatch[2]}</span>
+              <span className="text-[13px] text-[var(--text-muted)] leading-snug">{lineMatch[2]}</span>
             </div>
           );
         }
-        return <div key={i} className="text-[13px] text-text-muted leading-snug pl-1">{line}</div>;
+        return <div key={i} className="text-[13px] text-[var(--text-muted)] leading-snug pl-1">{line}</div>;
       })}
     </div>
   );
@@ -310,7 +310,7 @@ function TestCasesList({ content }: { content: string }) {
             <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-surface)]/[0.02] border border-slate-200">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">IN</span>
-                <code className="font-mono text-[12px] text-text-muted">{arrowMatch[1]}</code>
+                <code className="font-mono text-[12px] text-[var(--text-muted)]">{arrowMatch[1]}</code>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">OUT</span>
@@ -319,7 +319,7 @@ function TestCasesList({ content }: { content: string }) {
             </div>
           );
         }
-        return <div key={i} className="text-[13px] text-text-muted font-mono">{line}</div>;
+        return <div key={i} className="text-[13px] text-[var(--text-muted)] font-mono">{line}</div>;
       })}
     </div>
   );
@@ -488,7 +488,7 @@ function RequirementsList({ content, type }: { content: string; type: 'functiona
   return (
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2.5 text-sm text-text-muted leading-relaxed">
+        <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-muted)] leading-relaxed">
           {type === 'functional' ? (
             <svg className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <circle cx="10" cy="10" r="4" />
@@ -562,7 +562,7 @@ function ScaleMathList({ content }: { content: string }) {
 function DeepDesignList({ content }: { content: string }) {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
-  if (lines.length === 0) return <div className="text-[13px] text-text-muted italic">No layer design data</div>;
+  if (lines.length === 0) return <div className="text-[13px] text-[var(--text-muted)] italic">No layer design data</div>;
 
   // Group lines into layers: each layer starts with a numbered line or a non-sub-bullet line
   type Layer = { num: number; title: string; bullets: string[] };
@@ -602,7 +602,7 @@ function DeepDesignList({ content }: { content: string }) {
                   <svg className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-[12px] text-text-muted leading-relaxed">{bullet}</span>
+                  <span className="text-[12px] text-[var(--text-muted)] leading-relaxed">{bullet}</span>
                 </div>
               ))}
             </div>
@@ -629,7 +629,7 @@ function EdgeCasesList({ content }: { content: string }) {
             </div>
           );
         }
-        return <div key={i} className="text-[13px] text-text-muted leading-relaxed">{line}</div>;
+        return <div key={i} className="text-[13px] text-[var(--text-muted)] leading-relaxed">{line}</div>;
       })}
     </div>
   );
@@ -638,7 +638,7 @@ function EdgeCasesList({ content }: { content: string }) {
 function TradeoffsList({ content }: { content: string }) {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
 
-  if (lines.length === 0) return <div className="text-[13px] text-text-muted italic">No trade-offs data</div>;
+  if (lines.length === 0) return <div className="text-[13px] text-[var(--text-muted)] italic">No trade-offs data</div>;
 
   return (
     <div className="space-y-3">
@@ -684,7 +684,7 @@ function TradeoffsList({ content }: { content: string }) {
           }
         }
 
-        if (!pick) return <div key={i} className="text-[13px] text-text-muted leading-snug">{line}</div>;
+        if (!pick) return <div key={i} className="text-[13px] text-[var(--text-muted)] leading-snug">{line}</div>;
 
         return (
           <div key={i} className="pb-2.5 border-b border-slate-200 last:border-b-0 last:pb-0">
@@ -720,7 +720,7 @@ function FollowupList({ content }: { content: string }) {
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
           <div className="ml-9 border-l-2 border-[rgba(38,97,156,0.3)] pl-4 py-1">
-            <span className="text-[13px] text-text-muted leading-relaxed">{pair.answer}</span>
+            <span className="text-[13px] text-[var(--text-muted)] leading-relaxed">{pair.answer}</span>
           </div>
         </div>
       ))}

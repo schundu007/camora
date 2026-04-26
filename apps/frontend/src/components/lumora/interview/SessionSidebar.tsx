@@ -77,7 +77,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                 )}
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-lg text-white/60 hover:text-white/80 hover:bg-[var(--bg-surface)]/5 transition-colors lg:hidden"
+                  className="p-1 rounded-lg text-white/85 hover:text-white hover:bg-[var(--bg-surface)]/5 transition-colors lg:hidden"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -96,7 +96,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                     </svg>
                   </div>
                   <p className="text-xs text-white/70 font-mono">No questions yet</p>
-                  <p className="text-[10px] text-white/60 mt-1">Ask a question to start</p>
+                  <p className="text-[10px] text-white/85 mt-1">Ask a question to start</p>
                 </div>
               ) : (
                 groups.map(group => (

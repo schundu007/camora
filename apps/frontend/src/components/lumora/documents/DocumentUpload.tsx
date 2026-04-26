@@ -99,12 +99,12 @@ export function DocumentUpload() {
               </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/40 hover:text-white"
+                className="text-white/75 hover:text-white"
               >
                 <CloseIcon />
               </button>
             </div>
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-white/85">
               Upload prep guides. Answers will use these for context.
             </p>
           </div>
@@ -125,7 +125,7 @@ export function DocumentUpload() {
             >
               {isLoading ? 'Uploading...' : '+ Upload Document'}
             </button>
-            <p className="text-sm text-gray-400 mt-1 text-center">
+            <p className="text-sm text-gray-600 mt-1 text-center">
               .txt, .docx, .pdf, .md (max 5MB)
             </p>
           </div>
@@ -140,7 +140,7 @@ export function DocumentUpload() {
           {/* Documents list */}
           <div className="max-h-48 overflow-y-auto">
             {documents.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-400">
+              <div className="p-4 text-center text-sm text-gray-600">
                 No documents uploaded yet
               </div>
             ) : (
@@ -153,13 +153,13 @@ export function DocumentUpload() {
                     <div className="font-mono text-sm font-medium text-[var(--text-secondary)] truncate">
                       {doc.filename}
                     </div>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-gray-600">
                       {Math.round(doc.size / 1024)}KB
                     </div>
                   </div>
                   <button
                     onClick={() => handleDelete(doc.filename)}
-                    className="text-gray-400 hover:text-rose shrink-0"
+                    className="text-gray-600 hover:text-rose shrink-0"
                     title="Delete"
                   >
                     <TrashIcon />
