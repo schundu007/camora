@@ -387,9 +387,10 @@ export default function DownloadPage() {
       </nav>
 
       {/* ══════════════════════════════════════════════════
-         HERO SECTION
+         HERO SECTION — LeetCode dark navy band
          ══════════════════════════════════════════════════ */}
-      <section className="relative z-10 pt-20 pb-16 px-6">
+      <section className="relative z-10 pt-20 pb-28 px-6 overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="lg:max-w-[85%] mx-auto text-center">
           {/* App icon */}
           <FadeInSection>
@@ -418,17 +419,16 @@ export default function DownloadPage() {
 
           <FadeInSection delay={0.1}>
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-white"
             >
-              Camora for Desktop
+              Camora for <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Desktop</span>
             </h1>
           </FadeInSection>
 
           <FadeInSection delay={0.2}>
             <p
               className="mt-5 text-lg sm:text-xl max-w-xl mx-auto leading-relaxed"
-              style={{ color: 'var(--text-muted)' }}
+              style={{ color: 'rgba(255,255,255,0.85)' }}
             >
               Your AI interview co-pilot, running natively. Faster, always-on, and screen-share safe.
             </p>
@@ -566,6 +566,10 @@ export default function DownloadPage() {
             </div>
           </FadeInSection>
         </div>
+        {/* Diagonal cut into the next section */}
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '7vh', display: 'block', zIndex: 1 }}>
+          <polygon fill="var(--bg-elevated)" points="0,0 100,100 0,100" />
+        </svg>
       </section>
 
       {/* ══════════════════════════════════════════════════

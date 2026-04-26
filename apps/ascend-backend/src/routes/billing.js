@@ -116,6 +116,22 @@ router.get('/prices', (req, res) => {
       web_content: false,
     },
 
+    // ── Camora for Business — one-time starter pack ──────────
+    // $499 buys 75 AI hours + 10 team seats. PAYG kicks in at $8/hr
+    // after the pack (20% off the consumer $10/hr ceiling) once the
+    // auto-topup flow lands in Phase 2; today, business teams that
+    // exhaust the pack buy another pack or fall back to top-ups.
+    business_starter: {
+      priceId: STRIPE_PRICES.BUSINESS_STARTER,
+      amount: 49900,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 75,
+      seat_limit: 10,
+      payg_rate_per_hour: 800,
+      best_value: false,
+    },
+
     // ── Top-up hour packs (small/medium/large, flat $10/hr) ──
     topup_1h: {
       priceId: STRIPE_PRICES.TOPUP_1H,
@@ -175,6 +191,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       STRIPE_PRICES.TOPUP_1H,
       STRIPE_PRICES.TOPUP_5H,
       STRIPE_PRICES.TOPUP_25H,
+      STRIPE_PRICES.BUSINESS_STARTER,
     ].filter(Boolean);
 
     if (!validPrices.includes(priceId)) {
@@ -218,12 +235,14 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     else if (priceId === STRIPE_PRICES.TOPUP_1H) purchaseType = 'topup_1h';
     else if (priceId === STRIPE_PRICES.TOPUP_5H) purchaseType = 'topup_5h';
     else if (priceId === STRIPE_PRICES.TOPUP_25H) purchaseType = 'topup_25h';
+    else if (priceId === STRIPE_PRICES.BUSINESS_STARTER) purchaseType = 'business_starter';
 
     // One-time purchases (Stripe `mode: 'payment'` instead of subscription).
     const isOneTime = purchaseType === 'desktop_lifetime'
       || purchaseType === 'topup_1h'
       || purchaseType === 'topup_5h'
-      || purchaseType === 'topup_25h';
+      || purchaseType === 'topup_25h'
+      || purchaseType === 'business_starter';
 
     // For subscriptions, don't allow if already subscribed
     if (!isOneTime) {

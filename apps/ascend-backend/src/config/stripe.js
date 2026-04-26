@@ -25,6 +25,9 @@ export const STRIPE_PRICES = {
   TOPUP_1H: process.env.STRIPE_PRICE_TOPUP_1H,
   TOPUP_5H: process.env.STRIPE_PRICE_TOPUP_5H,
   TOPUP_25H: process.env.STRIPE_PRICE_TOPUP_25H,
+
+  // Business starter pack — one-time $499, 75 AI hours + 10 seats, PAYG @ $8/hr after.
+  BUSINESS_STARTER: process.env.STRIPE_PRICE_BUSINESS_STARTER,
 };
 
 /**

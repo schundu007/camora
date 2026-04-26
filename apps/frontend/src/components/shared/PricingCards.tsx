@@ -101,6 +101,26 @@ export const TOPUPS = [
   { name: '25 AI hours', price: '$250', desc: 'Large · 90-day expiry',   priceKey: 'topup_25h' },
 ];
 
+// Camora for Business — one-time starter pack for cohorts, bootcamps, and
+// recruiting teams. 75 AI hours + 10 seats for $499 (effective $6.65/hr —
+// 33% under consumer Pro Max). PAYG continues at $8/hr after the pack
+// (20% under consumer PAYG) once auto-topup ships in Phase 2.
+export const BUSINESS_STARTER = {
+  name: 'Business Starter',
+  price: '$499',
+  hours: 75,
+  seats: 10,
+  paygRate: 800, // cents/hr after pack — 20% off consumer PAYG
+  priceKey: 'business_starter',
+  features: [
+    '75 AI hours included',
+    'Up to 10 team seats',
+    'Centralized billing (one invoice)',
+    'Per-member usage breakdown',
+    'PAYG at $8/hr after pack (save 20%)',
+  ],
+};
+
 /* ── Shared price fetching hook ── */
 export function usePlanPrices() {
   const [prices, setPrices] = useState<Record<string, { priceId: string }> | null>(null);
@@ -307,7 +327,7 @@ export default function PricingCards({
         <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
           Need more hours? Top-up packs (flat $10/hr)
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {TOPUPS.map((pack) => {
             const pid = prices?.[pack.priceKey]?.priceId || '';
             return (
@@ -330,8 +350,62 @@ export default function PricingCards({
         </div>
       </div>
 
-      {/* ── Desktop add-on ──────────────────────────────────────────── */}
-      <div className="rounded-xl p-4 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      {/* ── Camora for Business — one-time starter pack ─────────────── */}
+      <div className="rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5"
+        style={{ background: 'linear-gradient(135deg, var(--cam-primary-dk) 0%, #0F172A 100%)', border: '1px solid var(--cam-primary-dk)' }}>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider" style={{ background: 'rgba(255,255,255,0.15)', color: '#FFFFFF' }}>FOR BUSINESS</span>
+            <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>One-time pack</span>
+          </div>
+          <h3 className="text-xl sm:text-2xl font-extrabold mb-1" style={{ color: '#FFFFFF' }}>Camora for Business</h3>
+          <p className="text-[12px] sm:text-[13px] mb-3" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            For bootcamps, recruiting teams, and cohorts. Single invoice, shared hour pool,
+            usage analytics for every seat.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+            {BUSINESS_STARTER.features.map((f, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[12px] leading-snug">
+                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span style={{ color: '#FFFFFF' }}>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-extrabold" style={{ color: '#FFFFFF' }}>{BUSINESS_STARTER.price}</span>
+            <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.7)' }}>one-time</span>
+          </div>
+          <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            Effective <strong style={{ color: '#FFFFFF' }}>$6.65/hr</strong> · save 33%
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-1">
+            <button
+              onClick={() => {
+                const pid = prices?.business_starter?.priceId || '';
+                if (pid) checkout(pid, BUSINESS_STARTER.name);
+                else navigate('/pricing');
+              }}
+              disabled={loading === BUSINESS_STARTER.name}
+              className="px-4 py-2 text-[12px] font-bold rounded-lg cursor-pointer disabled:opacity-50"
+              style={{ background: '#FFFFFF', color: 'var(--cam-primary-dk)' }}
+            >
+              {loading === BUSINESS_STARTER.name ? 'Processing…' : 'Buy starter pack'}
+            </button>
+            <a
+              href="mailto:business@cariara.com?subject=Camora%20for%20Business"
+              className="px-4 py-2 text-[12px] font-bold rounded-lg text-center"
+              style={{ background: 'transparent', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.4)' }}
+            >
+              Talk to us
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop add-on (stacks vertically on small screens) ─────── */}
+      <div className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
@@ -341,7 +415,7 @@ export default function PricingCards({
             <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, BYOK (bring your own AI keys) · one-time purchase</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0 ml-3">
+        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 sm:ml-3">
           <span className="text-base font-bold" style={{ color: 'var(--accent)' }}>$99</span>
           <button
             onClick={() => {
