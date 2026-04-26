@@ -12,8 +12,11 @@ import React, { useMemo } from 'react';
 import type { LumoraStory } from '@/lib/lumora-assistant';
 import { renderInlineSafe } from './inline-renderer';
 
-const TEXT_PRIMARY = '#0F172A';
-const BORDER = 'rgba(0,0,0,0.15)';
+// Theme-aware. The hardcoded slate-900 we used to ship rendered as
+// near-black on dark-navy --bg-elevated in dark mode → unreadable.
+// Use the design-token primary so it flips to cream in dark mode.
+const TEXT_PRIMARY = 'var(--text-primary)';
+const BORDER = 'var(--border)';
 
 /* ── Archetype parser — pulls leading "ARCHETYPE: X" line off a behavioral answer ── */
 const ARCHETYPES = ['Conflict', 'Leadership', 'Failure', 'Ambiguity', 'Influence', 'Innovation', 'Collaboration', 'Growth', 'Career', 'Fit'] as const;
