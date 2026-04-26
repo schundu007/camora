@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { CalibrationButton } from '@/components/lumora/audio/CalibrationButton';
@@ -24,6 +24,15 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
   const [platform, setPlatform] = useState('general');
   const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled } = useInterviewStore();
   const { selectedDeviceId } = useAudioDevices();
+
+  // Close on Escape — without this users had no keyboard escape and the
+  // backdrop click was the only way out.
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

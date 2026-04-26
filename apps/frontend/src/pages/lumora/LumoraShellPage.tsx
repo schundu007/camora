@@ -16,6 +16,8 @@ import SharedPricingCards from '../../components/shared/PricingCards';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
+import { AudioCheckModal } from '../../components/lumora/shell/AudioCheckModal';
+import { useTheme } from '../../hooks/useTheme';
 import type { ParsedBlock } from '../../types';
 import { dialogConfirm } from '../../components/shared/Dialog';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
@@ -31,6 +33,8 @@ export function LumoraShellPage() {
   // inputValue removed — copilot now manages its own state
   const [blanked, setBlanked] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [mobileAudioCheckOpen, setMobileAudioCheckOpen] = useState(false);
+  const { theme: currentTheme, toggle: toggleTheme } = useTheme();
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -547,10 +551,34 @@ export function LumoraShellPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                 </Link>
               ))}
+              {/* Utilities — desktop reaches these from the icon rail bottom; mobile gets them here. */}
+              <div className="border-t mt-1 pt-1" style={{ borderColor: 'var(--border)' }}>
+                <button type="button"
+                  onClick={() => { setMobileMoreOpen(false); setMobileAudioCheckOpen(true); }}
+                  className="w-full flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-black/5"
+                  style={{ color: 'var(--text-primary)' }}>
+                  <span>Audio check</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
+                </button>
+                <button type="button"
+                  onClick={() => { toggleTheme(); setMobileMoreOpen(false); }}
+                  className="w-full flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-black/5"
+                  style={{ color: 'var(--text-primary)' }}>
+                  <span>{currentTheme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+                  {currentTheme === 'dark' ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Mobile Audio Check — shell-level so the bottom-sheet "More → Audio check" entry can open it. */}
+      <AudioCheckModal isOpen={mobileAudioCheckOpen} onClose={() => setMobileAudioCheckOpen(false)} />
     </div>
     </>
   );

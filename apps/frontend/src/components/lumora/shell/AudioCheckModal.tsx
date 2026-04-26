@@ -139,6 +139,14 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
     return () => { stopStream(); };
   }, [isOpen, selectedInput, echoCancel, noiseSuppress, autoGain, startMic, stopStream]);
 
+  // Close on Escape — backdrop click was the only escape path before.
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isOpen, onClose]);
+
   // Swap <audio>.sinkId when user picks a different speaker
   useEffect(() => {
     const el = testAudioRef.current as any;
