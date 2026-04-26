@@ -83,7 +83,7 @@ function parseStar(text: string): { sections: { label: StarLabel; body: string }
 function StarBody({ text }: { text: string }) {
   if (!text) return null;
   const STAR_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const STAR_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.05)', color: 'var(--cam-primary-dk)', padding: '1px 5px', borderRadius: 3, fontSize: 12, fontFamily: "'JetBrains Mono',monospace" };
+  const STAR_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--cam-primary-dk)', padding: '1px 5px', borderRadius: 3, fontSize: 12, fontFamily: "'JetBrains Mono',monospace" };
   const inline = (s: string) => renderInlineSafe(s, { bold: STAR_BOLD, code: STAR_CODE });
   const lines = text.split('\n');
   const out: React.ReactNode[] = [];
@@ -131,11 +131,11 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
       {sections.map((s) => (
         <div key={s.label} className="rounded-lg overflow-hidden"
           style={{
-            background: 'rgba(38,97,156,0.04)',
-            border: '1px solid rgba(38,97,156,0.18)',
+            background: 'var(--accent-subtle)',
+            border: '1px solid var(--border)',
             borderLeft: '3px solid var(--cam-primary)',
           }}>
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(38,97,156,0.06)', borderBottom: '1px solid rgba(38,97,156,0.1)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
                 style={{ background: 'var(--cam-primary)', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
@@ -150,7 +150,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
               onClick={() => navigator.clipboard.writeText(s.body)}
               className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-colors"
               style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
               Copy
             </button>
@@ -174,7 +174,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
 function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
   return (
     <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg"
-      style={{ background: 'rgba(38,97,156,0.08)', border: '1px solid rgba(38,97,156,0.2)' }}>
+      style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary-dk)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="8" x2="12" y2="12" />
@@ -209,9 +209,9 @@ function extractRebuttals(text: string): { rebuttals: Rebuttal[]; stripped: stri
 function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="mt-2 rounded-lg overflow-hidden" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.22)', borderLeft: '3px solid #F59E0B' }}>
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A227" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="mt-2 rounded-lg overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--warning)', borderLeft: '3px solid var(--warning)' }}>
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--warning-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -259,15 +259,15 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
           return (
             <div key={s.id} className="px-2 py-1.5 rounded-md transition-all"
               style={{
-                background: matches ? 'rgba(38,97,156,0.1)' : '#FFFFFF',
-                border: matches ? '1px solid var(--cam-primary)' : '1px solid #E2E8F0',
+                background: matches ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                border: matches ? '1px solid var(--cam-primary)' : '1px solid var(--border)',
               }}>
               <div className="flex items-start gap-1.5">
                 <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
                   {s.archetypes.slice(0, 2).map(t => (
                     <span key={t} className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
                       style={{
-                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'rgba(38,97,156,0.15)',
+                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'var(--accent-subtle)',
                         color: (matches && t === activeArchetype) ? '#FFFFFF' : 'var(--cam-primary-dk)',
                       }}>
                       {t}
@@ -347,13 +347,13 @@ function RichText({ text }: { text: string }) {
   };
 
   const RICH_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700, fontFamily: "'Clash Display',sans-serif" };
-  const RICH_CODE: React.CSSProperties = { background: 'rgba(0,0,0,0.06)', color: 'var(--cam-primary-dk)', padding: '1px 5px', borderRadius: 3, fontSize: 10, fontFamily: "'JetBrains Mono',monospace", border: '1px solid rgba(0,0,0,0.08)' };
+  const RICH_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--cam-primary-dk)', padding: '1px 5px', borderRadius: 3, fontSize: 10, fontFamily: "'JetBrains Mono',monospace", border: '1px solid var(--border)' };
   const RICH_LINK: React.CSSProperties = { color: 'var(--cam-primary)', textDecoration: 'underline' };
   const renderInline = (s: string) => renderInlineSafe(s, { bold: RICH_BOLD, code: RICH_CODE, link: RICH_LINK, allowLinks: true });
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
-    <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid rgba(0,0,0,0.1)' }}>
-      <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(0,0,0,0.04)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+    <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between px-3 py-1" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
         <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{lang || 'code'}</span>
         <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }}>Copy</button>
       </div>
@@ -407,7 +407,7 @@ function RichText({ text }: { text: string }) {
 
     // Arrow patterns (Input: X -> Output: Y).
     if (/^(Input|Output)[:\s]/.test(t)) return (
-      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: 'rgba(0,0,0,0.04)', fontFamily: "'Source Code Pro', monospace", fontSize: '10px', color: TEXT_PRIMARY, border: '1px solid rgba(0,0,0,0.06)' }}>
+      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: 'var(--bg-elevated)', fontFamily: "'Source Code Pro', monospace", fontSize: '10px', color: TEXT_PRIMARY, border: '1px solid var(--border)' }}>
         {t}
       </div>
     );

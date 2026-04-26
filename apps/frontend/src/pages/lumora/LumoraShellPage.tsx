@@ -244,7 +244,7 @@ export function LumoraShellPage() {
 
         {/* Settings hint for uncalibrated users */}
         {showSettingsHint && (
-          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(38,97,156,0.08)', borderBottom: '1px solid rgba(38,97,156,0.15)' }}>
+          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
               <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
@@ -334,7 +334,7 @@ export function LumoraShellPage() {
                         if (ok) clearHistory();
                       }}
                       className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors"
-                      style={{ color: '#DC2626', border: '1px solid #FCA5A5', background: 'var(--bg-surface)' }}
+                      style={{ color: 'var(--danger)', border: '1px solid var(--danger)', background: 'var(--bg-surface)' }}
                     >Clear all</button>
                   )}
                 </div>
@@ -357,11 +357,11 @@ export function LumoraShellPage() {
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocusedEntry(realIdx); navigate('/lumora'); } }}
                           className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors"
                           style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                         >
                           <span className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-bold shrink-0"
-                            style={{ background: 'rgba(38,97,156,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
+                            style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
                             {realIdx + 1}
                           </span>
                           <div className="flex-1 min-w-0">
@@ -372,7 +372,7 @@ export function LumoraShellPage() {
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setFocusedEntry(realIdx); navigate('/lumora'); }}
                             className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors shrink-0"
-                            style={{ color: 'var(--cam-primary-dk)', background: '#CFFAFE', border: '1px solid #A5F3FC' }}
+                            style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}
                           >View</button>
                           <button
                             type="button"
@@ -385,8 +385,8 @@ export function LumoraShellPage() {
                             }}
                             className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-colors hover:bg-red-50"
                             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FCA5A5'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-dimmed)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
@@ -524,8 +524,8 @@ export function LumoraShellPage() {
       {mobileMoreOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setMobileMoreOpen(false)} role="dialog" aria-modal="true" aria-label="More menu">
           <div className="flex-1" style={{ background: 'rgba(0,0,0,0.35)' }} />
-          <div onClick={e => e.stopPropagation()} className="bg-white rounded-t-2xl overflow-hidden animate-slide-in-up" style={{ paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -8px 24px rgba(0,0,0,0.12)' }}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0]">
+          <div onClick={e => e.stopPropagation()} className="rounded-t-2xl overflow-hidden animate-slide-in-up" style={{ background: 'var(--bg-surface)', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -8px 24px rgba(0,0,0,0.12)' }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
               <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>More</span>
               <button type="button" onClick={() => setMobileMoreOpen(false)} aria-label="Close" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" /></svg>
@@ -541,8 +541,8 @@ export function LumoraShellPage() {
                 { id: 'pricing',    label: 'Pricing',    path: '/lumora/pricing' },
               ].map(item => (
                 <Link key={item.id} to={item.path} onClick={() => setMobileMoreOpen(false)}
-                  className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-[#F1F5F9]"
-                  style={{ color: activeTab === item.id ? 'var(--cam-primary)' : '#0F172A' }}>
+                  className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-black/5"
+                  style={{ color: activeTab === item.id ? 'var(--cam-primary)' : 'var(--text-primary)' }}>
                   <span>{item.label}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                 </Link>
