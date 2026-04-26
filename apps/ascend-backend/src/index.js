@@ -47,6 +47,25 @@ import challengeRouter from './routes/challenge.js';
 // the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
 import jobsRouter from './routes/jobs.js';
 
+// Same pattern as jobs above — the entire lumora-backend route surface was
+// copied under src/lumora/ so this service can answer /api/v1/transcribe,
+// /api/v1/stream, /api/v1/coding/*, /api/v1/conversations, /api/v1/documents,
+// /api/v1/speaker, /api/v1/diagram, /api/v1/reactions, /api/v1/analytics,
+// /api/v1/stories, /api/v1/inference instead of returning 404 on every
+// Lumora page. Each lumora route uses its own copy of authenticate/usage
+// middleware (sibling under src/lumora/middleware/) so the originals keep
+// working unchanged.
+import lumoraTranscriptionRouter from './lumora/routes/transcription.js';
+import lumoraInferenceRouter from './lumora/routes/inference.js';
+import lumoraCodingRouter from './lumora/routes/coding.js';
+import lumoraConversationsRouter from './lumora/routes/conversations.js';
+import lumoraDocumentsRouter from './lumora/routes/documents.js';
+import lumoraSpeakerRouter from './lumora/routes/speaker.js';
+import lumoraDiagramRouter from './lumora/routes/diagram.js';
+import lumoraReactionsRouter from './lumora/routes/reactions.js';
+import lumoraAnalyticsRouter from './lumora/routes/analytics.js';
+import lumoraStoriesRouter from './lumora/routes/stories.js';
+
 import { authenticate } from './middleware/authenticate.js';
 
 // Initialize Redis for problem caching
@@ -284,6 +303,97 @@ async function runMigrations() {
     }
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
+  }
+
+  // Lumora-side schema. The lumora-backend used to own these CREATE TABLE
+  // statements in its own startup; now that ascend serves the lumora API
+  // surface (transcribe, stream, coding, conversations, ...) it must also
+  // own the schema or every Lumora call will explode on a missing table.
+  try {
+    const lumoraMigrations = [
+      `CREATE TABLE IF NOT EXISTS lumora_conversations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(500),
+        is_archived BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_messages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        conversation_id UUID REFERENCES lumora_conversations(id) ON DELETE CASCADE,
+        role VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        metadata JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_usage_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        endpoint VARCHAR(100),
+        question_type VARCHAR(50),
+        tokens_used INTEGER DEFAULT 0,
+        latency_ms INTEGER DEFAULT 0,
+        success BOOLEAN DEFAULT true,
+        error_message TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_bookmarks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        conversation_id UUID,
+        message_id UUID,
+        note TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_completion_marks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        conversation_id UUID NOT NULL,
+        completed_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, conversation_id)
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_quotas (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+        monthly_tokens_limit INTEGER DEFAULT 100000,
+        monthly_tokens_used INTEGER DEFAULT 0,
+        monthly_requests_limit INTEGER DEFAULT 500,
+        monthly_requests_used INTEGER DEFAULT 0,
+        reset_date TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS coding_usage (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        language VARCHAR(50),
+        input_tokens INTEGER DEFAULT 0,
+        output_tokens INTEGER DEFAULT 0,
+        latency_ms INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_lumora_messages_conv ON lumora_messages(conversation_id)',
+      'CREATE INDEX IF NOT EXISTS idx_lumora_usage_user ON lumora_usage_logs(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_lumora_usage_created ON lumora_usage_logs(created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_lumora_bookmarks_user ON lumora_bookmarks(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_lumora_completion_user ON lumora_completion_marks(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_lumora_quotas_user ON lumora_quotas(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
+    ];
+    for (const sql of lumoraMigrations) {
+      try { await query(sql); } catch { /* table or index may already exist */ }
+    }
+    try {
+      const { ensureUsageTable } = await import('./lumora/services/usage.js');
+      await ensureUsageTable();
+    } catch (e) {
+      console.warn('[Migrations] Lumora usage table init skipped:', e.message);
+    }
+    console.log('[Migrations] Lumora schema ensured');
+  } catch (err) {
+    console.warn('[Migrations] Failed to run lumora migrations:', err.message);
   }
 }
 runMigrations();
@@ -806,6 +916,25 @@ app.use('/api/v1/usage', apiLimiter, usageRouter);
 // JOBS_DATABASE_URL is unset, so the frontend's /jobs page surfaces a
 // "jobs db not configured" message instead of an opaque 404.
 app.use('/api/v1/jobs', apiLimiter, jobsRouter);
+
+// Lumora route surface — full lumora-backend mounted under src/lumora/.
+// These pair with the existing /api/v1/auth and /api/v1/billing aliases
+// so the frontend's VITE_LUMORA_API_URL=https://lumorab.cariara.com
+// (which actually points at this ascend service) gets real responses
+// instead of 404s for every Lumora page.
+app.use('/api/v1/transcribe', aiLimiter, lumoraTranscriptionRouter);
+app.use('/api/v1/inference', aiLimiter, lumoraInferenceRouter);
+// Frontend posts to /api/v1/stream — forward to the inference router's
+// internal /stream handler so we don't fork the streaming logic.
+app.post('/api/v1/stream', aiLimiter, (req, res, next) => { req.url = '/stream'; lumoraInferenceRouter(req, res, next); });
+app.use('/api/v1/coding', aiLimiter, lumoraCodingRouter);
+app.use('/api/v1/conversations', apiLimiter, lumoraConversationsRouter);
+app.use('/api/v1/documents', apiLimiter, lumoraDocumentsRouter);
+app.use('/api/v1/speaker', aiLimiter, lumoraSpeakerRouter);
+app.use('/api/v1/diagram', aiLimiter, lumoraDiagramRouter);
+app.use('/api/v1/reactions', apiLimiter, lumoraReactionsRouter);
+app.use('/api/v1/analytics', apiLimiter, lumoraAnalyticsRouter);
+app.use('/api/v1/stories', apiLimiter, lumoraStoriesRouter);
 
 app.use('/api/topic-reads', apiLimiter, topicReadsRouter);
 app.use('/api/topic-comments', apiLimiter, topicCommentsRouter);
