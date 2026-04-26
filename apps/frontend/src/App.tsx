@@ -177,6 +177,35 @@ function PageTracker() {
   return null;
 }
 
+/**
+ * Set a sane default document.title on every route change so the tab
+ * never carries a stale title from the previous page. Individual pages
+ * may still override with a more specific title in their own useEffect
+ * — this only sets a fallback if they don't.
+ */
+function RouteTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const fallbacks: Array<[string, string]> = [
+      ['/lumora', 'Lumora — Camora'],
+      ['/capra/prepare', 'Prepare — Camora'],
+      ['/capra/practice', 'Practice — Camora'],
+      ['/capra/plan', 'Study Plan — Camora'],
+      ['/capra/onboarding', 'Get Started — Camora'],
+      ['/jobs', 'Jobs — Camora'],
+      ['/profile', 'Profile — Camora'],
+      ['/pricing', 'Pricing — Camora'],
+      ['/login', 'Sign In — Camora'],
+      ['/signup', 'Sign Up — Camora'],
+      ['/challenge', 'The Camora Challenge'],
+      ['/handbook', 'Blind 75 — Camora'],
+    ];
+    const match = fallbacks.find(([prefix]) => pathname === prefix || pathname.startsWith(prefix + '/'));
+    document.title = match ? match[1] : 'Camora — Apply, Prepare, Practice & Attend';
+  }, [pathname]);
+  return null;
+}
+
 export function App() {
   return (
     <AuthProvider>
@@ -184,6 +213,7 @@ export function App() {
       <Suspense fallback={<Loading />}>
         <ScrollToTop />
         <PageTracker />
+        <RouteTitle />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />

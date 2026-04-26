@@ -10,6 +10,7 @@ export default function CamoraLogo({ size = 36 }: { size?: number }) {
       aria-label="Camora"
       style={{ display: 'block', flexShrink: 0 }}
     >
+      <title>Camora</title>
       <defs>
         <linearGradient id={`${id}-shell`} x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="var(--cam-primary-lt, #3C7AAB)" />

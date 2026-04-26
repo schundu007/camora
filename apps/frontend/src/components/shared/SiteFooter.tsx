@@ -19,9 +19,9 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
         </div>
         <div className="flex items-center gap-4">
           {NAV_LINKS.map((link) => (
-            <Link key={link.label} to={link.href} className="text-[11px] font-bold transition-colors" style={{ color: textMuted }}>{link.label}</Link>
+            <Link key={link.label} to={link.href} className="text-[11px] font-bold transition-colors hover:text-[var(--text-primary)]" style={{ color: textMuted }}>{link.label}</Link>
           ))}
-          <a href="mailto:support@cariara.com" className="text-[11px] font-bold transition-colors" style={{ color: textMuted }}>Support</a>
+          <a href="mailto:support@cariara.com" className="text-[11px] font-bold transition-colors hover:text-[var(--text-primary)]" style={{ color: textMuted }}>Support</a>
         </div>
         <p className="text-[10px] font-bold" style={{ fontFamily: "'Source Code Pro', monospace", color: textMuted }}>&copy; {new Date().getFullYear()} Cariara</p>
       </div>
