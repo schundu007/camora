@@ -13,8 +13,13 @@ function ThemeToggleButton() {
     <button
       type="button"
       onClick={toggle}
-      className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
-      style={{ color: 'var(--text-secondary)' }}
+      className="flex items-center justify-center w-9 h-9 transition-all hover:bg-white/10"
+      style={{
+        color: '#FFFFFF',
+        border: '1px solid rgba(255,255,255,0.16)',
+        borderRadius: 999,
+        background: 'rgba(255,255,255,0.06)',
+      }}
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
     >
@@ -88,16 +93,23 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 
-      {/* Center: core audio controls (compact) */}
+      {/* Center: core audio controls — LeetCode-style sharp pill toolbar */}
       <div data-tour="audio" className="flex-1 flex items-center justify-center overflow-x-auto">
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}>
-          {/* Live recording controls */}
+        <div
+          className="flex items-center gap-2 px-2.5 py-1.5"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: 999,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+          }}
+        >
           <AudioCapture onTranscription={onTranscription} />
-          <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.25)' }} />
+          <div className="w-px h-5" style={{ background: 'rgba(201,162,39,0.35)' }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
           {canCapture && onCapturedProblem && (
             <>
-              <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.25)' }} />
+              <div className="w-px h-5" style={{ background: 'rgba(201,162,39,0.35)' }} />
               <ScreenCaptureButton kind={captureKind} onCaptured={onCapturedProblem} variant="label" label="Capture problem" />
             </>
           )}
@@ -109,8 +121,17 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
         {/* Voice enrollment / filter toggle */}
         <VoiceEnrollment disabled={false} />
 
-        {/* Status — compact dot on mobile, full pill on lg+ */}
-        <div className="flex items-center gap-2 px-2 lg:px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }} title={status.message}>
+        {/* Status pill — LeetCode-style sharp pill */}
+        <div
+          className="flex items-center gap-2 px-3 py-1.5"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: 999,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+          }}
+          title={status.message}
+        >
           <div className={`w-2 h-2 rounded-full ${
             status.state === 'ready' ? 'bg-[var(--cam-gold-leaf-lt)]' :
             status.state === 'error' ? 'bg-red-400' :
@@ -124,7 +145,17 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
         <ThemeToggleButton />
 
         {/* Settings gear */}
-        <button onClick={() => setShowSettings(true)} className="p-2 rounded-lg transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.92)' }} title="Settings">
+        <button
+          onClick={() => setShowSettings(true)}
+          className="flex items-center justify-center w-9 h-9 transition-all hover:bg-white/10"
+          style={{
+            color: '#FFFFFF',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: 999,
+            background: 'rgba(255,255,255,0.06)',
+          }}
+          title="Settings"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
           </svg>
