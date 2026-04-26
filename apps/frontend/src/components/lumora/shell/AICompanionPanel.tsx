@@ -153,8 +153,16 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const [input, setInput] = useState('');
   const [minimized, setMinimized] = useState(true);
   const [maximized, setMaximized] = useState(false);
-  const [panelWidth, setPanelWidth] = useState(400);
-  const [panelHeight, setPanelHeight] = useState(560);
+  // Cap initial size to the actual viewport so the floating copilot
+  // doesn't ship off the edge on small windows. 400×560 is the desktop
+  // default; on phones the panel claims most of the width with a 24px
+  // gutter and stays within the visible vertical area.
+  const [panelWidth, setPanelWidth] = useState(() =>
+    typeof window === 'undefined' ? 400 : Math.min(400, Math.max(280, window.innerWidth - 48))
+  );
+  const [panelHeight, setPanelHeight] = useState(() =>
+    typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96))
+  );
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh'>(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
   const [position, setPosition] = useState({ x: 0, y: 0 });

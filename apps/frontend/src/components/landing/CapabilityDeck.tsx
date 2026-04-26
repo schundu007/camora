@@ -147,7 +147,7 @@ function SceneLive() {
   }, [typed]);
   const chips = ['Redis Cluster', 'Token Bucket', 'Sliding Window', 'Consistent Hashing'];
   return (
-    <div className="grid grid-cols-[1fr,1fr] gap-5" style={{ marginTop: 8 }}>
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-3 sm:gap-5" style={{ marginTop: 8 }}>
       <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid #1E293B', borderRadius: 10, padding: 14 }}>
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
@@ -557,7 +557,7 @@ function SceneScore() {
   return (
     <div style={{ marginTop: 8 }}>
       <div style={{ background: 'rgba(30,41,59,0.35)', border: '1px solid #1E293B', borderRadius: 10, padding: 20 }}>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {gauges.map((g) => {
             const offset = C - (C * g.score) / 100;
             return (
