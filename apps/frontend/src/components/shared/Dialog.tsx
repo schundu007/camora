@@ -143,7 +143,7 @@ function DialogOverlay({ pending, confirmBtnRef, onClose }: {
   const title = opts.title || (isConfirm ? (danger ? 'Are you sure?' : 'Confirm') : (danger ? 'Error' : success ? 'Done' : 'Notice'));
 
   const primaryBg = danger ? '#DC2626' : success ? '#059669' : 'var(--cam-primary-dk)';
-  const primaryBgHover = danger ? '#B91C1C' : success ? '#047857' : 'var(--cam-primary-dk)';
+  const primaryBgHover = danger ? '#B91C1C' : success ? '#3C7AAB' : 'var(--cam-primary-dk)';
   const iconColor = danger ? '#DC2626' : success ? '#059669' : 'var(--cam-primary-dk)';
   const iconBg = danger ? '#FEE2E2' : success ? '#D1FAE5' : '#CFFAFE';
 

@@ -43,20 +43,20 @@
     --text-muted: #1E293B;
     --text-dimmed: #334155;
 
-    /* Accent — Camora Library Green (deep editorial emerald) */
-    --accent: #064E3B;
-    --accent-hover: #047857;
-    --accent-subtle: rgba(6,78,59,0.10);
-    --accent-text: #047857;
+    /* Accent — Camora Sapphire Editorial (Lapis Lazuli) */
+    --accent: #26619C;
+    --accent-hover: #1A4F86;
+    --accent-subtle: rgba(38,97,156,0.10);
+    --accent-text: #1A4F86;
 
-    /* Semantic — Library system. Success/info both fold onto emerald
-       (green = the brand promise). Warning uses copper (warm tone, the
-       secondary accent). Danger keeps plain red so error states never
-       collide with the brand colour. */
-    --success: #064E3B;
-    --warning: #B45309;
+    /* Semantic — Sapphire system. Success/info fold onto lapis (the
+       brand promise). Warning uses gold leaf (manuscript-illuminated
+       warm pop). Danger keeps plain red so error states never collide
+       with the brand colour. */
+    --success: #26619C;
+    --warning: #C9A227;
     --danger:  #EF4444;
-    --info:    #064E3B;
+    --info:    #26619C;
 
     /* Difficulty — rank by weight in the chip, not by hue. Values below
        are back-compat shims for any code that reads them directly. */
@@ -66,15 +66,15 @@
     --medium: #0F172A;
     --medium-bg: rgba(15,23,42,0.06);
     --medium-border: rgba(15,23,42,0.15);
-    --hard: #064E3B;
-    --hard-bg: rgba(6,78,59,0.10);
-    --hard-border: rgba(6,78,59,0.25);
+    --hard: #26619C;
+    --hard-bg: rgba(38,97,156,0.10);
+    --hard-border: rgba(38,97,156,0.25);
 
     /* Category — single accent plus two neutral slate shades. Pages
        with multiple categories side-by-side distinguish via typography
        and icons rather than color. */
-    --cat-primary: #064E3B;
-    --cat-primary-bg: rgba(6,78,59,0.10);
+    --cat-primary: #26619C;
+    --cat-primary-bg: rgba(38,97,156,0.10);
     --cat-secondary: #334155;
     --cat-secondary-bg: rgba(51,65,85,0.06);
     --cat-tertiary: #64748B;
@@ -122,36 +122,42 @@
     --nav-hover: var(--bg-elevated);
 
     /* ──────────────────────────────────────────────────────────
-       Camora brand system — Library Green
-       Editorial emerald + copper + cream + warm ink.
-       Inspired by hardcover libraries, NYT Cooking, Bottega Veneta.
+       Camora brand system — Sapphire Editorial
+       Lapis Lazuli + Gold Leaf + cream + warm ink.
 
-       Emerald = the verb (action, focus, the offer-winning promise).
-       Copper  = the noun (premium highlights, brass fittings).
-       Amber   = the adjective (warm tertiary, badges, streaks).
-       Cream   = the air (substrate, breathing room).
+       Inspiration: Renaissance illuminated manuscripts, Vermeer,
+       Egyptian sarcophagi, Yale + Oxford academic regalia.
+
+       Lapis    = the verb (action, focus, the offer-winning promise).
+       Gold     = the noun (illumination, achievement, brass).
+       Amber    = the adjective (warm tertiary, badges, streaks).
+       Cream    = the air (substrate, breathing room).
        Warm ink = the bones (text, structure).
        ────────────────────────────────────────────────────────── */
 
-    /* PRIMARY accent — deep editorial emerald */
-    --cam-primary:      #064E3B;
-    --cam-primary-lt:   #047857;
-    --cam-primary-dk:   #022C22;
-    --cam-primary-900:  #011611;
+    /* PRIMARY accent — Lapis Lazuli (Renaissance pigment, ~Afghan mines) */
+    --cam-primary:      #26619C;
+    --cam-primary-lt:   #3C7AAB;
+    --cam-primary-dk:   #1A4F86;
+    --cam-primary-900:  #051C40;
 
-    /* SECONDARY accent — copper. The teal-* aliases are kept for
-       back-compat with components that still reference them; they
-       now resolve to copper. */
-    --cam-copper:       #B45309;
-    --cam-copper-lt:    #D97706;
-    --cam-copper-dk:    #92400E;
-    --cam-copper-50:    #FEF3E2;
-    --cam-teal:         var(--cam-copper);
-    --cam-teal-lt:      var(--cam-copper-lt);
-    --cam-teal-dk:      var(--cam-copper-dk);
-    --cam-teal-50:      var(--cam-copper-50);
+    /* SECONDARY accent — Gold Leaf (illuminated manuscript gold).
+       The copper-* and teal-* aliases are kept for back-compat with
+       components that still reference them; they now resolve to gold. */
+    --cam-gold-leaf:    #C9A227;
+    --cam-gold-leaf-lt: #D9B543;
+    --cam-gold-leaf-dk: #A88817;
+    --cam-gold-leaf-50: #FBF6E3;
+    --cam-copper:       var(--cam-gold-leaf);
+    --cam-copper-lt:    var(--cam-gold-leaf-lt);
+    --cam-copper-dk:    var(--cam-gold-leaf-dk);
+    --cam-copper-50:    var(--cam-gold-leaf-50);
+    --cam-teal:         var(--cam-gold-leaf);
+    --cam-teal-lt:      var(--cam-gold-leaf-lt);
+    --cam-teal-dk:      var(--cam-gold-leaf-dk);
+    --cam-teal-50:      var(--cam-gold-leaf-50);
 
-    /* TERTIARY accent — amber, analogous warm pair with copper */
+    /* TERTIARY accent — amber (warm sibling to gold leaf) */
     --cam-amber:        #AB6400;
     --cam-amber-lt:     #C07A00;
     --cam-amber-dk:     #864E00;
@@ -166,9 +172,9 @@
     --cam-warm-ink-mid: #44403C;
     --cam-warm-ink-lt:  #A8A29E;
 
-    /* DARK SURFACES — forest void with 5% emerald echo */
-    --cam-plum-void:    #0A2419;
-    --cam-void:         #0A2419;
+    /* DARK SURFACES — deep-ocean lapis echo */
+    --cam-plum-void:    #0F1B2D;
+    --cam-void:         #0F1B2D;
 
     /* Neutral chrome (kept for low-contrast borders, never a fill) */
     --cam-midnight:     #0F172A;
@@ -180,10 +186,10 @@
     --cam-surface-lt:   #FDFCF7;
 
     /* Single source of truth (kept in sync with --accent above) */
-    --accent:           #064E3B;
-    --accent-hover:     #047857;
-    --accent-subtle:    rgba(6, 78, 59, 0.10);
-    --accent-text:      #047857;
+    --accent:           #26619C;
+    --accent-hover:     #1A4F86;
+    --accent-subtle:    rgba(38, 97, 156, 0.10);
+    --accent-text:      #1A4F86;
   }
 
   /* Light theme — opt-in via class on body or root container */
@@ -197,7 +203,7 @@
     --text-secondary: #334155;
     --text-muted: #7096BF;
     --text-dimmed: #B0CBE6;
-    --accent-subtle: rgba(6,78,59,0.10);
+    --accent-subtle: rgba(38,97,156,0.10);
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
     --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
     --shadow-md: 0 4px 12px rgba(56,189,248,0.10);

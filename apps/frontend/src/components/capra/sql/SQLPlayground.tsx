@@ -714,7 +714,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               <div className="flex-1 flex items-center justify-center p-6">
                 <div className="text-center max-w-sm">
                   {/* Celebration icon */}
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(6,78,59,0.1)' }}>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(38,97,156,0.1)' }}>
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9 12l2 2 4-4" />
@@ -769,7 +769,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
                       </button>
                     ) : (
-                      <div className="flex-1 py-2.5 text-sm font-bold rounded-xl text-center" style={{ background: 'rgba(6,78,59,0.08)', color: 'var(--accent)' }}>
+                      <div className="flex-1 py-2.5 text-sm font-bold rounded-xl text-center" style={{ background: 'rgba(38,97,156,0.08)', color: 'var(--accent)' }}>
                         All problems solved!
                       </div>
                     )}

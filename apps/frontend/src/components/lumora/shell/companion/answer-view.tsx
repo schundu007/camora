@@ -128,11 +128,11 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
       {sections.map((s) => (
         <div key={s.label} className="rounded-lg overflow-hidden"
           style={{
-            background: 'rgba(6,78,59,0.04)',
-            border: '1px solid rgba(6,78,59,0.18)',
+            background: 'rgba(38,97,156,0.04)',
+            border: '1px solid rgba(38,97,156,0.18)',
             borderLeft: '3px solid var(--cam-primary)',
           }}>
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(6,78,59,0.06)', borderBottom: '1px solid rgba(6,78,59,0.1)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(38,97,156,0.06)', borderBottom: '1px solid rgba(38,97,156,0.1)' }}>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
                 style={{ background: 'var(--cam-primary)', color: '#FFFFFF', fontFamily: "'Source Sans 3', sans-serif" }}>
@@ -171,7 +171,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
 function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
   return (
     <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg"
-      style={{ background: 'rgba(6,78,59,0.08)', border: '1px solid rgba(6,78,59,0.2)' }}>
+      style={{ background: 'rgba(38,97,156,0.08)', border: '1px solid rgba(38,97,156,0.2)' }}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary-dk)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="8" x2="12" y2="12" />
@@ -208,19 +208,19 @@ function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
   return (
     <div className="mt-2 rounded-lg overflow-hidden" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.22)', borderLeft: '3px solid #F59E0B' }}>
       <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A227" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#B45309', fontFamily: "'Source Sans 3', sans-serif" }}>Likely Rebuttals</span>
-        <span className="ml-auto text-[10px]" style={{ color: '#92400E' }}>{items.length}</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#C9A227', fontFamily: "'Source Sans 3', sans-serif" }}>Likely Rebuttals</span>
+        <span className="ml-auto text-[10px]" style={{ color: '#A88817' }}>{items.length}</span>
       </div>
       <div className="px-2.5 py-2 flex flex-col gap-1.5">
         {items.map((r, i) => (
           <div key={i} className="text-[12px] leading-[1.55]" style={{ color: TEXT_PRIMARY, fontFamily: "'Inter', sans-serif" }}>
             <p className="font-bold flex items-start gap-1">
-              <span className="font-mono shrink-0" style={{ color: '#B45309' }}>Q{i + 1}.</span>
+              <span className="font-mono shrink-0" style={{ color: '#C9A227' }}>Q{i + 1}.</span>
               <span>{r.probe}</span>
             </p>
             <p className="pl-5" style={{ color: '#334155' }}>→ {r.handling}</p>
@@ -256,7 +256,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
           return (
             <div key={s.id} className="px-2 py-1.5 rounded-md transition-all"
               style={{
-                background: matches ? 'rgba(6,78,59,0.1)' : '#FFFFFF',
+                background: matches ? 'rgba(38,97,156,0.1)' : '#FFFFFF',
                 border: matches ? '1px solid var(--cam-primary)' : '1px solid #E2E8F0',
               }}>
               <div className="flex items-start gap-1.5">
@@ -264,7 +264,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
                   {s.archetypes.slice(0, 2).map(t => (
                     <span key={t} className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
                       style={{
-                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'rgba(6,78,59,0.15)',
+                        background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'rgba(38,97,156,0.15)',
                         color: (matches && t === activeArchetype) ? '#FFFFFF' : 'var(--cam-primary-dk)',
                       }}>
                       {t}

@@ -181,7 +181,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {loading && (
         <div className="flex items-center justify-center p-8 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)]">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-[rgba(6,78,59,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
             <span className="text-sm text-[var(--text-muted)] font-mono">Looking up cached diagram...</span>
           </div>
         </div>
@@ -192,7 +192,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(6,78,59,0.3)' }}>
+            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(38,97,156,0.3)' }}>
             Generate Architecture Diagram
           </button>
         </div>
@@ -200,9 +200,9 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* Generating */}
       {generating && (
-        <div className="flex items-center justify-center p-8 border border-[rgba(6,78,59,0.2)] rounded-lg bg-[rgba(6,78,59,0.08)]">
+        <div className="flex items-center justify-center p-8 border border-[rgba(38,97,156,0.2)] rounded-lg bg-[rgba(38,97,156,0.08)]">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-[rgba(6,78,59,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
             <span className="text-sm text-[var(--accent)] font-mono">Generating {cloudProvider === 'auto' ? '' : cloudProvider.toUpperCase()} diagram...</span>
           </div>
         </div>
@@ -246,10 +246,10 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#B45309' }}>Text architecture (diagram service unavailable)</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#C9A227' }}>Text architecture (diagram service unavailable)</span>
             <button onClick={handleGenerate}
               className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded hover:bg-amber-100"
-              style={{ color: '#B45309', border: '1px solid #FCD34D' }}>
+              style={{ color: '#C9A227', border: '1px solid #FCD34D' }}>
               Retry diagram
             </button>
           </div>

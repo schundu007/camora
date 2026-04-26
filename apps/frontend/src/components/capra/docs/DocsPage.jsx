@@ -1353,7 +1353,7 @@ export default function DocsPage({ onBack }) {
                             style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                 {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
@@ -1515,7 +1515,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2000,7 +2000,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2222,7 +2222,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2363,7 +2363,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2416,7 +2416,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2462,7 +2462,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(6,78,59,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">

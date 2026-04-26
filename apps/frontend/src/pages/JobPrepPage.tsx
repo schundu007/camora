@@ -250,8 +250,8 @@ function slugifyCompany(name: string): string {
 
 const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
   'Coding': { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
-  'System Design': { bg: '#F8FAFC', text: '#92400e', border: 'var(--text-muted)' },
-  'Database': { bg: '#F8FAFC', text: '#065f46', border: '#a7f3d0' },
+  'System Design': { bg: '#F8FAFC', text: '#A88817', border: 'var(--text-muted)' },
+  'Database': { bg: '#F8FAFC', text: '#065f46', border: '#95B0CD' },
   'Architecture': { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
   'DevOps': { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe' },
   'API': { bg: '#fff7ed', text: '#9a3412', border: '#93C5FD' },
@@ -641,10 +641,10 @@ export default function JobPrepPage() {
                 )}
                 {urlAnalysis.behavioral_focus?.length > 0 && (
                   <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#D9B543', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#92400e', background: '#F8FAFC', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: '#A88817', background: '#F8FAFC', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
@@ -1147,7 +1147,7 @@ const S = {
   callout: (color: string) => ({ background: color === 'green' ? '#F8FAFC' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? 'var(--accent)' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'Source Code Pro', monospace" },
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#F8FAFC', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#D9B543' ? '#fffbeb' : '#F8FAFC', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
@@ -1188,7 +1188,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
           )}
           {data.tips && (
             <div style={S.callout('amber')}>
-              <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#92400e' }}>Delivery Tips</h4>
+              <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#A88817' }}>Delivery Tips</h4>
               <p style={{ ...S.p, margin: 0 }}>{typeof data.tips === 'string' ? data.tips : Array.isArray(data.tips) ? data.tips.join('\n') : ''}</p>
             </div>
           )}
@@ -1255,7 +1255,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
 
         {data.salaryNegotiation && typeof data.salaryNegotiation === 'object' && (
           <div style={S.callout('amber')}>
-            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#92400e' }}>Salary Negotiation</h4>
+            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#A88817' }}>Salary Negotiation</h4>
             {data.salaryNegotiation.rangeEstimate && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Expected Range:</strong> {data.salaryNegotiation.rangeEstimate}</p>}
             {data.salaryNegotiation.companyContext && <p style={{ ...S.p, margin: '0 0 4px' }}>{data.salaryNegotiation.companyContext}</p>}
             {data.salaryNegotiation.negotiationTips && <p style={{ ...S.p, margin: 0 }}><strong>Tips:</strong> {data.salaryNegotiation.negotiationTips}</p>}
@@ -1295,7 +1295,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(problems) && problems.map((p: any, i: number) => (
           <div key={i} style={{ marginBottom: '28px' }}>
             <h3 style={S.h3}>
-              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#0B5CFF' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : 'var(--accent)')}>{p.difficulty || 'Medium'}</span>
+              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#0B5CFF' : (p.difficulty || '').toLowerCase() === 'medium' ? '#D9B543' : 'var(--accent)')}>{p.difficulty || 'Medium'}</span>
               <span style={{ marginLeft: '8px' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
               {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>({p.frequency})</span>}
             </h3>
@@ -1403,9 +1403,9 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                   <div style={{ margin: '8px 0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                     <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
                       <thead><tr style={{ background: '#F8FAFC' }}>
-                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Metric</th>
-                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Result</th>
-                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Calculation</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #95B0CD' }}>Metric</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #95B0CD' }}>Result</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #95B0CD' }}>Calculation</th>
                       </tr></thead>
                       <tbody>{q.capacityEstimation.calculations.map((c: any, j: number) => (
                         <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}>

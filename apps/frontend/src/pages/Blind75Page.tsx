@@ -270,7 +270,7 @@ const PLACEHOLDER_CODE: Record<Language, string> = {
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Easy: { bg: 'rgba(5,150,105,0.12)', text: 'var(--accent)', border: 'rgba(5,150,105,0.3)' },
-  Medium: { bg: 'rgba(217,119,6,0.12)', text: '#d97706', border: 'rgba(217,119,6,0.3)' },
+  Medium: { bg: 'rgba(217,119,6,0.12)', text: '#D9B543', border: 'rgba(217,119,6,0.3)' },
   Hard: { bg: 'rgba(220,38,38,0.12)', text: '#0B5CFF', border: 'rgba(220,38,38,0.3)' },
 };
 
@@ -491,7 +491,7 @@ export default function Blind75Page() {
                     { label: '75 Problems', color: 'var(--success)', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
                     { label: `${techInterviewTopics.length} Algorithms`, color: 'var(--accent)', bg: 'rgba(45,140,255,0.12)', border: 'rgba(45,140,255,0.3)' },
                     { label: `${totalBehavioralQuestions} Behavioral`, color: 'var(--accent)', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)' },
-                    { label: 'Cheatsheet', color: '#d97706', bg: 'rgba(217,119,6,0.12)', border: 'rgba(217,119,6,0.3)' },
+                    { label: 'Cheatsheet', color: '#D9B543', bg: 'rgba(217,119,6,0.12)', border: 'rgba(217,119,6,0.3)' },
                   ].map((stat) => (
                     <span
                       key={stat.label}
@@ -937,7 +937,7 @@ export default function Blind75Page() {
                                               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{approach.name}</span>
                                               <div style={{ display: 'flex', gap: '8px' }}>
                                                 <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(45,140,255,0.12)', color: 'var(--accent)' }}>Time: {approach.complexity.time}</span>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(6,78,59,0.12)', color: 'var(--text-muted)' }}>Space: {approach.complexity.space}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(38,97,156,0.12)', color: 'var(--text-muted)' }}>Space: {approach.complexity.space}</span>
                                               </div>
                                             </div>
                                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{approach.description}</p>

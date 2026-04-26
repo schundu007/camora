@@ -441,7 +441,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-[rgba(6,78,59,0.06)] border-[rgba(6,78,59,0.2)] text-[var(--accent)]'
+              'bg-[rgba(38,97,156,0.06)] border-[rgba(38,97,156,0.2)] text-[var(--accent)]'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -470,7 +470,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(6,78,59,0.06)] border border-[rgba(6,78,59,0.2)] rounded-lg">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(38,97,156,0.06)] border border-[rgba(38,97,156,0.2)] rounded-lg">
               <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
               <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
@@ -655,7 +655,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 hover:bg-[rgba(6,78,59,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 hover:bg-[rgba(38,97,156,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
           style={{ background: t.sectionBg }}
         >
@@ -872,7 +872,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {sd.tradeoffs && sd.tradeoffs.length > 0 && (
                     <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #064E3B)` }} />
+                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #26619C)` }} />
                         <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Tradeoffs</h2>
                         <div className="ml-auto"><SectionCopyBtn getText={() => (sd.tradeoffs || []).map((tr, i) => `${i + 1}. ${tr}`).join('\n')} title="Copy tradeoffs" /></div>
                       </div>
