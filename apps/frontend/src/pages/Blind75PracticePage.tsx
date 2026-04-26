@@ -5750,26 +5750,26 @@ export default function Blind75PracticePage() {
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
-      {/* Breadcrumb Bar */}
-      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
+      {/* Breadcrumb Bar — LeetCode navy + 2px gold underline (matches /lumora/coding tabs) */}
+      <div style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 }}>
+          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             Blind 75
           </Link>
-          <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{problem.title}</span>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, color: DIFF_COLORS[problem.difficulty], background: `${DIFF_COLORS[problem.difficulty]}12` }}>
+          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.25)' }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{problem.title}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, color: 'var(--cam-primary-dk)', background: 'var(--cam-gold-leaf)' }}>
             {problem.difficulty}
           </span>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{problem.category}</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{problem.category}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={() => setActiveTab('practice')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: '1px solid var(--border)', cursor: 'pointer',
-            background: activeTab === 'practice' ? 'var(--accent)' : 'var(--bg-elevated)', color: activeTab === 'practice' ? '#fff' : 'var(--text-muted)' }}>Practice</button>
-          <button onClick={() => setActiveTab('solution')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: '1px solid var(--border)', cursor: 'pointer',
-            background: activeTab === 'solution' ? 'var(--accent)' : 'var(--bg-elevated)', color: activeTab === 'solution' ? '#fff' : 'var(--text-muted)' }}>Solution</button>
-          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button onClick={() => setActiveTab('practice')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
+            background: activeTab === 'practice' ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.1)', color: activeTab === 'practice' ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)' }}>Practice</button>
+          <button onClick={() => setActiveTab('solution')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
+            background: activeTab === 'solution' ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.1)', color: activeTab === 'solution' ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)' }}>Solution</button>
+          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: 'rgba(255,255,255,0.85)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             LeetCode <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
           </a>
         </div>
