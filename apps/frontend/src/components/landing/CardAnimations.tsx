@@ -11,9 +11,9 @@ export function CardAnimationStyles() {
         100% { transform: translateY(260%); }
       }
       @keyframes card-active-apply {
-        0%, 28% { opacity: 0.45; border-color: #E2E8F0; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        0%, 28% { opacity: 0.45; border-color: var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
         33%, 61% { opacity: 1; border-color: ${ACCENT}; box-shadow: 0 0 0 3px ${ACCENT}22; }
-        66%, 100% { opacity: 0.45; border-color: #E2E8F0; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        66%, 100% { opacity: 0.45; border-color: var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
       }
       @keyframes card-chip-pulse {
         0%, 100% { opacity: 0.35; transform: scale(0.96); }
@@ -78,7 +78,7 @@ export function ApplyAnim() {
     { co: 'STRIPE', role: 'Tech Lead', match: 91 },
   ];
   return (
-    <div style={{ ...base, background: 'linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%)' }}>
+    <div style={{ ...base, background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%)' }}>
       <div
         style={{
           position: 'absolute',
@@ -96,8 +96,8 @@ export function ApplyAnim() {
           <div
             key={j.co}
             style={{
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
               borderRadius: 6,
               padding: '7px 10px',
               display: 'flex',
@@ -107,8 +107,8 @@ export function ApplyAnim() {
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: MONO, color: '#0F172A', letterSpacing: '0.06em' }}>{j.co}</span>
-              <span style={{ fontSize: 9, color: '#64748B' }}>{j.role}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: MONO, color: 'var(--text-secondary)', letterSpacing: '0.06em' }}>{j.co}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{j.role}</span>
             </div>
             <span
               style={{
@@ -116,7 +116,7 @@ export function ApplyAnim() {
                 fontWeight: 800,
                 padding: '2px 6px',
                 borderRadius: 3,
-                background: '#F8FAFC',
+                background: 'var(--bg-elevated)',
                 color: 'var(--accent)',
                 fontFamily: MONO,
               }}
@@ -136,13 +136,13 @@ export function ApplyAnim() {
 export function PrepareAnim() {
   const topics = ['DSA', 'SYS DESIGN', 'SQL', 'BEHAVIORAL', 'OS', 'NETWORKS', 'LLD', 'GRAPHS', 'OOD'];
   return (
-    <div style={{ ...base, background: 'linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 14 }}>
+    <div style={{ ...base, background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 14 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, width: '100%', maxWidth: 240 }}>
         {topics.map((t, i) => (
           <div
             key={t}
             style={{
-              background: '#FFFFFF',
+              background: 'var(--bg-surface)',
               border: '1px solid rgba(38,97,156,0.20)',
               borderRadius: 4,
               padding: '7px 4px',
@@ -169,17 +169,17 @@ export function PrepareAnim() {
 export function PracticeAnim() {
   const lines: Array<{ text: string; color: string }> = [
     { text: 'function twoSum(nums, target) {', color: 'var(--accent)' },
-    { text: '  const seen = new Map();', color: '#94A3B8' },
-    { text: '  for (let i = 0; i < nums.length; i++) {', color: '#94A3B8' },
+    { text: '  const seen = new Map();', color: 'var(--text-dimmed)' },
+    { text: '  for (let i = 0; i < nums.length; i++) {', color: 'var(--text-dimmed)' },
     { text: '    if (seen.has(target - nums[i]))', color: 'var(--text-muted)' },
     { text: '      return [seen.get(target - nums[i]), i];', color: 'var(--accent)' },
-    { text: '  }', color: '#94A3B8' },
-    { text: '}', color: '#94A3B8' },
+    { text: '  }', color: 'var(--text-dimmed)' },
+    { text: '}', color: 'var(--text-dimmed)' },
   ];
   return (
     <div style={{ ...base, background: 'var(--cam-void)', padding: '10px 12px', fontFamily: MONO }}>
       <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#EF4444' }} />
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--danger)' }} />
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--text-muted)' }} />
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
       </div>
@@ -236,7 +236,7 @@ export function AttendAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, var(--cam-void) 0%, #1E293B 100%)',
+        background: 'linear-gradient(135deg, var(--cam-void) 0%, var(--cam-primary-dk) 100%)',
         padding: '12px 14px',
         display: 'flex',
         flexDirection: 'column',
@@ -249,12 +249,12 @@ export function AttendAnim() {
             width: 7,
             height: 7,
             borderRadius: '50%',
-            background: '#EF4444',
+            background: 'var(--danger)',
             animation: 'card-dot 1.1s ease-in-out infinite',
           }}
         />
-        <span style={{ fontSize: 9, fontWeight: 800, color: '#EF4444', fontFamily: MONO, letterSpacing: '0.18em' }}>LIVE</span>
-        <span style={{ fontSize: 9, color: '#94A3B8', fontFamily: MONO, letterSpacing: '0.12em' }}>TRANSCRIBING</span>
+        <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', fontFamily: MONO, letterSpacing: '0.18em' }}>LIVE</span>
+        <span style={{ fontSize: 9, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.12em' }}>TRANSCRIBING</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 3, height: 38 }}>
@@ -266,7 +266,7 @@ export function AttendAnim() {
               width: 3,
               height: '100%',
               borderRadius: 2,
-              background: `linear-gradient(180deg, ${ACCENT}, #3C7AAB)`,
+              background: `linear-gradient(180deg, ${ACCENT}, var(--cam-primary-lt))`,
               transformOrigin: 'center',
               animation: `card-wave ${0.85 + (i % 5) * 0.12}s ease-in-out ${(i % 7) * 0.07}s infinite`,
             }}
@@ -277,7 +277,7 @@ export function AttendAnim() {
       <div
         style={{
           fontSize: 10,
-          color: '#CBD5E1',
+          color: 'var(--text-dimmed)',
           fontFamily: MONO,
           lineHeight: 1.3,
           animation: 'card-transcript-cycle 5s ease-in-out infinite',
@@ -302,7 +302,7 @@ export function FeatureLiveAIAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, var(--cam-void) 0%, #1E293B 100%)',
+        background: 'linear-gradient(135deg, var(--cam-void) 0%, var(--cam-primary-dk) 100%)',
         padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',
@@ -316,12 +316,12 @@ export function FeatureLiveAIAnim() {
             width: 6,
             height: 6,
             borderRadius: '50%',
-            background: '#EF4444',
+            background: 'var(--danger)',
             animation: 'card-dot 1.1s ease-in-out infinite',
           }}
         />
-        <span style={{ fontSize: 8, fontWeight: 800, color: '#EF4444', letterSpacing: '0.2em' }}>LIVE</span>
-        <span style={{ marginLeft: 'auto', fontSize: 8, color: '#94A3B8', letterSpacing: '0.08em' }}>0.3s</span>
+        <span style={{ fontSize: 8, fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.2em' }}>LIVE</span>
+        <span style={{ marginLeft: 'auto', fontSize: 8, color: 'var(--text-dimmed)', letterSpacing: '0.08em' }}>0.3s</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -334,7 +334,7 @@ export function FeatureLiveAIAnim() {
                 width: 2,
                 height: '100%',
                 borderRadius: 1,
-                background: `linear-gradient(180deg, ${ACCENT}, #3C7AAB)`,
+                background: `linear-gradient(180deg, ${ACCENT}, var(--cam-primary-lt))`,
                 transformOrigin: 'center',
                 animation: `card-wave ${0.85 + (i % 4) * 0.12}s ease-in-out ${(i % 5) * 0.08}s infinite`,
               }}
@@ -344,7 +344,7 @@ export function FeatureLiveAIAnim() {
         <span
           style={{
             fontSize: 9,
-            color: '#E2E8F0',
+            color: 'var(--border)',
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             display: 'inline-block',
@@ -396,7 +396,7 @@ export function FeatureJobMatchAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%)',
+        background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%)',
         fontFamily: MONO,
       }}
     >
@@ -444,7 +444,7 @@ export function FeatureJobMatchAnim() {
             width: 26,
             height: 26,
             borderRadius: '50%',
-            background: `linear-gradient(135deg, ${ACCENT}, #3C7AAB)`,
+            background: `linear-gradient(135deg, ${ACCENT}, var(--cam-primary-lt))`,
             boxShadow: '0 2px 8px rgba(38,97,156,0.27)',
             marginBottom: 4,
           }}
@@ -457,7 +457,7 @@ export function FeatureJobMatchAnim() {
               fontWeight: 800,
               padding: '2px 7px',
               borderRadius: 3,
-              background: '#FFFFFF',
+              background: 'var(--bg-surface)',
               color: ACCENT,
               border: '1px solid rgba(38,97,156,0.27)',
               alignSelf: 'flex-start',
@@ -488,8 +488,8 @@ export function FeatureJobMatchAnim() {
           <div
             key={c.co}
             style={{
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
               borderRadius: 5,
               padding: '5px 9px',
               display: 'flex',
@@ -500,14 +500,14 @@ export function FeatureJobMatchAnim() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#0F172A', letterSpacing: '0.04em' }}>{c.co}</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>{c.co}</span>
             <span
               style={{
                 fontSize: 9,
                 fontWeight: 800,
                 padding: '1px 5px',
                 borderRadius: 3,
-                background: '#F8FAFC',
+                background: 'var(--bg-elevated)',
                 color: 'var(--accent)',
               }}
             >
@@ -541,7 +541,7 @@ export function FeaturePrepAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, #FAFAFA 0%, #F1F5F9 100%)',
+        background: 'linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
       }}
     >
       <svg width="100%" height="100%" viewBox="0 0 260 160" preserveAspectRatio="xMidYMid meet">
@@ -577,7 +577,7 @@ export function FeaturePrepAnim() {
               width={n.w}
               height={n.h}
               rx="4"
-              fill={n.filled ? ACCENT : '#FFFFFF'}
+              fill={n.filled ? ACCENT : 'var(--bg-surface)'}
               stroke={ACCENT}
               strokeWidth="1.3"
             />
@@ -634,7 +634,7 @@ export function FeatureMockInterviewAnim() {
     <div
       style={{
         ...base,
-        background: 'linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 100%)',
+        background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%)',
         padding: '12px 10px 10px',
         display: 'flex',
         flexDirection: 'column',
@@ -658,7 +658,7 @@ export function FeatureMockInterviewAnim() {
               }}
             >
               <svg width="52" height="52" viewBox="0 0 52 52">
-                <circle cx="26" cy="26" r={R} fill="none" stroke="#E2E8F0" strokeWidth="4" />
+                <circle cx="26" cy="26" r={R} fill="none" stroke="var(--border)" strokeWidth="4" />
                 <circle
                   cx="26"
                   cy="26"
@@ -682,7 +682,7 @@ export function FeatureMockInterviewAnim() {
                   y="30"
                   textAnchor="middle"
                   fontSize="13"
-                  fill="#0F172A"
+                  fill="var(--text-secondary)"
                   fontFamily="'Source Code Pro', monospace"
                   fontWeight="800"
                   style={{ opacity: 0, animation: `feat-pop 0.3s ease-out ${g.delay + 0.3}s forwards` }}
@@ -690,7 +690,7 @@ export function FeatureMockInterviewAnim() {
                   {g.score}
                 </text>
               </svg>
-              <span style={{ fontSize: 7.5, fontWeight: 800, color: '#64748B', letterSpacing: '0.14em' }}>{g.label}</span>
+              <span style={{ fontSize: 7.5, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.14em' }}>{g.label}</span>
             </div>
           );
         })}
@@ -705,7 +705,7 @@ export function FeatureMockInterviewAnim() {
           animation: 'card-fade-up 0.45s ease-out 1.7s forwards',
         }}
       >
-        <span style={{ fontSize: 9, fontWeight: 800, color: '#64748B', letterSpacing: '0.15em' }}>OVERALL</span>
+        <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.15em' }}>OVERALL</span>
         <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, letterSpacing: '0.04em' }}>92 / 100</span>
       </div>
     </div>

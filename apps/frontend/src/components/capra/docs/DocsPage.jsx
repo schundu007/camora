@@ -655,7 +655,7 @@ export default function DocsPage({ onBack }) {
                 <button
                   onClick={() => setSelectedTopic(null)}
                   className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded font-semibold text-xs transition-colors"
-                  style={{ color: 'var(--accent)', background: 'var(--accent-subtle)', border: '1px solid rgba(45,140,255,0.25)' }}
+                  style={{ color: 'var(--accent)', background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.25)' }}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                   Back
@@ -801,7 +801,7 @@ export default function DocsPage({ onBack }) {
                                   {/* Progress ring */}
                                   <div className="relative shrink-0" style={{ width: 48, height: 48 }}>
                                     <svg width="48" height="48" viewBox="0 0 48 48" className="transform -rotate-90">
-                                      <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(56,189,248,0.1)" strokeWidth="3" />
+                                      <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="3" />
                                       <circle cx="24" cy="24" r={radius} fill="none" stroke="var(--accent)" strokeWidth="3"
                                         strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                                         strokeLinecap="round" className="transition-colors duration-1000" />
@@ -833,7 +833,7 @@ export default function DocsPage({ onBack }) {
                               { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
                               { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
                             ].map((phase, idx) => (
-                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-4 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
+                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-4 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(38,97,156,0.1)' : 'none' }}>
                                 <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
                                   <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
@@ -843,7 +843,7 @@ export default function DocsPage({ onBack }) {
                                     <Icon name="chevronRight" size={12} style={{ color: 'var(--accent)' }} />
                                   </div>
                                 )}
-                                <div className="w-7 h-7 rounded flex items-center justify-center mb-2" style={{ background: 'rgba(56,189,248,0.06)' }}>
+                                <div className="w-7 h-7 rounded flex items-center justify-center mb-2" style={{ background: 'rgba(38,97,156,0.06)' }}>
                                   <Icon name={phase.icon} size={14} style={{ color: 'var(--accent)' }} />
                                 </div>
                                 <div className="text-sm font-bold mb-1 transition-colors" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{phase.title}</div>
@@ -984,12 +984,12 @@ export default function DocsPage({ onBack }) {
                         <div className="flex items-center gap-1 mt-5 p-1 rounded w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
                             className="px-4 py-2 text-sm font-bold rounded transition-colors"
-                            style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
+                            style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#FFFFFF', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
                             className="px-4 py-2 text-sm font-bold rounded transition-colors"
-                            style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
+                            style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#FFFFFF', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             SQL Playground
                           </button>
                         </div>
@@ -1356,7 +1356,7 @@ export default function DocsPage({ onBack }) {
                             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                 {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
@@ -1518,7 +1518,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2003,7 +2003,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2225,7 +2225,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2264,7 +2264,7 @@ export default function DocsPage({ onBack }) {
                           key={company.id}
                           onClick={() => setSelectedTopic(company.id)}
                           className={`group rounded transition-colors cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-[var(--success)]/30' : ''}`}
-                          style={{ background: 'var(--bg-surface)', border: completedTopics[company.id] ? undefined : '1px solid rgba(56,189,248,0.12)', boxShadow: 'none' }}
+                          style={{ background: 'var(--bg-surface)', border: completedTopics[company.id] ? undefined : '1px solid rgba(38,97,156,0.12)', boxShadow: 'none' }}
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
@@ -2281,14 +2281,14 @@ export default function DocsPage({ onBack }) {
                                 <p className="landing-body text-[var(--text-muted)] text-xs mt-0.5">{company.subtitle}</p>
                               </div>
                             </div>
-                            <span className="text-[10px] landing-mono px-2 py-0.5 rounded-full border text-[var(--accent)] flex-shrink-0" style={{ borderColor: 'rgba(56,189,248,0.2)', background: 'var(--bg-elevated)' }}>
+                            <span className="text-[10px] landing-mono px-2 py-0.5 rounded-full border text-[var(--accent)] flex-shrink-0" style={{ borderColor: 'rgba(38,97,156,0.2)', background: 'var(--bg-elevated)' }}>
                               {company.keyQuestions?.length || 0}Q
                             </span>
                           </div>
                           {company.principles && company.principles.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
                               {company.principles.slice(0, 5).map((principle, i) => (
-                                <span key={i} className="landing-mono text-[10px] px-2 py-0.5 rounded-full border text-[var(--text-muted)]" style={{ borderColor: 'rgba(56,189,248,0.15)', background: 'transparent' }}>
+                                <span key={i} className="landing-mono text-[10px] px-2 py-0.5 rounded-full border text-[var(--text-muted)]" style={{ borderColor: 'rgba(38,97,156,0.15)', background: 'transparent' }}>
                                   {principle}
                                 </span>
                               ))}
@@ -2366,7 +2366,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2419,7 +2419,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -2465,7 +2465,7 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : 'rgba(38,97,156,0.1)' }}>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
                                     {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">

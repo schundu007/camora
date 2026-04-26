@@ -8,9 +8,9 @@ import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 28;
 const TICKER_ITEMS = [
   { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: 'var(--cam-primary)' },
-  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#95B0CD' },
+  { text: 'Find bugs, build features', highlight: 'join the founding team', color: 'var(--cam-primary-lt)' },
   { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: 'var(--cam-primary)' },
-  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#95B0CD' },
+  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: 'var(--cam-primary-lt)' },
   { text: 'Open to all developers worldwide', highlight: 'remote-first', color: 'var(--cam-primary)' },
 ];
 
@@ -151,7 +151,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                   <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Onboarding</Link>
                 )}
                 <Link to="/profile?tab=referrals" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Refer a Friend</Link>
-                <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm text-red-500 font-bold">Sign out</button>
+                <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm font-bold" style={{ color: 'var(--danger)' }}>Sign out</button>
               </>
             ) : (
               <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Sign in</Link>
@@ -164,16 +164,16 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
           background: isLight
-            ? 'linear-gradient(90deg, rgba(38,97,156,0.06) 0%, rgba(103,232,249,0.06) 50%, rgba(38,97,156,0.06) 100%)'
-            : 'linear-gradient(90deg, var(--cam-primary), #95B0CD, var(--cam-primary), #95B0CD)',
+            ? 'linear-gradient(90deg, rgba(38,97,156,0.06) 0%, rgba(38,97,156,0.10) 50%, rgba(38,97,156,0.06) 100%)'
+            : 'linear-gradient(90deg, var(--cam-primary-dk), var(--cam-primary), var(--cam-primary-dk))',
           height: TICKER_HEIGHT,
-          borderTop: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
-          borderBottom: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
+          borderTop: `1px solid ${isLight ? 'var(--border)' : 'rgba(255,255,255,0.15)'}`,
+          borderBottom: `1px solid ${isLight ? 'var(--border)' : 'rgba(255,255,255,0.15)'}`,
         }}>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 overflow-hidden h-full">
             <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
               {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? '#334155' : '#FFFFFF' }}>
+                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? 'var(--text-dimmed)' : '#FFFFFF' }}>
                   {item.text}{' '}
                   <span className="ml-1" style={{ color: isLight ? item.color : '#FFFFFF' }}>{item.highlight}</span>
                   <span className="mx-5 w-1.5 h-1.5 rounded-full" style={{ background: isLight ? item.color : 'rgba(255,255,255,0.4)' }} />

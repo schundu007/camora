@@ -828,7 +828,7 @@ export default function TopicDetail({
           {progressInfo && (
             <div className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-white border border-[var(--border)]">
               <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
-                <circle cx="10" cy="10" r="8" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
+                <circle cx="10" cy="10" r="8" fill="none" stroke="var(--bg-elevated)" strokeWidth="2.5" />
                 <circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 8}`}
                   strokeDashoffset={`${2 * Math.PI * 8 * (1 - progressInfo.percent / 100)}`}
@@ -1507,7 +1507,7 @@ export default function TopicDetail({
                               return (
                                 <button key={lang} onClick={() => setCodeLanguage(lang)}
                                   className={`text-[10px] landing-mono px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${isActive ? `text-${c}-300 bg-${c}-900/50 border-${c}-700/50` : 'text-[var(--text-muted)] bg-transparent border-gray-700 hover:text-gray-300'}`}
-                                  style={isActive ? { color: c === 'yellow' ? '#F8FAFC' : undefined, background: c === 'yellow' ? 'rgba(161,98,7,0.3)' : undefined } : {}}
+                                  style={isActive ? { color: c === 'yellow' ? '#FFFFFF' : undefined, background: c === 'yellow' ? 'rgba(122,92,10,0.3)' : undefined } : {}}
                                 >{lang.charAt(0).toUpperCase() + lang.slice(1)}</button>
                               );
                             })}
@@ -1594,7 +1594,7 @@ export default function TopicDetail({
                     <Link
                       key={i}
                       to={href}
-                      className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-[var(--accent)]/10/60 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[#f0f0f0]' : ''}`}
+                      className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-[var(--accent)]/10/60 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[var(--border)]' : ''}`}
                     >
                       <span className="text-xs text-[var(--text-muted)] landing-mono">{i + 1}</span>
                       <span className="text-sm text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors landing-body pr-2">{problemName}</span>
@@ -1897,7 +1897,7 @@ export default function TopicDetail({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="hidden sm:inline text-xs font-semibold px-3 py-1.5 rounded group-hover:bg-[var(--accent)] group-hover:text-white transition-colors" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
+                      <span className="hidden sm:inline text-xs font-semibold px-3 py-1.5 rounded group-hover:bg-[var(--accent)] group-hover:text-white transition-colors" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                         Open Panel
                       </span>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
@@ -1915,7 +1915,7 @@ export default function TopicDetail({
                   <div className="p-3 space-y-1.5">
                     {topicDetails.architectureLayers.map((layer, i) => (
                       <div key={i} className="flex items-start gap-3 p-2.5 rounded border border-[var(--border)]">
-                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
+                        <span className="w-6 h-6 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
                         <div>
                           <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
                           <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
@@ -1942,7 +1942,7 @@ export default function TopicDetail({
                         <div key={i} className="relative">
                           {i > 0 && (
                             <div className="flex justify-center -my-1 z-10 relative">
-                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             </div>
                           )}
                           <div className="rounded border border-[var(--border)] bg-white transition-colors overflow-hidden">
@@ -2152,7 +2152,7 @@ export default function TopicDetail({
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
-                        <div className="p-3 bg-[rgba(45,140,255,0.04)]">
+                        <div className="p-3 bg-[var(--accent-subtle)]">
                           <h4 className="text-sm font-bold text-[var(--accent)] mb-1 landing-display">{item.topic}</h4>
                           <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
                             <FormattedContent content={item.detail} color="blue" />
@@ -2412,7 +2412,7 @@ export default function TopicDetail({
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
-                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(245,158,11,0.04)] border-b border-[rgba(245,158,11,0.2)]">
+                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(201,162,39,0.04)] border-b border-[rgba(201,162,39,0.2)]">
                           <span className="text-xs font-bold text-[var(--warning-text)] landing-mono flex-shrink-0">Q{i + 1}</span>
                           <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
                         </div>
@@ -3060,7 +3060,7 @@ export default function TopicDetail({
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'var(--accent)', color: '#fff' }}>
+                <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'var(--accent)', color: '#FFFFFF' }}>
                   <Icon name="layers" size={16} />
                 </div>
                 <div>
