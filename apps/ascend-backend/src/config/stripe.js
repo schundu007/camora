@@ -19,7 +19,8 @@ export const STRIPE_PRICES = {
   PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,                   // $290/yr — 24 AI hrs
   PRO_MAX_MONTHLY: process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,         // $79/mo  — 8 AI hrs (10% off)
   PRO_MAX_YEARLY: process.env.STRIPE_PRICE_PRO_MAX_YEARLY,           // $790/yr — 96 AI hrs (10% off)
-  DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT, // $99 one-time
+  DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT, // $99 one-time, single user
+  BUSINESS_DESKTOP_LIFETIME: process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME, // $999 one-time, 10 seats
 
   // Hour top-up packs (one-time, 90-day expiry, flat $10/hr)
   TOPUP_1H: process.env.STRIPE_PRICE_TOPUP_1H,

@@ -112,8 +112,19 @@ router.get('/prices', (req, res) => {
       amount: 9900,
       currency: 'usd',
       interval: null,
+      seat_limit: 1,
       desktop_only: true,
       web_content: false,
+    },
+    business_desktop_lifetime: {
+      priceId: STRIPE_PRICES.BUSINESS_DESKTOP_LIFETIME,
+      amount: 99900,
+      currency: 'usd',
+      interval: null,
+      seat_limit: 10,
+      desktop_only: true,
+      web_content: false,
+      business: true,
     },
 
     // ── Camora for Business — one-time starter pack ──────────
@@ -188,6 +199,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       STRIPE_PRICES.PRO_MAX_MONTHLY,
       STRIPE_PRICES.PRO_MAX_YEARLY,
       STRIPE_PRICES.DESKTOP_LIFETIME,
+      STRIPE_PRICES.BUSINESS_DESKTOP_LIFETIME,
       STRIPE_PRICES.TOPUP_1H,
       STRIPE_PRICES.TOPUP_5H,
       STRIPE_PRICES.TOPUP_25H,
@@ -228,6 +240,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     // Determine purchase type for metadata.
     let purchaseType = 'subscription';
     if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) purchaseType = 'desktop_lifetime';
+    else if (priceId === STRIPE_PRICES.BUSINESS_DESKTOP_LIFETIME) purchaseType = 'business_desktop_lifetime';
     else if (priceId === STRIPE_PRICES.PRO_MONTHLY) purchaseType = 'pro_monthly';
     else if (priceId === STRIPE_PRICES.PRO_YEARLY) purchaseType = 'pro_yearly';
     else if (priceId === STRIPE_PRICES.PRO_MAX_MONTHLY) purchaseType = 'pro_max_monthly';
@@ -239,6 +252,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
 
     // One-time purchases (Stripe `mode: 'payment'` instead of subscription).
     const isOneTime = purchaseType === 'desktop_lifetime'
+      || purchaseType === 'business_desktop_lifetime'
       || purchaseType === 'topup_1h'
       || purchaseType === 'topup_5h'
       || purchaseType === 'topup_25h'
@@ -587,13 +601,31 @@ async function handleCheckoutComplete(session) {
   logger.info({ userId, priceId, type }, 'Processing checkout completion');
 
   if (type === 'desktop_lifetime') {
-    // Desktop lifetime — record purchase, no web content access
     await query(
       `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)
        VALUES ($1, $2, 0, $3)`,
       [userId, type, 'Desktop Lifetime ($99 one-time)']
     );
     logger.info({ userId, type, sessionId: session.id }, 'Desktop lifetime activated');
+  } else if (type === 'business_desktop_lifetime') {
+    // 10-seat desktop license. Auto-create the team so the buyer can
+    // immediately invite up to 9 mates without a separate API call.
+    await query(
+      `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)
+       VALUES ($1, $2, 0, $3)`,
+      [userId, type, 'Business Desktop Lifetime ($999, 10 seats)']
+    );
+    await ensureTeamForBusinessPurchase(userId, 'business_desktop_lifetime');
+    logger.info({ userId, type, sessionId: session.id }, 'Business desktop lifetime activated + team ready');
+  } else if (type === 'business_starter') {
+    // One-time pack: 75 hrs + 10 seats. Auto-create team so the buyer can
+    // start inviting members without a manual POST /api/v1/teams call.
+    await query(
+      `UPDATE ascend_subscriptions SET plan_type = 'business_starter', status = 'active' WHERE user_id = $1`,
+      [userId]
+    );
+    await ensureTeamForBusinessPurchase(userId, 'business_starter');
+    logger.info({ userId, sessionId: session.id }, 'Business starter pack activated + team ready');
   } else {
     // Subscription plan — activate with the type as plan_type
     const planType = type || 'pro_monthly';
@@ -601,7 +633,23 @@ async function handleCheckoutComplete(session) {
       `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
       [planType, userId]
     );
+    // Pro Max tiers are team-eligible too — auto-create the team so the
+    // buyer can invite mates from the upgrade success screen.
+    if (planType === 'pro_max_monthly' || planType === 'pro_max_yearly') {
+      await ensureTeamForBusinessPurchase(userId, planType);
+    }
     logger.info({ userId, planType, sessionId: session.id }, 'Plan activated on checkout');
+  }
+}
+
+// Helper: idempotently create a team for a user after a team-eligible purchase.
+// Failures are logged but never block the rest of webhook processing.
+async function ensureTeamForBusinessPurchase(userId, planType) {
+  try {
+    const { createTeamForUser } = await import('../services/teamService.js');
+    await createTeamForUser({ userId, planType });
+  } catch (err) {
+    logger.warn({ err: err.message, userId, planType }, '[teams] auto-create skipped on purchase');
   }
 }
 

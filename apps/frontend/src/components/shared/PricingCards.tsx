@@ -79,6 +79,7 @@ export const PRO_MAX_PLAN: PlanCard = {
     'Everything in Pro',
     '8 AI hours / month',
     '$9/hr overage (save 10%)',
+    'Share with up to 5 mates · pooled hours',
     'Desktop app + voice filtering',
     'Priority support',
   ],
@@ -404,30 +405,65 @@ export default function PricingCards({
         </div>
       </div>
 
-      {/* ── Desktop add-on (stacks vertically on small screens) ─────── */}
-      <div className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+      {/* ── Desktop add-on — Individual ($99/1 user) and Business ($999/10 seats) ── */}
+      <div>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Desktop app · BYOK · one-time purchase</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Individual */}
+          <div className="rounded-xl p-4 flex flex-col" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+              </div>
+              <div>
+                <p className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Individual</p>
+                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>1 user · stealth mode</p>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1 mb-3">
+              <span className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$99</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
+            </div>
+            <button
+              onClick={() => {
+                const pid = prices?.desktop_lifetime?.priceId || '';
+                if (pid) checkout(pid, 'Desktop Lifetime');
+                else navigate('/pricing');
+              }}
+              disabled={loading === 'Desktop Lifetime'}
+              className="mt-auto w-full px-3 py-2 text-white text-[11px] font-semibold rounded-md cursor-pointer disabled:opacity-50" style={{ background: 'var(--accent)' }}
+            >
+              {loading === 'Desktop Lifetime' ? '…' : 'Buy individual'}
+            </button>
           </div>
-          <div className="min-w-0">
-            <span className="text-[13px] font-semibold block" style={{ color: 'var(--text-primary)' }}>Desktop App — Lifetime</span>
-            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, BYOK (bring your own AI keys) · one-time purchase</p>
+
+          {/* Business — 10 seats */}
+          <div className="rounded-xl p-4 flex flex-col" style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary-dk)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(15, 23, 42, 0.1)', color: 'var(--cam-primary-dk)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" /></svg>
+              </div>
+              <div>
+                <p className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Business · 10 seats</p>
+                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>For teams &amp; cohorts</p>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1 mb-3">
+              <span className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$999</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time · $99.90/seat</span>
+            </div>
+            <button
+              onClick={() => {
+                const pid = prices?.business_desktop_lifetime?.priceId || '';
+                if (pid) checkout(pid, 'Business Desktop Lifetime');
+                else navigate('/pricing');
+              }}
+              disabled={loading === 'Business Desktop Lifetime'}
+              className="mt-auto w-full px-3 py-2 text-white text-[11px] font-semibold rounded-md cursor-pointer disabled:opacity-50" style={{ background: 'var(--cam-primary-dk)' }}
+            >
+              {loading === 'Business Desktop Lifetime' ? '…' : 'Buy 10-seat license'}
+            </button>
           </div>
-        </div>
-        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 sm:ml-3">
-          <span className="text-base font-bold" style={{ color: 'var(--accent)' }}>$99</span>
-          <button
-            onClick={() => {
-              const pid = prices?.desktop_lifetime?.priceId || '';
-              if (pid) checkout(pid, 'Desktop Lifetime');
-              else navigate('/pricing');
-            }}
-            disabled={loading === 'Desktop Lifetime'}
-            className="px-3 py-1.5 text-white text-[11px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
-          >
-            {loading === 'Desktop Lifetime' ? '…' : 'Buy once'}
-          </button>
         </div>
       </div>
 

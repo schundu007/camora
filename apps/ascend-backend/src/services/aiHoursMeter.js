@@ -15,6 +15,12 @@ export function tokensToSeconds(tokensIn = 0, tokensOut = 0) {
 }
 
 // Fire-and-forget. Never throws. Never blocks the LLM response.
+//
+// team_id is filled inline via subquery against team_members so the write
+// stays single-round-trip. Postgres tolerates NULL when team_members is empty
+// or doesn't exist yet (we swallow the failure on the outer .catch). Read
+// paths that need fast team-id lookup (PaywallGate, dashboards) should hit
+// teamService.getTeamIdForUser, which is Redis-cached.
 export function recordUsage({
   userId,
   surface,
@@ -31,8 +37,9 @@ export function recordUsage({
   const end = new Date();
   query(
     `INSERT INTO ai_hours_usage
-       (user_id, surface, started_at, ended_at, seconds, tokens_in, tokens_out, model, plan_at_charge)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+       (user_id, surface, started_at, ended_at, seconds, tokens_in, tokens_out, model, plan_at_charge, team_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
+             (SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1))`,
     [userId, surface, start, end, safeSeconds, tokensIn || 0, tokensOut || 0, model, planAtCharge],
   ).catch((err) => {
     logger.warn({ err: err.message, userId, surface }, '[aiHoursMeter] insert failed');
