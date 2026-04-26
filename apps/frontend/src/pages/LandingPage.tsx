@@ -204,8 +204,16 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ 3. STATS ═══════════ */}
-      <section className="relative px-6 py-24 overflow-hidden" style={{ background: 'var(--cam-surface-lt)' }}>
-        <div className="absolute inset-0" style={{ backgroundImage: 'url(/grass-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
+      <section
+        className="relative px-6 py-24 overflow-hidden"
+        style={{
+          // Left-to-right blue → white wash. Replaces the previous grass
+          // photo with the gettyimages watermark; matches the brand's blue
+          // accents and stays readable behind the dark stat numerals.
+          background:
+            'linear-gradient(90deg, #2A66AE 0%, #4F86C5 35%, #B7CFE6 70%, #FFFFFF 100%)',
+        }}
+      >
         <div className="relative max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((s, i) => (
