@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -175,6 +175,7 @@ const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 export default function OnboardingPage() {
   const { token: accessToken } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     document.title = 'Get Started | Camora';
@@ -301,12 +302,20 @@ export default function OnboardingPage() {
         throw new Error(data.error || 'Failed to complete onboarding');
       }
 
-      navigate('/capra/prepare');
+      // If the user landed on onboarding via a ProtectedRoute redirect, the
+      // original target lives in ?redirect=. Honor it so the chain doesn't
+      // dead-end on /capra/prepare for someone who clicked /jobs or /lumora.
+      const intended = searchParams.get('redirect');
+      const safeIntended =
+        intended && intended.startsWith('/') && !intended.startsWith('//')
+          ? intended
+          : null;
+      navigate(safeIntended || '/capra/prepare');
     } catch (err) {
       setError(err.message || 'Something went wrong');
       setSubmitting(false);
     }
-  }, [accessToken, selectedRoles, resumeText]);
+  }, [accessToken, selectedRoles, resumeText, searchParams, navigate]);
 
   const progressPercent = step === 1 ? 50 : 100;
 

@@ -3,7 +3,6 @@ import { setStoredToken } from '../utils/tokenStore';
 
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://camora.cariara.com';
 // Auth + billing-subscription must call the SAME backend that mints the cookie
 // during OAuth — otherwise a JWT_SECRET drift between services causes silent
 // 401 on /me even though login itself succeeded. Route those through CAPRA
@@ -289,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: 'POST',
       credentials: 'include',
     }).catch(() => { /* navigate anyway even if the clear call fails */ })
-      .finally(() => { window.location.href = ASCEND_URL; });
+      .finally(() => { window.location.href = '/'; });
   }, []);
 
   return (
