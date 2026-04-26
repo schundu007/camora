@@ -89,7 +89,7 @@ function getComplexityColor(notation: string): string {
   if (/o\(n[\^²]2?\)/.test(n)) return '#D9B543';     // O(n²) - fair
   if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return '#ea580c'; // O(n³) - poor
   if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return '#0B5CFF'; // exponential - bad
-  return '#6b7280';
+  return 'var(--text-muted)';
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -117,38 +117,27 @@ interface CodingLayoutProps {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-// ── Theme tokens — follow the user's global theme choice (light or dark) ──
-// The dark palette uses slate-900 surfaces and the brand accent (--cam-primary)
-// for highlights so the code editor, tabs, and solution cards read as a single
-// coherent dark UI when the user has chosen dark mode.
-function useTheme(dark: boolean) {
-  if (dark) {
-    return {
-      cardBg: '#0F172A', cardBorder: '#1E293B',
-      headerBg: 'rgba(38,97,156,0.08)', headerBorder: '#1E40AF',
-      headerText: 'var(--cam-primary)', badgeBg: 'rgba(38,97,156,0.12)', badgeText: 'var(--cam-primary)',
-      text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
-      codeBg: '#020617', codeText: '#E2E8F0',
-      inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
-      sectionBg: '#0F172A', surfaceBg: '#1E293B',
-      tabActive: 'var(--cam-primary)', tabActiveBg: '#1E293B', tabText: '#94A3B8',
-      dotColor: 'var(--cam-primary)',
-      passedBg: 'rgba(34,197,94,0.12)', passedBorder: 'rgba(34,197,94,0.35)', passedText: '#4ADE80',
-      failedBg: 'rgba(239,68,68,0.12)', failedBorder: 'rgba(239,68,68,0.35)', failedText: '#F87171',
-    };
-  }
+// ── Theme tokens — return CSS-var references that auto-flip when the global
+// [data-theme="dark"] attribute is set on <html>. The `dark` arg is kept for
+// API stability but is no longer read — the underlying tokens in globals.css
+// flip in lockstep with the user's chosen theme so a single token map works
+// for both light and dark surfaces.
+function useTheme(_dark: boolean) {
   return {
-    cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(38,97,156,0.05)', headerBorder: '#BFDBFE',
-    headerText: 'var(--cam-primary)', badgeBg: 'rgba(38,97,156,0.06)', badgeText: 'var(--cam-primary)',
-    text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
-    codeBg: '#f9fafb', codeText: '#1f2937',
-    inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
-    sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: 'var(--cam-primary)', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    cardBg: 'var(--bg-surface)', cardBorder: 'var(--border)',
+    headerBg: 'var(--accent-subtle)', headerBorder: 'var(--border)',
+    headerText: 'var(--cam-primary)', badgeBg: 'var(--accent-subtle)', badgeText: 'var(--cam-primary)',
+    text: 'var(--text-primary)', textMuted: 'var(--text-muted)', textDim: 'var(--text-dimmed)',
+    codeBg: 'var(--bg-elevated)', codeText: 'var(--text-primary)',
+    inputBg: 'var(--bg-surface)', inputBorder: 'var(--border)', inputText: 'var(--text-primary)',
+    sectionBg: 'var(--bg-elevated)', surfaceBg: 'var(--bg-surface)',
+    tabActive: 'var(--cam-primary)', tabActiveBg: 'var(--bg-surface)', tabText: 'var(--text-muted)',
     dotColor: 'var(--cam-primary)',
-    passedBg: '#f0fdf4', passedBorder: '#bbf7d0', passedText: '#16a34a',
-    failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#0B5CFF',
+    // Pass/fail status — success maps to navy in this design system, danger
+    // stays red. Backgrounds use elevated surface so they're legible in both
+    // light and dark modes; the semantic colored borders carry the meaning.
+    passedBg: 'var(--accent-subtle)', passedBorder: 'var(--success)', passedText: 'var(--success)',
+    failedBg: 'var(--bg-elevated)', failedBorder: 'var(--danger)', failedText: 'var(--danger)',
   };
 }
 
@@ -748,7 +737,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-[rgba(38,97,156,0.15)] border-[rgba(38,97,156,0.3)] text-[#95B0CD]'
+              'bg-[rgba(38,97,156,0.15)] border-[rgba(38,97,156,0.3)] text-[var(--accent-text)]'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -768,7 +757,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-white/75 hover:text-white hover:bg-white/10 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -876,7 +865,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           onDrop={handleDrop}
                           onDragOver={(e) => e.preventDefault()}
                           placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
-                          className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
+                          className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                           style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                         />
                       )}
@@ -885,7 +874,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                         <div className="flex gap-2">
                           <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
                             placeholder="https://leetcode.com/problems/two-sum/"
-                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-gray-400 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
+                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-[var(--text-dimmed)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                             style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           <button onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
                             className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
@@ -927,7 +916,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 </div>
 
                 {error && (
-                  <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs">{error}</div>
+                  <div className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>{error}</div>
                 )}
 
                 {/* Generate Button */}
@@ -949,19 +938,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     Backend emits `error` events for 529/overloaded, parse failures,
                     and empty responses. We surface those here with a retry button. */}
                 {streamError && !isStreaming && !sd && (
-                  <div className="p-3 rounded-xl mb-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.35)' }}>
+                  <div className="p-3 rounded-xl mb-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)' }}>
                     <div className="flex items-start gap-2">
-                      <svg className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#ef4444' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--danger)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold mb-0.5" style={{ color: '#ef4444' }}>Couldn't generate solution</div>
+                        <div className="text-xs font-semibold mb-0.5" style={{ color: 'var(--danger)' }}>Couldn't generate solution</div>
                         <div className="text-[11px] leading-relaxed" style={{ color: t.textMuted }}>{streamError}</div>
                         <button
                           onClick={() => { setStreamError(null); handleGenerateSolution(); }}
                           disabled={!problemText.trim() || isLoading}
                           className="mt-2 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors disabled:opacity-50"
-                          style={{ background: 'var(--cam-primary)', color: '#000' }}
+                          style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}
                         >
                           Retry
                         </button>
@@ -974,7 +963,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     the solution has been structured. */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(38,97,156,0.08)', border: `1px solid ${t.cardBorder}` }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--accent-subtle)', border: `1px solid ${t.cardBorder}` }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
                       </div>
@@ -1010,7 +999,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           // Brute → Optimized → Most Optimal difficulty progression.
                           // Same brand-color family, stepped intensity so the tabs read as a
                           // progression (not rainbow — single-hue palette stays coherent).
-                          const tierAccents = ['#94A3B8', 'var(--cam-primary)', 'var(--cam-primary-dk)'];
+                          const tierAccents = ['var(--text-dimmed)', 'var(--cam-primary)', 'var(--cam-primary-dk)'];
                           const accentColor = tierAccents[i] || 'var(--cam-primary)';
                           return (
                             <button key={i}
@@ -1076,38 +1065,37 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                 ))}
                               </div>
                             )}
-                            {activeSol.narration && (() => {
-                              const dark = !!embedded;
-                              const narrBg = dark ? '#0B2534' : '#F0FDFF';
-                              const narrBorder = dark ? 'rgba(103,232,249,0.55)' : 'rgba(14,116,144,0.35)';
-                              const narrText = dark ? '#F1F5F9' : '#0F172A';
-                              const narrLabel = dark ? '#95B0CD' : 'var(--cam-primary-dk)';
-                              const narrCopy = dark ? '#A5F3FC' : 'var(--cam-primary-dk)';
-                              const narrDivider = dark ? 'rgba(103,232,249,0.2)' : 'rgba(14,116,144,0.18)';
-                              return (
-                              <div className="rounded-lg mt-2" style={{ background: narrBg, border: `1px solid ${narrBorder}`, borderLeft: '3px solid var(--cam-primary)' }}>
-                                <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: `1px solid ${narrDivider}` }}>
+                            {activeSol.narration && (
+                              <div
+                                className="rounded-lg mt-2"
+                                style={{
+                                  background: 'var(--accent-subtle)',
+                                  border: '1px solid var(--border)',
+                                  borderLeft: '3px solid var(--cam-primary)',
+                                }}>
+                                <div
+                                  className="flex items-center justify-between px-2.5 py-1.5"
+                                  style={{ borderBottom: '1px solid var(--border)' }}>
                                   <div className="flex items-center gap-1.5">
                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
                                       <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                                       <line x1="12" y1="19" x2="12" y2="22" />
                                     </svg>
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: narrLabel }}>Say this out loud</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>Say this out loud</span>
                                   </div>
                                   <button
                                     onClick={() => navigator.clipboard.writeText(activeSol.narration)}
-                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-white/5"
-                                    style={{ color: narrCopy }}>
+                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5"
+                                    style={{ color: 'var(--cam-primary-dk)' }}>
                                     Copy
                                   </button>
                                 </div>
-                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: narrText, fontFamily: "'Inter', sans-serif", opacity: 1 }}>
+                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif", opacity: 1 }}>
                                   {activeSol.narration}
                                 </p>
                               </div>
-                              );
-                            })()}
+                            )}
                             {Array.isArray(activeSol.trace) && activeSol.trace.length > 0 && (
                               <div className="rounded-lg mt-2 overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
                                 <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
@@ -1438,7 +1426,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.textMuted }}>Case {i + 1}</span>
                           {testCases.length > 1 && (
-                            <button onClick={() => removeTestCase(i)} className="text-[10px] hover:text-red-500 transition-colors" style={{ color: t.textDim }}>Remove</button>
+                            <button onClick={() => removeTestCase(i)} className="text-[10px] transition-colors" style={{ color: t.textDim }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--danger)')} onMouseLeave={(e) => (e.currentTarget.style.color = t.textDim)}>Remove</button>
                           )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1446,14 +1434,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}
                               placeholder="nums = [2,7], target = 9"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-500 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                           <div>
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
                             <textarea value={tc.expected} onChange={(e) => updateTestCase(i, 'expected', e.target.value)}
                               placeholder="[0, 1]"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-500 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                         </div>
@@ -1488,7 +1476,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                   </svg>
                                 </div>
                               ) : (
-                                <div className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
+                                <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ background: 'var(--danger)' }}>
                                   <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
                                   </svg>
@@ -1500,7 +1488,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                               <div><span style={{ color: t.textDim }}>In:</span> <span style={{ color: t.text }}>{r.input}</span></div>
                               <div><span style={{ color: t.textDim }}>Exp:</span> <span style={{ color: t.text }}>{r.expected}</span></div>
                               <div><span style={{ color: t.textDim }}>Out:</span> <span style={{ color: r.passed ? t.passedText : t.failedText }}>{r.output}</span></div>
-                              {r.error && <div className="text-red-500 mt-1">{r.error}</div>}
+                              {r.error && <div className="mt-1" style={{ color: 'var(--danger)' }}>{r.error}</div>}
                             </div>
                           </div>
                         ))}
@@ -1580,8 +1568,8 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
   ];
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
-    accent: { header: 'bg-[rgba(38,97,156,0.04)]', border: 'border-[rgba(38,97,156,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
-    warning: { header: 'bg-[rgba(245,158,11,0.04)]', border: 'border-[rgba(245,158,11,0.15)]', bg: 'bg-white', text: 'text-[var(--warning-text)]' },
+    accent: { header: 'bg-[var(--accent-subtle)]', border: 'border-[var(--border)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--accent)]' },
+    warning: { header: 'bg-[rgba(245,158,11,0.06)]', border: 'border-[rgba(245,158,11,0.25)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--warning-text)]' },
   };
 
   return (
@@ -1597,7 +1585,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
             <button onClick={() => onToggle(type)}
               className={`w-full flex items-center justify-between px-3 py-2 ${c.header} border-b ${c.border} transition-colors`}>
               <span className={`text-[10px] font-bold uppercase tracking-wider ${c.text}`}>{title}</span>
-              <svg className={`w-3 h-3 text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-3 h-3 text-[var(--text-dimmed)] transition-transform ${isCollapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -1610,18 +1598,18 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
                       if (arrowMatch) {
                         return (
                           <button key={i} onClick={() => onTestCaseClick(arrowMatch[1].trim(), arrowMatch[2].trim())}
-                            className="w-full text-left px-2 py-1 bg-[rgba(38,97,156,0.04)] border border-[rgba(38,97,156,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-gray-600 font-mono hover:text-[var(--accent)] transition-colors">
+                            className="w-full text-left px-2 py-1 bg-[rgba(38,97,156,0.04)] border border-[rgba(38,97,156,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-[var(--text-muted)] font-mono hover:text-[var(--accent)] transition-colors">
                             {line}
                           </button>
                         );
                       }
-                      return <div key={i} className="text-[10px] text-gray-700 font-mono">{line}</div>;
+                      return <div key={i} className="text-[10px] text-[var(--text-secondary)] font-mono">{line}</div>;
                     })}
                   </div>
                 ) : (
                   <div className="space-y-0.5">
                     {lines.map((line: string, i: number) => (
-                      <div key={i} className="text-xs text-gray-600 leading-relaxed">{line}</div>
+                      <div key={i} className="text-xs text-[var(--text-muted)] leading-relaxed">{line}</div>
                     ))}
                   </div>
                 )}
