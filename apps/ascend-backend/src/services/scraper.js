@@ -405,7 +405,19 @@ export async function fetchProblemFromUrl(url, electronCookies = null, req = nul
       headers['Cookie'] = cookies;
     }
 
-    const response = await fetch(url, { headers });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    let response;
+    try {
+      response = await fetch(url, { headers, signal: controller.signal });
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw new Error(`${platform} did not respond in time. Use screenshot or copy-paste instead.`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       if (response.status === 403 || response.status === 401) {
