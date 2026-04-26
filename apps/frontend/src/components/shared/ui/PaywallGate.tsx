@@ -1,5 +1,6 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { isOwner } from '@/lib/owner';
 import { useState, useEffect, useCallback } from 'react';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -16,7 +17,7 @@ interface PaywallGateProps {
  * Handles post-checkout polling to wait for webhook sync.
  */
 export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
-  const { token, subscription, subscriptionLoading, refreshSubscription } = useAuth();
+  const { token, user, subscription, subscriptionLoading, refreshSubscription } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [polling, setPolling] = useState(false);
@@ -26,9 +27,12 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
 
   const isCheckoutReturn = searchParams.get('checkout') === 'success';
 
-  // Use AuthContext subscription (already fetched on mount)
+  // Use AuthContext subscription (already fetched on mount). Owner emails
+  // bypass the gate unconditionally — defense in depth on top of the
+  // AuthContext-level admin synthesis, so even if the subscription state
+  // glitches the project owner is never paywalled.
   const plan = subscription?.plan || 'free';
-  const hasAccess = plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
+  const hasAccess = isOwner(user) || (plan !== 'free' && plan !== null && plan !== undefined && plan !== '');
 
   // After checkout success, poll for subscription activation (webhook may take a few seconds)
   const pollSubscription = useCallback(async () => {
