@@ -27,12 +27,8 @@ export default function OAuthLogin() {
 
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
-  // Theme-aware page gradient and journey-card palette so APPA section
-  // doesn't vanish in dark mode (was hardcoded pastel light colors).
-  const pageGradient = isDark
-    ? 'linear-gradient(180deg, var(--bg-app) 0%, var(--bg-elevated) 50%, var(--bg-app) 100%)'
-    : 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 50%, var(--bg-surface) 100%)';
-
+  // Page bg now lives in .bg-navy-drift (CSS) so the hero has subtle
+  // ambient motion. journey-card palette stays theme-aware below.
   const journeyCards = isDark
     ? [
         { label: 'Apply',    href: '/jobs',            icon: 'briefcase',  desc: 'Find your role',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--accent)',     borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
@@ -48,7 +44,7 @@ export default function OAuthLogin() {
       ];
 
   return (
-    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root" style={{ background: pageGradient, paddingBottom: '52px' }}>
+    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root bg-navy-drift" style={{ paddingBottom: '52px' }}>
       <SiteNav />
 
       {/* Hero */}
