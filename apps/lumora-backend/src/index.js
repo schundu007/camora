@@ -123,6 +123,59 @@ async function runMigrations() {
         plan_at_charge VARCHAR(40),
         metered_to_stripe BOOLEAN NOT NULL DEFAULT false,
         stripe_usage_record_id VARCHAR(80),
+        team_id BIGINT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+      // Team / group sharing — Pro Max owners + Business buyers pool hours
+      // across seats. Idempotent CREATE IF NOT EXISTS so ascend-backend's
+      // copy of these tables wins if it migrated first.
+      `CREATE TABLE IF NOT EXISTS teams (
+        id BIGSERIAL PRIMARY KEY,
+        owner_user_id INTEGER NOT NULL,
+        name VARCHAR(120),
+        plan_type VARCHAR(40) NOT NULL,
+        seat_limit INTEGER NOT NULL DEFAULT 5,
+        hours_pool_total REAL,
+        hours_pool_period_start TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        payg_rate_cents INTEGER,
+        auto_topup_pack VARCHAR(20),
+        auto_topup_monthly_cap_cents INTEGER,
+        pool_reminder_80_sent_at TIMESTAMPTZ,
+        pool_reminder_95_sent_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS team_members (
+        id BIGSERIAL PRIMARY KEY,
+        team_id BIGINT NOT NULL,
+        user_id INTEGER NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'member',
+        per_member_hour_cap REAL,
+        joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (team_id, user_id),
+        UNIQUE (user_id)
+      )`,
+      `CREATE TABLE IF NOT EXISTS team_invites (
+        id BIGSERIAL PRIMARY KEY,
+        team_id BIGINT NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        invite_token VARCHAR(64) NOT NULL UNIQUE,
+        invited_by INTEGER NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        accepted_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+      // Top-up credits — manual checkouts + auto-topup off-session charges.
+      // 90-day expiry; sums into the pool for any unexpired rows.
+      `CREATE TABLE IF NOT EXISTS ai_hour_topups (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        team_id BIGINT,
+        hours REAL NOT NULL,
+        amount_cents INTEGER NOT NULL,
+        stripe_session_id VARCHAR(255),
+        expires_at TIMESTAMPTZ NOT NULL,
+        auto_charged BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`,
       // Indexes
@@ -135,6 +188,15 @@ async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_lumora_completion_user ON lumora_completion_marks(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_quotas_user ON lumora_quotas(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_ai_hours_user_created ON ai_hours_usage(user_id, created_at DESC)',
+      'CREATE INDEX IF NOT EXISTS idx_ai_hours_team_created ON ai_hours_usage(team_id, created_at DESC) WHERE team_id IS NOT NULL',
+      'CREATE INDEX IF NOT EXISTS idx_teams_owner ON teams(owner_user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id)',
+      'CREATE INDEX IF NOT EXISTS idx_team_invites_team ON team_invites(team_id)',
+      'CREATE INDEX IF NOT EXISTS idx_team_invites_email_pending ON team_invites(email) WHERE accepted_at IS NULL',
+      'CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND expires_at > NOW()',
+      'CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND expires_at > NOW()',
+      'CREATE INDEX IF NOT EXISTS idx_topups_auto ON ai_hour_topups(user_id, created_at DESC) WHERE auto_charged = true',
+      'CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_session ON ai_hour_topups(stripe_session_id) WHERE stripe_session_id IS NOT NULL',
     ];
 
     for (const sql of migrations) {

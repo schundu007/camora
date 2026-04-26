@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
@@ -86,6 +86,8 @@ function planLabel(planType: string) {
 
 export default function TeamSettingsPage() {
   const { token, user, subscription } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoTopupFailed = searchParams.get('auto_topup_failed') === '1';
   const [team, setTeam] = useState<TeamData | null>(null);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [budget, setBudget] = useState<BudgetData | null>(null);
@@ -366,6 +368,37 @@ export default function TeamSettingsPage() {
         {error && !loading && (
           <div className="rounded-xl p-4 text-sm" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             {error}
+          </div>
+        )}
+
+        {/* Auto-topup failure banner — landed here from a payment_intent.payment_failed
+            email. Auto-topup has already been disabled server-side; nudge the user to
+            update their card and re-enable. Dismissable via the X. */}
+        {autoTopupFailed && (
+          <div className="rounded-xl p-4 mb-6 flex items-start gap-3" style={{ background: 'rgba(220, 38, 38, 0.08)', border: '1px solid rgba(220, 38, 38, 0.3)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth={2} className="shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Auto top-up failed</p>
+              <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                Your last off-session charge couldn't go through (most often: expired card, declined, or 3DS challenge timed out). We've turned auto top-up off so you don't get charged for failures.
+              </p>
+              <p className="text-[13px] mt-2" style={{ color: 'var(--text-secondary)' }}>
+                <strong>To restore it:</strong> buy any pack (or upgrade) — the checkout flow updates your default card — then re-enable auto top-up below.
+              </p>
+              <div className="flex gap-2 mt-3">
+                <Link to="/pricing" className="px-3 py-1.5 text-[12px] font-bold rounded-md text-white" style={{ background: '#dc2626' }}>Update card via top-up</Link>
+                <button
+                  onClick={() => { searchParams.delete('auto_topup_failed'); setSearchParams(searchParams, { replace: true }); }}
+                  className="px-3 py-1.5 text-[12px] font-semibold rounded-md"
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
