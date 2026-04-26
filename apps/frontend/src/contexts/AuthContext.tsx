@@ -26,6 +26,14 @@ interface SubscriptionInfo {
   status?: string;
 }
 
+interface TeamInfo {
+  id: number;
+  plan_type: string;
+  seat_limit: number;
+  hours_pool_total: number | null;
+  is_owner: boolean;
+}
+
 interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
@@ -34,6 +42,10 @@ interface AuthContextType {
   onboardingCompleted: boolean | null;
   subscription: SubscriptionInfo | null;
   subscriptionLoading: boolean;
+  team: TeamInfo | null;
+  hasTeamAccess: boolean;
+  refreshSubscription?: () => void;
+  refreshTeam?: () => void;
   logout: () => void;
 }
 
@@ -45,6 +57,8 @@ const AuthContext = createContext<AuthContextType>({
   onboardingCompleted: null,
   subscription: null,
   subscriptionLoading: true,
+  team: null,
+  hasTeamAccess: false,
   logout: () => {},
 });
 
@@ -64,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [team, setTeam] = useState<TeamInfo | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -287,6 +302,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) fetchSubscription(token);
   }, [token, fetchSubscription]);
 
+  // Fetch team membership. A user can be in 0 or 1 team (UNIQUE on user_id
+  // in team_members). Used by PaywallGate so a free user joining a Pro Max
+  // team actually gets access to gated features.
+  const fetchTeam = useCallback(async (authToken: string, userId: number | undefined) => {
+    try {
+      const res = await fetch(`${AUTH_API_URL}/api/v1/teams/me`, {
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (!res.ok) { setTeam(null); return; }
+      const data = await res.json();
+      const t = data.team;
+      if (!t) { setTeam(null); return; }
+      setTeam({
+        id: t.id,
+        plan_type: t.plan_type,
+        seat_limit: Number(t.seat_limit),
+        hours_pool_total: t.hours_pool_total != null ? Number(t.hours_pool_total) : null,
+        is_owner: t.owner_user_id === userId,
+      });
+    } catch {
+      setTeam(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!token) { setTeam(null); return; }
+    fetchTeam(token, user?.id);
+  }, [token, user?.id, fetchTeam]);
+
+  const refreshTeam = useCallback(() => {
+    if (token) fetchTeam(token, user?.id);
+  }, [token, user?.id, fetchTeam]);
+
+  // A user has team-grade access if their personal sub is paid OR they
+  // belong to a team whose plan_type unlocks paid features. Capra Content
+  // is intentionally excluded here — it grants content browsing but not
+  // hour-gated features. PaywallGate reads this flag.
+  const teamGrantsAccess = !!team && team.plan_type !== 'capra_content_monthly' && team.plan_type !== 'capra_content_yearly';
+  const hasTeamAccess = (subscription?.plan && subscription.plan !== 'free') || teamGrantsAccess;
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -302,7 +358,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, logout, refreshSubscription }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, team, hasTeamAccess, refreshSubscription, refreshTeam, logout }}>
       {children}
     </AuthContext.Provider>
   );
