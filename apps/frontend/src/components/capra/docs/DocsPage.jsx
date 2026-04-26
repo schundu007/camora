@@ -6,6 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import CamoraLogo from '../../shared/CamoraLogo';
+import TopicIllustration from './TopicIllustration';
 
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 const SQLPlayground = lazy(() => import('../sql/SQLPlayground'));
@@ -874,7 +875,7 @@ export default function DocsPage({ onBack }) {
                               className="card-lift group relative rounded-lg overflow-hidden flex flex-col"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
-                              {/* Top accent bar */}
+                              <TopicIllustration name={cat.id} />
                               <div className="p-4">
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
@@ -969,9 +970,9 @@ export default function DocsPage({ onBack }) {
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', icon: 'checklist', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'checklist', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', illustration: 'low-level', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
@@ -979,6 +980,7 @@ export default function DocsPage({ onBack }) {
                               className="card-lift group rounded-lg overflow-hidden flex flex-col"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
+                              <TopicIllustration name={resource.illustration} />
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>

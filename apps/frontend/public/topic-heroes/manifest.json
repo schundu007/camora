@@ -1,0 +1,74 @@
+{
+  "coding": {
+    "file": "/topic-heroes/coding.jpg",
+    "photographer": "Giannis Skarlatos",
+    "photographerUrl": "https://unsplash.com/@giannis_sk?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/black-and-silver-steel-containers-6AL5ong0mFQ?utm_source=camora&utm_medium=referral",
+    "query": "binary code abstract dark",
+    "bytes": 69002
+  },
+  "system-design": {
+    "file": "/topic-heroes/system-design.jpg",
+    "photographer": "Joseph Royer",
+    "photographerUrl": "https://unsplash.com/@joseph_royer?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-close-up-of-a-circuit-board-with-a-screw-eViZxLyRlMc?utm_source=camora&utm_medium=referral",
+    "query": "circuit board macro",
+    "bytes": 103773
+  },
+  "microservices": {
+    "file": "/topic-heroes/microservices.jpg",
+    "photographer": "Roma Kaiuk🇺🇦",
+    "photographerUrl": "https://unsplash.com/@roma_kaiuk?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-close-up-of-some-lights-4oLZ9UxdEFw?utm_source=camora&utm_medium=referral",
+    "query": "abstract geometric pattern",
+    "bytes": 126388
+  },
+  "databases": {
+    "file": "/topic-heroes/databases.jpg",
+    "photographer": "Shoaib Asif",
+    "photographerUrl": "https://unsplash.com/@shobyasif?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-bunch-of-fireworks-that-are-in-the-air-Md4gY71zzzk?utm_source=camora&utm_medium=referral",
+    "query": "fiber optic light",
+    "bytes": 158317
+  },
+  "low-level": {
+    "file": "/topic-heroes/low-level.jpg",
+    "photographer": "Amsterdam City Archives",
+    "photographerUrl": "https://unsplash.com/@amsterdamcityarchives?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/architectural-drawings-of-curved-stairs-and-structures-1i1ncG9x1CE?utm_source=camora&utm_medium=referral",
+    "query": "blueprint architecture drawing",
+    "bytes": 118757
+  },
+  "projects": {
+    "file": "/topic-heroes/projects.jpg",
+    "photographer": "Piotr Wilk",
+    "photographerUrl": "https://unsplash.com/@teddygraphics?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/flat-screen-monitor-turned-near-macbook-air-turned-on-on-white-wooden-table-K-YcSC3Fvrg?utm_source=camora&utm_medium=referral",
+    "query": "minimal workspace clean",
+    "bytes": 78621
+  },
+  "roadmaps": {
+    "file": "/topic-heroes/roadmaps.jpg",
+    "photographer": "MARIOLA GROBELSKA",
+    "photographerUrl": "https://unsplash.com/@mariolagr?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-blurry-photo-of-a-street-light-6FiMqzsQiqw?utm_source=camora&utm_medium=referral",
+    "query": "abstract lines path long exposure",
+    "bytes": 75853
+  },
+  "eng-blogs": {
+    "file": "/topic-heroes/eng-blogs.jpg",
+    "photographer": "Priscilla Du Preez 🇨🇦",
+    "photographerUrl": "https://unsplash.com/@priscilladupreez?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-stack-of-books-sitting-on-top-of-a-wooden-table-vZb2zeAhmAc?utm_source=camora&utm_medium=referral",
+    "query": "modern library books minimal",
+    "bytes": 112137
+  },
+  "behavioral": {
+    "file": "/topic-heroes/behavioral.jpg",
+    "photographer": "Olegs Jonins",
+    "photographerUrl": "https://unsplash.com/@jo_negatives?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-person-standing-in-front-of-a-glass-wall-DbsmXpEkffI?utm_source=camora&utm_medium=referral",
+    "query": "people silhouette abstract",
+    "bytes": 134986
+  }
+}
