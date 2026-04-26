@@ -170,11 +170,11 @@ export default function LandingPage() {
           <motion.div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'}
-              className="px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all bg-camora-primary text-camora-mist hover:bg-camora-primaryDk">
+              className="press px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all bg-camora-primary text-camora-mist hover:bg-camora-primaryDk">
               {isAuthenticated ? 'GO TO DASHBOARD' : 'GET STARTED FREE'}
             </Link>
             <Link to="/pricing"
-              className="px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all border border-camora-primaryDk text-camora-primary hover:bg-camora-mist">
+              className="press px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all border border-camora-primaryDk text-camora-primary hover:bg-camora-mist">
               VIEW PRICING &rsaquo;
             </Link>
           </motion.div>

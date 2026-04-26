@@ -17,10 +17,10 @@ interface SharedCodeEditorProps {
 function EditorSkeleton({ height }: { height: string }) {
   return (
     <div
-      className="animate-pulse bg-[var(--bg-elevated)] rounded-md flex items-center justify-center"
+      className="shimmer rounded-md flex items-center justify-center"
       style={{ height }}
     >
-      <div className="flex flex-col items-center gap-3">
+      <div className="relative z-10 flex flex-col items-center gap-3">
         <div className="flex gap-1.5">
           <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:0ms]" />
           <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:150ms]" />
