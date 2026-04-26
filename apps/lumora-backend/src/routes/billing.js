@@ -54,135 +54,80 @@ const PRICE_LIFETIME = () => process.env.STRIPE_PRICE_LIFETIME;
 // ---------------------------------------------------------------------------
 
 router.get('/prices', (_req, res) => {
+  // Pricing v2 — keeps the same shape ascend-backend's /prices uses so the
+  // frontend's /api/v1/billing/prices reader works whether the request lands
+  // on this service or ascend's mirror. SKUs identical to ascend.
   res.json({
-    plans: [
-      // ── Subscription Plans ──
-      {
-        id: 'monthly_starter',
-        name: 'Monthly Starter',
-        price: 2900,
-        interval: 'month',
-        yearly_total: 34800,
-        stripe_price_id: process.env.STRIPE_PRICE_STARTER || null,
-        includes_desktop: false,
-        features: [
-          'Unlimited prep and practice',
-          '10 live interview sessions/mo',
-          'AI-powered explanations',
-          'System design diagrams',
-          'Code solutions with complexity',
-          'All programming languages',
-        ],
-        upgrade_note: 'Upgrade to Monthly Pro for desktop access',
-      },
-      {
-        id: 'monthly_pro',
-        name: 'Monthly Pro',
-        price: 4900,
-        interval: 'month',
-        yearly_total: 58800,
-        stripe_price_id: process.env.STRIPE_PRICE_MONTHLY || null,
-        includes_desktop: true,
-        features: [
-          'Everything in Starter',
-          'Unlimited live sessions',
-          'Desktop app included',
-          'Job discovery and matching',
-          'Auto resume and cover letter',
-          'Company-specific prep',
-          'Speaker voice filtering',
-          'Priority AI responses',
-        ],
-      },
-      {
-        id: 'quarterly_pro',
-        name: 'Quarterly Pro',
-        price: 11900,
-        interval: 'quarter',
-        monthly_equiv: 3967,
-        yearly_total: 47600,
-        stripe_price_id: process.env.STRIPE_PRICE_QUARTERLY || null,
-        includes_desktop: true,
-        features: [
-          'Everything in Monthly Pro',
-          'Save 19% vs monthly',
-          'Desktop app included',
-          'Full access for 3 months',
-        ],
-      },
-      {
-        id: 'annual',
-        name: 'Annual (No Desktop)',
-        price: 22800,
-        interval: 'year',
-        monthly_equiv: 1900,
-        stripe_price_id: process.env.STRIPE_PRICE_YEARLY || null,
-        includes_desktop: false,
-        features: [
-          'Everything in Monthly Pro (web only)',
-          'Save 61% vs monthly',
-          'Locked-in pricing for 1 year',
-          'Priority support',
-        ],
-        upgrade_note: 'Add desktop: upgrade to Annual+Desktop or pay $29/mo',
-      },
-      {
-        id: 'annual_desktop',
-        name: 'Annual + Desktop',
-        price: 29900,
-        interval: 'year',
-        monthly_equiv: 2492,
-        stripe_price_id: process.env.STRIPE_PRICE_ANNUALLY || null,
-        includes_desktop: true,
-        features: [
-          'Everything in Annual',
-          'Desktop app included',
-          'Full web + desktop for 1 year',
-          'Best overall value',
-        ],
-      },
-      {
-        id: 'desktop_lifetime',
-        name: 'Desktop Lifetime',
-        price: 9900,
-        interval: null,
-        stripe_price_id: process.env.STRIPR_PRICE_DTOPLT || process.env.STRIPE_PRICE_DESKTOP_LIFETIME || null,
-        includes_desktop: true,
-        desktop_only: true,
-        web_content: false,
-        features: [
-          'Lumora Desktop app forever',
-          'Single purchase, no subscription',
-          'Bring your own AI keys (OpenAI/Claude)',
-          'You pay AI costs directly',
-          'No web prep content — buy a web plan separately',
-        ],
-      },
-    ],
-    // ── Top-Up Packs (for subscribers who exhaust monthly quota) ──
-    topups: [
-      {
-        id: 'topup_20q',
-        name: '20 AI Questions',
-        price: 500,
-        stripe_price_id: process.env.STRIPE_PRICE_TOPUP_20Q || 'price_1THiZuITUCNxtMxlS1Py7hSO',
-        description: '20 additional AI-generated questions',
-      },
-      {
-        id: 'topup_50q',
-        name: '50 AI Questions',
-        price: 1000,
-        stripe_price_id: process.env.STRIPE_PRICE_TOPUP_50Q || 'price_1THiaHITUCNxtMxlQ31IpECl',
-        description: '50 additional AI-generated questions',
-      },
-      {
-        id: 'topup_5s',
-        name: '5 Sessions',
-        price: 1500,
-        stripe_price_id: process.env.STRIPE_PRICE_TOPUP_5S || 'price_1THiagITUCNxtMxlG8idH0Cz',
-        description: '5 Lumora Desktop sessions (60 min each)',
-      },
-    ],
+    pro_monthly: {
+      priceId: process.env.STRIPE_PRICE_PRO_MONTHLY,
+      amount: 2900,
+      currency: 'usd',
+      interval: 'month',
+      ai_hours_included: 2,
+      overage_per_hour: 1000,
+      hour_discount_pct: 0,
+      popular: true,
+    },
+    pro_yearly: {
+      priceId: process.env.STRIPE_PRICE_PRO_YEARLY,
+      amount: 29000,
+      currency: 'usd',
+      interval: 'year',
+      ai_hours_included: 24,
+      overage_per_hour: 1000,
+      yearly_savings_pct: 17,
+    },
+    pro_max_monthly: {
+      priceId: process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,
+      amount: 7900,
+      currency: 'usd',
+      interval: 'month',
+      ai_hours_included: 8,
+      overage_per_hour: 900,
+      hour_discount_pct: 10,
+      includes_desktop: true,
+      voice_filtering: true,
+    },
+    pro_max_yearly: {
+      priceId: process.env.STRIPE_PRICE_PRO_MAX_YEARLY,
+      amount: 79000,
+      currency: 'usd',
+      interval: 'year',
+      ai_hours_included: 96,
+      overage_per_hour: 900,
+      includes_desktop: true,
+      yearly_savings_pct: 17,
+      best_value: true,
+    },
+    desktop_lifetime: {
+      priceId: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT,
+      amount: 9900,
+      currency: 'usd',
+      interval: null,
+      seat_limit: 1,
+      desktop_only: true,
+    },
+    business_desktop_lifetime: {
+      priceId: process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME,
+      amount: 99900,
+      currency: 'usd',
+      interval: null,
+      seat_limit: 10,
+      desktop_only: true,
+      business: true,
+    },
+    business_starter: {
+      priceId: process.env.STRIPE_PRICE_BUSINESS_STARTER,
+      amount: 49900,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 75,
+      seat_limit: 10,
+      payg_rate_per_hour: 800,
+    },
+    topup_1h: { priceId: process.env.STRIPE_PRICE_TOPUP_1H, amount: 1000, ai_hours: 1, interval: null },
+    topup_5h: { priceId: process.env.STRIPE_PRICE_TOPUP_5H, amount: 5000, ai_hours: 5, interval: null },
+    topup_25h: { priceId: process.env.STRIPE_PRICE_TOPUP_25H, amount: 25000, ai_hours: 25, interval: null },
   });
 });
 
@@ -206,17 +151,18 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
+  // Pricing v2 SKU list — kept in sync with ascend-backend/src/config/stripe.js.
   const validPrices = [
-    process.env.STRIPE_PRICE_STARTER,
-    process.env.STRIPE_PRICE_MONTHLY,
-    process.env.STRIPE_PRICE_QUARTERLY,
-    process.env.STRIPE_PRICE_YEARLY,
-    process.env.STRIPE_PRICE_ANNUALLY,
-    process.env.STRIPR_PRICE_DTOPLT,
-    process.env.STRIPE_PRICE_DESKTOP_LIFETIME,
-    process.env.STRIPE_PRICE_TOPUP_20Q || 'price_1THiZuITUCNxtMxlS1Py7hSO',
-    process.env.STRIPE_PRICE_TOPUP_50Q || 'price_1THiaHITUCNxtMxlQ31IpECl',
-    process.env.STRIPE_PRICE_TOPUP_5S || 'price_1THiagITUCNxtMxlG8idH0Cz',
+    process.env.STRIPE_PRICE_PRO_MONTHLY,
+    process.env.STRIPE_PRICE_PRO_YEARLY,
+    process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,
+    process.env.STRIPE_PRICE_PRO_MAX_YEARLY,
+    process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT,
+    process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME,
+    process.env.STRIPE_PRICE_BUSINESS_STARTER,
+    process.env.STRIPE_PRICE_TOPUP_1H,
+    process.env.STRIPE_PRICE_TOPUP_5H,
+    process.env.STRIPE_PRICE_TOPUP_25H,
   ].filter(Boolean);
   if (!validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
@@ -255,24 +201,30 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
-    // Determine payment mode and plan type
-    const desktopLifetimeId = process.env.STRIPR_PRICE_DTOPLT || process.env.STRIPE_PRICE_DESKTOP_LIFETIME;
+    // Determine payment mode and plan type. v2 SKUs:
+    const desktopLifetimeId = process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT;
+    const businessDesktopId = process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME;
+    const businessStarterId = process.env.STRIPE_PRICE_BUSINESS_STARTER;
     const topupIds = [
-      process.env.STRIPE_PRICE_TOPUP_20Q || 'price_1THiZuITUCNxtMxlS1Py7hSO',
-      process.env.STRIPE_PRICE_TOPUP_50Q || 'price_1THiaHITUCNxtMxlQ31IpECl',
-      process.env.STRIPE_PRICE_TOPUP_5S || 'price_1THiagITUCNxtMxlG8idH0Cz',
-    ];
-    const isOneTime = price_id === desktopLifetimeId || topupIds.includes(price_id);
+      process.env.STRIPE_PRICE_TOPUP_1H,
+      process.env.STRIPE_PRICE_TOPUP_5H,
+      process.env.STRIPE_PRICE_TOPUP_25H,
+    ].filter(Boolean);
+    const oneTimeIds = [desktopLifetimeId, businessDesktopId, businessStarterId, ...topupIds].filter(Boolean);
+    const isOneTime = oneTimeIds.includes(price_id);
 
-    // Map price_id to plan name for webhook metadata
-    let planType = 'monthly_starter';
-    if (price_id === process.env.STRIPE_PRICE_STARTER) planType = 'monthly_starter';
-    else if (price_id === process.env.STRIPE_PRICE_MONTHLY) planType = 'monthly_pro';
-    else if (price_id === process.env.STRIPE_PRICE_QUARTERLY) planType = 'quarterly_pro';
-    else if (price_id === process.env.STRIPE_PRICE_YEARLY) planType = 'annual';
-    else if (price_id === process.env.STRIPE_PRICE_ANNUALLY) planType = 'annual_desktop';
+    // Map price_id to v2 plan_type for webhook metadata.
+    let planType = 'pro_monthly';
+    if (price_id === process.env.STRIPE_PRICE_PRO_MONTHLY) planType = 'pro_monthly';
+    else if (price_id === process.env.STRIPE_PRICE_PRO_YEARLY) planType = 'pro_yearly';
+    else if (price_id === process.env.STRIPE_PRICE_PRO_MAX_MONTHLY) planType = 'pro_max_monthly';
+    else if (price_id === process.env.STRIPE_PRICE_PRO_MAX_YEARLY) planType = 'pro_max_yearly';
     else if (price_id === desktopLifetimeId) planType = 'desktop_lifetime';
-    else if (topupIds.includes(price_id)) planType = 'topup';
+    else if (price_id === businessDesktopId) planType = 'business_desktop_lifetime';
+    else if (price_id === businessStarterId) planType = 'business_starter';
+    else if (price_id === process.env.STRIPE_PRICE_TOPUP_1H) planType = 'topup_1h';
+    else if (price_id === process.env.STRIPE_PRICE_TOPUP_5H) planType = 'topup_5h';
+    else if (price_id === process.env.STRIPE_PRICE_TOPUP_25H) planType = 'topup_25h';
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -352,13 +304,13 @@ router.get('/subscription', authenticate, async (req, res) => {
     let status = row?.plan_status || 'active';
     // Admin override: authenticate middleware sets req.user.is_admin from ADMIN_EMAILS.
     if (req.user?.is_admin && (plan === 'free' || !plan)) {
-      plan = 'quarterly_pro';
+      plan = 'pro_max_yearly';
       status = 'active';
     }
     return res.json({ plan, status });
   } catch (_err) {
     if (req.user?.is_admin) {
-      return res.json({ plan: 'quarterly_pro', status: 'active' });
+      return res.json({ plan: 'pro_max_yearly', status: 'active' });
     }
     return res.json({ plan: 'free', status: 'active' });
   }

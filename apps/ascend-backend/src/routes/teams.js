@@ -7,6 +7,8 @@ import {
   getTeamIdForUser,
   getTeamWithMembers,
   getTeamUsageBreakdown,
+  checkTeamHourBudget,
+  checkPersonalHourBudget,
   createInvite,
   acceptInvite,
   cancelInvite,
@@ -117,6 +119,47 @@ router.get('/me/usage', jwtAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err: err.message, userId: req.user?.id }, '[teams] /me/usage failed');
     return res.status(500).json({ error: 'Failed to load usage' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/v1/teams/me/budget — normalized hour-budget view for the
+// current user. Always returns a single shape regardless of whether the
+// user is in a team or solo, so the frontend renders one meter component.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/me/budget', jwtAuth, async (req, res) => {
+  try {
+    const team = await checkTeamHourBudget(req.user.id);
+    if (team.has_team) {
+      return res.json({
+        source: 'team',
+        team_id: team.team_id,
+        pool_hours: team.pool_hours,
+        used_hours: team.used_hours,
+        remaining_hours: team.ok ? team.remaining_hours : 0,
+        plan_pool_hours: team.plan_pool_hours,
+        topup_hours: team.topup_hours,
+        member_cap_hours: team.member_cap_hours,
+        member_used_hours: team.member_used_hours,
+        exhausted: !team.ok,
+        reason: team.ok ? null : team.reason,
+      });
+    }
+    const personal = await checkPersonalHourBudget(req.user.id);
+    return res.json({
+      source: 'personal',
+      plan_type: personal.plan_type,
+      pool_hours: personal.pool_hours,
+      used_hours: personal.used_hours,
+      remaining_hours: personal.ok ? personal.remaining_hours : 0,
+      topup_hours: personal.topup_hours,
+      period: personal.period,
+      exhausted: !personal.ok,
+      reason: personal.ok ? null : personal.reason,
+    });
+  } catch (err) {
+    logger.error({ err: err.message, userId: req.user?.id }, '[teams] /me/budget failed');
+    return res.status(500).json({ error: 'Failed to load budget' });
   }
 });
 
