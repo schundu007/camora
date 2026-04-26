@@ -112,7 +112,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               </svg>
             )}
           </button>
-          {isAuthenticated && <HourMeterChip variant={isLight ? 'light' : 'dark'} />}
+          {isAuthenticated && <HourMeterChip variant="dark" />}
           {isAuthenticated ? (
             <UserDropdown variant="dark" />
           ) : (
@@ -150,6 +150,10 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           <div className="pt-2" style={{ borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }}>
             {isAuthenticated ? (
               <>
+                <Link to="/account/team" onClick={() => setOpen(false)} className="flex items-center justify-between py-2 text-sm font-bold" style={{ color: textColor }}>
+                  <span>AI hours</span>
+                  <span className="md:hidden"><HourMeterChip variant={isLight ? 'light' : 'dark'} /></span>
+                </Link>
                 <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Dashboard</Link>
                 <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Profile</Link>
                 {onboardingCompleted === false && (
