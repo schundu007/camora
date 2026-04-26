@@ -98,7 +98,8 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/admin/users`, {
+        credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       .then(r => { setIsAdmin(r.ok); return r.ok ? r.json() : null; })
       .then(d => { if (d) { setUsers(d.users); setUsersLoaded(true); } })
       .catch(() => setIsAdmin(false));
@@ -114,6 +115,7 @@ export default function AnalyticsPage() {
     const params = new URLSearchParams({ exclude_emails: EXCLUDE });
     if (days) params.set('days', days);
     fetch(`${API}/api/visitors/pageview-stats?${params}`, {
+      credentials: 'include',
       signal: controller.signal,
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -132,7 +134,8 @@ export default function AnalyticsPage() {
     if (!token) return;
     setUsersLoading(true);
     setUsersError('');
-    fetch(`${API}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/admin/users`, {
+        credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       .then(r => { if (!r.ok) throw new Error('Failed to load'); return r.json(); })
       .then(d => { setUsers(d.users); setUsersLoaded(true); setUsersLoading(false); })
       .catch(err => { setUsersError(err.message); setUsersLoading(false); });
@@ -147,7 +150,8 @@ export default function AnalyticsPage() {
     if (!token) return;
     setEmailsLoading(true);
     setEmailsError('');
-    fetch(`${API}/api/admin/emails?limit=100`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/admin/emails?limit=100`, {
+        credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       .then(r => { if (!r.ok) throw new Error('Failed to load'); return r.json(); })
       .then(d => { setEmails(d.emails); setEmailsLoaded(true); setEmailsLoading(false); })
       .catch(err => { setEmailsError(err.message); setEmailsLoading(false); });
@@ -166,6 +170,7 @@ export default function AnalyticsPage() {
     setTrialError('');
     try {
       const r = await fetch(`${API}/api/admin/grant-trial`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userId, days: trialDays }),
@@ -189,6 +194,7 @@ export default function AnalyticsPage() {
 
     try {
       const r = await fetch(`${API}/api/admin/delete-user/${userId}`, {
+        credentials: 'include',
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

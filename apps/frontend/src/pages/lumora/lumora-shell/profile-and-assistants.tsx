@@ -269,6 +269,7 @@ export function AssistantsPage() {
     });
     try {
       const r = await fetch(`${LUMORA_API}/api/v1/stories/parse`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ resume }),

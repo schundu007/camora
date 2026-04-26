@@ -230,6 +230,7 @@ export default function OnboardingPage() {
       formData.append('resume', file);
 
       const res = await fetch(`${API_URL}/api/onboarding/upload-resume`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -283,6 +284,7 @@ export default function OnboardingPage() {
 
     try {
       const res = await fetch(`${API_URL}/api/onboarding/complete`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

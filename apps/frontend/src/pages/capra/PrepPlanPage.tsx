@@ -46,6 +46,7 @@ export default function PrepPlanPage() {
   const fetchPlan = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/interview/plan`, {
+        credentials: 'include',
         headers: { ...getAuthHeaders() },
       });
       if (!res.ok) {
@@ -74,6 +75,7 @@ export default function PrepPlanPage() {
 
     try {
       const res = await fetch(`${API_URL}/api/interview/progress`, {
+        credentials: 'include',
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -120,6 +122,7 @@ export default function PrepPlanPage() {
     setClearing(true);
     try {
       const res = await fetch(`${API_URL}/api/interview/plan`, {
+        credentials: 'include',
         method: 'DELETE',
         headers: { ...getAuthHeaders() },
       });

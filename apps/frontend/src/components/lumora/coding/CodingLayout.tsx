@@ -290,6 +290,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/coding/execute`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ code, language, test_cases: validTestCases }),
@@ -350,6 +351,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setOutput('Auto-fixing code...');
     try {
       const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fix`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ code, language, error: fixError, problem: problemText }),
@@ -545,6 +547,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setIsTranslating(true);
     try {
       const r = await fetch(`${API_BASE_URL}/api/v1/coding/translate`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         signal: controller.signal,
@@ -641,6 +644,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setError(null);
     try {
       const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fetch-problem`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ url: problemUrl }),
@@ -666,6 +670,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       const formData = new FormData();
       formData.append('image', imageFile);
       const resp = await fetch(`${API_BASE_URL}/api/v1/coding/extract-from-image`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,

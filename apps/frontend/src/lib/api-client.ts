@@ -86,6 +86,7 @@ export const transcriptionAPI = {
     formData.append('filter_user_voice', filterUserVoice.toString());
 
     const response = await fetch(`${API_URL}/api/v1/transcribe`, {
+      credentials: 'include',
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -113,6 +114,7 @@ export const speakerAPI = {
 
     try {
       const response = await fetch(`${API_URL}/api/v1/speaker/enroll`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -172,6 +174,7 @@ export const documentsAPI = {
     formData.append('file', file);
 
     const response = await fetch(`${API_URL}/api/v1/documents/upload`, {
+      credentials: 'include',
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

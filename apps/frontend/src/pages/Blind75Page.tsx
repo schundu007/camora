@@ -391,6 +391,7 @@ export default function Blind75Page() {
     setOutput('Running...');
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/run`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ code, language, input: '' }),
@@ -410,6 +411,7 @@ export default function Blind75Page() {
     setOutput('Getting AI solution...');
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/solve/stream`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ problem: problemTitle, language }),

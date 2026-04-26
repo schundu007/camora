@@ -77,6 +77,7 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
 
       setStatus('Reading problem…');
       const res = await fetch(`${API_URL}/api/v1/coding/capture`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

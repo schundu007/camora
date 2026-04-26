@@ -30,6 +30,7 @@ export default function ReferralDashboard() {
     async function fetchDashboard() {
       try {
         const res = await fetch(`${API_URL}/api/referral/dashboard`, {
+          credentials: 'include',
           headers: { ...getAuthHeaders() },
         });
         if (!res.ok) throw new Error('Failed to load referral data');

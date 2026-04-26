@@ -411,6 +411,7 @@ export default function PracticePage() {
         : `System Design Problem: ${q.q} — ${q.desc}\n\nCandidate's answer:\n${answer}\n\nEvaluate this system design answer on a scale of 0-100. Consider: key components identified (30%), scalability addressed (25%), trade-offs discussed (25%), clarity (20%).\n\nReturn ONLY a JSON object:\n{"score": number, "dimensions": {"approach": number, "complexity": number, "completeness": number, "communication": number}, "feedback": "2-3 sentences of feedback", "modelAnswer": "A model system design answer in 3-4 sentences", "improvementTips": ["tip1", "tip2"]}`;
 
       const resp = await fetch(API_URL + '/api/solve/stream', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ problem: evalPrompt, provider: 'claude', language: 'auto', detailLevel: 'basic', ascendMode: 'coding' }),
@@ -965,6 +966,7 @@ export default function PracticePage() {
                   setSdGenerating(true);
                   try {
                     const res = await fetch(`${API_URL}/api/solve/stream`, {
+                      credentials: 'include',
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                       body: JSON.stringify({

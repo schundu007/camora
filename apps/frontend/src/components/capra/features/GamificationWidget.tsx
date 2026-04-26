@@ -48,9 +48,11 @@ export default function GamificationWidget() {
       try {
         const [profileRes, badgesRes] = await Promise.all([
           fetch(`${API_URL}/api/gamification/profile`, {
+            credentials: 'include',
             headers: { ...getAuthHeaders() },
           }),
           fetch(`${API_URL}/api/gamification/badges`, {
+            credentials: 'include',
             headers: { ...getAuthHeaders() },
           }),
         ]);

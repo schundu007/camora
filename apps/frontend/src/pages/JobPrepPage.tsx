@@ -302,6 +302,7 @@ export default function JobPrepPage() {
 
     try {
       const response = await fetch(`${CAPRA_API_URL}/api/ascend/prep/stream`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

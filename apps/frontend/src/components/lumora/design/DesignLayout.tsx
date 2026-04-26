@@ -141,6 +141,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       const formData = new FormData();
       formData.append('image', file);
       const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -561,6 +562,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     if (!urlInput.trim() || !token) return;
                     try {
                       const resp = await fetch(`${API_URL}/api/v1/coding/fetch-problem`, {
+                        credentials: 'include',
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ url: urlInput.trim() }),

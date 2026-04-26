@@ -36,8 +36,10 @@ export default function AdminPanel({ token, onClose }) {
       setError('');
 
       const [usersRes, pendingRes] = await Promise.all([
-        fetch(API_URL + '/api/auth/admin/users', { headers: getAuthHeaders() }),
-        fetch(API_URL + '/api/auth/admin/pending', { headers: getAuthHeaders() }),
+        fetch(API_URL + '/api/auth/admin/users', {
+        credentials: 'include', headers: getAuthHeaders() }),
+        fetch(API_URL + '/api/auth/admin/pending', {
+        credentials: 'include', headers: getAuthHeaders() }),
       ]);
 
       if (!usersRes.ok || !pendingRes.ok) {
@@ -66,6 +68,7 @@ export default function AdminPanel({ token, onClose }) {
       setSuccess('');
 
       const response = await fetch(API_URL + `/api/auth/admin/users/${username}/roles`, {
+        credentials: 'include',
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ roles: newRoles }),
@@ -99,6 +102,7 @@ export default function AdminPanel({ token, onClose }) {
       setSuccess('');
 
       const response = await fetch(API_URL + `/api/auth/admin/users/${username}`, {
+        credentials: 'include',
         method: 'DELETE',
         headers: getAuthHeaders(),
       });

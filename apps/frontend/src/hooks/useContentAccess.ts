@@ -41,6 +41,7 @@ export function useContentAccess() {
     if (!token || isPaidUser || fetchingRef.current.has(category)) return;
     fetchingRef.current.add(category);
     fetch(`${API_URL}/api/topic-reads?category=${encodeURIComponent(category)}`, {
+      credentials: 'include',
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.ok ? r.json() : null)
@@ -117,6 +118,7 @@ export function useContentAccess() {
     // Persist to server — update local state with server response
     if (token) {
       fetch(`${API_URL}/api/topic-reads`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ category, topicId }),

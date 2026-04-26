@@ -38,6 +38,7 @@ export function useUsage(): UseUsageReturn {
     setError(null);
     try {
       const res = await fetch(`${API_URL}/api/v1/usage`, {
+        credentials: 'include',
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {

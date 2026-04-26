@@ -36,6 +36,7 @@ export interface LumoraAssistant {
 export async function parseResumeToStories(resume: string, token: string, apiUrl: string): Promise<LumoraStory[]> {
   try {
     const r = await fetch(`${apiUrl}/api/v1/stories/parse`, {
+      credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ resume }),

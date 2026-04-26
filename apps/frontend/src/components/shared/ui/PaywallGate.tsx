@@ -33,6 +33,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
     setPolling(true);
     try {
       const resp = await fetch(`${API_URL}/api/v1/billing/subscription`, {
+        credentials: 'include',
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (resp.ok) {

@@ -165,6 +165,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
         const formData = new FormData();
         formData.append('file', file);
         const response = await fetch(API_URL + '/api/extract', {
+          credentials: 'include',
           method: 'POST',
           headers: getAuthHeaders(),
           body: formData,
@@ -217,6 +218,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           const formData = new FormData();
           formData.append('file', file);
           const response = await fetch(API_URL + '/api/extract', {
+            credentials: 'include',
             method: 'POST',
             headers: getAuthHeaders(),
             body: formData,

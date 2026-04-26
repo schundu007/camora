@@ -33,6 +33,7 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
 
     try {
       const res = await fetch(`${API_URL}/api/interview/setup`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

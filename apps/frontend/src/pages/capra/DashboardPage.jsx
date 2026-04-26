@@ -303,6 +303,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
         setLoadingType('fetch');
         try {
           const response = await fetch(API_URL + '/api/fetch', {
+            credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({ url: decodedUrl }),
@@ -482,6 +483,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     setLoadingType('fetch');
     try {
       const fetchResponse = await fetch(API_URL + '/api/fetch', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ url }),
@@ -513,6 +515,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
       formData.append('mode', 'extract');
       formData.append('model', model);
       const response = await fetch(API_URL + '/api/analyze', {
+        credentials: 'include',
         method: 'POST',
         headers: { ...getAuthHeaders() },
         body: formData,
@@ -546,6 +549,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     setIsProcessingFollowUp(true);
     try {
       const response = await fetch(API_URL + '/api/solve/followup', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -601,6 +605,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     const description = buildEraserDescription(sd);
     try {
       const response = await fetch(API_URL + '/api/diagram/eraser', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ description, detailLevel: 'pro', cacheKey: currentProblem || sd.overview || '' }),

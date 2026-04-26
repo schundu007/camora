@@ -99,7 +99,8 @@ function SubscriptionCard() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${BILLING_API}/api/v1/billing/subscription`, { headers: getAuthHeaders() });
+        const res = await fetch(`${BILLING_API}/api/v1/billing/subscription`, {
+        credentials: 'include', headers: getAuthHeaders() });
         if (res.ok) setSub(await res.json());
       } catch { /* ignore */ }
       setLoading(false);
@@ -109,6 +110,7 @@ function SubscriptionCard() {
   const openPortal = async () => {
     try {
       const res = await fetch(`${BILLING_API}/api/v1/billing/portal`, {
+        credentials: 'include',
         method: 'POST',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnUrl: window.location.href }),
@@ -192,7 +194,8 @@ function DeleteAccount() {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${CAPRA_API}/api/v1/auth/account`, { method: 'DELETE', headers: getAuthHeaders() });
+      const res = await fetch(`${CAPRA_API}/api/v1/auth/account`, {
+        credentials: 'include', method: 'DELETE', headers: getAuthHeaders() });
       if (res.ok) { logout(); window.location.href = '/'; }
     } catch { /* ignore */ }
   };

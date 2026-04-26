@@ -111,6 +111,7 @@ export default function BadgeGrid() {
     async function fetchBadges() {
       try {
         const res = await fetch(`${API_URL}/api/gamification/badges`, {
+          credentials: 'include',
           headers: { ...getAuthHeaders() },
         });
         if (!res.ok) throw new Error('Failed to load badges');

@@ -69,6 +69,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
   const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/topic-comments?topicId=${encodeURIComponent(topicId)}`, {
+        credentials: 'include',
         headers: { ...getAuthHeaders() },
       });
       if (!res.ok) throw new Error('Failed to fetch comments');
@@ -95,6 +96,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
     setSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/api/topic-comments`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,6 +127,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
     setDeletingId(commentId);
     try {
       const res = await fetch(`${API_URL}/api/topic-comments/${commentId}`, {
+        credentials: 'include',
         method: 'DELETE',
         headers: { ...getAuthHeaders() },
       });

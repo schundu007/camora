@@ -35,6 +35,7 @@ async function solveWithStream(
   onSwitch = null
 ) {
   const response = await fetch(API_URL + '/api/solve/stream', {
+    credentials: 'include',
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({
@@ -307,6 +308,7 @@ export function useAutoTestFix({ provider, model }) {
 
       try {
         const runResponse = await fetch(API_URL + '/api/run', {
+          credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({ code: currentCode, language: normalizedLang, input: testInput }),
@@ -326,6 +328,7 @@ export function useAutoTestFix({ provider, model }) {
         setLoadingType('fixing');
 
         const fixResponse = await fetch(API_URL + '/api/fix', {
+          credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({
@@ -344,6 +347,7 @@ export function useAutoTestFix({ provider, model }) {
 
           setLoadingType('running');
           const finalRunResponse = await fetch(API_URL + '/api/run', {
+            credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({
