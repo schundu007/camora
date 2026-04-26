@@ -293,7 +293,7 @@ function DataModelSection({ schema, examples }) {
                     <span className="text-[10px] font-bold text-[var(--accent)] landing-mono">{ex.table}</span>
                     <span className="text-[10px] text-[var(--text-muted)] landing-body">— {ex.label}</span>
                   </div>
-                  <pre className="p-2.5 text-[11px] leading-relaxed landing-mono text-[var(--text-secondary)] overflow-x-auto" style={{ background: '#f8fafc' }}>{ex.json}</pre>
+                  <pre className="p-2.5 text-[11px] leading-relaxed landing-mono text-[var(--text-secondary)] overflow-x-auto" style={{ background: 'var(--bg-surface)' }}>{ex.json}</pre>
                 </div>
               ))}
             </div>
