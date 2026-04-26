@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../hooks/useTheme';
 import { dialogAlert } from './Dialog';
 
 const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -163,8 +164,18 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
   const prices = usePlanPrices();
   const { checkout, loading } = useCheckout();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   const displayPlans = PLANS.filter(p => showFree || p.priceKey !== null);
+
+  // Highlight card surface needs to stand out against the page bg in BOTH
+  // themes. Light page (white) → near-black card. Dark page (#0A1320) → a
+  // brighter accent navy so the card doesn't disappear navy-on-navy.
+  const isDark = theme === 'dark';
+  const highlightBg = isDark ? 'var(--cam-primary-dk)' : '#0F172A';
+  const highlightFg = '#FFFFFF';
+  const highlightFgMuted = 'rgba(255,255,255,0.72)';
+  const highlightBorder = 'rgba(255,255,255,0.18)';
 
   return (
     <div className="space-y-8">
@@ -176,12 +187,6 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
           const isBest = (plan as any).best;
 
           const highlighted = isPro || isBest;
-          // Solid dark navy for highlighted cards — matches the bottom CTA on the
-          // pricing page, and contrasts safely with white text in both themes.
-          const highlightBg = '#0F172A';
-          const highlightFg = '#FFFFFF';
-          const highlightFgMuted = 'rgba(255,255,255,0.72)';
-          const highlightBorder = 'rgba(255,255,255,0.18)';
 
           return (
             <div

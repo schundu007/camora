@@ -17,16 +17,16 @@ interface SharedCodeEditorProps {
 function EditorSkeleton({ height }: { height: string }) {
   return (
     <div
-      className="animate-pulse bg-gray-800 rounded-md flex items-center justify-center"
+      className="animate-pulse bg-[var(--bg-elevated)] rounded-md flex items-center justify-center"
       style={{ height }}
     >
       <div className="flex flex-col items-center gap-3">
         <div className="flex gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-gray-600 animate-bounce [animation-delay:0ms]" />
-          <div className="w-2 h-2 rounded-full bg-gray-600 animate-bounce [animation-delay:150ms]" />
-          <div className="w-2 h-2 rounded-full bg-gray-600 animate-bounce [animation-delay:300ms]" />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:0ms]" />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:150ms]" />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:300ms]" />
         </div>
-        <span className="text-gray-500 text-sm">Loading editor...</span>
+        <span className="text-[var(--text-muted)] text-sm">Loading editor...</span>
       </div>
     </div>
   );
