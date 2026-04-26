@@ -169,23 +169,24 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
         </div>
         </>
       )}
-      {/* Challenge Campaign Ticker */}
+      {/* Challenge Campaign Ticker — gold band so the scrolling text
+          jumps out below the dark navy nav (was a near-invisible navy
+          gradient that blurred into the chrome above). */}
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
-          background: isLight
-            ? 'linear-gradient(90deg, rgba(38,97,156,0.06) 0%, rgba(38,97,156,0.10) 50%, rgba(38,97,156,0.06) 100%)'
-            : 'linear-gradient(90deg, var(--cam-primary-dk), var(--cam-primary), var(--cam-primary-dk))',
+          background: 'linear-gradient(90deg, var(--cam-gold-leaf-dk) 0%, var(--cam-gold-leaf) 50%, var(--cam-gold-leaf-dk) 100%)',
           height: TICKER_HEIGHT,
-          borderTop: `1px solid ${isLight ? 'var(--border)' : 'rgba(255,255,255,0.15)'}`,
-          borderBottom: `1px solid ${isLight ? 'var(--border)' : 'rgba(255,255,255,0.15)'}`,
+          borderTop: '1px solid rgba(0,0,0,0.18)',
+          borderBottom: '1px solid rgba(0,0,0,0.10)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)',
         }}>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 overflow-hidden h-full">
             <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
               {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? 'var(--text-dimmed)' : '#FFFFFF' }}>
+                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: '#020617' }}>
                   {item.text}{' '}
-                  <span className="ml-1" style={{ color: isLight ? item.color : '#FFFFFF' }}>{item.highlight}</span>
-                  <span className="mx-5 w-1.5 h-1.5 rounded-full" style={{ background: isLight ? item.color : 'rgba(255,255,255,0.4)' }} />
+                  <span className="ml-1 font-extrabold" style={{ color: '#020617' }}>{item.highlight}</span>
+                  <span className="mx-5 w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(2,6,23,0.55)' }} />
                 </span>
               ))}
             </div>
