@@ -4,6 +4,7 @@ import { dialogConfirm } from '../../components/shared/Dialog';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import { Icon } from '../../components/shared/Icons.jsx';
+import { DatabricksThumb } from '../../components/shared/DatabricksThumb';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
@@ -73,9 +74,9 @@ const CHALLENGES = {
 };
 
 const MODES = [
-  { id: 'quickfire', label: 'Quick Fire', time: 300, questions: 5, icon: 'zap', desc: '5 rapid questions in 5 minutes. Build speed and intuition.' },
-  { id: 'deepdive', label: 'Deep Dive', time: 900, questions: 3, icon: 'target', desc: '3 in-depth questions over 15 minutes. Focus on quality.' },
-  { id: 'mock', label: 'Mock Interview', time: 2700, questions: 8, icon: 'timer', desc: '8 questions in 45 minutes. Simulate the real experience.' },
+  { id: 'quickfire', label: 'Quick Fire',     time: 300,  questions: 5, icon: 'zap',    hexColor: 'gold',    desc: '5 rapid questions in 5 minutes. Build speed and intuition.' },
+  { id: 'deepdive',  label: 'Deep Dive',      time: 900,  questions: 3, icon: 'target', hexColor: 'navy',    desc: '3 in-depth questions over 15 minutes. Focus on quality.' },
+  { id: 'mock',      label: 'Mock Interview', time: 2700, questions: 8, icon: 'timer',  hexColor: 'navy-dk', desc: '8 questions in 45 minutes. Simulate the real experience.' },
 ];
 
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
@@ -740,10 +741,13 @@ export default function PracticePage() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                       {MODES.map(m => (
                         <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? 'var(--accent)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#FFFFFF' : 'var(--text-muted)' }} />
-                            </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <DatabricksThumb
+                              color={m.hexColor}
+                              size={40}
+                              icon={<Icon name={m.icon} size={20} style={{ color: '#FFFFFF' }} />}
+                              title={m.label}
+                            />
                             <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? 'var(--accent)' : 'var(--text-primary)' }}>{m.label}</span>
                           </div>
                           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px', lineHeight: 1.5 }}>{m.desc}</p>

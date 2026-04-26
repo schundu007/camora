@@ -7,6 +7,22 @@ import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 import TopicIllustration from './TopicIllustration';
+import { DatabricksThumb } from '../../shared/DatabricksThumb';
+
+/* ── Per-category color family for DatabricksThumb tiles on the
+   Prepare overview. Stays inside the existing Camora palette —
+   navy / navy-lt / navy-dk / gold / red — no new tokens. */
+const CATEGORY_HEX = {
+  'coding':         'navy',
+  'system-design':  'navy-lt',
+  'microservices':  'navy',
+  'databases':      'navy-lt',
+  'low-level':      'navy-dk',
+  'projects':       'gold',
+  'roadmaps':       'navy-dk',
+  'eng-blogs':      'navy-lt',
+  'behavioral':     'gold',
+};
 
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 const SQLPlayground = lazy(() => import('../sql/SQLPlayground'));
@@ -879,9 +895,12 @@ export default function DocsPage({ onBack }) {
                               <div className="p-4">
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                                      <Icon name={cat.icon} size={18} style={{ color: 'var(--accent)' }} />
-                                    </div>
+                                    <DatabricksThumb
+                                      color={CATEGORY_HEX[cat.id] || 'navy'}
+                                      size={44}
+                                      icon={<Icon name={cat.icon} size={22} style={{ color: '#FFFFFF' }} />}
+                                      title={cat.title}
+                                    />
                                     <div>
                                       <h3 className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
                                       <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
@@ -970,9 +989,9 @@ export default function DocsPage({ onBack }) {
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'checklist', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', illustration: 'low-level', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'checklist', hexColor: 'navy',    title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
@@ -983,9 +1002,12 @@ export default function DocsPage({ onBack }) {
                               <TopicIllustration name={resource.illustration} />
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
-                                  <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                                    <Icon name={resource.icon} size={18} style={{ color: 'var(--accent)' }} />
-                                  </div>
+                                  <DatabricksThumb
+                                    color={resource.hexColor}
+                                    size={44}
+                                    icon={<Icon name={resource.icon} size={22} style={{ color: '#FFFFFF' }} />}
+                                    title={resource.title}
+                                  />
                                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
                                     {resource.badge}
                                   </span>
@@ -1007,9 +1029,9 @@ export default function DocsPage({ onBack }) {
                         <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Survival Guide</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', step: 'Prep' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', step: 'Execute' },
-                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', step: 'Follow up' },
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', hexColor: 'navy',    step: 'Prep' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play',      hexColor: 'gold',    step: 'Execute' },
+                            { title: 'After the Interview',  items: interviewCheatsheet.after,  icon: 'check',     hexColor: 'navy-dk', step: 'Follow up' },
                           ].map((card) => (
                             <div
                               key={card.title}
@@ -1018,9 +1040,12 @@ export default function DocsPage({ onBack }) {
                             >
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                                  <Icon name={card.icon} size={18} style={{ color: 'var(--accent)' }} />
-                                </div>
+                                <DatabricksThumb
+                                  color={card.hexColor}
+                                  size={40}
+                                  icon={<Icon name={card.icon} size={20} style={{ color: '#FFFFFF' }} />}
+                                  title={card.title}
+                                />
                                 <div>
                                   <h3 className="landing-display text-sm font-bold text-[var(--text-primary)]">{card.title}</h3>
                                   <span className="text-[10px] font-bold landing-mono px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)' }}>{card.step}</span>
