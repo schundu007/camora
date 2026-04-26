@@ -8,7 +8,7 @@ import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
 const ACCENT = 'var(--cam-primary)';
-const ACCENT_BG = 'rgba(38,97,156,0.08)';
+const ACCENT_BG = 'var(--accent-subtle)';
 const MUTED = 'var(--text-muted)';
 
 export function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
@@ -62,7 +62,7 @@ export function MicButtonLarge({ onResult, disabled }: { onResult: (text: string
     <button onClick={rec ? stop : start} disabled={disabled}
       className="w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 shadow-md hover:shadow-lg hover:scale-105"
       style={rec
-        ? { background: '#ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.2)' }
+        ? { background: 'var(--danger)', boxShadow: '0 0 0 4px rgba(239,68,68,0.2)' }
         : { background: ACCENT, boxShadow: `0 0 0 4px ${ACCENT_BG}` }
       }
       title={rec ? 'Stop recording' : 'Voice input'}

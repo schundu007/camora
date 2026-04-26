@@ -218,8 +218,8 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           className="flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-lg transition-all shrink-0"
           style={isLight ? {
             fontSize: '13px',
-            color: isRecording ? '#ffffff' : '#000000',
-            background: isRecording ? '#FF0000' : 'var(--cam-primary)',
+            color: '#ffffff',
+            background: isRecording ? 'var(--danger)' : 'var(--cam-primary)',
             border: '1px solid var(--border)',
           } : {
             fontSize: '11px',
@@ -247,8 +247,8 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           )}
         </button>
         {isRecording && (
-          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: isLight ? '#e5e7eb' : 'rgba(255,255,255,0.1)' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${recordingProgress}%`, background: '#FF0000' }} />
+          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: isLight ? 'var(--border)' : 'rgba(255,255,255,0.1)' }}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${recordingProgress}%`, background: 'var(--danger)' }} />
           </div>
         )}
         {error && <span className="text-xs max-w-full truncate" style={{ color: 'var(--danger)' }} title={error}>{error}</span>}
@@ -266,7 +266,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           fontSize: '13px',
           padding: '10px 16px',
           color: '#ffffff',
-          background: voiceFilterEnabled ? 'var(--cam-primary)' : '#000000',
+          background: voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--text-primary)',
           border: '1px solid var(--border)',
         } : {
           fontSize: '11px',

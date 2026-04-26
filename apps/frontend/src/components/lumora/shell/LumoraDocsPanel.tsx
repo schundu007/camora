@@ -96,7 +96,7 @@ function formatPrepContent(content: any): any {
   return { summary: String(content) };
 }
 
-/** Repair truncated JSON by closing open strings, arrays, and objects */
+/** Repair truncated JSON using delimiter stack — closes in correct nesting order */
 function repairJSON(s: string): any {
   let str = s.trim();
   const start = str.indexOf('{');
@@ -112,25 +112,23 @@ function repairJSON(s: string): any {
   }
   if (inStr) str += '"';
 
-  // Remove trailing partial key-value or comma
-  str = str.replace(/,\s*"[^"]*"?\s*:?\s*$/, '');
+  // Remove trailing partial key-value pairs and commas
+  str = str.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"]*"?\s*$/, '');
   str = str.replace(/,\s*$/, '');
 
-  // Count and close open brackets/braces (outside strings)
-  let braces = 0, brackets = 0;
+  // Build stack of open delimiters and close in correct nesting order
+  const stack: string[] = [];
   inStr = false; esc = false;
   for (let i = 0; i < str.length; i++) {
     if (esc) { esc = false; continue; }
     if (str[i] === '\\') { esc = true; continue; }
     if (str[i] === '"') { inStr = !inStr; continue; }
     if (inStr) continue;
-    if (str[i] === '{') braces++;
-    else if (str[i] === '}') braces--;
-    else if (str[i] === '[') brackets++;
-    else if (str[i] === ']') brackets--;
+    if (str[i] === '{') stack.push('}');
+    else if (str[i] === '[') stack.push(']');
+    else if (str[i] === '}' || str[i] === ']') stack.pop();
   }
-  while (brackets > 0) { str += ']'; brackets--; }
-  while (braces > 0) { str += '}'; braces--; }
+  str += stack.reverse().join('');
 
   try { const p = JSON.parse(str); if (p && typeof p === 'object') return p; } catch {}
   return null;
@@ -237,7 +235,7 @@ function PrepContentRenderer({ content }: { content: any }) {
   if (data.summary) {
     mark('summary');
     els.push(
-      <div key="summary" className="rounded-lg p-4" style={{ background: 'rgba(38,97,156,0.03)', border: '1px solid var(--border)' }}>
+      <div key="summary" className="rounded-lg p-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
         <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>Summary</div>
         <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
       </div>
@@ -256,7 +254,7 @@ function PrepContentRenderer({ content }: { content: any }) {
             <div className="flex-1 pt-0.5">
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                 {(s.bullets || []).map((b: string, j: number) => (
-                  <span key={j}>{j === 0 ? <><strong style={{ color: '#1e40af' }}>{String(b).split(' ').slice(0, 3).join(' ')}</strong> {String(b).split(' ').slice(3).join(' ')}</> : ` ${b}`}</span>
+                  <span key={j}>{j === 0 ? <><strong style={{ color: 'var(--cam-primary)' }}>{String(b).split(' ').slice(0, 3).join(' ')}</strong> {String(b).split(' ').slice(3).join(' ')}</> : ` ${b}`}</span>
                 ))}
                 {s.title && !s.bullets?.length && <>{s.title}</>}
               </p>
@@ -273,7 +271,7 @@ function PrepContentRenderer({ content }: { content: any }) {
     mark('companyInsights');
     els.push(
       <div key="insights" className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: '#06b6d4' }}>Company Insights</div>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--cam-primary)' }}>Company Insights</div>
         <div className="grid grid-cols-1 gap-2">
           {Object.entries(data.companyInsights).map(([k, v]) => (
             <div key={k}><span className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}:</span><p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</p></div>
@@ -295,14 +293,14 @@ function PrepContentRenderer({ content }: { content: any }) {
           return (
             <div key={i} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
               <div className="px-5 py-3 flex items-start gap-3" style={{ background: 'var(--bg-elevated)' }}>
-                <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: '#eff6ff', color: '#1e40af' }}>{i + 1}</span>
+                <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>{i + 1}</span>
                 <div className="flex-1">
                   <p className="text-sm font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>{title}</p>
-                  {q.difficulty && <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full" style={{ background: q.difficulty === 'Hard' ? '#fef2f2' : q.difficulty === 'Medium' ? '#fefce8' : '#f0fdf4', color: q.difficulty === 'Hard' ? '#dc2626' : q.difficulty === 'Medium' ? '#ca8a04' : '#16a34a' }}>{q.difficulty}</span>}
-                  {q.whyTheyAsk && (qRendered.add('whyTheyAsk'), <p className="text-xs mt-1 italic" style={{ color: '#f59e0b' }}>Why Asked: {q.whyTheyAsk}</p>)}
-                  {q.whyThisCompanyAsks && (qRendered.add('whyThisCompanyAsks'), <p className="text-xs mt-1 italic" style={{ color: '#f59e0b' }}>Why Asked: {q.whyThisCompanyAsks}</p>)}
-                  {q.companyConnection && (qRendered.add('companyConnection'), <p className="text-xs mt-1 italic" style={{ color: '#06b6d4' }}>Connect to: {q.companyConnection}</p>)}
-                  {q.category && (qRendered.add('category'), <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: '#eff6ff', color: '#1e40af' }}>{q.category}</span>)}
+                  {q.difficulty && <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: q.difficulty === 'Hard' ? 'var(--danger)' : q.difficulty === 'Medium' ? 'var(--warning-text)' : 'var(--success)', border: `1px solid ${q.difficulty === 'Hard' ? 'var(--danger)' : q.difficulty === 'Medium' ? 'var(--warning)' : 'var(--success)'}` }}>{q.difficulty}</span>}
+                  {q.whyTheyAsk && (qRendered.add('whyTheyAsk'), <p className="text-xs mt-1 italic" style={{ color: 'var(--warning-text)' }}>Why Asked: {q.whyTheyAsk}</p>)}
+                  {q.whyThisCompanyAsks && (qRendered.add('whyThisCompanyAsks'), <p className="text-xs mt-1 italic" style={{ color: 'var(--warning-text)' }}>Why Asked: {q.whyThisCompanyAsks}</p>)}
+                  {q.companyConnection && (qRendered.add('companyConnection'), <p className="text-xs mt-1 italic" style={{ color: 'var(--cam-primary)' }}>Connect to: {q.companyConnection}</p>)}
+                  {q.category && (qRendered.add('category'), <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>{q.category}</span>)}
                 </div>
               </div>
               <div className="px-5 py-4 space-y-3">
@@ -335,7 +333,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                   );
                 })()}
                 {/* Tips */}
-                {q.tips && (qRendered.add('tips'), <div className="text-xs p-3 rounded-lg italic" style={{ background: 'rgba(245,158,11,0.06)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.1)' }}>{Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</div>)}
+                {q.tips && (qRendered.add('tips'), <div className="text-xs p-3 rounded-lg italic" style={{ background: 'var(--bg-elevated)', color: 'var(--warning-text)', border: '1px solid var(--warning)' }}>{Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</div>)}
                 {q.followUp && (qRendered.add('followUp'), <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>Follow-up: {q.followUp}</p>)}
                 {/* Catch-all: render any remaining question fields generically */}
                 {Object.entries(q).filter(([k]) => !qRendered.has(k) && k !== 'difficulty').map(([k, v]) => (
@@ -412,9 +410,9 @@ function PrepContentRenderer({ content }: { content: any }) {
 
   // Box fields
   const boxFields = [
-    { key: 'tips', label: 'Tips', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
-    { key: 'deliveryTips', label: 'Delivery Tips', bg: 'rgba(38,97,156,0.06)', border: 'rgba(38,97,156,0.15)', color: 'var(--cam-primary)' },
-    { key: 'recentNews', label: 'Recent News', bg: '#f0fdf4', border: 'rgba(16,185,129,0.15)', color: '#10b981' },
+    { key: 'tips', label: 'Tips', bg: 'var(--bg-elevated)', border: 'var(--warning)', color: 'var(--warning-text)' },
+    { key: 'deliveryTips', label: 'Delivery Tips', bg: 'var(--accent-subtle)', border: 'var(--border)', color: 'var(--cam-primary)' },
+    { key: 'recentNews', label: 'Recent News', bg: 'var(--accent-subtle)', border: 'var(--border)', color: 'var(--success)' },
   ];
   for (const f of boxFields) {
     if (!data[f.key]) continue;
@@ -504,7 +502,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste, onCli
   return (
     <div
       className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
-      style={{ background: value ? 'rgba(38,97,156,0.03)' : '#f8fafc', border: `1px solid ${value ? 'var(--cam-primary)' : '#e2e8f0'}` }}
+      style={{ background: value ? 'var(--accent-subtle)' : 'var(--bg-elevated)', border: `1px solid ${value ? 'var(--cam-primary)' : 'var(--border)'}` }}
       onClick={() => { if (onClickOverride) onClickOverride(); else ref.current?.click(); }}
       onDrop={handleDrop}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -526,7 +524,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste, onCli
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
           <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-            {label}{required && <span style={{ color: '#ef4444' }}>*</span>}
+            {label}{required && <span style={{ color: 'var(--danger)' }}>*</span>}
           </span>
           <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
             {onClickOverride ? 'Paste URL, text, or upload' : 'Drop or click'}
@@ -588,7 +586,7 @@ function FormattedJD({ text }: { text: string }) {
       {sections.map((sec, i) => (
         <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           {sec.title && (
-            <div className="px-4 py-2.5" style={{ background: 'rgba(38,97,156,0.03)', borderBottom: '1px solid #e2e8f0' }}>
+            <div className="px-4 py-2.5" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
               <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>{sec.title}</h4>
             </div>
           )}
@@ -866,7 +864,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       {/* Sidebar */}
       <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         {/* Company selector */}
-        <div className="px-3 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+        <div className="px-3 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
           <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
           {prepData.activeCompany ? (
             <div className="relative">
@@ -883,7 +881,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                     {prepData.companies.map(c => (
                       <button key={c} onClick={() => switchCompany(c)}
                         className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors"
-                        style={{ color: c === prepData.activeCompany ? 'var(--cam-primary)' : '#475569', background: c === prepData.activeCompany ? 'rgba(38,97,156,0.03)' : 'transparent' }}>
+                        style={{ color: c === prepData.activeCompany ? 'var(--cam-primary)' : 'var(--text-muted)', background: c === prepData.activeCompany ? 'var(--accent-subtle)' : 'transparent' }}>
                         <span className="truncate">{c}</span>
                         {prepData.companies.length > 1 && (
                           <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
@@ -927,8 +925,8 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <button key={s.id} onClick={() => setActiveSection(s.id)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
-                  background: isActive ? 'rgba(38,97,156,0.03)' : 'transparent',
-                  color: isActive ? 'var(--cam-primary)' : '#475569',
+                  background: isActive ? 'var(--accent-subtle)' : 'transparent',
+                  color: isActive ? 'var(--cam-primary)' : 'var(--text-muted)',
                   borderLeft: isActive ? `3px solid var(--cam-primary)` : '3px solid transparent',
                 }}>
                 {/* Status indicator */}
@@ -939,7 +937,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                     <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                   </div>
                 ) : sectionStatus[s.id] === 'error' ? (
-                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: '#ef4444' }} />
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: 'var(--danger)' }} />
                 ) : (
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--border)' }} />
                 )}
@@ -1029,9 +1027,9 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         ) : activeSection === 'jd-view' ? (
           /* JD formatted viewer */
           <div className="flex-1 flex flex-col">
-            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
-              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'rgba(38,97,156,0.03)' }}>Edit</button>
+              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }}>Edit</button>
             </div>
             <div className="flex-1 overflow-auto p-6">
               <FormattedJD text={state.jd} />
@@ -1040,13 +1038,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         ) : (
           /* Generated section content */
           <div className="flex-1 flex flex-col">
-            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                 {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}
               </h3>
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(38,97,156,0.03)', color: 'var(--cam-primary)' }}>Generated</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>Generated</span>
                 )}
                 {hasRequiredDocs && (
                   <button
@@ -1089,7 +1087,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       {jdModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={closeJdModal}>
           <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden" style={{ background: 'var(--bg-surface)' }} onClick={(e) => e.stopPropagation()}>
-            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
               <div className="flex items-center gap-2">
                 <button onClick={() => jdFileInputRef.current?.click()}
@@ -1127,7 +1125,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
                 Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn, and most career pages.
               </p>
-              {jdUrlError && <p className="text-[11px] mt-1.5" style={{ color: '#ef4444' }}>{jdUrlError}</p>}
+              {jdUrlError && <p className="text-[11px] mt-1.5" style={{ color: 'var(--danger)' }}>{jdUrlError}</p>}
 
               <textarea
                 value={jdEditText}

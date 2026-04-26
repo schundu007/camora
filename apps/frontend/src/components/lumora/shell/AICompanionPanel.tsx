@@ -8,11 +8,11 @@ import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { MicButtonLarge } from './companion/mic-button-large';
 
-/* White glass copilot — dark text */
+/* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
 const C = {
-  base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: 'var(--cam-primary)',
-  text: '#0F172A', muted: '#64748B', accent: 'var(--cam-primary)',
-  accentBg: 'rgba(38,97,156,0.08)', border: 'rgba(0,0,0,0.15)',
+  base: 'var(--bg-surface)', surface: 'var(--bg-elevated)', elevated: 'var(--cam-primary)',
+  text: 'var(--text-primary)', muted: 'var(--text-muted)', accent: 'var(--cam-primary)',
+  accentBg: 'var(--accent-subtle)', border: 'var(--border)',
 };
 
 /* ── Types ── */
@@ -345,10 +345,10 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         left: maximized ? 'var(--lumora-rail-offset, 0px)' : undefined,
         top: maximized ? 0 : undefined,
         borderRadius: maximized ? 0 : '16px',
-        background: 'rgba(255,255,255,0.92)',
+        background: 'var(--bg-surface)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        border: maximized ? 'none' : '1px solid rgba(0,0,0,0.1)',
+        border: maximized ? 'none' : '1px solid var(--border)',
         boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
         transition: isDragging ? 'none' : 'all 0.2s ease',
       }}
@@ -365,7 +365,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       {/* Header */}
       <div
         className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
-        style={{ borderBottom: '1px solid #E2E8F0', borderRadius: embedded || maximized ? 0 : '16px 16px 0 0' }}
+        style={{ borderBottom: '1px solid var(--border)', borderRadius: embedded || maximized ? 0 : '16px 16px 0 0' }}
         onMouseDown={embedded ? undefined : startDrag}
       >
         {/* Left: clear + close (embedded) or clear + new (floating) */}
@@ -389,7 +389,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         <div className="flex-1 flex items-center justify-center gap-2">
           <SonaAvatar size={18} />
           <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>Sona</span>
-          {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#F0FDF4', color: '#16A34A' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
+          {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--success)' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
           <div className="flex items-center rounded-md p-0.5" style={{ background: 'var(--bg-elevated)' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
@@ -401,7 +401,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   fontWeight: 700,
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
-                  color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
+                  color: answerMode === mode ? '#FFFFFF' : 'var(--text-dimmed)',
                   background: answerMode === mode ? 'var(--cam-primary)' : 'transparent',
                 }}
               >
@@ -451,8 +451,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
                       <button key={s} onClick={() => ask(s)} className="w-full text-left px-3 py-2 rounded-lg text-[11px] transition-all" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#E2E8F0'; }}>{s}</button>
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}>{s}</button>
                     ))}
                   </div>
                 </div>
@@ -509,9 +509,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               <div className="grid grid-cols-2 gap-1.5 w-full">
                 {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
                   <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
-                    style={{ border: '1px solid rgba(0,0,0,0.08)', fontSize: '10px', color: 'var(--text-muted)' }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
+                    style={{ border: '1px solid var(--border)', fontSize: '10px', color: 'var(--text-muted)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}>
                     {s}
                   </button>
                 ))}
@@ -556,13 +556,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Mic + AUTO toggle — click AUTO before the interview to keep Sona
             listening continuously (auto-restarts, persists across reloads). */}
         <div className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl"
-          style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)' }}>
+          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <AudioCapture onTranscription={handleAutoTranscription} />
         </div>
         {/* Prominent centered one-shot mic — kept for explicit single-question capture */}
         <MicButtonLarge onResult={(text) => ask(text)} disabled={streaming} />
         {/* Text input row */}
-        <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}>
+        <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
             placeholder={answerMode === 'short' ? 'Type a question...' : 'Type a question...'}

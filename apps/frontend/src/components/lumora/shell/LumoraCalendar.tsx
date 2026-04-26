@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const C = {
   base: 'var(--bg-surface)', surface: 'var(--bg-elevated)', elevated: 'var(--bg-elevated)',
   text: 'var(--text-primary)', muted: 'var(--text-muted)', accent: 'var(--cam-primary)',
-  accentBg: 'rgba(38,97,156,0.08)', border: 'var(--border)',
+  accentBg: 'var(--accent-subtle)', border: 'var(--border)',
 };
 
 export function LumoraCalendar({ onClose }: { onClose: () => void }) {

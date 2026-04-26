@@ -525,7 +525,7 @@ function UnifiedMicButton({
             className="w-0.5 rounded-full transition-all duration-75"
             style={{
               height: `${6 + i * 2}px`,
-              background: audioLevel > i * 0.02 ? 'var(--accent)' : 'rgba(148,163,184,0.25)',
+              background: audioLevel > i * 0.02 ? 'var(--accent)' : 'var(--border)',
             }}
           />
         ))}

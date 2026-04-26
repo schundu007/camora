@@ -82,7 +82,7 @@ export function DocumentUpload() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
         style={documents.length > 0
-          ? { background: 'rgba(38,97,156,0.1)', color: '#95B0CD', border: '1px solid rgba(38,97,156,0.15)' }
+          ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--border)' }
           : { color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
         title={`Prep docs (${documents.length})`}
       >
