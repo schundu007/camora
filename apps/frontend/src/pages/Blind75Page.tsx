@@ -485,58 +485,63 @@ export default function Blind75Page() {
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
 
-      {/* ═══════════════════════ Header Section ═══════════════════════ */}
-      <div>
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32 }}>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '24px 28px', marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-              <div>
-                <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
-                  Interview Handbook
-                </h1>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
-                  {[
-                    { label: '75 Problems', color: 'var(--success)', bg: 'var(--accent-subtle)', border: 'var(--border)' },
-                    { label: `${techInterviewTopics.length} Algorithms`, color: 'var(--accent)', bg: 'var(--accent-subtle)', border: 'var(--border)' },
-                    { label: `${totalBehavioralQuestions} Behavioral`, color: 'var(--accent)', bg: 'var(--accent-subtle)', border: 'var(--border)' },
-                    { label: 'Cheatsheet', color: 'var(--cam-gold-leaf-text)', bg: 'var(--cam-gold-leaf-50)', border: 'var(--warning)' },
-                  ].map((stat) => (
-                    <span
-                      key={stat.label}
-                      style={{ fontSize: '12px', fontWeight: 600, color: stat.color, background: stat.bg, border: `1px solid ${stat.border}`, borderRadius: '20px', padding: '3px 10px' }}
-                    >
-                      {stat.label}
-                    </span>
-                  ))}
-                </div>
+      {/* ═══════════════════════ Header Section — LeetCode navy band ═══════════════════════ */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: 56, paddingBottom: 64 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
+                Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Handbook</span>
+              </h1>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                {[
+                  { label: '75 Problems',                              gold: true },
+                  { label: `${techInterviewTopics.length} Algorithms`, gold: false },
+                  { label: `${totalBehavioralQuestions} Behavioral`,   gold: false },
+                  { label: 'Cheatsheet',                               gold: true },
+                ].map((stat) => (
+                  <span
+                    key={stat.label}
+                    style={stat.gold
+                      ? { fontSize: '12px', fontWeight: 700, color: 'var(--cam-primary-dk)', background: 'var(--cam-gold-leaf)', borderRadius: '20px', padding: '3px 10px' }
+                      : { fontSize: '12px', fontWeight: 600, color: '#FFFFFF', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '20px', padding: '3px 10px' }
+                    }
+                  >
+                    {stat.label}
+                  </span>
+                ))}
               </div>
+            </div>
 
-              {/* Progress */}
-              <div style={{ minWidth: 200, flex: '0 1 260px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    {completedCount} / {TOTAL} completed
-                  </span>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--success)' }}>
-                    {progressPercent}%
-                  </span>
-                </div>
-                <div style={{ height: '8px', borderRadius: '4px', background: 'var(--bg-elevated)', overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${progressPercent}%`,
-                      background: 'linear-gradient(90deg, var(--success), var(--accent))',
-                      borderRadius: '4px',
-                      transition: 'width 0.4s ease',
-                    }}
-                  />
-                </div>
+            {/* Progress */}
+            <div style={{ minWidth: 200, flex: '0 1 260px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+                  {completedCount} / {TOTAL} completed
+                </span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--cam-gold-leaf-lt)' }}>
+                  {progressPercent}%
+                </span>
+              </div>
+              <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${progressPercent}%`,
+                    background: 'linear-gradient(90deg, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))',
+                    borderRadius: '4px',
+                    transition: 'width 0.4s ease',
+                  }}
+                />
               </div>
             </div>
           </div>
         </div>
-      </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" style={{ position: 'absolute', left: 0, bottom: 0, width: '100%', pointerEvents: 'none', height: '5vh', display: 'block' }}>
+          <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
 
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
       <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
