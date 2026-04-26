@@ -7,6 +7,7 @@ import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
 import OnThisPage from '../../shared/docs/OnThisPage';
+import DocsTabs from '../../shared/docs/DocsTabs';
 import { RoughLayeredDiagram } from './RoughLayeredDiagram';
 import { RoughFlowDiagram } from './RoughFlowDiagram';
 import { GENERATED_LAYERED_DESIGN } from '../../../data/capra/topics/__generated/layered-design';
@@ -2460,26 +2461,33 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 14. Code Examples */}
+              {/* 14. Code Examples — NVIDIA-style language-tabbed code block.
+                  Each language entry becomes a tab; active tab content renders
+                  inside DocsTabs's accent-bordered panel. Copy button moves
+                  into the panel header so the tabs row stays clean. */}
               {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
                 <div id="code-examples" className="scroll-mt-24 mt-14 first:mt-0">
                   <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
                     <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Implementation Code</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-1 gap-2">
-                    {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
-                      <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
-                        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900">
-                          <div className="flex items-center gap-2">
-                            <div className="flex gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]/40" /><span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]/40" /><span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]/40" /></div>
-                            <span className="text-xs font-bold text-[var(--text-muted)] landing-mono uppercase">{lang}</span>
-                          </div>
-                          <button onClick={() => navigator.clipboard.writeText(code)} className="text-xs text-[var(--text-muted)] hover:text-gray-300 px-2 py-0.5 border border-gray-700 rounded hover:border-gray-500 transition-colors landing-mono">Copy</button>
+                  <DocsTabs
+                    tabs={Object.entries(topicDetails.codeExamples).map(([lang, code]) => ({
+                      id: lang,
+                      label: lang.charAt(0).toUpperCase() + lang.slice(1),
+                      content: (
+                        <div className="relative">
+                          <button
+                            onClick={() => navigator.clipboard.writeText(String(code))}
+                            className="absolute top-2 right-2 z-10 px-2 py-1 text-[10px] font-semibold rounded transition-colors landing-mono"
+                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                          >Copy</button>
+                          <pre className="p-3 overflow-x-auto max-h-96 overflow-y-auto" style={{ background: 'var(--bg-elevated)' }}>
+                            <code className="text-[13px] landing-mono leading-relaxed whitespace-pre" style={{ color: 'var(--text-primary)' }}>{code}</code>
+                          </pre>
                         </div>
-                        <pre className="p-3 bg-[#0d1117] overflow-x-auto max-h-80 overflow-y-auto"><code className="text-sm landing-mono text-gray-300 leading-relaxed whitespace-pre">{code}</code></pre>
-                      </div>
-                    ))}
-                  </div>
+                      ),
+                    }))}
+                  />
                 </div>
               )}
 
