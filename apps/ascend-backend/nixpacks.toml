@@ -2,10 +2,19 @@
 nixPkgs = ["nodejs_20", "python3", "graphviz", "gcc", "go", "rustc", "openjdk17", "typescript", "bash", "liberation_ttf", "dejavu_fonts", "fontconfig", "freetype", "librsvg"]
 
 [phases.install]
-cmds = ["npm install", "python3 -m venv /app/.venv && /app/.venv/bin/pip install diagrams anthropic", "fc-cache -fv || true"]
+cmds = [
+  # The monorepo uses pnpm workspaces (workspace:* protocol). npm rejects this,
+  # so we activate pnpm via Corepack (ships with Node 20) before installing.
+  "corepack enable",
+  "corepack prepare pnpm@9.15.0 --activate",
+  "pnpm install --frozen-lockfile",
+  "python3 -m venv /app/.venv && /app/.venv/bin/pip install diagrams anthropic",
+  "fc-cache -fv || true",
+]
 
 [phases.build]
 cmds = ["echo 'build complete'"]
 
 [start]
-cmd = "node src/index.js"
+# Run from the monorepo root via pnpm filter so workspace deps resolve.
+cmd = "pnpm --filter ascend-backend start"
