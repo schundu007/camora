@@ -1149,12 +1149,25 @@ img { max-width: 100%; height: auto; }
    .answer-flow — multi-column layout for fullscreen Sona answers.
    The behavioral page is wide (≥1280px); without this, a long answer
    stacks into 2–3 viewports of vertical scroll, forcing the user to
-   scroll instead of read during a live interview. Columns are applied
-   in AICompanionPanel; this rule just keeps logical blocks (paragraphs,
-   list items, headers, STAR cards) intact across column boundaries.
+   scroll instead of read during a live interview.
+
+   Tailwind classes on the wrapper apply `display: contents` to the
+   AnswerView and inner flex/STAR wrappers, so the leaf blocks (each
+   paragraph, header, bullet, STAR card) become direct children of
+   .answer-flow and can flow across columns. Without that unwrap, the
+   single flex container would occupy column 1 entirely and leave the
+   other columns empty. These rules keep the leaves intact at column
+   breaks and preserve the answer's native typography.
    ─────────────────────────────────────────────────────────────────── */
-.answer-flow > * { break-inside: avoid-column; -webkit-column-break-inside: avoid; }
-.answer-flow > *:first-child { margin-top: 0; }
+.answer-flow {
+  font-family: 'Inter', sans-serif;
+  /* `balance` distributes content evenly across columns so the card's height
+     ≈ total_content / column_count. Without it (or with `auto` on an
+     unbounded container) all content piles into column 1 and the rest stay
+     empty — defeats the whole purpose. */
+  column-fill: balance;
+}
+.answer-flow > *,
 .answer-flow p,
 .answer-flow li,
 .answer-flow h2,
@@ -1163,4 +1176,8 @@ img { max-width: 100%; height: auto; }
 .answer-flow pre {
   break-inside: avoid-column;
   -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
 }
+/* Tiny spacer between flowed items, since unwrapping the flex `gap` removes
+   the original 2–8px stack-spacing the components relied on. */
+.answer-flow > * + * { margin-top: 4px; }
