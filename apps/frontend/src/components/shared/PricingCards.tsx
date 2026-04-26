@@ -216,7 +216,7 @@ export default function PricingCards({
   const { checkout, loading } = useCheckout();
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
 
   const isDark = theme === 'dark';
   const highlightBg = isDark ? 'var(--cam-primary-dk)' : '#0F172A';
