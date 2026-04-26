@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -18,8 +18,11 @@ interface PaywallGateProps {
 export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
   const { token, subscription, subscriptionLoading, refreshSubscription } = useAuth();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [polling, setPolling] = useState(false);
   const [pollCount, setPollCount] = useState(0);
+  // Round-trip token: gated URL → /pricing?returnTo= → Stripe → back here.
+  const returnTo = encodeURIComponent(location.pathname + location.search);
 
   const isCheckoutReturn = searchParams.get('checkout') === 'success';
 
@@ -92,7 +95,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            to="/pricing"
+            to={`/pricing?returnTo=${returnTo}`}
             className="px-6 py-3 bg-[var(--accent)] text-white font-bold text-sm rounded-xl hover:opacity-90 transition-all"
           >
             View Plans

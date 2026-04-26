@@ -124,10 +124,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
-  // Only enforce onboarding for Capra routes. Pass the original target
+  // Only enforce onboarding for Capra routes that need a role. Read-only
+  // surfaces (/capra/prepare/*) are free to browse without onboarding —
+  // per the freemium model, Capra content is open and only the role-aware
+  // solver/practice flows require setup. Pass the original target
   // through ?redirect= so OnboardingPage can return the user to where
   // they were headed instead of dead-ending on /capra/prepare.
-  if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
+  const isOnboardingExempt =
+    location.pathname.startsWith('/capra/prepare') ||
+    location.pathname === '/capra/onboarding';
+  if (location.pathname.startsWith('/capra') && onboardingCompleted === false && !isOnboardingExempt) {
     const target = location.pathname + location.search;
     return <Navigate to={`/capra/onboarding?redirect=${encodeURIComponent(target)}`} replace />;
   }
