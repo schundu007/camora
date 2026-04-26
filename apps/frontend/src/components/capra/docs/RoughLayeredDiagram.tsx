@@ -150,7 +150,13 @@ export function RoughLayeredDiagram({ layers, components, className = '', title 
                 seed={li * 17 + 3}
               />
 
-              {/* Layer name pill — top-left of envelope */}
+              {/* Layer header — name + (optional) purpose flow as ONE text
+                  element with tspans so the purpose is positioned RELATIVE to
+                  the end of the name. The previous version put name and
+                  purpose in two separate <text> elements anchored at the same
+                  (x,y), which collapsed them on top of each other and made
+                  the labels unreadable. tspan + dx="0.6em" gives a small
+                  natural-looking gap regardless of the name's rendered width. */}
               <text
                 x={x + 14}
                 y={yOffset + 19}
@@ -160,22 +166,30 @@ export function RoughLayeredDiagram({ layers, components, className = '', title 
                 fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
               >
                 {layer.name}
+                {layer.purpose && (
+                  <tspan
+                    dx="0.6em"
+                    fill="var(--text-muted)"
+                    fontSize="10"
+                    fontWeight="400"
+                    fontStyle="italic"
+                  >
+                    {`— ${layer.purpose}`.slice(0, 90)}
+                  </tspan>
+                )}
               </text>
-              {layer.purpose && (
-                <text
-                  x={x + 14}
-                  y={yOffset + 19}
-                  dx="0.5em"
-                  textAnchor="start"
-                  fill="var(--text-muted)"
-                  fontSize="10"
-                  fontStyle="italic"
-                  fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
-                >
-                  {/* purpose is rendered to the right of name with leading separator */}
-                  {`  —  ${layer.purpose}`.slice(0, 80)}
-                </text>
-              )}
+              {/* Subtle 1px hairline under the header text so the layer name
+                  sits in a visually distinct band, not floating in the layer
+                  envelope at random vertical positions. */}
+              <line
+                x1={x + 12}
+                y1={yOffset + 24}
+                x2={x + innerWidth - 12}
+                y2={yOffset + 24}
+                stroke="var(--border)"
+                strokeWidth="0.6"
+                opacity="0.6"
+              />
 
               {/* Component boxes inside the layer */}
               {comps.map((comp, ci) => {
