@@ -15,6 +15,7 @@ import {
   removeMember,
   setMemberCap,
   planSupportsTeam,
+  maybeSendPoolReminder,
 } from '../services/teamService.js';
 import { sendTeamInviteEmail } from '../services/emailService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
@@ -136,6 +137,26 @@ router.get('/me/budget', jwtAuth, async (req, res) => {
   try {
     const team = await checkTeamHourBudget(req.user.id);
     if (team.has_team) {
+      // Lazy reminder fire (fire-and-forget, never blocks the response).
+      // Looks up the team owner's email since the reminder is billing info,
+      // and dedups via pool_reminder_*_sent_at columns.
+      try {
+        const ownerRow = await query(
+          `SELECT u.email, u.name FROM teams t JOIN users u ON u.id = t.owner_user_id WHERE t.id = $1`,
+          [team.team_id],
+        );
+        if (ownerRow.rows[0]) {
+          maybeSendPoolReminder({
+            scope: 'team',
+            scopeId: team.team_id,
+            ownerEmail: ownerRow.rows[0].email,
+            ownerName: ownerRow.rows[0].name,
+            poolHours: team.pool_hours,
+            usedHours: team.used_hours,
+          }).catch(() => {});
+        }
+      } catch { /* swallow */ }
+
       return res.json({
         source: 'team',
         team_id: team.team_id,
@@ -151,6 +172,22 @@ router.get('/me/budget', jwtAuth, async (req, res) => {
       });
     }
     const personal = await checkPersonalHourBudget(req.user.id);
+    // Same lazy reminder for solo users — sent to themselves.
+    try {
+      if (personal.pool_hours > 0) {
+        const userRow = await query('SELECT email, name FROM users WHERE id = $1', [req.user.id]);
+        if (userRow.rows[0]) {
+          maybeSendPoolReminder({
+            scope: 'personal',
+            scopeId: req.user.id,
+            ownerEmail: userRow.rows[0].email,
+            ownerName: userRow.rows[0].name,
+            poolHours: personal.pool_hours,
+            usedHours: personal.used_hours,
+          }).catch(() => {});
+        }
+      }
+    } catch { /* swallow */ }
     return res.json({
       source: 'personal',
       plan_type: personal.plan_type,

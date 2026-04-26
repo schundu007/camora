@@ -188,3 +188,81 @@ export async function sendTeamInviteEmail({ to, ownerName, ownerEmail, teamName,
     return null;
   }
 }
+
+/**
+ * Pool-low reminder. Sent when a team or personal AI hour pool crosses a
+ * threshold (80% used → "heads up", 95% used → "running out"). Once per
+ * period — period rollover clears the dedup flag.
+ */
+export async function sendPoolReminderEmail({ to, name, level, isTeam, poolHours, usedHours, remainingHours, accountUrl }) {
+  if (!resend) {
+    console.warn('[Email] RESEND_API_KEY not set, skipping pool reminder');
+    return null;
+  }
+
+  const usedPct = poolHours > 0 ? Math.round((usedHours / poolHours) * 100) : 0;
+  const remainingDisplay = remainingHours < 1
+    ? `${Math.round(remainingHours * 60)} minutes`
+    : `${remainingHours.toFixed(1)} hours`;
+
+  const subject = level === 'critical'
+    ? `Almost out of AI hours · ${remainingDisplay} left`
+    : `${usedPct}% of your AI hours used`;
+  const headline = level === 'critical'
+    ? "You're almost out of AI hours."
+    : `Heads up — you've used ${usedPct}% of your AI hours.`;
+  const body = level === 'critical'
+    ? `Only ${remainingDisplay} remaining ${isTeam ? 'in your team pool' : ''} this period. ` +
+      `Top up now so calls keep flowing — Camora won't auto-charge unless you've enabled auto top-up.`
+    : `${remainingDisplay} remaining ${isTeam ? 'in your team pool' : ''} this period. ` +
+      `Plenty of time to top up at your own pace, but a heads up so you can plan.`;
+  const ctaLabel = level === 'critical' ? 'Top up now' : 'View usage';
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <img src="https://camora.cariara.com/camora-logo.png" alt="Camora" width="48" height="48" style="border-radius:12px;">
+    </div>
+    <div style="background:#111111;border:1px solid #222;border-radius:16px;padding:36px 32px;">
+      <p style="color:#a1a1aa;font-size:13px;margin:0 0 8px;">${greeting}</p>
+      <h1 style="color:#ffffff;font-size:22px;font-weight:700;margin:0 0 12px;line-height:1.3;">${headline}</h1>
+      <p style="color:#a1a1aa;font-size:15px;line-height:1.6;margin:0 0 24px;">${body}</p>
+
+      <!-- Visual usage bar -->
+      <div style="background:#1f1f23;border-radius:8px;height:10px;margin:0 0 8px;overflow:hidden;">
+        <div style="background:${level === 'critical' ? '#dc2626' : '#d97706'};height:100%;width:${Math.min(100, usedPct)}%;"></div>
+      </div>
+      <p style="color:#71717a;font-size:11px;margin:0 0 24px;text-align:right;">
+        ${usedHours.toFixed(1)} of ${poolHours.toFixed(0)} hours used
+      </p>
+
+      <div style="text-align:center;margin:24px 0 8px;">
+        <a href="${accountUrl}" style="display:inline-block;background:#26619C;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:13px 28px;border-radius:10px;">${ctaLabel}</a>
+      </div>
+      <p style="color:#52525b;font-size:11px;margin:24px 0 0;text-align:center;">
+        Top-ups stack with any plan and don't expire for 90 days.
+      </p>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <p style="color:#3f3f46;font-size:11px;margin:0;">
+        <a href="https://camora.cariara.com" style="color:#3f3f46;text-decoration:underline;">camora.cariara.com</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  try {
+    const result = await resend.emails.send({ from: FROM, to, subject, html });
+    console.log(`[Email] Pool reminder (${level}) sent to ${to}:`, result);
+    return result;
+  } catch (err) {
+    console.error(`[Email] Failed to send pool reminder to ${to}:`, err.message);
+    return null;
+  }
+}

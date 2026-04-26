@@ -45,13 +45,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
   // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
   // via design tokens.
-  const navBg = 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)';
-  const navShadow = '0 4px 18px rgba(5,28,64,0.12)';
+  // Dark navy nav — same look in both light and dark themes. Near-black
+  // navy stripe sits visibly above the page hero gradients beneath
+  // (which use the brighter cam-primary range), with a 3px gold-leaf
+  // underline as the separator.
+  const navBg = 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)';
+  const navShadow = '0 6px 22px rgba(0,0,0,0.45)';
   const borderClass = '';
-  // High-contrast text — pure dark navy on white. Inline styles below
-  // pin font-weight: 700 so links read clearly at the 14px scale.
-  const textColor = '#020617';
-  const textMuted = '#020617';
+  const textColor = '#FFFFFF';
+  const textMuted = 'rgba(255,255,255,0.92)';
   const activeBg = 'var(--cam-gold-leaf)';
   const activeColor = '#020617';
 
@@ -112,7 +114,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           </button>
           {isAuthenticated && <HourMeterChip variant={isLight ? 'light' : 'dark'} />}
           {isAuthenticated ? (
-            <UserDropdown variant={isLight ? 'light' : 'dark'} />
+            <UserDropdown variant="dark" />
           ) : (
             <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} className="text-[13px] font-bold transition-colors" style={{ color: textColor }}>Sign in</Link>
           )}
