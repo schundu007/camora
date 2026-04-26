@@ -90,7 +90,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
   }
 
   return (
-    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)', borderBottom: '3px solid var(--cam-gold-leaf)', boxShadow: '0 6px 22px rgba(0,0,0,0.45)' }}>
+    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: 'var(--cam-hero-strip)', borderBottom: '3px solid var(--cam-gold-leaf)', boxShadow: '0 6px 22px rgba(0,0,0,0.45)' }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 

@@ -215,10 +215,14 @@
       radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.14), transparent 70%),
       linear-gradient(135deg, #03132E 0%, #051C40 35%, var(--cam-primary-dk) 65%, #051C40 100%);
     --cam-hero-strip:
-      radial-gradient(ellipse 45% 240% at 15% 50%, rgba(201,162,39,0.24), transparent 70%),
-      radial-gradient(ellipse 40% 240% at 85% 50%, rgba(201,162,39,0.18), transparent 70%),
-      radial-gradient(ellipse 100% 100% at 50% 0%, rgba(255,255,255,0.08), transparent 80%),
-      linear-gradient(90deg, #03132E 0%, #051C40 35%, var(--cam-primary-dk) 65%, #051C40 100%);
+      /* Strong gold radial bookends — left + right warm-light ribbons */
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(201,162,39,0.42), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(201,162,39,0.32), transparent 70%),
+      /* Center accent — soft white halo across the brighter navy waist */
+      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.12), transparent 75%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(110,150,192,0.22), transparent 70%),
+      /* Multi-stop horizontal navy with brighter cam-primary-dk waist */
+      linear-gradient(95deg, #020617 0%, #03132E 25%, var(--cam-primary-dk) 50%, #03132E 75%, #020617 100%);
   }
 
   /* ──────────────────────────────────────────────────────────

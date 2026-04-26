@@ -519,7 +519,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           <div
             className="flex items-center justify-between px-3 py-2"
             style={{
-              background: 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)',
+              background: 'var(--cam-hero-strip)',
               borderBottom: '2px solid var(--cam-gold-leaf)',
             }}
           >
