@@ -70,7 +70,7 @@ export default function InterviewQuestionsPage() {
       <SiteNav variant="light" />
 
       {/* ── Hero — LeetCode dark navy band ───────────────── */}
-      <section className="relative pt-24 pb-24 px-4 overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative pt-24 pb-24 px-4 overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative lg:max-w-[85%] mx-auto text-center">
           <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto bg-white p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />

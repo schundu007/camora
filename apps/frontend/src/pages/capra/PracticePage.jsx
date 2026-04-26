@@ -607,7 +607,7 @@ export default function PracticePage() {
       {/* ═══════════ Main Content ═══════════ */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* ── View Tabs — LeetCode navy + gold underline ── */}
-        <div className="flex items-center gap-4 px-4 sm:px-6 py-2 flex-shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+        <div className="flex items-center gap-4 px-4 sm:px-6 py-2 flex-shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
           <h1 style={{ fontSize: 16, fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Practice</h1>
           <div style={{ display: 'flex', gap: 2, padding: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 8 }}>
             {[

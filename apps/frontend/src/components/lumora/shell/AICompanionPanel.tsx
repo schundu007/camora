@@ -369,7 +369,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <div
         className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
         style={{
-          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          background: 'var(--cam-hero-strip)',
           borderBottom: '2px solid var(--cam-gold-leaf)',
           borderRadius: embedded || maximized ? 0 : '16px 16px 0 0',
         }}

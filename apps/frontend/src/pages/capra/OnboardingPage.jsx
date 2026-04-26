@@ -324,7 +324,7 @@ export default function OnboardingPage() {
   const progressPercent = step === 1 ? 50 : 100;
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+    <div className="min-h-screen relative flex items-center justify-center px-4 py-12" style={{ background: 'var(--cam-hero-bg)' }}>
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <div className="relative w-full max-w-2xl">
         {/* Card with gold-leaf top stripe */}

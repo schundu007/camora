@@ -763,7 +763,7 @@ export default function DocsPage({ onBack }) {
                   {activePage === 'overview' && (
                     <>
                       {/* Hero Banner — LeetCode dark navy band w/ diagonal cut */}
-                      <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+                      <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                         <div className="relative p-6 md:p-8">
                           <div>
@@ -1219,7 +1219,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* Category Introduction Heroes */}
                   {activePage === 'coding' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1243,7 +1243,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'system-design' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1267,7 +1267,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'behavioral' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1291,7 +1291,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'low-level' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1315,7 +1315,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'microservices' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1339,7 +1339,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'databases' && !selectedTopic && !sqlPlaygroundOpen && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1363,7 +1363,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'projects' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1387,7 +1387,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'roadmaps' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1411,7 +1411,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'eng-blogs' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">

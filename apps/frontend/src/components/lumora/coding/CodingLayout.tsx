@@ -719,7 +719,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -801,7 +801,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           <div
             className="flex items-center gap-1 px-3 py-1.5"
             style={{
-              background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+              background: 'var(--cam-hero-strip)',
               borderBottom: '2px solid var(--cam-gold-leaf)',
             }}
           >

@@ -241,7 +241,7 @@ export default function TeamSettingsPage() {
       <SiteNav variant="light" />
 
       {/* LeetCode hero */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative max-w-4xl mx-auto px-6 pt-16 pb-20">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--cam-gold-leaf-lt)' }}>ACCOUNT</p>

@@ -373,7 +373,7 @@ export function LumoraShellPage() {
           {activeTab === 'sessions' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               {/* LeetCode navy hero w/ gold underline */}
-              <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                 <div className="max-w-3xl mx-auto px-6 py-6 w-full">
                   <h2 className="text-xl font-bold mb-1 text-white">Sessions</h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)' }}>{history.length}</span> saved.</p>
@@ -474,7 +474,7 @@ export function LumoraShellPage() {
           {/* Credits page */}
           {activeTab === 'credits' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                 <div className="max-w-2xl mx-auto px-6 py-6 w-full">
                   <h2 className="text-xl font-bold mb-1 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Track your AI usage and remaining credits.</p>
@@ -516,7 +516,7 @@ export function LumoraShellPage() {
           {/* Pricing page */}
           {activeTab === 'pricing' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
                 <div className="max-w-3xl mx-auto px-6 py-6 w-full">
                   <h2 className="text-xl font-bold mb-1 text-white"><span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Pricing</span></h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Manage your subscription and top-ups.</p>

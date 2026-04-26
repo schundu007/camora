@@ -12,7 +12,7 @@ export default function AchievementsPage() {
   return (
     <div className="min-h-screen">
       {/* LeetCode navy hero */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
           <h1 className="landing-display font-extrabold text-2xl md:text-3xl tracking-tight text-white">

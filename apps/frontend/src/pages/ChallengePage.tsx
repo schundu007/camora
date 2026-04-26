@@ -766,7 +766,7 @@ export default function ChallengePage() {
           position: relative;
           padding: 100px 0 110px;
           overflow: hidden;
-          background: linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%);
+          background: var(--cam-hero-bg);
         }
         .ch-hero::before {
           content: '';

@@ -138,7 +138,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
           <div
             className="flex items-center justify-between px-3 py-1.5"
             style={{
-              background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+              background: 'var(--cam-hero-strip)',
               borderBottom: '2px solid var(--cam-gold-leaf)',
             }}
           >

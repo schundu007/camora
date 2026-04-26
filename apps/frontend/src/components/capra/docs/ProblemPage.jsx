@@ -333,7 +333,7 @@ export default function ProblemPage({ slug, onBack }) {
   return (
     <div className="h-screen bg-[var(--bg-app)] flex flex-col">
       {/* Header — LeetCode navy + 2px gold underline */}
-      <div className="flex-shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+      <div className="flex-shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

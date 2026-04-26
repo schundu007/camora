@@ -3,7 +3,7 @@ import SiteNav from '../components/shared/SiteNav';
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)', color: '#FFFFFF' }}>
+    <div className="min-h-screen relative" style={{ background: 'var(--cam-hero-bg)', color: '#FFFFFF' }}>
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <SiteNav variant="light" />
 

@@ -430,7 +430,7 @@ function GridCard({
         onClick={() => collapsible && setCollapsed(!collapsed)}
         className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:brightness-110' : 'cursor-default'}`}
         style={{
-          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          background: 'var(--cam-hero-strip)',
           borderBottom: '2px solid var(--cam-gold-leaf)',
         }}
       >
@@ -464,7 +464,7 @@ function ArchitectureCard({ question }: { question: string }) {
       <div
         className="flex items-center gap-2 px-3 py-2 shrink-0"
         style={{
-          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          background: 'var(--cam-hero-strip)',
           borderBottom: '2px solid var(--cam-gold-leaf)',
         }}
       >

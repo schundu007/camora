@@ -150,7 +150,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         className="relative overflow-hidden"
         style={{
           background:
-            'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+            'var(--cam-hero-bg)',
         }}
       >
         <div
