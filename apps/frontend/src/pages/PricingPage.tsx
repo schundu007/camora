@@ -116,9 +116,8 @@ export default function PricingPage() {
               {
                 title: 'AI hours',
                 rows: [
-                  { feature: 'Included AI hours', hint: 'Lumora live + coding helper + prep generation', values: { free: '30 min lifetime', capra_content_monthly: 'PAYG only', starter: '4 / mo', pro: '10 / mo', pro_max: '25 / mo', annual_pro: '120 / yr pooled' } },
-                  { feature: 'Overage rate', hint: 'After included hours run out', values: { free: '—', capra_content_monthly: '$10/hr', starter: '$9/hr', pro: '$8/hr', pro_max: '$7/hr', annual_pro: '$7/hr' } },
-                  { feature: 'Effective $/hr in bundle', values: { free: '—', capra_content_monthly: '$10', starter: '$7.25', pro: '$5.90', pro_max: '$3.96', annual_pro: '$4.16' } },
+                  { feature: 'Included AI hours', hint: 'Lumora live + coding helper + prep generation', values: { free: '30 min lifetime', capra_content_monthly: 'PAYG only', starter: '1 / mo', pro: '4 / mo', pro_max: '8 / mo', annual_pro: '40 / yr pooled' } },
+                  { feature: 'Overage / PAYG rate', hint: 'Same flat $15/hr everywhere — undercuts OfferGoose & Parakeet by 57%', values: { free: '—', capra_content_monthly: '$15/hr', starter: '$15/hr', pro: '$15/hr', pro_max: '$15/hr', annual_pro: '$15/hr' } },
                   { feature: 'Voice filtering', values: { free: false, capra_content_monthly: false, starter: false, pro: true, pro_max: true, annual_pro: true } },
                 ],
               },
