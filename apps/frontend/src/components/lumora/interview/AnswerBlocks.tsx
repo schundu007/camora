@@ -44,7 +44,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
   switch (block.type) {
     case 'HEADLINE':
       return (
-        <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0', backdropFilter: 'blur(8px)'}}>
+        <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)', backdropFilter: 'blur(8px)'}}>
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, var(--cam-primary), var(--cam-primary), #95B0CD)' }} />
           <div className="p-5">
             <p className="text-[15px] text-slate-800 leading-relaxed font-medium" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
@@ -58,11 +58,11 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         .map(l => cleanText(l).replace(/^[•\-*]\s*/, ''))
         .filter(Boolean);
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
+        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b">
             <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Key Points</h4>
-            <span className="ml-auto text-[10px] font-mono text-slate-700 border border-slate-200 rounded-full px-2 py-0.5">{lines.length}</span>
+            <span className="ml-auto text-[10px] font-mono text-slate-700 border rounded-full px-2 py-0.5">{lines.length}</span>
           </div>
           <div className="p-4 space-y-2.5">
             {lines.map((line, i) => {
@@ -86,8 +86,8 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
 
     case 'DIAGRAM':
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
+        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b">
             <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" /></svg>
             <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Flow</h4>
           </div>
@@ -98,13 +98,13 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'CODE':
       const lang = block.lang || 'bash';
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up group" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
-          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200">
+        <div className="rounded-xl overflow-hidden animate-fade-up group" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
+          <div className="flex items-center justify-between px-4 py-2 border-b">
             <div className="flex items-center gap-2">
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" /></div>
               <span className="font-mono text-[10px] font-bold text-[#95B0CD]/80 uppercase tracking-widest">{lang}</span>
             </div>
-            <button className="text-[10px] font-mono text-slate-700 hover:text-slate-900 px-2 py-0.5 border border-slate-200 rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
+            <button className="text-[10px] font-mono text-slate-700 hover:text-slate-900 px-2 py-0.5 border rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
           </div>
           <pre className="p-4 overflow-x-auto" style={{ background: '#0F172A' }}><code ref={codeRef} className={`language-${lang} text-[13px] leading-relaxed`}>{block.content}</code></pre>
@@ -114,13 +114,13 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'FOLLOWUP':
       const pairs = parseFollowups(block.content);
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
+        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b">
             <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <h4 className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest">Follow-up Q&A</h4>
-            <span className="ml-auto text-[10px] font-mono text-slate-700 border border-slate-200 rounded-full px-2 py-0.5">{pairs.length}</span>
+            <span className="ml-auto text-[10px] font-mono text-slate-700 border rounded-full px-2 py-0.5">{pairs.length}</span>
           </div>
-          <div className="divide-y divide-slate-200">
+          <div className="divide-y divide-[var(--border)]">
             {pairs.map((pair, i) => (
               <div key={i} className="px-4 py-3">
                 <div className="flex items-start gap-2 mb-2">
@@ -136,7 +136,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
 
     default:
       return (
-        <div className="rounded-xl p-4 animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
+        <div className="rounded-xl p-4 animate-fade-up" style={{...style, background: 'var(--bg-elevated)', border: '1px solid var(--border)'}}>
           <p className="text-[13px] text-slate-600 leading-relaxed">{cleanText(block.content)}</p>
         </div>
       );
@@ -178,7 +178,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
 
       {/* Code Block - Full Width */}
       <div className="rounded-md border border-[var(--accent)]/20 bg-[#0d1117] overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-[var(--bg-surface)]/[0.02]">
+        <div className="flex items-center justify-between px-3 py-2 border-b bg-[var(--bg-surface)]/[0.02]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-red-400/40" />
@@ -307,7 +307,7 @@ function TestCasesList({ content }: { content: string }) {
         const arrowMatch = line.match(/Input:\s*(.+?)\s*[-→>]+\s*Output:\s*(.+)/i);
         if (arrowMatch) {
           return (
-            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-surface)]/[0.02] border border-slate-200">
+            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-surface)]/[0.02] border">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-[12px] text-[var(--text-muted)]">{arrowMatch[1]}</code>
@@ -533,7 +533,7 @@ function ScaleMathList({ content }: { content: string }) {
       </thead>
       <tbody>
         {items.map((m, i) => (
-          <tr key={i} style={{ borderBottom: '1px solid #E2E8F0' }}>
+          <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
             <td className="text-[11px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>{m.label}</td>
             <td className="text-[11px] py-1.5" style={{ color: 'var(--text-secondary)' }}>{m.value}</td>
           </tr>
@@ -687,7 +687,7 @@ function TradeoffsList({ content }: { content: string }) {
         if (!pick) return <div key={i} className="text-[13px] text-[var(--text-muted)] leading-snug">{line}</div>;
 
         return (
-          <div key={i} className="pb-2.5 border-b border-slate-200 last:border-b-0 last:pb-0">
+          <div key={i} className="pb-2.5 border-b last:border-b-0 last:pb-0">
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="font-mono text-sm font-bold text-[var(--accent)]">{pick}</span>
               {alt && (
