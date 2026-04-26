@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCelebration } from '../../components/shared/Celebration';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -176,6 +177,7 @@ export default function OnboardingPage() {
   const { token: accessToken } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { celebrate } = useCelebration();
 
   useEffect(() => {
     document.title = 'Get Started | Camora';
@@ -310,12 +312,14 @@ export default function OnboardingPage() {
         intended && intended.startsWith('/') && !intended.startsWith('//')
           ? intended
           : null;
-      navigate(safeIntended || '/capra/prepare');
+      celebrate({ title: 'Profile complete', subtitle: 'Welcome to Camora — your dashboard is ready.' });
+      // Brief delay so the celebration toast registers before nav unmounts it.
+      setTimeout(() => navigate(safeIntended || '/capra/prepare'), 600);
     } catch (err) {
       setError(err.message || 'Something went wrong');
       setSubmitting(false);
     }
-  }, [accessToken, selectedRoles, resumeText, searchParams, navigate]);
+  }, [accessToken, selectedRoles, resumeText, searchParams, navigate, celebrate]);
 
   const progressPercent = step === 1 ? 50 : 100;
 
