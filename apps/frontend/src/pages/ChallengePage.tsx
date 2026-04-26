@@ -761,83 +761,108 @@ export default function ChallengePage() {
           overflow-x: hidden;
         }
 
-        /* ── Hero ── */
+        /* ── Hero — LeetCode-style dark navy band, matches landing/pricing ── */
         .ch-hero {
           position: relative;
-          padding: 100px 0 60px;
+          padding: 100px 0 110px;
           overflow: hidden;
-          background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+          background: linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%);
+        }
+        .ch-hero::before {
+          content: '';
+          position: absolute; inset: 0;
+          pointer-events: none;
+          background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%);
         }
         .ch-hero-mesh, .ch-hero-orb, .ch-hero-grid { display: none; }
 
-        .ch-badge {
+        /* Eyebrow on dark */
+        .ch-hero .ch-badge {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 20px; border-radius: 999px;
           font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
-          color: var(--text-muted);
-          background: transparent;
-          border: none;
+          color: rgba(255,255,255,0.65);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
           margin-bottom: 24px;
           font-family: 'Source Code Pro', monospace;
         }
-        .ch-badge-dot {
+        .ch-hero .ch-badge-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: var(--cam-primary);
+          background: var(--cam-gold-leaf-lt);
+          box-shadow: 0 0 8px var(--cam-gold-leaf);
         }
 
         .ch-hero-title {
           font-size: clamp(2.5rem, 6vw, 5rem);
           font-weight: 800;
-          letter-spacing: -0.04em;
-          line-height: 1.05;
-          color: var(--text-primary);
-          text-transform: uppercase;
           letter-spacing: -0.02em;
+          line-height: 1.05;
+          color: #FFFFFF;
+          text-transform: uppercase;
         }
         .ch-hero-gradient-text {
-          background: linear-gradient(135deg, var(--cam-primary), var(--cam-primary));
-          background-size: 300% 300%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: gradient-flow 6s ease infinite;
-        }
-        @keyframes gradient-flow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          color: var(--cam-gold-leaf-lt);
         }
 
-        /* ── Countdown ── */
+        /* Hero subtitle — was reading text-secondary on light bg */
+        .ch-hero p { color: rgba(255,255,255,0.85); }
+
+        /* Countdown — translucent on dark navy */
         .ch-countdown-card {
           display: flex; flex-direction: column; align-items: center;
         }
-        .ch-countdown-num {
+        .ch-hero .ch-countdown-num {
           width: 64px; height: 64px;
           display: flex; align-items: center; justify-content: center;
           border-radius: 12px;
           font-family: 'Source Code Pro', monospace;
           font-size: 28px; font-weight: 700;
-          color: var(--text-primary);
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
+          color: #FFFFFF;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.18);
+          backdrop-filter: blur(4px);
         }
-        .ch-countdown-label {
+        .ch-hero .ch-countdown-label {
           margin-top: 6px; font-size: 10px; font-weight: 700;
-          color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase;
+          color: rgba(255,255,255,0.7); letter-spacing: 0.15em; text-transform: uppercase;
         }
 
-        /* ── Prize pool badge ── */
-        .ch-prize-pool-badge {
+        /* Prize pool — translucent gold-accented on navy */
+        .ch-hero .ch-prize-pool-badge {
           margin-top: 32px;
           display: flex; flex-direction: column; align-items: center; gap: 6px;
           padding: 20px 40px; border-radius: 12px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.18);
         }
-        .ch-prize-amount {
+        .ch-hero .ch-prize-pool-badge > span {
+          color: rgba(255,255,255,0.7) !important;
+        }
+        .ch-hero .ch-prize-amount {
           font-family: 'Source Sans 3', sans-serif;
           font-size: 48px; font-weight: 800;
-          color: var(--cam-primary);
+          color: var(--cam-gold-leaf-lt);
+        }
+
+        /* Hero-scoped CTA overrides — gold pill, matches Landing/Pricing.
+           Outside the hero, .ch-cta-primary stays navy as before. */
+        .ch-hero .ch-cta-primary {
+          background: var(--cam-gold-leaf);
+          color: var(--cam-primary-dk);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+        }
+        .ch-hero .ch-cta-primary:hover {
+          background: var(--cam-gold-leaf-lt);
+        }
+        .ch-hero .ch-cta-secondary {
+          color: #FFFFFF;
+          border-color: rgba(255,255,255,0.35);
+        }
+        .ch-hero .ch-cta-secondary:hover {
+          background: rgba(255,255,255,0.08);
+          color: #FFFFFF;
+          border-color: rgba(255,255,255,0.6);
         }
 
         /* ── CTAs ── */
