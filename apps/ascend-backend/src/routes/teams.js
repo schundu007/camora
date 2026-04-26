@@ -440,4 +440,82 @@ router.delete('/:teamId/members/:userId', jwtAuth, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin endpoints — owner-emails-only. Used by /admin/teams ops dashboard.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+  .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+
+async function adminGate(req, res, next) {
+  const email = (req.user?.email || '').toLowerCase();
+  if (!email || !ADMIN_EMAILS.includes(email)) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  return next();
+}
+
+// GET /api/v1/teams/admin/all — every team with members + recent auto-charges
+router.get('/admin/all', jwtAuth, adminGate, async (_req, res) => {
+  try {
+    const teams = await query(
+      `SELECT t.id, t.owner_user_id, t.name, t.plan_type, t.seat_limit,
+              t.hours_pool_total, t.auto_topup_pack, t.auto_topup_monthly_cap_cents,
+              t.created_at,
+              u.email AS owner_email, u.name AS owner_name,
+              (SELECT COUNT(*) FROM team_members tm WHERE tm.team_id = t.id) AS member_count,
+              COALESCE((SELECT SUM(seconds) FROM ai_hours_usage au
+                          WHERE au.team_id = t.id
+                            AND au.created_at >= t.hours_pool_period_start), 0) AS used_seconds_period,
+              COALESCE((SELECT SUM(amount_cents) FROM ai_hour_topups ht
+                          WHERE ht.team_id = t.id
+                            AND ht.auto_charged = true
+                            AND ht.created_at >= NOW() - INTERVAL '30 days'
+                            AND ht.refunded_at IS NULL), 0) AS auto_charged_30d_cents
+         FROM teams t
+         JOIN users u ON u.id = t.owner_user_id
+        ORDER BY t.created_at DESC`,
+    );
+    return res.json({ teams: teams.rows });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] list teams failed');
+    return res.status(500).json({ error: 'Failed to list teams' });
+  }
+});
+
+// POST /api/v1/teams/admin/:teamId/disable-auto-topup — kill switch
+router.post('/admin/:teamId/disable-auto-topup', jwtAuth, adminGate, async (req, res) => {
+  try {
+    await query(
+      'UPDATE teams SET auto_topup_pack = NULL, updated_at = NOW() WHERE id = $1',
+      [req.params.teamId],
+    );
+    logger.info({ teamId: req.params.teamId, admin: req.user.email }, '[admin] auto-topup force-disabled');
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] force-disable failed');
+    return res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// POST /api/v1/teams/admin/:teamId/force-cap-member — set per_member cap admin-style
+router.post('/admin/:teamId/force-cap-member', jwtAuth, adminGate, async (req, res) => {
+  try {
+    const { user_id, cap_hours } = req.body || {};
+    const cap = cap_hours === null ? null : Number(cap_hours);
+    if (!user_id || (cap !== null && (!Number.isFinite(cap) || cap < 0))) {
+      return res.status(400).json({ error: 'Invalid input' });
+    }
+    await query(
+      'UPDATE team_members SET per_member_hour_cap = $1 WHERE team_id = $2 AND user_id = $3',
+      [cap, req.params.teamId, user_id],
+    );
+    logger.info({ teamId: req.params.teamId, userId: user_id, cap, admin: req.user.email }, '[admin] member cap force-set');
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] force-cap failed');
+    return res.status(500).json({ error: 'Failed' });
+  }
+});
+
 export default router;
