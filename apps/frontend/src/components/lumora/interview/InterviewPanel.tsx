@@ -129,7 +129,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   }, []);
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  // Digital-clock split so we can style HH:MM big and the AM/PM smaller.
+  const hh12 = ((now.getHours() + 11) % 12) + 1;
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ampm = now.getHours() < 12 ? 'AM' : 'PM';
   const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
   const COPILOTS = [
@@ -155,16 +158,16 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
   return (
     <div className="flex-1 overflow-auto px-3 sm:px-4 md:px-6 py-2 md:py-3">
-      {/* Greeting + live clock */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Launch an AI assistant for your next interview.</p>
+      {/* Big digital clock + greeting — Zoom-style. Time anchors the
+          page; greeting sits below as the secondary line. */}
+      <div className="mb-8">
+        <div className="flex items-baseline gap-2 leading-none" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-code)' }}>
+          <span className="font-bold tabular-nums" style={{ fontSize: 'clamp(48px, 8vw, 72px)', letterSpacing: '-0.02em' }}>{hh12}:{mm}</span>
+          <span className="font-semibold tabular-nums" style={{ fontSize: 'clamp(18px, 2.5vw, 24px)', color: 'var(--text-muted)' }}>{ampm}</span>
         </div>
-        <div className="text-right shrink-0">
-          <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-code)' }}>{timeStr}</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{dateStr}</div>
-        </div>
+        <div className="mt-2 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{dateStr}</div>
+        <h1 className="mt-4 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Launch an AI assistant for your next interview.</p>
       </div>
 
       {/* Divider */}
