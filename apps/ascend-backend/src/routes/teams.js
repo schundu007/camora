@@ -19,6 +19,7 @@ import {
 } from '../services/teamService.js';
 import { sendTeamInviteEmail } from '../services/emailService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
+import { getSurfaceEstimate, SUPPORTED_SURFACES } from '../services/estimateService.js';
 
 const router = Router();
 
@@ -202,6 +203,44 @@ router.get('/me/budget', jwtAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err: err.message, userId: req.user?.id }, '[teams] /me/budget failed');
     return res.status(500).json({ error: 'Failed to load budget' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/v1/teams/me/estimate?surface=capra_prep
+// Pre-call estimate: how many seconds a call to this surface is expected
+// to consume, plus whether it would push the user past their pool. Used by
+// the frontend to surface "this will use ~Xm of your AI hours" before
+// kicking off a long generation.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/me/estimate', jwtAuth, async (req, res) => {
+  try {
+    const surface = String(req.query.surface || '');
+    if (!SUPPORTED_SURFACES.includes(surface)) {
+      return res.status(400).json({ error: 'Invalid surface', supported: SUPPORTED_SURFACES });
+    }
+    const est = await getSurfaceEstimate(surface, req.user.id);
+
+    // Pair with current budget so the frontend can render "X of Y remaining"
+    // without a second round-trip.
+    const team = await checkTeamHourBudget(req.user.id);
+    const remainingHours = team.has_team
+      ? (team.ok ? team.remaining_hours : 0)
+      : (await checkPersonalHourBudget(req.user.id)).remaining_hours;
+    const remainingSeconds = (remainingHours || 0) * 3600;
+
+    return res.json({
+      surface,
+      estimate_seconds: est.estimate_seconds,
+      sample_size: est.sample_size,
+      source: est.source,
+      remaining_seconds: remainingSeconds,
+      remaining_hours: remainingHours || 0,
+      would_exceed: est.estimate_seconds > remainingSeconds,
+    });
+  } catch (err) {
+    logger.error({ err: err.message }, '[teams] /me/estimate failed');
+    return res.status(500).json({ error: 'Failed to compute estimate' });
   }
 });
 
