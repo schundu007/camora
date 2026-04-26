@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 import { dialogAlert } from '../../shared/Dialog';
@@ -52,6 +53,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
 
   const [expanded, setExpanded] = useState(false);
   const [audioCheckOpen, setAudioCheckOpen] = useState(false);
+  const { theme, toggle: toggleTheme } = useTheme();
 
   return (
     <nav
@@ -117,6 +119,11 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
             onClick: () => setAudioCheckOpen(true) },
           { label: 'Help', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
             onClick: () => dialogAlert({ title: 'Keyboard shortcuts', message: '⌘K — focus search\n⌘M — toggle mic\n⌘B — go invisible (hide overlay)\n⌘S — search' }) },
+          { label: theme === 'dark' ? 'Light mode' : 'Dark mode',
+            icon: theme === 'dark'
+              ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>,
+            onClick: toggleTheme },
         ].map(item => (
           <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium text-white/85 hover:text-white hover:bg-white/10 active:text-white active:bg-white/10 transition-all text-left w-full`} title={expanded ? undefined : item.label}>
             {item.icon}
