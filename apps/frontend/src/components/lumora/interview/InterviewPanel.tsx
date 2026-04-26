@@ -147,9 +147,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {COPILOTS.map(cp => (
             <button key={cp.name} onClick={cp.onClick} className="group text-left rounded-xl overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(38,97,156,0.04)', border: '1px solid rgba(38,97,156,0.15)' }}>
-              {/* 3:1 Unsplash hero strip — duotone-navy filter unifies all 3
-                  photos into one brand mood (same treatment as Prepare). */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '3 / 1', background: 'var(--cam-primary-dk)' }}>
+              {/* Compact Unsplash hero strip — duotone-navy filter unifies
+                  all 3 photos into one brand mood. ~50px tall on a 400px
+                  card so the title/description below stay the focus. */}
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '8 / 1', background: 'var(--cam-primary-dk)' }}>
                 <img src={cp.image} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'grayscale(100%) contrast(1.05) brightness(0.85)' }} />
                 <div aria-hidden="true" className="absolute inset-0" style={{ background: 'var(--cam-primary)', mixBlendMode: 'multiply' }} />
                 <div aria-hidden="true" className="absolute inset-0" style={{ background: 'var(--cam-primary-lt)', mixBlendMode: 'screen', opacity: 0.35 }} />
