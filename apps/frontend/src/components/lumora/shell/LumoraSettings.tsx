@@ -36,15 +36,15 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6" onClick={onClose}>
         <div
           className="w-full max-w-3xl max-h-[85vh] overflow-auto rounded-2xl"
-          style={{ background: '#ffffff', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
+          style={{ background: 'var(--bg-surface)', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 sm:py-5 border-b border-slate-200">
-            <h2 className="text-xl font-bold" style={{ fontFamily: "'Source Sans 3', sans-serif", color: '#0f172a' }}>
+            <h2 className="text-xl font-bold" style={{ fontFamily: "'Source Sans 3', sans-serif", color: 'var(--text-primary)' }}>
               Settings
             </h2>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 transition-colors" style={{ color: '#94a3b8' }}>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 transition-colors" style={{ color: 'var(--text-muted)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </button>
           </div>
@@ -52,7 +52,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
           <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8">
             {/* ── Audio Settings ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#64748b' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
                 Audio Settings
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -77,7 +77,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                     value={platform}
                     onChange={e => setPlatform(e.target.value)}
                     className="mt-3 w-full text-sm rounded-lg px-3 py-2 focus:outline-none cursor-pointer"
-                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   >
                     {PLATFORMS.map(p => (
                       <option key={p.value} value={p.value}>{p.label}</option>
@@ -100,10 +100,10 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 
             {/* ── Voice Recognition ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#64748b' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
                 Voice Recognition
               </h3>
-              <p className="text-xs mb-4" style={{ color: '#64748b' }}>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
                 Choose how Camora distinguishes your voice from the interviewer.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -132,15 +132,15 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
               </div>
 
               {/* Voice enrollment section based on mode */}
-              <div className="mt-4 p-4 rounded-xl" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 {voiceMode === 'filter-candidate' ? (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>Step 1</span>
-                      <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
-                    <p className="text-[10px] mt-2" style={{ color: '#94a3b8' }}>
+                    <p className="text-[10px] mt-2" style={{ color: 'var(--text-muted)' }}>
                       Once enrolled, your voice will be filtered out during recording. Toggle filter on/off anytime from the header.
                     </p>
                   </div>
@@ -148,10 +148,10 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>Step 1</span>
-                      <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
-                    <p className="text-[10px] mt-2" style={{ color: '#94a3b8' }}>
+                    <p className="text-[10px] mt-2" style={{ color: 'var(--text-muted)' }}>
                       Once enrolled, your voice is filtered out during recording. Only the interviewer's questions are transcribed and answered by AI.
                     </p>
                   </div>
@@ -161,7 +161,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 
             {/* ── Keyboard Shortcuts ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#64748b' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
                 Keyboard Shortcuts
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -173,9 +173,9 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                   { keys: '⌘⌫', action: 'Clear history' },
                   { keys: '⌘↵', action: 'Submit' },
                 ].map(s => (
-                  <div key={s.keys} className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                    <kbd className="px-2 py-1 rounded text-[11px] font-bold" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontFamily: "'Source Code Pro', monospace" }}>{s.keys}</kbd>
-                    <span className="text-xs" style={{ color: '#475569', fontFamily: "'Inter', sans-serif" }}>{s.action}</span>
+                  <div key={s.keys} className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                    <kbd className="px-2 py-1 rounded text-[11px] font-bold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontFamily: "'Source Code Pro', monospace" }}>{s.keys}</kbd>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: "'Inter', sans-serif" }}>{s.action}</span>
                   </div>
                 ))}
               </div>
@@ -192,12 +192,12 @@ function SettingCard({ icon, title, description, children }: {
   icon: React.ReactNode; title: string; description: string; children?: React.ReactNode;
 }) {
   return (
-    <div className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: '#ffffff', border: '1px solid #e2e8f0' }}>
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: 'var(--cam-primary)' }}>
+    <div className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--bg-elevated)', color: 'var(--cam-primary)' }}>
         {icon}
       </div>
       <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--cam-primary)', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
-      <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{description}</p>
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
       {children}
     </div>
   );
@@ -235,8 +235,8 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
           <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? 'rgba(38,97,156,0.08)' : '#f1f5f9', color: active ? 'var(--cam-primary)' : '#94a3b8' }}>
             {icon}
           </div>
-          <h4 className="text-sm font-bold mb-1" style={{ color: '#0f172a', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
-          <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{description}</p>
+          <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
         </div>
       </div>
     </button>

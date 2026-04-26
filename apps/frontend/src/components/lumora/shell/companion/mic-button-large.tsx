@@ -9,7 +9,7 @@ import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices
 
 const ACCENT = 'var(--cam-primary)';
 const ACCENT_BG = 'rgba(38,97,156,0.08)';
-const MUTED = '#64748B';
+const MUTED = 'var(--text-muted)';
 
 export function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
   const { token } = useAuth();

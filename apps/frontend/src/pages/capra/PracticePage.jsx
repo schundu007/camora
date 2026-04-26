@@ -742,7 +742,7 @@ export default function PracticePage() {
                         <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                             <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? 'var(--accent)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : '#94a3b8' }} />
+                              <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : 'var(--text-muted)' }} />
                             </div>
                             <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? 'var(--accent)' : 'var(--text-primary)' }}>{m.label}</span>
                           </div>

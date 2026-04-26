@@ -32,18 +32,18 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
   if (currentSection.title || currentSection.items.length) sections.push(currentSection);
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
-      <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #F8FAFC, #EFF6FF)', borderBottom: '1px solid #E2E8F0' }}>
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#475569' }}>{label}</span>
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+      <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #F8FAFC, #EFF6FF)', borderBottom: '1px solid var(--border)' }}>
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
         <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#E0F2FE', color: '#0284C7' }}>{lines.length} lines</span>
       </div>
-      <div className="px-4 py-3 max-h-[500px] overflow-auto text-[13px] leading-[1.8]" style={{ color: '#334155' }}>
+      <div className="px-4 py-3 max-h-[500px] overflow-auto text-[13px] leading-[1.8]" style={{ color: 'var(--text-secondary)' }}>
         {sections.map((section, si) => (
           <div key={si} className={si > 0 ? 'mt-4' : ''}>
             {section.title && (
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1 h-4 rounded-full" style={{ background: 'var(--cam-primary)' }} />
-                <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#0F172A' }}>{section.title}</h4>
+                <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{section.title}</h4>
               </div>
             )}
             {section.items.map((item, ii) => {
@@ -59,12 +59,12 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
               );
               if (kvMatch && kvMatch[1].length < 30) return (
                 <div key={ii} className="mb-1 ml-3">
-                  <span className="font-semibold" style={{ color: '#0F172A' }}>{kvMatch[1]}:</span>
+                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{kvMatch[1]}:</span>
                   <span className="ml-1">{kvMatch[2]}</span>
                 </div>
               );
               const isTitle = item.length < 60 && /\b(Engineer|Manager|Developer|Director|Lead|Senior|Junior|Intern|Analyst|Designer|Architect)\b/i.test(item);
-              if (isTitle) return <p key={ii} className="font-semibold mt-2 mb-0.5" style={{ color: '#0F172A' }}>{item}</p>;
+              if (isTitle) return <p key={ii} className="font-semibold mt-2 mb-0.5" style={{ color: 'var(--text-primary)' }}>{item}</p>;
               return <p key={ii} className="mb-1">{item}</p>;
             })}
           </div>
@@ -77,15 +77,15 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
 /* ── Editable text field with preview toggle ── */
 export function TextFieldWithPreview({ value, onChange, placeholder, label }: { value: string; onChange: (v: string) => void; placeholder: string; label: string }) {
   const [previewing, setPreviewing] = useState(false);
-  const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
+  const iS: React.CSSProperties = { border: '1px solid var(--border)', outline: 'none', background: 'var(--bg-surface)' };
   return previewing && value ? (
     <div>
-      <button onClick={() => setPreviewing(false)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>Edit</button>
+      <button onClick={() => setPreviewing(false)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>Edit</button>
       <FormatTextPreview text={value} label={label} />
     </div>
   ) : (
     <div>
-      {value && <button onClick={() => setPreviewing(true)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>Preview</button>}
+      {value && <button onClick={() => setPreviewing(true)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>Preview</button>}
       <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
     </div>
   );
@@ -141,45 +141,45 @@ export function LumoraProfilePage() {
           </div>
         )}
         <div>
-          <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>{user?.name || 'User'}</h2>
-          <p className="text-sm" style={{ color: '#64748B' }}>{user?.email}</p>
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'User'}</h2>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
         </div>
       </div>
 
       <div className="space-y-4">
         {/* Account */}
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
-          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>Account</div>
-          <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Account</div>
+          <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs" style={{ color: '#64748B' }}>Email</span>
-              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>{user?.email || '—'}</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{user?.email || '—'}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs" style={{ color: '#64748B' }}>Name</span>
-              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>{user?.name || '—'}</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Name</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{user?.name || '—'}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs" style={{ color: '#64748B' }}>Plan</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Plan</span>
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? '#F1F5F9' : 'rgba(38,97,156,0.1)', color: plan === 'free' ? '#64748B' : 'var(--cam-primary)' }}>{planLabel}</span>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs" style={{ color: '#64748B' }}>Status</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Status</span>
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#F0FDF4', color: '#16A34A' }}>{subscription?.status || 'Active'}</span>
             </div>
           </div>
         </div>
 
         {/* Preferences */}
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
-          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>Preferences</div>
-          <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Preferences</div>
+          <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between px-4 py-3">
               <div>
-                <span className="text-xs font-medium block" style={{ color: '#0F172A' }}>AI Model</span>
-                <span className="text-[10px]" style={{ color: '#94A3B8' }}>Model used for real-time answers</span>
+                <span className="text-xs font-medium block" style={{ color: 'var(--text-primary)' }}>AI Model</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Model used for real-time answers</span>
               </div>
-              <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid #E2E8F0', background: '#fff' }}>
+              <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                 <option>Auto (Recommended)</option>
                 <option>Claude Sonnet 4</option>
                 <option>Claude Opus 4</option>
@@ -188,10 +188,10 @@ export function LumoraProfilePage() {
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <div>
-                <span className="text-xs font-medium block" style={{ color: '#0F172A' }}>Answer Mode</span>
-                <span className="text-[10px]" style={{ color: '#94A3B8' }}>Short for live interviews, detailed for practice</span>
+                <span className="text-xs font-medium block" style={{ color: 'var(--text-primary)' }}>Answer Mode</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Short for live interviews, detailed for practice</span>
               </div>
-              <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid #E2E8F0', background: '#fff' }}>
+              <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                 <option>Short</option>
                 <option>Detailed</option>
               </select>
@@ -200,19 +200,19 @@ export function LumoraProfilePage() {
         </div>
 
         {/* Quick links */}
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E2E8F0' }}>
-          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#F8FAFC', color: '#64748B', borderBottom: '1px solid #E2E8F0' }}>Quick Links</div>
-          <div className="divide-y" style={{ borderColor: '#E2E8F0' }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Quick Links</div>
+          <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <Link to="/lumora/pricing" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Manage Subscription</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Manage Subscription</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
             <Link to="/lumora/credits" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Credits & Usage</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Credits & Usage</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
             <Link to="/lumora/assistants" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-              <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Interview Assistants</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Interview Assistants</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
           </div>
@@ -314,34 +314,34 @@ export function AssistantsPage() {
     const ok = await dialogConfirm({ title: 'Delete this assistant?', message: 'The assistant profile and its stored resume/stories will be removed.', confirmLabel: 'Delete', tone: 'danger' });
     if (ok) save(assistants.filter(a => a.id !== id));
   };
-  const iS: React.CSSProperties = { border: '1px solid #E2E8F0', outline: 'none', background: '#fff' };
+  const iS: React.CSSProperties = { border: '1px solid var(--border)', outline: 'none', background: 'var(--bg-surface)' };
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 w-full">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Interview Assistants</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Interview Assistants</h2>
         <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
           New
         </button>
       </div>
-      <p className="text-sm mb-6" style={{ color: '#64748B' }}>Add your resume and job description so AI personalizes answers to your background during live interviews.</p>
+      <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Add your resume and job description so AI personalizes answers to your background during live interviews.</p>
       {showCreate && (
-        <div className="mb-6 p-5 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+        <div className="mb-6 p-5 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <div className="grid grid-cols-3 gap-3 mb-3">
             <input value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Company" className="px-3 py-2 rounded-lg text-sm" style={iS} />
             <input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Role" className="px-3 py-2 rounded-lg text-sm" style={iS} />
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Name (auto)" className="px-3 py-2 rounded-lg text-sm" style={iS} />
           </div>
           <div className="mb-3">
-            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: '#94A3B8' }}>AI Model</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-muted)' }}>AI Model</label>
             <div className="flex gap-2">{AI_MODELS.map(m => (
               <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid #E2E8F0', color: form.model === m.value ? m.color : '#64748B', background: form.model === m.value ? m.color + '08' : '#fff' }}>{m.label}</button>
             ))}</div>
           </div>
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Your Resume</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>
+              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your Resume</label>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -358,8 +358,8 @@ export function AssistantsPage() {
           </div>
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Job Description</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid #E2E8F0' }}>
+              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Job Description</label>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[#F1F5F9]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -376,36 +376,36 @@ export function AssistantsPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: 'var(--cam-primary)' }}>Create</button>
-            <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color: '#64748B', border: '1px solid #E2E8F0' }}>Cancel</button>
+            <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Cancel</button>
           </div>
         </div>
       )}
       {assistants.length === 0 && !showCreate ? (
         <div className="text-center py-16 rounded-xl" style={{ border: '2px dashed #E2E8F0' }}>
           <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
-          <p className="text-sm font-medium" style={{ color: '#0F172A' }}>No assistants yet</p>
-          <p className="text-xs mt-1 mb-4" style={{ color: '#94A3B8' }}>Add your resume + job description for personalized AI answers.</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No assistants yet</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Add your resume + job description for personalized AI answers.</p>
           <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>Create Your First Assistant</button>
         </div>
       ) : (
         <div className="space-y-3">{assistants.map(a => {
           const mi = AI_MODELS.find(m => m.value === a.model);
           return (
-            <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: '#fff', border: '1px solid #E2E8F0' }}>
+            <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(38,97,156,0.1)' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{a.name}</p>
-                    <p className="text-[11px]" style={{ color: '#94A3B8' }}>{a.company}{a.company && a.role ? ' · ' : ''}{a.role}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{a.name}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{a.company}{a.company && a.role ? ' · ' : ''}{a.role}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: (mi?.color || 'var(--cam-primary)') + '10', color: mi?.color || 'var(--cam-primary)' }}>{mi?.label || a.model}</span>
                   <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: 'var(--cam-primary)' }}>Launch</Link>
-                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: '#94A3B8' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
+                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: 'var(--text-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
               {(a.resume || a.jobDescription) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
@@ -422,7 +422,7 @@ export function AssistantsPage() {
                     </svg>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
                     {a.storyParseStatus === 'parsing' && (
-                      <span className="flex items-center gap-1 text-[10px]" style={{ color: '#64748B' }}>
+                      <span className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-muted)' }}>
                         <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-primary)' }} />
                         Parsing resume…
                       </span>
@@ -433,7 +433,7 @@ export function AssistantsPage() {
                       </button>
                     )}
                     {a.storyParseStatus === 'done' && a.stories && (
-                      <span className="text-[10px]" style={{ color: '#64748B' }}>· {a.stories.length} stories extracted</span>
+                      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>· {a.stories.length} stories extracted</span>
                     )}
                   </div>
                   {a.stories && a.stories.length > 0 && (
@@ -448,8 +448,8 @@ export function AssistantsPage() {
                             ))}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold" style={{ color: '#0F172A' }}>{s.title}</p>
-                            <p className="text-[10px]" style={{ color: '#64748B' }}>{s.summary}{s.impact ? <span style={{ color: 'var(--cam-primary-dk)' }}> · {s.impact}</span> : null}</p>
+                            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{s.title}</p>
+                            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{s.summary}{s.impact ? <span style={{ color: 'var(--cam-primary-dk)' }}> · {s.impact}</span> : null}</p>
                           </div>
                         </div>
                       ))}

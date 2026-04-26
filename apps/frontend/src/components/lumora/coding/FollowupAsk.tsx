@@ -61,7 +61,7 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
   };
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(38,97,156,0.05)', borderBottom: '1px solid rgba(38,97,156,0.12)' }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
@@ -71,11 +71,11 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
         <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
           Ask a follow-up
         </span>
-        <span className="ml-auto text-[9px]" style={{ color: '#94A3B8' }}>Context-aware · scoped to this problem</span>
+        <span className="ml-auto text-[9px]" style={{ color: 'var(--text-muted)' }}>Context-aware · scoped to this problem</span>
       </div>
 
       <div className="p-3 space-y-2">
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -83,7 +83,7 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
             placeholder={activeSolutionName ? `e.g. Why does ${activeSolutionName} use O(n) space?` : 'e.g. Why not sort first? What breaks at scale?'}
             disabled={loading}
             className="flex-1 bg-transparent outline-none text-[12px]"
-            style={{ color: '#0F172A' }}
+            style={{ color: 'var(--text-primary)' }}
           />
           <button
             onClick={submit}
@@ -102,8 +102,8 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
 
         {(answer || loading) && (
           <div className="rounded-lg px-2.5 py-2" style={{ background: 'rgba(38,97,156,0.04)', border: '1px solid rgba(38,97,156,0.15)' }}>
-            <p className="text-[12px] leading-[1.55] whitespace-pre-wrap" style={{ color: '#0F172A', fontFamily: "'Inter', sans-serif" }}>
-              {answer || <span style={{ color: '#64748B' }}>Thinking…</span>}
+            <p className="text-[12px] leading-[1.55] whitespace-pre-wrap" style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
+              {answer || <span style={{ color: 'var(--text-muted)' }}>Thinking…</span>}
               {loading && answer && <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-primary)', verticalAlign: 'middle' }} />}
             </p>
           </div>

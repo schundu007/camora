@@ -64,7 +64,7 @@ export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: Cali
           Current threshold: {vadThreshold.toFixed(4)}
         </span>
       )}
-      {error && <span className="text-xs" style={{ color: '#FF0000' }}>{isLight ? error : '!'}</span>}
+      {error && <span className="text-xs" style={{ color: 'var(--danger)' }}>{isLight ? error : '!'}</span>}
     </div>
   );
 }

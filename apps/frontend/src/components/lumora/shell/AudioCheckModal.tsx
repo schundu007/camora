@@ -210,9 +210,9 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
       aria-modal="true"
       aria-label="Audio check"
     >
-      <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', fontFamily: "'Inter', var(--font-sans)", maxHeight: '92vh' }}>
+      <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', fontFamily: "'Inter', var(--font-sans)", maxHeight: '92vh' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+        <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#CFFAFE', color: 'var(--cam-primary-dk)' }}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -223,14 +223,14 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
               </svg>
             </div>
             <div>
-              <h2 className="text-[15px] font-bold" style={{ color: '#0F172A' }}>Audio check</h2>
-              <p className="text-[11px]" style={{ color: '#64748B' }}>Pick devices, verify levels, test mic + speaker before your interview.</p>
+              <h2 className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>Audio check</h2>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Pick devices, verify levels, test mic + speaker before your interview.</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="flex items-center justify-center w-8 h-8 rounded-md transition-colors"
-            style={{ color: '#64748B', border: '1px solid #E2E8F0', background: '#FFFFFF' }}
+            style={{ color: 'var(--text-muted)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
             aria-label="Close"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
@@ -255,14 +255,14 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
           {/* Input — Microphone */}
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#0F172A' }}>Microphone</h3>
-              <span className="text-[10px]" style={{ color: '#64748B' }}>{inputs.length} device{inputs.length !== 1 ? 's' : ''}</span>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Microphone</h3>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{inputs.length} device{inputs.length !== 1 ? 's' : ''}</span>
             </div>
             <select
               value={selectedInput}
               onChange={(e) => setSelectedInput(e.target.value)}
               className="w-full px-3 py-2 text-[13px] rounded-md"
-              style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#0F172A' }}
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             >
               {inputs.length === 0 && <option value="">No microphones found</option>}
               {inputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
@@ -271,13 +271,13 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
             {/* Live level meter */}
             <div className="mt-3">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-semibold" style={{ color: '#475569' }}>Input level</span>
-                <span className="text-[10px] font-mono" style={{ color: '#64748B' }}>{levelPct}%</span>
+                <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Input level</span>
+                <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{levelPct}%</span>
               </div>
-              <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: '#F1F5F9' }}>
+              <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                 <div className="h-full rounded-full transition-[width] duration-75" style={{ width: `${levelPct}%`, background: levelColor }} />
               </div>
-              <p className="text-[10px] mt-1" style={{ color: '#94A3B8' }}>Speak normally — you want the bar staying mostly green with occasional amber peaks.</p>
+              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Speak normally — you want the bar staying mostly green with occasional amber peaks.</p>
             </div>
 
             {/* Processing toggles */}
@@ -295,12 +295,12 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                   title={hint}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold" style={{ color: '#0F172A' }}>{label}</span>
+                    <span className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</span>
                     <span className="w-8 h-4 rounded-full relative transition-colors" style={{ background: val ? 'var(--cam-primary)' : '#CBD5E1' }}>
                       <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-[left]" style={{ left: val ? 18 : 2 }} />
                     </span>
                   </div>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#64748B' }}>{hint}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{hint}</p>
                 </button>
               ))}
             </div>
@@ -309,21 +309,21 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
           {/* Output — Speaker */}
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#0F172A' }}>Speaker</h3>
-              <span className="text-[10px]" style={{ color: '#64748B' }}>{outputs.length} device{outputs.length !== 1 ? 's' : ''}</span>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Speaker</h3>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{outputs.length} device{outputs.length !== 1 ? 's' : ''}</span>
             </div>
             <select
               value={selectedOutput}
               onChange={(e) => setSelectedOutput(e.target.value)}
               disabled={!supportsSinkId}
               className="w-full px-3 py-2 text-[13px] rounded-md"
-              style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#0F172A' }}
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             >
               {outputs.length === 0 && <option value="">No speakers found</option>}
               {outputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
             </select>
             {!supportsSinkId && (
-              <p className="text-[10px] mt-1" style={{ color: '#94A3B8' }}>Your browser (likely Safari/Firefox) doesn't let web pages pick the speaker — use the OS output picker instead.</p>
+              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Your browser (likely Safari/Firefox) doesn't let web pages pick the speaker — use the OS output picker instead.</p>
             )}
             <div className="mt-3 flex items-center gap-2">
               <button
@@ -337,14 +337,14 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                 Play test tone
               </button>
               <audio ref={testAudioRef} preload="none" />
-              <p className="text-[11px]" style={{ color: '#64748B' }}>A 1-second 440 Hz tone. You should hear it clearly in the selected speaker.</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>A 1-second 440 Hz tone. You should hear it clearly in the selected speaker.</p>
             </div>
           </section>
 
           {/* Record + playback */}
           <section>
-            <h3 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: '#0F172A' }}>Record + playback</h3>
-            <p className="text-[11px] mb-2" style={{ color: '#64748B' }}>Say a sentence, then play it back — confirms both the mic and speaker end-to-end. Capped at 8 seconds.</p>
+            <h3 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-primary)' }}>Record + playback</h3>
+            <p className="text-[11px] mb-2" style={{ color: 'var(--text-muted)' }}>Say a sentence, then play it back — confirms both the mic and speaker end-to-end. Capped at 8 seconds.</p>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={toggleRecording}
@@ -352,7 +352,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors disabled:opacity-40"
                 style={recState === 'recording'
                   ? { color: '#FFFFFF', background: '#DC2626', border: '1px solid #B91C1C' }
-                  : { color: '#0F172A', background: '#FFFFFF', border: '1px solid #E2E8F0' }}
+                  : { color: 'var(--text-primary)', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
               >
                 {recState === 'recording' ? (
                   <><span className="w-2 h-2 rounded-full bg-white animate-pulse" />Stop recording</>
@@ -367,9 +367,9 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
           </section>
 
           {/* Zoom / virtual-audio tip */}
-          <section className="rounded-md p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-            <h3 className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: '#0F172A' }}>Interview-platform settings</h3>
-            <ul className="text-[12px] space-y-1" style={{ color: '#475569' }}>
+          <section className="rounded-md p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <h3 className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-primary)' }}>Interview-platform settings</h3>
+            <ul className="text-[12px] space-y-1" style={{ color: 'var(--text-secondary)' }}>
               <li>• <strong>Zoom / Teams / Meet:</strong> match the mic and speaker above to the same devices in the meeting app's audio settings — otherwise Lumora will transcribe a different stream than the interviewer hears.</li>
               <li>• <strong>Auto-adjust volume:</strong> turn OFF in Zoom when running Lumora — it fights with our auto-gain and causes level pumping.</li>
               <li>• <strong>Original sound / music mode:</strong> leave OFF — Lumora is tuned for standard speech.</li>
@@ -386,8 +386,8 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 flex items-center justify-between shrink-0" style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
-          <p className="text-[11px]" style={{ color: '#64748B' }}>Settings apply immediately to the main Lumora mic pipeline.</p>
+        <div className="px-5 py-3 flex items-center justify-between shrink-0" style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)' }}>
+          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Settings apply immediately to the main Lumora mic pipeline.</p>
           <button
             onClick={onClose}
             className="px-4 py-1.5 text-[13px] font-semibold rounded-md transition-colors"

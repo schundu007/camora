@@ -335,7 +335,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   return (
     <div
       className={embedded ? "flex flex-col h-full w-full" : "fixed z-50 flex flex-col"}
-      style={embedded ? { background: '#FFFFFF', borderRadius: 0 } : {
+      style={embedded ? { background: 'var(--bg-surface)', borderRadius: 0 } : {
         // On mobile the LumoraIconRail is hidden, so maximized must start at left:0
         // and span the full viewport width. md+ keeps the 80px rail offset.
         width: maximized ? `calc(100vw - var(--lumora-rail-offset, 0px))` : panelWidth,
@@ -371,15 +371,15 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Left: clear + close (embedded) or clear + new (floating) */}
         <div className="flex items-center gap-0.5">
           <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
-            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Clear history">
+            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="Clear history">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
           </button>
           {embedded ? (
-            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Close">
+            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="Close">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </button>
           ) : (
-            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="New chat">
+            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="New chat">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
             </button>
           )}
@@ -388,9 +388,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Center: title + mode toggle */}
         <div className="flex-1 flex items-center justify-center gap-2">
           <SonaAvatar size={18} />
-          <span className="text-[11px] font-bold" style={{ color: '#0F172A' }}>Sona</span>
+          <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>Sona</span>
           {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#F0FDF4', color: '#16A34A' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
-          <div className="flex items-center rounded-md p-0.5" style={{ background: '#F1F5F9' }}>
+          <div className="flex items-center rounded-md p-0.5" style={{ background: 'var(--bg-elevated)' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
                 key={mode}
@@ -415,11 +415,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: '#94A3B8' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
@@ -434,7 +434,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       {embedded ? (
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* Left: stories + questions */}
-          <div className="w-[280px] shrink-0 overflow-auto border-r" style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}>
+          <div className="w-[280px] shrink-0 overflow-auto border-r" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
             <StoryBankPanel
               stories={activeAssistant?.stories}
               activeArchetype={(() => {
@@ -444,13 +444,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               })()}
             />
             <div className="p-3 space-y-1.5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: '#94A3B8' }}>Questions</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: 'var(--text-muted)' }}>Questions</p>
               {messages.filter(m => m.role === 'user').length === 0 && !streaming && (
                 <div className="py-4">
-                  <p className="text-[10px] mb-3" style={{ color: '#94A3B8' }}>Ask a question to get started</p>
+                  <p className="text-[10px] mb-3" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
-                      <button key={s} onClick={() => ask(s)} className="w-full text-left px-3 py-2 rounded-lg text-[11px] transition-all" style={{ border: '1px solid #E2E8F0', color: '#475569' }}
+                      <button key={s} onClick={() => ask(s)} className="w-full text-left px-3 py-2 rounded-lg text-[11px] transition-all" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                         onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#E2E8F0'; }}>{s}</button>
                     ))}
@@ -458,9 +458,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 </div>
               )}
               {messages.filter(m => m.role === 'user').map((msg, i) => (
-                <div key={i} className="px-3 py-2 rounded-lg text-[11px] font-medium" style={{ background: '#fff', border: '1px solid #E2E8F0', color: '#0F172A' }}>
+                <div key={i} className="px-3 py-2 rounded-lg text-[11px] font-medium" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                   <p>{msg.text}</p>
-                  <span className="text-[8px] mt-1 block" style={{ color: '#94A3B8' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-[8px] mt-1 block" style={{ color: 'var(--text-muted)' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               ))}
             </div>
@@ -468,13 +468,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           {/* Right: answers */}
           <div ref={scrollRef} className="flex-1 overflow-auto p-4">
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
-              <div className="flex items-center justify-center h-full" style={{ color: '#94A3B8' }}>
+              <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
                 <p className="text-xs">Answers will appear here</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {messages.filter(m => m.role === 'ai').map((msg, i) => (
-                  <div key={i} className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div key={i} className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                     <div className="flex items-center gap-2 mb-3">
                       <SonaAvatar size={18} />
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona</span>
@@ -483,13 +483,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 ))}
                 {streaming && (
-                  <div className="rounded-xl p-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                     <div className="flex items-center gap-2 mb-3">
                       <SonaAvatar size={18} active />
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona is answering…</span>
                     </div>
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-primary)' }} /></>
-                      : <span className="animate-pulse text-xs" style={{ color: '#94A3B8' }}>Thinking...</span>}
+                      : <span className="animate-pulse text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>}
                   </div>
                 )}
               </div>
@@ -509,7 +509,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               <div className="grid grid-cols-2 gap-1.5 w-full">
                 {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
                   <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
-                    style={{ border: '1px solid rgba(0,0,0,0.08)', fontSize: '10px', color: '#64748B' }}
+                    style={{ border: '1px solid rgba(0,0,0,0.08)', fontSize: '10px', color: 'var(--text-muted)' }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
                     {s}
@@ -526,7 +526,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 </div>
               ) : (
-                <div key={i} className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div key={i} className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center gap-1.5 mb-2">
                     <SonaAvatar size={14} />
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
@@ -535,7 +535,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 </div>
               ))}
               {streaming && (
-                <div className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center gap-1.5 mb-2">
                     <SonaAvatar size={14} active />
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
@@ -567,7 +567,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
             placeholder={answerMode === 'short' ? 'Type a question...' : 'Type a question...'}
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
-            style={{ fontFamily: "'Inter', sans-serif", color: '#0F172A', fontSize: '10px' }} disabled={streaming} />
+            style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)', fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
             <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>

@@ -184,7 +184,7 @@ export function LumoraShellPage() {
         </div>
       </div>
     )}
-    <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: '#F0F7FF' }}>
+    <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: 'var(--bg-app)' }}>
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}
@@ -232,7 +232,7 @@ export function LumoraShellPage() {
           </div>
 
           {/* Go Invisible button — icon-only on mobile to save horizontal room */}
-          <button onClick={() => setBlanked(true)} className="ml-auto p-2 md:px-3 md:py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[#0F172A] hover:text-white flex items-center gap-1.5" style={{ color: '#64748B', border: '1px solid #E2E8F0' }} title="Go invisible (⌘B) — hides UI, audio keeps running" aria-label="Go invisible">
+          <button onClick={() => setBlanked(true)} className="ml-auto p-2 md:px-3 md:py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[#0F172A] hover:text-white flex items-center gap-1.5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }} title="Go invisible (⌘B) — hides UI, audio keeps running" aria-label="Go invisible">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
               <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
@@ -313,14 +313,14 @@ export function LumoraShellPage() {
 
           {/* Calendar tab */}
           {activeTab === 'calendar' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#FFFFFF' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: 'var(--bg-surface)' }}>
               <LumoraCalendar onClose={() => navigate('/lumora')} />
             </div>
           )}
 
           {/* Sessions page */}
           {activeTab === 'sessions' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="max-w-3xl mx-auto px-6 py-8 w-full">
                 <div className="flex items-end justify-between mb-6">
                   <div>
@@ -334,7 +334,7 @@ export function LumoraShellPage() {
                         if (ok) clearHistory();
                       }}
                       className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors"
-                      style={{ color: '#DC2626', border: '1px solid #FCA5A5', background: '#FFFFFF' }}
+                      style={{ color: '#DC2626', border: '1px solid #FCA5A5', background: 'var(--bg-surface)' }}
                     >Clear all</button>
                   )}
                 </div>
@@ -356,7 +356,7 @@ export function LumoraShellPage() {
                           onClick={() => { setFocusedEntry(realIdx); navigate('/lumora'); }}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocusedEntry(realIdx); navigate('/lumora'); } }}
                           className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors"
-                          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}
+                          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                         >
@@ -365,8 +365,8 @@ export function LumoraShellPage() {
                             {realIdx + 1}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold truncate" style={{ color: '#0F172A' }}>{entry.question}</p>
-                            <p className="text-[10px] mt-0.5" style={{ color: '#64748B' }}>{new Date(entry.timestamp).toLocaleString()}</p>
+                            <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.question}</p>
+                            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{new Date(entry.timestamp).toLocaleString()}</p>
                           </div>
                           <button
                             type="button"
@@ -384,7 +384,7 @@ export function LumoraShellPage() {
                               if (ok) removeHistoryEntry(realIdx);
                             }}
                             className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-colors hover:bg-red-50"
-                            style={{ color: '#94A3B8', border: '1px solid #E2E8F0' }}
+                            style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
                             onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#FCA5A5'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                           >
@@ -403,21 +403,21 @@ export function LumoraShellPage() {
 
           {/* Assistants page */}
           {activeTab === 'assistants' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <AssistantsPage />
             </div>
           )}
 
           {/* Profile page */}
           {activeTab === 'profile' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <LumoraProfilePage />
             </div>
           )}
 
           {/* Credits page */}
           {activeTab === 'credits' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="max-w-2xl mx-auto px-6 py-8 w-full">
                 <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Credits & Usage</h2>
                 <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Track your AI usage and remaining credits.</p>
@@ -455,7 +455,7 @@ export function LumoraShellPage() {
 
           {/* Pricing page */}
           {activeTab === 'pricing' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: '#FFFFFF' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="max-w-3xl mx-auto px-6 py-8 w-full">
                 <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Pricing</h2>
                 <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Manage your subscription and top-ups.</p>
@@ -468,7 +468,7 @@ export function LumoraShellPage() {
 
           {/* AI Assistant — fullscreen mode (behavioral / ask questions) */}
           {copilotFullscreen && (
-            <div className="absolute inset-0 z-20 flex flex-col" style={{ background: '#FFFFFF' }}>
+            <div className="absolute inset-0 z-20 flex flex-col" style={{ background: 'var(--bg-surface)' }}>
               <AICompanionPanel isOpen={true} onClose={() => navigate('/lumora')} initialQuestion={copilotQuestion} embedded />
             </div>
           )}
@@ -526,8 +526,8 @@ export function LumoraShellPage() {
           <div className="flex-1" style={{ background: 'rgba(0,0,0,0.35)' }} />
           <div onClick={e => e.stopPropagation()} className="bg-white rounded-t-2xl overflow-hidden animate-slide-in-up" style={{ paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -8px 24px rgba(0,0,0,0.12)' }}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0]">
-              <span className="text-sm font-bold" style={{ color: '#0F172A' }}>More</span>
-              <button type="button" onClick={() => setMobileMoreOpen(false)} aria-label="Close" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: '#64748B' }}>
+              <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>More</span>
+              <button type="button" onClick={() => setMobileMoreOpen(false)} aria-label="Close" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" /></svg>
               </button>
             </div>

@@ -166,9 +166,9 @@ export function EvolutionTimeline({ steps }) {
                 }}
               >
                 {s.icon ? (
-                  <Icon name={s.icon} size={12} style={{ color: i <= activeStep ? '#fff' : '#9ca3af' }} />
+                  <Icon name={s.icon} size={12} style={{ color: i <= activeStep ? '#fff' : 'var(--text-muted)' }} />
                 ) : (
-                  <span className="text-[10px] font-bold" style={{ color: i <= activeStep ? '#fff' : '#9ca3af' }}>{i + 1}</span>
+                  <span className="text-[10px] font-bold" style={{ color: i <= activeStep ? '#fff' : 'var(--text-muted)' }}>{i + 1}</span>
                 )}
               </div>
               <span className={`text-[9px] landing-mono font-semibold text-center leading-tight transition-colors ${
@@ -357,7 +357,7 @@ export function StaticDiagram({ diagram }) {
                 className="px-2 py-0.5 text-[10px] font-bold rounded transition-colors landing-mono"
                 style={{
                   background: provider === p.id ? `${p.color}20` : 'transparent',
-                  color: provider === p.id ? p.color : '#9ca3af',
+                  color: provider === p.id ? p.color : 'var(--text-muted)',
                   border: provider === p.id ? `1px solid ${p.color}40` : '1px solid transparent',
                 }}
               >

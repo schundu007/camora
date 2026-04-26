@@ -66,7 +66,7 @@ export default function InterviewQuestionsPage() {
   const diffColor = DIFF_COLORS[company.difficulty] ?? DIFF_COLORS.Medium;
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-app)' }}>
       <SiteNav variant="light" />
 
       {/* ── Hero ─────────────────────────────────────────── */}
