@@ -82,12 +82,12 @@ const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const CATEGORIES = ['coding', 'system-design', 'behavioral'];
 const COMPANIES = [
   { id: 'all', label: 'All', color: 'var(--text-muted)' },
-  { id: 'google', label: 'Google', color: '#4285f4' },
-  { id: 'meta', label: 'Meta', color: '#0668E1' },
-  { id: 'amazon', label: 'Amazon', color: '#FF9900' },
-  { id: 'apple', label: 'Apple', color: '#555' },
-  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF' },
-  { id: 'netflix', label: 'Netflix', color: '#E50914' },
+  { id: 'google', label: 'Google', color: '#4285f4', logo: '/logos/google.png' },
+  { id: 'meta', label: 'Meta', color: '#0668E1', logo: '/logos/meta.png' },
+  { id: 'amazon', label: 'Amazon', color: '#FF9900', logo: '/logos/amazon.png' },
+  { id: 'apple', label: 'Apple', color: '#555', logo: '/logos/apple.png' },
+  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF', logo: '/logos/microsoft.png' },
+  { id: 'netflix', label: 'Netflix', color: '#E50914', logo: '/logos/netflix.png' },
 ];
 
 const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
@@ -784,8 +784,12 @@ export default function PracticePage() {
                     <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Company Focus</label>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {COMPANIES.map(c => (
-                        <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid var(--border)', background: company === c.id ? `${c.color}0d` : 'var(--bg-surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
-                          <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, display: 'inline-block' }} />
+                        <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 12px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid var(--border)', background: company === c.id ? `${c.color}0d` : 'var(--bg-surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
+                          {c.logo ? (
+                            <img src={c.logo} alt="" width={16} height={16} style={{ display: 'block', objectFit: 'contain', borderRadius: 3, flexShrink: 0 }} draggable={false} />
+                          ) : (
+                            <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, display: 'inline-block' }} />
+                          )}
                           {c.label}
                         </button>
                       ))}
