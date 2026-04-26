@@ -228,7 +228,7 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
           {/* Desktop App */}
           <div className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(236,72,153,0.1)', color: 'var(--accent)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(6,78,59,0.1)', color: 'var(--accent)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
               </div>
               <div className="min-w-0">

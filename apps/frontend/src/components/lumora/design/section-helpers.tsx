@@ -69,26 +69,26 @@ export const SectionIcon = ({ type }: { type: string }) => {
 /** Scalability tier colors — stepped brand-color intensity so each tier is
  *  visually distinguishable while staying on-brand. */
 export const tierColors = [
-  { bg: 'bg-[rgba(236,72,153,0.04)]', border: 'border-[rgba(236,72,153,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.06)]', border: 'border-[rgba(236,72,153,0.22)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.08)]', border: 'border-[rgba(236,72,153,0.30)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.10)]', border: 'border-[rgba(236,72,153,0.38)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.12)]', border: 'border-[rgba(236,72,153,0.46)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.14)]', border: 'border-[rgba(236,72,153,0.54)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.16)]', border: 'border-[rgba(236,72,153,0.62)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
-  { bg: 'bg-[rgba(236,72,153,0.18)]', border: 'border-[rgba(236,72,153,0.70)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.04)]', border: 'border-[rgba(6,78,59,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.06)]', border: 'border-[rgba(6,78,59,0.22)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.08)]', border: 'border-[rgba(6,78,59,0.30)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.10)]', border: 'border-[rgba(6,78,59,0.38)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.12)]', border: 'border-[rgba(6,78,59,0.46)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.14)]', border: 'border-[rgba(6,78,59,0.54)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.16)]', border: 'border-[rgba(6,78,59,0.62)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(6,78,59,0.18)]', border: 'border-[rgba(6,78,59,0.70)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
 ];
 
 /** Architecture layer accents — same stepped brand-color intensity for layers. */
 export const layerAccents = [
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.04)', border: 'rgba(236,72,153,0.15)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.06)', border: 'rgba(236,72,153,0.22)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.08)', border: 'rgba(236,72,153,0.30)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.10)', border: 'rgba(236,72,153,0.38)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.12)', border: 'rgba(236,72,153,0.46)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.14)', border: 'rgba(236,72,153,0.54)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.16)', border: 'rgba(236,72,153,0.62)' },
-  { accent: 'var(--cam-primary)', bg: 'rgba(236,72,153,0.18)', border: 'rgba(236,72,153,0.70)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.04)', border: 'rgba(6,78,59,0.15)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.06)', border: 'rgba(6,78,59,0.22)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.08)', border: 'rgba(6,78,59,0.30)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.10)', border: 'rgba(6,78,59,0.38)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.12)', border: 'rgba(6,78,59,0.46)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.14)', border: 'rgba(6,78,59,0.54)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.16)', border: 'rgba(6,78,59,0.62)' },
+  { accent: 'var(--cam-primary)', bg: 'rgba(6,78,59,0.18)', border: 'rgba(6,78,59,0.70)' },
 ];
 
 /** Tiny copy-to-clipboard button for section headers. Placed with ml-auto so
