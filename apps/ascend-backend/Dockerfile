@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# build-marker: 2026-04-26T05:55:00Z (forces Railway to invalidate stale Nixpacks snapshot)
+# build-marker: 2026-04-26T18:00:00Z (forces Railway to invalidate stale Nixpacks snapshot)
 # Custom Dockerfile (replaces nixpacks.toml). Reason: Nixpacks bakes every
 # Railway service variable into the image as ARG/ENV — including JWT_SECRET,
 # STRIPE_SECRET_KEY, OPENAI_API_KEY, etc. — which lands those values in the
@@ -29,6 +29,7 @@ RUN apt-get update \
       fontconfig libfontconfig1 \
       libfreetype6 \
       librsvg2-bin \
+      ffmpeg \
  && rm -rf /var/lib/apt/lists/*
 
 # TypeScript was in the old nixpkgs list — install via npm so we don't depend
