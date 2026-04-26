@@ -3016,6 +3016,42 @@ export default function TopicDetail({
         </div>
       )}
 
+      {/* "Was this helpful?" — Databricks-style feedback row above prev/next */}
+      {topicDetails && (
+        <div className="mt-8 pt-5 border-t border-[var(--border)] flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>Was this helpful?</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => celebrate({ title: 'Thanks for the feedback', subtitle: 'Glad this one helped.' })}
+                className="press flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors"
+                style={{ color: 'var(--text-primary)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                aria-label="Yes, this was helpful"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 22V11" /><path d="M2 13v6c0 1.7 1.3 3 3 3h12c1.5 0 2.7-1 3-2.5l1.7-7.5c.3-1.3-.7-2.5-2-2.5h-6l1-4c0-1-.5-2-1.5-2-1 0-2 .5-2 1.5L7 11" /></svg>
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => celebrate({ title: 'Thanks for the heads up', subtitle: 'Noted — we will keep iterating.' })}
+                className="press flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors"
+                style={{ color: 'var(--text-primary)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                aria-label="No, this was not helpful"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2v11" /><path d="M22 11V5c0-1.7-1.3-3-3-3H7c-1.5 0-2.7 1-3 2.5L2.3 12c-.3 1.3.7 2.5 2 2.5h6l-1 4c0 1 .5 2 1.5 2 1 0 2-.5 2-1.5L17 13" /></svg>
+                No
+              </button>
+            </div>
+          </div>
+          {topicDetails.lastUpdated && (
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              Last updated {topicDetails.lastUpdated}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Comments */}
       <TopicComments topicId={selectedTopic} />
 
