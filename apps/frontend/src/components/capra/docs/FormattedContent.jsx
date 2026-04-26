@@ -1,3 +1,5 @@
+import DocsCallout from '../../shared/docs/DocsCallout';
+
 export default function FormattedContent({ content }) {
   if (!content) return null;
 
@@ -206,6 +208,27 @@ export default function FormattedContent({ content }) {
 
         if (!trimmed) {
           flushList();
+          return;
+        }
+
+        // Databricks/GitHub-style callouts: `> [!NOTE] body`, `> [!TIP] body`,
+        // `> [!WARNING] body`, `> [!CAUTION] body`, `> [!IMPORTANT] body`.
+        // Maps to the four DocsCallout variants — note / tip / warning / caution.
+        const calloutMatch = trimmed.match(/^>\s*\[!(NOTE|TIP|WARNING|CAUTION|IMPORTANT)\]\s*(.*)$/i);
+        if (calloutMatch) {
+          flushList();
+          const tag = calloutMatch[1].toUpperCase();
+          const body = calloutMatch[2];
+          const variant =
+            tag === 'TIP' ? 'tip' :
+            tag === 'WARNING' ? 'warning' :
+            tag === 'CAUTION' || tag === 'IMPORTANT' ? 'caution' :
+            'note';
+          elements.push(
+            <div key={`cb-${blockIdx}-${lineIdx}`} className="my-3">
+              <DocsCallout variant={variant}>{formatInlineText(body)}</DocsCallout>
+            </div>,
+          );
           return;
         }
 
