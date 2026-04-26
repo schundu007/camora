@@ -15,9 +15,15 @@ async function tryJwtAuth(token) {
       if (userId) {
         await initUser(userId);
 
+        // Forward name + picture from the JWT payload — Google OAuth mints
+        // tokens with these fields, and the frontend's UserDropdown / Welcome
+        // banner read them off req.user via the /me response. Dropping them
+        // here was making the dropdown fall back to "Account" with no name.
         return {
           id: userId,
           email: payload.email,
+          name: payload.name || null,
+          picture: payload.picture || null,
           role: payload.role || 'user',
           source: 'jwt',
         };
