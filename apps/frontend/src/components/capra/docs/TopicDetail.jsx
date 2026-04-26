@@ -728,9 +728,18 @@ export default function TopicDetail({
       <div className="flex-1 min-w-0">
       {/* Topic Header — flush left, no card */}
       <div className="pb-4 mb-6 border-b border-[var(--border)]">
-        <div className="flex items-center justify-between mb-2">
-          <button onClick={() => setSelectedTopic(null)} className="text-xs text-[var(--accent)] font-medium transition-colors">← Back to {pageConfig.title}</button>
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between mb-2 gap-2">
+          {/* Breadcrumb: Prepare › <category> › <topic>. The category crumb
+              clears selectedTopic to scroll back to the topic list (preserves
+              filter state); the leaf is non-clickable. */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs min-w-0 flex-1">
+            <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--accent)] font-medium whitespace-nowrap transition-colors">Prepare</Link>
+            <span className="text-[var(--text-dimmed)]" aria-hidden="true">›</span>
+            <button onClick={() => setSelectedTopic(null)} className="text-[var(--text-muted)] hover:text-[var(--accent)] font-medium whitespace-nowrap transition-colors">{pageConfig.title}</button>
+            <span className="text-[var(--text-dimmed)]" aria-hidden="true">›</span>
+            <span className="text-[var(--text-primary)] font-semibold truncate" aria-current="page" title={topicDetails.title}>{topicDetails.title}</span>
+          </nav>
+          <div className="flex items-center gap-1 shrink-0">
             {currentIndex >= 0 && filteredTopics && <span className="text-[var(--text-muted)] text-[10px] mr-2" style={{ fontFamily: 'var(--font-mono)' }}>{currentIndex + 1}/{filteredTopics.length}</span>}
             <button onClick={() => prevTopic && setSelectedTopic(prevTopic.id)} disabled={!prevTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronLeft" size={16} /></button>
             <button onClick={() => nextTopic && setSelectedTopic(nextTopic.id)} disabled={!nextTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronRight" size={16} /></button>

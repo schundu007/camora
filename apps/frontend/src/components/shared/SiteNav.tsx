@@ -15,7 +15,7 @@ const TICKER_ITEMS = [
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, onboardingCompleted } = useAuth();
   const location = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
@@ -134,7 +134,9 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               <>
                 <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Dashboard</Link>
                 <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Profile</Link>
-                <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Onboarding</Link>
+                {onboardingCompleted === false && (
+                  <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Onboarding</Link>
+                )}
                 <Link to="/profile?tab=referrals" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Refer a Friend</Link>
                 <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm text-red-500 font-bold">Sign out</button>
               </>
