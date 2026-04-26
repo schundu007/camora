@@ -6,6 +6,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 import { useAuth } from '../contexts/AuthContext';
 import { getAuthHeaders } from '../utils/authHeaders.js';
 import ReferralDashboard from '../components/capra/features/ReferralDashboard';
+import CountUp from '../components/shared/animation/CountUp';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -313,7 +314,7 @@ export default function ChallengePage() {
           {/* Prize pool — glowing */}
           <div className="ch-prize-pool-badge">
             <span className="text-base text-[var(--text-muted)] uppercase tracking-widest font-bold">Total Prize Pool</span>
-            <span className="ch-prize-amount">$21,812</span>
+            <CountUp className="ch-prize-amount" value={21812} prefix="$" duration={1600} />
           </div>
 
           {/* CTAs */}

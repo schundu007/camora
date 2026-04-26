@@ -8,6 +8,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
+import CountUp from '../components/shared/animation/CountUp';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE
@@ -52,11 +53,11 @@ const APPA = [
 ];
 
 /* ── Stats ─────────────────────────────────────────────── */
-const STATS = [
-  { value: '800+', label: 'Study Topics' },
-  { value: '1,850+', label: 'Problems' },
-  { value: '1,000+', label: 'Companies' },
-  { value: '50+', label: 'Languages' },
+const STATS: { value: number; suffix: string; label: string }[] = [
+  { value: 800,   suffix: '+', label: 'Study Topics' },
+  { value: 1850,  suffix: '+', label: 'Problems' },
+  { value: 1000,  suffix: '+', label: 'Companies' },
+  { value: 50,    suffix: '+', label: 'Languages' },
 ];
 
 /* ── Company logos ───────────────────── */
@@ -219,7 +220,9 @@ export default function LandingPage() {
             {STATS.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.06}>
                 <div className="text-center">
-                  <p className="text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>{s.value}</p>
+                  <p className="text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>
+                    <CountUp value={s.value} suffix={s.suffix} duration={1400} />
+                  </p>
                   <p className="text-xs font-bold mt-3 uppercase tracking-[0.15em] text-camora-primary" style={{ fontFamily: F.mono }}>{s.label}</p>
                 </div>
               </Reveal>
@@ -241,7 +244,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {APPA.map((step, i) => (
               <Reveal key={step.key} delay={i * 0.06}>
-                <Link to={step.href} className="block rounded-lg h-full transition-all bg-[var(--bg-surface)] border border-[var(--border)] hover:border-camora-primary group overflow-hidden">
+                <Link to={step.href} className="card-lift block rounded-lg h-full bg-[var(--bg-surface)] border border-[var(--border)] group overflow-hidden">
                   <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <step.Anim />
                   </div>
@@ -309,7 +312,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.06}>
-                <div className="rounded-lg h-full overflow-hidden flex flex-col bg-[var(--bg-surface)] border border-[var(--border)]">
+                <div className="card-lift rounded-lg h-full overflow-hidden flex flex-col bg-[var(--bg-surface)] border border-[var(--border)]">
                   <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <f.Anim />
                   </div>

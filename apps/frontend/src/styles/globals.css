@@ -1024,3 +1024,43 @@ img { max-width: 100%; height: auto; }
   100% { transform: rotate(360deg); }
 }
 .ai-slow-spin { animation: slowSpin 30s linear infinite; }
+
+/* ══════════════════════════════════════════════════════════════
+   Liveliness — universal microinteractions
+   ══════════════════════════════════════════════════════════════
+   .card-lift  → on hover: gentle lift + accent glow + border tint.
+   .press      → on :active: brief scale-down feedback for buttons.
+   Both honor prefers-reduced-motion.
+   ══════════════════════════════════════════════════════════════ */
+.card-lift {
+  transition:
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    border-color 200ms ease;
+  will-change: transform;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(38, 97, 156, 0.10), 0 2px 6px rgba(38, 97, 156, 0.06);
+  border-color: var(--accent);
+}
+
+.press {
+  transition: transform 80ms ease, filter 80ms ease;
+}
+.press:active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-lift, .press, .ai-float, .ai-slow-spin {
+    transition: none;
+    animation: none;
+    transform: none !important;
+  }
+  .card-lift:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
