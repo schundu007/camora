@@ -67,12 +67,14 @@ function LoginPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login?redirect=${encodeURIComponent(redirectTo)}`;
 
   return (
-    <div className="min-h-screen" style={{ background: 'transparent' }}>
+    <div className="min-h-screen relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      {/* Soft top glow — LeetCode hero band */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <SiteNav />
 
       {/* ── Centered card ─────────────────────────────── */}
-      <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
-        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+      <div className="relative flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
+        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 12px 40px rgba(0,0,0,0.35)', borderTop: '3px solid var(--cam-gold-leaf)' }}>
 
           {/* Header */}
           <h1 className="text-center text-xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Welcome back</h1>
