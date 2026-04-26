@@ -4,4 +4,4 @@
  * a security fix to both. The canonical implementation now lives in
  * packages/shared-auth and is the only place that should be edited.
  */
-export { verifyToken, createToken, authenticate, setSSOCookie, clearSSOCookie } from '@camora/shared-auth';
+export { verifyToken, createToken, authenticate, setSSOCookie, clearSSOCookie } from './_shared/auth.js';

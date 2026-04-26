@@ -3,15 +3,11 @@
   "build": {
     "builder": "NIXPACKS",
     "watchPatterns": [
-      "apps/lumora-backend/**",
-      "packages/**",
-      "pnpm-workspace.yaml",
-      "pnpm-lock.yaml",
-      "package.json"
+      "apps/lumora-backend/**"
     ]
   },
   "deploy": {
-    "startCommand": "pnpm --filter lumora-backend start",
+    "startCommand": "node src/index.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",

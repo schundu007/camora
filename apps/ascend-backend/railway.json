@@ -3,15 +3,11 @@
   "build": {
     "builder": "NIXPACKS",
     "watchPatterns": [
-      "apps/ascend-backend/**",
-      "packages/**",
-      "pnpm-workspace.yaml",
-      "pnpm-lock.yaml",
-      "package.json"
+      "apps/ascend-backend/**"
     ]
   },
   "deploy": {
-    "startCommand": "pnpm --filter ascend-backend start",
+    "startCommand": "node src/index.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",

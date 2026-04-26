@@ -27,15 +27,6 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.1
         version: 0.91.1
-      '@camora/shared-auth':
-        specifier: workspace:*
-        version: link:../../packages/shared-auth
-      '@camora/shared-db':
-        specifier: workspace:*
-        version: link:../../packages/shared-db
-      '@camora/shared-llm':
-        specifier: workspace:*
-        version: link:../../packages/shared-llm
       bcryptjs:
         specifier: ^3.0.0
         version: 3.0.3
@@ -210,15 +201,6 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.1
         version: 0.91.1
-      '@camora/shared-auth':
-        specifier: workspace:*
-        version: link:../../packages/shared-auth
-      '@camora/shared-db':
-        specifier: workspace:*
-        version: link:../../packages/shared-db
-      '@camora/shared-llm':
-        specifier: workspace:*
-        version: link:../../packages/shared-llm
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7

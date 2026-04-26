@@ -1,4 +1,4 @@
-import { getAnthropicClient, getOpenAIClient as getOpenAIClientFromShared } from '@camora/shared-llm';
+import { getAnthropicClient, getOpenAIClient as getOpenAIClientFromShared } from '../lib/_shared/llm.js';
 import { getApiKey as getClaudeApiKey } from './claude.js';
 import { getApiKey as getOpenAIApiKey } from './openai.js';
 import { SECTION_PROMPTS } from './ascend-prep/section-prompts.js';

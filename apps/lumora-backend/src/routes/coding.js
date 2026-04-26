@@ -8,7 +8,7 @@
  * POST /execute — Run code against test cases (Python, JS, Ruby).
  */
 import { Router } from 'express';
-import { getAnthropicClient } from '@camora/shared-llm';
+import { getAnthropicClient } from '../lib/_shared/llm.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
