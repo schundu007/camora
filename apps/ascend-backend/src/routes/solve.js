@@ -11,7 +11,7 @@ import * as freeUsageService from '../services/freeUsageService.js';
 import { logger } from '../middleware/requestLogger.js';
 import { awardXP } from '../services/gamificationService.js';
 import { cacheGet, cacheSet } from '../services/redis.js';
-import { recordTokens, shouldThrottleLegacyPro } from '../services/aiHoursMeter.js';
+import { recordTokens } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
@@ -218,7 +218,6 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
     // Select model based on user plan — free users get Haiku, paid users get Sonnet
     let userModel = model;
     let userPlanType = null;
-    let throttledByFairUse = false;
     if (!userModel && provider === 'claude') {
       const userId = webappUserId || req.user?.id;
       if (userId) {
@@ -227,17 +226,9 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
         userModel = (subStatus.hasSubscription)
           ? 'claude-sonnet-4-20250514'
           : 'claude-haiku-4-5-20251001';
-        // Legacy unlimited Pro fair-use cap: 60h/30d → fall back to Haiku.
-        // Protects margin on grandfathered $49 unlimited subscribers.
-        if (subStatus.hasSubscription && await shouldThrottleLegacyPro(userId, subStatus.planType)) {
-          userModel = 'claude-haiku-4-5-20251001';
-          throttledByFairUse = true;
-          logger.info({ userId, planType: subStatus.planType }, 'Legacy fair-use cap engaged');
-        }
-        logger.debug({ userId, model: userModel, hasSubscription: subStatus.hasSubscription, throttledByFairUse }, 'Model selected based on plan');
+        logger.debug({ userId, model: userModel, hasSubscription: subStatus.hasSubscription }, 'Model selected based on plan');
       }
     }
-    if (throttledByFairUse) res.setHeader('X-Fair-Use-Throttled', '1');
 
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');

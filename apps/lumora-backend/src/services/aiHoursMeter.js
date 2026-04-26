@@ -7,16 +7,6 @@ import { logger } from '../middleware/requestLogger.js';
 const SECONDS_PER_1K_OUTPUT_TOKENS = Number(process.env.AI_HOURS_SEC_PER_1K_OUT) || 20;
 const SECONDS_PER_1K_INPUT_TOKENS = Number(process.env.AI_HOURS_SEC_PER_1K_IN) || 2;
 
-// Legacy unlimited plans grandfathered from pre-2026-04 pricing. Heavy users on
-// these plans cost more than they pay; cap at 60h/30d then downgrade model.
-const LEGACY_UNLIMITED_PLANS = new Set([
-  'monthly',
-  'monthly_pro',
-  'pro',
-  'quarterly_pro',
-]);
-const LEGACY_FAIR_USE_HOURS = Number(process.env.LEGACY_FAIR_USE_HOURS) || 60;
-
 export function tokensToSeconds(tokensIn = 0, tokensOut = 0) {
   return (
     (tokensIn / 1000) * SECONDS_PER_1K_INPUT_TOKENS
@@ -78,8 +68,3 @@ export async function getRecentHours(userId, days = 30) {
   }
 }
 
-export async function shouldThrottleLegacyPro(userId, planType) {
-  if (!planType || !LEGACY_UNLIMITED_PLANS.has(planType)) return false;
-  const hours = await getRecentHours(userId, 30);
-  return hours >= LEGACY_FAIR_USE_HOURS;
-}
