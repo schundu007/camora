@@ -269,6 +269,18 @@ function getCategoryColor(category: string): string {
   return CATEGORY_COLORS[category] || DEFAULT_COLOR;
 }
 
+// Text-safe overrides for categories whose fill color fails WCAG AA on
+// white (gold). Use the bright gold for the pill background/border, the
+// darkened sibling for the label text inside the pill.
+const CATEGORY_TEXT_OVERRIDES: Record<string, string> = {
+  data: 'var(--warning-text)',
+  blockchain: 'var(--warning-text)',
+};
+
+function getCategoryTextColor(category: string): string {
+  return CATEGORY_TEXT_OVERRIDES[category] || getCategoryColor(category);
+}
+
 function getCategoryLabel(category: string): string {
   const found = CATEGORIES.find((c) => c.value === category);
   return found ? found.label : 'Engineering';
@@ -1035,7 +1047,7 @@ export default function JobsPage() {
             {[
               { val: locationFilter, set: setLocationFilter, label: locationFilter, color: 'var(--accent)' },
               { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: 'var(--success)' },
-              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: 'var(--warning)' },
+              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: 'var(--warning-text)' },
               { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: 'var(--accent)' },
               { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: 'var(--accent)' },
               { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: 'var(--text-muted)' },
@@ -1272,6 +1284,7 @@ export default function JobsPage() {
               {filteredJobs.map((job) => {
                 const category = detectCategory(job.title);
                 const color = getCategoryColor(category);
+                const textColor = getCategoryTextColor(category);
                 const categoryLabel = getCategoryLabel(category);
                 const workType = detectWorkType(job.location);
                 const salary = formatSalary(job.salary_min, job.salary_max);
@@ -1331,7 +1344,7 @@ export default function JobsPage() {
                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.company_name}</div>
                       </div>
                       <div className="flex gap-1" style={{ flexShrink: 0 }}>
-                        <span style={{ fontSize: '10px', fontWeight: 600, color, background: `${color}14`, padding: '2px 8px', borderRadius: '9999px', border: `1px solid ${color}30` }}>{categoryLabel}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: textColor, background: `${color}14`, padding: '2px 8px', borderRadius: '9999px', border: `1px solid ${color}30` }}>{categoryLabel}</span>
                       </div>
                     </div>
 

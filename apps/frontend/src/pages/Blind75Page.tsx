@@ -67,7 +67,13 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Stack',
+    // Stack is the lone gold category. The rest are blues/greens/reds where
+    // the same hex works as both fill and text. Gold (#C9A227) reads at
+    // ~2.6:1 on white — fails AA — so split: keep bright gold for the 4px
+    // stripe / chip-fill / borders (cat.color), use the darkened text-safe
+    // gold sibling for the active-tab text (cat.colorText).
     color: 'var(--warning)',
+    colorText: 'var(--warning-text)',
     problems: [
       { id: 16, title: 'Valid Parentheses', difficulty: 'Easy', leetcode: 'https://leetcode.com/problems/valid-parentheses/' },
     ],
@@ -843,7 +849,7 @@ export default function Blind75Page() {
                                   borderRadius: '8px',
                                   border: `1px solid ${isOpen && viewMode === 'practice' ? cat.color : cat.color + '30'}`,
                                   background: isOpen && viewMode === 'practice' ? cat.color : `${cat.color}08`,
-                                  color: isOpen && viewMode === 'practice' ? '#ffffff' : cat.color,
+                                  color: isOpen && viewMode === 'practice' ? '#ffffff' : ((cat as any).colorText || cat.color),
                                   cursor: 'pointer',
                                   transition: 'all 0.15s',
                                 }}
@@ -909,7 +915,7 @@ export default function Blind75Page() {
                             >
                               {/* View mode tabs */}
                               <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-                                <button onClick={() => setViewMode('practice')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid var(--border)', background: viewMode === 'practice' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'practice' ? cat.color : 'var(--text-muted)', borderBottom: viewMode === 'practice' ? `2px solid ${cat.color}` : '2px solid transparent', cursor: 'pointer' }}>
+                                <button onClick={() => setViewMode('practice')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid var(--border)', background: viewMode === 'practice' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'practice' ? ((cat as any).colorText || cat.color) : 'var(--text-muted)', borderBottom: viewMode === 'practice' ? `2px solid ${cat.color}` : '2px solid transparent', cursor: 'pointer' }}>
                                   Practice
                                 </button>
                                 <button onClick={() => setViewMode('solution')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid var(--border)', background: viewMode === 'solution' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'solution' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: viewMode === 'solution' ? '2px solid var(--accent)' : '2px solid transparent', cursor: 'pointer' }}>

@@ -1148,7 +1148,10 @@ const S = {
   callout: (color: string) => ({ background: color === 'green' ? 'var(--bg-elevated)' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? 'var(--accent)' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'Source Code Pro', monospace" },
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#D9B543' ? '#fffbeb' : 'var(--bg-elevated)', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  // When color is the bright gold, the text needs the darkened text-safe
+  // sibling — gold-on-cream tint fails WCAG AA. Other passed colors
+  // (lapis #0B5CFF / accent) already meet contrast at body weight.
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color: color === '#D9B543' ? 'var(--cam-gold-leaf-text)' : color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#D9B543' ? '#fffbeb' : 'var(--bg-elevated)', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
