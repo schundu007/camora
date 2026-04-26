@@ -356,21 +356,21 @@ export function LumoraShellPage() {
 
           {/* Docs tab */}
           {activeTab === 'prepkit' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0">
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0">
               <LumoraDocsPanel />
             </div>
           )}
 
           {/* Calendar tab */}
           {activeTab === 'calendar' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: 'var(--bg-surface)' }}>
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: 'var(--bg-surface)' }}>
               <LumoraCalendar onClose={() => navigate('/lumora')} />
             </div>
           )}
 
           {/* Sessions page */}
           {activeTab === 'sessions' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="max-w-3xl mx-auto px-6 py-8 w-full">
                 <div className="flex items-end justify-between mb-6">
                   <div>
@@ -453,21 +453,21 @@ export function LumoraShellPage() {
 
           {/* Assistants page */}
           {activeTab === 'assistants' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <AssistantsPage />
             </div>
           )}
 
           {/* Profile page */}
           {activeTab === 'profile' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <LumoraProfilePage />
             </div>
           )}
 
           {/* Credits page */}
           {activeTab === 'credits' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="max-w-2xl mx-auto px-6 py-8 w-full">
                 <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Credits & Usage</h2>
                 <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Track your AI usage and remaining credits.</p>
@@ -505,7 +505,7 @@ export function LumoraShellPage() {
 
           {/* Pricing page */}
           {activeTab === 'pricing' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="max-w-3xl mx-auto px-6 py-8 w-full">
                 <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Pricing</h2>
                 <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Manage your subscription and top-ups.</p>
