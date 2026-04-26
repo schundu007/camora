@@ -58,7 +58,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
             </button>
           </div>
 
-          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8">
+          <div className="px-4 sm:px-5 md:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
             {/* ── Audio Settings ── */}
             <section>
               <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
