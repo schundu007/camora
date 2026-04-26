@@ -316,13 +316,23 @@
      Translucent variants (`bg-white/20`, `bg-white/30` overlays sitting
      on dark gradient cards) are deliberate and keep their white tint
      because Tailwind generates them as separate class names. */
-  [data-theme="dark"] .bg-white { background-color: var(--bg-surface) !important; }
+  [data-theme="dark"] .bg-white,
+  [data-theme="dark"] .bg-gray-50,
+  [data-theme="dark"] .bg-slate-50,
+  [data-theme="dark"] .bg-zinc-50,
+  [data-theme="dark"] .bg-neutral-50 { background-color: var(--bg-surface) !important; }
+  [data-theme="dark"] .bg-gray-100,
+  [data-theme="dark"] .bg-slate-100 { background-color: var(--bg-elevated) !important; }
   [data-theme="dark"] [style*="background: white"],
   [data-theme="dark"] [style*="background:#fff"],
   [data-theme="dark"] [style*="background: #fff"],
   [data-theme="dark"] [style*="background: #FFFFFF"],
   [data-theme="dark"] [style*="background-color: white"],
-  [data-theme="dark"] [style*="background-color:#fff"] { background-color: var(--bg-surface) !important; }
+  [data-theme="dark"] [style*="background-color:#fff"],
+  [data-theme="dark"] [style*="background: #F9FAFB"],
+  [data-theme="dark"] [style*="background:#F9FAFB"],
+  [data-theme="dark"] [style*="background: #F8FAFC"],
+  [data-theme="dark"] [style*="background:#F8FAFC"] { background-color: var(--bg-surface) !important; }
 
   /* Legacy `.light-theme` class is now a no-op alias for the default
      (light) state. Components that still apply it won't break. */
