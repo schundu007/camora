@@ -762,22 +762,23 @@ export default function DocsPage({ onBack }) {
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
                     <>
-                      {/* Hero Banner — Databricks-style eyebrow + display heading */}
-                      <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                        <div className="p-6 md:p-8">
+                      {/* Hero Banner — LeetCode dark navy band w/ diagonal cut */}
+                      <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+                        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                        <div className="relative p-6 md:p-8">
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
                               PREPARE
                             </p>
-                            <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
-                              {user?.name ? `Welcome back, ${user.name.split(' ')[0]}.` : 'Your interview prep, organized.'}
+                            <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
+                              {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your interview prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
-                            <p className="text-base md:text-lg max-w-2xl" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                            <p className="text-base md:text-lg max-w-2xl" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.55 }}>
                               {overviewTotalTopics}+ topics across {overviewCategories.length} categories — coding, system design, behavioral, low-level design, and more.
                             </p>
                           </div>
 
-                          {/* Stats row */}
+                          {/* Stats row — translucent on navy */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                             {[
                               { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen' },
@@ -785,14 +786,14 @@ export default function DocsPage({ onBack }) {
                               { label: 'Categories', value: overviewCategories.length, icon: 'grid' },
                               { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp' },
                             ].map(stat => (
-                              <div key={stat.label} className="rounded p-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                              <div key={stat.label} className="rounded p-4" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                                    <Icon name={stat.icon} size={15} style={{ color: 'var(--accent)' }} />
+                                  <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf)' }}>
+                                    <Icon name={stat.icon} size={15} style={{ color: 'var(--cam-primary-dk)' }} />
                                   </div>
                                 </div>
-                                <div className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{stat.value}</div>
-                                <div className="text-[11px] landing-body mt-0.5 font-semibold" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+                                <div className="text-2xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>{stat.value}</div>
+                                <div className="text-[11px] landing-body mt-0.5 font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>{stat.label}</div>
                               </div>
                             ))}
                           </div>
