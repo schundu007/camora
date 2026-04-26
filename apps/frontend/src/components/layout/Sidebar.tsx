@@ -413,7 +413,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           width: sidebarWidth,
           height: '100%',
           transition: 'width 0.2s ease-out',
-          background: 'var(--bg-elevated)',
+          background: 'var(--bg-surface)',
           borderRight: '1px solid var(--border)',
           overflow: 'hidden',
         }}
@@ -439,7 +439,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               width: '280px',
               height: '100vh',
               paddingTop: 'var(--topbar-height, 56px)',
-              background: 'var(--bg-elevated)',
+              background: 'var(--bg-surface)',
               borderRight: '1px solid var(--border)',
               boxShadow: '4px 0 20px rgba(0,0,0,0.25)',
             }}
@@ -450,13 +450,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       {/* ── Hover styles (injected once) ──────────────────────
-          Hover uses --bg-surface so items pop a layer ABOVE the
-          --bg-elevated panel surface in either theme — instead of the
-          old white-overlay-on-blue trick which only worked when the
-          panel was lapis. */}
+          Sidebar panel sits on --bg-surface (matches every other
+          sidebar in the app — ShellSidebar, LumoraIconRail,
+          SessionSidebar). Hover items raise to --bg-elevated so they
+          read as one layer above the panel in either theme. */}
       <style>{`
         .sidebar-item:hover {
-          background: var(--bg-surface) !important;
+          background: var(--bg-elevated) !important;
           color: var(--text-primary) !important;
         }
       `}</style>
