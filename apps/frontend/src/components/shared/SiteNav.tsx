@@ -41,7 +41,11 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const isLight = theme === 'light';
   // All chrome colors come from CSS vars so [data-theme="dark"] in globals.css
   // flips the nav with the rest of the app.
-  const navBg = 'var(--bg-surface)';
+  // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
+  // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
+  // via design tokens.
+  const navBg = 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)';
+  const navShadow = '0 1px 2px rgba(38,97,156,0.05), 0 4px 16px rgba(38,97,156,0.06)';
   const borderClass = 'border-b border-[var(--border)]';
   const textColor = 'var(--text-primary)';
   const textMuted = 'var(--text-secondary)';
@@ -49,7 +53,16 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const activeColor = 'var(--accent)';
 
   const nav = (
-    <nav className={`fixed top-0 left-0 right-0 z-50 ${borderClass}`} style={{ background: navBg, fontFamily: 'var(--font-sans)' }}>
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 ${borderClass}`}
+      style={{
+        background: navBg,
+        boxShadow: navShadow,
+        backdropFilter: 'saturate(120%) blur(6px)',
+        WebkitBackdropFilter: 'saturate(120%) blur(6px)',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center px-4 sm:px-6 h-14">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">

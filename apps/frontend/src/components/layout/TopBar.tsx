@@ -49,11 +49,21 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
       <header
         className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
-          height: 56,
-          background: 'var(--bg-surface)',
+          height: 60,
+          // Lapis-tinted vertical gradient + soft inset highlight gives the
+          // header weight and depth without leaving the navy palette.
+          // Both stops resolve from design tokens so light/dark flip
+          // cleanly. The boxShadow does double duty: a thin lapis hairline
+          // along the bottom for separation, plus a wider soft glow that
+          // implies the header floats above the page.
+          background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
           borderBottom: '1px solid var(--border)',
+          boxShadow:
+            '0 1px 2px rgba(38,97,156,0.05), 0 4px 16px rgba(38,97,156,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
           color: 'var(--text-primary)',
           fontFamily: 'var(--font-sans)',
+          backdropFilter: 'saturate(120%) blur(6px)',
+          WebkitBackdropFilter: 'saturate(120%) blur(6px)',
         }}
       >
         {/* -- Left: mobile hamburger + logo ---------------------- */}
@@ -82,22 +92,29 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             <CamoraLogo size={32} />
           </Link>
 
-          {/* Nav links — desktop only (hide Pricing & Challenge in app shell) */}
+          {/* Nav links — desktop only (hide Pricing & Challenge in app shell).
+              Active link gets a lapis-tinted pill with a subtle inset
+              shadow so it reads as "pressed" rather than just colored. */}
           <nav className="hidden lg:flex items-center gap-1 ml-4">
-            {NAV_LINKS.filter(l => l.href !== '/pricing' && l.href !== '/challenge').map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="px-3 py-1.5 text-[13px] rounded-lg transition-colors no-underline"
-                style={{
-                  color: isNavActive(link.href) ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontWeight: isNavActive(link.href) ? 700 : 600,
-                  background: isNavActive(link.href) ? 'var(--accent-subtle)' : 'transparent',
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.filter(l => l.href !== '/pricing' && l.href !== '/challenge').map((link) => {
+              const active = isNavActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="px-3.5 py-1.5 text-[13px] rounded-lg transition-all no-underline"
+                  style={{
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    fontWeight: active ? 700 : 600,
+                    background: active ? 'var(--accent-subtle)' : 'transparent',
+                    boxShadow: active ? 'inset 0 0 0 1px rgba(38,97,156,0.18)' : 'none',
+                    letterSpacing: active ? '0.005em' : 'normal',
+                  }}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 

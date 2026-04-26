@@ -5,6 +5,7 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
+import { ContentDiagram } from './ContentDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -1978,11 +1979,12 @@ export default function TopicDetail({
                       </div>
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
-                        {topicDetails.basicImplementation.diagramSrc ? (
-                          <img src={topicDetails.basicImplementation.diagramSrc} alt={topicDetails.basicImplementation.title || 'Basic Architecture'} className="w-full rounded mb-3" style={{ maxHeight: '400px', objectFit: 'contain' }} loading="lazy" />
-                        ) : topicDetails.basicImplementation.svgTemplate ? (
-                          <DiagramSVG template={topicDetails.basicImplementation.svgTemplate} className="mb-3" />
-                        ) : null}
+                        <ContentDiagram
+                          src={topicDetails.basicImplementation.diagramSrc}
+                          template={topicDetails.basicImplementation.svgTemplate}
+                          alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
+                          className="mb-3"
+                        />
                         {topicDetails.basicImplementation.problems && (
                           <div>
                             <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-1.5 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues</h4>
@@ -2007,11 +2009,12 @@ export default function TopicDetail({
                       </div>
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
-                        {topicDetails.advancedImplementation.diagramSrc ? (
-                          <img src={topicDetails.advancedImplementation.diagramSrc} alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'} className="w-full rounded mb-3" style={{ maxHeight: '400px', objectFit: 'contain' }} loading="lazy" />
-                        ) : topicDetails.advancedImplementation.svgTemplate ? (
-                          <DiagramSVG template={topicDetails.advancedImplementation.svgTemplate} className="mb-3" />
-                        ) : null}
+                        <ContentDiagram
+                          src={topicDetails.advancedImplementation.diagramSrc}
+                          template={topicDetails.advancedImplementation.svgTemplate}
+                          alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
+                          className="mb-3"
+                        />
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-3">
                             <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>
@@ -2041,7 +2044,7 @@ export default function TopicDetail({
                       </div>
                       {topicDetails.createFlow.diagramSrc ? (
                         <div className="pt-2">
-                          <img src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} className="w-full rounded" style={{ maxHeight: '500px', objectFit: 'contain' }} loading="lazy" />
+                          <ContentDiagram src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} />
                         </div>
                       ) : (
                         <div className="pt-2">
@@ -2064,7 +2067,7 @@ export default function TopicDetail({
                       </div>
                       {topicDetails.redirectFlow.diagramSrc ? (
                         <div className="pt-2">
-                          <img src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} className="w-full rounded" style={{ maxHeight: '500px', objectFit: 'contain' }} loading="lazy" />
+                          <ContentDiagram src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} />
                         </div>
                       ) : (
                         <div className="pt-2">
@@ -2157,7 +2160,7 @@ export default function TopicDetail({
                         </div>
                         {item.diagramSrc && (
                           <div className="border-t border-[var(--border)] p-3 bg-white">
-                            <img src={item.diagramSrc} alt={item.topic} className="w-full rounded" style={{ maxHeight: '360px', objectFit: 'contain' }} loading="lazy" />
+                            <ContentDiagram src={item.diagramSrc} alt={item.topic} />
                           </div>
                         )}
                       </div>
@@ -2373,7 +2376,7 @@ export default function TopicDetail({
                               <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display flex-1">{point.topic}</h4>
                             </div>
                             {point.diagramSrc && (
-                              <img src={point.diagramSrc} alt={point.topic} className="w-full rounded border border-[var(--border)] mb-3" loading="lazy" style={{ maxHeight: '240px', objectFit: 'contain' }} />
+                              <ContentDiagram src={point.diagramSrc} alt={point.topic} className="mb-3" />
                             )}
                             <ul className="space-y-1.5 ml-8">
                               {visiblePoints.map((p, j) => (
@@ -2443,7 +2446,7 @@ export default function TopicDetail({
                       <div key={i} className="p-3 rounded border border-[var(--border)]">
                         <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{i + 1}. {app.name}</h4>
                         {app.diagramSrc && (
-                          <img src={app.diagramSrc} alt={app.name} className="w-full rounded border border-[var(--border)] mb-2" loading="lazy" style={{ maxHeight: '280px', objectFit: 'contain' }} />
+                          <ContentDiagram src={app.diagramSrc} alt={app.name} className="mb-2" />
                         )}
                         <div className="text-[var(--text-secondary)] text-xs mb-2 landing-body leading-relaxed"><FormattedContent content={app.description} color="amber" /></div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">

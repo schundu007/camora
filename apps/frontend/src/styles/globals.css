@@ -379,6 +379,16 @@
   [data-theme="dark"] .text-zinc-400,
   [data-theme="dark"] .text-neutral-400 { color: var(--text-muted) !important; }
 
+  /* Topic content PNG diagrams (apps/frontend/public/diagrams/**) were
+     authored against a white page background. On dark theme they read
+     as bright white cards floating on dark navy. Pull luminance + bump
+     contrast slightly so the paper sits naturally on the dark surface
+     — same technique MDN / GitHub Docs use for light-authored
+     diagrams in dark mode. */
+  [data-theme="dark"] .topic-content-diagram-img {
+    filter: brightness(0.94) contrast(1.06);
+  }
+
   /* Inline literal text colors are NOT remapped here. Same reason as
      the literal-white background note above: the same hex (#0F172A,
      #475569, etc.) is sometimes "default dark body text on light page"
