@@ -51,24 +51,27 @@ function SayThisCard({ text }: { text: string | null }) {
     <div
       className="mx-3 mb-3 rounded-xl p-3 relative"
       style={{
-        background: 'linear-gradient(135deg, rgba(38,97,156,0.15), rgba(38,97,156,0.06))',
-        border: '1px solid rgba(38,97,156,0.25)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
       }}
     >
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
-          <svg className="w-3.5 h-3.5 text-[#95B0CD]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
-          <span className="text-[10px] font-mono font-bold text-white/90 uppercase tracking-widest">SAY THIS</span>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>SAY THIS</span>
         </div>
         {text && (
           <button
             onClick={handleCopy}
-            className="p-1 rounded hover:bg-white/10 transition-colors"
+            className="p-1 rounded transition-colors"
+            style={{ background: 'transparent' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             title="Copy to clipboard"
           >
-            <svg className="w-3 h-3 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3" style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <rect x="9" y="9" width="13" height="13" rx="2" />
               <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
             </svg>
@@ -76,11 +79,11 @@ function SayThisCard({ text }: { text: string | null }) {
         )}
       </div>
       {text ? (
-        <p className="text-[13px] text-white/90 leading-relaxed font-medium">{text}</p>
+        <p className="text-[13px] leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>{text}</p>
       ) : (
         <div className="space-y-1.5">
-          <div className="h-3 bg-white/5 rounded shimmer w-full" />
-          <div className="h-3 bg-white/5 rounded shimmer w-3/4" />
+          <div className="h-3 rounded shimmer w-full" style={{ background: 'var(--bg-elevated)' }} />
+          <div className="h-3 rounded shimmer w-3/4" style={{ background: 'var(--bg-elevated)' }} />
         </div>
       )}
     </div>
@@ -98,15 +101,15 @@ function MinimizedPill({ onExpand }: { onExpand: () => void }) {
       onClick={onExpand}
       className="fixed bottom-5 right-5 z-[9999] flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer"
       style={{
-        background: 'rgba(15,15,25,0.9)',
+        background: 'var(--bg-surface)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(38,97,156,0.3)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
       }}
     >
       <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-      <span className="text-xs font-mono font-bold text-white/80 tracking-wide">Lumora LIVE</span>
-      <svg className="w-3 h-3 text-white/75" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <span className="text-xs font-mono font-bold tracking-wide" style={{ color: 'var(--text-secondary)' }}>Lumora LIVE</span>
+      <svg className="w-3 h-3" style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
       </svg>
     </motion.button>,
@@ -232,11 +235,11 @@ export function FollowUpPopup() {
           width: isMobile ? 'auto' : size.w,
           height: isMobile ? 'auto' : size.h || 'auto',
           maxHeight: isMobile ? '60vh' : '85vh',
-          background: 'rgba(15, 15, 25, 0.95)',
+          background: 'var(--bg-surface)',
           backdropFilter: 'blur(24px)',
-          border: '1px solid rgba(38,97,156,0.2)',
+          border: '1px solid var(--border)',
           borderRadius: 16,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
         }}
       >
         {/* ── Resize handles (top, left, top-left corner) ── */}
@@ -255,34 +258,34 @@ export function FollowUpPopup() {
           onPointerDown={(e) => { if (!isMobile) dragControls.start(e); }}
           className="flex items-center justify-between px-4 py-3 select-none"
           style={{
-            borderBottom: '1px solid rgba(255,255,255,0.12)',
+            borderBottom: '1px solid var(--border)',
             cursor: isMobile ? 'default' : 'grab',
           }}
         >
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[#95B0CD]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-4 h-4" style={{ color: 'var(--accent)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
-            <span className="text-sm font-bold text-white/90 tracking-tight" style={{ fontFamily: "'Inter', system-ui" }}>
+            <span className="text-sm font-bold tracking-tight" style={{ fontFamily: "'Inter', system-ui", color: 'var(--text-primary)' }}>
               Lumora AI Co-pilot
             </span>
           </div>
           <div className="flex items-center gap-2">
             {/* LIVE badge */}
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider"
-              style={{ background: 'rgba(38,97,156,0.18)', color: '#95B0CD' }}>
+              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
               LIVE
             </span>
             {/* Minimize */}
-            <button onClick={() => setPopupMinimized(true)} className="p-1 rounded hover:bg-white/10 transition-colors" title="Minimize">
-              <svg className="w-3.5 h-3.5 text-white/75" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <button onClick={() => setPopupMinimized(true)} className="p-1 rounded transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }} title="Minimize">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             {/* Close */}
-            <button onClick={() => setPopupVisible(false)} className="p-1 rounded hover:bg-white/10 transition-colors" title="Close (Cmd+J to reopen)">
-              <svg className="w-3.5 h-3.5 text-white/75" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <button onClick={() => setPopupVisible(false)} className="p-1 rounded transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }} title="Close (Cmd+J to reopen)">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -294,9 +297,9 @@ export function FollowUpPopup() {
 
         {/* ── Interviewer question ──────────────────────── */}
         {question && (
-          <div className="mx-3 mb-2 px-3 py-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <span className="text-[10px] font-mono font-bold text-white/75 uppercase tracking-wider">Interviewer:</span>
-            <p className="text-[13px] text-white/95 leading-snug mt-0.5 italic">
+          <div className="mx-3 mb-2 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Interviewer:</span>
+            <p className="text-[13px] leading-snug mt-0.5 italic" style={{ color: 'var(--text-primary)' }}>
               &ldquo;{question.length > 150 ? question.slice(0, 150) + '...' : question}&rdquo;
             </p>
           </div>
@@ -305,20 +308,21 @@ export function FollowUpPopup() {
         {/* ── AI Answer Stream ──────────────────────────── */}
         <div className="mx-3 mb-2">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <svg className="w-3 h-3 text-[#95B0CD]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3" style={{ color: 'var(--accent)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" />
             </svg>
-            <span className="text-[10px] font-mono font-bold text-[#95B0CD] uppercase tracking-widest">AI Answer Stream</span>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>AI Answer Stream</span>
             {isStreaming && (
               <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             )}
           </div>
           <div
             ref={scrollRef}
-            className="overflow-y-auto rounded-lg px-3 py-2.5 text-[13px] text-white/90 leading-relaxed"
+            className="overflow-y-auto rounded-lg px-3 py-2.5 text-[13px] leading-relaxed"
             style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.04)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
               maxHeight: isMobile ? '25vh' : size.h ? '50vh' : '180px',
               minHeight: 60,
               flex: size.h ? '1 1 0' : undefined,
@@ -332,12 +336,12 @@ export function FollowUpPopup() {
                 )}
               </>
             ) : isStreaming ? (
-              <div className="flex items-center gap-2 text-white/30">
+              <div className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
                 Generating answer...
               </div>
             ) : (
-              <span className="text-white/30">Waiting for question...</span>
+              <span style={{ color: 'var(--text-muted)' }}>Waiting for question...</span>
             )}
           </div>
         </div>

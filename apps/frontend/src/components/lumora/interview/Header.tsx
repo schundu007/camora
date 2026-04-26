@@ -132,7 +132,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, var(--cam-primary) 0%, var(--cam-primary) 100%)', borderBottom: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Inter', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', fontFamily: "'Inter', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -140,9 +140,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <button
             onClick={onToggleSidebar}
             className="flex items-center justify-center w-10 h-full shrink-0 transition-colors"
-            style={{ color: sidebarOpen ? '#FFFFFF' : 'rgba(255,255,255,0.6)', borderRight: '1px solid rgba(255,255,255,0.1)' }}
-            onMouseEnter={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; }}
-            onMouseLeave={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+            style={{ color: sidebarOpen ? 'var(--text-primary)' : 'var(--text-muted)', borderRight: '1px solid var(--border)' }}
+            onMouseEnter={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            onMouseLeave={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'var(--text-muted)'; }}
             title={sidebarOpen ? 'Close history' : 'Open history'}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,13 +156,13 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         )}
 
         {/* Logo — brand identity, Comfortaa font */}
-        <Link to="/" className="flex items-center gap-2 px-4 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+        <Link to="/" className="flex items-center gap-2 px-4 h-full shrink-0" style={{ borderRight: '1px solid var(--border)' }}>
           <CamoraLogo size={24} />
         </Link>
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
-        <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
-          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif", fontWeight: 700 }} title="Prepare">
+        <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid var(--border)' }}>
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif", fontWeight: 700 }} title="Prepare">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             <span className="hidden xl:inline">Prepare</span>
           </Link>
@@ -170,8 +170,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
               className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-all"
               style={currentTab === tab.id
-                ? { background: 'rgba(255,255,255,0.15)', color: '#FFFFFF', fontFamily: "'Inter', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.25)' }
-                : { color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif" }}>
+                ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif", boxShadow: 'inset 0 0 0 1px var(--border)' }
+                : { color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
             </button>
@@ -179,14 +179,14 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Mic Selector — between tabs and platform */}
-        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid var(--border)' }}>
           <MicrophoneSelector disabled={false} />
         </div>
 
         {/* Platform — monospace badge style */}
-        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid var(--border)' }}>
           <select id="platform-select" name="platform" className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.2)' }} defaultValue="general">
+            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
             <option value="meet">Meet</option>
@@ -198,12 +198,12 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Interviewer — between General and Audio */}
-        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid var(--border)' }}>
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
         </div>
 
         {/* Audio Controls — grouped with a subtle translucent surface */}
-        <div data-tour="audio" className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+        <div data-tour="audio" className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ background: 'var(--bg-elevated)', borderRight: '1px solid var(--border)' }}>
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
         </div>
@@ -212,7 +212,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         <div className="flex-1 min-w-0" />
 
         {/* Status — monospace, right-aligned with glow dot */}
-        <div className="hidden lg:flex items-center gap-2 px-3 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
+        <div className="hidden lg:flex items-center gap-2 px-3 h-full shrink-0" style={{ borderLeft: '1px solid var(--border)' }}>
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
             status.state === 'ready' ? 'bg-[var(--accent)]' :
             status.state === 'error' ? 'bg-red-400' :
@@ -220,30 +220,30 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             status.state === 'listen' || status.state === 'write' ? 'bg-[var(--accent)] animate-pulse' :
             'bg-white/20'
           }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(255,255,255,0.4)' } : {}} />
-          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'var(--text-muted)' }}>
             {status.message}
           </span>
         </div>
 
         {/* Actions — icon-only, subtle */}
-        <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
+        <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid var(--border)' }}>
           <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-md transition-all"
-            style={useSearch ? { background: 'rgba(255,255,255,0.15)', color: '#FFFFFF' } : { color: 'rgba(255,255,255,0.7)' }} title="Search (⌘S)">
+            style={useSearch ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)' } : { color: 'var(--text-muted)' }} title="Search (⌘S)">
             <SearchIcon />
           </button>
-          <button className="p-1.5 rounded-md transition-all" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
+          <button className="p-1.5 rounded-md transition-all" style={{ color: 'var(--text-muted)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
             <ResetIcon />
           </button>
         </div>
 
         {/* User — avatar pill */}
-        <div className="flex items-center px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
+        <div className="flex items-center px-2 h-full shrink-0" style={{ borderLeft: '1px solid var(--border)' }}>
           <UserBadge />
         </div>
       </div>
 
       {/* Row 2: Input bar — hidden when showInputBar=false (composer moved to page bottom) */}
-      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.04)' }}>
+      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
             ref={inputRef}
@@ -252,14 +252,15 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Type or paste question... (⌘K)"
-            className="font-display w-full max-w-2xl bg-transparent border-none outline-none text-sm text-white text-center placeholder:text-white/25 min-w-0"
+            className="font-display w-full max-w-2xl bg-transparent border-none outline-none text-sm text-center placeholder:text-white/25 min-w-0"
+            style={{ color: 'var(--text-primary)' }}
           />
           <button
             onClick={toggleExpand}
             className="p-1.5 rounded-lg transition-all duration-200 ml-1 shrink-0"
-            style={isExpanded ? { color: '#FFFFFF', background: 'rgba(255,255,255,0.15)' } : { color: 'rgba(255,255,255,0.75)' }}
-            onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}}
-            onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}}
+            style={isExpanded ? { color: 'var(--text-primary)', background: 'var(--accent-subtle)' } : { color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}}
+            onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}}
             title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
           >
             <ExpandIcon expanded={isExpanded} />
@@ -268,7 +269,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button
               onClick={onSubmit}
               className="font-display flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all ml-2"
-              style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}
+              style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -299,7 +300,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
                 onClick={handleTextareaSubmit}
                 disabled={!inputValue}
                 className="font-display flex items-center gap-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}
+                style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
