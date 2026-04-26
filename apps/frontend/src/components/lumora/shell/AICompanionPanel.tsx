@@ -321,7 +321,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: 'radial-gradient(circle at 32% 28%, #E0F7FB 0%, #FFFFFF 55%, #F0FDFF 100%)', border: '1px solid rgba(38,97,156,0.35)', boxShadow: '0 10px 26px -6px rgba(8,145,178,0.35), 0 2px 6px rgba(14,116,144,0.12)' }}
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', boxShadow: '0 10px 26px -6px rgba(38,97,156,0.45), 0 2px 6px rgba(38,97,156,0.18)' }}
         title="Open Sona"
       >
         <SonaAvatar size={44} />
