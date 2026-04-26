@@ -536,41 +536,35 @@ export default function CompanyPrepPage() {
 
       <SiteNav variant="light" />
 
-      {/* ═══════════════════════ Main Content ═══════════════════════ */}
-      <main>
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
+      {/* LeetCode navy hero band w/ diagonal cut */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: 32, paddingBottom: 80 }}>
+          {/* Breadcrumb on dark */}
+          <nav className="practice-body" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: 'rgba(255,255,255,0.7)' }}>
+            <Link to="/" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
+            <span>/</span>
+            <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Interview Questions</Link>
+            <span>/</span>
+            <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 600 }}>{companyData.name}</span>
+          </nav>
 
-          {/* ── Breadcrumb ── */}
-          <div style={{ padding: '16px 0 0' }}>
-            <nav className="practice-body" style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Link to="/" className="breadcrumb-link" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.15s' }}>Home</Link>
-              <span style={{ color: 'var(--text-muted)' }}>/</span>
-              <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.15s' }}>Interview Questions</Link>
-              <span style={{ color: 'var(--text-muted)' }}>/</span>
-              <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{companyData.name}</span>
-            </nav>
-          </div>
-
-          {/* ── Company Header ── */}
-          <div style={{ padding: '32px 0 24px' }}>
-            {/* Accent bar */}
-            <div style={{ width: 48, height: 4, borderRadius: 2, background: companyData.color, marginBottom: 20 }} />
-
+          <div style={{ paddingTop: 24 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-              {/* Logo circle */}
               <div
                 style={{
                   width: 56,
                   height: 56,
                   borderRadius: 14,
-                  background: companyData.color,
+                  background: 'var(--cam-gold-leaf)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
                 }}
               >
-                <span style={{ fontSize: 24, fontWeight: 800, color: '#FFFFFF', fontFamily: "'Inter', system-ui, sans-serif" }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--cam-primary-dk)', fontFamily: "'Inter', system-ui, sans-serif" }}>
                   {companyData.logo}
                 </span>
               </div>
@@ -581,23 +575,32 @@ export default function CompanyPrepPage() {
                   style={{
                     fontSize: 32,
                     fontWeight: 800,
-                    color: 'var(--text-primary)',
+                    color: '#FFFFFF',
                     margin: '0 0 8px',
                     letterSpacing: '-0.02em',
                     lineHeight: 1.2,
                   }}
                 >
-                  {companyData.name} Interview Questions
+                  {companyData.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Interview Questions</span>
                 </h1>
-                <p className="practice-body" style={{ fontSize: 15, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
+                <p className="practice-body" style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
                   {companyData.description}
                 </p>
-                <p className="practice-body" style={{ fontSize: 13, color: 'var(--text-muted)', margin: '10px 0 0' }}>
+                <p className="practice-body" style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '10px 0 0' }}>
                   {totalQuestions} curated questions across {companyData.sections.length} categories
                 </p>
               </div>
             </div>
           </div>
+        </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" style={{ position: 'absolute', left: 0, bottom: 0, width: '100%', pointerEvents: 'none', height: '5vh', display: 'block' }}>
+          <polygon fill="var(--bg-surface)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
+
+      {/* ═══════════════════════ Main Content ═══════════════════════ */}
+      <main>
+        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Stats Grid ── */}
           <div

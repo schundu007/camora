@@ -950,14 +950,14 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       className="flex items-center justify-between gap-4 px-5 relative"
       style={{
         height: '52px',
-        background: 'var(--bg-surface)',
-        borderBottom: '1px solid #e3e8ee',
+        background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+        borderBottom: '2px solid var(--cam-gold-leaf)',
       }}
     >
-      {/* Left: mode indicator (logo lives in the parent shell TopBar) */}
+      {/* Left: mode indicator */}
       <div className="flex items-center gap-1.5">
-        <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
-        <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
+        <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
+        <span className="text-sm font-semibold text-white">{currentMode.label}</span>
       </div>
 
       {/* Center: APPA tabs */}
@@ -966,11 +966,11 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           <Link
             key={tab.label}
             to={tab.href}
-            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-              tab.label === activeAppaTab
-                ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-            }`}
+            className="px-3 py-1.5 text-sm font-medium transition-colors"
+            style={tab.label === activeAppaTab
+              ? { color: 'var(--cam-gold-leaf-lt)', borderBottom: '2px solid var(--cam-gold-leaf)' }
+              : { color: 'rgba(255,255,255,0.85)' }
+            }
           >
             {tab.label}
           </Link>
@@ -979,13 +979,13 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
 
       {/* Right: action buttons */}
       <div className="flex items-center gap-1 sm:gap-2">
-        <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">
+        <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors">
           {user?.image ? (
             <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           ) : (
-            <div className="w-6 h-6 rounded-full bg-[rgba(45,140,255,0.08)] flex items-center justify-center text-[10px] font-bold text-[var(--accent)]">{user?.name?.[0] || '?'}</div>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{user?.name?.[0] || '?'}</div>
           )}
-          <span className="text-sm text-[var(--text-primary)] font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+          <span className="text-sm font-medium text-white">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
       </div>
     </header>
