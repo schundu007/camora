@@ -47,8 +47,8 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   };
 
   const itemStyle = (active: boolean) => ({
-    color: active ? 'var(--accent)' : 'var(--text-muted)',
-    background: active ? 'var(--accent-subtle)' : 'transparent',
+    color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
+    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
   });
 
   const [expanded, setExpanded] = useState(false);
@@ -58,7 +58,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   return (
     <nav
       className="hidden md:flex flex-col shrink-0 py-3 transition-all duration-200"
-      style={{ width: expanded ? 200 : 60, background: 'var(--bg-surface)', borderRight: '1px solid var(--border)' }}
+      style={{ width: expanded ? 200 : 60, background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)', borderRight: '2px solid var(--cam-gold-leaf)' }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}
@@ -67,7 +67,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
           Camora landing is the canonical "home" target for the wordmark. */}
       <Link to="/" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Camora home">
         <CamoraLogo size={expanded ? 28 : 24} />
-        {expanded && <span className="text-sm font-bold whitespace-nowrap" style={{ fontFamily: "'Source Sans 3', sans-serif", color: 'var(--text-primary)' }}>Camora</span>}
+        {expanded && <span className="text-sm font-bold whitespace-nowrap text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>}
       </Link>
 
       {/* Main nav */}
@@ -84,13 +84,13 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       </div>
 
       {/* Divider */}
-      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+      <div className="mx-4 my-3 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
 
       {/* More section */}
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dimmed)' }}>More</p>}
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.55)' }}>More</p>}
         {/* Account dropdown */}
-        <button onClick={() => setAccountOpen(!accountOpen)} className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-all`} style={{ color: 'var(--text-muted)' }} title={expanded ? undefined : 'Account'}>
+        <button onClick={() => setAccountOpen(!accountOpen)} className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-all hover:bg-white/10`} style={{ color: 'rgba(255,255,255,0.85)' }} title={expanded ? undefined : 'Account'}>
           <div className="flex items-center gap-3">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
             {expanded && 'Account'}
@@ -100,7 +100,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {accountOpen && expanded && (
           <div className="ml-5 flex flex-col gap-0.5">
             {MORE_ITEMS.map(item => (
-              <Link key={item.id} to={item.path} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all">
+              <Link key={item.id} to={item.path} className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 {item.label}
               </Link>
             ))}
@@ -126,7 +126,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
               : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>,
             onClick: toggleTheme },
         ].map(item => (
-          <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all text-left w-full`} title={expanded ? undefined : item.label}>
+          <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium hover:bg-white/10 transition-all text-left w-full`} style={{ color: 'rgba(255,255,255,0.85)' }} title={expanded ? undefined : item.label}>
             {item.icon}
             {expanded && <span className="whitespace-nowrap">{item.label}</span>}
           </button>
@@ -134,7 +134,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       </div>
 
       {/* User */}
-      <div className="px-1.5 pt-2 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
+      <div className="px-1.5 pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.18)' }}>
         <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} showName={expanded} compact={!expanded} position="above-left" />
       </div>
 
