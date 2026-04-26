@@ -169,10 +169,26 @@ router.get('/', async (req, res, next) => {
       paramIdx++;
     }
 
+    // Experience filter — match against j.title using level-specific keyword
+    // synonyms. Filtering on a dedicated experience_level column was fragile
+    // because the column is mostly NULL (postings rarely tag this explicitly)
+    // and was missing on some jobs schemas, causing 500s. Title patterns are
+    // both more reliable and schema-independent.
     if (req.query.experience) {
-      conditions.push(`j.experience_level ILIKE $${paramIdx}`);
-      params.push(`%${req.query.experience}%`);
-      paramIdx++;
+      const level = String(req.query.experience).toLowerCase();
+      const SYNONYMS = {
+        intern:    ['intern'],
+        entry:     ['entry', 'junior', 'jr.', 'associate', 'new grad', 'new-grad', 'graduate'],
+        mid:       ['mid-level', 'mid level', 'engineer ii', 'engineer 2'],
+        senior:    ['senior', 'sr.', 'sr '],
+        staff:     ['staff'],
+        principal: ['principal', 'distinguished'],
+        lead:      ['lead', 'manager', 'director', 'head of'],
+      };
+      const patterns = SYNONYMS[level] || [level];
+      const orClauses = patterns.map(() => `j.title ILIKE $${paramIdx++}`).join(' OR ');
+      conditions.push(`(${orClauses})`);
+      patterns.forEach((p) => params.push(`%${p}%`));
     }
 
     if (req.query.posted_within) {
