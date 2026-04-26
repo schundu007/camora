@@ -126,8 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const data = await res.json();
               // Prefer the freshly minted short-lived token from /me if present.
               setToken(data.access_token || hashToken);
-              const { access_token, ...userData } = data;
-              setUser(userData);
+              // Backend /me responses come in two shapes:
+              //   (a) flat:    { id, email, name, picture, ..., access_token }   — lumora-backend
+              //   (b) nested:  { authenticated: true, user: { id, email, name, ... } }  — ascend-backend
+              // `lumorab.cariara.com` runs ascend-backend, so we unwrap data.user
+              // when present; otherwise we strip the access_token from the flat body.
+              const { access_token: _at, ...flat } = data;
+              setUser(data.user ?? flat);
             }
           } catch { /* network error */ }
           // Check onboarding
@@ -198,9 +203,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (bearerToken) {
             setToken(bearerToken);
-            const { access_token, ...userData } = data;
-            void access_token;
-            setUser(userData);
+            // /me may return either flat ({id, email, name, ..., access_token})
+            // from lumora-backend or nested ({authenticated, user: {...}}) from
+            // ascend-backend. Unwrap data.user when present.
+            const { access_token: _at, ...flat } = data;
+            void _at;
+            setUser(data.user ?? flat);
 
             // Fetch onboarding status from Capra backend using the fresh token
             try {
