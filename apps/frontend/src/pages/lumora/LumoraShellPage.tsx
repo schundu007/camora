@@ -372,11 +372,16 @@ export function LumoraShellPage() {
           {/* Sessions page */}
           {activeTab === 'sessions' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="max-w-3xl mx-auto px-6 py-8 w-full">
+              {/* LeetCode navy hero w/ gold underline */}
+              <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                <div className="max-w-3xl mx-auto px-6 py-6 w-full">
+                  <h2 className="text-xl font-bold mb-1 text-white">Sessions</h2>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)' }}>{history.length}</span> saved.</p>
+                </div>
+              </div>
+              <div className="max-w-3xl mx-auto px-6 py-6 w-full">
                 <div className="flex items-end justify-between mb-6">
                   <div>
-                    <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sessions</h2>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Your interview session history — {history.length} saved.</p>
                   </div>
                   {history.length > 0 && (
                     <button
@@ -469,9 +474,13 @@ export function LumoraShellPage() {
           {/* Credits page */}
           {activeTab === 'credits' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="max-w-2xl mx-auto px-6 py-8 w-full">
-                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Credits & Usage</h2>
-                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Track your AI usage and remaining credits.</p>
+              <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                <div className="max-w-2xl mx-auto px-6 py-6 w-full">
+                  <h2 className="text-xl font-bold mb-1 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Track your AI usage and remaining credits.</p>
+                </div>
+              </div>
+              <div className="max-w-2xl mx-auto px-6 py-6 w-full">
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
                     { label: 'Sessions Used', value: String(history.length), sub: 'this month' },
@@ -507,9 +516,13 @@ export function LumoraShellPage() {
           {/* Pricing page */}
           {activeTab === 'pricing' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="max-w-3xl mx-auto px-6 py-8 w-full">
-                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Pricing</h2>
-                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Manage your subscription and top-ups.</p>
+              <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                <div className="max-w-3xl mx-auto px-6 py-6 w-full">
+                  <h2 className="text-xl font-bold mb-1 text-white"><span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Pricing</span></h2>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Manage your subscription and top-ups.</p>
+                </div>
+              </div>
+              <div className="max-w-3xl mx-auto px-6 py-6 w-full">
                 <Suspense fallback={<div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
                   <SharedPricingCards />
                 </Suspense>

@@ -863,9 +863,9 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     <div className="h-full flex flex-col sm:flex-row" style={{ background: 'var(--bg-surface)' }}>
       {/* Sidebar */}
       <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-        {/* Company selector */}
-        <div className="px-3 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
+        {/* LeetCode-style sidebar header */}
+        <div className="px-3 py-3" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+          <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
           {prepData.activeCompany ? (
             <div className="relative">
               <button onClick={() => setShowDropdown(!showDropdown)}
