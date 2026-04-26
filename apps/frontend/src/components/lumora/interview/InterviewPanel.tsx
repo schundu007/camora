@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { StreamingAnswer } from './StreamingAnswer';
 import { DiagonalDivider } from '@/components/shared/DiagonalDivider';
+import { DatabricksThumb, type DatabricksColor } from '@/components/shared/DatabricksThumb';
 
 interface InterviewPanelProps {
   onAskQuestion?: (question: string) => void;
@@ -83,37 +84,20 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   );
 }
 
-/* ─── Databricks-style prompt thumbnail ─────────────────────
-   64×64 rounded square with a navy radial gradient and a large
-   category glyph centered inside. Bold enough to scan a 6-card
-   grid at a glance, on-brand (navy only, no rainbow). */
+/* ─── Quick-prompt thumbnail — wraps the shared DatabricksThumb
+   primitive with a per-category glyph + color. */
+const PROMPT_GLYPH = {
+  coding: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
+  design: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+  behavioral: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>,
+} as const;
+const PROMPT_COLOR: Record<keyof typeof PROMPT_GLYPH, DatabricksColor> = {
+  coding: 'navy',
+  design: 'navy-lt',
+  behavioral: 'gold',
+};
 function PromptThumb({ type }: { type: 'coding' | 'design' | 'behavioral' }) {
-  const glyph =
-    type === 'coding' ? (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>
-    ) : type === 'design' ? (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>
-    ) : (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>
-    );
-  return (
-    <div
-      className="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden flex items-center justify-center"
-      style={{
-        background:
-          'radial-gradient(120% 120% at 0% 0%, var(--cam-primary-lt) 0%, var(--cam-primary) 55%, var(--cam-primary-dk) 100%)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.18) inset, 0 6px 14px rgba(38,97,156,0.18)',
-      }}
-    >
-      {/* Subtle highlight blob — Databricks-style soft orb on top edge */}
-      <div
-        aria-hidden="true"
-        className="absolute -top-3 -left-3 w-10 h-10 rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, transparent 70%)' }}
-      />
-      <div className="relative">{glyph}</div>
-    </div>
-  );
+  return <DatabricksThumb color={PROMPT_COLOR[type]} size={64} icon={PROMPT_GLYPH[type]} />;
 }
 
 /* ─── Lumora Dashboard ─────────────────────────────── */
