@@ -43,15 +43,19 @@ const STROKE = 'var(--border)';
 const FILL = 'var(--bg-surface)';
 
 export default function TopicIllustration({ name, className = '', style }: TopicIllustrationProps) {
+  // Fixed-height hero strip (~120px) instead of card-wide aspect-ratio.
+  // The previous 5:3 aspect ratio on a wide bento card meant 600+px tall
+  // illustrations dominating the entire layout. This keeps the strip
+  // compact and consistent regardless of card width.
   const wrapperStyle: CSSProperties = {
     background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--accent-subtle) 100%)',
     borderBottom: '1px solid var(--border)',
-    aspectRatio: '5 / 3',
+    height: 120,
     ...style,
   };
   return (
-    <div className={`relative w-full overflow-hidden ${className}`} style={wrapperStyle}>
-      <svg {...COMMON_PROPS} fill="none">{ART[name]}</svg>
+    <div className={`relative w-full overflow-hidden flex items-center justify-center ${className}`} style={wrapperStyle}>
+      <svg {...COMMON_PROPS} fill="none" style={{ height: 96, width: 'auto', maxWidth: '100%' }}>{ART[name]}</svg>
     </div>
   );
 }
