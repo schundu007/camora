@@ -229,16 +229,10 @@ export function LumoraShellPage() {
             boxShadow: '0 1px 3px rgba(38,97,156,0.06), 0 4px 16px rgba(38,97,156,0.04)',
           }}
         >
-          {/* LEFT — Camora wordmark (always links to landing /) followed
-              by the Lumora-specific tab pills. Mirrors the Capra TopBar
-              pattern: brand logo on the far left, then immediate-context
-              navigation. Clicking the logo always returns to the marketing
-              landing, matching SiteNav and TopBar globally. */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 no-underline" title="Camora home">
-            <CamoraLogo size={28} />
-            <span className="hidden md:inline text-[14px] font-bold tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>
-          </Link>
-          <div className="hidden md:block h-6 w-px shrink-0" style={{ background: 'var(--border)' }} aria-hidden="true" />
+          {/* LEFT — Lumora-specific tab pills. The Camora wordmark used
+              to render here too, but the LumoraIconRail already shows
+              the brand logo in the corner; rendering it twice on the
+              same screen was duplicate brand chrome (per user feedback). */}
           <div className="hidden md:flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
