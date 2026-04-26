@@ -53,7 +53,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           // Dark navy chrome — same look in both light and dark themes,
           // near-black so it sits visibly above the brighter cam-primary
           // hero gradients below. 3px gold-leaf underline.
-          background: 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)',
+          background: 'var(--cam-hero-strip)',
           borderBottom: '3px solid var(--cam-gold-leaf)',
           boxShadow: '0 6px 22px rgba(0,0,0,0.45)',
           color: '#FFFFFF',

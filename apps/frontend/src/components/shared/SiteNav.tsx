@@ -49,7 +49,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // navy stripe sits visibly above the page hero gradients beneath
   // (which use the brighter cam-primary range), with a 3px gold-leaf
   // underline as the separator.
-  const navBg = 'linear-gradient(180deg, #020617 0%, #03132E 50%, #051C40 100%)';
+  const navBg = 'var(--cam-hero-strip)';
   const navShadow = '0 6px 22px rgba(0,0,0,0.45)';
   const borderClass = '';
   const textColor = '#FFFFFF';
