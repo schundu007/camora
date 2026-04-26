@@ -1053,8 +1053,47 @@ img { max-width: 100%; height: auto; }
   filter: brightness(0.95);
 }
 
+/* Diagonal shimmer sweep — replaces flat animate-pulse on loading
+   surfaces. The base color stays var(--bg-elevated); a thin lighter
+   stripe travels left-to-right every 1.6s. */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(38, 97, 156, 0.08) 50%,
+    transparent 100%
+  );
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+@keyframes shimmer-sweep {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Fade + slide transition for tab content swaps. Apply to the
+   wrapping element with `key={activeTab}` so React remounts and
+   replays the entry. Subtle 8px slide + 180ms duration keeps the app
+   feeling responsive (not animation-heavy). */
+.tab-fade-in {
+  animation: tab-fade-in 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes tab-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card-lift, .press, .ai-float, .ai-slow-spin {
+  .card-lift, .press, .ai-float, .ai-slow-spin, .shimmer::after, .tab-fade-in {
     transition: none;
     animation: none;
     transform: none !important;
@@ -1063,4 +1102,24 @@ img { max-width: 100%; height: auto; }
     transform: none;
     box-shadow: none;
   }
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   .answer-flow — multi-column layout for fullscreen Sona answers.
+   The behavioral page is wide (≥1280px); without this, a long answer
+   stacks into 2–3 viewports of vertical scroll, forcing the user to
+   scroll instead of read during a live interview. Columns are applied
+   in AICompanionPanel; this rule just keeps logical blocks (paragraphs,
+   list items, headers, STAR cards) intact across column boundaries.
+   ─────────────────────────────────────────────────────────────────── */
+.answer-flow > * { break-inside: avoid-column; -webkit-column-break-inside: avoid; }
+.answer-flow > *:first-child { margin-top: 0; }
+.answer-flow p,
+.answer-flow li,
+.answer-flow h2,
+.answer-flow h3,
+.answer-flow h4,
+.answer-flow pre {
+  break-inside: avoid-column;
+  -webkit-column-break-inside: avoid;
 }
