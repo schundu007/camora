@@ -629,7 +629,7 @@ export default function ChallengePage() {
             {[1, 2, 3, 4, 5].map((rank) => (
               <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-elevated)] transition-colors">
                 <div className="col-span-1">
-                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--text-muted)' : rank === 2 ? '#94a3b8' : rank === 3 ? '#D9B543' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
+                  <span className="text-base font-bold" style={{ color: rank === 1 ? 'var(--text-muted)' : rank === 2 ? '#94a3b8' : rank === 3 ? 'var(--cam-gold-leaf-text)' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
                 </div>
                 <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
                 <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>

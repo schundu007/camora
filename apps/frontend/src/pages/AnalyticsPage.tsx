@@ -572,7 +572,7 @@ export default function AnalyticsPage() {
                                 : e.last_event === 'opened' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
                                 : e.last_event === 'clicked' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
                                 : e.last_event === 'bounced' ? 'bg-[var(--danger)]/20 text-[var(--danger)]'
-                                : e.last_event === 'complained' ? 'bg-[var(--warning)]/20 text-[var(--warning)]'
+                                : e.last_event === 'complained' ? 'bg-[var(--warning)]/20 text-[var(--warning-text)]'
                                 : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                             }`}>
                               {e.last_event || 'sent'}

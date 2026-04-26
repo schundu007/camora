@@ -2401,7 +2401,7 @@ export default function TopicDetail({
                     {topicDetails.interviewFollowups.map((item, i) => (
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
                         <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(245,158,11,0.04)] border-b border-[rgba(245,158,11,0.2)]">
-                          <span className="text-xs font-bold text-[var(--warning)] landing-mono flex-shrink-0">Q{i + 1}</span>
+                          <span className="text-xs font-bold text-[var(--warning-text)] landing-mono flex-shrink-0">Q{i + 1}</span>
                           <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
                         </div>
                         <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">

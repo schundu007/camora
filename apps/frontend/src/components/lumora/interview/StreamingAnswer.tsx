@@ -92,7 +92,7 @@ function StreamingQAView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
 
       {/* Follow-up Card */}
       <div className="rounded-md border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] p-3">
-        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning)]">
+        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning-text)]">
           FOLLOW-UP Q&A
         </div>
         {blocks.FOLLOWUP ? (
@@ -181,7 +181,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
       {/* Edge Cases & Test Cases Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="rounded-md border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] p-3">
-          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning)]">
+          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning-text)]">
             EDGE CASES
           </div>
           {blocks.EDGECASES ? (
@@ -347,7 +347,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
           {/* TRADE-OFFS | EDGE CASES */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <StreamingGridCard title="TRADE-OFFS" titleColor="text-[var(--danger)]" block={blocks.TRADEOFFS} type="tradeoffs" />
-            <StreamingGridCard title="EDGE CASES" titleColor="text-[var(--warning)]" block={blocks.EDGECASES} type="edgecases" />
+            <StreamingGridCard title="EDGE CASES" titleColor="text-[var(--warning-text)]" block={blocks.EDGECASES} type="edgecases" />
           </div>
 
           {/* LAYER DESIGN */}
@@ -355,7 +355,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
 
           {/* FOLLOW-UP Q&A */}
           <div className="border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] overflow-hidden min-w-0">
-            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-[var(--warning)] shrink-0">
+            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-[var(--warning-text)] shrink-0">
               FOLLOW-UP Q&A
             </div>
             <div className="p-4 overflow-y-auto max-h-[420px]">
@@ -535,7 +535,7 @@ function EdgeCasesList({ content, isComplete }: { content: string; isComplete: b
         if (colonIdx > 0 && colonIdx < 40) {
           return (
             <div key={i} className="flex items-start gap-2">
-              <span className="font-mono text-base font-semibold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">
+              <span className="font-mono text-base font-semibold text-[var(--warning-text)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">
                 {line.slice(0, colonIdx)}
               </span>
               <span className="text-base text-[var(--text-muted)] leading-snug">{line.slice(colonIdx + 1).trim()}</span>
@@ -655,7 +655,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
       {pairs.map((pair, i) => (
         <div key={i} className="py-1.5 border-b border-[var(--border)] last:border-b-0">
           <div className="flex items-start gap-2 text-base">
-            <span className="font-mono font-bold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{i + 1}</span>
+            <span className="font-mono font-bold text-[var(--warning-text)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{i + 1}</span>
             <span className="text-[var(--text-muted)] leading-snug">{pair.question}</span>
           </div>
           <div className="flex items-start gap-2 text-base mt-1.5 pl-8">
@@ -666,7 +666,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
       {currentQ && (
         <div className="py-1.5">
           <div className="flex items-start gap-2 text-base">
-            <span className="font-mono font-bold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{pairs.length + 1}</span>
+            <span className="font-mono font-bold text-[var(--warning-text)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{pairs.length + 1}</span>
             <span className="text-[var(--text-muted)] leading-snug">{currentQ}<Cursor /></span>
           </div>
         </div>
