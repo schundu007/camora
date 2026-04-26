@@ -878,8 +878,8 @@ export default function DocsPage({ onBack }) {
                       {/* Category Cards Grid — bento layout with the largest
                           category (Coding) spanning two columns on desktop. */}
                       <div className="mb-8">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-5" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
+                        <p className="text-[22px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
+                        <h2 className="text-5xl md:text-6xl font-bold tracking-tight mb-8" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                           {overviewCategories.map((cat) => {
                             const radius = 20;
@@ -898,24 +898,24 @@ export default function DocsPage({ onBack }) {
                                   <div className="flex items-center gap-3">
                                     <DatabricksThumb
                                       color={CATEGORY_HEX[cat.id] || 'navy'}
-                                      size={44}
-                                      icon={<Icon name={cat.icon} size={22} style={{ color: '#FFFFFF' }} />}
+                                      size={64}
+                                      icon={<Icon name={cat.icon} size={32} style={{ color: '#FFFFFF' }} />}
                                       title={cat.title}
                                     />
                                     <div>
-                                      <h3 className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                      <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
+                                      <h3 className="text-[28px] font-bold leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                      <span className="text-[18px] font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
                                     </div>
                                   </div>
                                   {/* Progress ring */}
-                                  <div className="relative shrink-0" style={{ width: 48, height: 48 }}>
-                                    <svg width="48" height="48" viewBox="0 0 48 48" className="transform -rotate-90">
-                                      <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="3" />
-                                      <circle cx="24" cy="24" r={radius} fill="none" stroke="var(--accent)" strokeWidth="3"
-                                        strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                                  <div className="relative shrink-0" style={{ width: 72, height: 72 }}>
+                                    <svg width="72" height="72" viewBox="0 0 72 72" className="transform -rotate-90">
+                                      <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="4" />
+                                      <circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" strokeWidth="4"
+                                        strokeDasharray={2 * Math.PI * 30} strokeDashoffset={(2 * Math.PI * 30) - (cat.progress / 100) * (2 * Math.PI * 30)}
                                         strokeLinecap="round" className="transition-colors duration-1000" />
                                     </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                                    <span className="absolute inset-0 flex items-center justify-center text-[20px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
                                       {cat.progress}%
                                     </span>
                                   </div>
@@ -930,17 +930,17 @@ export default function DocsPage({ onBack }) {
                                     on Databricks docs category cards so users see what a
                                     category contains before clicking in. */}
                                 {cat.topics.length > 0 && (
-                                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                                    <ul className="space-y-1">
+                                  <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                                    <ul className="space-y-2">
                                       {cat.topics.slice(0, 3).map(t => (
-                                        <li key={t.id} className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-                                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
-                                          <span className="truncate">{t.title}</span>
+                                        <li key={t.id} className="flex items-center gap-2.5 text-[18px]" style={{ color: 'var(--text-secondary)' }}>
+                                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
+                                          <span className="truncate font-semibold">{t.title}</span>
                                         </li>
                                       ))}
                                     </ul>
                                     {cat.topics.length > 3 && (
-                                      <p className="text-[10px] font-semibold mt-2 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                                      <p className="text-[16px] font-bold mt-3 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
                                         + {cat.topics.length - 3} more
                                       </p>
                                     )}
