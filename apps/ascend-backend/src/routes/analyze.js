@@ -3,6 +3,7 @@ import multer from 'multer';
 import * as claude from '../services/claude.js';
 import * as openai from '../services/openai.js';
 import * as freeUsageService from '../services/freeUsageService.js';
+import { recordTokens } from '../services/aiHoursMeter.js';
 
 // Safe logging that ignores EPIPE errors
 function safeError(...args) {
@@ -66,13 +67,20 @@ router.post('/', handleUpload, async (req, res) => {
 
     const service = provider === 'openai' ? openai : claude;
 
-    if (mode === 'extract') {
-      const result = await service.extractText(base64Image, mimeType, userModel);
-      res.json(result);
-    } else {
-      const result = await service.analyzeImage(base64Image, mimeType, userModel);
-      res.json(result);
+    const result = mode === 'extract'
+      ? await service.extractText(base64Image, mimeType, userModel)
+      : await service.analyzeImage(base64Image, mimeType, userModel);
+
+    if (req.user?.id) {
+      recordTokens({
+        userId: req.user.id,
+        surface: mode === 'extract' ? 'capra_extract' : 'capra_analyze',
+        tokensIn: Math.ceil(base64Image.length / 4),
+        tokensOut: Math.ceil(JSON.stringify(result || {}).length / 4),
+        model: userModel,
+      });
     }
+    res.json(result);
   } catch (error) {
     res.status(500).json({
       error: 'Failed to analyze image',

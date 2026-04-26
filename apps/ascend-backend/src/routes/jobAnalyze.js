@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as cheerio from 'cheerio';
 import Anthropic from '@anthropic-ai/sdk';
 import * as freeUsageService from '../services/freeUsageService.js';
+import { recordTokens } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
@@ -441,6 +442,16 @@ router.post('/', async (req, res) => {
     // Deduct free usage on success
     if (userId) await freeUsageService.useFreeAllowance(userId, 'company_prep');
 
+    if (userId) {
+      recordTokens({
+        userId,
+        surface: 'capra_job_analyze',
+        tokensIn: Math.ceil((jobText || '').length / 4),
+        tokensOut: Math.ceil(JSON.stringify(analysis || {}).length / 4),
+        model: MODEL,
+      });
+    }
+
     return res.json({
       success: true,
       source_url: url,
@@ -550,7 +561,16 @@ router.post('/text', async (req, res) => {
     const jobText = cleanText(text);
     const analysis = await analyzeJobDescription(jobText, title || '');
     // Deduct free usage on success
-    if (userId) await freeUsageService.useFreeAllowance(userId, 'company_prep');
+    if (userId) {
+      await freeUsageService.useFreeAllowance(userId, 'company_prep');
+      recordTokens({
+        userId,
+        surface: 'capra_job_analyze',
+        tokensIn: Math.ceil(jobText.length / 4),
+        tokensOut: Math.ceil(JSON.stringify(analysis || {}).length / 4),
+        model: MODEL,
+      });
+    }
     return res.json({ success: true, source: 'text', ...analysis });
   } catch (err) {
     console.error('[job-analyze/text] Error:', err.message);

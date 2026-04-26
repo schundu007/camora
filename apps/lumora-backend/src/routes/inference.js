@@ -14,6 +14,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
+import { recordUsage as recordAiHours, shouldThrottleLegacyPro } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
@@ -89,12 +90,17 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     const allMessages = historyResult.rows;
     const history = allMessages.slice(-12).map((m) => ({ role: m.role, content: m.content }));
 
+    // Legacy unlimited Pro fair-use cap: 60h/30d → fall back to Haiku.
+    const throttled = await shouldThrottleLegacyPro(user.id, userPlan);
+    const effectivePlan = throttled ? 'free' : userPlan;
+
     // Start SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
+      ...(throttled ? { 'X-Fair-Use-Throttled': '1' } : {}),
     });
 
     let finalAnswer = null;
@@ -115,7 +121,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
-      plan: userPlan,
+      plan: effectivePlan,
       signal: abortController.signal,
     })) {
       if (clientDisconnected) break;
@@ -178,6 +184,15 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
         tokensUsed: (finalAnswer.input_tokens || 0) + (finalAnswer.output_tokens || 0),
         latencyMs: finalAnswer.latency_ms || 0,
       });
+      recordAiHours({
+        userId: user.id,
+        surface: 'lumora_inference',
+        seconds: (finalAnswer.latency_ms || 0) / 1000,
+        tokensIn: finalAnswer.input_tokens || 0,
+        tokensOut: finalAnswer.output_tokens || 0,
+        model: MODEL,
+        planAtCharge: userPlan,
+      });
 
       // Increment plan usage counter
       await recordUsageCount(user.id, 'questions');
@@ -239,12 +254,17 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     );
     const conversationId = convResult.rows[0].id;
 
+    // Legacy unlimited Pro fair-use cap: 60h/30d → fall back to Haiku.
+    const throttled = await shouldThrottleLegacyPro(user.id, userPlan);
+    const effectivePlan = throttled ? 'free' : userPlan;
+
     // Start SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
+      ...(throttled ? { 'X-Fair-Use-Throttled': '1' } : {}),
     });
 
     let finalAnswer = null;
@@ -261,7 +281,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
-      plan: userPlan,
+      plan: effectivePlan,
     })) {
       if (clientDisconnected) break;
 
@@ -313,6 +333,15 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
         questionType: getQuestionType(finalAnswer),
         tokensUsed: (finalAnswer.input_tokens || 0) + (finalAnswer.output_tokens || 0),
         latencyMs: finalAnswer.latency_ms || 0,
+      });
+      recordAiHours({
+        userId: user.id,
+        surface: 'lumora_inference',
+        seconds: (finalAnswer.latency_ms || 0) / 1000,
+        tokensIn: finalAnswer.input_tokens || 0,
+        tokensOut: finalAnswer.output_tokens || 0,
+        model: MODEL,
+        planAtCharge: userPlan,
       });
       // Increment plan usage counter
       await recordUsageCount(user.id, 'questions');

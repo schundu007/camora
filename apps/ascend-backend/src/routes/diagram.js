@@ -7,6 +7,7 @@ import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
+import { recordTokens } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
@@ -227,6 +228,15 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
               [problemHash, detailLevel, provider, direction, mermaidCode.trim(), (cacheKey || question).slice(0, 500)]
             );
           } catch { /* ignore cache error */ }
+          if (req.user?.id) {
+            recordTokens({
+              userId: req.user.id,
+              surface: 'capra_diagram',
+              tokensIn: Math.ceil(mermaidPrompt.length / 4),
+              tokensOut: Math.ceil(mermaidCode.length / 4),
+              model: 'claude-sonnet-4-20250514',
+            });
+          }
           return res.json({ success: true, type: 'mermaid', mermaid_code: mermaidCode.trim(), cloud_provider: provider, cached: false });
         }
       } catch (mermaidErr) {
@@ -260,6 +270,17 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
       return res.json({ ...pythonResult, cloud_provider: provider });
     }
 
+    if (req.user?.id) {
+      // Diagram generation is dominated by Python+Anthropic time, not raw tokens.
+      // Approximate as 30s per generation to keep the meter populated.
+      recordTokens({
+        userId: req.user.id,
+        surface: 'capra_diagram',
+        tokensIn: Math.ceil((question || '').length / 4),
+        tokensOut: 1500,
+        model: 'claude-sonnet-4-20250514',
+      });
+    }
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
   } catch (error) {
     if (error instanceof AppError) {

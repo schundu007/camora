@@ -108,6 +108,23 @@ async function runMigrations() {
         type VARCHAR(100),
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`,
+      // Pricing-v2 metering — shared with ascend-backend via the same DB.
+      // Created here too so this service can boot independently and still meter.
+      `CREATE TABLE IF NOT EXISTS ai_hours_usage (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        surface VARCHAR(40) NOT NULL,
+        started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ended_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        seconds REAL NOT NULL DEFAULT 0,
+        tokens_in INTEGER NOT NULL DEFAULT 0,
+        tokens_out INTEGER NOT NULL DEFAULT 0,
+        model VARCHAR(80),
+        plan_at_charge VARCHAR(40),
+        metered_to_stripe BOOLEAN NOT NULL DEFAULT false,
+        stripe_usage_record_id VARCHAR(80),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
       // Indexes
       'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',
@@ -117,6 +134,7 @@ async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_lumora_bookmarks_user ON lumora_bookmarks(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_completion_user ON lumora_completion_marks(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_quotas_user ON lumora_quotas(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_ai_hours_user_created ON ai_hours_usage(user_id, created_at DESC)',
     ];
 
     for (const sql of migrations) {

@@ -11,6 +11,7 @@ import * as freeUsageService from '../services/freeUsageService.js';
 import { logger } from '../middleware/requestLogger.js';
 import { awardXP } from '../services/gamificationService.js';
 import { cacheGet, cacheSet } from '../services/redis.js';
+import { recordTokens, shouldThrottleLegacyPro } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
@@ -109,7 +110,16 @@ router.post('/', validate('solve'), async (req, res, next) => {
     }
     solutionCache.set(cacheKey, { data: result, timestamp: Date.now() });
 
-    if (userId) awardXP(userId, 'coding_solve').catch(() => {});
+    if (userId) {
+      awardXP(userId, 'coding_solve').catch(() => {});
+      recordTokens({
+        userId,
+        surface: 'capra_solve',
+        tokensIn: Math.ceil((problem || '').length / 4),
+        tokensOut: Math.ceil(JSON.stringify(result || {}).length / 4),
+        model: userModel,
+      });
+    }
 
     res.json(result);
   } catch (error) {
@@ -207,16 +217,27 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
 
     // Select model based on user plan — free users get Haiku, paid users get Sonnet
     let userModel = model;
+    let userPlanType = null;
+    let throttledByFairUse = false;
     if (!userModel && provider === 'claude') {
       const userId = webappUserId || req.user?.id;
       if (userId) {
         const subStatus = await freeUsageService.getSubscriptionStatus(userId);
+        userPlanType = subStatus.planType;
         userModel = (subStatus.hasSubscription)
           ? 'claude-sonnet-4-20250514'
           : 'claude-haiku-4-5-20251001';
-        logger.debug({ userId, model: userModel, hasSubscription: subStatus.hasSubscription }, 'Model selected based on plan');
+        // Legacy unlimited Pro fair-use cap: 60h/30d → fall back to Haiku.
+        // Protects margin on grandfathered $49 unlimited subscribers.
+        if (subStatus.hasSubscription && await shouldThrottleLegacyPro(userId, subStatus.planType)) {
+          userModel = 'claude-haiku-4-5-20251001';
+          throttledByFairUse = true;
+          logger.info({ userId, planType: subStatus.planType }, 'Legacy fair-use cap engaged');
+        }
+        logger.debug({ userId, model: userModel, hasSubscription: subStatus.hasSubscription, throttledByFairUse }, 'Model selected based on plan');
       }
     }
+    if (throttledByFairUse) res.setHeader('X-Fair-Use-Throttled', '1');
 
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -432,6 +453,19 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
       }
 
       if (webappUserId) awardXP(webappUserId, 'coding_solve').catch(() => {});
+
+      // AI Hours metering (Phase 0: log only). Token counts approximated from
+      // text length since stream API doesn't surface usage in the chunk events.
+      if (webappUserId) {
+        recordTokens({
+          userId: webappUserId,
+          surface: ascendMode === 'system-design' ? 'capra_design' : 'capra_solve',
+          tokensIn: Math.ceil((problem || '').length / 4),
+          tokensOut: Math.ceil(fullText.length / 4),
+          model: userModel,
+          planAtCharge: userPlanType,
+        });
+      }
 
       // Write-through: persist the fully parsed answer so the next
       // caller asking the same question gets an instant cache hit.
