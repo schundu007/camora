@@ -3,13 +3,13 @@ import CamoraLogo from './CamoraLogo';
 import { NAV_LINKS } from '../../lib/constants';
 
 export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
-  const isLight = variant === 'light';
-  const bg = isLight
-    ? '#FFFFFF'
-    : '#0B1120';
-  const textColor = isLight ? '#0F172A' : '#FFFFFF';
-  const textMuted = isLight ? '#64748B' : 'rgba(255,255,255,0.85)';
-  const borderColor = isLight ? '#E2E8F0' : 'rgba(255,255,255,0.12)';
+  // Honor the user's global theme via CSS vars so the footer matches the body
+  // surface; the `variant` prop is preserved for back-compat but inert.
+  void variant;
+  const bg = 'var(--bg-surface)';
+  const textColor = 'var(--text-primary)';
+  const textMuted = 'var(--text-secondary)';
+  const borderColor = 'var(--border)';
 
   return (
     <footer className="px-4 sm:px-6 mt-auto" style={{ height: 48, width: '100%', background: bg, borderTop: `1px solid ${borderColor}`, fontFamily: "var(--font-sans)" }}>
