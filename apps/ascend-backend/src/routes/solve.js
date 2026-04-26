@@ -128,13 +128,22 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
 
     logger.debug({ ascendMode, designDetailLevel, provider, autoSwitch, language, detailLevel }, 'Solve stream request params');
 
-    // Check for webapp user (JWT auth) and verify subscription + usage allowance
+    // Check for webapp user (JWT auth) and verify subscription + usage allowance.
+    // Resolve token from Authorization header OR cariara_sso cookie so a SPA
+    // fetch with only the httpOnly cookie still gets recognised.
     let webappUserId = null;
     const authHeader = req.headers.authorization;
-
+    let resolvedToken = null;
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      resolvedToken = authHeader.substring(7);
+    }
+    if (!resolvedToken && req.cookies?.cariara_sso) {
+      resolvedToken = req.cookies.cariara_sso;
+    }
+
+    if (resolvedToken) {
       try {
-        const token = authHeader.substring(7);
+        const token = resolvedToken;
         const decoded = await verifyJWT(token);
         if (decoded && decoded.id) {
           webappUserId = decoded.id;

@@ -25,25 +25,36 @@ export async function jwtAuth(req, res, next) {
     });
   }
 
+  // Resolve token. Prefer Authorization: Bearer <token>, fall back to the
+  // cariara_sso httpOnly cookie. Matching the unified auth pattern used by
+  // packages/shared-auth and apps/ascend-backend/src/middleware/authenticate.
+  // Without this fallback, any front-end fetch that fires before the SPA's
+  // tokenStore is populated returns blanket 401 even though the user has a
+  // valid SSO cookie ride-along via credentials:'include'.
   const authHeader = req.headers.authorization;
+  let token = null;
 
-  if (!authHeader) {
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      return res.status(401).json({
+        error: 'Invalid authorization format. Use: Bearer <token>',
+        code: 'INVALID_AUTH_FORMAT',
+      });
+    }
+    if (parts[1]) token = parts[1];
+  }
+
+  if (!token && req.cookies?.cariara_sso) {
+    token = req.cookies.cariara_sso;
+  }
+
+  if (!token) {
     return res.status(401).json({
       error: 'Authentication required',
       code: 'AUTH_REQUIRED',
     });
   }
-
-  // Extract token from "Bearer <token>"
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return res.status(401).json({
-      error: 'Invalid authorization format. Use: Bearer <token>',
-      code: 'INVALID_AUTH_FORMAT',
-    });
-  }
-
-  const token = parts[1];
 
   try {
     // Verify token

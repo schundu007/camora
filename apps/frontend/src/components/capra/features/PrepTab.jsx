@@ -54,7 +54,9 @@ export default function PrepTab({ isOpen, onClose }) {
           const token = getToken();
           const headers = {};
           if (token) headers.Authorization = `Bearer ${token}`;
-          const res = await fetch(API_URL + '/api/auth/status', { headers });
+          const res = await fetch(API_URL + '/api/auth/status', {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() }, headers });
           if (res.ok) {
             const data = await res.json();
             setPlatformStatus(data);
@@ -106,7 +108,9 @@ export default function PrepTab({ isOpen, onClose }) {
       const token = getToken();
       const headers = {};
       if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(API_URL + '/api/auth/status', { headers });
+      const res = await fetch(API_URL + '/api/auth/status', {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() }, headers });
       if (res.ok) {
         const data = await res.json();
         setPlatformStatus(data);
@@ -128,6 +132,8 @@ export default function PrepTab({ isOpen, onClose }) {
       if (token) headers.Authorization = `Bearer ${token}`;
 
       const res = await fetch(API_URL + '/api/fetch', {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() },
         method: 'POST',
         headers,
         body: JSON.stringify({ url: fetchUrl }),

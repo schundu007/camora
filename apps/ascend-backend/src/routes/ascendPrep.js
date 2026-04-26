@@ -38,8 +38,18 @@ function checkPrepDailyLimit(userId, isPaid, email) {
  * Returns true if allowed (Electron or subscription or free allowance remaining)
  */
 async function checkFeatureAccess(req, res, featureType = 'design') {
+  // Resolve token from Authorization header OR cariara_sso cookie. Without
+  // the cookie fallback, any SPA fetch firing before tokenStore is populated
+  // 401s even though credentials:'include' carries a valid SSO cookie.
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  let token = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  }
+  if (!token && req.cookies?.cariara_sso) {
+    token = req.cookies.cariara_sso;
+  }
+  if (!token) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.write(`data: ${JSON.stringify({
       error: 'Authentication required',
@@ -50,7 +60,6 @@ async function checkFeatureAccess(req, res, featureType = 'design') {
   }
 
   try {
-    const token = authHeader.substring(7);
     const decoded = await verifyJWT(token);
 
     if (!decoded?.id) {
