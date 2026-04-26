@@ -841,43 +841,59 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto">
             {problemTab === 'description' && (
-              <div className="p-3 md:p-4 space-y-3">
-                {/* Collapsible Input Section */}
-                <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${t.inputBorder}` }}>
-                  {/* Collapse/Expand Header */}
+              <div>
+                {/* Input Tab Header — same pattern + placement as DesignLayout:
+                    navy band + 2px gold underline + pill toolbar on left,
+                    collapse chevron on right. Replaces the old "Problem Input
+                    PASTE" expandable header so Coding mirrors Design's layout. */}
+                <div
+                  className="flex items-center justify-between px-3 py-2"
+                  style={{
+                    background: 'var(--cam-hero-strip)',
+                    borderBottom: '2px solid var(--cam-gold-leaf)',
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-1 px-1 py-1"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.16)',
+                      borderRadius: 999,
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    {(['paste', 'url', 'image'] as const).map(mode => (
+                      <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
+                        className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all"
+                        style={
+                          inputMode === mode
+                            ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                            : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                        }
+                      >{mode === 'paste' ? 'Paste' : mode === 'url' ? 'URL' : 'Image'}</button>
+                    ))}
+                  </div>
                   <button
                     onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                    className="w-full flex items-center justify-between px-3 py-2 transition-colors"
-                    style={{ background: t.sectionBg }}
+                    className="flex items-center justify-center w-7 h-7 transition-all hover:bg-white/10"
+                    style={{
+                      color: '#FFFFFF',
+                      border: '1px solid rgba(255,255,255,0.16)',
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.06)',
+                    }}
+                    aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
                   >
-                    <div className="flex items-center gap-2">
-                      <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isInputCollapsed ? '' : 'rotate-90'}`} style={{ color: t.textMuted }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                      <span className="text-xs font-semibold" style={{ color: t.text }}>Problem Input</span>
-                      <span className="text-[10px] font-medium uppercase" style={{ color: t.textDim }}>{inputMode === 'paste' ? 'Paste' : inputMode === 'url' ? 'URL' : 'Image'}</span>
-                    </div>
-                    {problemText && isInputCollapsed && (
-                      <span className="text-[10px] font-medium truncate max-w-[200px]" style={{ color: t.headerText }}>
-                        {problemText.slice(0, 50)}{problemText.length > 50 ? '...' : ''}
-                      </span>
-                    )}
+                    <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
+                </div>
 
+                <div className="p-3 md:p-4 space-y-3">
                   {/* Collapsible Content */}
                   {!isInputCollapsed && (
-                    <div className="p-3 space-y-3 border-t" style={{ borderColor: t.cardBorder }}>
-                      {/* Input Mode Toggle */}
-                      <div className="flex items-center gap-0.5 p-0.5 rounded-lg w-fit" style={{ background: t.sectionBg }}>
-                        {(['paste', 'url', 'image'] as const).map(mode => (
-                          <button key={mode} onClick={() => setInputMode(mode)}
-                            className={`px-3 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-all ${
-                              inputMode === mode ? 'shadow-sm' : ''
-                            }`}
-                            style={inputMode === mode ? { background: t.inputBg, color: t.text } : { color: t.textMuted }}
-                          >{mode === 'paste' ? 'Paste' : mode === 'url' ? 'URL' : 'Image'}</button>
-                        ))}
-                      </div>
+                    <div className="space-y-3">
 
                       {/* Input Areas */}
                       {inputMode === 'paste' && (
@@ -935,21 +951,21 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                       )}
                     </div>
                   )}
-                </div>
 
-                {error && (
-                  <div className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>{error}</div>
-                )}
-
-                {/* Generate Button */}
-                <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
-                  {isLoading ? (
-                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
-                  ) : (
-                    <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Generate Solution</>
+                  {error && (
+                    <div className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>{error}</div>
                   )}
-                </button>
+
+                  {/* Generate Button */}
+                  <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
+                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
+                    {isLoading ? (
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+                    ) : (
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Generate Solution</>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 
