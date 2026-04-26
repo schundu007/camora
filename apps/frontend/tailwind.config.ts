@@ -13,20 +13,20 @@ export default {
       },
       colors: {
         accent: {
-          DEFAULT: '#EC4899',
-          hover: '#BE185D',
-          subtle: 'rgba(236,72,153,0.10)',
-          muted: 'rgba(236,72,153,0.18)',
+          DEFAULT: '#064E3B',
+          hover: '#047857',
+          subtle: 'rgba(6,78,59,0.10)',
+          muted: 'rgba(6,78,59,0.18)',
         },
         success: {
-          DEFAULT: '#34D399',
-          subtle: 'rgba(52,211,153,0.10)',
-          muted: 'rgba(52,211,153,0.18)',
+          DEFAULT: '#064E3B',
+          subtle: 'rgba(6,78,59,0.10)',
+          muted: 'rgba(6,78,59,0.18)',
         },
         warning: {
-          DEFAULT: '#FBBF24',
-          subtle: 'rgba(251,191,36,0.10)',
-          muted: 'rgba(251,191,36,0.18)',
+          DEFAULT: '#B45309',
+          subtle: 'rgba(180,83,9,0.10)',
+          muted: 'rgba(180,83,9,0.18)',
         },
         danger: {
           DEFAULT: '#EF4444',
@@ -35,10 +35,10 @@ export default {
         },
         surface: {
           DEFAULT: '#FFFFFF',
-          elevated: '#F8FAFC',
+          elevated: '#FAF7F0',
         },
-        // Neutral slate ramp for backgrounds, borders, low-contrast chrome.
-        // The accent is intentionally NOT in this scale — only --accent / camora.primary.
+        // Neutral slate ramp for low-contrast chrome (borders, dividers).
+        // Brand surfaces use camora.cream / camora.creamLt instead.
         frost: {
           50: '#F8FAFC',
           100: '#F1F5F9',
@@ -52,16 +52,21 @@ export default {
           900: '#0F172A',
         },
         camora: {
-          // PRIMARY — magenta (the verb)
-          primary:   '#EC4899',
-          primaryLt: '#F472B6',
-          primaryDk: '#BE185D',
-          // SECONDARY — teal (the noun, split-complement of magenta)
-          teal:      '#0F766E',
-          tealLt:    '#14B8A6',
-          tealDk:    '#134E4A',
-          teal50:    '#F0FDFA',
-          // TERTIARY — amber (the adjective, analogous warm pair)
+          // PRIMARY — Library emerald (the verb)
+          primary:   '#064E3B',
+          primaryLt: '#047857',
+          primaryDk: '#022C22',
+          // SECONDARY — copper (the noun, premium brass)
+          copper:    '#B45309',
+          copperLt:  '#D97706',
+          copperDk:  '#92400E',
+          copper50:  '#FEF3E2',
+          // teal* are back-compat aliases pointing at copper.
+          teal:      '#B45309',
+          tealLt:    '#D97706',
+          tealDk:    '#92400E',
+          teal50:    '#FEF3E2',
+          // TERTIARY — amber (warm pair with copper)
           amber:     '#AB6400',
           amberLt:   '#C07A00',
           amberDk:   '#864E00',
@@ -69,40 +74,42 @@ export default {
           // SUBSTRATE — cream paper, replaces white where ink + warmth land
           cream:     '#FAF7F0',
           creamLt:   '#FDFCF7',
-          // TEXT — warm ink, pairs with cream
-          warmInk:   '#292524',
-          warmInkMid:'#57534E',
+          // TEXT — warm near-black ink, pairs with cream
+          warmInk:   '#1C1917',
+          warmInkMid:'#44403C',
           warmInkLt: '#A8A29E',
-          // DARK — plum-void with magenta echo
-          void:      '#1A0B1F',
-          plumVoid:  '#1A0B1F',
-          // Chrome neutrals (use sparingly — borders only, never fills)
+          // DARK — forest void with emerald echo
+          void:      '#0A2419',
+          plumVoid:  '#0A2419',
+          // Chrome neutrals (use sparingly — borders only)
           midnight:  '#0F172A',
           steel:     '#475569',
           mist:      '#FAF7F0',
           surface:   '#FDFCF7',
-          // Tonal ramps. `blue` keeps its name for back-compat but is now
-          // the magenta-pink ramp; `gold` is amber.
+          // Tonal ramp — emerald scale (back-compat name `blue`)
           blue: {
-            50:  '#FDF2F8',
-            100: '#FCE7F3',
-            200: '#FBCFE8',
-            300: '#F472B6',
-            400: '#EC4899',
-            500: '#BE185D',
-            600: '#9D174D',
-            700: '#831843',
-            900: '#500724',
+            50:  '#ECFDF5',
+            100: '#D1FAE5',
+            200: '#A7F3D0',
+            300: '#6EE7B7',
+            400: '#34D399',
+            500: '#10B981',
+            600: '#059669',
+            700: '#047857',
+            800: '#065F46',
+            900: '#064E3B',
           },
+          // Copper / amber ramp (back-compat name `gold`)
           gold: {
-            50:  '#FAF0E0',
-            100: '#F0D4A0',
-            200: '#D9A84A',
-            300: '#C07A00',
-            400: '#AB6400',
-            500: '#864E00',
-            600: '#5E3600',
-            700: '#3A2000',
+            50:  '#FEF3E2',
+            100: '#FDE4B5',
+            200: '#FBBF24',
+            300: '#F59E0B',
+            400: '#D97706',
+            500: '#B45309',
+            600: '#92400E',
+            700: '#78350F',
+            800: '#451A03',
             900: '#1A0E00',
           },
         },

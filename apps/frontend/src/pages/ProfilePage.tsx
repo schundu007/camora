@@ -32,10 +32,10 @@ function ActivityHeatmap() {
 
   const getColor = (v: number) => {
     if (v === 0) return 'var(--bg-elevated)';
-    if (v === 1) return 'rgba(236,72,153,0.2)';
-    if (v === 2) return 'rgba(236,72,153,0.4)';
-    if (v === 3) return 'rgba(236,72,153,0.6)';
-    return 'rgba(236,72,153,0.85)';
+    if (v === 1) return 'rgba(6,78,59,0.2)';
+    if (v === 2) return 'rgba(6,78,59,0.4)';
+    if (v === 3) return 'rgba(6,78,59,0.6)';
+    return 'rgba(6,78,59,0.85)';
   };
 
   return (
@@ -131,7 +131,7 @@ function SubscriptionCard() {
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'rgba(236,72,153,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'rgba(6,78,59,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
         <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Subscription</h3>
         {endDate && sub?.status === 'active' && (
           <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--text-muted)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
@@ -163,7 +163,7 @@ function ProfileSettings() {
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-      <div className="px-5 py-3" style={{ background: 'rgba(236,72,153,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+      <div className="px-5 py-3" style={{ background: 'rgba(6,78,59,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
         <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Profile settings</h3>
       </div>
       <div className="divide-y divide-[var(--border)]">
@@ -230,7 +230,7 @@ function ContributionsTab() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-        <div className="px-5 py-3" style={{ background: 'rgba(236,72,153,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+        <div className="px-5 py-3" style={{ background: 'rgba(6,78,59,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
           <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Problem Contributions</h3>
         </div>
         <div className="px-5 py-4">
@@ -312,7 +312,7 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Account Info */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-              <div className="px-5 py-3" style={{ background: 'rgba(236,72,153,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+              <div className="px-5 py-3" style={{ background: 'rgba(6,78,59,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
                 <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Account Information</h3>
               </div>
               <div className="px-5 py-4 flex items-center justify-between">
@@ -340,7 +340,7 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Invite section */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
-              <div className="px-5 py-3" style={{ background: 'rgba(236,72,153,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
+              <div className="px-5 py-3" style={{ background: 'rgba(6,78,59,0.04)', borderBottom: '1px solid rgba(56,189,248,0.1)' }}>
                 <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Invite Friends to Get Free Access</h3>
               </div>
               <div className="px-5 py-4">

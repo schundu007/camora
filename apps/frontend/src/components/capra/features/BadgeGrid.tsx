@@ -95,7 +95,7 @@ function BadgeIcon({ name, earned }: { name: string; earned: boolean }) {
   return (
     <div
       className={`mx-auto w-14 h-14 rounded-2xl flex items-center justify-center ${earned ? '' : 'grayscale opacity-50'}`}
-      style={{ background: earned ? 'rgba(236,72,153,0.08)' : 'var(--bg-elevated)' }}
+      style={{ background: earned ? 'rgba(6,78,59,0.08)' : 'var(--bg-elevated)' }}
     >
       {renderer(color)}
     </div>
@@ -167,7 +167,7 @@ export default function BadgeGrid() {
                 : 'border'
             }`}
             style={badge.earned
-              ? { background: 'var(--bg-surface)', borderColor: 'rgba(236,72,153,0.35)', boxShadow: '0 2px 8px rgba(236,72,153,0.1)' }
+              ? { background: 'var(--bg-surface)', borderColor: 'rgba(6,78,59,0.35)', boxShadow: '0 2px 8px rgba(6,78,59,0.1)' }
               : { background: 'var(--bg-elevated)', borderColor: 'var(--border)' }
             }
           >

@@ -937,7 +937,7 @@ export default function Blind75Page() {
                                               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{approach.name}</span>
                                               <div style={{ display: 'flex', gap: '8px' }}>
                                                 <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(45,140,255,0.12)', color: 'var(--accent)' }}>Time: {approach.complexity.time}</span>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(236,72,153,0.12)', color: 'var(--text-muted)' }}>Space: {approach.complexity.space}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(6,78,59,0.12)', color: 'var(--text-muted)' }}>Space: {approach.complexity.space}</span>
                                               </div>
                                             </div>
                                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{approach.description}</p>

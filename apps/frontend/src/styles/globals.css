@@ -43,19 +43,20 @@
     --text-muted: #1E293B;
     --text-dimmed: #334155;
 
-    /* Accent — Camora magenta, single source of truth */
-    --accent: #EC4899;
-    --accent-hover: #BE185D;
-    --accent-subtle: rgba(236,72,153,0.10);
-    --accent-text: #BE185D;
+    /* Accent — Camora Library Green (deep editorial emerald) */
+    --accent: #064E3B;
+    --accent-hover: #047857;
+    --accent-subtle: rgba(6,78,59,0.10);
+    --accent-text: #047857;
 
-    /* Semantic — three-accent brand system. Success uses teal so it's
-       visually distinct from the magenta primary; warning uses amber
-       (the third brand accent) for the warm-tone alert family. */
-    --success: #0F766E;
-    --warning: #AB6400;
+    /* Semantic — Library system. Success/info both fold onto emerald
+       (green = the brand promise). Warning uses copper (warm tone, the
+       secondary accent). Danger keeps plain red so error states never
+       collide with the brand colour. */
+    --success: #064E3B;
+    --warning: #B45309;
     --danger:  #EF4444;
-    --info:    #EC4899;
+    --info:    #064E3B;
 
     /* Difficulty — rank by weight in the chip, not by hue. Values below
        are back-compat shims for any code that reads them directly. */
@@ -65,15 +66,15 @@
     --medium: #0F172A;
     --medium-bg: rgba(15,23,42,0.06);
     --medium-border: rgba(15,23,42,0.15);
-    --hard: #EC4899;
-    --hard-bg: rgba(236,72,153,0.10);
-    --hard-border: rgba(236,72,153,0.25);
+    --hard: #064E3B;
+    --hard-bg: rgba(6,78,59,0.10);
+    --hard-border: rgba(6,78,59,0.25);
 
     /* Category — single accent plus two neutral slate shades. Pages
        with multiple categories side-by-side distinguish via typography
        and icons rather than color. */
-    --cat-primary: #EC4899;
-    --cat-primary-bg: rgba(236,72,153,0.10);
+    --cat-primary: #064E3B;
+    --cat-primary-bg: rgba(6,78,59,0.10);
     --cat-secondary: #334155;
     --cat-secondary-bg: rgba(51,65,85,0.06);
     --cat-tertiary: #64748B;
@@ -121,27 +122,36 @@
     --nav-hover: var(--bg-elevated);
 
     /* ──────────────────────────────────────────────────────────
-       Camora brand system — three accents on a cream substrate.
-       Magenta = the verb (action, focus).
-       Teal    = the noun (trust, success, depth).
-       Amber   = the adjective (highlight, premium, warmth).
+       Camora brand system — Library Green
+       Editorial emerald + copper + cream + warm ink.
+       Inspired by hardcover libraries, NYT Cooking, Bottega Veneta.
+
+       Emerald = the verb (action, focus, the offer-winning promise).
+       Copper  = the noun (premium highlights, brass fittings).
+       Amber   = the adjective (warm tertiary, badges, streaks).
        Cream   = the air (substrate, breathing room).
        Warm ink = the bones (text, structure).
        ────────────────────────────────────────────────────────── */
 
-    /* PRIMARY accent — magenta */
-    --cam-primary:      #EC4899;
-    --cam-primary-lt:   #F472B6;
-    --cam-primary-dk:   #BE185D;
-    --cam-primary-900:  #500724;
+    /* PRIMARY accent — deep editorial emerald */
+    --cam-primary:      #064E3B;
+    --cam-primary-lt:   #047857;
+    --cam-primary-dk:   #022C22;
+    --cam-primary-900:  #011611;
 
-    /* SECONDARY accent — deep teal (split-complement of magenta) */
-    --cam-teal:         #0F766E;
-    --cam-teal-lt:      #14B8A6;
-    --cam-teal-dk:      #134E4A;
-    --cam-teal-50:      #F0FDFA;
+    /* SECONDARY accent — copper. The teal-* aliases are kept for
+       back-compat with components that still reference them; they
+       now resolve to copper. */
+    --cam-copper:       #B45309;
+    --cam-copper-lt:    #D97706;
+    --cam-copper-dk:    #92400E;
+    --cam-copper-50:    #FEF3E2;
+    --cam-teal:         var(--cam-copper);
+    --cam-teal-lt:      var(--cam-copper-lt);
+    --cam-teal-dk:      var(--cam-copper-dk);
+    --cam-teal-50:      var(--cam-copper-50);
 
-    /* TERTIARY accent — amber (analogous warm pair with magenta) */
+    /* TERTIARY accent — amber, analogous warm pair with copper */
     --cam-amber:        #AB6400;
     --cam-amber-lt:     #C07A00;
     --cam-amber-dk:     #864E00;
@@ -151,29 +161,29 @@
     --cam-cream:        #FAF7F0;
     --cam-cream-lt:     #FDFCF7;
 
-    /* TEXT — warm ink, pairs with cream */
-    --cam-warm-ink:     #292524;
-    --cam-warm-ink-mid: #57534E;
+    /* TEXT — warm near-black ink for cream surfaces */
+    --cam-warm-ink:     #1C1917;
+    --cam-warm-ink-mid: #44403C;
     --cam-warm-ink-lt:  #A8A29E;
 
-    /* DARK SURFACES — plum-void with 5% magenta echo */
-    --cam-plum-void:    #1A0B1F;
-    --cam-void:         #1A0B1F;
+    /* DARK SURFACES — forest void with 5% emerald echo */
+    --cam-plum-void:    #0A2419;
+    --cam-void:         #0A2419;
 
     /* Neutral chrome (kept for low-contrast borders, never a fill) */
     --cam-midnight:     #0F172A;
     --cam-steel:        #475569;
 
-    /* Mist/surface-lt now resolve to cream so existing consumers
-       (hero gradients, accent panels) pick up the painterly substrate */
+    /* Mist/surface-lt resolve to cream so hero gradients + accent
+       panels inherit the painterly substrate */
     --cam-mist:         #FAF7F0;
     --cam-surface-lt:   #FDFCF7;
 
     /* Single source of truth (kept in sync with --accent above) */
-    --accent:           #EC4899;
-    --accent-hover:     #BE185D;
-    --accent-subtle:    rgba(236, 72, 153, 0.10);
-    --accent-text:      #BE185D;
+    --accent:           #064E3B;
+    --accent-hover:     #047857;
+    --accent-subtle:    rgba(6, 78, 59, 0.10);
+    --accent-text:      #047857;
   }
 
   /* Light theme — opt-in via class on body or root container */
@@ -187,7 +197,7 @@
     --text-secondary: #334155;
     --text-muted: #7096BF;
     --text-dimmed: #B0CBE6;
-    --accent-subtle: rgba(236,72,153,0.10);
+    --accent-subtle: rgba(6,78,59,0.10);
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
     --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
     --shadow-md: 0 4px 12px rgba(56,189,248,0.10);
