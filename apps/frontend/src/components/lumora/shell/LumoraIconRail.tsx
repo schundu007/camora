@@ -63,8 +63,9 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}
     >
-      {/* Logo */}
-      <Link to="/" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Camora">
+      {/* Logo — points at /lumora (not /) so users mid-session don't get
+          ejected to the marketing site. Camora-home is reachable via Account → Profile. */}
+      <Link to="/lumora" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Lumora home">
         <CamoraLogo size={expanded ? 28 : 24} />
         {expanded && <span className="text-sm font-bold whitespace-nowrap" style={{ fontFamily: "'Source Sans 3', sans-serif", color: 'var(--text-primary)' }}>Camora</span>}
       </Link>
