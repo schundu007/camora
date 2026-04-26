@@ -155,7 +155,7 @@ function ResultTable({
 
 function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
   return (
-    <div className="mb-4">
+    <div className="min-w-0">
       <div className="flex items-center gap-2 mb-1.5">
         <span
           className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[var(--accent-subtle)] text-[var(--accent)] border border-[rgba(0,0,0,0.1)]"
@@ -481,100 +481,112 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               {problem.description}
             </p>
 
-            {/* Table schemas */}
-            <div className="mb-3">
+            {/* Schemas + Expected Output side-by-side. The grid auto-fits as
+                many tables as fit (min 220px each); on narrow panels they wrap. */}
+            <div
+              className="mb-4 grid gap-3"
+              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}
+            >
               {problem.tables.map((t, i) => (
                 <SchemaTable key={i} table={t} />
               ))}
-            </div>
-
-            {/* Expected output preview */}
-            <div className="mb-3">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                Expected Output
-              </div>
-              <ResultTable columns={problem.expectedOutput.columns} rows={problem.expectedOutput.rows} />
-            </div>
-
-            {/* Hints */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowHints(!showHints)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                {showHints ? 'Hide Hints' : 'Show Hints'}
-              </button>
-              <button
-                onClick={() => setShowSolution(!showSolution)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  {showSolution ? (
-                    <>
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </>
-                  )}
-                </svg>
-                {showSolution ? 'Hide Solution' : 'Show Solution'}
-              </button>
-            </div>
-            {showHints && (
-              <div className="mt-2 space-y-1">
-                {problem.hints.map((hint, i) => (
-                  <div
-                    key={i}
-                    className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-start gap-2"
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide border"
+                    style={{ fontFamily: 'var(--font-mono)', background: 'rgba(38,97,156,0.04)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}
                   >
-                    <span className="text-amber-500 font-bold mt-px">{i + 1}.</span>
-                    <span>{hint}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {showSolution && (
-              <div className="mt-2 relative">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Solution</span>
-                  <button
-                    onClick={() => {
-                      const el = document.createElement('textarea');
-                      el.value = problem.solution;
-                      el.style.position = 'fixed';
-                      el.style.opacity = '0';
-                      document.body.appendChild(el);
-                      el.select();
-                      document.execCommand('copy');
-                      document.body.removeChild(el);
-                      const btn = document.getElementById('sql-copy-btn');
-                      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
-                    }}
-                    id="sql-copy-btn"
-                    className="px-2.5 py-1 rounded text-[10px] font-semibold transition-colors"
-                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                  >
-                    Copy
-                  </button>
+                    Expected Output
+                  </span>
                 </div>
-                <pre
-                  className="text-xs text-[var(--accent)] bg-[var(--accent-subtle)] border border-[rgba(0,0,0,0.1)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
-                  style={{ fontFamily: 'var(--font-mono)' }}
-                >
-                  {problem.solution}
-                </pre>
+                <ResultTable columns={problem.expectedOutput.columns} rows={problem.expectedOutput.rows} />
               </div>
-            )}
+            </div>
+
+            {/* Explanation — Approach (always visible) + Solution (toggleable
+                so the user can attempt the problem first). The Problem card
+                isn't repeated here since the description above already serves
+                that role; this section is the "what to do + how" companion. */}
+            <div className="mb-3 space-y-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Explanation
+              </div>
+
+              {/* Approach card — hints rendered as a numbered step list. */}
+              <div className="rounded-lg border border-slate-200 bg-white">
+                <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
+                    <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 1.9V18h6v-1.4c0-.7.4-1.4 1-1.9A7 7 0 0 0 12 2z" />
+                  </svg>
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Approach</span>
+                </div>
+                <ol className="px-3 py-2 space-y-1.5">
+                  {problem.hints.map((hint, i) => (
+                    <li key={i} className="text-xs text-slate-700 flex items-start gap-2">
+                      <span className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{i + 1}</span>
+                      <span className="leading-relaxed">{hint}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Solution card — collapsed by default. The reveal button sits
+                  inside the card header so it's discoverable without a row of
+                  loose buttons above. */}
+              <div className="rounded-lg border border-slate-200 bg-white">
+                <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
+                      <polyline points="16 18 22 12 16 6" />
+                      <polyline points="8 6 2 12 8 18" />
+                    </svg>
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Solution</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {showSolution && (
+                      <button
+                        onClick={() => {
+                          const el = document.createElement('textarea');
+                          el.value = problem.solution;
+                          el.style.position = 'fixed';
+                          el.style.opacity = '0';
+                          document.body.appendChild(el);
+                          el.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(el);
+                          const btn = document.getElementById('sql-copy-btn');
+                          if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+                        }}
+                        id="sql-copy-btn"
+                        className="px-2 py-0.5 rounded text-[10px] font-semibold transition-colors"
+                        style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                      >
+                        Copy
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowSolution(!showSolution)}
+                      className="px-2 py-0.5 rounded text-[10px] font-semibold transition-colors"
+                      style={{ background: showSolution ? 'var(--bg-elevated)' : 'var(--accent-subtle)', color: showSolution ? 'var(--text-secondary)' : 'var(--accent)', border: '1px solid var(--border)' }}
+                    >
+                      {showSolution ? 'Hide' : 'Reveal'}
+                    </button>
+                  </div>
+                </div>
+                {showSolution ? (
+                  <pre
+                    className="px-3 py-2 text-xs overflow-x-auto whitespace-pre-wrap"
+                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', background: 'var(--accent-subtle)' }}
+                  >
+                    {problem.solution}
+                  </pre>
+                ) : (
+                  <div className="px-3 py-2 text-[11px] italic" style={{ color: 'var(--text-muted)' }}>
+                    Try the problem first, then reveal to compare. The solution applies the approach above.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -708,7 +720,9 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             const catProblems = SQL_PROBLEMS.filter(p => p.category === selectedCategory);
             const catSolved = catProblems.filter(p => solved.has(p.id)).length;
             const nextUnsolved = SQL_PROBLEMS.find((p, i) => i > currentIndex && !solved.has(p.id));
-            const usedHint = showHints;
+            // Hints are always visible now, so the "used assistance" flag
+            // tracks whether the user revealed the solution.
+            const usedHint = showSolution;
 
             return (
               <div className="flex-1 flex items-center justify-center p-6">
