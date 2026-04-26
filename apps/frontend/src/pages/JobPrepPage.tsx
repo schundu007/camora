@@ -7,6 +7,8 @@ import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
 import SharedPricingCards from '../components/shared/PricingCards';
+import { DiagonalDivider } from '../components/shared/DiagonalDivider';
+import { MadeWithLove } from '../components/shared/MadeWithLove';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -503,42 +505,56 @@ export default function JobPrepPage() {
       {/* ── Page Content ── */}
       <div>
 
-        {/* ── Header ── */}
-        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-          <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 flex-wrap mb-4" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-              <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
+        {/* ── Header — LeetCode-style dark navy band w/ diagonal cut ── */}
+        <div style={{
+          position: 'relative',
+          overflow: 'hidden',
+          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+        }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+            }}
+          />
+          <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: '64px', paddingBottom: '88px' }}>
+            {/* Breadcrumb on dark */}
+            <div className="flex items-center gap-2 flex-wrap mb-4" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+              <Link to="/" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
               <span>/</span>
-              <Link to="/jobs" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Jobs</Link>
+              <Link to="/jobs" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Jobs</Link>
               <span>/</span>
-              <span style={{ color: 'var(--text-muted)' }}>{job.company_name}</span>
+              <span style={{ color: 'rgba(255,255,255,0.7)' }}>{job.company_name}</span>
               <span>/</span>
-              <span style={{ color: 'var(--text-secondary)' }}>Prepare</span>
+              <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 600 }}>Prepare</span>
             </div>
 
             <h1 style={{
-              fontSize: 'clamp(20px, 5vw, 28px)',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
+              fontSize: 'clamp(24px, 5vw, 36px)',
+              fontWeight: 800,
+              color: '#FFFFFF',
               letterSpacing: '-0.02em',
               margin: 0,
               fontFamily: "'Inter', system-ui, sans-serif",
               wordBreak: 'break-word',
             }}>
-              {job.company_name} &mdash; {job.title}
+              {job.company_name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>&mdash; {job.title}</span>
             </h1>
 
             <p style={{
               fontSize: '16px',
-              color: 'var(--text-muted)',
-              marginTop: '8px',
+              color: 'rgba(255,255,255,0.85)',
+              marginTop: '10px',
               lineHeight: 1.6,
               maxWidth: '640px',
             }}>
               This preparation plan is based on the job requirements and tech stack.
             </p>
           </div>
+          <DiagonalDivider fill="var(--bg-surface)" slope="tr-to-bl" position="bottom" height="6vh" />
         </div>
 
         {/* ── Main content area ── */}
@@ -1088,6 +1104,9 @@ export default function JobPrepPage() {
           </div>
         </div>
       )}
+      <div style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
+        <MadeWithLove city="San Jose" />
+      </div>
       <SiteFooter variant="light" />
     </div>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { StreamingAnswer } from './StreamingAnswer';
+import { DiagonalDivider } from '@/components/shared/DiagonalDivider';
 
 interface InterviewPanelProps {
   onAskQuestion?: (question: string) => void;
@@ -157,21 +158,38 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   };
 
   return (
-    <div className="flex-1 overflow-auto px-3 sm:px-4 md:px-6 py-2 md:py-3">
-      {/* Big digital clock + greeting — Zoom-style. Time anchors the
-          page; greeting sits below as the secondary line. */}
-      <div className="mb-8">
-        <div className="flex items-baseline gap-2 leading-none" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-code)' }}>
-          <span className="font-bold tabular-nums" style={{ fontSize: 'clamp(48px, 8vw, 72px)', letterSpacing: '-0.02em' }}>{hh12}:{mm}</span>
-          <span className="font-semibold tabular-nums" style={{ fontSize: 'clamp(18px, 2.5vw, 24px)', color: 'var(--text-muted)' }}>{ampm}</span>
+    <div className="flex-1 overflow-auto flex flex-col">
+      {/* Hero — LeetCode-style dark navy band full-bleed, with the big
+          digital clock anchoring the page. White HH:MM, gold AM/PM,
+          diagonal cut at the bottom carving into bg-surface. */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+        }}
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+          }}
+        />
+        <div className="relative px-3 sm:px-4 md:px-6 pt-5 md:pt-7 pb-12 md:pb-14">
+          <div className="flex items-baseline gap-2 leading-none" style={{ color: '#FFFFFF', fontFamily: 'var(--font-code)' }}>
+            <span className="font-bold tabular-nums" style={{ fontSize: 'clamp(48px, 8vw, 72px)', letterSpacing: '-0.02em' }}>{hh12}:{mm}</span>
+            <span className="font-semibold tabular-nums" style={{ fontSize: 'clamp(18px, 2.5vw, 24px)', color: 'var(--cam-gold-leaf-lt)' }}>{ampm}</span>
+          </div>
+          <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{dateStr}</div>
+          <h1 className="mt-4 text-xl font-bold text-white">{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Launch an AI assistant for your next interview.</p>
         </div>
-        <div className="mt-2 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{dateStr}</div>
-        <h1 className="mt-4 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Launch an AI assistant for your next interview.</p>
+        <DiagonalDivider fill="var(--bg-surface)" slope="tl-to-br" position="bottom" height="36px" />
       </div>
 
-      {/* Divider */}
-      <div className="h-px mb-6" style={{ background: 'var(--border)' }} />
+      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-2 md:pb-3">
 
       {/* Launch Now */}
       <div className="mb-8">
@@ -237,6 +255,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘K</kbd> focus</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘M</kbd> mic</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank screen</span>
+      </div>
       </div>
     </div>
   );

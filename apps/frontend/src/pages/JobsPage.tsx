@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { DiagonalDivider } from '../components/shared/DiagonalDivider';
 
 /* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
 
@@ -689,21 +690,38 @@ export default function JobsPage() {
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div>
 
-        {/* ── Hero Section (MetAntz-inspired) ── */}
+        {/* ── Hero Section — LeetCode-style dark navy band w/ diagonal cut ── */}
         <div
           style={{
-            background: 'transparent',
+            position: 'relative',
+            overflow: 'hidden',
+            background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
           }}
         >
-          <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '20px', textAlign: 'center' }}>
-            {/* Main heading — compact */}
+          {/* Soft top glow */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+            }}
+          />
+          <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: '56px', paddingBottom: '76px', textAlign: 'center' }}>
+            {/* Eyebrow */}
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', fontFamily: "'Source Code Pro', monospace" }}>
+              CAREER · DISCOVER
+            </span>
+            {/* Main heading — bigger on the dark band */}
             <h1 className="heading-1" style={{
-              fontSize: 'clamp(22px, 3vw, 32px)',
+              fontSize: 'clamp(28px, 4vw, 44px)',
               fontWeight: 800,
               letterSpacing: '-0.02em',
-              margin: '0 auto 12px auto',
+              color: '#FFFFFF',
+              margin: '12px auto 14px auto',
             }}>
-              Find the right job — without searching
+              Find the right job — <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>without searching.</span>
             </h1>
 
             {/* Search bar */}
@@ -771,14 +789,14 @@ export default function JobsPage() {
             </div>
 
             {/* Stats row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6" style={{ marginTop: '10px', fontSize: '13px', color: 'var(--text-muted)' }}>
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6" style={{ marginTop: '14px', fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="16" height="16" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg width="16" height="16" fill="none" stroke="var(--cam-gold-leaf-lt)" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
                 </svg>
-                <strong style={{ color: 'var(--text-primary)' }}>{total}</strong> active jobs
+                <strong className="text-white">{total}</strong> active jobs
               </span>
-              <span style={{ color: 'var(--border)' }}>|</span>
+              <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
               <span>
                 {lastUpdated
                   ? `Updated ${new Date(lastUpdated).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}`
@@ -786,6 +804,7 @@ export default function JobsPage() {
               </span>
             </div>
           </div>
+          <DiagonalDivider fill="var(--bg-surface)" slope="tl-to-br" position="bottom" height="6vh" />
         </div>
 
         {/* ── Job URL Analysis Section ── */}

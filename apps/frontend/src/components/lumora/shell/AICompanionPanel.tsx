@@ -363,24 +363,30 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         </>
       )}
 
-      {/* Header */}
+      {/* Header — LeetCode-style dark navy band with gold underline.
+          Tool window, so no diagonal wedge — the gold hairline carries
+          the same design grammar without crowding the chat surface. */}
       <div
         className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
-        style={{ borderBottom: '1px solid var(--border)', borderRadius: embedded || maximized ? 0 : '16px 16px 0 0' }}
+        style={{
+          background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderRadius: embedded || maximized ? 0 : '16px 16px 0 0',
+        }}
         onMouseDown={embedded ? undefined : startDrag}
       >
         {/* Left: clear + close (embedded) or clear + new (floating) */}
         <div className="flex items-center gap-0.5">
           <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
-            className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="Clear history">
+            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="Clear history">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
           </button>
           {embedded ? (
-            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="Close">
+            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="Close">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </button>
           ) : (
-            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="New chat">
+            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="New chat">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
             </button>
           )}
@@ -389,9 +395,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Center: title + mode toggle */}
         <div className="flex-1 flex items-center justify-center gap-2">
           <SonaAvatar size={18} />
-          <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>Sona</span>
-          {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--success)' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
-          <div className="flex items-center rounded-md p-0.5" style={{ background: 'var(--bg-elevated)' }}>
+          <span className="text-[11px] font-bold text-white">Sona</span>
+          {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
+          <div className="flex items-center rounded-md p-0.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
                 key={mode}
@@ -402,8 +408,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   fontWeight: 700,
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
-                  color: answerMode === mode ? '#FFFFFF' : 'var(--text-dimmed)',
-                  background: answerMode === mode ? 'var(--cam-primary)' : 'transparent',
+                  color: answerMode === mode ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.75)',
+                  background: answerMode === mode ? 'var(--cam-gold-leaf)' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -416,11 +422,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
