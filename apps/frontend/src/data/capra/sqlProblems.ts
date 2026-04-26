@@ -39,10 +39,6 @@ export const SQL_CATEGORIES = [
   { id: 'advanced-select',  label: 'Advanced Select and Joins' },
   { id: 'subqueries',       label: 'Subqueries' },
   { id: 'advanced-string',  label: 'Advanced String + Misc' },
-  // legacy fallthrough (no current Top-50 problems use these but old
-  // catalogue items still reference them)
-  { id: 'advanced-joins',   label: 'Advanced Joins' },
-  { id: 'window-functions', label: 'Window Functions' },
 ] as const;
 
 const _LEGACY_PROBLEMS: SqlProblem[] = [
@@ -453,7 +449,7 @@ SELECT`,
     id: 7,
     title: 'Students and Examinations',
     difficulty: 'Medium',
-    category: 'advanced-joins',
+    category: 'basic-joins',
     description: `Write a query to find the number of times each student attended each exam.\n\nReturn the result table ordered by \`student_id\` and \`subject_name\`.`,
     tables: [
       {
@@ -562,7 +558,7 @@ SELECT`,
     id: 8,
     title: 'Managers with at Least 5 Direct Reports',
     difficulty: 'Medium',
-    category: 'advanced-joins',
+    category: 'basic-joins',
     description: `Write a query to find managers who have **at least five direct reports**.\n\nReturn the result table in **any order**.`,
     tables: [
       {
@@ -619,7 +615,7 @@ SELECT`,
     id: 9,
     title: 'Confirmation Rate',
     difficulty: 'Medium',
-    category: 'advanced-joins',
+    category: 'basic-joins',
     description: `The **confirmation rate** of a user is the number of \`confirmed\` messages divided by the total number of confirmation requests. If a user has no requests, the rate is \`0.00\`.\n\nWrite a query to find the confirmation rate of each user, rounded to **2 decimal places**.\n\nReturn the result table in **any order**.`,
     tables: [
       {
@@ -695,7 +691,7 @@ SELECT`,
     id: 10,
     title: 'Number of Employees Who Report to Each Manager',
     difficulty: 'Easy',
-    category: 'advanced-joins',
+    category: 'advanced-select',
     description: `For each manager, report the number of employees who report directly to them, and the **average age** of those employees (rounded to the nearest integer).\n\nReturn the result table ordered by \`employee_id\`.`,
     tables: [
       {
@@ -884,7 +880,7 @@ SELECT`,
     id: 13,
     title: 'Count Salary Categories',
     difficulty: 'Medium',
-    category: 'aggregations',
+    category: 'advanced-select',
     description: `Write a query to count the number of bank accounts in each salary category. The categories are:\n\n- **"Low Salary"**: income strictly less than 20000\n- **"Average Salary"**: income between 20000 and 50000 (inclusive)\n- **"High Salary"**: income strictly greater than 50000\n\nReturn the result table in **any order**. If there are no accounts in a category, return 0.`,
     tables: [
       {
@@ -949,7 +945,7 @@ SELECT`,
     id: 14,
     title: 'Primary Department for Each Employee',
     difficulty: 'Easy',
-    category: 'subqueries',
+    category: 'advanced-select',
     description: `Employees can belong to multiple departments. When an employee joins multiple departments, they choose one as their **primary** department (\`primary_flag = 'Y'\`). An employee who belongs to only one department automatically has that as their primary.\n\nWrite a query to report the department that is the primary for each employee.\n\nReturn the result table in **any order**.`,
     tables: [
       {
@@ -1015,7 +1011,7 @@ SELECT`,
     id: 15,
     title: 'Product Price at a Given Date',
     difficulty: 'Medium',
-    category: 'subqueries',
+    category: 'advanced-select',
     description: `Write a query to find the prices of all products on **2019-08-16**. Assume the price of all products before any change is **10**.\n\nReturn the result table in **any order**.`,
     tables: [
       {
@@ -1080,7 +1076,7 @@ SELECT`,
     id: 16,
     title: 'Last Person to Fit in the Bus',
     difficulty: 'Medium',
-    category: 'subqueries',
+    category: 'advanced-select',
     description: `There is a queue of people waiting to board a bus. The bus has a weight limit of **1000 kilograms**.\n\nWrite a query to find the **last person** who can fit on the bus without exceeding the weight limit. It is guaranteed that the first person in the queue can fit.\n\nThe queue is ordered by \`turn\`.`,
     tables: [
       {
@@ -1141,7 +1137,7 @@ SELECT`,
     id: 17,
     title: 'Rank Scores',
     difficulty: 'Medium',
-    category: 'window-functions',
+    category: 'subqueries',
     description: `Write a query to rank scores. The ranking should be **dense** (no gaps between ranking numbers when there are ties).\n\nReturn the result table ordered by \`score\` in **descending** order.`,
     tables: [
       {
@@ -1198,7 +1194,7 @@ SELECT`,
     id: 18,
     title: 'Department Top Three Salaries',
     difficulty: 'Hard',
-    category: 'window-functions',
+    category: 'subqueries',
     description: `A company's executives want to see who earns the most in each department. A **high earner** is an employee whose salary is in the **top three unique salaries** for that department.\n\nWrite a query to find the employees who are high earners in each department.`,
     tables: [
       {
