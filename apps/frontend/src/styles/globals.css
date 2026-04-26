@@ -940,7 +940,7 @@ img { max-width: 100%; height: auto; }
 
 /* Gradient text on dark backgrounds */
 .ai-gradient-text {
-  background: linear-gradient(135deg, #2D8CFF 0%, #60A5FA 50%, var(--cam-primary) 100%);
+  background: linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-lt) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
