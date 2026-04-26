@@ -5,6 +5,7 @@ import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import SEO from '../../components/shared/SEO';
 import { dialogConfirm, dialogAlert } from '../../components/shared/Dialog';
+import UsageEstimateBadge from '../../components/shared/ui/UsageEstimateBadge';
 
 const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -417,6 +418,7 @@ export default function TeamSettingsPage() {
                     Includes {formatHours(budget.topup_hours)} from active top-ups (90-day expiry)
                   </p>
                 )}
+                <div className="mt-2"><UsageEstimateBadge surface="capra_prep" /></div>
               </div>
               <Link to="/pricing" className="px-3 py-1.5 text-[11px] font-bold rounded-lg text-white" style={{ background: 'var(--accent)' }}>
                 {budget.exhausted ? 'Top up now' : 'Buy a top-up'}

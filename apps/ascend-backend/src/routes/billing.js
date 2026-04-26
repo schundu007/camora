@@ -396,6 +396,147 @@ router.patch('/auto-topup', jwtAuth, async (req, res) => {
 });
 
 /**
+ * Cancel subscription at period end. Self-serve cancellation — sets
+ * cancel_at_period_end on Stripe + locally so the user keeps access until
+ * their billing period ends, then drops to free.
+ * POST /api/billing/cancel-subscription
+ */
+router.post('/cancel-subscription', jwtAuth, async (req, res) => {
+  if (!isStripeConfigured()) return res.status(503).json({ error: 'Billing not configured' });
+  try {
+    const subRow = await query(
+      'SELECT stripe_subscription_id, plan_type, status, current_period_end FROM ascend_subscriptions WHERE user_id = $1',
+      [req.user.id],
+    );
+    const sub = subRow.rows[0];
+    if (!sub?.stripe_subscription_id) {
+      return res.status(404).json({ error: 'No active subscription to cancel', code: 'NO_SUBSCRIPTION' });
+    }
+    if (!PAID_PLAN_TYPES.has(sub.plan_type)) {
+      return res.status(400).json({ error: 'Subscription is already free', code: 'ALREADY_FREE' });
+    }
+    // Stripe canonical state — DB tracks the same flag for fast reads.
+    await stripe.subscriptions.update(sub.stripe_subscription_id, { cancel_at_period_end: true });
+    await query(
+      'UPDATE ascend_subscriptions SET cancel_at_period_end = true, updated_at = NOW() WHERE user_id = $1',
+      [req.user.id],
+    );
+    logger.info({ userId: req.user.id, planType: sub.plan_type }, 'Subscription scheduled for cancellation');
+    return res.json({
+      ok: true,
+      cancel_at_period_end: true,
+      access_until: sub.current_period_end,
+    });
+  } catch (err) {
+    logger.error({ err: err.message, userId: req.user.id }, '[billing] cancel failed');
+    return res.status(500).json({ error: 'Failed to cancel subscription' });
+  }
+});
+
+/**
+ * Resume a cancellation — undo cancel_at_period_end before the period ends.
+ * POST /api/billing/resume-subscription
+ */
+router.post('/resume-subscription', jwtAuth, async (req, res) => {
+  if (!isStripeConfigured()) return res.status(503).json({ error: 'Billing not configured' });
+  try {
+    const subRow = await query(
+      'SELECT stripe_subscription_id, cancel_at_period_end FROM ascend_subscriptions WHERE user_id = $1',
+      [req.user.id],
+    );
+    const sub = subRow.rows[0];
+    if (!sub?.stripe_subscription_id) return res.status(404).json({ error: 'No subscription' });
+    if (!sub.cancel_at_period_end) return res.json({ ok: true, cancel_at_period_end: false });
+    await stripe.subscriptions.update(sub.stripe_subscription_id, { cancel_at_period_end: false });
+    await query(
+      'UPDATE ascend_subscriptions SET cancel_at_period_end = false, updated_at = NOW() WHERE user_id = $1',
+      [req.user.id],
+    );
+    return res.json({ ok: true, cancel_at_period_end: false });
+  } catch (err) {
+    logger.error({ err: err.message }, '[billing] resume failed');
+    return res.status(500).json({ error: 'Failed to resume subscription' });
+  }
+});
+
+/**
+ * Refund a top-up purchase. Owner-only for team top-ups (only the buyer
+ * can refund). Marks the row as refunded so future budget calcs exclude
+ * it. Stripe refund is full-amount only — partial refunds are out of
+ * scope for self-serve.
+ * POST /api/billing/refund-topup/:topupId
+ */
+router.post('/refund-topup/:topupId', jwtAuth, async (req, res) => {
+  if (!isStripeConfigured()) return res.status(503).json({ error: 'Billing not configured' });
+  try {
+    const topupId = Number(req.params.topupId);
+    const r = await query(
+      `SELECT id, user_id, team_id, hours, amount_cents, stripe_session_id, refunded_at, auto_charged
+         FROM ai_hour_topups WHERE id = $1`,
+      [topupId],
+    );
+    const topup = r.rows[0];
+    if (!topup) return res.status(404).json({ error: 'Top-up not found' });
+    if (topup.refunded_at) return res.status(400).json({ error: 'Already refunded', code: 'ALREADY_REFUNDED' });
+    if (topup.user_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the buyer can refund this top-up' });
+    }
+
+    // Stripe refund — works for both Checkout sessions (manual) and
+    // PaymentIntents (auto-topup). retrieve resolves the underlying PI.
+    let paymentIntentId = topup.stripe_session_id;
+    if (paymentIntentId?.startsWith('cs_')) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(paymentIntentId);
+        paymentIntentId = session.payment_intent;
+      } catch { /* fallthrough — let refunds.create error if invalid */ }
+    }
+    let refund;
+    try {
+      refund = await stripe.refunds.create({
+        payment_intent: paymentIntentId,
+        reason: req.body?.reason || 'requested_by_customer',
+      });
+    } catch (err) {
+      logger.warn({ err: err.message, topupId }, '[billing] stripe refund failed');
+      return res.status(400).json({ error: 'Refund failed', stripe_error: err.message });
+    }
+
+    await query(
+      'UPDATE ai_hour_topups SET refunded_at = NOW(), refund_reason = $1 WHERE id = $2',
+      [(req.body?.reason || 'requested_by_customer').slice(0, 100), topupId],
+    );
+    logger.info({ topupId, refundId: refund.id, userId: req.user.id }, 'Top-up refunded');
+    return res.json({ ok: true, refund_id: refund.id, amount_refunded: refund.amount });
+  } catch (err) {
+    logger.error({ err: err.message }, '[billing] refund-topup failed');
+    return res.status(500).json({ error: 'Failed to refund top-up' });
+  }
+});
+
+/**
+ * List the user's recent top-ups so the frontend can offer refund.
+ * GET /api/billing/topups
+ */
+router.get('/topups', jwtAuth, async (req, res) => {
+  try {
+    const r = await query(
+      `SELECT id, hours, amount_cents, expires_at, auto_charged, refunded_at, created_at,
+              (refunded_at IS NULL AND expires_at > NOW()) AS active
+         FROM ai_hour_topups
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT 50`,
+      [req.user.id],
+    );
+    return res.json({ topups: r.rows });
+  } catch (err) {
+    logger.error({ err: err.message }, '[billing] list topups failed');
+    return res.status(500).json({ error: 'Failed to load top-ups' });
+  }
+});
+
+/**
  * Get subscription status
  * GET /api/billing/subscription
  */

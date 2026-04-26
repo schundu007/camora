@@ -268,7 +268,7 @@ async function sumUnexpiredTopups({ userId = null, teamId = null }) {
     if (teamId) {
       const r = await query(
         `SELECT COALESCE(SUM(hours), 0) AS h FROM ai_hour_topups
-          WHERE team_id = $1 AND expires_at > NOW()`,
+          WHERE team_id = $1 AND expires_at > NOW() AND refunded_at IS NULL`,
         [teamId],
       );
       return Number(r.rows[0]?.h || 0);
@@ -276,7 +276,7 @@ async function sumUnexpiredTopups({ userId = null, teamId = null }) {
     if (userId) {
       const r = await query(
         `SELECT COALESCE(SUM(hours), 0) AS h FROM ai_hour_topups
-          WHERE user_id = $1 AND team_id IS NULL AND expires_at > NOW()`,
+          WHERE user_id = $1 AND team_id IS NULL AND expires_at > NOW() AND refunded_at IS NULL`,
         [userId],
       );
       return Number(r.rows[0]?.h || 0);

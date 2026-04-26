@@ -375,6 +375,12 @@ async function runMigrations() {
     await query("ALTER TABLE teams ADD COLUMN IF NOT EXISTS pool_reminder_95_sent_at TIMESTAMPTZ");
     console.log('[Migrations] pool reminder timestamps ensured');
 
+    // Refund tracking — when a top-up is refunded via Stripe, we mark it
+    // here and exclude it from pool sums going forward.
+    await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ");
+    await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS refund_reason VARCHAR(100)");
+    console.log('[Migrations] refund tracking ensured');
+
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
       id SERIAL PRIMARY KEY,
