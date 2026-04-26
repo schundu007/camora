@@ -105,14 +105,15 @@ function ResultTable({
 }) {
   const displayRows = rows.slice(0, maxRows);
   return (
-    <div className="overflow-auto max-h-[260px] rounded-lg border border-slate-200">
-      <table className="w-full text-sm border-collapse" style={{ fontFamily: 'var(--font-mono)' }}>
+    <div className="overflow-auto max-h-[220px] rounded-md border" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
+      <table className="w-full text-[12px] border-collapse" style={{ fontFamily: 'var(--font-mono)' }}>
         <thead>
-          <tr className="bg-slate-50 sticky top-0">
+          <tr className="sticky top-0" style={{ background: 'var(--bg-elevated)' }}>
             {columns.map((col, i) => (
               <th
                 key={i}
-                className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200"
+                className="px-2 py-1 text-left text-[10px] font-bold uppercase tracking-wider border-b"
+                style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
               >
                 {col}
               </th>
@@ -121,11 +122,11 @@ function ResultTable({
         </thead>
         <tbody>
           {displayRows.map((row, ri) => (
-            <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
+            <tr key={ri} style={{ background: ri % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)' }}>
               {row.map((cell, ci) => (
-                <td key={ci} className="px-3 py-1.5 border-b border-slate-100 text-slate-700 whitespace-nowrap">
+                <td key={ci} className="px-2 py-0.5 border-b font-medium whitespace-nowrap" style={{ color: 'var(--text-primary)', borderColor: 'var(--border)' }}>
                   {cell === null || cell === undefined ? (
-                    <span className="text-slate-400 italic">NULL</span>
+                    <span className="italic font-semibold" style={{ color: 'var(--warning-text)' }}>NULL</span>
                   ) : (
                     String(cell)
                   )}
@@ -135,7 +136,7 @@ function ResultTable({
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={columns.length} className="px-3 py-6 text-center text-slate-400 italic">
+              <td colSpan={columns.length} className="px-2 py-4 text-center italic" style={{ color: 'var(--text-muted)' }}>
                 No rows returned
               </td>
             </tr>
@@ -143,7 +144,7 @@ function ResultTable({
         </tbody>
       </table>
       {rows.length > maxRows && (
-        <div className="px-3 py-1.5 text-xs text-slate-400 bg-slate-50 border-t border-slate-200">
+        <div className="px-2 py-0.5 text-[10px] border-t" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           Showing {maxRows} of {rows.length} rows
         </div>
       )}
@@ -156,22 +157,23 @@ function ResultTable({
 function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-2 mb-1.5">
+      <div className="flex items-center gap-2 mb-1">
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[var(--accent-subtle)] text-[var(--accent)] border border-[rgba(0,0,0,0.1)]"
-          style={{ fontFamily: 'var(--font-mono)' }}
+          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
+          style={{ fontFamily: 'var(--font-mono)', background: 'var(--accent-subtle)', color: 'var(--accent)', borderColor: 'var(--border)' }}
         >
           {table.name}
         </span>
       </div>
-      <div className="overflow-auto rounded-lg border border-slate-200">
-        <table className="w-full text-sm border-collapse" style={{ fontFamily: 'var(--font-mono)' }}>
+      <div className="overflow-auto rounded-md border" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
+        <table className="w-full text-[12px] border-collapse" style={{ fontFamily: 'var(--font-mono)' }}>
           <thead>
-            <tr className="bg-slate-50">
+            <tr style={{ background: 'var(--bg-elevated)' }}>
               {table.columns.map((col, i) => (
                 <th
                   key={i}
-                  className="px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200"
+                  className="px-2 py-1 text-left text-[10px] font-bold uppercase tracking-wider border-b"
+                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                 >
                   {col}
                 </th>
@@ -180,11 +182,11 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
           </thead>
           <tbody>
             {table.rows.map((row, ri) => (
-              <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
+              <tr key={ri} style={{ background: ri % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)' }}>
                 {row.map((cell, ci) => (
-                  <td key={ci} className="px-3 py-1 border-b border-slate-100 text-slate-700 whitespace-nowrap">
+                  <td key={ci} className="px-2 py-0.5 border-b font-medium whitespace-nowrap" style={{ color: 'var(--text-primary)', borderColor: 'var(--border)' }}>
                     {cell === null || cell === undefined ? (
-                      <span className="text-slate-400 italic">NULL</span>
+                      <span className="italic font-semibold" style={{ color: 'var(--warning-text)' }}>NULL</span>
                     ) : (
                       String(cell)
                     )}
@@ -226,6 +228,21 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
 
   const dbRef = useRef<SqlJsDatabase | null>(null);
   const problem = SQL_PROBLEMS.find((p) => p.id === selectedProblemId) || SQL_PROBLEMS[0];
+
+  // Drag-to-reorder state for the schema/expected-output card row. The order
+  // array indexes into [...problem.tables, expectedOutput] — value -1 is the
+  // expected-output sentinel. Resets whenever the problem changes.
+  const cardCount = problem.tables.length + 1;
+  const [cardOrder, setCardOrder] = useState<number[]>(() =>
+    Array.from({ length: cardCount }, (_, i) => i === problem.tables.length ? -1 : i)
+  );
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [dropTargetIdx, setDropTargetIdx] = useState<number | null>(null);
+  useEffect(() => {
+    setCardOrder(Array.from({ length: cardCount }, (_, i) => i === problem.tables.length ? -1 : i));
+    setDraggingIdx(null);
+    setDropTargetIdx(null);
+  }, [problem.id, cardCount]);
 
   // ── Persist solved state ────────────────────────────────────────────────
   useEffect(() => {
@@ -432,10 +449,10 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
       {/* ── Main Content — side by side ─────────────────────────────── */}
       <div className="flex flex-col md:flex-row" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
         {/* ── Left: Problem Description ────────────────────────────── */}
-        <div className="w-full md:w-[42%] md:border-r border-b md:border-b-0 border-slate-200 overflow-y-auto">
-          <div className="p-5">
+        <div className="w-full md:w-[42%] md:border-r border-b md:border-b-0 overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-3">
             {/* Title + navigation */}
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={goPrev}
                 disabled={currentIndex === 0}
@@ -475,74 +492,102 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
 
             {/* Description */}
             <p
-              className="text-sm text-slate-600 leading-relaxed mb-4 whitespace-pre-line"
-              style={{ fontFamily: "'Inter', sans-serif" }}
+              className="text-[13px] leading-snug mb-2 whitespace-pre-line font-medium"
+              style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)' }}
             >
               {problem.description}
             </p>
 
-            {/* Schemas + Expected Output side-by-side. The grid auto-fits as
-                many tables as fit (min 220px each); on narrow panels they wrap. */}
+            {/* Schemas + Expected Output side-by-side. Cards are draggable —
+                dropping one onto another swaps positions so the user can
+                arrange the row to match the join they're reasoning about.
+                Grid auto-fits (min 200px each); narrow panels wrap. */}
             <div
-              className="mb-4 grid gap-3"
-              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}
+              className="mb-3 grid gap-2"
+              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
             >
-              {problem.tables.map((t, i) => (
-                <SchemaTable key={i} table={t} />
-              ))}
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span
-                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide border"
-                    style={{ fontFamily: 'var(--font-mono)', background: 'rgba(38,97,156,0.04)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}
+              {cardOrder.map((slot, idx) => {
+                const isExpected = slot === -1;
+                const isDragging = draggingIdx === idx;
+                const isDropTarget = dropTargetIdx === idx && draggingIdx !== null && draggingIdx !== idx;
+                return (
+                  <div
+                    key={isExpected ? 'expected' : `tbl-${slot}`}
+                    draggable
+                    onDragStart={(e) => { setDraggingIdx(idx); e.dataTransfer.effectAllowed = 'move'; }}
+                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dropTargetIdx !== idx) setDropTargetIdx(idx); }}
+                    onDragLeave={() => setDropTargetIdx(t => (t === idx ? null : t))}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (draggingIdx === null || draggingIdx === idx) return;
+                      const next = [...cardOrder];
+                      const moved = next.splice(draggingIdx, 1)[0];
+                      next.splice(idx, 0, moved);
+                      setCardOrder(next);
+                      setDraggingIdx(null);
+                      setDropTargetIdx(null);
+                    }}
+                    onDragEnd={() => { setDraggingIdx(null); setDropTargetIdx(null); }}
+                    className="rounded-md transition-all"
+                    style={{
+                      cursor: 'grab',
+                      opacity: isDragging ? 0.5 : 1,
+                      outline: isDropTarget ? '2px solid var(--accent)' : 'none',
+                      outlineOffset: '-2px',
+                    }}
+                    title="Drag to reorder"
                   >
-                    Expected Output
-                  </span>
-                </div>
-                <ResultTable columns={problem.expectedOutput.columns} rows={problem.expectedOutput.rows} />
-              </div>
+                    {isExpected ? (
+                      <>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
+                            style={{ fontFamily: 'var(--font-mono)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                          >
+                            Expected Output
+                          </span>
+                        </div>
+                        <ResultTable columns={problem.expectedOutput.columns} rows={problem.expectedOutput.rows} />
+                      </>
+                    ) : (
+                      <SchemaTable table={problem.tables[slot]} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Explanation — Approach (always visible) + Solution (toggleable
-                so the user can attempt the problem first). The Problem card
-                isn't repeated here since the description above already serves
-                that role; this section is the "what to do + how" companion. */}
-            <div className="mb-3 space-y-3">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Explanation
-              </div>
-
-              {/* Approach card — hints rendered as a numbered step list. */}
-              <div className="rounded-lg border border-slate-200 bg-white">
-                <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
+            {/* Explanation — compact Approach + Solution cards. */}
+            <div className="mb-2 space-y-2">
+              {/* Approach card — hints as a numbered step list, always visible. */}
+              <div className="rounded-md border" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
+                <div className="px-2 py-1 border-b flex items-center gap-1.5" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 1.9V18h6v-1.4c0-.7.4-1.4 1-1.9A7 7 0 0 0 12 2z" />
                   </svg>
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Approach</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Approach</span>
                 </div>
-                <ol className="px-3 py-2 space-y-1.5">
+                <ol className="px-2 py-1.5 space-y-1">
                   {problem.hints.map((hint, i) => (
-                    <li key={i} className="text-xs text-slate-700 flex items-start gap-2">
+                    <li key={i} className="text-[12px] flex items-start gap-1.5 font-medium" style={{ color: 'var(--text-primary)' }}>
                       <span className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{i + 1}</span>
-                      <span className="leading-relaxed">{hint}</span>
+                      <span className="leading-snug">{hint}</span>
                     </li>
                   ))}
                 </ol>
               </div>
 
-              {/* Solution card — collapsed by default. The reveal button sits
-                  inside the card header so it's discoverable without a row of
-                  loose buttons above. */}
-              <div className="rounded-lg border border-slate-200 bg-white">
-                <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
+              {/* Solution card — collapsed by default. */}
+              <div className="rounded-md border" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
+                <div className="px-2 py-1 border-b flex items-center justify-between gap-2" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+                  <div className="flex items-center gap-1.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
                       <polyline points="16 18 22 12 16 6" />
                       <polyline points="8 6 2 12 8 18" />
                     </svg>
-                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Solution</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Solution</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     {showSolution && (
                       <button
                         onClick={() => {
@@ -558,16 +603,16 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                           if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
                         }}
                         id="sql-copy-btn"
-                        className="px-2 py-0.5 rounded text-[10px] font-semibold transition-colors"
-                        style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                        className="px-1.5 py-0 rounded text-[10px] font-bold transition-colors"
+                        style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                       >
                         Copy
                       </button>
                     )}
                     <button
                       onClick={() => setShowSolution(!showSolution)}
-                      className="px-2 py-0.5 rounded text-[10px] font-semibold transition-colors"
-                      style={{ background: showSolution ? 'var(--bg-elevated)' : 'var(--accent-subtle)', color: showSolution ? 'var(--text-secondary)' : 'var(--accent)', border: '1px solid var(--border)' }}
+                      className="px-1.5 py-0 rounded text-[10px] font-bold transition-colors"
+                      style={{ background: showSolution ? 'var(--bg-surface)' : 'var(--accent-subtle)', color: showSolution ? 'var(--text-secondary)' : 'var(--accent)', border: '1px solid var(--border)' }}
                     >
                       {showSolution ? 'Hide' : 'Reveal'}
                     </button>
@@ -575,14 +620,14 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                 </div>
                 {showSolution ? (
                   <pre
-                    className="px-3 py-2 text-xs overflow-x-auto whitespace-pre-wrap"
+                    className="px-2 py-1.5 text-[12px] overflow-x-auto whitespace-pre-wrap font-semibold"
                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', background: 'var(--accent-subtle)' }}
                   >
                     {problem.solution}
                   </pre>
                 ) : (
-                  <div className="px-3 py-2 text-[11px] italic" style={{ color: 'var(--text-muted)' }}>
-                    Try the problem first, then reveal to compare. The solution applies the approach above.
+                  <div className="px-2 py-1 text-[11px] italic" style={{ color: 'var(--text-muted)' }}>
+                    Try the problem first, then reveal to compare.
                   </div>
                 )}
               </div>
