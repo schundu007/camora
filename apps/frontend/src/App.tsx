@@ -116,6 +116,28 @@ function LoginPage() {
   );
 }
 
+/**
+ * Bare /capra is non-canonical (memory rule says never route there). The
+ * default landing is /capra/prepare. But several legacy callers passed
+ * ?problem=...&mode=... to bare /capra to launch the solver — strip-style
+ * <Navigate> would have dropped those params silently. Route them to the
+ * mode's canonical path with the query intact.
+ */
+function CapraRootRedirect() {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  const mode = params.get('mode');
+  const target =
+    mode === 'system-design' ? '/capra/design'
+    : mode === 'behavioral'   ? '/capra/prep'
+    : params.has('problem')   ? '/capra/coding'
+    : '/capra/prepare';
+  // Drop ?mode= since it's encoded in the path now; keep everything else.
+  params.delete('mode');
+  const tail = params.toString();
+  return <Navigate to={tail ? `${target}?${tail}` : target} replace />;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, onboardingCompleted } = useAuth();
   const location = useLocation();
@@ -246,9 +268,9 @@ export function App() {
           <Route path="/app/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
           {/* ── Capra: Preparation (FREE to browse, backend limits solves) ── */}
-          {/* Bare /capra always lands on Prepare (the canonical Capra dashboard);
-              the legacy CapraDashboard solver still lives at /capra/coding etc. */}
-          <Route path="/capra" element={<Navigate to="/capra/prepare" replace />} />
+          {/* Bare /capra: empty → /capra/prepare; legacy ?mode=... → mode's
+              canonical path (preserves problem/autosolve query params). */}
+          <Route path="/capra" element={<CapraRootRedirect />} />
           <Route path="/capra/coding" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
           <Route path="/capra/design" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
           <Route path="/capra/prep" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
