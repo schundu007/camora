@@ -124,9 +124,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
-  // Only enforce onboarding for Capra routes
+  // Only enforce onboarding for Capra routes. Pass the original target
+  // through ?redirect= so OnboardingPage can return the user to where
+  // they were headed instead of dead-ending on /capra/prepare.
   if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
-    return <Navigate to="/capra/onboarding" replace />;
+    const target = location.pathname + location.search;
+    return <Navigate to={`/capra/onboarding?redirect=${encodeURIComponent(target)}`} replace />;
   }
   return <>{children}</>;
 }
@@ -207,7 +210,9 @@ export function App() {
           <Route path="/app/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
           {/* ── Capra: Preparation (FREE to browse, backend limits solves) ── */}
-          <Route path="/capra" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          {/* Bare /capra always lands on Prepare (the canonical Capra dashboard);
+              the legacy CapraDashboard solver still lives at /capra/coding etc. */}
+          <Route path="/capra" element={<Navigate to="/capra/prepare" replace />} />
           <Route path="/capra/coding" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
           <Route path="/capra/design" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
           <Route path="/capra/prep" element={<ShellRoute><CapraDashboard /></ShellRoute>} />

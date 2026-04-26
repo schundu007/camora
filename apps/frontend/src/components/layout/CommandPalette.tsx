@@ -23,7 +23,7 @@ interface SearchResult {
 /* ── Static pages ────────────────────────────────────────────── */
 
 const PAGES: SearchResult[] = [
-  { id: 'page-dashboard', title: 'Dashboard', path: '/capra', category: 'Pages', icon: 'home' },
+  { id: 'page-dashboard', title: 'Dashboard', path: '/capra/prepare', category: 'Pages', icon: 'home' },
   { id: 'page-practice', title: 'Practice', path: '/capra/practice', category: 'Pages', icon: 'play' },
   { id: 'page-jobs', title: 'Jobs', path: '/jobs', category: 'Pages', icon: 'briefcase' },
   { id: 'page-live', title: 'Live Interview', path: '/lumora', category: 'Pages', icon: 'mic' },
