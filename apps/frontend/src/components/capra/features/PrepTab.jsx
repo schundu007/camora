@@ -234,7 +234,7 @@ export default function PrepTab({ isOpen, onClose }) {
                     <button
                       onClick={handleRefreshStatus}
                       className="px-3 py-1.5 text-xs font-medium rounded transition-colors"
-                      style={{ background: '#ffffff', color: '#A88817', border: '1px solid var(--text-muted)' }}
+                      style={{ background: 'var(--bg-surface)', color: '#A88817', border: '1px solid var(--text-muted)' }}
                     >
                       Refresh Status
                     </button>
