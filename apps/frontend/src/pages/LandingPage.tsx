@@ -188,7 +188,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ 2. COMPANY LOGOS — Scrolling ═══════════ */}
-      <section className="py-10 overflow-hidden bg-white">
+      <section className="py-10 overflow-hidden bg-[var(--bg-surface)]">
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: 'var(--text-muted)' }}>Trusted by engineers at</p>
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, var(--bg-surface), transparent)' }} />
@@ -229,7 +229,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ 4. APPA — THE PROCESS ═══════════ */}
-      <section className="px-6 py-28 bg-white">
+      <section className="px-6 py-28 bg-[var(--bg-surface)]">
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-16">
             <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>THE PROCESS</span>
@@ -241,7 +241,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {APPA.map((step, i) => (
               <Reveal key={step.key} delay={i * 0.06}>
-                <Link to={step.href} className="block rounded-lg h-full transition-all bg-white border border-[var(--border)] hover:border-camora-primary group overflow-hidden">
+                <Link to={step.href} className="block rounded-lg h-full transition-all bg-[var(--bg-surface)] border border-[var(--border)] hover:border-camora-primary group overflow-hidden">
                   <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <step.Anim />
                   </div>
@@ -297,7 +297,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ 6. FEATURES — 4 CARDS ═══════════ */}
-      <section className="px-6 py-28 bg-white">
+      <section className="px-6 py-28 bg-[var(--bg-surface)]">
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-16">
             <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>ONLY ON CAMORA</span>
@@ -309,7 +309,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.06}>
-                <div className="rounded-lg h-full overflow-hidden flex flex-col bg-white border border-[var(--border)]">
+                <div className="rounded-lg h-full overflow-hidden flex flex-col bg-[var(--bg-surface)] border border-[var(--border)]">
                   <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <f.Anim />
                   </div>
@@ -393,7 +393,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ 8. FINAL CTA BANNER ═══════════ */}
-      <section className="px-6 py-20 bg-white">
+      <section className="px-6 py-20 bg-[var(--bg-surface)]">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-10 md:px-16 py-12 rounded-2xl" style={{ background: 'var(--cam-void)' }}>
             <div>

@@ -4,6 +4,7 @@ import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 import SiteNav from '../../shared/SiteNav';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../hooks/useTheme';
 
 function useInView(threshold = 0.2) {
   const ref = useRef(null);
@@ -21,11 +22,33 @@ function useInView(threshold = 0.2) {
 export default function OAuthLogin() {
   const { user, isLoading: loading } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
+  // Theme-aware page gradient and journey-card palette so APPA section
+  // doesn't vanish in dark mode (was hardcoded pastel light colors).
+  const pageGradient = isDark
+    ? 'linear-gradient(180deg, var(--bg-app) 0%, var(--bg-elevated) 50%, var(--bg-app) 100%)'
+    : 'linear-gradient(180deg, #F8FAFC 0%, #ede9fe 50%, #BFDBFE 100%)';
+
+  const journeyCards = isDark
+    ? [
+        { label: 'Apply',    href: '/jobs',            icon: 'briefcase',  desc: 'Find your role',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--accent)',     borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
+        { label: 'Prepare',  href: '/capra/prepare',   icon: 'book',       desc: 'Study & review',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--cam-primary-lt)', borderEnd: 'var(--cam-primary)', badge: 'var(--cam-primary-lt)', iconColor: 'var(--cam-primary-lt)', glowColor: '60,122,171' },
+        { label: 'Practice', href: '/capra/practice',  icon: 'code',       desc: 'Solve problems',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--accent)',     borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
+        { label: 'Attend',   href: '/lumora',          icon: 'microphone', desc: 'Ace the interview',  bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--warning-text)', borderEnd: 'var(--warning)', badge: 'var(--warning)',    iconColor: 'var(--warning-text)', glowColor: '201,162,39' },
+      ]
+    : [
+        { label: 'Apply',    href: '/jobs',            icon: 'briefcase',  desc: 'Find your role',     bg: '#F8FAFC', bgEnd: '#d1fae5', border: '#6ee7b7',           borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '16,185,129' },
+        { label: 'Prepare',  href: '/capra/prepare',   icon: 'book',       desc: 'Study & review',     bg: '#ecfeff', bgEnd: '#cffafe', border: '#67e8f9',           borderEnd: '#22d3ee',           badge: '#0891b2',           iconColor: '#0891b2',           glowColor: '8,145,178' },
+        { label: 'Practice', href: '/capra/practice',  icon: 'code',       desc: 'Solve problems',     bg: '#f5f3ff', bgEnd: '#ede9fe', border: 'var(--accent)',     borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '124,58,237' },
+        { label: 'Attend',   href: '/lumora',          icon: 'microphone', desc: 'Ace the interview',  bg: '#fffbeb', bgEnd: '#F8FAFC', border: 'var(--text-muted)', borderEnd: 'var(--text-muted)', badge: '#D9B543',           iconColor: '#D9B543',           glowColor: '217,119,6' },
+      ];
+
   return (
-    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #F8FAFC 0%, #ede9fe 50%, #BFDBFE 100%)', paddingBottom: '52px' }}>
+    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root" style={{ background: pageGradient, paddingBottom: '52px' }}>
       <SiteNav />
 
       {/* Hero */}
@@ -77,12 +100,7 @@ export default function OAuthLogin() {
       <section className="px-6 md:px-12 py-10">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 pt-6 px-2">
-            {[
-              { label: 'Apply', href: '/jobs', icon: 'briefcase', desc: 'Find your role', bg: '#F8FAFC', bgEnd: '#d1fae5', border: '#6ee7b7', borderEnd: 'var(--accent)', badge: 'var(--accent)', iconColor: 'var(--accent)', glowColor: '16,185,129', slideFrom: 'left' },
-              { label: 'Prepare', href: '/capra/prepare', icon: 'book', desc: 'Study & review', bg: '#ecfeff', bgEnd: '#cffafe', border: '#67e8f9', borderEnd: '#22d3ee', badge: '#0891b2', iconColor: '#0891b2', glowColor: '8,145,178', slideFrom: 'bottom' },
-              { label: 'Practice', href: '/capra/practice', icon: 'code', desc: 'Solve problems', bg: '#f5f3ff', bgEnd: '#ede9fe', border: 'var(--accent)', borderEnd: 'var(--accent)', badge: 'var(--accent)', iconColor: 'var(--accent)', glowColor: '124,58,237', slideFrom: 'bottom' },
-              { label: 'Attend', href: '/lumora', icon: 'microphone', desc: 'Ace the interview', bg: '#fffbeb', bgEnd: '#F8FAFC', border: 'var(--text-muted)', borderEnd: 'var(--text-muted)', badge: '#D9B543', iconColor: '#D9B543', glowColor: '217,119,6', slideFrom: 'right' },
-            ].map((item, i) => (
+            {journeyCards.map((item, i) => (
               <Link key={item.label} to={item.href} className={`journey-card journey-card-${i} group relative flex flex-col items-center gap-3 p-6 rounded-2xl text-center`} style={{ '--card-bg': item.bg, '--card-bg-end': item.bgEnd, '--card-border': item.border, '--card-border-end': item.borderEnd, '--card-glow': item.glowColor, animationDelay: `${i * 0.2}s` }}>
                 <div className="journey-border-glow absolute inset-0 rounded-2xl pointer-events-none" style={{ animationDelay: `${i * 0.5}s` }} />
                 <div className="journey-badge absolute -top-5 -right-3 w-10 h-10 rounded-full flex items-center justify-center text-base font-black landing-mono text-white z-10" style={{ background: `linear-gradient(135deg, ${item.border}, ${item.badge})`, boxShadow: `0 4px 14px rgba(${item.glowColor},0.4), inset 0 1px 2px rgba(255,255,255,0.3)`, animationDelay: `${i * 0.2 + 0.6}s` }}>{i + 1}</div>
@@ -191,8 +209,10 @@ export default function OAuthLogin() {
         </Link>
       </section>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: '#111827' }}>
+      {/* Footer — uses var(--bg-surface) so it respects light + dark
+          themes. Was hardcoded to #111827 (always dark) which made the
+          footer invisible/broken in light mode. */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={24} />
