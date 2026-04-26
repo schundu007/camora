@@ -175,43 +175,51 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
           const isPro = (plan as any).popular;
           const isBest = (plan as any).best;
 
+          const highlighted = isPro || isBest;
+          // Solid dark navy for highlighted cards — matches the bottom CTA on the
+          // pricing page, and contrasts safely with white text in both themes.
+          const highlightBg = '#0F172A';
+          const highlightFg = '#FFFFFF';
+          const highlightFgMuted = 'rgba(255,255,255,0.72)';
+          const highlightBorder = 'rgba(255,255,255,0.18)';
+
           return (
             <div
               key={plan.name}
               className="group flex flex-col rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               style={{
-                background: (isPro || isBest) ? '#C2E3F5' : 'var(--bg-surface)',
-                border: (isPro || isBest) ? '2px solid var(--border)' : '1px solid var(--border)',
+                background: highlighted ? highlightBg : 'var(--bg-surface)',
+                border: highlighted ? `2px solid ${highlightBg}` : '1px solid var(--border)',
               }}
             >
               <div className="p-3 flex flex-col flex-1">
                 {/* Badge */}
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-[10px] font-bold uppercase tracking-wider" style={{ color: (isPro || isBest) ? 'var(--text-muted)' : 'var(--text-muted)' }}>{plan.name}</h3>
-                  {isPro && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: 'var(--text-muted)' }}>Popular</span>}
-                  {isBest && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ background: 'var(--text-muted)' }}>Best</span>}
+                  <h3 className="text-[10px] font-bold uppercase tracking-wider" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>{plan.name}</h3>
+                  {isPro && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold" style={{ background: '#FFFFFF', color: highlightBg }}>Popular</span>}
+                  {isBest && <span className="px-1.5 py-0.5 rounded-full text-[7px] font-bold" style={{ background: '#FFFFFF', color: highlightBg }}>Best</span>}
                 </div>
 
                 {/* Price */}
                 <div className="flex items-baseline gap-0.5 mb-1">
-                  <span className="text-xl font-extrabold" style={{ color: (isPro || isBest) ? 'var(--text-primary)' : 'var(--text-primary)' }}>{plan.price}</span>
-                  {plan.period && <span className="text-[10px]" style={{ color: (isPro || isBest) ? 'var(--text-muted)' : 'var(--text-muted)' }}>{plan.period}</span>}
+                  <span className="text-xl font-extrabold" style={{ color: highlighted ? highlightFg : 'var(--text-primary)' }}>{plan.price}</span>
+                  {plan.period && <span className="text-[10px]" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>{plan.period}</span>}
                 </div>
-                {(plan as any).subtitle && <p className="text-[9px] mb-1" style={{ color: (isPro || isBest) ? 'var(--text-muted)' : 'var(--text-muted)' }}>{(plan as any).subtitle}</p>}
+                {(plan as any).subtitle && <p className="text-[9px] mb-1" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>{(plan as any).subtitle}</p>}
 
                 {/* Features */}
                 <ul className="space-y-1 flex-1 mb-3">
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-1 text-[10px] leading-tight">
-                      <svg className="w-3 h-3 mt-px shrink-0" viewBox="0 0 16 16" fill="none" stroke={(isPro || isBest) ? 'var(--text-primary)' : 'var(--accent)'} strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      <span style={{ color: (isPro || isBest) ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{f}</span>
+                      <svg className="w-3 h-3 mt-px shrink-0" viewBox="0 0 16 16" fill="none" stroke={highlighted ? highlightFg : 'var(--accent)'} strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <span style={{ color: highlighted ? highlightFg : 'var(--text-secondary)' }}>{f}</span>
                     </li>
                   ))}
                 </ul>
 
                 {/* Upgrade note */}
                 {(plan as any).upgrade_note && (
-                  <p className="text-[8px] mb-2" style={{ color: (isPro || isBest) ? 'var(--text-primary)' : 'var(--warning-text)' }}>{(plan as any).upgrade_note}</p>
+                  <p className="text-[8px] mb-2" style={{ color: highlighted ? highlightFgMuted : 'var(--warning-text)' }}>{(plan as any).upgrade_note}</p>
                 )}
               </div>
 
@@ -221,8 +229,11 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
                   onClick={() => plan.priceKey ? checkout(priceId, plan.name) : navigate('/capra/prepare')}
                   disabled={loading === plan.name}
                   className="w-full py-2 text-[11px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50"
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
-                  }
+                  style={{
+                    background: highlighted ? '#FFFFFF' : 'var(--bg-elevated)',
+                    color: highlighted ? highlightBg : 'var(--text-primary)',
+                    border: highlighted ? `1px solid ${highlightBorder}` : '1px solid var(--border)',
+                  }}
                 >
                   {loading === plan.name ? 'Processing...' : plan.cta}
                 </button>
