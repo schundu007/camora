@@ -55,21 +55,22 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
           isOpen ? 'translate-x-0 w-[75vw] sm:w-[280px]' : '-translate-x-full lg:translate-x-0 w-0 lg:w-0'
         }`}
         style={{
-          background: 'linear-gradient(180deg, var(--cam-primary) 0%, #000000 100%)',
-          borderRight: isOpen ? '1px solid rgba(255,255,255,0.2)' : 'none',
-          boxShadow: isOpen ? '2px 0 12px rgba(0,0,0,0.2)' : 'none',
+          background: 'var(--bg-surface)',
+          borderRight: isOpen ? '1px solid var(--border)' : 'none',
+          boxShadow: isOpen ? '2px 0 12px rgba(15,23,42,0.06)' : 'none',
         }}
       >
         {isOpen && (
           <div className="flex flex-col h-full w-full overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/20 shrink-0">
-              <span className="text-xs font-mono font-bold text-white/80 uppercase tracking-widest">History</span>
+            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>History</span>
               <div className="flex items-center gap-1">
                 {history.length > 0 && (
                   <button
                     onClick={async () => { const ok = await dialogConfirm({ title: 'Clear all history?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' }); if (ok) clearHistory(); }}
-                    className="text-[10px] font-mono text-white/70 hover:text-red-400 px-2 py-1 rounded transition-colors"
+                    className="text-[10px] font-mono px-2 py-1 rounded transition-colors hover:bg-[var(--bg-elevated)]"
+                    style={{ color: 'var(--text-muted)' }}
                     title="Clear all"
                   >
                     Clear
@@ -77,7 +78,8 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                 )}
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-lg text-white/85 hover:text-white hover:bg-[var(--bg-surface)]/5 transition-colors lg:hidden"
+                  className="p-1 rounded-lg transition-colors hover:bg-[var(--bg-elevated)] lg:hidden"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -90,19 +92,19 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
             <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
               {groups.length === 0 ? (
                 <div className="px-4 py-8 text-center">
-                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                    <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-white/70 font-mono">No questions yet</p>
-                  <p className="text-[10px] text-white/85 mt-1">Ask a question to start</p>
+                  <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>No questions yet</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'var(--text-dimmed)' }}>Ask a question to start</p>
                 </div>
               ) : (
                 groups.map(group => (
                   <div key={group.label} className="mb-3">
                     <div className="px-4 py-1.5">
-                      <span className="text-[10px] font-mono font-bold text-white/70 uppercase tracking-widest">{group.label}</span>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{group.label}</span>
                     </div>
                     {group.items.map(item => (
                       <div
@@ -113,7 +115,8 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                       >
                         <button
                           onClick={() => { onSelectEntry(item.index); if (window.innerWidth < 1024) onClose(); }}
-                          className="w-full text-left px-4 py-2 text-[13px] text-white/80 hover:text-white/90 hover:bg-white/15 transition-all truncate block"
+                          className="w-full text-left px-4 py-2 text-[13px] transition-all truncate block hover:bg-[var(--bg-elevated)]"
+                          style={{ color: 'var(--text-secondary)' }}
                         >
                           {item.question}
                         </button>
@@ -121,7 +124,8 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                         {hoveredIdx === item.index && (
                           <button
                             onClick={(e) => { e.stopPropagation(); removeHistoryEntry(item.index); }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-white/70 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors hover:bg-[var(--bg-elevated)]"
+                            style={{ color: 'var(--danger)' }}
                             title="Remove"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,8 +142,8 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
 
             {/* Footer — Q&A count */}
             {history.length > 0 && (
-              <div className="px-4 py-2.5 border-t border-white/20 shrink-0">
-                <span className="text-[10px] font-mono text-white/70">{history.length} question{history.length !== 1 ? 's' : ''}</span>
+              <div className="px-4 py-2.5 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
+                <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{history.length} question{history.length !== 1 ? 's' : ''}</span>
               </div>
             )}
           </div>
