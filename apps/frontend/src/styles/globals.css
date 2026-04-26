@@ -222,10 +222,16 @@
 
   html {
     @apply antialiased scroll-smooth;
-    overflow-x: hidden;
+    /* Allow horizontal scroll instead of clipping it. Hiding overflow only
+       masks broken layouts; pages that legitimately overflow need to
+       handle it locally with overflow-x-auto wrappers, not by hiding the
+       symptom site-wide. */
     width: 100%;
     color-scheme: light;
-    zoom: 1.25;
+    /* No `zoom: 1.25` — global zoom shifts the effective viewport vs.
+       what Tailwind breakpoints test against, causing content to spill
+       at every window size. Use specific `text-Xl md:text-Yxl` patterns
+       instead of a global zoom. */
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

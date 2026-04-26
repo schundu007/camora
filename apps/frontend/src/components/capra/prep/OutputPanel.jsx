@@ -492,7 +492,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                 {safeArray(displayContent.techStack).length > 0 && (
                   <div>
                     <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: colors.textLight }}>Tech Stack (HR Report)</p>
-                    <div className="grid grid-cols-4 gap-1 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1 text-xs">
                       <span className="font-semibold" style={{ color: colors.textMuted }}>Tech</span>
                       <span className="font-semibold" style={{ color: colors.textMuted }}>Category</span>
                       <span className="font-semibold" style={{ color: colors.textMuted }}>Exp</span>
@@ -620,7 +620,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Requirements (System Design) */}
                         {q.requirements && typeof q.requirements === 'object' && (
-                          <div className="mt-3 grid grid-cols-2 gap-4">
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {safeArray(q.requirements.functional).length > 0 && (
                               <div>
                                 <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: '#3C7AAB' }}>Functional</p>
@@ -1206,7 +1206,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                 {safeArray(displayContent.abbreviations).length > 0 && (
                   <div className="pt-3 mt-3 text-xs" style={{ borderTop: `1px solid ${colors.border}` }}>
                     <p className="font-semibold mb-2" style={{ color: colors.textLight }}>Terms</p>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
                       {safeArray(displayContent.abbreviations).filter(item => item && typeof item === 'object').map((item, i) => (
                         <p key={i}>
                           <span className="font-mono font-semibold" style={{ color: colors.accent }}>{item?.abbr || ''}</span>
