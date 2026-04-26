@@ -9,6 +9,7 @@ import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import { ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
 import CountUp from '../components/shared/animation/CountUp';
+import { BentoCell } from '../components/shared/docs';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE
@@ -154,15 +155,15 @@ export default function LandingPage() {
 
           <motion.h1 className="mt-6" style={{ fontFamily: F.display }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-[36px] sm:text-[52px] md:text-[72px] font-bold leading-[1.05] tracking-tight uppercase">
+            <span className="block text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase">
               ALL YOUR PREP.
             </span>
-            <span className="block text-[48px] sm:text-[60px] md:text-[72px] font-bold leading-[1.05] tracking-tight uppercase" style={{ color: 'var(--cam-primary)' }}>
+            <span className="block text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase" style={{ color: 'var(--cam-primary)' }}>
               ONE TRUSTED PLATFORM.
             </span>
           </motion.h1>
 
-          <motion.p className="mt-6 text-lg md:text-xl max-w-4xl mx-auto" style={{ color: 'var(--text-secondary)' }}
+          <motion.p className="mt-7 text-lg md:text-xl max-w-3xl mx-auto" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
             Job discovery, interview prep, mock practice, and live AI assistance — all in one place.
           </motion.p>
@@ -299,32 +300,40 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 6. FEATURES — 4 CARDS ═══════════ */}
-      <section className="px-6 py-28 bg-[var(--bg-surface)]">
+      {/* ═══════════ 6. FEATURES — Bento grid ═══════════ */}
+      <section className="px-6 py-24 md:py-28 bg-[var(--bg-surface)]">
         <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center mb-16">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>ONLY ON CAMORA</span>
-            <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
-              FEATURES THAT <span style={{ color: 'var(--cam-primary)' }}>SET US APART.</span>
+          <Reveal className="text-left max-w-3xl mb-12 md:mb-14">
+            <span className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: 'var(--accent)', fontFamily: F.mono }}>ONLY ON CAMORA</span>
+            <h2 className="mt-3 text-3xl md:text-5xl font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.1 }}>
+              Features that set us apart.
             </h2>
+            <p className="mt-4 text-base md:text-lg" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+              Live transcription. Architecture diagrams. AI-scored mocks. Engineered for the moment that decides the offer.
+            </p>
           </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map((f, i) => (
-              <Reveal key={f.title} delay={i * 0.06}>
-                <div className="card-lift rounded-lg h-full overflow-hidden flex flex-col bg-[var(--bg-surface)] border border-[var(--border)]">
-                  <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
-                    <f.Anim />
-                  </div>
-                  <div className="p-8 flex-1">
-                    <div className="mb-5">{f.icon}</div>
-                    <span className="text-xs font-bold tracking-[0.15em] uppercase text-camora-primary" style={{ fontFamily: F.mono }}>{f.label}</span>
-                    <h3 className="mt-2 text-base font-bold" style={{ fontFamily: F.display }}>{f.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+          {/* Bento layout: row 1 = LIVE AI (wide) + JOB MATCHING.
+              row 2 = PREP + MOCK INTERVIEWS (wide). */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5" style={{ gridAutoFlow: 'dense' }}>
+            {FEATURES.map((f, i) => {
+              const wide = f.label === 'LIVE AI' || f.label === 'MOCK INTERVIEWS';
+              return (
+                <Reveal key={f.title} delay={i * 0.06} className={wide ? 'md:col-span-2' : ''}>
+                  <BentoCell
+                    size={wide ? 'lg' : 'sm'}
+                    eyebrow={f.label}
+                    title={f.title}
+                    description={f.desc}
+                    className="h-full"
+                  >
+                    <div className="mt-4 -mx-1 rounded-lg overflow-hidden h-32 md:h-40 relative" style={{ background: 'var(--bg-elevated)' }}>
+                      <f.Anim />
+                    </div>
+                  </BentoCell>
+                </Reveal>
+              );
+            })}
           </div>
 
           {/* Feature highlights bar */}
