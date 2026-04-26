@@ -55,6 +55,18 @@ interface UsageData {
   members: UsageMember[];
 }
 
+interface BudgetData {
+  source: 'team' | 'personal';
+  pool_hours: number;
+  used_hours: number;
+  remaining_hours: number;
+  topup_hours: number;
+  exhausted: boolean;
+  plan_type?: string;
+  period?: string;
+  team_id?: number;
+}
+
 function formatHours(h: number) {
   if (h < 0.01) return '0';
   if (h < 1) return `${(h * 60).toFixed(0)} min`;
@@ -76,6 +88,7 @@ export default function TeamSettingsPage() {
   const { token, user, subscription } = useAuth();
   const [team, setTeam] = useState<TeamData | null>(null);
   const [usage, setUsage] = useState<UsageData | null>(null);
+  const [budget, setBudget] = useState<BudgetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -94,14 +107,17 @@ export default function TeamSettingsPage() {
   const fetchAll = useCallback(async () => {
     if (!token) { setLoading(false); return; }
     try {
-      const [teamRes, usageRes] = await Promise.all([
+      const [teamRes, usageRes, budgetRes] = await Promise.all([
         fetch(`${API}/api/v1/teams/me`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/api/v1/teams/me/usage`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/api/v1/teams/me/budget`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const teamJson = await teamRes.json();
       const usageJson = await usageRes.json();
+      const budgetJson = await budgetRes.json();
       setTeam(teamJson.team || null);
       setUsage(usageJson.usage || null);
+      setBudget(budgetJson || null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load team');
     }
@@ -266,6 +282,45 @@ export default function TeamSettingsPage() {
         {error && !loading && (
           <div className="rounded-xl p-4 text-sm" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             {error}
+          </div>
+        )}
+
+        {/* Personal budget meter — shown for solo users (no team).
+            Team users see the equivalent breakdown inside the team panel below. */}
+        {!loading && !team && budget && budget.source === 'personal' && (
+          <div className="rounded-xl p-5 mb-6" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your AI hours</p>
+                <p className="text-base font-bold">
+                  {formatHours(budget.used_hours)} <span className="text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}>used / {formatHours(budget.pool_hours)} {budget.period === 'lifetime' ? 'lifetime' : `this ${budget.period === 'yearly' ? 'year' : 'month'}`}</span>
+                </p>
+                {budget.topup_hours > 0 && (
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    Includes {formatHours(budget.topup_hours)} from active top-ups (90-day expiry)
+                  </p>
+                )}
+              </div>
+              <Link to="/pricing" className="px-3 py-1.5 text-[11px] font-bold rounded-lg text-white" style={{ background: 'var(--accent)' }}>
+                {budget.exhausted ? 'Top up now' : 'Buy a top-up'}
+              </Link>
+            </div>
+            {budget.pool_hours > 0 && (
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                <div
+                  className="h-full transition-all"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, (budget.used_hours / budget.pool_hours) * 100))}%`,
+                    background: budget.exhausted ? '#dc2626' : (budget.remaining_hours / budget.pool_hours < 0.2 ? 'var(--cam-gold-leaf-lt)' : 'var(--accent)'),
+                  }}
+                />
+              </div>
+            )}
+            {budget.exhausted && (
+              <p className="mt-3 text-[12px]" style={{ color: '#dc2626' }}>
+                You've used all of your AI hours for this period. Buy a top-up pack to keep going, or wait for your plan's reset.
+              </p>
+            )}
           </div>
         )}
 
