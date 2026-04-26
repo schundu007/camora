@@ -460,57 +460,49 @@ router.post('/resume-subscription', jwtAuth, async (req, res) => {
 });
 
 /**
- * Refund a top-up purchase. Owner-only for team top-ups (only the buyer
- * can refund). Marks the row as refunded so future budget calcs exclude
- * it. Stripe refund is full-amount only — partial refunds are out of
- * scope for self-serve.
+ * Request a refund for a top-up. The actual Stripe refund is NOT issued
+ * here — an admin reviews and approves via /api/v1/teams/admin/refund-
+ * requests/:id/approve. Returns the request row so the UI can show a
+ * "pending review" badge on the top-up.
  * POST /api/billing/refund-topup/:topupId
+ * Body: { reason?: string }
  */
 router.post('/refund-topup/:topupId', jwtAuth, async (req, res) => {
-  if (!isStripeConfigured()) return res.status(503).json({ error: 'Billing not configured' });
   try {
     const topupId = Number(req.params.topupId);
     const r = await query(
-      `SELECT id, user_id, team_id, hours, amount_cents, stripe_session_id, refunded_at, auto_charged
-         FROM ai_hour_topups WHERE id = $1`,
+      `SELECT id, user_id, refunded_at FROM ai_hour_topups WHERE id = $1`,
       [topupId],
     );
     const topup = r.rows[0];
     if (!topup) return res.status(404).json({ error: 'Top-up not found' });
     if (topup.refunded_at) return res.status(400).json({ error: 'Already refunded', code: 'ALREADY_REFUNDED' });
     if (topup.user_id !== req.user.id) {
-      return res.status(403).json({ error: 'Only the buyer can refund this top-up' });
+      return res.status(403).json({ error: 'Only the buyer can request a refund' });
     }
 
-    // Stripe refund — works for both Checkout sessions (manual) and
-    // PaymentIntents (auto-topup). retrieve resolves the underlying PI.
-    let paymentIntentId = topup.stripe_session_id;
-    if (paymentIntentId?.startsWith('cs_')) {
-      try {
-        const session = await stripe.checkout.sessions.retrieve(paymentIntentId);
-        paymentIntentId = session.payment_intent;
-      } catch { /* fallthrough — let refunds.create error if invalid */ }
-    }
-    let refund;
     try {
-      refund = await stripe.refunds.create({
-        payment_intent: paymentIntentId,
-        reason: req.body?.reason || 'requested_by_customer',
+      const inserted = await query(
+        `INSERT INTO topup_refund_requests (topup_id, user_id, reason)
+         VALUES ($1, $2, $3) RETURNING id, status, requested_at`,
+        [topupId, req.user.id, (req.body?.reason || '').slice(0, 1000) || null],
+      );
+      logger.info({ topupId, userId: req.user.id, requestId: inserted.rows[0].id }, 'Refund requested');
+      return res.json({
+        ok: true,
+        request: inserted.rows[0],
+        message: 'Refund request submitted. An admin will review and process it within 1-2 business days.',
       });
     } catch (err) {
-      logger.warn({ err: err.message, topupId }, '[billing] stripe refund failed');
-      return res.status(400).json({ error: 'Refund failed', stripe_error: err.message });
+      // 23505 = unique violation — pending request already exists for this topup.
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'A refund request for this top-up is already pending', code: 'ALREADY_PENDING' });
+      }
+      throw err;
     }
-
-    await query(
-      'UPDATE ai_hour_topups SET refunded_at = NOW(), refund_reason = $1 WHERE id = $2',
-      [(req.body?.reason || 'requested_by_customer').slice(0, 100), topupId],
-    );
-    logger.info({ topupId, refundId: refund.id, userId: req.user.id }, 'Top-up refunded');
-    return res.json({ ok: true, refund_id: refund.id, amount_refunded: refund.amount });
   } catch (err) {
-    logger.error({ err: err.message }, '[billing] refund-topup failed');
-    return res.status(500).json({ error: 'Failed to refund top-up' });
+    logger.error({ err: err.message }, '[billing] refund request failed');
+    return res.status(500).json({ error: 'Failed to submit refund request' });
   }
 });
 
@@ -521,12 +513,19 @@ router.post('/refund-topup/:topupId', jwtAuth, async (req, res) => {
 router.get('/topups', jwtAuth, async (req, res) => {
   try {
     const r = await query(
-      `SELECT id, hours, amount_cents, expires_at, auto_charged, refunded_at, created_at,
-              (refunded_at IS NULL AND expires_at > NOW()) AS active
-         FROM ai_hour_topups
-        WHERE user_id = $1
-        ORDER BY created_at DESC
-        LIMIT 50`,
+      `SELECT t.id, t.hours, t.amount_cents, t.expires_at, t.auto_charged,
+              t.refunded_at, t.created_at,
+              (t.refunded_at IS NULL AND t.expires_at > NOW()) AS active,
+              rr.status AS refund_status,
+              rr.requested_at AS refund_requested_at,
+              rr.processed_note AS refund_note
+         FROM ai_hour_topups t
+         LEFT JOIN topup_refund_requests rr
+           ON rr.topup_id = t.id
+          AND rr.status IN ('pending', 'approved', 'denied')
+         WHERE t.user_id = $1
+         ORDER BY t.created_at DESC
+         LIMIT 50`,
       [req.user.id],
     );
     return res.json({ topups: r.rows });

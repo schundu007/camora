@@ -96,19 +96,24 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-9 h-9 rounded-md transition-colors hover:bg-white/10"
-            style={{ color: '#FFFFFF' }}
+            className="flex items-center justify-center w-9 h-9 transition-all hover:bg-white/15"
+            style={{
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.08)',
+            }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
             {theme === 'dark' ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8" cy="8" r="3" />
-                <path d="M8 1v2M8 13v2M3.05 3.05l1.4 1.4M11.55 11.55l1.4 1.4M1 8h2M13 8h2M3.05 12.95l1.4-1.4M11.55 4.45l1.4-1.4" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
               </svg>
             ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M13.5 9.5A5.5 5.5 0 1 1 6.5 2.5a4 4 0 0 0 7 7Z" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
               </svg>
             )}
           </button>
@@ -136,34 +141,40 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           {/* Tap-outside backdrop — sits below the menu, covers the rest of the viewport */}
           <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-40 cursor-default" style={{ background: 'rgba(0,0,0,0.25)', top: 56 }} />
         <div className="md:hidden relative z-50 px-6 py-3 space-y-1" style={{ background: 'var(--bg-surface)', backdropFilter: 'blur(12px)', borderTop: '1px solid var(--border)' }} role="menu">
+          {/* IMPORTANT: this menu sits on var(--bg-surface) which is white in
+              light mode. The parent <nav> uses #FFFFFF text against its dark
+              navy bg — DO NOT reuse those constants here, or you get
+              white-on-white. Inline text colors below pull from the
+              theme-aware --text-primary / --text-muted tokens so the menu
+              stays readable in either theme. */}
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
               to={link.href}
               onClick={() => setOpen(false)}
               className="block py-2 text-sm font-bold"
-              style={{ color: isActive(link.href) ? textColor : textMuted }}
+              style={{ color: isActive(link.href) ? 'var(--accent)' : 'var(--text-primary)' }}
             >
               {link.label}
             </Link>
           ))}
-          <div className="pt-2" style={{ borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }}>
+          <div className="pt-2" style={{ borderTop: '1px solid var(--border)' }}>
             {isAuthenticated ? (
               <>
-                <Link to="/account/team" onClick={() => setOpen(false)} className="flex items-center justify-between py-2 text-sm font-bold" style={{ color: textColor }}>
+                <Link to="/account/team" onClick={() => setOpen(false)} className="flex items-center justify-between py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                   <span>AI hours</span>
-                  <span className="md:hidden"><HourMeterChip variant={isLight ? 'light' : 'dark'} /></span>
+                  <span className="md:hidden"><HourMeterChip variant="light" /></span>
                 </Link>
-                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Dashboard</Link>
-                <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Profile</Link>
+                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Dashboard</Link>
+                <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Profile</Link>
                 {onboardingCompleted === false && (
-                  <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Onboarding</Link>
+                  <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Onboarding</Link>
                 )}
-                <Link to="/profile?tab=referrals" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Refer a Friend</Link>
+                <Link to="/profile?tab=referrals" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Refer a Friend</Link>
                 <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm font-bold" style={{ color: 'var(--danger)' }}>Sign out</button>
               </>
             ) : (
-              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Sign in</Link>
+              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Sign in</Link>
             )}
           </div>
         </div>

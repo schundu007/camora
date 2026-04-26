@@ -68,6 +68,24 @@ interface BudgetData {
   team_id?: number;
 }
 
+interface SubscriptionDetails {
+  plan_type: string;
+  status: string;
+  cancel_at_period_end: boolean;
+  current_period_end: string | null;
+}
+
+interface TopupRow {
+  id: number;
+  hours: number;
+  amount_cents: number;
+  expires_at: string;
+  auto_charged: boolean;
+  refunded_at: string | null;
+  active: boolean;
+  created_at: string;
+}
+
 function formatHours(h: number) {
   if (h < 0.01) return '0';
   if (h < 1) return `${(h * 60).toFixed(0)} min`;
@@ -106,6 +124,10 @@ export default function TeamSettingsPage() {
   const [autoCapDollars, setAutoCapDollars] = useState<string>('');
   const [autoSaving, setAutoSaving] = useState(false);
   const [autoLoaded, setAutoLoaded] = useState(false);
+  const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [topups, setTopups] = useState<TopupRow[]>([]);
+  const [refundingId, setRefundingId] = useState<number | null>(null);
 
   useEffect(() => {
     document.title = 'Team — Camora';
@@ -114,17 +136,31 @@ export default function TeamSettingsPage() {
   const fetchAll = useCallback(async () => {
     if (!token) { setLoading(false); return; }
     try {
-      const [teamRes, usageRes, budgetRes] = await Promise.all([
+      const [teamRes, usageRes, budgetRes, subRes, topupsRes] = await Promise.all([
         fetch(`${API}/api/v1/teams/me`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/api/v1/teams/me/usage`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/api/v1/teams/me/budget`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/api/v1/billing/subscription`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/api/v1/billing/topups`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const teamJson = await teamRes.json();
       const usageJson = await usageRes.json();
       const budgetJson = await budgetRes.json();
+      const subJson = subRes.ok ? await subRes.json() : null;
+      const topupsJson = topupsRes.ok ? await topupsRes.json() : null;
       setTeam(teamJson.team || null);
       setUsage(usageJson.usage || null);
       setBudget(budgetJson || null);
+      if (subJson) {
+        const sub = subJson.subscription || subJson;
+        setSubDetails({
+          plan_type: sub.plan_type || subJson.plan || 'free',
+          status: sub.status || subJson.status || 'active',
+          cancel_at_period_end: !!sub.cancel_at_period_end,
+          current_period_end: sub.current_period_end || null,
+        });
+      }
+      if (topupsJson?.topups) setTopups(topupsJson.topups);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load team');
     }
@@ -293,6 +329,78 @@ export default function TeamSettingsPage() {
       });
       if (res.ok) await fetchAll();
     } catch { /* swallow */ }
+  }
+
+  // ── Subscription cancel / resume ────────────────────────────────────
+  async function handleCancelSubscription() {
+    if (!token) return;
+    if (!(await dialogConfirm({
+      title: 'Cancel subscription?',
+      message: subDetails?.current_period_end
+        ? `You'll keep team access until ${new Date(subDetails.current_period_end).toLocaleDateString()}, then drop to free. Top-up packs you've already bought stay valid for 90 days.`
+        : 'Your subscription will cancel at the end of the current billing period. Top-up packs you\'ve already bought stay valid.',
+      confirmLabel: 'Cancel subscription',
+      tone: 'danger',
+    }))) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`${API}/api/v1/billing/cancel-subscription`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) await fetchAll();
+      else await dialogAlert({ title: 'Could not cancel', message: data.error || 'Try again', tone: 'danger' });
+    } catch (err: unknown) {
+      await dialogAlert({ title: 'Cancel failed', message: err instanceof Error ? err.message : 'Network error', tone: 'danger' });
+    }
+    setCancelling(false);
+  }
+
+  async function handleResumeSubscription() {
+    if (!token) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`${API}/api/v1/billing/resume-subscription`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) await fetchAll();
+    } catch { /* swallow */ }
+    setCancelling(false);
+  }
+
+  // ── Refund request ──────────────────────────────────────────────────
+  async function handleRequestRefund(topupId: number, hours: number, amountCents: number) {
+    if (!token) return;
+    if (!(await dialogConfirm({
+      title: 'Request refund?',
+      message: `Submitting a refund request for ${hours} hr ($${(amountCents / 100).toFixed(2)}). An admin will review within 1-2 business days. The hours stay usable until the refund is approved.`,
+      confirmLabel: 'Submit request',
+    }))) return;
+    setRefundingId(topupId);
+    try {
+      const res = await fetch(`${API}/api/v1/billing/refund-topup/${topupId}`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: 'user-requested via /account/team' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await dialogAlert({ title: 'Request submitted', message: data.message || 'An admin will review your refund request shortly.' });
+        await fetchAll();
+      } else if (data.code === 'ALREADY_PENDING') {
+        await dialogAlert({ title: 'Already pending', message: 'A refund request is already in review for this top-up.' });
+      } else {
+        await dialogAlert({ title: 'Could not submit', message: data.error || 'Try again', tone: 'danger' });
+      }
+    } catch (err: unknown) {
+      await dialogAlert({ title: 'Request failed', message: err instanceof Error ? err.message : 'Network error', tone: 'danger' });
+    }
+    setRefundingId(null);
   }
 
   // Save a per-member cap. Empty input = clear the cap (unlimited within pool).
@@ -491,6 +599,114 @@ export default function TeamSettingsPage() {
                 </p>
               </div>
             </div>
+
+            {/* Subscription state — cancel / resume affordance for owners on
+                a recurring sub. Hidden for one-time SKUs (Business Starter,
+                Business Desktop) since there's nothing to cancel. */}
+            {isOwner && subDetails && ['pro_monthly', 'pro_yearly', 'pro_max_monthly', 'pro_max_yearly'].includes(subDetails.plan_type) && (
+              <section className="rounded-xl p-5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <h2 className="text-base font-bold mb-1">Subscription</h2>
+                    {subDetails.cancel_at_period_end ? (
+                      <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                        Cancellation scheduled. You'll keep access until{' '}
+                        <strong style={{ color: 'var(--text-primary)' }}>
+                          {subDetails.current_period_end ? new Date(subDetails.current_period_end).toLocaleDateString() : 'the end of this period'}
+                        </strong>, then drop to free.
+                      </p>
+                    ) : (
+                      <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                        Your subscription renews automatically. Cancel anytime — you keep access through the current period.
+                      </p>
+                    )}
+                  </div>
+                  {subDetails.cancel_at_period_end ? (
+                    <button
+                      onClick={handleResumeSubscription}
+                      disabled={cancelling}
+                      className="px-3 py-2 text-[12px] font-bold rounded-lg text-white disabled:opacity-50"
+                      style={{ background: 'var(--accent)' }}
+                    >
+                      {cancelling ? '…' : 'Resume subscription'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={cancelling}
+                      className="px-3 py-2 text-[12px] font-semibold rounded-lg disabled:opacity-50"
+                      style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                    >
+                      {cancelling ? '…' : 'Cancel subscription'}
+                    </button>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Top-up history — every recent purchase with refund-request affordance. */}
+            {topups.length > 0 && (
+              <section>
+                <h2 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Recent top-ups
+                </h2>
+                <div className="rounded-xl divide-y" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  {topups.slice(0, 10).map((t) => {
+                    const refundStatus = (t as TopupRow & { refund_status?: string }).refund_status;
+                    const refunded = !!t.refunded_at;
+                    const expired = !refunded && new Date(t.expires_at) < new Date();
+                    return (
+                      <div key={t.id} className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">
+                            {t.hours} hr{t.hours !== 1 ? 's' : ''} · ${(t.amount_cents / 100).toFixed(2)}
+                            {t.auto_charged && (
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>
+                            )}
+                          </p>
+                          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                            Bought {new Date(t.created_at).toLocaleDateString()}
+                            {refunded && ' · refunded'}
+                            {!refunded && !expired && ` · expires ${new Date(t.expires_at).toLocaleDateString()}`}
+                            {!refunded && expired && ' · expired'}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
+                          {refundStatus === 'pending' && (
+                            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-md" style={{ background: 'rgba(217, 119, 6, 0.1)', color: '#b45309', border: '1px solid rgba(217, 119, 6, 0.3)' }}>
+                              Refund pending review
+                            </span>
+                          )}
+                          {refundStatus === 'denied' && (
+                            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-md" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                              Refund denied
+                            </span>
+                          )}
+                          {refunded && (
+                            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-md" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                              Refunded
+                            </span>
+                          )}
+                          {!refunded && !refundStatus && !expired && (
+                            <button
+                              onClick={() => handleRequestRefund(t.id, t.hours, t.amount_cents)}
+                              disabled={refundingId === t.id}
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-md"
+                              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                            >
+                              {refundingId === t.id ? '…' : 'Request refund'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  Refund requests are reviewed by an admin within 1-2 business days. Stripe issues the actual refund only after approval.
+                </p>
+              </section>
+            )}
 
             {/* Auto top-up (owner-only for teams; everyone else sees the personal version) */}
             {isOwner && (
