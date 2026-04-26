@@ -9,6 +9,7 @@ import { ContentDiagram } from './ContentDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useCelebration } from '../../shared/Celebration';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
 import {
@@ -447,6 +448,7 @@ export default function TopicDetail({
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { celebrate } = useCelebration();
   const isAdmin = user?.email === 'chundubabu@gmail.com';
   const [adminRegenStatus, setAdminRegenStatus] = useState('');
   const [diagramPanelOpen, setDiagramPanelOpen] = useState(false);
@@ -840,7 +842,13 @@ export default function TopicDetail({
           )}
           {/* Mark as Complete */}
           <button
-            onClick={() => toggleComplete(selectedTopic)}
+            onClick={() => {
+              const wasComplete = !!completedTopics[selectedTopic];
+              toggleComplete(selectedTopic);
+              if (!wasComplete) {
+                celebrate({ title: `${topicDetails.title} complete`, subtitle: 'Nice work — keep the streak going.' });
+              }
+            }}
             className={`flex items-center gap-2 px-2 sm:px-3 py-2 rounded text-sm font-medium transition-colors landing-body ${completedTopics[selectedTopic] ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20' : 'text-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] border border-[var(--border)]'}`}
           >
             <Icon name={completedTopics[selectedTopic] ? 'checkCircle' : 'check'} size={16} />

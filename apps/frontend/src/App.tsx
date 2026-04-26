@@ -6,6 +6,7 @@ import RootShell from './components/layout/RootShell';
 import { PaywallGate } from './components/shared/ui/PaywallGate';
 import { usePageTracker } from './hooks/usePageTracker';
 import { DialogProvider } from './components/shared/Dialog';
+import { CelebrationProvider } from './components/shared/Celebration';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -232,6 +233,7 @@ export function App() {
   return (
     <AuthProvider>
       <DialogProvider>
+      <CelebrationProvider>
       <Suspense fallback={<Loading />}>
         <ScrollToTop />
         <PageTracker />
@@ -316,6 +318,7 @@ export function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
+      </CelebrationProvider>
       </DialogProvider>
     </AuthProvider>
   );
