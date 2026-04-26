@@ -1,10 +1,10 @@
 import React from 'react';
+import { RoughBox, RoughDiamond, RoughArrow, RoughLabel } from './RoughShapes';
 
-// Color theme — single-ink editorial palette ("hand-drawn on paper"
-// aesthetic). Every box has a SOLID surface fill (var(--bg-surface)) so
-// labels sit on a guaranteed background regardless of where the diagram
-// lands on the page. Strokes use lapis. Text uses the primary token.
-// All three flip cleanly with [data-theme="dark"].
+// Color palette — single-ink editorial. All "category colors" collapse
+// to lapis except true error states (muted red). Templates can still
+// pass `color={COLORS.error}` for danger semantics; the rest stays
+// monochromatic so 107 templates read as one consistent diagram style.
 const COLORS = {
   primary:   'var(--accent)',
   secondary: 'var(--accent)',
@@ -12,105 +12,24 @@ const COLORS = {
   warning:   'var(--accent)',
   cyan:      'var(--accent)',
   gray:      'var(--text-muted)',
-  error:     '#B45454', // muted red, not the neon Tailwind one
+  error:     '#B45454',
   text:      'var(--text-primary)',
   textLight: 'var(--text-secondary)',
   bg:        'var(--bg-elevated)',
-  // Solid box surface — same in both themes via design token. White card
-  // in light, dark navy card in dark. Gives strokes + text a guaranteed
-  // contrasting background instead of a near-invisible 8% tint.
   boxFill:   'var(--bg-surface)',
 };
 
-const STROKE_WIDTH = 1.6; // sketchy-thin; bumped 1.5 -> 1.6 for AA visibility
+// Primitives — alias names for the rough variants so the existing 107
+// template definitions below auto-upgrade to the hand-drawn aesthetic
+// without per-template edits.
+const Box = RoughBox;
+const Diamond = RoughDiamond;
 
-// Helper components
-const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11 }) => (
-  <g>
-    <rect
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      fill={COLORS.boxFill}
-      stroke={color}
-      strokeWidth={STROKE_WIDTH}
-      rx="6"
-    />
-    <text
-      x={x + width / 2}
-      y={y + height / 2 + 4}
-      textAnchor="middle"
-      fill={COLORS.text}
-      fontSize={fontSize}
-      fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
-      fontWeight="600"
-    >
-      {label}
-    </text>
-  </g>
-);
-
-const Diamond = ({ x, y, size, label, color = COLORS.warning }) => (
-  <g>
-    <polygon
-      points={`${x + size/2},${y} ${x + size},${y + size/2} ${x + size/2},${y + size} ${x},${y + size/2}`}
-      fill={COLORS.boxFill}
-      stroke={color}
-      strokeWidth={STROKE_WIDTH}
-    />
-    <text
-      x={x + size / 2}
-      y={y + size / 2 + 4}
-      textAnchor="middle"
-      fill={COLORS.text}
-      fontSize="11"
-      fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
-      fontWeight="600"
-    >
-      {label}
-    </text>
-  </g>
-);
-
-const Arrow = ({ x1, y1, x2, y2, color = COLORS.primary }) => (
-  <g>
-    <defs>
-      <marker
-        id={`arrowhead-${color.replace('#', '')}`}
-        markerWidth="10"
-        markerHeight="7"
-        refX="9"
-        refY="3.5"
-        orient="auto"
-      >
-        <polygon points="0 0, 10 3.5, 0 7" fill={color} />
-      </marker>
-    </defs>
-    <line
-      x1={x1}
-      y1={y1}
-      x2={x2}
-      y2={y2}
-      stroke={color}
-      strokeWidth={STROKE_WIDTH}
-      markerEnd={`url(#arrowhead-${color.replace(/[^a-zA-Z0-9]/g, '')})`}
-    />
-  </g>
-);
-
-const Label = ({ x, y, text, color = COLORS.textLight, fontSize = 9 }) => (
-  <text
-    x={x}
-    y={y}
-    fill={color}
-    fontSize={fontSize}
-    fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
-    fontStyle="italic"
-  >
-    {text}
-  </text>
-);
+// Arrow + Label use the rough versions for the same hand-drawn feel.
+// Arrow ditches the SVG <marker> machinery (which broke with var() colors)
+// in favor of a literal arrowhead drawn from short rough strokes.
+const Arrow = RoughArrow;
+const Label = RoughLabel;
 
 // Diagram templates
 const diagrams = {
