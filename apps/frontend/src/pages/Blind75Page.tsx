@@ -493,7 +493,7 @@ export default function Blind75Page() {
                     { label: '75 Problems', color: 'var(--success)', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
                     { label: `${techInterviewTopics.length} Algorithms`, color: 'var(--accent)', bg: 'rgba(45,140,255,0.12)', border: 'rgba(45,140,255,0.3)' },
                     { label: `${totalBehavioralQuestions} Behavioral`, color: 'var(--accent)', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)' },
-                    { label: 'Cheatsheet', color: '#D9B543', bg: 'rgba(217,119,6,0.12)', border: 'rgba(217,119,6,0.3)' },
+                    { label: 'Cheatsheet', color: 'var(--cam-gold-leaf-text)', bg: 'rgba(217,119,6,0.12)', border: 'rgba(217,119,6,0.3)' },
                   ].map((stat) => (
                     <span
                       key={stat.label}
@@ -1557,7 +1557,7 @@ export default function Blind75Page() {
                             }}>T</span>
                           </div>
                           <div style={{ flex: 1, background: 'rgba(217,119,6,0.12)', borderLeft: '3px solid var(--warning)', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--warning)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Task</div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--warning-text)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Task</div>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.star.task}</div>
                           </div>
                         </div>

@@ -223,7 +223,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
 
       {/* Edge Cases & Test Cases Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <GridCard title="EDGE CASES" titleColor="text-[var(--warning)]" className="border-[var(--warning)]/15 bg-[var(--warning)]/[0.02]">
+        <GridCard title="EDGE CASES" titleColor="text-[var(--warning-text)]" className="border-[var(--warning)]/15 bg-[var(--warning)]/[0.02]">
           {byType.EDGECASES ? (
             <EdgeCasesList content={byType.EDGECASES.content} />
           ) : <Shimmer />}
@@ -380,7 +380,7 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
                 <TradeoffsList content={byType.TRADEOFFS.content} />
               ) : <EmptyBlock />}
             </GridCard>
-            <GridCard title="EDGE CASES" titleColor="text-[var(--warning)]" compact>
+            <GridCard title="EDGE CASES" titleColor="text-[var(--warning-text)]" compact>
               {byType.EDGECASES ? (
                 <EdgeCasesList content={byType.EDGECASES.content} />
               ) : <EmptyBlock />}
@@ -394,7 +394,7 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
           )}
           {/* Follow-up Q&A */}
           {byType.FOLLOWUP && (
-            <GridCard title="FOLLOW-UP Q&A" titleColor="text-[var(--warning)]" className="border-[var(--warning)]/15 bg-[var(--warning)]/[0.02]" compact>
+            <GridCard title="FOLLOW-UP Q&A" titleColor="text-[var(--warning-text)]" className="border-[var(--warning)]/15 bg-[var(--warning)]/[0.02]" compact>
               <FollowupList content={byType.FOLLOWUP.content} />
             </GridCard>
           )}
@@ -624,7 +624,7 @@ function EdgeCasesList({ content }: { content: string }) {
           const explanation = line.slice(colonIdx + 1).trim();
           return (
             <div key={i} className="space-y-0.5">
-              <span className="font-mono text-xs font-bold text-[var(--warning)]">{caseName}</span>
+              <span className="font-mono text-xs font-bold text-[var(--warning-text)]">{caseName}</span>
               <div className="text-[13px] text-text-dim leading-relaxed pl-0.5">{explanation}</div>
             </div>
           );

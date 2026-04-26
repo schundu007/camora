@@ -242,8 +242,8 @@ interface Assistant {
 }
 
 const AI_MODELS = [
-  { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', color: '#D9B543' },
-  { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', color: '#D9B543' },
+  { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', color: '#7A5C0A' },
+  { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', color: '#7A5C0A' },
   { value: 'gpt-4o', label: 'GPT-4o', provider: 'OpenAI', color: '#10B981' },
   { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'OpenAI', color: '#10B981' },
   { value: 'o3-mini', label: 'o3-mini', provider: 'OpenAI', color: '#10B981' },

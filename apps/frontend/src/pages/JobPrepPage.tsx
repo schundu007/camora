@@ -642,10 +642,10 @@ export default function JobPrepPage() {
                 )}
                 {urlAnalysis.behavioral_focus?.length > 0 && (
                   <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#D9B543', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--cam-gold-leaf-text)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#A88817', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: 'var(--cam-gold-leaf-text)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>

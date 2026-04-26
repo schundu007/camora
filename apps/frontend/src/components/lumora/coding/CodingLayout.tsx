@@ -1581,7 +1581,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
     accent: { header: 'bg-[rgba(38,97,156,0.04)]', border: 'border-[rgba(38,97,156,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
-    warning: { header: 'bg-[rgba(245,158,11,0.04)]', border: 'border-[rgba(245,158,11,0.15)]', bg: 'bg-white', text: 'text-[var(--warning)]' },
+    warning: { header: 'bg-[rgba(245,158,11,0.04)]', border: 'border-[rgba(245,158,11,0.15)]', bg: 'bg-white', text: 'text-[var(--warning-text)]' },
   };
 
   return (
