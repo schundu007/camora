@@ -44,13 +44,16 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
   // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
   // via design tokens.
-  // LeetCode-style navy gradient + 2px gold-leaf underline. Same vocabulary
-  // as the Lumora top bar so chrome is consistent across the entire app.
-  const navBg = 'var(--cam-hero-strip)';
-  const navShadow = '0 4px 16px rgba(0,0,0,0.18)';
+  // SiteNav uses a deeper, near-black navy than the page heroes so the
+  // chrome reads as a distinct strip ABOVE the gradient hero band rather
+  // than blurring into it. Two-stop subtle gradient (navy-900 → navy-dk)
+  // + a thicker 3px gold-leaf underline for clear separation.
+  const navBg =
+    'linear-gradient(180deg, #03132E 0%, #051C40 100%)';
+  const navShadow = '0 6px 22px rgba(0,0,0,0.35)';
   const borderClass = '';
   const textColor = '#FFFFFF';
-  const textMuted = 'rgba(255,255,255,0.85)';
+  const textMuted = 'rgba(255,255,255,0.78)';
   const activeBg = 'var(--cam-gold-leaf)';
   const activeColor = 'var(--cam-primary-dk)';
 
@@ -60,8 +63,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       style={{
         background: navBg,
         boxShadow: navShadow,
-        backdropFilter: 'saturate(120%) blur(6px)',
-        WebkitBackdropFilter: 'saturate(120%) blur(6px)',
+        borderBottom: '3px solid var(--cam-gold-leaf)',
         fontFamily: 'var(--font-sans)',
       }}
     >
