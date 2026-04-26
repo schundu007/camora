@@ -300,7 +300,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
   return (
     <div className="flex flex-col gap-2">
       {/* Approach Headline */}
-      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--accent)]/20 bg-[rgba(38,97,156,0.04)] shrink-0">
+      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--accent)]/20 shrink-0" style={{ background: 'var(--accent-subtle)' }}>
         <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/12 px-2 py-0.5 rounded tracking-wider shrink-0">
           Approach
         </span>
@@ -462,7 +462,7 @@ function ScaleMathList({ content, isComplete }: { content: string; isComplete: b
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-[rgba(38,97,156,0.15)] bg-[rgba(38,97,156,0.04)] p-3">
+          <div key={i} className="rounded-lg p-3" style={{ border: '1px solid var(--border)', background: 'var(--accent-subtle)' }}>
             <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
               {m.label}
             </div>
