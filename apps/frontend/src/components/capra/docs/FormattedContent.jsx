@@ -151,7 +151,7 @@ export default function FormattedContent({ content }) {
       elements.push(
         <div
           key={`code-${blockIdx}`}
-          className="my-3 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]"
+          className="my-2 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]"
         >
           {block.lang && block.lang !== 'code' && (
             <div className="px-4 py-1.5 text-[10px] uppercase tracking-[0.14em] landing-mono text-[var(--text-muted)] border-b border-[var(--border)]">
@@ -170,7 +170,7 @@ export default function FormattedContent({ content }) {
       elements.push(
         <div
           key={`diagram-${blockIdx}`}
-          className="my-3 rounded border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]"
+          className="my-2 rounded border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]"
         >
           <pre
             className="p-4 text-sm leading-7 landing-mono text-[var(--text-secondary)]"

@@ -113,7 +113,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   };
 
   return (
-    <div className="flex-1 overflow-auto px-4 sm:px-6 md:px-8 py-4 md:py-6">
+    <div className="flex-1 overflow-auto px-3 sm:px-4 md:px-6 py-2 md:py-3">
       {/* Greeting */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>

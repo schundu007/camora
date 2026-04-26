@@ -226,8 +226,8 @@ export default function PrepPlanPage() {
           </div>
 
           {/* Progress summary */}
-          <div className="mt-6 bg-[var(--bg-surface)] border-0 rounded-2xl p-5">
-            <div className="flex items-center gap-6 flex-wrap">
+          <div className="mt-6 bg-[var(--bg-surface)] border-0 rounded-2xl p-4">
+            <div className="flex items-center gap-4 flex-wrap">
               {/* Days remaining */}
               <div className="text-center">
                 <p className="text-3xl font-bold text-[var(--accent)]">{days_remaining}</p>
@@ -235,7 +235,7 @@ export default function PrepPlanPage() {
               </div>
 
               {/* Progress bar */}
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-[200px] max-w-sm">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-sm font-medium text-[var(--text-primary)]">Overall Progress</span>
                   <span className="text-sm font-semibold text-[var(--accent)]">{completion_pct}%</span>

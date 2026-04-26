@@ -332,7 +332,7 @@ export default function OnboardingPage() {
             />
           </div>
 
-          <div className="p-8">
+          <div className="p-6">
             {/* Step indicator dots */}
             <div className="flex items-center justify-center gap-3 mb-8">
               <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
@@ -356,7 +356,7 @@ export default function OnboardingPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-8">
                   {JOB_ROLES.map((role) => {
                     const selected = selectedRoles.includes(role.id);
                     return (

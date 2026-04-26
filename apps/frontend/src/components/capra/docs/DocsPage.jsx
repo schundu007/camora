@@ -709,7 +709,7 @@ export default function DocsPage({ onBack }) {
                     <Icon name="chevronLeft" size={18} className="transition-transform group-hover:-translate-x-0.5" />
                     <span>Back to {pageConfig.title}</span>
                   </button>
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
                     <div className="w-16 h-16 rounded bg-[var(--bg-elevated)] flex items-center justify-center mb-4">
                       <Icon name="alertTriangle" size={32} className="text-[var(--text-muted)]" />
                     </div>
@@ -739,7 +739,7 @@ export default function DocsPage({ onBack }) {
                     <>
                       {/* Hero Banner */}
                       <div className="relative mb-8 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                        <div className="rounded-[15px] p-6 md:p-8" style={{ background: 'var(--bg-elevated)', }}>
+                        <div className="rounded-[15px] p-6 md:p-6" style={{ background: 'var(--bg-elevated)', }}>
                           <div>
                             <h1 className="font-extrabold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
                               Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
@@ -833,7 +833,7 @@ export default function DocsPage({ onBack }) {
                               { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
                               { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
                             ].map((phase, idx) => (
-                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-5 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
+                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-4 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(56,189,248,0.1)' : 'none' }}>
                                 <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
                                   <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
@@ -983,12 +983,12 @@ export default function DocsPage({ onBack }) {
                       {(activePage === 'databases') && (
                         <div className="flex items-center gap-1 mt-5 p-1 rounded w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
-                            className="px-5 py-2.5 text-sm font-bold rounded transition-colors"
+                            className="px-4 py-2 text-sm font-bold rounded transition-colors"
                             style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
-                            className="px-5 py-2.5 text-sm font-bold rounded transition-colors"
+                            className="px-4 py-2 text-sm font-bold rounded transition-colors"
                             style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             SQL Playground
                           </button>
@@ -999,7 +999,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* SQL Playground — takes over entire content area */}
                   {(activePage === 'databases') && sqlPlaygroundOpen && (
-                    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
+                    <Suspense fallback={<div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
                       <div style={{ margin: '0 -24px', minHeight: 'calc(100vh - 200px)' }}>
                         <SQLPlayground />
                       </div>
