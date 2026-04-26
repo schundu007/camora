@@ -5684,7 +5684,9 @@ export default function Blind75PracticePage() {
     if (!token) { setOutput('Please sign in to run code.'); return; }
     setIsRunning(true); setOutput('Running...');
     try {
-      const res = await fetch(`${CAPRA_API_URL}/api/run`, { method: 'POST', headers, body: JSON.stringify({ code, language, input: '' }) });
+      const res = await fetch(`${CAPRA_API_URL}/api/run`, {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() }, method: 'POST', headers, body: JSON.stringify({ code, language, input: '' }) });
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const data = await res.json();
       setOutput(data.output || data.stdout || data.stderr || 'No output');
@@ -5698,6 +5700,8 @@ export default function Blind75PracticePage() {
     setIsSolving(true); setAiSolution(''); setActiveTab('solution');
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/solve/stream`, {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() },
         method: 'POST',
         headers,
         body: JSON.stringify({ problem: problem?.title || `Problem #${id}`, language }),

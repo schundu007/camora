@@ -194,12 +194,19 @@ router.get('/google/callback', async (req, res) => {
  * Accepts an expired access token and issues a fresh one with the same claims.
  */
 router.post('/refresh', authLimiter, async (req, res) => {
+  // Resolve token from Authorization header OR cariara_sso cookie so a SPA
+  // can refresh using only the httpOnly cookie via credentials:'include'.
+  let token = null;
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
+  if (!token && req.cookies?.cariara_sso) {
+    token = req.cookies.cariara_sso;
+  }
+  if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
-
-  const token = authHeader.split(' ')[1];
   const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
   if (!jwtSecret) {
     return res.status(500).json({ error: 'Auth not configured' });

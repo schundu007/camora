@@ -117,10 +117,10 @@ interface CodingLayoutProps {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-// ── Theme tokens — dark when embedded (live interview), light when standalone ──
+// ── Theme tokens — follow the user's global theme choice (light or dark) ──
 // The dark palette uses slate-900 surfaces and the brand accent (--cam-primary)
 // for highlights so the code editor, tabs, and solution cards read as a single
-// coherent dark UI during a live interview (matches Monaco's vs-dark theme).
+// coherent dark UI when the user has chosen dark mode.
 function useTheme(dark: boolean) {
   if (dark) {
     return {
@@ -155,9 +155,7 @@ function useTheme(dark: boolean) {
 export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded, onVoiceProblemRef, onCapturedProblemRef }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
-  // Embedded panes default to dark for IDE feel; toggling the global theme
-  // flips this layout in lockstep with the rest of the app.
-  const t = useTheme(globalTheme === 'dark' || !!embedded);
+  const t = useTheme(globalTheme === 'dark');
 
   // Core state
   const [language, setLanguage] = useState('python');

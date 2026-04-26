@@ -174,6 +174,8 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       formData.append('audio', audioBlob, 'recording.webm');
 
       const response = await fetch(API_URL + '/api/transcribe', {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() },
         method: 'POST',
         body: formData,
       });

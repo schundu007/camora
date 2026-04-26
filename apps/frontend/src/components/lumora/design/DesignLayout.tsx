@@ -37,11 +37,10 @@ interface DesignLayoutProps {
 
 export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onCapturedProblemRef }: DesignLayoutProps) {
   // Bind the local Lumora design theme to the global light/dark choice.
-  // Embedded panes still default to dark for the IDE feel, but switching
-  // the global toggle flips coding/design with the rest of the app.
+  // Always follow the user's global theme — embedded panes inherit light/dark
+  // from the rest of the app instead of forcing dark.
   const { theme: globalTheme } = useGlobalTheme();
-  const t = useTheme(globalTheme === 'dark' || !!embedded);
-  void embedded; // intentionally referenced via the line above
+  const t = useTheme(globalTheme === 'dark');
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
 

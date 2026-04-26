@@ -45,14 +45,14 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
 
   const nav = (
     <nav className={`fixed top-0 left-0 right-0 z-50 ${borderClass}`} style={{ background: navBg, fontFamily: 'var(--font-sans)' }}>
-      <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14">
+      <div className="w-full lg:max-w-[70%] mx-auto flex items-center px-4 sm:px-6 h-14">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
           <CamoraLogo size={32} />
         </Link>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-1">
+        {/* Desktop links — sit immediately after the logo (no big gap) */}
+        <div className="hidden md:flex items-center gap-1 ml-6 lg:ml-8">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
@@ -69,8 +69,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           ))}
         </div>
 
-        {/* Desktop auth + theme toggle */}
-        <div className="hidden md:flex items-center gap-2">
+        {/* Desktop auth + theme toggle — ml-auto pushes this group to the right */}
+        <div className="hidden md:flex items-center gap-2 ml-auto">
           <button
             type="button"
             onClick={toggleTheme}
