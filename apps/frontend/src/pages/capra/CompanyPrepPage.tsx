@@ -463,7 +463,7 @@ export default function CompanyPrepPage() {
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {section.topics.map((topic) => (
-                        <span key={topic} style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 10px' }}>
+                        <span key={topic} style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px' }}>
                           {topic}
                         </span>
                       ))}
@@ -480,7 +480,7 @@ export default function CompanyPrepPage() {
                       <Link
                         to={section.practiceLink}
                         className="practice-body"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', color: 'var(--text-secondary)', background: '#f3f4f6', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', color: 'var(--text-secondary)', background: 'var(--bg-elevated)', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid var(--border)' }}
                       >
                         {section.practiceLabel}
                       </Link>
@@ -509,7 +509,7 @@ export default function CompanyPrepPage() {
                 <Link
                   to="/capra/prepare"
                   className="practice-body"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', color: 'var(--text-secondary)', background: '#f3f4f6', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', color: 'var(--text-secondary)', background: 'var(--bg-elevated)', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid var(--border)' }}
                 >
                   All Prep Topics
                 </Link>
