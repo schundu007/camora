@@ -50,11 +50,13 @@
     --accent-text: #1A4F86;
 
     /* Semantic — Sapphire system. Success/info fold onto lapis (the
-       brand promise). Warning uses gold leaf (manuscript-illuminated
-       warm pop). Danger keeps plain red so error states never collide
-       with the brand colour. */
+       brand promise). Warning uses gold leaf for fills (badges, dots,
+       spinners, gradients) but `--warning-text` is its WCAG-AA-safe
+       sibling for text-on-white. Danger keeps plain red so error
+       states never collide with the brand colour. */
     --success: #26619C;
     --warning: #C9A227;
+    --warning-text: #7A5C0A;
     --danger:  #EF4444;
     --info:    #26619C;
 
@@ -143,11 +145,14 @@
 
     /* SECONDARY accent — Gold Leaf (illuminated manuscript gold).
        The copper-* and teal-* aliases are kept for back-compat with
-       components that still reference them; they now resolve to gold. */
+       components that still reference them; they now resolve to gold.
+       --cam-gold-leaf-text is the text-safe darkened gold for use on
+       white/cream surfaces (≥4.5:1 against #FFFFFF — passes WCAG AA). */
     --cam-gold-leaf:    #C9A227;
     --cam-gold-leaf-lt: #D9B543;
     --cam-gold-leaf-dk: #A88817;
     --cam-gold-leaf-50: #FBF6E3;
+    --cam-gold-leaf-text:#7A5C0A;
     --cam-copper:       var(--cam-gold-leaf);
     --cam-copper-lt:    var(--cam-gold-leaf-lt);
     --cam-copper-dk:    var(--cam-gold-leaf-dk);
@@ -225,9 +230,10 @@
     --accent-subtle: rgba(135,170,224,0.18);
     --accent-text:   #B5CCEC;
 
-    /* Semantic */
+    /* Semantic — gold reads safely on the dark substrate */
     --success: #6E96C0;
     --warning: #D9B543;
+    --warning-text: #E6C75F;
     --danger:  #F87171;
     --info:    #6E96C0;
 
@@ -262,6 +268,8 @@
     --cam-gold-leaf-lt: #E6C75F;
     --cam-gold-leaf-dk: #C9A227;
     --cam-gold-leaf-50: #243450;
+    /* Dark-theme gold reads safely on the dark substrate as-is */
+    --cam-gold-leaf-text:#E6C75F;
 
     --cam-amber:    #D9A84A;
     --cam-amber-lt: #E8C76F;
@@ -299,6 +307,22 @@
 
     color-scheme: dark;
   }
+
+  /* Dark-theme contrast guard: components that hard-coded `bg-white` (or
+     literal `background:white` inline styles) pair it with themed text
+     tokens like var(--text-primary), which becomes cream in dark mode →
+     cream-on-white = invisible. Remap the opaque white surface to the
+     dark surface token so the same markup stays readable in either theme.
+     Translucent variants (`bg-white/20`, `bg-white/30` overlays sitting
+     on dark gradient cards) are deliberate and keep their white tint
+     because Tailwind generates them as separate class names. */
+  [data-theme="dark"] .bg-white { background-color: var(--bg-surface) !important; }
+  [data-theme="dark"] [style*="background: white"],
+  [data-theme="dark"] [style*="background:#fff"],
+  [data-theme="dark"] [style*="background: #fff"],
+  [data-theme="dark"] [style*="background: #FFFFFF"],
+  [data-theme="dark"] [style*="background-color: white"],
+  [data-theme="dark"] [style*="background-color:#fff"] { background-color: var(--bg-surface) !important; }
 
   /* Legacy `.light-theme` class is now a no-op alias for the default
      (light) state. Components that still apply it won't break. */

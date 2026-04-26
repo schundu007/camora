@@ -201,7 +201,7 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
 
                 {/* Upgrade note */}
                 {(plan as any).upgrade_note && (
-                  <p className="text-[8px] mb-2" style={{ color: (isPro || isBest) ? 'var(--text-primary)' : 'var(--warning)' }}>{(plan as any).upgrade_note}</p>
+                  <p className="text-[8px] mb-2" style={{ color: (isPro || isBest) ? 'var(--text-primary)' : 'var(--warning-text)' }}>{(plan as any).upgrade_note}</p>
                 )}
               </div>
 
