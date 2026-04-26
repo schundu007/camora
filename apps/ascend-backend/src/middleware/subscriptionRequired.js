@@ -5,8 +5,8 @@ import { logger } from './requestLogger.js';
  * Subscription Required Middleware
  * Checks if user has an active paid subscription before allowing access
  *
- * Valid subscription plans: monthly, quarterly_pro
- * Free plan users are blocked with SUBSCRIPTION_REQUIRED error
+ * Valid plans (pricing v2): pro_monthly, pro_yearly, pro_max_monthly, pro_max_yearly.
+ * Free / Capra-content-only / unsubscribed users are blocked with SUBSCRIPTION_REQUIRED.
  */
 export async function subscriptionRequired(req, res, next) {
   // User must be authenticated first
@@ -26,12 +26,10 @@ export async function subscriptionRequired(req, res, next) {
     const subscription = result.rows[0];
 
     // Check if user has active paid subscription OR active trial
-    const isPaidPlan = subscription?.plan_type === 'monthly' ||
-                       subscription?.plan_type === 'monthly_starter' ||
-                       subscription?.plan_type === 'monthly_pro' ||
-                       subscription?.plan_type === 'quarterly_pro' ||
-                       subscription?.plan_type === 'annual' ||
-                       subscription?.plan_type === 'annual_desktop';
+    const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
+                       subscription?.plan_type === 'pro_yearly' ||
+                       subscription?.plan_type === 'pro_max_monthly' ||
+                       subscription?.plan_type === 'pro_max_yearly';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
@@ -79,12 +77,10 @@ export async function checkSubscription(req, res, next) {
     );
 
     const subscription = result.rows[0];
-    const isPaidPlan = subscription?.plan_type === 'monthly' ||
-                       subscription?.plan_type === 'monthly_starter' ||
-                       subscription?.plan_type === 'monthly_pro' ||
-                       subscription?.plan_type === 'quarterly_pro' ||
-                       subscription?.plan_type === 'annual' ||
-                       subscription?.plan_type === 'annual_desktop';
+    const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
+                       subscription?.plan_type === 'pro_yearly' ||
+                       subscription?.plan_type === 'pro_max_monthly' ||
+                       subscription?.plan_type === 'pro_max_yearly';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
