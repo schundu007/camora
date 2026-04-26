@@ -82,12 +82,15 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
           </div>
         )}
         {showName && !compact && (
-          <span className="text-sm font-bold truncate max-w-[140px] hidden md:inline" style={{ color: textColor }}>
+          <span
+            className="truncate max-w-[140px] hidden md:inline"
+            style={{ color: textColor, fontSize: 14, fontWeight: 700 }}
+          >
             {user.name?.split(' ')[0] || 'Account'}
           </span>
         )}
         {!compact && (
-          <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ color: mutedColor }}>
+          <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ color: textColor, opacity: 0.85 }}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         )}

@@ -96,8 +96,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-9 h-9 rounded-md transition-colors hover:bg-[var(--bg-elevated)]"
-            style={{ color: textMuted }}
+            className="flex items-center justify-center w-9 h-9 rounded-md transition-colors hover:bg-white/10"
+            style={{ color: '#FFFFFF' }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
