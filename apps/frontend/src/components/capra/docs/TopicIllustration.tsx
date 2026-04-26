@@ -1,15 +1,24 @@
 /* ── TopicIllustration ─────────────────────────────────────────────────
-   Hand-crafted SVG illustration per topic category. One component, nine
-   variants — picked by `name` prop. All renders use --accent + --border +
-   --bg-elevated tokens so they flip with the theme automatically.
+   Per-topic-category hero strip. Renders an Unsplash photograph (cached
+   to /public/topic-heroes/<id>.jpg by scripts/fetch-topic-heroes.mjs)
+   with a navy-tinted gradient overlay so it reads on both light and
+   dark themes. Falls back to a hand-crafted SVG line-art when no
+   photograph is available for that name.
 
-   The visual language is intentionally restrained: line-art / abstract
-   geometry with a single brand accent. No stock photography, no generic
-   icons, no rainbow palettes. Each illustration evokes its category in
-   2–3 strokes — closer to Stripe / Linear / Databricks product-card art
-   than to a shutterstock thumbnail.
+   The photograph manifest at /public/topic-heroes/manifest.json carries
+   photographer attribution per Unsplash API license terms. Run the
+   fetch script with VITE_UNSPLASH_KEY in env to refresh / add images.
    ────────────────────────────────────────────────────────────────────── */
 import type { CSSProperties } from 'react';
+import manifestJson from '../../../../public/topic-heroes/manifest.json';
+
+type ManifestEntry = {
+  file: string;
+  photographer: string;
+  photographerUrl: string | null;
+  unsplashUrl: string | null;
+};
+const MANIFEST = manifestJson as Record<string, ManifestEntry>;
 
 export type IllustrationName =
   | 'coding'
@@ -43,19 +52,60 @@ const STROKE = 'var(--border)';
 const FILL = 'var(--bg-surface)';
 
 export default function TopicIllustration({ name, className = '', style }: TopicIllustrationProps) {
-  // Fixed-height hero strip (~120px) instead of card-wide aspect-ratio.
-  // The previous 5:3 aspect ratio on a wide bento card meant 600+px tall
-  // illustrations dominating the entire layout. This keeps the strip
-  // compact and consistent regardless of card width.
+  const photo = MANIFEST[name];
+
+  // Fixed 120px hero strip. Card width no longer drives image height.
   const wrapperStyle: CSSProperties = {
     background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--accent-subtle) 100%)',
     borderBottom: '1px solid var(--border)',
     height: 120,
     ...style,
   };
+
+  // Photograph branch (preferred): Unsplash image with a navy-tinted
+  // overlay so the photo blends with the brand palette on both themes.
+  if (photo) {
+    const credit = photo.photographer
+      ? `Photo by ${photo.photographer} on Unsplash`
+      : '';
+    return (
+      <div
+        className={`relative w-full overflow-hidden ${className}`}
+        style={wrapperStyle}
+        title={credit}
+      >
+        <img
+          src={photo.file}
+          alt=""
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Navy-tint overlay — keeps the photo on-brand without losing
+            its content. Light theme gets a subtle wash, dark theme gets
+            a stronger pull so the image doesn't outshine the page. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(38,97,156,0.08) 0%, rgba(38,97,156,0.20) 100%)',
+            mixBlendMode: 'multiply',
+          }}
+        />
+      </div>
+    );
+  }
+
+  // SVG fallback (used while a manifest entry is missing or in dev when
+  // the fetch script hasn't been run). Same height contract as the photo
+  // branch so the cards don't shift.
   return (
-    <div className={`relative w-full overflow-hidden flex items-center justify-center ${className}`} style={wrapperStyle}>
-      <svg {...COMMON_PROPS} fill="none" style={{ height: 96, width: 'auto', maxWidth: '100%' }}>{ART[name]}</svg>
+    <div
+      className={`relative w-full overflow-hidden flex items-center justify-center ${className}`}
+      style={wrapperStyle}
+    >
+      <svg {...COMMON_PROPS} fill="none" style={{ height: 96, width: 'auto', maxWidth: '100%' }}>
+        {ART[name]}
+      </svg>
     </div>
   );
 }
