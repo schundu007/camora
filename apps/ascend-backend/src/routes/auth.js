@@ -237,7 +237,7 @@ router.post('/refresh', authLimiter, async (req, res) => {
 
     setSSOCookie(res, newToken);
 
-    res.json({ accessToken: newToken });
+    res.json({ access_token: newToken });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid token' });
   }
@@ -257,8 +257,21 @@ router.post('/logout', (req, res) => {
  * GET /api/auth/me
  */
 router.get('/me', authenticate, async (req, res) => {
+  // Mint a fresh short-lived bearer so the SPA can keep calling APIs after a
+  // hard refresh without a second /refresh roundtrip. The cookie is httpOnly
+  // so JS can't read it; we hand the token back in the body.
+  const accessToken = createToken(
+    {
+      sub: String(req.user.id),
+      email: req.user.email,
+      name: req.user.name || '',
+      picture: req.user.picture || '',
+      type: 'access',
+    },
+    '30d'
+  );
+
   try {
-    // Fetch onboarding data from DB
     const result = await query(
       'SELECT onboarding_completed, job_roles FROM users WHERE id = $1',
       [req.user.id]
@@ -266,6 +279,7 @@ router.get('/me', authenticate, async (req, res) => {
     const dbUser = result.rows[0] || {};
     res.json({
       authenticated: true,
+      access_token: accessToken,
       user: {
         ...req.user,
         onboarding_completed: dbUser.onboarding_completed || false,
@@ -273,9 +287,9 @@ router.get('/me', authenticate, async (req, res) => {
       },
     });
   } catch (error) {
-    // Fallback: return user without onboarding data if DB query fails
     res.json({
       authenticated: true,
+      access_token: accessToken,
       user: req.user,
     });
   }
