@@ -261,7 +261,7 @@ export default function AnalyticsPage() {
   return (
     <div className="min-h-screen" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       {/* LeetCode hero band */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative lg:max-w-[85%] mx-auto px-4 pt-12 pb-16">
           <h1 className="text-3xl font-bold text-white">Admin <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Dashboard</span></h1>

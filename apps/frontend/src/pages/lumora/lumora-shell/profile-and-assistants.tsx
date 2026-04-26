@@ -132,7 +132,7 @@ export function LumoraProfilePage() {
   return (
     <div className="w-full">
       {/* LeetCode navy hero */}
-      <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+      <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="max-w-2xl mx-auto px-6 py-6 w-full flex items-center gap-4">
           {user?.image ? (
             <img src={user.image} alt="" className="w-16 h-16 rounded-2xl object-cover" style={{ border: '2px solid var(--cam-gold-leaf)' }} referrerPolicy="no-referrer" />
@@ -323,7 +323,7 @@ export function AssistantsPage() {
   return (
     <div className="w-full">
       {/* LeetCode navy hero */}
-      <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+      <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="max-w-5xl mx-auto px-6 py-6 w-full flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white">Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Assistants</span></h2>

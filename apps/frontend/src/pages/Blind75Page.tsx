@@ -486,7 +486,7 @@ export default function Blind75Page() {
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
 
       {/* ═══════════════════════ Header Section — LeetCode navy band ═══════════════════════ */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: 56, paddingBottom: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>

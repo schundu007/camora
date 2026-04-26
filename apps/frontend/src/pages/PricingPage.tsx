@@ -58,7 +58,7 @@ export default function PricingPage() {
         className="relative pt-32 pb-32 px-6 text-center overflow-hidden"
         style={{
           background:
-            'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+            'var(--cam-hero-bg)',
         }}
       >
         <div

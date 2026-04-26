@@ -11,7 +11,7 @@ export default function SignupPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   return (
-    <div className="min-h-screen relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+    <div className="min-h-screen relative" style={{ background: 'var(--cam-hero-bg)' }}>
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <SEO title="Sign Up" description="Create your free Camora account. Start preparing for technical interviews with AI." path="/signup" />
       <SiteNav variant="light" />

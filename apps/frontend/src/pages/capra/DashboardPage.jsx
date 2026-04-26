@@ -950,7 +950,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       className="flex items-center justify-between gap-4 px-5 relative"
       style={{
         height: '52px',
-        background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+        background: 'var(--cam-hero-strip)',
         borderBottom: '2px solid var(--cam-gold-leaf)',
       }}
     >

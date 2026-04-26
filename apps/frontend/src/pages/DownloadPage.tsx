@@ -389,7 +389,7 @@ export default function DownloadPage() {
       {/* ══════════════════════════════════════════════════
          HERO SECTION — LeetCode dark navy band
          ══════════════════════════════════════════════════ */}
-      <section className="relative z-10 pt-20 pb-28 px-6 overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative z-10 pt-20 pb-28 px-6 overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="lg:max-w-[85%] mx-auto text-center">
           {/* App icon */}

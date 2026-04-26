@@ -200,6 +200,24 @@
     --accent-hover:     #1A4F86;
     --accent-subtle:    rgba(38, 97, 156, 0.10);
     --accent-text:      #1A4F86;
+
+    /* ── LeetCode-inspired hero gradients ──────────────────────
+       Rich multi-layer treatment used across every page hero:
+         · diagonal navy gradient (4 stops) — depth instead of flat
+         · two warm gold radial blobs — subtle off-axis warmth
+         · top-edge white glow — LeetCode signature halo
+         · gold mesh texture — 0.04 opacity, scannable but not loud
+       --cam-hero-bg    → tall heroes (Landing, Pricing, Challenge, etc.)
+       --cam-hero-strip → thin chrome (top bars, tab bars, sub-page heads) */
+    --cam-hero-bg:
+      radial-gradient(ellipse 70% 60% at 18% 30%, rgba(201,162,39,0.14), transparent 55%),
+      radial-gradient(ellipse 65% 55% at 82% 70%, rgba(201,162,39,0.10), transparent 60%),
+      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.12), transparent 70%),
+      linear-gradient(135deg, #051C40 0%, var(--cam-primary-dk) 22%, var(--cam-primary) 50%, var(--cam-primary-dk) 78%, #051C40 100%);
+    --cam-hero-strip:
+      radial-gradient(ellipse 60% 200% at 20% 50%, rgba(201,162,39,0.12), transparent 60%),
+      radial-gradient(ellipse 60% 200% at 80% 50%, rgba(201,162,39,0.08), transparent 60%),
+      linear-gradient(180deg, #051C40 0%, var(--cam-primary-dk) 50%, var(--cam-primary) 100%);
   }
 
   /* ──────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ export default function ResumePage() {
   return (
     <div style={{ minHeight: '100vh' }}>
       {/* Hero — LeetCode navy band w/ diagonal cut */}
-      <div style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', padding: '48px 16px 80px', background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <div style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', padding: '48px 16px 80px', background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div style={{ position: 'relative' }}>
           <div

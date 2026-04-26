@@ -24,7 +24,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
   return (
     <div className="h-full flex flex-col" style={{ background: C.base }}>
       {/* Header — LeetCode navy + gold underline */}
-      <div className="flex items-center justify-between px-4 h-12 shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+      <div className="flex items-center justify-between px-4 h-12 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-3">
           <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-sans)' }}>Interview Calendar</span>
           {/* View toggle */}

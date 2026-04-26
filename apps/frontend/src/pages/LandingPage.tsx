@@ -171,7 +171,7 @@ export default function LandingPage() {
         className="relative pt-24 pb-32 md:pt-32 md:pb-40 px-6 text-center overflow-hidden"
         style={{
           background:
-            'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+            'var(--cam-hero-bg)',
         }}
       >
         {/* Subtle navy noise/glow — keeps the band from looking flat */}

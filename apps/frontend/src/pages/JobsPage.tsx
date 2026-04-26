@@ -695,7 +695,7 @@ export default function JobsPage() {
           style={{
             position: 'relative',
             overflow: 'hidden',
-            background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)',
+            background: 'var(--cam-hero-bg)',
           }}
         >
           {/* Soft top glow */}

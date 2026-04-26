@@ -141,7 +141,7 @@ export default function PublicProfilePage() {
       <SiteNav variant="light" />
 
       {/* LeetCode-style profile hero — navy band w/ diagonal cut */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 pt-24 pb-20">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">

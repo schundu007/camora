@@ -25,7 +25,7 @@ export default function CapraLandingPage() {
 
   // Capra landing — redirect to dashboard or show sign-in prompt
   return (
-    <div className="min-h-screen flex items-center justify-center relative" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center relative" style={{ background: 'var(--cam-hero-bg)' }}>
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <div className="relative text-center max-w-md px-6">
         <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--cam-gold-leaf)', boxShadow: '0 6px 18px rgba(0,0,0,0.25)' }}>

@@ -294,7 +294,7 @@ export default function ProfilePage() {
       <SiteNav variant="light" />
 
       {/* LeetCode hero — navy band w/ diagonal cut */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 60%, var(--cam-primary-dk) 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative max-w-3xl mx-auto px-6 pt-24 pb-16">
           <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
