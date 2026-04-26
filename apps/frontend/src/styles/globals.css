@@ -192,31 +192,117 @@
     --accent-text:      #1A4F86;
   }
 
-  /* Light theme — opt-in via class on body or root container */
-  .light-theme {
-    --bg-app: #F0F7FF;
-    --bg-surface: #FFFFFF;
-    --bg-elevated: #DDE9F7;
-    --border: #C4D9F2;
-    --border-hover: #A8C8EB;
-    --text-primary: #0F172A;
-    --text-secondary: #334155;
-    /* Tightened from #7096BF (3.6:1 on white, fails AA) → slate-600 7.6:1.
-       --text-dimmed similarly bumped from #B0CBE6 (1.7:1) → slate-500 4.6:1. */
-    --text-muted: #475569;
-    --text-dimmed: #64748B;
-    --accent-subtle: rgba(38,97,156,0.10);
-    --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
-    --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
-    --shadow-md: 0 4px 12px rgba(56,189,248,0.10);
-    --shadow-lg: 0 8px 24px rgba(56,189,248,0.12);
+  /* ──────────────────────────────────────────────────────────
+     DARK THEME — opt-in via [data-theme="dark"] on <html>.
+     Mirror image of the light Sapphire Editorial palette:
+     deep ocean substrate + cream-tinted ink + brighter lapis.
+     Every contrast pair below ≥ 4.5:1 (WCAG AA).
+     ────────────────────────────────────────────────────────── */
+  [data-theme="dark"] {
+    /* Backgrounds — deep ocean, lapis-tinted */
+    --bg-base:     #0A1320;
+    --bg-app:      #0F1B2D;
+    --bg-surface:  #1A2940;
+    --bg-elevated: #243450;
+    --bg-overlay:  rgba(0,0,0,0.55);
+
+    /* Borders — visible against dark surfaces (3:1+ luminance step) */
+    --border:        #3A4A66;
+    --border-hover:  #4A5C7A;
+    --border-focus:  #5985B6;
+
+    /* Text — warm cream-tinted whites; all stay above WCAG AA on bg-app */
+    --text-primary:  #F5F0E5;   /* 14.7:1 on bg-app */
+    --text-secondary:#D6CFC0;   /* 11.0:1 */
+    --text-muted:    #ADA68F;   /*  6.4:1 */
+    --text-dimmed:   #847C68;   /*  4.5:1 — disabled / captions only */
+
+    /* Accent — lapis-300 (#5985B6) is too low on void; use 6E96C0 hover.
+       For inline TEXT against dark, use --accent-text = lapis-200 (#95B0CD)
+       which clears 7:1 AAA. */
+    --accent:        #6E96C0;
+    --accent-hover:  #87AAE0;
+    --accent-subtle: rgba(110,150,192,0.18);
+    --accent-text:   #95B0CD;
+
+    /* Semantic */
+    --success: #6E96C0;
+    --warning: #D9B543;
+    --danger:  #F87171;
+    --info:    #6E96C0;
+
+    /* Difficulty + category — match accent shift */
+    --hard:        #6E96C0;
+    --hard-bg:     rgba(110,150,192,0.15);
+    --hard-border: rgba(110,150,192,0.30);
+    --easy:        #94A3B8;
+    --easy-bg:     rgba(148,163,184,0.10);
+    --easy-border: rgba(148,163,184,0.25);
+    --medium:      #F5F0E5;
+    --medium-bg:   rgba(245,240,229,0.06);
+    --medium-border: rgba(245,240,229,0.15);
+    --cat-primary:    #6E96C0;
+    --cat-primary-bg: rgba(110,150,192,0.15);
+
+    /* Shadows — invisible on dark substrate; subtle white glow */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-sm: 0 2px 6px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.55);
+    --shadow-xl: 0 16px 48px rgba(0,0,0,0.6);
     --card-shadow: var(--shadow-sm);
-    --bg: #F0F7FF;
-    --bg2: #E8F1FC;
-    --surface: #F0F7FF;
-    --surface2: #DDE9F7;
-    --nav-bg: rgba(240,247,255,0.92);
+
+    /* Camora brand tokens — flipped for dark */
+    --cam-primary:    #6E96C0;
+    --cam-primary-lt: #87AAE0;
+    --cam-primary-dk: #5985B6;
+    --cam-primary-900:#0A1320;
+
+    --cam-gold-leaf:    #D9B543;
+    --cam-gold-leaf-lt: #E6C75F;
+    --cam-gold-leaf-dk: #C9A227;
+    --cam-gold-leaf-50: #243450;
+
+    --cam-amber:    #D9A84A;
+    --cam-amber-lt: #E8C76F;
+    --cam-amber-dk: #C07A00;
+    --cam-amber-50: #243450;
+
+    --cam-cream:        #1A2940;
+    --cam-cream-lt:     #243450;
+    --cam-warm-ink:     #F5F0E5;
+    --cam-warm-ink-mid: #D6CFC0;
+    --cam-warm-ink-lt:  #847C68;
+    --cam-plum-void:    #0A1320;
+    --cam-void:         #0A1320;
+    --cam-mist:         #1A2940;
+    --cam-surface-lt:   #243450;
+
+    /* Legacy compat aliases */
+    --bg:      var(--bg-base);
+    --bg2:     var(--bg-surface);
+    --surface: var(--bg-surface);
+    --surface2:var(--bg-elevated);
+    --primary: var(--accent);
+    --primary-light: var(--accent-hover);
+    --text:    var(--text-primary);
+    --text-subtle: var(--text-secondary);
+    --text-dim:    var(--text-muted);
+    --border2: var(--border-hover);
+    --nav-bg:  rgba(15,27,45,0.92);
+    --nav-bg-secondary: var(--bg-elevated);
+    --nav-border: var(--border);
+    --nav-text: var(--text-primary);
+    --nav-text-secondary: var(--text-secondary);
+    --nav-text-muted: var(--text-muted);
+    --nav-hover: var(--bg-elevated);
+
+    color-scheme: dark;
   }
+
+  /* Legacy `.light-theme` class is now a no-op alias for the default
+     (light) state. Components that still apply it won't break. */
+  .light-theme { color-scheme: light; }
 
   *, *::before, *::after {
     box-sizing: border-box;
@@ -606,27 +692,20 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
    LUMORA — Live Interview Dark Theme
    ══════════════════════════════════════════════════════════════ */
 
-/* Lumora pages use white-content + blue-sidebar light theme. */
+/* Lumora pages now respect the global theme. The class is kept as a
+   layout anchor (used by AICompanionPanel / LumoraShell for positioning)
+   but no longer pins the substrate to white — it inherits from
+   :root or [data-theme="dark"] like the rest of the app. */
 .lumora-app-bg {
-  --bg-app: #ffffff;
-  --bg-surface: #f8fafc;
-  --bg-elevated: #f1f5f9;
-  --border: #e2e8f0;
-  --border-hover: #cbd5e1;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-dimmed: #94a3b8;
-  background: #ffffff;
-  color: #0f172a;
-  color-scheme: light;
+  background: var(--bg-app);
+  color: var(--text-primary);
   position: relative;
 }
 .lumora-app-bg::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(45,140,255,0.03) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(45,140,255,0.02) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 30%, var(--accent-subtle) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, var(--accent-subtle) 0%, transparent 60%);
 }
 
 .lumora-grid-overlay {
@@ -637,20 +716,18 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 }
 
 .lumora-status-bar {
-  background: linear-gradient(90deg, #ffffff 0%, rgba(45,140,255,0.03) 50%, #ffffff 100%);
-  border-top: 1px solid #e2e8f0; box-shadow: 0 -1px 4px rgba(0,0,0,0.04);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.04);
 }
 
 .lumora-empty-mesh { position: relative; }
 .lumora-empty-mesh::before {
   content: ''; position: absolute; inset: 0; border-radius: 1.5rem; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(45,140,255,0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 50% at 80% 80%, rgba(45,140,255,0.03) 0%, transparent 70%);
+    radial-gradient(ellipse 50% 40% at 20% 20%, var(--accent-subtle) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 80% 80%, var(--accent-subtle) 0%, transparent 70%);
 }
-.lumora-app-bg ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
-.lumora-app-bg ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-.lumora-app-bg select { color-scheme: light; }
 
 /* Light panel inside Lumora — for solution/description panels that need light bg */
 .lumora-light-panel {

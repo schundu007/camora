@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from './CamoraLogo';
 import UserDropdown from './UserDropdown';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
@@ -16,6 +17,7 @@ const TICKER_ITEMS = [
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
   const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
 
   // Close the mobile menu on Escape or when the route changes.
@@ -67,8 +69,27 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           ))}
         </div>
 
-        {/* Desktop auth */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Desktop auth + theme toggle */}
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 rounded-md transition-colors hover:bg-[var(--bg-elevated)]"
+            style={{ color: textMuted }}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          >
+            {theme === 'dark' ? (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="8" cy="8" r="3" />
+                <path d="M8 1v2M8 13v2M3.05 3.05l1.4 1.4M11.55 11.55l1.4 1.4M1 8h2M13 8h2M3.05 12.95l1.4-1.4M11.55 4.45l1.4-1.4" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13.5 9.5A5.5 5.5 0 1 1 6.5 2.5a4 4 0 0 0 7 7Z" />
+              </svg>
+            )}
+          </button>
           {isAuthenticated ? (
             <UserDropdown variant={isLight ? 'light' : 'dark'} />
           ) : (

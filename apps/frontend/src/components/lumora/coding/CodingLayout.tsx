@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { isQuestion } from '@/lib/questionDetector';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
@@ -153,7 +154,10 @@ function useTheme(dark: boolean) {
 
 export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded, onVoiceProblemRef, onCapturedProblemRef }: CodingLayoutProps) {
   const { token } = useAuth();
-  const t = useTheme(!!embedded);
+  const { theme: globalTheme } = useGlobalTheme();
+  // Embedded panes default to dark for IDE feel; toggling the global theme
+  // flips this layout in lockstep with the rest of the app.
+  const t = useTheme(globalTheme === 'dark' || !!embedded);
 
   // Core state
   const [language, setLanguage] = useState('python');
