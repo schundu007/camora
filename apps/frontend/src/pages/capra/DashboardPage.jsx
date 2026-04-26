@@ -252,11 +252,19 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   const codeDisplayRef = useRef(null);
 
   // ---------------------------------------------------------------------------
-  // Apply theme to document
+  // Theme — INTENTIONALLY a no-op.
+  //
+  // Previously this effect forced data-theme on <html> from editorSettings,
+  // defaulting to 'dark', which overrode the user's global choice every time
+  // they hit /capra/practice?view=code-solver / design-solver / sql-editor.
+  // Result: the page chrome stayed in light mode but the inner solver
+  // panels jumped to dark mode whenever this component mounted, breaking the
+  // global toggle.
+  //
+  // The global useTheme() hook already owns data-theme — we leave it alone.
+  // Per-component "editor theme" preferences should live as scoped CSS vars
+  // or component props, never by mutating the document root.
   // ---------------------------------------------------------------------------
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', editorSettings.theme || 'dark');
-  }, [editorSettings.theme]);
 
   // ---------------------------------------------------------------------------
   // Auth check on mount
