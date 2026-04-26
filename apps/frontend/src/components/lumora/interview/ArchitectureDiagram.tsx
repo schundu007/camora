@@ -248,10 +248,10 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#C9A227' }}>Text architecture (diagram service unavailable)</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-gold-leaf-text)' }}>Text architecture (diagram service unavailable)</span>
             <button onClick={handleGenerate}
               className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded hover:bg-amber-100"
-              style={{ color: '#C9A227', border: '1px solid #FCD34D' }}>
+              style={{ color: 'var(--cam-gold-leaf-text)', border: '1px solid #FCD34D' }}>
               Retry diagram
             </button>
           </div>

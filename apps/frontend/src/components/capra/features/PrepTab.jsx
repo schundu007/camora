@@ -219,8 +219,8 @@ export default function PrepTab({ isOpen, onClose }) {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm mb-1" style={{ color: '#A88817' }}>Browser Extension Required</h3>
-                  <p className="text-xs mb-2" style={{ color: '#C9A227' }}>
+                  <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--cam-gold-leaf-text)' }}>Browser Extension Required</h3>
+                  <p className="text-xs mb-2" style={{ color: 'var(--cam-gold-leaf-text)' }}>
                     Install the Ascend browser extension to sync your platform logins. The extension captures cookies from your logged-in sessions.
                   </p>
                   <div className="flex gap-2">

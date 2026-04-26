@@ -213,14 +213,14 @@ function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: '#C9A227', fontFamily: "'Source Sans 3', sans-serif" }}>Likely Rebuttals</span>
-        <span className="ml-auto text-[10px]" style={{ color: '#A88817' }}>{items.length}</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-gold-leaf-text)', fontFamily: "'Source Sans 3', sans-serif" }}>Likely Rebuttals</span>
+        <span className="ml-auto text-[10px]" style={{ color: 'var(--cam-gold-leaf-text)' }}>{items.length}</span>
       </div>
       <div className="px-2.5 py-2 flex flex-col gap-1.5">
         {items.map((r, i) => (
           <div key={i} className="text-[12px] leading-[1.55]" style={{ color: TEXT_PRIMARY, fontFamily: "'Inter', sans-serif" }}>
             <p className="font-bold flex items-start gap-1">
-              <span className="font-mono shrink-0" style={{ color: '#C9A227' }}>Q{i + 1}.</span>
+              <span className="font-mono shrink-0" style={{ color: 'var(--cam-gold-leaf-text)' }}>Q{i + 1}.</span>
               <span>{r.probe}</span>
             </p>
             <p className="pl-5" style={{ color: 'var(--text-secondary)' }}>→ {r.handling}</p>
