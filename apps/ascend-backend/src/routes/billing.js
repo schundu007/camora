@@ -338,7 +338,7 @@ router.get('/subscription', jwtAuth, async (req, res) => {
 
     // Admin override: grant full plan access regardless of Stripe state.
     if (isAdmin && !PAID_PLAN_TYPES.has(sub.plan_type)) {
-      sub.plan_type = 'quarterly_pro';
+      sub.plan_type = 'pro_max_yearly';
       sub.status = 'active';
     }
 
@@ -414,8 +414,9 @@ router.get('/download-access', jwtAuth, async (req, res) => {
 });
 
 /**
- * Verify subscription status (for cross-service verification)
- * Used by jobs.cariara.com to check if user has quarterly_pro access
+ * Verify subscription status (for cross-service verification).
+ * Used by jobs.cariara.com to check if a user holds any active paid plan
+ * (pricing v2: pro_monthly / pro_yearly / pro_max_monthly / pro_max_yearly).
  * GET /api/billing/verify-subscription/:userId
  */
 router.get('/verify-subscription/:userId', async (req, res) => {
@@ -436,10 +437,9 @@ router.get('/verify-subscription/:userId', async (req, res) => {
 
     const subscription = result.rows[0];
 
-    // Check if user has active paid subscription OR active trial. The old check
-    // hard-coded 'monthly' but production stores 'monthly_starter' / 'monthly_pro',
-    // making the branch unreachable and silently returning hasAccess=false for
-    // paying users.
+    // Check if user has active paid subscription OR active trial. PAID_PLAN_TYPES
+    // is the source of truth — keep it in sync with /prices to avoid the
+    // unreachable-branch bug where production plan_type values silently fail.
     const isPaidActive = PAID_PLAN_TYPES.has(subscription?.plan_type) &&
                          subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
@@ -577,7 +577,7 @@ async function handleCheckoutComplete(session) {
     logger.info({ userId, type, sessionId: session.id }, 'Desktop lifetime activated');
   } else {
     // Subscription plan — activate with the type as plan_type
-    const planType = type || 'monthly_starter';
+    const planType = type || 'pro_monthly';
     await query(
       `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
       [planType, userId]

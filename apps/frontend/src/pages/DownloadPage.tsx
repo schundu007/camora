@@ -303,30 +303,39 @@ export default function DownloadPage() {
 
   const [annualLoading, setAnnualLoading] = useState(false);
 
-  const [prices, setPrices] = useState<any>(null);
+  const [prices, setPrices] = useState<Record<string, { priceId: string }> | null>(null);
   useEffect(() => {
     const LUMORA = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
     fetch(`${LUMORA}/api/v1/billing/prices`).then(r => r.json()).then(data => {
       const mapped: Record<string, { priceId: string }> = {};
-      for (const p of (data.plans || data || [])) {
-        if (p.id === 'pro' || p.id === 'monthly') mapped.monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'monthly_pro') mapped.monthly_pro = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'lifetime' || p.id === 'annual') mapped.annual = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'desktop_monthly') mapped.desktop_monthly = { priceId: p.stripe_price_id || p.priceId || '' };
-        if (p.id === 'desktop_annual') mapped.desktop_annual = { priceId: p.stripe_price_id || p.priceId || '' };
+      // Pricing v2: /prices returns a flat object keyed by SKU id (pro_monthly,
+      // pro_max_monthly, pro_max_yearly, desktop_lifetime, …). Extract the IDs
+      // we need: Pro Max for the in-app desktop upsell, Desktop Lifetime for BYOK.
+      const flat: Record<string, { priceId?: string; stripe_price_id?: string }> = {};
+      if (Array.isArray(data?.plans)) for (const p of data.plans) flat[p.id] = p;
+      else if (data && typeof data === 'object') for (const k of Object.keys(data)) {
+        if (data[k] && typeof data[k] === 'object') flat[k] = data[k];
+      }
+      for (const id of Object.keys(flat)) {
+        const v = flat[id];
+        const pid = v.priceId || v.stripe_price_id || '';
+        if (pid) mapped[id] = { priceId: pid };
       }
       setPrices(mapped);
     }).catch(() => {});
   }, []);
 
-  const handleMonthlyAddon = () =>
-    handleStripeCheckout(prices?.desktop_monthly?.priceId || '', setAddonLoading);
-
-  const handleAnnualAddon = () =>
-    handleStripeCheckout(prices?.desktop_annual?.priceId || '', setAnnualLoading);
-
+  // Pro Max monthly upgrade — desktop app is included in this tier.
   const handleProCheckout = () =>
-    handleStripeCheckout(prices?.monthly_pro?.priceId || '', setProLoading);
+    handleStripeCheckout(prices?.pro_max_monthly?.priceId || '', setProLoading);
+
+  // Pro Max yearly — desktop app + 17% savings.
+  const handleAnnualAddon = () =>
+    handleStripeCheckout(prices?.pro_max_yearly?.priceId || '', setAnnualLoading);
+
+  // BYOK Desktop Lifetime — one-time purchase, no subscription.
+  const handleMonthlyAddon = () =>
+    handleStripeCheckout(prices?.desktop_lifetime?.priceId || '', setAddonLoading);
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';

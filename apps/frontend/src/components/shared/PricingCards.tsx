@@ -177,8 +177,20 @@ export function useCheckout() {
   return { checkout, loading };
 }
 
-/* ── Pricing Cards — Free / Pro / Pro Max with billing toggle ── */
-export default function PricingCards({ showFree = true }: { showFree?: boolean }) {
+/* ── Pricing Cards — Free / Pro / Pro Max with billing toggle ──
+ *
+ * `variant`: passthrough for legacy callers (JobPrepPage upsell modal,
+ * TopicDetail inline upgrade). Today both render the standard layout —
+ * the cards are already compact enough for in-modal use; if a tighter
+ * layout is needed later we can branch on `variant === 'compact'`.
+ */
+export default function PricingCards({
+  showFree = true,
+  variant: _variant,
+}: {
+  showFree?: boolean;
+  variant?: 'compact' | 'default';
+}) {
   const prices = usePlanPrices();
   const { checkout, loading } = useCheckout();
   const navigate = useNavigate();

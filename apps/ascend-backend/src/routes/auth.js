@@ -324,9 +324,9 @@ router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
     // Upsert subscription
     await query(
       `INSERT INTO ascend_subscriptions (user_id, plan_type, status, created_at, updated_at)
-       VALUES ($1, 'quarterly_pro', 'active', NOW(), NOW())
+       VALUES ($1, 'pro_max_yearly', 'active', NOW(), NOW())
        ON CONFLICT (user_id) DO UPDATE SET
-         plan_type = 'quarterly_pro', status = 'active', updated_at = NOW()`,
+         plan_type = 'pro_max_yearly', status = 'active', updated_at = NOW()`,
       [userId]
     );
 
@@ -356,7 +356,7 @@ router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
       success: true,
       message: `Subscription granted to ${email}`,
       userId,
-      subscription: 'quarterly_pro',
+      subscription: 'pro_max_yearly',
       creditsAdded: 10000,
     });
   } catch (error) {
