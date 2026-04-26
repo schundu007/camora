@@ -32,7 +32,7 @@ app.use(cookieParser());
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', service: 'lumora-backend', version: '2.0.0' });
+  res.json({ status: 'healthy', service: 'lumora-backend', version: '2.0.1' });
 });
 
 // Run migrations on startup
