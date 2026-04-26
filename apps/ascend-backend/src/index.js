@@ -35,6 +35,7 @@ import usageRouter from './routes/usage.js';
 import companyPrepsRouter from './routes/companyPreps.js';
 import extensionRouter from './routes/extension.js';
 import jobAnalyzeRouter from './routes/jobAnalyze.js';
+import teamsRouter from './routes/teams.js';
 import topicReadsRouter from './routes/topicReads.js';
 import topicCommentsRouter from './routes/topicComments.js';
 import referralRouter from './routes/referral.js';
@@ -281,6 +282,54 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_user_created ON ai_hours_usage(user_id, created_at DESC)');
     await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_unsynced ON ai_hours_usage(metered_to_stripe) WHERE metered_to_stripe = false');
     console.log('[Migrations] ai_hours_usage table ensured');
+
+    // Team / group accounts — Pro Max owners + Business Starter buyers can
+    // share their hour pool with up to N seats. Source of truth for team
+    // membership; aiHoursMeter stamps team_id on usage rows so consumption
+    // rolls up cleanly per team and per member.
+    await query(`CREATE TABLE IF NOT EXISTS teams (
+      id BIGSERIAL PRIMARY KEY,
+      owner_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(120),
+      plan_type VARCHAR(40) NOT NULL,
+      seat_limit INTEGER NOT NULL DEFAULT 5,
+      hours_pool_total REAL,
+      hours_pool_period_start TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      payg_rate_cents INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_teams_owner ON teams(owner_user_id)');
+
+    await query(`CREATE TABLE IF NOT EXISTS team_members (
+      id BIGSERIAL PRIMARY KEY,
+      team_id BIGINT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role VARCHAR(20) NOT NULL DEFAULT 'member',
+      per_member_hour_cap REAL,
+      joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (team_id, user_id),
+      UNIQUE (user_id)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id)');
+
+    await query(`CREATE TABLE IF NOT EXISTS team_invites (
+      id BIGSERIAL PRIMARY KEY,
+      team_id BIGINT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      email VARCHAR(255) NOT NULL,
+      invite_token VARCHAR(64) NOT NULL UNIQUE,
+      invited_by INTEGER NOT NULL REFERENCES users(id),
+      expires_at TIMESTAMPTZ NOT NULL,
+      accepted_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_team_invites_team ON team_invites(team_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_team_invites_email_pending ON team_invites(email) WHERE accepted_at IS NULL');
+
+    // Stamp team_id on usage rows so per-team and per-member rollups are cheap.
+    await query('ALTER TABLE ai_hours_usage ADD COLUMN IF NOT EXISTS team_id BIGINT');
+    await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_team_created ON ai_hours_usage(team_id, created_at DESC) WHERE team_id IS NOT NULL');
+    console.log('[Migrations] team tables + ai_hours_usage.team_id ensured');
 
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
@@ -977,6 +1026,10 @@ app.use('/api/challenge', apiLimiter, challengeRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
+
+// Team / group sharing — Pro Max owners + Business Starter buyers can pool
+// hours across up to 5/10 seats. Auth via jwtAuth in the router itself.
+app.use('/api/v1/teams', apiLimiter, teamsRouter);
 
 // Voice assistant routes (SSE + REST)
 // No rate limiter on /events endpoint for real-time streaming

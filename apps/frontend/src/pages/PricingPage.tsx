@@ -136,6 +136,14 @@ export default function PricingPage() {
                 ],
               },
               {
+                title: 'Team sharing',
+                rows: [
+                  { feature: 'Seats included', hint: 'Owner + invited mates share the hour pool', values: { free: '1 (solo)', pro: '1 (solo)', pro_max: 'Up to 5' } },
+                  { feature: 'Per-member usage breakdown', values: { free: false, pro: false, pro_max: true } },
+                  { feature: 'Pooled hours', values: { free: false, pro: false, pro_max: true } },
+                ],
+              },
+              {
                 title: 'Billing',
                 rows: [
                   { feature: 'Cancel anytime', values: { free: true, pro: true, pro_max: true } },
