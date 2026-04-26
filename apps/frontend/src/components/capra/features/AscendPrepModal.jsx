@@ -46,11 +46,11 @@ const ALL_SECTIONS = [
   { id: 'pitch', name: 'Elevator Pitch', description: '2-3 minute interview pitch', icon: 'rocket', color: 'var(--text-muted)' },
   { id: 'hr', name: 'HR Questions', description: 'Salary, culture, availability', icon: 'users', color: 'var(--text-muted)' },
   { id: 'hiring-manager', name: 'Hiring Manager', description: 'Role-specific questions', icon: 'briefcase', color: 'var(--accent)' },
-  { id: 'rrk', name: 'RRK (Google)', description: 'Role Related Knowledge round', companyFilter: 'google', icon: 'academic', color: '#4285f4' },
+  { id: 'rrk', name: 'RRK (Google)', description: 'Role Related Knowledge round', companyFilter: 'google', icon: 'academic', color: 'var(--accent)' },
   { id: 'coding', name: 'Coding', description: 'Algorithm & coding challenges', icon: 'code', color: 'var(--accent)' },
   { id: 'system-design', name: 'System Design', description: 'Architecture questions', icon: 'cube', color: 'var(--accent)' },
   { id: 'behavioral', name: 'Behavioral', description: 'STAR method questions', icon: 'chat', color: 'var(--accent)' },
-  { id: 'techstack', name: 'Tech Stack', description: 'Technology-specific questions', icon: 'stack', color: '#06b6d4' },
+  { id: 'techstack', name: 'Tech Stack', description: 'Technology-specific questions', icon: 'stack', color: 'var(--accent)' },
 ];
 
 // Section icon components
@@ -1288,9 +1288,9 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   disabled={linkingAccount}
                   className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg transition-colors"
                   style={{
-                    background: accountLinked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                    color: accountLinked ? 'var(--accent)' : 'var(--accent)',
-                    border: `1px solid ${accountLinked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+                    background: 'var(--accent-subtle)',
+                    color: 'var(--accent)',
+                    border: '1px solid var(--border)',
                   }}
                   title={accountLinked ? 'Cloud sync enabled - click to unlink' : 'Link account for cloud sync'}
                 >
@@ -1370,7 +1370,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   setShowCompanyDropdown(true);
                 }}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium"
-                style={{ background: 'var(--accent)', color: '#ffffff', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+                style={{ background: 'var(--accent)', color: '#FFFFFF', boxShadow: '0 2px 8px var(--accent-subtle)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1460,7 +1460,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                         onClick={() => handleCreateCompany(newCompanyName)}
                         disabled={!newCompanyName.trim()}
                         className="flex-1 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ background: 'var(--accent)', color: '#ffffff' }}
+                        style={{ background: 'var(--accent)', color: '#FFFFFF' }}
                       >
                         Create
                       </button>
@@ -1534,14 +1534,14 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 onClick={() => setShowJDPopup(true)}
                 className="prep-nav-item"
                 style={{
-                  background: inputs.jobDescription?.trim() ? 'rgba(59, 130, 246, 0.08)' : undefined,
-                  borderColor: inputs.jobDescription?.trim() ? 'rgba(59, 130, 246, 0.2)' : undefined,
+                  background: inputs.jobDescription?.trim() ? 'var(--accent-subtle)' : undefined,
+                  borderColor: inputs.jobDescription?.trim() ? 'var(--border)' : undefined,
                 }}
               >
                 <div
                   className="prep-nav-icon"
                   style={{
-                    background: 'rgba(59, 130, 246, 0.12)',
+                    background: 'var(--accent-subtle)',
                     color: inputs.jobDescription?.trim() ? 'var(--accent)' : undefined,
                   }}
                 >
@@ -1611,7 +1611,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               {/* Custom Sections from Documents */}
               {customSections.length > 0 && (
                 <>
-                  <div className="my-2 mx-4 flex items-center gap-2" style={{ borderTop: '1px solid rgba(16, 185, 129, 0.15)', paddingTop: '8px' }}>
+                  <div className="my-2 mx-4 flex items-center gap-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
                     <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)', opacity: 0.8 }}>Custom</span>
                   </div>
                   {customSections.map((section) => {
@@ -1672,8 +1672,8 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${completedSections === sections.length ? 'completed' : ''}`}
                   style={{
                     background: completedSections === sections.length ? 'var(--accent)' : 'var(--accent)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 6px var(--accent-subtle)',
                   }}
                 >
                   {isGenerating ? (
@@ -1795,8 +1795,8 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
           <div
             className="relative w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
             style={{
-              background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(16, 185, 129, 0.1)',
+              background: 'var(--bg-surface)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border)',
               transform: `translate(${jdPopupPos.x}px, ${jdPopupPos.y}px)`,
               transition: isDraggingJD ? 'none' : 'transform 0.1s ease-out'
             }}
@@ -1805,7 +1805,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             {/* Gradient Header Bar - Draggable */}
             <div
               className="h-2 cursor-move"
-              style={{ background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent) 50%, #06b6d4 100%)' }}
+              style={{ background: 'linear-gradient(90deg, var(--cam-primary-lt), var(--cam-primary-dk))' }}
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsDraggingJD(true);
@@ -1835,7 +1835,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 <div>
                   <h2 className="text-xl font-bold text-[var(--text-primary)] landing-display">Job Description</h2>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent)' }}>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                       {activeCompany || 'No company'}
                     </span>
                     {inputs.jobDescription?.trim() && (
@@ -1876,7 +1876,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <div
                       className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
-                      style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)' }}
+                      style={{ background: 'var(--accent-subtle)' }}
                     >
                       <svg className="w-10 h-10" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

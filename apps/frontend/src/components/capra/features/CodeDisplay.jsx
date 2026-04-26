@@ -133,13 +133,13 @@ const darkTheme = {
   ...vscDarkPlus,
   'pre[class*="language-"]': {
     ...vscDarkPlus['pre[class*="language-"]'],
-    background: '#0c1322',
+    background: 'var(--cam-primary-dk)',
     margin: 0,
     padding: '12px',
   },
   'code[class*="language-"]': {
     ...vscDarkPlus['code[class*="language-"]'],
-    color: '#e2e8f0',
+    color: 'var(--border)',
     background: 'transparent',
   },
 };
@@ -149,13 +149,13 @@ const lightTheme = {
   ...vs,
   'pre[class*="language-"]': {
     ...vs['pre[class*="language-"]'],
-    background: '#1a2332',
+    background: 'var(--cam-primary-dk)',
     margin: 0,
     padding: '12px',
   },
   'code[class*="language-"]': {
     ...vs['code[class*="language-"]'],
-    color: '#e2e8f0',
+    color: 'var(--border)',
     background: 'transparent',
   },
 };
@@ -440,19 +440,19 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             disabled={running || !canRun}
             className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${running ? 'running' : ''}`}
             style={{
-              background: running ? '#334155' : 'var(--accent)',
-              color: 'white',
-              boxShadow: running ? 'none' : '0 2px 6px rgba(45, 140, 255, 0.25)',
+              background: running ? 'var(--text-muted)' : 'var(--accent)',
+              color: '#FFFFFF',
+              boxShadow: running ? 'none' : '0 2px 6px var(--accent-subtle)',
               cursor: running || !canRun ? 'not-allowed' : 'pointer',
             }}
             onMouseEnter={(e) => {
               if (!running && canRun) {
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(45, 140, 255, 0.35)';
+                e.currentTarget.style.boxShadow = '0 4px 12px var(--accent-subtle)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = running ? 'none' : '0 2px 6px rgba(45, 140, 255, 0.25)';
+              e.currentTarget.style.boxShadow = running ? 'none' : '0 2px 6px var(--accent-subtle)';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
@@ -483,8 +483,8 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             onClick={handleCopy}
             className="px-3 py-1 text-xs font-medium rounded-md transition-all hover:bg-[var(--bg-elevated)]"
             style={{
-              color: copied ? 'var(--accent)' : '#94a3b8',
-              background: copied ? 'rgba(45, 140, 255, 0.1)' : 'transparent'
+              color: copied ? 'var(--accent)' : 'var(--text-dimmed)',
+              background: copied ? 'var(--accent-subtle)' : 'transparent'
             }}
           >
             {copied ? (
@@ -514,7 +514,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           customStyle={{
             margin: 0,
             padding: '8px',
-            background: '#0c1322',
+            background: 'var(--cam-primary-dk)',
             fontSize: `${Math.max(editorSettings?.fontSize || 12, window.matchMedia?.('(max-width: 767px)')?.matches ? 14 : 12)}px`,
             lineHeight: '1.6',
             minHeight: '100%',
@@ -522,7 +522,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           lineNumberStyle={{
             minWidth: '2.5em',
             paddingRight: '0.5em',
-            color: '#475569',
+            color: 'var(--text-muted)',
             userSelect: 'none',
             fontSize: `${Math.max(editorSettings?.fontSize || 12, window.matchMedia?.('(max-width: 767px)')?.matches ? 13 : 12)}px`,
           }}
@@ -555,7 +555,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               disabled={fixing}
               className="px-3 py-1 text-xs font-semibold rounded-md transition-all border border-brand-400 text-brand-400 hover:bg-brand-400/10"
               style={{
-                background: fixing ? 'rgba(45, 140, 255, 0.1)' : 'transparent',
+                background: fixing ? 'var(--accent-subtle)' : 'transparent',
               }}
             >
               {fixing ? (
@@ -662,7 +662,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           <pre
             className="px-3 py-1.5 text-xs font-mono overflow-auto select-text scrollbar-thin cursor-pointer bg-[var(--bg-elevated)]"
             style={{
-              color: output.success ? 'var(--accent)' : '#f87171',
+              color: output.success ? 'var(--accent)' : 'var(--danger)',
               height: `${outputHeight}px`,
               minHeight: '50px',
               maxHeight: '200px',
@@ -689,7 +689,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-elevated)]">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${output.success ? 'bg-brand-400' : 'bg-error-400'}`}
-                     style={{ boxShadow: output.success ? '0 0 8px rgba(16, 185, 129, 0.5)' : '0 0 8px rgba(239, 68, 68, 0.5)' }} />
+                     style={{ boxShadow: output.success ? '0 0 8px var(--accent-subtle)' : '0 0 8px rgba(239, 68, 68, 0.5)' }} />
                 <span className="text-sm font-semibold text-[var(--text-primary)]">
                   {output.success ? 'Program Output' : 'Error Output'}
                 </span>
@@ -732,7 +732,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 {/* Output Content */}
                 <pre
                   className="flex-1 py-3 px-4 select-text leading-5"
-                  style={{ color: output.success ? 'var(--accent)' : '#f87171' }}
+                  style={{ color: output.success ? 'var(--accent)' : 'var(--danger)' }}
                 >
                   {output.success ? output.output : (output.error || output.stderr || output.output)}
                 </pre>

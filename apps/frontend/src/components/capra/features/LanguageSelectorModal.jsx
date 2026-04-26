@@ -73,9 +73,9 @@ const CATEGORIES = [
   { id: 'backend', label: 'Backend', color: 'var(--accent)' },
   { id: 'mobile', label: 'Mobile', color: 'var(--text-muted)' },
   { id: 'sql', label: 'SQL', color: 'var(--text-muted)' },
-  { id: 'devops', label: 'DevOps', color: '#06b6d4' },
-  { id: 'data', label: 'Data/ML', color: '#84cc16' },
-  { id: 'docs', label: 'Docs', color: '#64748b' },
+  { id: 'devops', label: 'DevOps', color: 'var(--accent)' },
+  { id: 'data', label: 'Data/ML', color: 'var(--accent)' },
+  { id: 'docs', label: 'Docs', color: 'var(--text-muted)' },
 ];
 
 export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguage, onSelect }) {
@@ -167,8 +167,8 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
               }}
               className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
               style={{
-                background: activeCategory === cat.id ? cat.color : 'rgba(100, 116, 139, 0.2)',
-                color: activeCategory === cat.id ? '#0c1322' : '#94a3b8',
+                background: activeCategory === cat.id ? cat.color : 'var(--bg-elevated)',
+                color: activeCategory === cat.id ? '#FFFFFF' : 'var(--text-dimmed)',
                 boxShadow: activeCategory === cat.id ? `0 2px 8px ${cat.color}40` : 'none',
               }}
             >
@@ -201,17 +201,17 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-4 transition-all hover:bg-[var(--bg-elevated)]"
             style={{
               background: selectedLanguage === 'auto'
-                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)'
-                : 'rgba(30, 41, 59, 0.5)',
-              border: selectedLanguage === 'auto' ? '2px solid var(--accent)' : '1px solid rgba(100, 116, 139, 0.3)',
+                ? 'var(--accent-subtle)'
+                : 'var(--bg-elevated)',
+              border: selectedLanguage === 'auto' ? '2px solid var(--accent)' : '1px solid var(--border)',
             }}
           >
             <div
               className="w-10 h-10 flex items-center justify-center rounded-lg text-lg"
               style={{
                 background: selectedLanguage === 'auto'
-                  ? 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)'
-                  : 'linear-gradient(135deg, #334155 0%, #475569 100%)',
+                  ? 'var(--accent)'
+                  : 'var(--bg-elevated)',
               }}
             >
               ✨
@@ -238,11 +238,11 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all hover:bg-[var(--bg-elevated)] group"
                 style={{
                   background: selectedLanguage === lang.value
-                    ? `linear-gradient(135deg, ${activeCategoryData?.color || 'var(--accent)'}15 0%, ${activeCategoryData?.color || 'var(--accent)'}08 100%)`
-                    : 'rgba(30, 41, 59, 0.5)',
+                    ? 'var(--accent-subtle)'
+                    : 'var(--bg-elevated)',
                   border: selectedLanguage === lang.value
                     ? `2px solid ${activeCategoryData?.color || 'var(--accent)'}`
-                    : '1px solid rgba(100, 116, 139, 0.2)',
+                    : '1px solid var(--border)',
                 }}
               >
                 <span
@@ -250,8 +250,8 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                   style={{
                     background: selectedLanguage === lang.value
                       ? activeCategoryData?.color || 'var(--accent)'
-                      : '#334155',
-                    color: selectedLanguage === lang.value ? '#0c1322' : '#cbd5e1',
+                      : 'var(--bg-elevated)',
+                    color: selectedLanguage === lang.value ? '#FFFFFF' : 'var(--text-dimmed)',
                   }}
                 >
                   {lang.icon}

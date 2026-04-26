@@ -43,17 +43,17 @@ function renderMarkdown(text) {
 
     // Headers
     if (trimmed.startsWith('### ')) {
-      elements.push(<h4 key={`h4-${i}`} className="font-semibold text-sm mt-3 mb-1" style={{ color: '#1e40af' }}>{trimmed.slice(4)}</h4>);
+      elements.push(<h4 key={`h4-${i}`} className="font-semibold text-sm mt-3 mb-1" style={{ color: 'var(--accent-text)' }}>{trimmed.slice(4)}</h4>);
       i++;
       continue;
     }
     if (trimmed.startsWith('## ')) {
-      elements.push(<h3 key={`h3-${i}`} className="font-semibold text-base mt-3 mb-1" style={{ color: '#1e40af' }}>{trimmed.slice(3)}</h3>);
+      elements.push(<h3 key={`h3-${i}`} className="font-semibold text-base mt-3 mb-1" style={{ color: 'var(--accent-text)' }}>{trimmed.slice(3)}</h3>);
       i++;
       continue;
     }
     if (trimmed.startsWith('# ')) {
-      elements.push(<h2 key={`h2-${i}`} className="font-bold text-lg mt-3 mb-2" style={{ color: '#1e40af' }}>{trimmed.slice(2)}</h2>);
+      elements.push(<h2 key={`h2-${i}`} className="font-bold text-lg mt-3 mb-2" style={{ color: 'var(--accent-text)' }}>{trimmed.slice(2)}</h2>);
       i++;
       continue;
     }
@@ -108,13 +108,13 @@ function processInline(str) {
   // Escape HTML entities first to prevent XSS
   str = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   // Bold: **text** or __text__
-  str = str.replace(/\*\*(.+?)\*\*/g, '<strong style="color: #3C7AAB;">$1</strong>');
-  str = str.replace(/__(.+?)__/g, '<strong style="color: #3C7AAB;">$1</strong>');
+  str = str.replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--accent);">$1</strong>');
+  str = str.replace(/__(.+?)__/g, '<strong style="color: var(--accent);">$1</strong>');
   // Italic: *text* or _text_
   str = str.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
   str = str.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
   // Inline code: `text`
-  str = str.replace(/`([^`]+)`/g, '<code style="padding: 2px 6px; background: #f1f5f9; border-radius: 4px; color: #0369a1; font-size: 12px; font-family: Monaco, Consolas, monospace;">$1</code>');
+  str = str.replace(/`([^`]+)`/g, '<code style="padding: 2px 6px; background: var(--bg-elevated); border-radius: 4px; color: var(--accent-text); font-size: 12px; font-family: Monaco, Consolas, monospace;">$1</code>');
   return str;
 }
 
@@ -434,13 +434,13 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                   <div className="space-y-3">
                     {safeArray(displayContent.pitchSections).filter(section => section && typeof section === 'object').map((section, i) => (
                       <div key={i} className="flex gap-3">
-                        <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--accent)', color: 'white', boxShadow: '0 2px 4px rgba(45,140,255,0.3)' }}>{i + 1}</span>
+                        <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--accent)', color: '#FFFFFF', boxShadow: '0 2px 4px var(--accent-subtle)' }}>{i + 1}</span>
                         <div className="flex-1 pt-0.5">
                           {safeArray(section?.bullets).length > 0 && (
                             <p className="text-sm leading-relaxed" style={{ color: colors.text }}>
                               {safeArray(section.bullets).filter(b => b != null).map((bullet, j) => (
                                 <span key={j}>
-                                  {j === 0 ? <strong style={{ color: '#1e40af' }}>{String(bullet).split(' ').slice(0, 3).join(' ')}</strong> : null}
+                                  {j === 0 ? <strong style={{ color: 'var(--accent-text)' }}>{String(bullet).split(' ').slice(0, 3).join(' ')}</strong> : null}
                                   {j === 0 ? ' ' + String(bullet).split(' ').slice(3).join(' ') : String(bullet)}
                                   {j < section.bullets.length - 1 ? ' ' : ''}
                                 </span>
@@ -515,14 +515,14 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     {safeArray(displayContent.questions).filter(q => q && (q.question?.trim?.() || q.title?.trim?.())).map((q, i) => (
                       <div key={i} className="pb-4" style={{ borderBottom: i < displayContent.questions.length - 1 ? `1px solid ${colors.border}` : 'none' }}>
                         {/* Question/Title */}
-                        <p className="font-semibold mb-1 text-base" style={{ color: '#1e40af' }}>
+                        <p className="font-semibold mb-1 text-base" style={{ color: 'var(--accent-text)' }}>
                           {i + 1}. {(q.title || q.question)?.trim()}
                         </p>
 
                         {/* Difficulty & Frequency */}
                         {(q.difficulty || q.frequency) && (
                           <p className="text-xs mb-2" style={{ color: colors.textMuted }}>
-                            {q.difficulty && <span className="px-1.5 py-0.5 rounded mr-2" style={{ background: q.difficulty === 'Hard' ? '#FEE2E2' : q.difficulty === 'Medium' ? '#F8FAFC' : '#D1FAE5' }}>{q.difficulty}</span>}
+                            {q.difficulty && <span className="px-1.5 py-0.5 rounded mr-2" style={{ background: 'var(--bg-elevated)' }}>{q.difficulty}</span>}
                             {q.frequency}
                           </p>
                         )}
@@ -538,8 +538,8 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: colors.textLight }}>Examples</p>
                             {safeArray(q.examples).filter(ex => ex && typeof ex === 'object').map((ex, j) => (
                               <div key={j} className="text-xs font-mono p-2 rounded mb-1" style={{ background: 'var(--bg-elevated)' }}>
-                                <span style={{ color: '#0369a1' }}>Input:</span> {ex?.input || ''}<br/>
-                                <span style={{ color: '#3C7AAB' }}>Output:</span> {ex?.output || ''}
+                                <span style={{ color: 'var(--accent)' }}>Input:</span> {ex?.input || ''}<br/>
+                                <span style={{ color: 'var(--accent)' }}>Output:</span> {ex?.output || ''}
                                 {ex?.explanation && <><br/><span style={{ color: colors.textMuted }}>→ {ex.explanation}</span></>}
                               </div>
                             ))}
@@ -551,7 +551,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                           <div className="space-y-4">
                             {safeArray(q.approaches).filter(approach => approach && typeof approach === 'object').map((approach, j) => (
                               <div key={j} className="pl-3" style={{ borderLeft: '3px solid var(--accent)' }}>
-                                <p className="font-semibold" style={{ color: '#3C7AAB' }}>{approach.name}</p>
+                                <p className="font-semibold" style={{ color: 'var(--accent)' }}>{approach.name}</p>
                                 <p className="text-xs mb-2" style={{ color: colors.textMuted }}>
                                   Time: {approach.timeComplexity} | Space: {approach.spaceComplexity}
                                 </p>
@@ -559,7 +559,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                                 {/* Code */}
                                 {approach.code && (
-                                  <pre className="text-xs p-3 rounded overflow-x-auto mb-2" style={{ background: '#1e293b', color: '#e2e8f0', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
+                                  <pre className="text-xs p-3 rounded overflow-x-auto mb-2" style={{ background: 'var(--cam-primary-dk)', color: 'var(--border)', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
                                     {approach.code.replace(/\\n/g, '\n')}
                                   </pre>
                                 )}
@@ -571,7 +571,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                     <div className="space-y-1">
                                       {safeArray(approach.lineByLine).filter(line => line && typeof line === 'object').map((line, k) => (
                                         <div key={k} className="text-xs">
-                                          <code className="font-mono px-1 rounded" style={{ background: 'var(--bg-elevated)', color: '#1e40af' }}>{line?.line || ''}</code>
+                                          <code className="font-mono px-1 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--accent-text)' }}>{line?.line || ''}</code>
                                           <p className="ml-2 mt-0.5" style={{ color: colors.textMuted }}>→ {line?.explanation || ''}</p>
                                         </div>
                                       ))}
@@ -585,12 +585,12 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Edge Cases */}
                         {safeArray(q.edgeCases).length > 0 && (
-                          <div className="mt-3 p-3 rounded" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#B91C1C' }}>⚠ Edge Cases</p>
+                          <div className="mt-3 p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--danger)' }}>⚠ Edge Cases</p>
                             {safeArray(q.edgeCases).filter(edge => edge && typeof edge === 'object').map((edge, j) => (
                               <div key={j} className="text-xs mb-2">
                                 <span className="font-semibold">{edge?.case || ''}:</span> {edge?.explanation || ''}
-                                <div className="font-mono mt-0.5 pl-2" style={{ color: '#6B7280' }}>
+                                <div className="font-mono mt-0.5 pl-2" style={{ color: 'var(--text-muted)' }}>
                                   Input: {edge?.input || ''} → Output: {edge?.expectedOutput || ''}
                                 </div>
                               </div>
@@ -601,7 +601,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Common Mistakes */}
                         {safeArray(q.commonMistakes).length > 0 && (
                           <div className="mt-2">
-                            <p className="font-semibold text-xs" style={{ color: '#0B5CFF' }}>Common Mistakes:</p>
+                            <p className="font-semibold text-xs" style={{ color: 'var(--accent)' }}>Common Mistakes:</p>
                             {safeArray(q.commonMistakes).filter(m => m != null).map((m, j) => (
                               <p key={j} className="text-xs ml-2" style={{ color: colors.textMuted }}>• {String(m)}</p>
                             ))}
@@ -623,7 +623,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {safeArray(q.requirements.functional).length > 0 && (
                               <div>
-                                <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: '#3C7AAB' }}>Functional</p>
+                                <p className="font-semibold text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--accent)' }}>Functional</p>
                                 {safeArray(q.requirements.functional).filter(r => r != null).map((r, j) => (
                                   <p key={j} className="text-xs" style={{ color: colors.text }}>✓ {String(r)}</p>
                                 ))}
@@ -643,7 +643,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Capacity Estimation */}
                         {q.capacityEstimation && typeof q.capacityEstimation === 'object' && (
                           <div className="mt-3 p-3 rounded" style={{ background: 'var(--bg-elevated)' }}>
-                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Capacity Estimation</p>
+                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Capacity Estimation</p>
                             {safeArray(q.capacityEstimation.calculations).filter(calc => calc && typeof calc === 'object').map((calc, j) => (
                               <p key={j} className="text-xs font-mono">{calc?.metric || ''}: {calc?.result || ''}</p>
                             ))}
@@ -673,21 +673,21 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 )}
                               </div>
                             ) : q.architecture?.asciiDiagram ? (
-                              <pre className="text-xs p-3 rounded overflow-x-auto" style={{ background: '#1e293b', color: '#e2e8f0', fontFamily: "'Source Code Pro', Monaco, monospace", lineHeight: '1.3' }}>
+                              <pre className="text-xs p-3 rounded overflow-x-auto" style={{ background: 'var(--cam-primary-dk)', color: 'var(--border)', fontFamily: "'Source Code Pro', Monaco, monospace", lineHeight: '1.3' }}>
                                 {q.architecture.asciiDiagram.replace(/\\n/g, '\n')}
                               </pre>
                             ) : q.architecture?.diagramDescription ? (
-                              <div className="p-3 rounded" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-                                <p className="text-sm italic" style={{ color: '#1D4ED8' }}>
+                              <div className="p-3 rounded" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                                <p className="text-sm italic" style={{ color: 'var(--accent-text)' }}>
                                   📊 {q.architecture.diagramDescription}
                                 </p>
                                 {failedDiagrams[i] && (
-                                  <p className="text-xs mt-1" style={{ color: '#0B5CFF' }}>(Diagram expired - regenerate section to create new diagram)</p>
+                                  <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>(Diagram expired - regenerate section to create new diagram)</p>
                                 )}
                               </div>
                             ) : failedDiagrams[i] ? (
-                              <div className="p-3 rounded" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-                                <p className="text-xs" style={{ color: '#0B5CFF' }}>Diagram expired - regenerate this section to create a new diagram</p>
+                              <div className="p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                <p className="text-xs" style={{ color: 'var(--accent)' }}>Diagram expired - regenerate this section to create a new diagram</p>
                               </div>
                             ) : null}
                           </div>
@@ -700,8 +700,8 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             <div className="space-y-2">
                               {safeArray(q.architecture.components).filter(comp => comp && typeof comp === 'object').map((comp, j) => (
                                 <div key={j} className="text-xs p-2 rounded bg-[var(--bg-elevated)]">
-                                  <span className="font-semibold" style={{ color: '#1e40af' }}>{comp?.name || ''}</span>
-                                  <span className="ml-2 px-1.5 py-0.5 rounded text-xs" style={{ background: '#E0E7FF', color: '#3730A3' }}>{comp?.technology || ''}</span>
+                                  <span className="font-semibold" style={{ color: 'var(--accent-text)' }}>{comp?.name || ''}</span>
+                                  <span className="ml-2 px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)' }}>{comp?.technology || ''}</span>
                                   <p className="mt-1" style={{ color: colors.textMuted }}>{comp?.responsibility || ''}</p>
                                   {comp?.whyThisChoice && <p className="mt-0.5 italic" style={{ color: colors.textLight }}>Why: {comp.whyThisChoice}</p>}
                                 </div>
@@ -713,9 +713,9 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Trade-offs */}
                         {safeArray(q.tradeOffs).length > 0 && (
                           <div className="mt-3">
-                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#0B5CFF' }}>Trade-offs</p>
+                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Trade-offs</p>
                             {safeArray(q.tradeOffs).filter(t => t && typeof t === 'object').map((t, j) => (
-                              <div key={j} className="text-xs mb-2 pl-2" style={{ borderLeft: '2px solid #FECACA' }}>
+                              <div key={j} className="text-xs mb-2 pl-2" style={{ borderLeft: '2px solid var(--border)' }}>
                                 <p><b>Decision:</b> {t?.decision || ''}</p>
                                 <p><b>Chose:</b> {t?.chose || ''} — {t?.reason || ''}</p>
                                 {t?.alternative && <p style={{ color: colors.textMuted }}>Alt: {t.alternative}</p>}
@@ -739,10 +739,10 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Behavioral Question Context */}
                         {(q.whyThisCompanyAsks || q.companyValue || q.companyConnection) && (
-                          <div className="mt-2 mb-2 p-2 rounded text-xs" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-                            {q.companyValue && <p><span className="font-semibold" style={{ color: '#1D4ED8' }}>Tests:</span> {q.companyValue}</p>}
-                            {q.whyThisCompanyAsks && <p><span className="font-semibold" style={{ color: '#1D4ED8' }}>Why Asked:</span> {q.whyThisCompanyAsks}</p>}
-                            {q.companyConnection && <p className="mt-1 italic" style={{ color: '#3C7AAB' }}>Connect to: {q.companyConnection}</p>}
+                          <div className="mt-2 mb-2 p-2 rounded text-xs" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                            {q.companyValue && <p><span className="font-semibold" style={{ color: 'var(--accent-text)' }}>Tests:</span> {q.companyValue}</p>}
+                            {q.whyThisCompanyAsks && <p><span className="font-semibold" style={{ color: 'var(--accent-text)' }}>Why Asked:</span> {q.whyThisCompanyAsks}</p>}
+                            {q.companyConnection && <p className="mt-1 italic" style={{ color: 'var(--accent)' }}>Connect to: {q.companyConnection}</p>}
                           </div>
                         )}
 
@@ -754,34 +754,34 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             )}
                             <div className="space-y-3">
                               {q.situation && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #F8FAFC 0%, #F8FAFC 100%)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                                   <div className="prep-star-label situation">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                                     Situation
                                   </div>
-                                  <p className="text-sm leading-relaxed" style={{ color: '#166534' }}>{safeStr(q.situation).trim()}</p>
+                                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{safeStr(q.situation).trim()}</p>
                                 </div>
                               )}
                               {q.task && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                                   <div className="prep-star-label task">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
                                     Task
                                   </div>
-                                  <p className="text-sm leading-relaxed" style={{ color: '#1e40af' }}>{safeStr(q.task).trim()}</p>
+                                  <p className="text-sm leading-relaxed" style={{ color: 'var(--accent-text)' }}>{safeStr(q.task).trim()}</p>
                                 </div>
                               )}
                               {q.action && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #fefce8 0%, #F8FAFC 100%)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--warning)' }}>
                                   <div className="prep-star-label action">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
                                     Action
                                   </div>
-                                  <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#A88817' }}>{safeStr(q.action).trim()}</p>
+                                  <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--warning-text)' }}>{safeStr(q.action).trim()}</p>
                                 </div>
                               )}
                               {q.result && (
-                                <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #F8FAFC 0%, #d1fae5 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                <div className="p-4 rounded-xl" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                                   <div className="prep-star-label result">
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                     Result
@@ -809,7 +809,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {safeArray(displayContent.keyTopics).filter(topic => topic && typeof topic === 'object').map((topic, i) => (
                           <div key={i} className="flex items-start gap-2 text-sm">
                             <span className="font-semibold" style={{ color: colors.accent }}>{topic?.topic || ''}</span>
-                            {topic?.frequency && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: topic.frequency === 'Very High' ? '#FEE2E2' : '#E0E7FF', color: topic.frequency === 'Very High' ? '#B91C1C' : '#3730A3' }}>{topic.frequency}</span>}
+                            {topic?.frequency && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: topic.frequency === 'Very High' ? 'var(--bg-elevated)' : 'var(--accent-subtle)', color: topic.frequency === 'Very High' ? 'var(--danger)' : 'var(--accent-text)' }}>{topic.frequency}</span>}
                             {topic?.whyImportant && <span className="text-xs" style={{ color: colors.textMuted }}>— {topic.whyImportant}</span>}
                           </div>
                         ))}
@@ -878,7 +878,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                   </div>
                                 )}
                                 {q?.codeExample && (
-                                  <pre className="text-xs p-2 rounded mt-2 overflow-x-auto" style={{ background: '#1e293b', color: '#e2e8f0', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
+                                  <pre className="text-xs p-2 rounded mt-2 overflow-x-auto" style={{ background: 'var(--cam-primary-dk)', color: 'var(--border)', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
                                     {String(q.codeExample).replace(/\\n/g, '\n')}
                                   </pre>
                                 )}
@@ -890,7 +890,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 )}
                                 {safeArray(q?.commonMistakes).length > 0 && (
                                   <div className="mt-2">
-                                    <p className="text-xs font-semibold" style={{ color: '#0B5CFF' }}>Avoid:</p>
+                                    <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>Avoid:</p>
                                     {safeArray(q.commonMistakes).filter(m => m != null).map((m, k) => <p key={k} className="text-xs ml-2" style={{ color: colors.textMuted }}>• {String(m)}</p>)}
                                   </div>
                                 )}
@@ -902,13 +902,13 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Best Practices */}
                         {safeArray(tech.bestPractices).length > 0 && (
                           <div className="mb-3">
-                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Best Practices</p>
+                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Best Practices</p>
                             {safeArray(tech.bestPractices).filter(bp => bp && typeof bp === 'object').map((bp, j) => (
                               <div key={j} className="text-xs mb-2">
                                 <span className="font-semibold">{bp?.practice || ''}</span>
                                 {bp?.when && <span style={{ color: colors.textMuted }}> — {bp.when}</span>}
                                 {bp?.codeExample && (
-                                  <pre className="text-xs p-2 rounded mt-1 overflow-x-auto" style={{ background: '#1e293b', color: '#e2e8f0', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
+                                  <pre className="text-xs p-2 rounded mt-1 overflow-x-auto" style={{ background: 'var(--cam-primary-dk)', color: 'var(--border)', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
                                     {String(bp.codeExample).replace(/\\n/g, '\n')}
                                   </pre>
                                 )}
@@ -919,13 +919,13 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Anti-patterns */}
                         {safeArray(tech.antiPatterns).length > 0 && (
-                          <div className="p-2 rounded" style={{ background: '#FEF2F2' }}>
-                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#B91C1C' }}>Anti-Patterns to Avoid</p>
+                          <div className="p-2 rounded" style={{ background: 'var(--bg-elevated)' }}>
+                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--danger)' }}>Anti-Patterns to Avoid</p>
                             {safeArray(tech.antiPatterns).filter(ap => ap && typeof ap === 'object').map((ap, j) => (
                               <div key={j} className="text-xs mb-2">
                                 <span className="font-semibold">{ap?.pattern || ''}</span>
                                 <p style={{ color: colors.textMuted }}>Problem: {ap?.problem || ''}</p>
-                                <p style={{ color: '#3C7AAB' }}>Solution: {ap?.solution || ''}</p>
+                                <p style={{ color: 'var(--accent)' }}>Solution: {ap?.solution || ''}</p>
                               </div>
                             ))}
                           </div>
@@ -944,8 +944,8 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                 {/* Company Context/Insights - handles both string and object formats */}
                 {(displayContent.companyContext || displayContent.companyInsights || displayContent.companyTechContext) && (
-                  <div className="mb-3 p-3 rounded" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#1D4ED8' }}>Company Insights</p>
+                  <div className="mb-3 p-3 rounded" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent-text)' }}>Company Insights</p>
                     {(() => {
                       const ctx = displayContent.companyContext || displayContent.companyInsights || displayContent.companyTechContext;
                       if (typeof ctx === 'string') {
@@ -1014,7 +1014,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             <p className="text-xs mt-1">{safeArray(int.patterns).join(' • ')}</p>
                           )}
                           {int?.codeExample && (
-                            <pre className="text-xs p-2 rounded mt-1 overflow-x-auto" style={{ background: '#1e293b', color: '#e2e8f0', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
+                            <pre className="text-xs p-2 rounded mt-1 overflow-x-auto" style={{ background: 'var(--cam-primary-dk)', color: 'var(--border)', fontFamily: "'Source Code Pro', Monaco, monospace" }}>
                               {String(int.codeExample).replace(/\\n/g, '\n')}
                             </pre>
                           )}
@@ -1034,7 +1034,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                       <div className="space-y-2">
                         {safeArray(displayContent.practiceRecommendations).filter(rec => rec && typeof rec === 'object').map((rec, i) => (
                           <div key={i} className="p-2 rounded" style={{ background: 'var(--bg-elevated)' }}>
-                            <span className="font-semibold" style={{ color: '#3C7AAB' }}>{rec?.platform || ''}</span>
+                            <span className="font-semibold" style={{ color: 'var(--accent)' }}>{rec?.platform || ''}</span>
                             {safeArray(rec?.problems).length > 0 && (
                               <p className="text-xs mt-1">{safeArray(rec.problems).join(', ')}</p>
                             )}
@@ -1049,7 +1049,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                 {/* Interview Tips */}
                 {safeArray(displayContent.interviewTips).length > 0 && (
                   <div className="p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Interview Tips</p>
+                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Interview Tips</p>
                     {safeArray(displayContent.interviewTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
                     ))}
@@ -1059,7 +1059,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                 {/* General Tips (system design) */}
                 {safeArray(displayContent.generalTips).length > 0 && (
                   <div className="p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#3C7AAB' }}>Tips</p>
+                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Tips</p>
                     {safeArray(displayContent.generalTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
                     ))}
@@ -1145,7 +1145,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             if (item.type === 'tech') {
                               return (
                                 <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                                  <span className="font-bold text-base" style={{ color: '#1e40af' }}>{item.name}</span>
+                                  <span className="font-bold text-base" style={{ color: 'var(--accent-text)' }}>{item.name}</span>
                                   <p className="text-sm mt-1" style={{ color: colors.textMuted }}>{item.description}</p>
                                 </div>
                               );
@@ -1153,7 +1153,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             if (item.type === 'question') {
                               return (
                                 <div key={i} className="pb-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
-                                  <p className="font-semibold mb-1 text-base" style={{ color: '#1e40af' }}>{item.question}</p>
+                                  <p className="font-semibold mb-1 text-base" style={{ color: 'var(--accent-text)' }}>{item.question}</p>
                                   <div className="text-sm">{renderMarkdown(item.answer.replace(/\\n/g, '\n'))}</div>
                                 </div>
                               );
@@ -1169,14 +1169,14 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             if (item.type === 'sd-question') {
                               return (
                                 <div key={i} className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--accent)' }}>
-                                  <span className="font-bold text-base" style={{ color: '#166534' }}>{item.title}</span>
+                                  <span className="font-bold text-base" style={{ color: 'var(--accent)' }}>{item.title}</span>
                                 </div>
                               );
                             }
                             if (item.type === 'diagram') {
                               return (
                                 <div key={i} className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--text-muted)' }}>
-                                  <p className="text-sm" style={{ color: '#A88817' }}>{item.description}</p>
+                                  <p className="text-sm" style={{ color: 'var(--warning-text)' }}>{item.description}</p>
                                 </div>
                               );
                             }
@@ -1226,7 +1226,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                   <div className="space-y-4">
                     {Object.entries(displayContent).map(([key, value]) => (
                       <div key={key}>
-                        <p className="font-semibold text-sm capitalize mb-2" style={{ color: '#1e40af' }}>
+                        <p className="font-semibold text-sm capitalize mb-2" style={{ color: 'var(--accent-text)' }}>
                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                         </p>
                         {typeof value === 'string' ? (

@@ -273,10 +273,10 @@ const COMPANIES: Record<string, CompanyData> = {
 /* ──────────────────────────────── Helpers ────────────────────────────── */
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: '#F8FAFC', text: 'var(--accent)', border: '#95B0CD' },
-  Medium: { bg: '#fffbeb', text: '#D9B543', border: '#F8FAFC' },
-  Hard: { bg: '#fef2f2', text: '#0B5CFF', border: '#fecaca' },
-  'Medium-Hard': { bg: '#fff7ed', text: 'var(--text-muted)', border: '#BFDBFE' },
+  Easy: { bg: 'var(--bg-elevated)', text: 'var(--accent)', border: 'var(--border)' },
+  Medium: { bg: 'var(--bg-elevated)', text: 'var(--warning-text)', border: 'var(--border)' },
+  Hard: { bg: 'var(--bg-elevated)', text: 'var(--danger)', border: 'var(--border)' },
+  'Medium-Hard': { bg: 'var(--bg-elevated)', text: 'var(--text-muted)', border: 'var(--border)' },
 };
 
 function getDifficultyStyle(difficulty: string) {
@@ -444,7 +444,7 @@ export default function CompanyPrepPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {genericSections.map((section) => (
                 <div key={section.title} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-                  <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
                     <div className="flex items-center gap-3 mb-2">
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: `${section.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {getSectionIcon(section.icon)}
@@ -472,7 +472,7 @@ export default function CompanyPrepPage() {
                       <Link
                         to={section.link}
                         className="practice-body"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: section.color, color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: section.color, color: '#FFFFFF', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
                       >
                         {section.linkLabel}
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
@@ -502,7 +502,7 @@ export default function CompanyPrepPage() {
                 <Link
                   to="/jobs"
                   className="practice-body"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--accent)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--accent)', color: '#FFFFFF', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
                 >
                   Browse Jobs
                 </Link>
@@ -570,7 +570,7 @@ export default function CompanyPrepPage() {
                   flexShrink: 0,
                 }}
               >
-                <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: "'Inter', system-ui, sans-serif" }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: '#FFFFFF', fontFamily: "'Inter', system-ui, sans-serif" }}>
                   {companyData.logo}
                 </span>
               </div>
@@ -692,7 +692,7 @@ export default function CompanyPrepPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: 12,
-                          borderBottom: qIdx < section.questions.length - 1 ? '1px solid #f3f4f6' : 'none',
+                          borderBottom: qIdx < section.questions.length - 1 ? '1px solid var(--border)' : 'none',
                           transition: 'background 0.15s',
                         }}
                       >
@@ -802,13 +802,13 @@ export default function CompanyPrepPage() {
                 gap: 8,
                 padding: '12px 28px',
                 background: 'var(--accent)',
-                color: '#ffffff',
+                color: '#FFFFFF',
                 fontSize: 15,
                 fontWeight: 700,
                 borderRadius: 10,
                 textDecoration: 'none',
                 transition: 'filter 0.15s, transform 0.15s',
-                boxShadow: '0 4px 14px rgba(45,140,255,0.25)',
+                boxShadow: '0 4px 14px var(--accent-subtle)',
               }}
             >
               Start Practicing
@@ -850,13 +850,13 @@ export default function CompanyPrepPage() {
 
         /* Nav link hover */
         .nav-link:hover {
-          color: #111827 !important;
-          background: #f3f4f6;
+          color: var(--text-primary) !important;
+          background: var(--bg-elevated);
         }
 
         /* Breadcrumb link hover */
         .breadcrumb-link:hover {
-          color: #6b7280 !important;
+          color: var(--text-muted) !important;
         }
 
         /* Footer link hover */
@@ -866,7 +866,7 @@ export default function CompanyPrepPage() {
 
         /* Question row hover */
         .question-row:hover {
-          background: #fafbfc;
+          background: var(--bg-elevated);
         }
 
         /* Practice link hover */
