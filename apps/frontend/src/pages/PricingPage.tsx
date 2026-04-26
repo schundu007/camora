@@ -4,6 +4,7 @@ import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import SharedPricingCards from '../components/shared/PricingCards';
+import { FeatureMatrix } from '../components/shared/docs';
 
 const accent = 'var(--cam-primary)';
 const F = {
@@ -62,8 +63,63 @@ export default function PricingPage() {
       </section>
 
       {/* ═══════════ PLANS ═══════════ */}
-      <section className="max-w-6xl mx-auto px-6 pb-24 w-full">
+      <section className="max-w-6xl mx-auto px-6 pb-16 w-full">
         <SharedPricingCards />
+      </section>
+
+      {/* ═══════════ FEATURE MATRIX — per-plan side-by-side ═══════════ */}
+      <section className="px-6 pb-24 w-full">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-6">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: accent, fontFamily: F.mono }}>WHAT'S INCLUDED</p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>Compare plans</h2>
+          </div>
+          <FeatureMatrix
+            highlightPlanId="annual"
+            plans={[
+              { id: 'free',           name: 'Free' },
+              { id: 'monthly_starter', name: 'Starter' },
+              { id: 'monthly_pro',    name: 'Pro', highlight: 'Popular' },
+              { id: 'quarterly',      name: 'Quarterly' },
+              { id: 'annual',         name: 'Annual', highlight: 'Best value' },
+              { id: 'annual_desktop', name: 'Annual+' },
+            ]}
+            sections={[
+              {
+                title: 'Prep content',
+                rows: [
+                  { feature: 'Browse 800+ prep topics', values: { free: true, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Unlimited prep topics', hint: 'Free tier limited to 3 topics per category', values: { free: false, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Architecture diagrams', values: { free: false, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Company-specific prep', values: { free: false, monthly_starter: false, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                ],
+              },
+              {
+                title: 'AI assistance',
+                rows: [
+                  { feature: 'AI explanations', values: { free: 'Limited', monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Live interview AI', values: { free: false, monthly_starter: '10 / mo', monthly_pro: 'Unlimited', quarterly: 'Unlimited', annual: 'Unlimited', annual_desktop: 'Unlimited' } },
+                  { feature: 'Voice filtering', values: { free: false, monthly_starter: false, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                ],
+              },
+              {
+                title: 'Apps & access',
+                rows: [
+                  { feature: 'Web app', values: { free: true, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Desktop app (stealth mode)', values: { free: false, monthly_starter: false, monthly_pro: true, quarterly: true, annual: false, annual_desktop: true } },
+                  { feature: 'Priority support', values: { free: false, monthly_starter: false, monthly_pro: false, quarterly: false, annual: true, annual_desktop: true } },
+                ],
+              },
+              {
+                title: 'Billing',
+                rows: [
+                  { feature: 'Cancel anytime', values: { free: true, monthly_starter: true, monthly_pro: true, quarterly: true, annual: true, annual_desktop: true } },
+                  { feature: 'Locked-in pricing', hint: 'Future price increases do not apply', values: { free: false, monthly_starter: false, monthly_pro: false, quarterly: false, annual: true, annual_desktop: true } },
+                ],
+              },
+            ]}
+          />
+        </div>
       </section>
 
       {/* ═══════════ COMPARISON TABLE ═══════════ */}
