@@ -878,8 +878,8 @@ export default function DocsPage({ onBack }) {
                       {/* Category Cards Grid — bento layout with the largest
                           category (Coding) spanning two columns on desktop. */}
                       <div className="mb-8">
-                        <p className="text-[22px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
-                        <h2 className="text-5xl md:text-6xl font-bold tracking-tight mb-8" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
+                        <p className="text-[16px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-7" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                           {overviewCategories.map((cat) => {
                             const radius = 20;
@@ -898,24 +898,24 @@ export default function DocsPage({ onBack }) {
                                   <div className="flex items-center gap-3">
                                     <DatabricksThumb
                                       color={CATEGORY_HEX[cat.id] || 'navy'}
-                                      size={64}
-                                      icon={<Icon name={cat.icon} size={32} style={{ color: '#FFFFFF' }} />}
+                                      size={56}
+                                      icon={<Icon name={cat.icon} size={28} style={{ color: '#FFFFFF' }} />}
                                       title={cat.title}
                                     />
                                     <div>
-                                      <h3 className="text-[28px] font-bold leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                      <span className="text-[18px] font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
+                                      <h3 className="text-[21px] font-bold leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                      <span className="text-[15px] font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
                                     </div>
                                   </div>
                                   {/* Progress ring */}
-                                  <div className="relative shrink-0" style={{ width: 72, height: 72 }}>
-                                    <svg width="72" height="72" viewBox="0 0 72 72" className="transform -rotate-90">
-                                      <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="4" />
-                                      <circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" strokeWidth="4"
-                                        strokeDasharray={2 * Math.PI * 30} strokeDashoffset={(2 * Math.PI * 30) - (cat.progress / 100) * (2 * Math.PI * 30)}
+                                  <div className="relative shrink-0" style={{ width: 60, height: 60 }}>
+                                    <svg width="60" height="60" viewBox="0 0 60 60" className="transform -rotate-90">
+                                      <circle cx="30" cy="30" r="25" fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="3.5" />
+                                      <circle cx="30" cy="30" r="25" fill="none" stroke="var(--accent)" strokeWidth="3.5"
+                                        strokeDasharray={2 * Math.PI * 25} strokeDashoffset={(2 * Math.PI * 25) - (cat.progress / 100) * (2 * Math.PI * 25)}
                                         strokeLinecap="round" className="transition-colors duration-1000" />
                                     </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-[20px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                                    <span className="absolute inset-0 flex items-center justify-center text-[15px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
                                       {cat.progress}%
                                     </span>
                                   </div>
@@ -930,17 +930,17 @@ export default function DocsPage({ onBack }) {
                                     on Databricks docs category cards so users see what a
                                     category contains before clicking in. */}
                                 {cat.topics.length > 0 && (
-                                  <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                                    <ul className="space-y-2">
+                                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                                    <ul className="space-y-1.5">
                                       {cat.topics.slice(0, 3).map(t => (
-                                        <li key={t.id} className="flex items-center gap-2.5 text-[18px]" style={{ color: 'var(--text-secondary)' }}>
+                                        <li key={t.id} className="flex items-center gap-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
                                           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
                                           <span className="truncate font-semibold">{t.title}</span>
                                         </li>
                                       ))}
                                     </ul>
                                     {cat.topics.length > 3 && (
-                                      <p className="text-[16px] font-bold mt-3 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                                      <p className="text-[13px] font-bold mt-2.5 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
                                         + {cat.topics.length - 3} more
                                       </p>
                                     )}
@@ -955,7 +955,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Learning Path */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Learning Path</h2>
+                        <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Learning Path</h2>
                         <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: 'none' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
@@ -987,7 +987,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Resources */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Interview Resources</h2>
+                        <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'checklist', hexColor: 'navy',    title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
@@ -1027,7 +1027,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Cheatsheet — Before / During / After */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Survival Guide</h2>
+                        <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Survival Guide</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', hexColor: 'navy',    step: 'Prep' },
@@ -1077,7 +1077,7 @@ export default function DocsPage({ onBack }) {
                         if (recentItems.length === 0) return null;
                         return (
                           <div className="mb-8">
-                            <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Continue Where You Left Off</h2>
+                            <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Continue Where You Left Off</h2>
                             <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                               {recentItems.map((topic) => (
                                 <Link
@@ -1227,8 +1227,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Master the building blocks of technical interviews. From arrays and strings to trees, graphs, and dynamic programming — practice the patterns that top companies like Google, Meta, and Amazon test most frequently.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1251,8 +1251,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="systemDesign" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Learn to design scalable, reliable systems from the ground up. Study real-world architectures like URL shorteners, messaging platforms, and distributed databases — the exact problems asked at senior-level interviews.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1275,8 +1275,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Interviews</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Interviews</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Craft compelling stories using the STAR method. Prepare answers for leadership, conflict resolution, and teamwork questions — the human side that determines culture fit at every company from startups to FAANG.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1299,8 +1299,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Deep-dive into object-oriented design, SOLID principles, and design patterns. Practice designing class hierarchies for parking lots, elevators, and chess games — the LLD round that separates mid from senior engineers.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1323,8 +1323,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="grid" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Understand distributed system patterns used by Netflix, Uber, and Spotify. Learn service discovery, circuit breakers, saga patterns, and event-driven architectures that power modern cloud-native applications.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1347,8 +1347,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="database" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Master database internals and SQL queries for interviews. Understand indexing, replication, partitioning, consistency models, window functions, CTEs, and complex joins — the exact topics asked at Meta, Amazon, and top firms.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1371,8 +1371,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Build impressive projects that showcase real engineering skills. From full-stack web apps to CLI tools and API services — create the portfolio pieces that make hiring managers take notice.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1395,8 +1395,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="trendingUp" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Follow structured learning paths tailored to your target role. Whether you're aiming for frontend, backend, DevOps, or ML engineering — get a clear roadmap from where you are to where you want to be.
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1419,8 +1419,8 @@ export default function DocsPage({ onBack }) {
                             <Icon name="bookOpen" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-extrabold mb-1 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
-                            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
+                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Learn from the engineers who built the systems you'll be asked about. Curated posts from Netflix, Uber, Stripe, and more — real-world context that elevates your system design answers beyond textbook theory.
                             </p>
                             <div className="flex flex-wrap gap-2">
