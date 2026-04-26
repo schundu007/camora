@@ -1276,7 +1276,7 @@ export default function PracticePage() {
             return (
             <div>
               {/* ── Hero Result Card ── */}
-              <div style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-surface))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(38,97,156,0.15)' }}>
                 {/* Decorative grid */}
                 <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -1285,13 +1285,13 @@ export default function PracticePage() {
                     <div style={{ position: 'relative', display: 'inline-block' }}>
                       <ScoreRing value={finalAvgScore} size={160} strokeW={12} animated />
                       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={{ fontSize: 36, fontWeight: 800, color: '#FFFFFF', lineHeight: 1 }}>{finalAvgScore}%</span>
+                        <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{finalAvgScore}%</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: gradeColor, marginTop: 2 }}>Grade {grade}</span>
                       </div>
                     </div>
                     <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 20, fontWeight: 800, color: '#FFFFFF' }}>{passed}/{total}</div>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{passed}/{total}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>Passed</div>
                       </div>
                       <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
@@ -1316,7 +1316,7 @@ export default function PracticePage() {
 
                 {/* Actions */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 28, position: 'relative' }}>
-                  <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
+                  <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
                   <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'var(--accent)', color: '#FFFFFF', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>

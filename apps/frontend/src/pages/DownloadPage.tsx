@@ -339,7 +339,7 @@ export default function DownloadPage() {
     <div
       className="min-h-screen"
       style={{
-        background: 'var(--cam-primary-900)',
+        background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
         color: 'var(--text-primary)',
         fontFamily: "'Inter', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
