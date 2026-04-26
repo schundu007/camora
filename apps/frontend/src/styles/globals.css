@@ -209,16 +209,19 @@
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="dark"] {
-    /* Backgrounds — deep ocean, lapis-tinted */
-    --bg-base:     #0A1320;
-    --bg-app:      #0F1B2D;
-    --bg-surface:  #1A2940;
-    --bg-elevated: #243450;
+    /* Backgrounds — neutral charcoal so the navy --cam-primary stays
+       reserved for brand accents (CTAs, links, highlights) instead of
+       painting every surface lapis. Linear / Stripe / Databricks-style:
+       slate-zinc neutrals, NOT navy gradients. */
+    --bg-base:     #0A0C10;
+    --bg-app:      #11141A;
+    --bg-surface:  #1A1E26;
+    --bg-elevated: #232830;
     --bg-overlay:  rgba(0,0,0,0.55);
 
-    /* Borders — visible against dark surfaces (3:1+ luminance step) */
-    --border:        #3A4A66;
-    --border-hover:  #4A5C7A;
+    /* Borders — neutral slate that pops against charcoal without tinting it. */
+    --border:        #2E343F;
+    --border-hover:  #3D4452;
     --border-focus:  #5985B6;
 
     /* Text — warm cream-tinted whites. Tightened so secondary copy and
