@@ -348,11 +348,18 @@ router.get('/subscription', authenticate, async (req, res) => {
       [req.user.id],
     );
     const row = result.rows[0];
-    return res.json({
-      plan: row?.plan_type || 'free',
-      status: row?.plan_status || 'active',
-    });
+    let plan = row?.plan_type || 'free';
+    let status = row?.plan_status || 'active';
+    // Admin override: authenticate middleware sets req.user.is_admin from ADMIN_EMAILS.
+    if (req.user?.is_admin && (plan === 'free' || !plan)) {
+      plan = 'quarterly_pro';
+      status = 'active';
+    }
+    return res.json({ plan, status });
   } catch (_err) {
+    if (req.user?.is_admin) {
+      return res.json({ plan: 'quarterly_pro', status: 'active' });
+    }
     return res.json({ plan: 'free', status: 'active' });
   }
 });

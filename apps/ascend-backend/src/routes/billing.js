@@ -10,6 +10,10 @@ import { logger } from '../middleware/requestLogger.js';
 // to Stripe must be added here so subscription-verify recognises it.
 const PAID_PLAN_TYPES = new Set(['monthly', 'monthly_starter', 'monthly_pro', 'quarterly_pro']);
 
+// Admin emails get full plan access without a Stripe subscription record.
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+
 function safeCompareApiKey(provided, expected) {
   if (!provided || !expected) return false;
   const a = Buffer.from(String(provided));
@@ -281,17 +285,29 @@ router.post('/portal', jwtAuth, async (req, res) => {
 router.get('/subscription', jwtAuth, async (req, res) => {
   try {
     const userId = req.user.id;
+    const email = (req.user.email || '').toLowerCase();
+    const isAdmin = email && ADMIN_EMAILS.includes(email);
 
     const result = await query(
       'SELECT * FROM ascend_subscriptions WHERE user_id = $1',
       [userId]
     );
 
+    const sub = result.rows[0] || { plan_type: 'free', status: 'active' };
+
+    // Admin override: grant full plan access regardless of Stripe state.
+    if (isAdmin && !PAID_PLAN_TYPES.has(sub.plan_type)) {
+      sub.plan_type = 'quarterly_pro';
+      sub.status = 'active';
+    }
+
+    // Return both nested (legacy) and flat (frontend AuthContext) shapes so
+    // either reader works.
     res.json({
-      subscription: result.rows[0] || {
-        plan_type: 'free',
-        status: 'active',
-      },
+      subscription: sub,
+      plan: sub.plan_type,
+      plan_type: sub.plan_type,
+      status: sub.status,
     });
   } catch (error) {
     logger.error({ error: error.message }, 'Failed to get subscription');

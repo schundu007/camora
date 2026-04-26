@@ -238,7 +238,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setSubscription({ plan: data.plan || data.plan_type || 'free', status: data.status });
+        // Backends return one of:
+        //   lumora:  { plan, status }
+        //   ascend:  { subscription: { plan_type, status }, plan, plan_type, status }
+        const plan = data.plan
+          || data.plan_type
+          || data.subscription?.plan_type
+          || data.subscription?.plan
+          || 'free';
+        const status = data.status || data.subscription?.status;
+        setSubscription({ plan, status });
       } else {
         setSubscription({ plan: 'free' });
       }
