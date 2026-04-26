@@ -235,6 +235,7 @@ async function loadCloudData() {
 
   try {
     const response = await fetch(API_URL + '/api/company-preps', {
+      credentials: 'include',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -277,6 +278,7 @@ async function createCloudCompany(companyName) {
 
   try {
     const response = await fetch(API_URL + '/api/company-preps', {
+      credentials: 'include',
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -307,6 +309,7 @@ async function updateCloudCompany(cloudId, data) {
 
   try {
     const response = await fetch(API_URL + '/api/company-preps/' + cloudId, {
+      credentials: 'include',
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -338,6 +341,7 @@ async function deleteCloudCompany(cloudId) {
 
   try {
     const response = await fetch(API_URL + '/api/company-preps/' + cloudId, {
+      credentials: 'include',
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -359,6 +363,7 @@ async function renameCloudCompany(cloudId, newName) {
 
   try {
     const response = await fetch(API_URL + '/api/company-preps/' + cloudId, {
+      credentials: 'include',
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -816,6 +821,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
 
     try {
       const response = await fetch(API_URL + '/api/ascend/prep/section', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -890,6 +896,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
   const generateSingleSection = async (sectionId) => {
     try {
       const response = await fetch(API_URL + '/api/ascend/prep/section', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -1036,6 +1043,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
 
     try {
       const response = await fetch(API_URL + '/api/ascend/prep/section', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -1133,6 +1141,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
   const handleExportPDF = async () => {
     try {
       const response = await fetch(`${API_URL}/api/ascend/prep/export/pdf`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1167,6 +1176,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
   const handleExportDOCX = async () => {
     try {
       const response = await fetch(`${API_URL}/api/ascend/prep/export/docx`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

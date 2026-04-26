@@ -144,7 +144,8 @@ export default function ChallengePage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetch(`${API_URL}/api/challenge/status`, { headers: { ...getAuthHeaders() } })
+    fetch(`${API_URL}/api/challenge/status`, {
+        credentials: 'include', headers: { ...getAuthHeaders() } })
       .then(r => r.ok ? r.json() : null).then(d => d && setChallengeStatus(d)).catch(() => {});
   }, [isAuthenticated]);
 
@@ -173,6 +174,7 @@ export default function ChallengePage() {
     try {
       const evalPrompt = `Coding: ${q.q} — ${q.desc}\n\nAnswer:\n${answer}\n\nScore 0-100. Return ONLY: {"score": number}`;
       const resp = await fetch(API_URL + '/api/solve/stream', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ problem: evalPrompt, provider: 'claude', language: 'auto', detailLevel: 'basic', ascendMode: 'coding' }),
@@ -219,6 +221,7 @@ export default function ChallengePage() {
     setQuizPhase('evaluating');
     try {
       const resp = await fetch(`${API_URL}/api/challenge/qualify`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ answers: s.map((sc, i) => ({ question: quizQuestions[i]?.q, score: sc })), totalScore: avg }),
@@ -238,6 +241,7 @@ export default function ChallengePage() {
     setSubmitStatus('submitting');
     try {
       const resp = await fetch(`${API_URL}/api/challenge/submit`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ title: submitForm.title, category: submitForm.category, severity: submitForm.severity, description: submitForm.description, stepsToReproduce: submitForm.steps, suggestedFix: submitForm.fix }),

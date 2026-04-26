@@ -213,6 +213,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
     setOutput(null);
     try {
       const response = await fetch(API_URL + '/api/run', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ code, language: normalizedLanguage, input }),
@@ -238,6 +239,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
     setFixing(true);
     try {
       const response = await fetch(API_URL + '/api/fix', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({

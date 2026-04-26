@@ -284,6 +284,7 @@ export default function DownloadPage() {
     setLoadingFn(true);
     try {
       const res = await fetch(`${LUMORA_API}/api/v1/billing/checkout`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({

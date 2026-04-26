@@ -127,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Check onboarding
           try {
             const onbRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
+              credentials: 'include',
               headers: { Authorization: `Bearer ${hashToken}` },
             });
             if (onbRes.ok) {
@@ -139,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const referralCode = localStorage.getItem('camora_referral_code');
           if (referralCode && hashToken) {
             fetch(`${CAPRA_API_URL}/api/referral/apply`, {
+              credentials: 'include',
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${hashToken}` },
               body: JSON.stringify({ code: referralCode }),
@@ -217,6 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchSubscription = useCallback(async (authToken: string) => {
     try {
       const res = await fetch(`${LUMORA_API_URL}/api/v1/billing/subscription`, {
+        credentials: 'include',
         headers: { Authorization: `Bearer ${authToken}` },
       });
       if (res.ok) {

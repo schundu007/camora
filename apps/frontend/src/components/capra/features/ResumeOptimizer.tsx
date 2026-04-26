@@ -66,6 +66,7 @@ export default function ResumeOptimizer() {
 
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

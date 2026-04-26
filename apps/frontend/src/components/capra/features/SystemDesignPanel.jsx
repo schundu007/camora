@@ -364,6 +364,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
     try {
       const response = await fetch(`${API_URL}/api/diagram/generate`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

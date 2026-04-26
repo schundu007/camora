@@ -461,6 +461,7 @@ export default function TopicDetail({
     setAdminRegenStatus(`${engine}: generating...`);
     try {
       const res = await fetch(`${CAPRA_API}${endpoint}`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({

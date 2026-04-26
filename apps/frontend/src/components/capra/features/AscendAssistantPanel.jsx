@@ -323,6 +323,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         const formData = new FormData();
         formData.append('file', file);
         const response = await fetch(`${API_URL}/api/ascend/extract-text`, {
+          credentials: 'include',
           method: 'POST',
           headers: getAuthHeaders(),
           body: formData,
@@ -339,6 +340,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         const formData = new FormData();
         formData.append('file', file);
         const response = await fetch(`${API_URL}/api/ascend/extract-text`, {
+          credentials: 'include',
           method: 'POST',
           headers: getAuthHeaders(),
           body: formData,
@@ -582,6 +584,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       formData.append('audio', audioBlob, filename);
 
       const response = await fetch(`${API_URL}/api/transcribe?provider=${transcriptionProvider}`, {
+        credentials: 'include',
         method: 'POST',
         headers: { ...getAuthHeaders() },
         body: formData,
@@ -1049,6 +1052,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       ].filter(Boolean).join('\n\n') : '';
 
       const response = await fetch(`${API_URL}/api/ascend/answer`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1147,6 +1151,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       ].filter(Boolean).join('\n\n') : '';
 
       const response = await fetch(`${API_URL}/api/ascend/answer`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

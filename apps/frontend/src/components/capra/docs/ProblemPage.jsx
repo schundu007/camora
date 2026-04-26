@@ -252,6 +252,7 @@ export default function ProblemPage({ slug, onBack }) {
       const input = currentExample?.input || '';
 
       const response = await fetch(`${API_URL}/api/run`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -297,6 +298,7 @@ export default function ProblemPage({ slug, onBack }) {
       const example = problem.examples[i];
       try {
         const response = await fetch(`${API_URL}/api/run`, {
+          credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({

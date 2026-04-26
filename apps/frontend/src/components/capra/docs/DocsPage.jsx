@@ -317,6 +317,7 @@ export default function DocsPage({ onBack }) {
     setShowAskAI(true);
     try {
       const res = await fetch(`${API_URL}/api/solve/followup`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -406,6 +407,7 @@ export default function DocsPage({ onBack }) {
       const question = `Design ${topicTitle}`;
 
       const response = await fetch(`${API_URL}/api/diagram/generate`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -587,6 +589,7 @@ export default function DocsPage({ onBack }) {
           if (cancelled) break;
           try {
             const res = await fetch(`${API_URL}/api/diagram/lookup`, {
+              credentials: 'include',
               method: 'POST',
               headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
               body: JSON.stringify({ question, cloudProvider: provider, detailLevel: diagramDetailLevel }),

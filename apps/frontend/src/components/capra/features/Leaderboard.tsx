@@ -39,6 +39,7 @@ export default function Leaderboard() {
         }
 
         const res = await fetch(`${API_URL}/api/gamification/leaderboard`, {
+          credentials: 'include',
           headers: { ...getAuthHeaders() },
         });
         if (!res.ok) throw new Error('Failed to load leaderboard');

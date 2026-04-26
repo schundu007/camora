@@ -26,6 +26,7 @@ class ActivityTracker {
 
     try {
       const resp = await fetch(`${API_URL}/api/v1/activity/sessions`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,6 +64,7 @@ class ActivityTracker {
     // (sendBeacon cannot send Authorization headers)
     const url = `${API_URL}/api/v1/activity/sessions/${this.sessionId}/end`;
     fetch(url, {
+      credentials: 'include',
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -92,6 +94,7 @@ class ActivityTracker {
 
     // Fire and forget
     fetch(`${API_URL}/api/v1/activity/page-views`, {
+      credentials: 'include',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -117,6 +120,7 @@ class ActivityTracker {
     if (!this.token) return;
 
     fetch(`${API_URL}/api/v1/activity/events`, {
+      credentials: 'include',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

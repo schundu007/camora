@@ -64,6 +64,7 @@ export default function SharedDiagram({
     (async () => {
       try {
         const r = await fetch(`${API_URL}/api/diagram/lookup`, {
+          credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ question, cloudProvider: provider, detailLevel: detail, direction }),
@@ -89,6 +90,7 @@ export default function SharedDiagram({
     setGenerating(true); setError(null); setNoCache(false);
     try {
       const r = await fetch(`${API_URL}/api/diagram/generate`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ question, cloudProvider: provider, detailLevel: detail, direction }),
