@@ -217,7 +217,7 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-1 text-[10px] leading-tight">
                       <svg className="w-3 h-3 mt-px shrink-0" viewBox="0 0 16 16" fill="none" stroke={highlighted ? highlightFg : 'var(--accent)'} strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      <span style={{ color: highlighted ? highlightFg : 'var(--text-secondary)' }}>{f}</span>
+                      <span style={{ color: highlighted ? highlightFg : 'var(--text-muted)' }}>{f}</span>
                     </li>
                   ))}
                 </ul>
