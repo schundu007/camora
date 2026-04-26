@@ -737,15 +737,18 @@ export default function DocsPage({ onBack }) {
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
                     <>
-                      {/* Hero Banner */}
-                      <div className="relative mb-8 rounded overflow-hidden" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                        <div className="rounded-[15px] p-6 md:p-6" style={{ background: 'var(--bg-elevated)', }}>
+                      {/* Hero Banner — Databricks-style eyebrow + display heading */}
+                      <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <div className="p-6 md:p-8">
                           <div>
-                            <h1 className="font-extrabold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-                              Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                              PREPARE
+                            </p>
+                            <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
+                              {user?.name ? `Welcome back, ${user.name.split(' ')[0]}.` : 'Your interview prep, organized.'}
                             </h1>
-                            <p className="text-sm landing-body" style={{ color: 'var(--text-secondary)' }}>
-                              {overviewTotalTopics}+ topics across {overviewCategories.length} categories.
+                            <p className="text-base md:text-lg max-w-2xl" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                              {overviewTotalTopics}+ topics across {overviewCategories.length} categories — coding, system design, behavioral, low-level design, and more.
                             </p>
                           </div>
 
@@ -771,19 +774,24 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Category Cards Grid */}
+                      {/* Category Cards Grid — bento layout with the largest
+                          category (Coding) spanning two columns on desktop. */}
                       <div className="mb-8">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Topic Categories</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {overviewCategories.map(cat => {
+                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-5" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoFlow: 'dense' }}>
+                          {overviewCategories.map((cat, idx) => {
                             const radius = 20;
                             const circumference = 2 * Math.PI * radius;
                             const strokeDashoffset = circumference - (cat.progress / 100) * circumference;
+                            // First category (typically the largest catalog — coding)
+                            // gets the "wide" bento slot on desktop.
+                            const isWide = idx === 0;
                             return (
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className="group relative rounded overflow-hidden transition-colors duration-300  "
+                              className={`card-lift group relative rounded-lg overflow-hidden ${isWide ? 'lg:col-span-2' : ''}`}
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
                               {/* Top accent bar */}
