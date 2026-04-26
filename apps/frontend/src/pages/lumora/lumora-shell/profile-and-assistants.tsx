@@ -130,21 +130,25 @@ export function LumoraProfilePage() {
   const planLabel = plan === 'free' ? 'Free' : plan.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8 w-full">
-      {/* User header */}
-      <div className="flex items-center gap-4 mb-8">
-        {user?.image ? (
-          <img src={user.image} alt="" className="w-16 h-16 rounded-2xl object-cover" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: 'var(--cam-primary)' }}>
-            {(user?.name || user?.email || '?')[0].toUpperCase()}
+    <div className="w-full">
+      {/* LeetCode navy hero */}
+      <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+        <div className="max-w-2xl mx-auto px-6 py-6 w-full flex items-center gap-4">
+          {user?.image ? (
+            <img src={user.image} alt="" className="w-16 h-16 rounded-2xl object-cover" style={{ border: '2px solid var(--cam-gold-leaf)' }} referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
+              {(user?.name || user?.email || '?')[0].toUpperCase()}
+            </div>
+          )}
+          <div>
+            <h2 className="text-xl font-bold text-white">{user?.name || 'User'}</h2>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{user?.email}</p>
           </div>
-        )}
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'User'}</h2>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
         </div>
       </div>
+
+      <div className="max-w-2xl mx-auto px-6 py-6 w-full">
 
       <div className="space-y-4">
         {/* Account */}
@@ -222,6 +226,7 @@ export function LumoraProfilePage() {
         <button onClick={logout} className="w-full text-center py-3 text-xs font-semibold rounded-xl transition-colors hover:bg-[var(--accent-subtle)]" style={{ color: 'var(--danger)', border: '1px solid var(--border)' }}>
           Sign Out
         </button>
+      </div>
       </div>
     </div>
   );
@@ -316,13 +321,24 @@ export function AssistantsPage() {
   };
   const iS: React.CSSProperties = { border: '1px solid var(--border)', outline: 'none', background: 'var(--bg-surface)' };
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 w-full">
+    <div className="w-full">
+      {/* LeetCode navy hero */}
+      <div className="shrink-0" style={{ background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+        <div className="max-w-5xl mx-auto px-6 py-6 w-full flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-white">Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Assistants</span></h2>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Role + Resume + JD profiles for personalized AI</p>
+          </div>
+          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-all hover:scale-[1.02]" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+            New
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 py-6 w-full">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Interview Assistants</h2>
-        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-          New
-        </button>
+        <span className="hidden" />
       </div>
       <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Add your resume and job description so AI personalizes answers to your background during live interviews.</p>
       {showCreate && (
@@ -466,6 +482,7 @@ export function AssistantsPage() {
           );
         })}</div>
       )}
+      </div>
     </div>
   );
 }
