@@ -25,7 +25,11 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-  "npm install",
+  # The monorepo uses pnpm workspaces (workspace:* protocol). npm rejects this,
+  # so we activate pnpm via Corepack (ships with Node 20) before installing.
+  "corepack enable",
+  "corepack prepare pnpm@9.15.0 --activate",
+  "pnpm install --frozen-lockfile",
   # Install Julia via juliaup (outside Nix)
   "curl -fsSL https://install.julialang.org | sh -s -- --yes -p /opt/juliaup --default-channel release",
   "ln -sf /opt/juliaup/bin/julia /usr/local/bin/julia",
@@ -37,4 +41,5 @@ cmds = [
 cmds = ["echo 'build complete'"]
 
 [start]
-cmd = "node src/index.js"
+# Run from the monorepo root via pnpm filter so workspace deps resolve.
+cmd = "pnpm --filter lumora-backend start"
