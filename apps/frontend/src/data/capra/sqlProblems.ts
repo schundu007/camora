@@ -22,11 +22,21 @@ export interface SqlProblem {
   starterCode: string;
 }
 
+/* Categories — aligned with LeetCode's Top SQL 50 study-plan grouping
+   so a learner can work through the plan on either site and see the
+   same progression. The legacy 'advanced-joins' / 'window-functions'
+   ids are kept for any historic problem that still uses them. */
 export const SQL_CATEGORIES = [
-  { id: 'basic-joins', label: 'Basic Joins' },
-  { id: 'advanced-joins', label: 'Advanced Joins' },
-  { id: 'aggregations', label: 'Aggregations' },
-  { id: 'subqueries', label: 'Subqueries' },
+  { id: 'select',           label: 'Select' },
+  { id: 'basic-joins',      label: 'Basic Joins' },
+  { id: 'aggregations',     label: 'Basic Aggregate Functions' },
+  { id: 'sorting-grouping', label: 'Sorting and Grouping' },
+  { id: 'advanced-select',  label: 'Advanced Select and Joins' },
+  { id: 'subqueries',       label: 'Subqueries' },
+  { id: 'advanced-string',  label: 'Advanced String + Misc' },
+  // legacy fallthrough (no current Top-50 problems use these but old
+  // catalogue items still reference them)
+  { id: 'advanced-joins',   label: 'Advanced Joins' },
   { id: 'window-functions', label: 'Window Functions' },
 ] as const;
 
@@ -1262,3 +1272,19 @@ ORDER BY Department, Salary DESC;`,
 SELECT`,
   },
 ];
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Top SQL 50 — full LeetCode study-plan catalog
+   Imported from sqlProblemsTop50.ts and merged with the legacy items
+   above so the editor's filter sidebar shows one combined catalog.
+   The legacy items 1-18 already cover ~18 of the 50; the new file
+   contributes the remaining ~32 that LeetCode lists.
+   ───────────────────────────────────────────────────────────────────── */
+import { SQL_TOP50_PROBLEMS } from './sqlProblemsTop50';
+
+const _legacyTitles = new Set(SQL_PROBLEMS.map(p => p.title.toLowerCase()));
+for (const p of SQL_TOP50_PROBLEMS) {
+  if (_legacyTitles.has(p.title.toLowerCase())) continue;
+  SQL_PROBLEMS.push(p);
+  _legacyTitles.add(p.title.toLowerCase());
+}
