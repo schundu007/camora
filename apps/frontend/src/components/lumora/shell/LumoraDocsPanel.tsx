@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { getAuthHeaders } from '../../../utils/authHeaders';
 
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -643,7 +644,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     try {
       const res = await fetch(`${API_URL}/api/job-analyze/fetch-text`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',
         body: JSON.stringify({ url: url.trim() }),
       });
@@ -755,7 +756,12 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     if (!token) return `[Uploaded: ${file.name}]`;
     try {
       const fd = new FormData(); fd.append('file', file);
-      const res = await fetch(`${API_URL}/api/extract`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+      const res = await fetch(`${API_URL}/api/extract`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders() },
+        credentials: 'include',
+        body: fd,
+      });
       if (res.ok) { const d = await res.json(); return d.text || `[${file.name}]`; }
     } catch {}
     return `[Uploaded: ${file.name}]`;
@@ -810,9 +816,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     setSectionStatus(prev => ({ ...prev, [section]: 'generating' }));
 
     try {
+      // Use getAuthHeaders() which reads from the in-memory token store
+      // (set by AuthContext from /me) and falls back to the legacy
+      // non-httpOnly cookie. credentials:'include' lets the httpOnly cookie
+      // ride along as a server-side fallback if the Bearer is rejected.
       const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        credentials: 'include',
         body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
       });
 
