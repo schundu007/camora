@@ -823,6 +823,28 @@ export default function DocsPage({ onBack }) {
                                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                                   <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                 </div>
+
+                                {/* "What's inside" preview — first three topic titles +
+                                    "+ N more" suffix. Mirrors the bullet-sublists pattern
+                                    on Databricks docs category cards so users see what a
+                                    category contains before clicking in. */}
+                                {cat.topics.length > 0 && (
+                                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                                    <ul className="space-y-1">
+                                      {cat.topics.slice(0, 3).map(t => (
+                                        <li key={t.id} className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+                                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
+                                          <span className="truncate">{t.title}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                    {cat.topics.length > 3 && (
+                                      <p className="text-[10px] font-semibold mt-2 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                                        + {cat.topics.length - 3} more
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </Link>
                             );
