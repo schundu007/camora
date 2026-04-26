@@ -43,6 +43,25 @@ const TeamSettingsPage = lazy(() => import('./pages/account/TeamSettingsPage'));
 const JoinTeamPage = lazy(() => import('./pages/account/JoinTeamPage'));
 const TeamsDocsPage = lazy(() => import('./pages/docs/TeamsDocsPage'));
 const AdminTeamsPage = lazy(() => import('./pages/admin/AdminTeamsPage'));
+const DocsIndexPage = lazy(() => import('./pages/docs/DocsIndexPage'));
+const GettingStartedPage = lazy(() => import('./pages/docs/GettingStartedPage'));
+const PrepareDocsPage = lazy(() => import('./pages/docs/PreparePage'));
+const PracticeDocsPage = lazy(() => import('./pages/docs/PracticeDocsPage'));
+const LumoraLivePage = lazy(() => import('./pages/docs/LumoraLivePage'));
+const LumoraCodingDocsPage = lazy(() => import('./pages/docs/LumoraCodingPage'));
+const LumoraDesignDocsPage = lazy(() => import('./pages/docs/LumoraDesignPage'));
+const AccountDocsPage = lazy(() => import('./pages/docs/AccountPage'));
+const TopupsDocsPage = lazy(() => import('./pages/docs/TopupsPage'));
+const DesktopDocsPage = lazy(() => import('./pages/docs/DesktopPage'));
+const VoiceFilteringDocsPage = lazy(() => import('./pages/docs/VoiceFilteringPage'));
+const AdminOverviewPage = lazy(() => import('./pages/docs/admin/AdminOverviewPage'));
+const AdminStripePage = lazy(() => import('./pages/docs/admin/AdminStripePage'));
+const AdminEnvVarsPage = lazy(() => import('./pages/docs/admin/AdminEnvVarsPage'));
+const AdminDeploymentPage = lazy(() => import('./pages/docs/admin/AdminDeploymentPage'));
+const AdminDatabasePage = lazy(() => import('./pages/docs/admin/AdminDatabasePage'));
+const AdminRefundsPage = lazy(() => import('./pages/docs/admin/AdminRefundsPage'));
+const AdminIncidentsPage = lazy(() => import('./pages/docs/admin/AdminIncidentsPage'));
+const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 
 function Loading() {
   return (
@@ -256,8 +275,27 @@ export function App() {
           {/* ── Team / group sharing (auth required) ─────────── */}
           <Route path="/account/team" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
           <Route path="/teams/join/:token" element={<JoinTeamPage />} />
+          <Route path="/docs" element={<DocsIndexPage />} />
+          <Route path="/docs/getting-started" element={<GettingStartedPage />} />
+          <Route path="/docs/prepare" element={<PrepareDocsPage />} />
+          <Route path="/docs/practice" element={<PracticeDocsPage />} />
+          <Route path="/docs/lumora-live" element={<LumoraLivePage />} />
+          <Route path="/docs/lumora-coding" element={<LumoraCodingDocsPage />} />
+          <Route path="/docs/lumora-design" element={<LumoraDesignDocsPage />} />
+          <Route path="/docs/account" element={<AccountDocsPage />} />
           <Route path="/docs/teams" element={<TeamsDocsPage />} />
+          <Route path="/docs/topups" element={<TopupsDocsPage />} />
+          <Route path="/docs/desktop" element={<DesktopDocsPage />} />
+          <Route path="/docs/voice-filtering" element={<VoiceFilteringDocsPage />} />
+          <Route path="/docs/admin" element={<AdminOverviewPage />} />
+          <Route path="/docs/admin/stripe" element={<AdminStripePage />} />
+          <Route path="/docs/admin/env-vars" element={<AdminEnvVarsPage />} />
+          <Route path="/docs/admin/deployment" element={<AdminDeploymentPage />} />
+          <Route path="/docs/admin/database" element={<AdminDatabasePage />} />
+          <Route path="/docs/admin/refunds" element={<AdminRefundsPage />} />
+          <Route path="/docs/admin/incidents" element={<AdminIncidentsPage />} />
           <Route path="/admin/teams" element={<ProtectedRoute><AdminTeamsPage /></ProtectedRoute>} />
+          <Route path="/flyer" element={<FlyerPage />} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
