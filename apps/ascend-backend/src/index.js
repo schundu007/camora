@@ -632,6 +632,11 @@ app.delete('/api/admin/delete-user/:userId', authenticate, async (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+// Frontend calls auth endpoints under /api/v1/auth/* (lumora-backend's URL
+// shape). Mount the same router at the v1 prefix so login works regardless
+// of which backend the lumorab.cariara.com Railway service is actually
+// running. This is purely additive — no behavior change for existing callers.
+app.use('/api/v1/auth', authRouter);
 app.use('/api/extension', extensionRouter);
 
 // Diagram debug endpoint (protected - exposes system info)
