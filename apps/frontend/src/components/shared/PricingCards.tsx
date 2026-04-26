@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { dialogAlert } from './Dialog';
 
@@ -111,12 +111,22 @@ export function usePlanPrices() {
 export function useCheckout() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState('');
 
   const checkout = async (priceId: string, planName: string) => {
     if (!priceId) { navigate('/pricing'); return; }
     if (!token) { navigate('/login'); return; }
     setLoading(planName);
+    // Stripe success/cancel URLs: if PaywallGate sent the user here with
+    // ?returnTo=/lumora/coding, route them back to the gated page so
+    // PaywallGate's polling unblocks the original feature. Default falls
+    // back to /lumora — historical behavior. Guard against open-redirect
+    // by accepting only same-origin paths.
+    const raw = searchParams.get('returnTo');
+    const returnTo = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/lumora';
+    const sep = returnTo.includes('?') ? '&' : '?';
+    const successUrl = `${window.location.origin}${returnTo}${sep}checkout=success`;
     try {
       const resp = await fetch(`${BILLING_API}/api/v1/billing/checkout`, {
         credentials: 'include',
@@ -124,7 +134,7 @@ export function useCheckout() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           price_id: priceId,
-          success_url: `${window.location.origin}/lumora?checkout=success`,
+          success_url: successUrl,
           cancel_url: window.location.href,
         }),
       });
