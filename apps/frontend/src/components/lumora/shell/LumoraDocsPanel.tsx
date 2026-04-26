@@ -43,9 +43,9 @@ const INITIAL_STATE: PrepData = {
 const SIDEBAR_SECTIONS = [
   { id: 'input', label: 'Input Materials', color: 'var(--cam-primary)' },
   { id: 'jd-view', label: 'Job Description', color: 'var(--cam-primary)' },
-  { id: 'pitch', label: 'Elevator Pitch', color: '#26619C' },
-  { id: 'hr', label: 'HR Questions', color: '#f59e0b' },
-  { id: 'hiring-manager', label: 'Hiring Manager', color: '#06b6d4' },
+  { id: 'pitch', label: 'Elevator Pitch', color: 'var(--cam-primary)' },
+  { id: 'hr', label: 'HR Questions', color: 'var(--warning-text)' },
+  { id: 'hiring-manager', label: 'Hiring Manager', color: 'var(--accent)' },
   { id: 'coding', label: 'Coding', color: 'var(--cam-primary)' },
   { id: 'system-design', label: 'System Design', color: 'var(--cam-primary)' },
   { id: 'behavioral', label: 'Behavioral', color: 'var(--cam-primary)' },
@@ -250,7 +250,7 @@ function PrepContentRenderer({ content }: { content: any }) {
       <div key="pitch" className="space-y-4">
         {sections.map((s: any, i: number) => (
           <div key={i} className="flex gap-3">
-            <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: '#10b981', color: '#fff' }}>{i + 1}</span>
+            <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>{i + 1}</span>
             <div className="flex-1 pt-0.5">
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                 {(s.bullets || []).map((b: string, j: number) => (
@@ -383,7 +383,7 @@ function PrepContentRenderer({ content }: { content: any }) {
     { key: 'keyTopics', label: 'Key Topics', color: 'var(--cam-primary)', pill: true },
     { key: 'keyPoints', label: 'Key Points', color: 'var(--cam-primary)' },
     { key: 'talkingPoints', label: 'Talking Points', color: 'var(--cam-primary)' },
-    { key: 'questionsToAsk', label: 'Questions to Ask', color: '#8b5cf6' },
+    { key: 'questionsToAsk', label: 'Questions to Ask', color: 'var(--accent)' },
   ];
   for (const f of listFields) {
     if (!data[f.key]) continue;
@@ -512,7 +512,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste, onCli
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ''; }} />
       {value ? (
         <>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary)', color: '#fff' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
           <span className="text-xs font-semibold" style={{ color: 'var(--cam-primary)' }}>{fileName || 'Content added'}</span>
@@ -906,13 +906,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               <div className="flex gap-1.5">
-                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary)', color: '#fff' }}>Create</button>
+                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>Create</button>
                 <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
               </div>
             </div>
           ) : (
             <button onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: 'var(--cam-primary)', color: '#fff' }}>
+              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
               + Add Company
             </button>
           )}
@@ -970,7 +970,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           )}
           <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: 'var(--cam-primary)', color: '#fff' }}>
+            style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
             {generating ? 'Generating...' : `Generate (${GENERATE_SECTIONS.length})`}
           </button>
           {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>}

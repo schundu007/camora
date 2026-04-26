@@ -30,7 +30,7 @@ function AudioWaveform({ active }: { active: boolean }) {
               height: active ? `${activeH}px` : `${baseH}px`,
               background: active
                 ? `rgba(38,97,156,${0.4 + barOpacities[i] * 0.6})`
-                : 'rgba(255,255,255,0.1)',
+                : 'rgba(15,23,42,0.1)',
               transitionDelay: `${i * 15}ms`,
             }}
           />
@@ -51,7 +51,7 @@ function SayThisCard({ text }: { text: string | null }) {
     <div
       className="mx-3 mb-3 rounded-xl p-3 relative"
       style={{
-        background: 'linear-gradient(135deg, rgba(38,97,156,0.15), rgba(139,92,246,0.10))',
+        background: 'linear-gradient(135deg, rgba(38,97,156,0.15), rgba(38,97,156,0.06))',
         border: '1px solid rgba(38,97,156,0.25)',
       }}
     >
@@ -270,7 +270,7 @@ export function FollowUpPopup() {
           <div className="flex items-center gap-2">
             {/* LIVE badge */}
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider"
-              style={{ background: 'rgba(16,185,129,0.12)', color: '#95B0CD' }}>
+              style={{ background: 'rgba(38,97,156,0.18)', color: '#95B0CD' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
               LIVE
             </span>

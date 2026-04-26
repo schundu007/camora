@@ -188,7 +188,7 @@ export function LumoraShellPage() {
     <>
     {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
     {blanked && (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000000' }} onClick={() => setBlanked(false)}>
         <div className="text-center">
           <div className="opacity-5 mb-4"><CamoraLogo size={24} /></div>
           <p className="text-[10px] opacity-10 text-white">Press ⌘B or click to return</p>
@@ -281,7 +281,7 @@ export function LumoraShellPage() {
                 </svg>
               )}
             </button>
-            <button onClick={() => setBlanked(true)} className="p-2 md:px-3 md:py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[#0F172A] hover:text-white flex items-center gap-1.5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }} title="Go invisible (⌘B) — hides UI, audio keeps running" aria-label="Go invisible">
+            <button onClick={() => setBlanked(true)} className="p-2 md:px-3 md:py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-[var(--cam-primary-dk)] hover:text-white flex items-center gap-1.5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }} title="Go invisible (⌘B) — hides UI, audio keeps running" aria-label="Go invisible">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
                 <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />

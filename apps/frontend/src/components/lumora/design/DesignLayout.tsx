@@ -429,14 +429,14 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
                 detailLevel === 'basic' ? 'text-white shadow-sm' : 'text-white/75 hover:text-white'
               }`}
-              style={detailLevel === 'basic' ? { background: 'rgba(96,165,250,0.25)' } : {}}
+              style={detailLevel === 'basic' ? { background: 'rgba(255,255,255,0.2)' } : {}}
             >Basic</button>
             <button
               onClick={() => setDetailLevel('full')}
               className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
                 detailLevel === 'full' ? 'text-white shadow-sm' : 'text-white/75 hover:text-white'
               }`}
-              style={detailLevel === 'full' ? { background: 'rgba(96,165,250,0.25)' } : {}}
+              style={detailLevel === 'full' ? { background: 'rgba(255,255,255,0.2)' } : {}}
             >Full</button>
           </div>
         </div>

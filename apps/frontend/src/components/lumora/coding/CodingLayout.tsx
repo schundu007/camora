@@ -83,12 +83,12 @@ function formatTime(seconds: number): string {
 function getComplexityColor(notation: string): string {
   const n = notation.toLowerCase().replace(/\s+/g, '');
   if (/o\(1\)/.test(n)) return 'var(--cam-primary)';           // O(1) - best
-  if (/o\(log/.test(n) && !/o\(n/.test(n)) return '#0891b2'; // O(log n) - great
+  if (/o\(log/.test(n) && !/o\(n/.test(n)) return 'var(--accent)'; // O(log n) - great
   if (/o\(n\)$/.test(n)) return 'var(--cam-primary)';           // O(n) - good
-  if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return '#7c3aed'; // O(n log n)
-  if (/o\(n[\^²]2?\)/.test(n)) return '#D9B543';     // O(n²) - fair
-  if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return '#ea580c'; // O(n³) - poor
-  if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return '#0B5CFF'; // exponential - bad
+  if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return 'var(--accent)'; // O(n log n)
+  if (/o\(n[\^²]2?\)/.test(n)) return 'var(--warning-text)';     // O(n²) - fair
+  if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return 'var(--danger)'; // O(n³) - poor
+  if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return 'var(--danger)'; // exponential - bad
   return 'var(--text-muted)';
 }
 
@@ -1569,7 +1569,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
     accent: { header: 'bg-[var(--accent-subtle)]', border: 'border-[var(--border)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--accent)]' },
-    warning: { header: 'bg-[rgba(245,158,11,0.06)]', border: 'border-[rgba(245,158,11,0.25)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--warning-text)]' },
+    warning: { header: 'bg-[rgba(201,162,39,0.06)]', border: 'border-[rgba(201,162,39,0.25)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--warning-text)]' },
   };
 
   return (

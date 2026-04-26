@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const ACCENT = 'var(--cam-primary)';
-const DANGER = '#EF4444';
+const DANGER = 'var(--danger)';
 const SUCCESS = 'var(--accent)';
 const MONO = "'Source Code Pro', monospace";
 const DISPLAY = "'Source Sans 3', sans-serif";
@@ -36,8 +36,8 @@ export default function CapabilityDeck() {
     <div
       className="rounded-xl overflow-hidden relative"
       style={{
-        background: 'linear-gradient(180deg, #0B1220 0%, var(--cam-void) 100%)',
-        border: '1px solid #1E293B',
+        background: 'linear-gradient(180deg, var(--cam-void) 0%, var(--cam-primary-dk) 100%)',
+        border: '1px solid var(--cam-primary-dk)',
         boxShadow: '0 30px 80px -20px rgba(15,23,42,0.4), 0 12px 30px -10px rgba(15,23,42,0.25)',
         minHeight: 560,
       }}
@@ -56,7 +56,7 @@ export default function CapabilityDeck() {
         @keyframes cd-grid-drift { 0% { transform: translate(0,0); } 100% { transform: translate(48px,48px); } }
         @keyframes cd-glow-ring { 0% { box-shadow: 0 0 0 0 rgba(38,97,156,0.33); } 80%,100% { box-shadow: 0 0 0 18px rgba(38,97,156,0); } }
         @keyframes cd-provider-sweep { 0% { left: 0; } 33% { left: calc(33.333% + 4px); } 66% { left: calc(66.666% + 8px); } 100% { left: 0; } }
-        .cd-cursor { display:inline-block; width:2px; height:14px; background:#E2E8F0; vertical-align:text-bottom; margin-left:1px; animation: cd-blink 0.9s step-end infinite; }
+        .cd-cursor { display:inline-block; width:2px; height:14px; background: var(--border); vertical-align:text-bottom; margin-left:1px; animation: cd-blink 0.9s step-end infinite; }
       `}</style>
 
       {/* Grid background */}
@@ -74,14 +74,14 @@ export default function CapabilityDeck() {
       {/* Top chrome */}
       <div
         className="relative flex items-center gap-3 px-6 py-4"
-        style={{ borderBottom: '1px solid #1E293B', background: 'rgba(11,18,32,0.6)', backdropFilter: 'blur(12px)' }}
+        style={{ borderBottom: '1px solid var(--cam-primary-dk)', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(12px)' }}
       >
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
         <span style={{ fontSize: 10, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.2em' }}>LIVE</span>
-        <div className="w-px h-4" style={{ background: '#1E293B' }} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: '#CBD5E1', fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
+        <div className="w-px h-4" style={{ background: 'var(--cam-primary-dk)' }} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
         <div className="flex-1" />
-        <span style={{ fontSize: 10, color: '#64748B', fontFamily: MONO }}>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO }}>
           latency&nbsp;<span style={{ color: ACCENT, fontWeight: 700 }}>0.3s</span>
         </span>
       </div>
@@ -91,10 +91,10 @@ export default function CapabilityDeck() {
         <div key={`eyebrow-${pulse}`} style={{ fontSize: 10, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.22em', textTransform: 'uppercase', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
           {meta.eyebrow}
         </div>
-        <h3 key={`title-${pulse}`} style={{ marginTop: 6, fontSize: 24, fontWeight: 800, color: '#F8FAFC', fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1.15, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.08s forwards' }}>
+        <h3 key={`title-${pulse}`} style={{ marginTop: 6, fontSize: 24, fontWeight: 800, color: '#FFFFFF', fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1.15, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.08s forwards' }}>
           {meta.title}
         </h3>
-        <p key={`hint-${pulse}`} style={{ marginTop: 6, fontSize: 13, color: '#94A3B8', fontFamily: DISPLAY, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.16s forwards' }}>
+        <p key={`hint-${pulse}`} style={{ marginTop: 6, fontSize: 13, color: 'var(--text-dimmed)', fontFamily: DISPLAY, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.16s forwards' }}>
           {meta.hint}
         </p>
       </div>
@@ -110,7 +110,7 @@ export default function CapabilityDeck() {
       </div>
 
       {/* Bottom chrome */}
-      <div className="relative flex items-center gap-4 px-6 py-4" style={{ borderTop: '1px solid #1E293B', background: 'rgba(11,18,32,0.6)' }}>
+      <div className="relative flex items-center gap-4 px-6 py-4" style={{ borderTop: '1px solid var(--cam-primary-dk)', background: 'rgba(15,23,42,0.6)' }}>
         <div className="flex items-center gap-2">
           {SCENES.map((s, i) => (
             <span
@@ -118,17 +118,17 @@ export default function CapabilityDeck() {
               style={{
                 width: i === sceneIdx ? 24 : 6,
                 height: 6, borderRadius: 999,
-                background: i === sceneIdx ? ACCENT : '#334155',
+                background: i === sceneIdx ? ACCENT : 'var(--text-dimmed)',
                 transition: 'width 0.35s ease, background 0.35s ease',
               }}
             />
           ))}
         </div>
-        <span style={{ fontSize: 10, color: '#64748B', fontFamily: MONO, letterSpacing: '0.15em' }}>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em' }}>
           {String(sceneIdx + 1).padStart(2, '0')} / {String(SCENES.length).padStart(2, '0')}
         </span>
         <div className="flex-1" />
-        <span style={{ fontSize: 10, color: '#475569', fontFamily: MONO, letterSpacing: '0.14em' }}>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.14em' }}>
           APPLY · PREPARE · PRACTICE · ATTEND
         </span>
       </div>
@@ -148,7 +148,7 @@ function SceneLive() {
   const chips = ['Redis Cluster', 'Token Bucket', 'Sliding Window', 'Consistent Hashing'];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-3 sm:gap-5" style={{ marginTop: 8 }}>
-      <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid #1E293B', borderRadius: 10, padding: 14 }}>
+      <div style={{ background: 'rgba(15,23,42,0.5)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, padding: 14 }}>
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
           <span style={{ fontSize: 9, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.18em' }}>TRANSCRIBING</span>
@@ -158,7 +158,7 @@ function SceneLive() {
             ))}
           </div>
         </div>
-        <p style={{ fontSize: 13, color: '#E2E8F0', fontFamily: DISPLAY, lineHeight: 1.6, minHeight: 84 }}>
+        <p style={{ fontSize: 13, color: 'var(--border)', fontFamily: DISPLAY, lineHeight: 1.6, minHeight: 84 }}>
           &ldquo;{Q.slice(0, typed)}
           {typed < Q.length && <span className="cd-cursor" />}
           {typed >= Q.length && '”'}
@@ -169,7 +169,7 @@ function SceneLive() {
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
           <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>AI · RESPONSE</span>
-          <span style={{ marginLeft: 'auto', fontSize: 9, color: '#64748B', fontFamily: MONO }}>streaming…</span>
+          <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-muted)', fontFamily: MONO }}>streaming…</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {chips.map((c, i) => (
@@ -178,7 +178,7 @@ function SceneLive() {
             </span>
           ))}
         </div>
-        <div style={{ marginTop: 14, fontSize: 11, color: '#94A3B8', fontFamily: DISPLAY, lineHeight: 1.6, opacity: 0, animation: 'cd-fade-up 0.45s ease-out 2.4s forwards' }}>
+        <div style={{ marginTop: 14, fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, lineHeight: 1.6, opacity: 0, animation: 'cd-fade-up 0.45s ease-out 2.4s forwards' }}>
           Use a <span style={{ color: ACCENT, fontWeight: 700 }}>sliding-window counter</span> in Redis for bursty traffic; fall back to token bucket at gateway for baseline limits.
         </div>
       </div>
@@ -222,9 +222,9 @@ function SceneCompany() {
         {COS.map((c, i) => (
           <span key={c} style={{
             fontSize: 9, fontWeight: 800,
-            color: i === coIdx ? '#0B1220' : '#64748B',
+            color: i === coIdx ? '#FFFFFF' : 'var(--text-muted)',
             background: i === coIdx ? ACCENT : 'transparent',
-            border: `1px solid ${i === coIdx ? ACCENT : '#1E293B'}`,
+            border: `1px solid ${i === coIdx ? ACCENT : 'var(--cam-primary-dk)'}`,
             padding: '4px 10px', borderRadius: 999, fontFamily: MONO, letterSpacing: '0.16em',
             transition: 'all 0.35s',
           }}>
@@ -234,17 +234,17 @@ function SceneCompany() {
       </div>
 
       {/* Flavor line */}
-      <div key={co} style={{ fontSize: 11, color: '#94A3B8', fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
+      <div key={co} style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
         <span style={{ color: ACCENT, fontWeight: 700, letterSpacing: '0.1em', fontFamily: MONO, fontSize: 10 }}>{co} LOOP · </span>
         {FLAVOR[co]}
       </div>
 
       {/* 5 stages stacked */}
-      <div style={{ background: 'rgba(30,41,59,0.35)', border: '1px solid #1E293B', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, overflow: 'hidden' }}>
         {STAGES.map((s, i) => (
           <div key={s.n} style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px',
-            borderBottom: i < STAGES.length - 1 ? '1px solid #1E293B' : 'none',
+            borderBottom: i < STAGES.length - 1 ? '1px solid var(--cam-primary-dk)' : 'none',
             opacity: 0, animation: `cd-fade-up 0.35s ease-out ${0.15 + i * 0.12}s forwards`,
           }}>
             <span style={{
@@ -254,13 +254,13 @@ function SceneCompany() {
             }}>
               {s.n}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#F8FAFC', fontFamily: MONO, letterSpacing: '0.16em', minWidth: 130 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#FFFFFF', fontFamily: MONO, letterSpacing: '0.16em', minWidth: 130 }}>
               {s.label}
             </span>
-            <span style={{ fontSize: 10, color: '#64748B', fontFamily: MONO, letterSpacing: '0.08em', minWidth: 54 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.08em', minWidth: 54 }}>
               {s.dur}
             </span>
-            <span style={{ fontSize: 11, color: '#94A3B8', fontFamily: DISPLAY, lineHeight: 1.4, flex: 1 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, lineHeight: 1.4, flex: 1 }}>
               {s.detail}
             </span>
           </div>
@@ -275,25 +275,25 @@ function SceneCode() {
   const APPROACHES = [
     { label: 'Brute Force',   cx: 'O(n²)',  lines: [
       { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
-      { t: '  for i in range(len(nums)):', c: '#E2E8F0' },
-      { t: '    for j in range(i+1, len(nums)):', c: '#E2E8F0' },
+      { t: '  for i in range(len(nums)):', c: 'var(--border)' },
+      { t: '    for j in range(i+1, len(nums)):', c: 'var(--border)' },
       { t: '      if nums[i] + nums[j] == target:', c: 'var(--text-muted)' },
       { t: '        return [i, j]', c: SUCCESS },
     ]},
     { label: 'Optimal · Hash', cx: 'O(n)',  lines: [
       { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
-      { t: '  seen = {}', c: '#E2E8F0' },
-      { t: '  for i, n in enumerate(nums):', c: '#E2E8F0' },
+      { t: '  seen = {}', c: 'var(--border)' },
+      { t: '  for i, n in enumerate(nums):', c: 'var(--border)' },
       { t: '    if target - n in seen:', c: 'var(--text-muted)' },
       { t: '      return [seen[target - n], i]', c: SUCCESS },
-      { t: '    seen[n] = i', c: '#E2E8F0' },
+      { t: '    seen[n] = i', c: 'var(--border)' },
     ]},
     { label: 'Space-Tight',    cx: 'O(n log n)', lines: [
       { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
-      { t: '  idx = sorted(range(len(nums)), key=lambda i: nums[i])', c: '#E2E8F0' },
-      { t: '  l, r = 0, len(nums) - 1', c: '#E2E8F0' },
+      { t: '  idx = sorted(range(len(nums)), key=lambda i: nums[i])', c: 'var(--border)' },
+      { t: '  l, r = 0, len(nums) - 1', c: 'var(--border)' },
       { t: '  while l < r:', c: 'var(--text-muted)' },
-      { t: '    s = nums[idx[l]] + nums[idx[r]]', c: '#E2E8F0' },
+      { t: '    s = nums[idx[l]] + nums[idx[r]]', c: 'var(--border)' },
       { t: '    if s == target: return [idx[l], idx[r]]', c: SUCCESS },
     ]},
   ];
@@ -312,9 +312,9 @@ function SceneCode() {
         {APPROACHES.map((a, i) => (
           <span key={a.label} style={{
             fontSize: 10, fontWeight: 700,
-            color: i === tab ? ACCENT : '#64748B',
+            color: i === tab ? ACCENT : 'var(--text-muted)',
             background: i === tab ? 'rgba(38,97,156,0.08)' : 'transparent',
-            border: `1px solid ${i === tab ? 'rgba(38,97,156,0.33)' : '#1E293B'}`,
+            border: `1px solid ${i === tab ? 'rgba(38,97,156,0.33)' : 'var(--cam-primary-dk)'}`,
             padding: '4px 10px', borderRadius: 6, fontFamily: MONO, letterSpacing: '0.08em',
             transition: 'all 0.3s',
           }}>
@@ -324,12 +324,12 @@ function SceneCode() {
       </div>
 
       {/* Editor */}
-      <div style={{ background: '#020617', border: '1px solid #1E293B', borderRadius: 10, overflow: 'hidden', fontFamily: MONO }}>
-        <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderBottom: '1px solid #1E293B' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#334155' }} />
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#334155' }} />
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#334155' }} />
-          <span style={{ marginLeft: 8, fontSize: 10, color: '#475569' }}>two_sum.py</span>
+      <div style={{ background: 'var(--cam-void)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, overflow: 'hidden', fontFamily: MONO }}>
+        <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderBottom: '1px solid var(--cam-primary-dk)' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
+          <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--text-muted)' }}>two_sum.py</span>
           <span style={{ marginLeft: 'auto', fontSize: 10, color: ACCENT, fontWeight: 700 }}>● {active.label}</span>
         </div>
         <div className="p-3" style={{ fontSize: 12, lineHeight: 1.7, minHeight: 132 }}>
@@ -350,7 +350,7 @@ function SceneCode() {
           <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.16em', marginTop: 2 }}>
             FOLLOW-UP
           </span>
-          <p style={{ fontSize: 12, color: '#CBD5E1', fontFamily: DISPLAY, lineHeight: 1.55, flex: 1 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-dimmed)', fontFamily: DISPLAY, lineHeight: 1.55, flex: 1 }}>
             &ldquo;How would you extend this to return <em>all</em> pairs that sum to the target, not just the first?&rdquo;
           </p>
         </div>
@@ -403,9 +403,9 @@ function SceneDesign() {
         {PROVIDERS.map((p, i) => (
           <span key={p} style={{
             fontSize: 10, fontWeight: 800,
-            color: i === provIdx ? '#0B1220' : '#94A3B8',
+            color: i === provIdx ? '#FFFFFF' : 'var(--text-dimmed)',
             background: i === provIdx ? ACCENT : 'transparent',
-            border: `1px solid ${i === provIdx ? ACCENT : '#1E293B'}`,
+            border: `1px solid ${i === provIdx ? ACCENT : 'var(--cam-primary-dk)'}`,
             padding: '4px 14px', borderRadius: 6, fontFamily: MONO, letterSpacing: '0.18em',
             transition: 'all 0.35s',
           }}>
@@ -417,7 +417,7 @@ function SceneDesign() {
         </span>
       </div>
 
-      <svg viewBox="0 0 560 230" width="100%" height="230" style={{ background: 'rgba(30,41,59,0.35)', border: '1px solid #1E293B', borderRadius: 10 }} key={prov}>
+      <svg viewBox="0 0 560 230" width="100%" height="230" style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10 }} key={prov}>
         <defs>
           <marker id={`cd-arr-${prov}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
             <path d="M 0 0 L 10 5 L 0 10 z" fill={ACCENT} />
@@ -436,9 +436,9 @@ function SceneDesign() {
           <g key={n.id} style={{ opacity: 0, animation: `cd-pop 0.35s ease-out ${n.delay}s forwards` }}>
             <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="5"
               fill={n.filled ? ACCENT : 'var(--cam-void)'}
-              stroke={n.filled ? ACCENT : '#334155'} strokeWidth="1.3" />
+              stroke={n.filled ? ACCENT : 'var(--text-dimmed)'} strokeWidth="1.3" />
             <text x={n.x + n.w / 2} y={n.y + n.h / 2 + 4} textAnchor="middle" fontSize="9.5" fontWeight="800"
-              fill={n.filled ? '#0B1220' : '#CBD5E1'} fontFamily={MONO} letterSpacing="0.5">
+              fill={n.filled ? '#FFFFFF' : 'var(--text-dimmed)'} fontFamily={MONO} letterSpacing="0.5">
               {n.label}
             </text>
           </g>
@@ -452,25 +452,25 @@ function SceneDesign() {
 function ScenePrep() {
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ background: 'rgba(30,41,59,0.35)', border: '1px solid #1E293B', borderRadius: 10, padding: 14 }}>
+      <div style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, padding: 14 }}>
         {/* Problem header */}
-        <div className="flex items-baseline gap-3 pb-3 mb-4" style={{ borderBottom: '1px solid #1E293B', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
+        <div className="flex items-baseline gap-3 pb-3 mb-4" style={{ borderBottom: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
           <span style={{ fontSize: 10, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>SYSTEM DESIGN</span>
-          <span style={{ fontSize: 14, fontWeight: 800, color: '#F8FAFC', fontFamily: DISPLAY, letterSpacing: '-0.01em' }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: '#FFFFFF', fontFamily: DISPLAY, letterSpacing: '-0.01em' }}>
             Design a URL Shortener
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 9, color: '#94A3B8', fontFamily: MONO }}>Medium · 14 sections</span>
+          <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-dimmed)', fontFamily: MONO }}>Medium · 14 sections</span>
         </div>
 
         {/* 2×2 mini cards */}
         <div className="grid grid-cols-2 gap-3">
           {/* Functional Reqs */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.15s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: '#94A3B8', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
               FUNCTIONAL REQS
             </div>
             {['Shorten long URL', 'Redirect 301/302', 'Custom aliases', 'Analytics'].map((r, i) => (
-              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', fontSize: 11, color: '#CBD5E1', fontFamily: DISPLAY, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.3 + i * 0.09}s forwards` }}>
+              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.3 + i * 0.09}s forwards` }}>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: ACCENT }} />
                 {r}
               </div>
@@ -479,7 +479,7 @@ function ScenePrep() {
 
           {/* Capacity Planning */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.25s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: '#94A3B8', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
               CAPACITY PLANNING
             </div>
             {[
@@ -489,15 +489,15 @@ function ScenePrep() {
               { k: 'Storage',    v: '5 TB / yr' },
             ].map((m, i) => (
               <div key={m.k} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '3px 0', fontSize: 11, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.45 + i * 0.09}s forwards` }}>
-                <span style={{ color: '#64748B' }}>{m.k}</span>
-                <span style={{ color: '#F8FAFC', fontWeight: 700 }}>{m.v}</span>
+                <span style={{ color: 'var(--text-muted)' }}>{m.k}</span>
+                <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{m.v}</span>
               </div>
             ))}
           </div>
 
           {/* API Design */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.45s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: '#94A3B8', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
               API DESIGN
             </div>
             {[
@@ -506,17 +506,17 @@ function ScenePrep() {
               { m: 'GET',  p: '/{code}/stats' },
             ].map((e, i) => (
               <div key={e.p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.6 + i * 0.1}s forwards` }}>
-                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : '#94A3B8', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'rgba(38,97,156,0.33)' : '#334155'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-dimmed)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'rgba(38,97,156,0.33)' : 'var(--text-dimmed)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
                   {e.m}
                 </span>
-                <code style={{ fontSize: 11, color: '#CBD5E1', fontFamily: MONO }}>{e.p}</code>
+                <code style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: MONO }}>{e.p}</code>
               </div>
             ))}
           </div>
 
           {/* Data Model */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.55s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: '#94A3B8', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
               DATA MODEL · urls
             </div>
             {[
@@ -526,16 +526,16 @@ function ScenePrep() {
               { f: 'created_at', t: 'TIMESTAMP' },
             ].map((f, i) => (
               <div key={f.f} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '2.5px 0', fontSize: 11, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.7 + i * 0.09}s forwards` }}>
-                <span style={{ color: '#CBD5E1' }}>{f.f}</span>
-                <span style={{ color: '#64748B' }}>{f.t}</span>
+                <span style={{ color: 'var(--text-dimmed)' }}>{f.f}</span>
+                <span style={{ color: 'var(--text-muted)' }}>{f.t}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Footer stats */}
-        <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid #1E293B', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.2s forwards' }}>
-          <span style={{ fontSize: 10, color: '#64748B', fontFamily: MONO, letterSpacing: '0.1em' }}>
+        <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.2s forwards' }}>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.1em' }}>
             Requirements · Capacity · Architecture · API · Data · Trade-offs · Edge Cases · Interview Follow-ups
           </span>
           <span style={{ marginLeft: 'auto', fontSize: 10, color: ACCENT, fontWeight: 700, fontFamily: MONO }}>14 / 14 ✓</span>
@@ -556,35 +556,35 @@ function SceneScore() {
   ];
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ background: 'rgba(30,41,59,0.35)', border: '1px solid #1E293B', borderRadius: 10, padding: 20 }}>
+      <div style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, padding: 20 }}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {gauges.map((g) => {
             const offset = C - (C * g.score) / 100;
             return (
               <div key={g.label} className="flex flex-col items-center">
                 <svg width="72" height="72" viewBox="0 0 72 72">
-                  <circle cx="36" cy="36" r={R} fill="none" stroke="#1E293B" strokeWidth="5" />
+                  <circle cx="36" cy="36" r={R} fill="none" stroke="var(--cam-primary-dk)" strokeWidth="5" />
                   <circle cx="36" cy="36" r={R} fill="none" stroke={ACCENT} strokeWidth="5" strokeLinecap="round"
                     strokeDasharray={C} transform="rotate(-90 36 36)"
                     style={{ strokeDashoffset: C, animation: `cd-gauge 1.1s cubic-bezier(0.22,1,0.36,1) ${g.delay}s forwards`, ['--cd-offset' as any]: offset } as React.CSSProperties}
                   />
-                  <text x="36" y="40" textAnchor="middle" fontSize="16" fontWeight="800" fill="#F8FAFC" fontFamily={MONO}
+                  <text x="36" y="40" textAnchor="middle" fontSize="16" fontWeight="800" fill="#FFFFFF" fontFamily={MONO}
                     style={{ opacity: 0, animation: `cd-count-up 0.4s ease-out ${g.delay + 0.25}s forwards` }}>
                     {g.score}
                   </text>
                 </svg>
-                <span style={{ marginTop: 8, fontSize: 9, fontWeight: 800, color: '#94A3B8', fontFamily: MONO, letterSpacing: '0.15em', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${g.delay + 0.4}s forwards` }}>
+                <span style={{ marginTop: 8, fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.15em', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${g.delay + 0.4}s forwards` }}>
                   {g.label}
                 </span>
               </div>
             );
           })}
         </div>
-        <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: '1px solid #1E293B', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.7s forwards' }}>
+        <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.7s forwards' }}>
           <div>
-            <div style={{ fontSize: 10, color: '#64748B', fontFamily: MONO, letterSpacing: '0.18em' }}>OVERALL</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#F8FAFC', fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1, marginTop: 4 }}>
-              92<span style={{ color: '#475569', fontSize: 18, fontWeight: 700 }}>&nbsp;/&nbsp;100</span>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.18em' }}>OVERALL</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#FFFFFF', fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1, marginTop: 4 }}>
+              92<span style={{ color: 'var(--text-muted)', fontSize: 18, fontWeight: 700 }}>&nbsp;/&nbsp;100</span>
             </div>
           </div>
           <div style={{ padding: '8px 16px', borderRadius: 999, background: 'rgba(38,97,156,0.08)', border: '1px solid rgba(38,97,156,0.33)', fontSize: 11, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
