@@ -20,7 +20,10 @@ export const STRIPE_PRICES = {
   ANNUAL_PRO: process.env.STRIPE_PRICE_ANNUAL_PRO,                          // $499/yr — content + 120 hrs pooled
   DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT, // $99 one-time
 
-  // Hour top-up packs (one-time, 90-day expiry enforced server-side)
+  // Hour top-up packs (one-time, 90-day expiry enforced server-side).
+  // 1H/3H are student-friendly entry points; per-hour rate decreases with volume.
+  TOPUP_1H: process.env.STRIPE_PRICE_TOPUP_1H,
+  TOPUP_3H: process.env.STRIPE_PRICE_TOPUP_3H,
   TOPUP_5H: process.env.STRIPE_PRICE_TOPUP_5H,
   TOPUP_10H: process.env.STRIPE_PRICE_TOPUP_10H,
   TOPUP_25H: process.env.STRIPE_PRICE_TOPUP_25H,

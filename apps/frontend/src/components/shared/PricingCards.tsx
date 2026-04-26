@@ -147,10 +147,14 @@ export const DESKTOP_LIFETIME = {
   priceKey: 'desktop_lifetime',
 };
 
+// Per-hour rate decreases monotonically with volume so larger packs always
+// look like a better deal: $9 → $8.33 → $8 → $7.50 → $7.
 export const TOPUPS = [
-  { name: '5 AI hours', price: '$45',  desc: 'Top-up pack — 90-day expiry', priceKey: 'topup_5h' },
-  { name: '10 AI hours', price: '$80', desc: 'Top-up pack — 90-day expiry', priceKey: 'topup_10h' },
-  { name: '25 AI hours', price: '$175', desc: 'Top-up pack — 90-day expiry', priceKey: 'topup_25h' },
+  { name: '1 AI hour',   price: '$9',   rate: '$9.00/hr',  desc: '90-day expiry',  priceKey: 'topup_1h' },
+  { name: '3 AI hours',  price: '$25',  rate: '$8.33/hr',  desc: '90-day expiry',  priceKey: 'topup_3h' },
+  { name: '5 AI hours',  price: '$40',  rate: '$8.00/hr',  desc: '90-day expiry',  priceKey: 'topup_5h' },
+  { name: '10 AI hours', price: '$75',  rate: '$7.50/hr',  desc: '90-day expiry',  priceKey: 'topup_10h' },
+  { name: '25 AI hours', price: '$175', rate: '$7.00/hr',  desc: '90-day expiry',  priceKey: 'topup_25h' },
 ];
 
 /* ── Shared price fetching hook ── */
@@ -360,59 +364,62 @@ export default function PricingCards({ showFree = true }: { showFree?: boolean }
         </div>
       </div>
 
-      {/* ── Add-ons & Top-ups ──────────────────────────────────────────── */}
+      {/* ── Hour top-up packs ─────────────────────────────────────────── */}
       <div>
-        <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Add-ons & top-up packs</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Desktop App */}
-          <div className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-              </div>
-              <div className="min-w-0">
-                <span className="text-[11px] font-semibold block" style={{ color: 'var(--text-primary)' }}>Desktop App</span>
-                <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>Stealth mode, BYOK</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <span className="text-sm font-bold" style={{ color: 'var(--accent)' }}>$99</span>
-              <button
-                onClick={() => {
-                  const pid = prices?.desktop_lifetime?.priceId || '';
-                  if (pid) checkout(pid, 'Desktop Lifetime');
-                  else navigate('/pricing');
-                }}
-                disabled={loading === 'Desktop Lifetime'}
-                className="px-2.5 py-1 text-white text-[9px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
-              >
-                {loading === 'Desktop Lifetime' ? '...' : 'Buy'}
-              </button>
-            </div>
-          </div>
-
-          {/* Top-Up Hour Packs */}
+        <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
+          Hour top-ups · stack with any plan, pay-as-you-go starts at $9/hr
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {TOPUPS.map(pack => {
             const pid = prices?.[pack.priceKey]?.priceId || '';
             return (
-              <div key={pack.priceKey} className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <div className="min-w-0">
-                  <span className="text-[11px] font-semibold block" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
-                  <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
+              <div key={pack.priceKey} className="rounded-xl p-3 flex flex-col" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-lg font-extrabold" style={{ color: 'var(--text-primary)' }}>{pack.price}</span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>· {pack.rate}</span>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  <span className="text-sm font-bold" style={{ color: 'var(--accent)' }}>{pack.price}</span>
-                  <button
-                    onClick={() => pid ? checkout(pid, pack.name) : navigate('/pricing')}
-                    disabled={loading === pack.name}
-                    className="px-2.5 py-1 text-white text-[9px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
-                  >
-                    {loading === pack.name ? '...' : 'Buy'}
-                  </button>
-                </div>
+                <span className="text-[11px] font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
+                <p className="text-[9px] mb-2" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
+                <button
+                  onClick={() => pid ? checkout(pid, pack.name) : navigate('/pricing')}
+                  disabled={loading === pack.name}
+                  className="mt-auto w-full px-2.5 py-1.5 text-white text-[10px] font-semibold rounded-md cursor-pointer disabled:opacity-50" style={{ background: 'var(--accent)' }}
+                >
+                  {loading === pack.name ? '...' : 'Buy pack'}
+                </button>
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── Desktop add-on ───────────────────────────────────────────── */}
+      <div>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Add-ons</h3>
+        <div className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+            </div>
+            <div className="min-w-0">
+              <span className="text-[12px] font-semibold block" style={{ color: 'var(--text-primary)' }}>Desktop App — Lifetime</span>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, BYOK (bring your own AI keys)</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-3">
+            <span className="text-base font-bold" style={{ color: 'var(--accent)' }}>$99</span>
+            <button
+              onClick={() => {
+                const pid = prices?.desktop_lifetime?.priceId || '';
+                if (pid) checkout(pid, 'Desktop Lifetime');
+                else navigate('/pricing');
+              }}
+              disabled={loading === 'Desktop Lifetime'}
+              className="px-3 py-1.5 text-white text-[10px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
+            >
+              {loading === 'Desktop Lifetime' ? '...' : 'Buy once'}
+            </button>
+          </div>
         </div>
 
         <p className="mt-4 text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>

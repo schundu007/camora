@@ -129,16 +129,30 @@ router.get('/prices', (req, res) => {
     },
 
     // ── Top-up hour packs ─────────────────────────────────────
+    topup_1h: {
+      priceId: STRIPE_PRICES.TOPUP_1H,
+      amount: 900,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 1,
+    },
+    topup_3h: {
+      priceId: STRIPE_PRICES.TOPUP_3H,
+      amount: 2500,
+      currency: 'usd',
+      interval: null,
+      ai_hours: 3,
+    },
     topup_5h: {
       priceId: STRIPE_PRICES.TOPUP_5H,
-      amount: 4500,
+      amount: 4000,
       currency: 'usd',
       interval: null,
       ai_hours: 5,
     },
     topup_10h: {
       priceId: STRIPE_PRICES.TOPUP_10H,
-      amount: 8000,
+      amount: 7500,
       currency: 'usd',
       interval: null,
       ai_hours: 10,
@@ -186,6 +200,8 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       STRIPE_PRICES.PRO_MAX,
       STRIPE_PRICES.ANNUAL_PRO,
       STRIPE_PRICES.DESKTOP_LIFETIME,
+      STRIPE_PRICES.TOPUP_1H,
+      STRIPE_PRICES.TOPUP_3H,
       STRIPE_PRICES.TOPUP_5H,
       STRIPE_PRICES.TOPUP_10H,
       STRIPE_PRICES.TOPUP_25H,
@@ -231,12 +247,16 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     else if (priceId === STRIPE_PRICES.PRO) purchaseType = 'pro';
     else if (priceId === STRIPE_PRICES.PRO_MAX) purchaseType = 'pro_max';
     else if (priceId === STRIPE_PRICES.ANNUAL_PRO) purchaseType = 'annual_pro';
+    else if (priceId === STRIPE_PRICES.TOPUP_1H) purchaseType = 'topup_1h';
+    else if (priceId === STRIPE_PRICES.TOPUP_3H) purchaseType = 'topup_3h';
     else if (priceId === STRIPE_PRICES.TOPUP_5H) purchaseType = 'topup_5h';
     else if (priceId === STRIPE_PRICES.TOPUP_10H) purchaseType = 'topup_10h';
     else if (priceId === STRIPE_PRICES.TOPUP_25H) purchaseType = 'topup_25h';
 
     // One-time purchases (Stripe `mode: 'payment'` instead of subscription).
     const isOneTime = purchaseType === 'desktop_lifetime'
+      || purchaseType === 'topup_1h'
+      || purchaseType === 'topup_3h'
       || purchaseType === 'topup_5h'
       || purchaseType === 'topup_10h'
       || purchaseType === 'topup_25h';
