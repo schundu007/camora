@@ -7,6 +7,11 @@
 /* ── JetBrains Mono — Bunny.net CDN (canonical source for mono) ── */
 @import url('https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700&display=swap');
 
+/* ── Caveat — hand-drawn diagram font (Excalidraw-style architecture
+       diagrams). Loaded once globally so DiagramSVG primitives + the
+       Lumora ArchitectureDiagram pick it up via font-family stack. ── */
+@import url('https://fonts.bunny.net/css?family=caveat:400,600,700&display=swap');
+
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 

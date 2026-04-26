@@ -1,18 +1,26 @@
 import React from 'react';
 
-// Color theme
+// Color theme — single-ink editorial palette ("hand-drawn on paper"
+// aesthetic). All semantic categories collapse to lapis except true
+// error states (red). Cyan is removed per the navy-only palette rule.
+// Text colors read from design tokens so the diagram flips with theme.
 const COLORS = {
-  primary: 'var(--accent)',
+  primary:   'var(--accent)',
   secondary: 'var(--accent)',
-  accent: 'var(--accent)',
-  warning: 'var(--text-muted)',
-  error: '#EF4444',
-  cyan: '#06b6d4',
-  gray: '#64748b',
-  text: '#1e293b',
-  textLight: '#475569',
-  bg: '#f1f5f9'
+  accent:    'var(--accent)',
+  warning:   'var(--accent)',
+  cyan:      'var(--accent)',
+  gray:      'var(--text-muted)',
+  error:     '#B45454', // muted red, not the neon Tailwind one
+  text:      'var(--text-primary)',
+  textLight: 'var(--text-secondary)',
+  bg:        'var(--bg-elevated)',
 };
+
+// Faint fill tint — was 25% (saturated, "neon card"), now 10% so the
+// shapes read as ink-on-paper rather than colored cells.
+const FILL_ALPHA = '14'; // hex 14 ≈ 8% opacity
+const STROKE_WIDTH = 1.5; // was 2 — thinner, sketchier
 
 // Helper components
 const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11 }) => (
@@ -22,10 +30,10 @@ const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11
       y={y}
       width={width}
       height={height}
-      fill={`${color}25`}
+      fill={`${color.startsWith('var(') ? `rgba(38,97,156,0.08)` : `${color}${FILL_ALPHA}`}`}
       stroke={color}
-      strokeWidth="2"
-      rx="4"
+      strokeWidth={STROKE_WIDTH}
+      rx="6"
     />
     <text
       x={x + width / 2}
@@ -33,7 +41,7 @@ const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11
       textAnchor="middle"
       fill={COLORS.text}
       fontSize={fontSize}
-      fontFamily="system-ui, -apple-system, sans-serif"
+      fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
       fontWeight="600"
     >
       {label}
@@ -45,9 +53,9 @@ const Diamond = ({ x, y, size, label, color = COLORS.warning }) => (
   <g>
     <polygon
       points={`${x + size/2},${y} ${x + size},${y + size/2} ${x + size/2},${y + size} ${x},${y + size/2}`}
-      fill={`${color}25`}
+      fill={`${color.startsWith('var(') ? `rgba(38,97,156,0.08)` : `${color}${FILL_ALPHA}`}`}
       stroke={color}
-      strokeWidth="2"
+      strokeWidth={STROKE_WIDTH}
     />
     <text
       x={x + size / 2}
@@ -55,7 +63,7 @@ const Diamond = ({ x, y, size, label, color = COLORS.warning }) => (
       textAnchor="middle"
       fill={COLORS.text}
       fontSize="11"
-      fontFamily="system-ui, -apple-system, sans-serif"
+      fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
       fontWeight="600"
     >
       {label}
@@ -83,8 +91,8 @@ const Arrow = ({ x1, y1, x2, y2, color = COLORS.primary }) => (
       x2={x2}
       y2={y2}
       stroke={color}
-      strokeWidth="2"
-      markerEnd={`url(#arrowhead-${color.replace('#', '')})`}
+      strokeWidth={STROKE_WIDTH}
+      markerEnd={`url(#arrowhead-${color.replace(/[^a-zA-Z0-9]/g, '')})`}
     />
   </g>
 );
@@ -95,7 +103,8 @@ const Label = ({ x, y, text, color = COLORS.textLight, fontSize = 9 }) => (
     y={y}
     fill={color}
     fontSize={fontSize}
-    fontFamily="system-ui, -apple-system, sans-serif"
+    fontFamily="'Caveat','Patrick Hand','Comic Sans MS',system-ui,sans-serif"
+    fontStyle="italic"
   >
     {text}
   </text>
