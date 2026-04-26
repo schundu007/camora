@@ -4,7 +4,28 @@ import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/Audio
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { LumoraSettings } from './LumoraSettings';
 import ScreenCaptureButton from '@/components/lumora/shared/ScreenCaptureButton';
+import { useTheme } from '@/hooks/useTheme';
 import type { LumoraTab } from './LumoraIconRail';
+
+function ThemeToggleButton() {
+  const { theme, toggle } = useTheme();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
+      style={{ color: 'var(--text-secondary)' }}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+    >
+      {theme === 'dark' ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>
+      )}
+    </button>
+  );
+}
 
 /* ── Color tokens (standardized) ── */
 const C = {
@@ -53,6 +74,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium" style={{ background: C.elevated, border: `1px solid ${C.border}`, color: C.muted }}>
           {status === 'recording' ? <><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Recording</> : 'Ready to assist'}
         </div>
+        <ThemeToggleButton />
         <button onClick={() => setShowSettings(true)} className="p-1.5 rounded-lg transition-colors" style={{ color: C.muted }} title="Settings">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
         </button>
@@ -98,6 +120,8 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
           }`} />
           <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "'Inter', sans-serif", color: C.muted }}>{status.message}</span>
         </div>
+
+        <ThemeToggleButton />
 
         {/* Settings gear */}
         <button onClick={() => setShowSettings(true)} className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: C.muted }} title="Settings">
