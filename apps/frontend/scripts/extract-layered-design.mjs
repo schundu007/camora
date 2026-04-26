@@ -209,15 +209,24 @@ async function loadAllTopics() {
 async function loadExistingOutput() {
   try {
     const src = await fs.readFile(OUT_FILE, 'utf8');
-    // Match: `'topic-id': [ ... ]` and re-eval the array as JSON. We control this
-    // file's format completely, so a permissive parse is safe.
+    // Bracket-counting parser — handles nested arrays inside each topic
+    // entry's value (a single non-greedy regex would stop at the first
+    // closing ']' which sits inside a nested `components` array).
     const map = {};
-    const RE = /'([^']+)':\s*(\[[\s\S]*?\])(?=,\s*'|,?\s*\})/g;
+    const KEY_RE = /'([^']+)':\s*\[/g;
     let m;
-    while ((m = RE.exec(src)) !== null) {
-      try {
-        map[m[1]] = JSON.parse(m[2]);
-      } catch { /* ignore corrupt entry — will be regenerated next run */ }
+    while ((m = KEY_RE.exec(src)) !== null) {
+      const id = m[1];
+      const arrStart = m.index + m[0].length - 1;
+      let depth = 0;
+      let i = arrStart;
+      for (; i < src.length; i++) {
+        const ch = src[i];
+        if (ch === '[') depth++;
+        else if (ch === ']') { depth--; if (depth === 0) { i++; break; } }
+      }
+      const slice = src.slice(arrStart, i);
+      try { map[id] = JSON.parse(slice); } catch { /* skip malformed */ }
     }
     return map;
   } catch {
