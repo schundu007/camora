@@ -445,7 +445,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           {/* Timer — matching coding page */}
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
-              timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
+              timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
               'bg-[rgba(38,97,156,0.06)] border-[rgba(38,97,156,0.2)] text-[var(--accent)]'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
@@ -522,7 +522,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   key={tab}
                   onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
-                    inputTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-700'
+                    inputTab === tab ? 'text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   }`}
                   style={inputTab === tab ? { background: 'var(--cam-primary)', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
                 >
@@ -532,7 +532,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             </div>
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}
-              className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+              className="p-1 text-[var(--text-dimmed)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] rounded transition-colors"
             >
               <svg className={`w-3 h-3 transition-transform ${inputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -612,18 +612,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 ) : (
                   <div className="space-y-2 text-center">
                     <div className="w-10 h-10 mx-auto bg-white/10 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-[var(--text-dimmed)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-gray-400 text-xs">Drop image or click to upload</p>
+                    <p className="text-[var(--text-dimmed)] text-xs">Drop image or click to upload</p>
                   </div>
                 )}
               </div>
             )}
             {errorMsg && !isLoading && (
-              <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs flex items-start gap-2">
-                <svg className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2.5 rounded-lg text-xs flex items-start gap-2" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>
+                <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01" />
                 </svg>
                 <span>{errorMsg}</span>
@@ -771,7 +771,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 {sd.requirements?.nonFunctional && sd.requirements.nonFunctional.length > 0 && (
                   <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #3b82f6)` }} />
+                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--cam-primary))` }} />
                       <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Non-Functional</h2>
                       <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.nonFunctional.length}</span>
                       <SectionCopyBtn getText={() => (sd.requirements?.nonFunctional || []).join('\n')} title="Copy non-functional requirements" />
@@ -815,7 +815,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                               </thead>
                               <tbody>
                                 {col.map(([key, val]) => (
-                                  <tr key={key} style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                                  <tr key={key} style={{ borderBottom: `1px solid var(--border)` }}>
                                     <td className="text-[11px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: t.text }}>{key}</td>
                                     <td className="text-[11px] py-1.5" style={{ color: t.textMuted }}>{val}</td>
                                   </tr>
@@ -879,7 +879,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {sd.tradeoffs && sd.tradeoffs.length > 0 && (
                     <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #26619C)` }} />
+                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--cam-primary))` }} />
                         <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Tradeoffs</h2>
                         <div className="ml-auto"><SectionCopyBtn getText={() => (sd.tradeoffs || []).map((tr, i) => `${i + 1}. ${tr}`).join('\n')} title="Copy tradeoffs" /></div>
                       </div>
@@ -921,7 +921,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {sd.edgeCases && sd.edgeCases.length > 0 && (
                     <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #f59e0b)` }} />
+                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--warning))` }} />
                         <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Edge Cases</h2>
                         <div className="ml-auto"><SectionCopyBtn getText={() => (sd.edgeCases || []).map((e, i) => `${i + 1}. ${e}`).join('\n')} title="Copy edge cases" /></div>
                       </div>
@@ -948,7 +948,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.followups && sd.followups.length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #f59e0b)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--warning))` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Follow-up Q&A</h2>
                     <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.followups.length}</span>
                     <SectionCopyBtn getText={() => (sd.followups || []).map((f, i) => `Q${i + 1}: ${f.question}\nA: ${f.answer}`).join('\n\n')} title="Copy follow-up Q&A" />

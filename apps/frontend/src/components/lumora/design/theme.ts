@@ -22,29 +22,22 @@ export interface DesignTheme {
   dotColor: string;
 }
 
-export function useTheme(dark: boolean): DesignTheme {
-  if (dark) {
-    return {
-      cardBg: '#0F172A', cardBorder: '#1E293B',
-      headerBg: 'rgba(38,97,156,0.08)', headerBorder: '#1E40AF',
-      headerText: 'var(--cam-primary)', badgeBg: 'rgba(38,97,156,0.12)', badgeText: 'var(--cam-primary)',
-      text: '#F8FAFC', textMuted: '#94A3B8', textDim: '#64748B',
-      codeBg: '#020617', codeText: '#E2E8F0',
-      inputBg: '#0F172A', inputBorder: '#334155', inputText: '#F8FAFC',
-      sectionBg: '#0F172A', surfaceBg: '#1E293B',
-      tabActive: 'var(--cam-primary)', tabActiveBg: '#1E293B', tabText: '#94A3B8',
-      dotColor: 'var(--cam-primary)',
-    };
-  }
+// Theme tokens are returned as CSS-var references that auto-flip via the
+// global [data-theme="dark"] selector defined in src/styles/globals.css.
+// The `dark` argument is preserved for API stability but is no longer read —
+// the same token map works for both light and dark surfaces because the
+// underlying CSS vars (`--bg-surface`, `--bg-elevated`, `--border`,
+// `--text-primary`, etc.) flip in lockstep with the global theme.
+export function useTheme(_dark: boolean): DesignTheme {
   return {
-    cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(38,97,156,0.05)', headerBorder: '#BFDBFE',
-    headerText: 'var(--cam-primary)', badgeBg: 'rgba(38,97,156,0.06)', badgeText: 'var(--cam-primary)',
-    text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
-    codeBg: '#f9fafb', codeText: '#1f2937',
-    inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
-    sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: 'var(--cam-primary)', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    cardBg: 'var(--bg-surface)', cardBorder: 'var(--border)',
+    headerBg: 'var(--accent-subtle)', headerBorder: 'var(--border)',
+    headerText: 'var(--cam-primary)', badgeBg: 'var(--accent-subtle)', badgeText: 'var(--cam-primary)',
+    text: 'var(--text-primary)', textMuted: 'var(--text-muted)', textDim: 'var(--text-dimmed)',
+    codeBg: 'var(--bg-elevated)', codeText: 'var(--text-primary)',
+    inputBg: 'var(--bg-surface)', inputBorder: 'var(--border)', inputText: 'var(--text-primary)',
+    sectionBg: 'var(--bg-elevated)', surfaceBg: 'var(--bg-surface)',
+    tabActive: 'var(--cam-primary)', tabActiveBg: 'var(--bg-surface)', tabText: 'var(--text-muted)',
     dotColor: 'var(--cam-primary)',
   };
 }
