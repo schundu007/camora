@@ -5,6 +5,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { transcriptionAPI, speakerAPI } from '@/lib/api-client';
 import { MicrophoneSelector } from './MicrophoneSelector';
 import { useAuth } from '@/contexts/AuthContext';
+import { isQuestion } from '@/lib/questionDetector';
 
 // Keyboard shortcuts — use Cmd/Ctrl+M to avoid conflict with typing
 const SHORTCUTS = {
@@ -78,14 +79,24 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   }, [onTranscription, setStatus]);
 
   const scheduleQuestionCheck = useCallback(() => {
-    // After receiving a chunk, wait 2 seconds of no new chunks → question is complete
+    // After receiving a chunk, wait for "no new chunks" before deciding the
+    // question is complete. The wait is adaptive:
+    //   - if the accumulated text already trips isQuestion() (ends with "?",
+    //     starts with an interrogative, or contains an interview verb), we
+    //     fire after 600 ms — enough to let one more in-flight chunk land
+    //     without making the user wait the full debounce window.
+    //   - otherwise we fall back to the conservative 2000 ms so half-spoken
+    //     monologues don't get prematurely sent to the LLM.
     if (questionCheckTimerRef.current) clearTimeout(questionCheckTimerRef.current);
+    const accumulated = accumulatedTextRef.current.trim();
+    const looksComplete = isQuestion(accumulated);
+    const wait = looksComplete ? 600 : 2000;
     questionCheckTimerRef.current = window.setTimeout(() => {
       if (accumulatedTextRef.current.trim().length > 5) {
         flushAccumulatedText();
         setShouldRestart(true);
       }
-    }, 2000);
+    }, wait);
   }, [flushAccumulatedText]);
 
   // Auto-enroll user's voice from first audio chunk in record-interviewer mode
@@ -227,7 +238,11 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
     silenceThreshold: Math.max(threshold, 0.003),
-    silenceDuration: 1500,
+    // Live mode shaves the end-of-utterance debounce so Sona can fire
+    // faster on each turn — 1500ms felt sluggish in real interviews.
+    // Manual (push-to-talk) keeps the longer window because the user is
+    // composing a thought and natural pauses are common there.
+    silenceDuration: continuousMode ? 800 : 1500,
     minSpeechDuration: 300,
     maxRecordingDuration: continuousMode ? 5000 : 30000, // Live: 5s chunks, Manual: 30s max
     deviceId: selectedDeviceId,

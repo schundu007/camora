@@ -425,6 +425,9 @@ IMPORTANT CODE FORMATTING RULE:
   const chunks = [];
   let inputTokens = 0;
   let outputTokens = 0;
+  let cacheReadTokens = 0;
+  let cacheCreationTokens = 0;
+  let firstTokenAt = 0;
 
   try {
     const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isShortMode ? 'behavioral' : 'general');
@@ -444,6 +447,7 @@ IMPORTANT CODE FORMATTING RULE:
       if (signal?.aborted) { try { stream.controller?.abort(); } catch {} break; }
       if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
         const token = event.delta.text;
+        if (!firstTokenAt) firstTokenAt = performance.now();
         chunks.push(token);
         yield { event: 'token', data: { t: token } };
       }
@@ -456,6 +460,11 @@ IMPORTANT CODE FORMATTING RULE:
     if (finalMessage.usage) {
       inputTokens = finalMessage.usage.input_tokens;
       outputTokens = finalMessage.usage.output_tokens;
+      // Anthropic returns these only when cache_control was honored.
+      // cache_read = warm-cache hit (cheap), cache_creation = first write
+      // of this prompt prefix into the 5-minute ephemeral cache.
+      cacheReadTokens = finalMessage.usage.cache_read_input_tokens || 0;
+      cacheCreationTokens = finalMessage.usage.cache_creation_input_tokens || 0;
     }
   } catch (err) {
     console.error('Claude stream error:', err);
@@ -484,9 +493,22 @@ IMPORTANT CODE FORMATTING RULE:
       },
     };
 
+    // Cache hit telemetry — surface cache_read / cache_creation so we can
+    // verify the ephemeral prompt cache is actually warming on the live
+    // (isShortMode) path. cache_read>0 means we paid 1/10 input price for
+    // the system prompt and ate ~50-70% off TTFT; consistently 0 means the
+    // prompt prefix is changing every turn (re-built resume / culture frame
+    // / order drift) and we're paying full price each call.
+    const ttftMs = firstTokenAt ? Math.round(firstTokenAt - startTime) : null;
+    const cacheStatus = cacheReadTokens > 0
+      ? `cache_hit(${cacheReadTokens})`
+      : cacheCreationTokens > 0
+        ? `cache_write(${cacheCreationTokens})`
+        : 'cache_miss';
     console.log(
       `Answer done design=${isDesign} coding=${isCoding} ` +
-      `tokens=${inputTokens}+${outputTokens} latency=${latencyMs}ms ` +
+      `tokens=${inputTokens}+${outputTokens} ` +
+      `${cacheStatus} ttft=${ttftMs}ms latency=${latencyMs}ms ` +
       `q='${question.slice(0, 50)}...'`
     );
   } else {
