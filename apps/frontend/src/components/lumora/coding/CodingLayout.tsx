@@ -795,24 +795,36 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
         <div className={`w-full md:w-auto flex flex-col min-w-0 md:border-r border-b md:border-b-0 coding-left-panel max-h-[45dvh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
-          {/* Tabs */}
-          <div className="flex items-center gap-1 px-3 py-1.5 border-b" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
+          {/* Tabs — LeetCode-style navy gradient + 2px gold underline.
+              Embedded path: this is the only header users see on
+              /lumora/coding so it carries the brand signature. */}
+          <div
+            className="flex items-center gap-1 px-3 py-1.5"
+            style={{
+              background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
+              borderBottom: '2px solid var(--cam-gold-leaf)',
+            }}
+          >
             <button
               onClick={() => setProblemTab('description')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                problemTab === 'description' ? 'bg-[var(--accent)] text-white shadow-sm' : ''
-              }`}
-              style={problemTab !== 'description' ? { color: t.tabText } : undefined}
+              className="px-3 py-1 text-xs font-semibold rounded-md transition-all"
+              style={
+                problemTab === 'description'
+                  ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }
+                  : { color: 'rgba(255,255,255,0.75)' }
+              }
             >Description</button>
             <button
               onClick={() => setProblemTab('solution')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                problemTab === 'solution' ? 'bg-[var(--accent)] text-white shadow-sm' : ''
-              }`}
-              style={problemTab !== 'solution' ? { color: t.tabText } : undefined}
+              className="px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5"
+              style={
+                problemTab === 'solution'
+                  ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }
+                  : { color: 'rgba(255,255,255,0.75)' }
+              }
             >
               Solution
-              {isStreaming && <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
+              {isStreaming && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: problemTab === 'solution' ? 'var(--cam-primary-dk)' : '#FFFFFF' }} />}
             </button>
           </div>
 
