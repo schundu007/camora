@@ -50,20 +50,15 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
         className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
           height: 60,
-          // Lapis-tinted vertical gradient + soft inset highlight gives the
-          // header weight and depth without leaving the navy palette.
-          // Both stops resolve from design tokens so light/dark flip
-          // cleanly. The boxShadow does double duty: a thin lapis hairline
-          // along the bottom for separation, plus a wider soft glow that
-          // implies the header floats above the page.
-          background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
-          borderBottom: '1px solid var(--border)',
-          boxShadow:
-            '0 1px 2px rgba(38,97,156,0.05), 0 4px 16px rgba(38,97,156,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
-          color: 'var(--text-primary)',
+          // White chrome above navy hero bands — same flip pattern as the
+          // marketing SiteNav so all app shell chrome reads as a distinct
+          // strip above the gradient page heroes. 3px gold-leaf underline
+          // carries the brand accent.
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+          borderBottom: '3px solid var(--cam-gold-leaf)',
+          boxShadow: '0 4px 18px rgba(5,28,64,0.12)',
+          color: 'var(--cam-primary-dk)',
           fontFamily: 'var(--font-sans)',
-          backdropFilter: 'saturate(120%) blur(6px)',
-          WebkitBackdropFilter: 'saturate(120%) blur(6px)',
         }}
       >
         {/* -- Left: mobile hamburger + logo ---------------------- */}
@@ -102,12 +97,11 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="px-3.5 py-1.5 text-[13px] rounded-lg transition-all no-underline"
+                  className="px-3.5 py-1.5 text-[13px] rounded-full transition-all no-underline"
                   style={{
-                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    color: active ? 'var(--cam-primary-dk)' : 'var(--text-secondary)',
                     fontWeight: active ? 700 : 600,
-                    background: active ? 'var(--accent-subtle)' : 'transparent',
-                    boxShadow: active ? 'inset 0 0 0 1px rgba(38,97,156,0.18)' : 'none',
+                    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
                     letterSpacing: active ? '0.005em' : 'normal',
                   }}
                 >

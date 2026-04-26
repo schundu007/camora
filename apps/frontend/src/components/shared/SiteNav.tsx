@@ -44,16 +44,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
   // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
   // via design tokens.
-  // SiteNav uses a deeper, near-black navy than the page heroes so the
-  // chrome reads as a distinct strip ABOVE the gradient hero band rather
-  // than blurring into it. Two-stop subtle gradient (navy-900 → navy-dk)
-  // + a thicker 3px gold-leaf underline for clear separation.
+  // FLIPPED: white nav above navy hero band — high contrast separation.
+  // Crisp white surface, navy text, gold pill for the active link, and a
+  // 3px gold-leaf underline so the brand still carries through the chrome.
   const navBg =
-    'linear-gradient(180deg, #03132E 0%, #051C40 100%)';
-  const navShadow = '0 6px 22px rgba(0,0,0,0.35)';
+    'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)';
+  const navShadow = '0 4px 18px rgba(5,28,64,0.12)';
   const borderClass = '';
-  const textColor = '#FFFFFF';
-  const textMuted = 'rgba(255,255,255,0.78)';
+  const textColor = 'var(--cam-primary-dk)';
+  const textMuted = 'var(--text-secondary)';
   const activeBg = 'var(--cam-gold-leaf)';
   const activeColor = 'var(--cam-primary-dk)';
 
