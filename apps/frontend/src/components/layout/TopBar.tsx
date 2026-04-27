@@ -13,11 +13,26 @@ interface TopBarProps {
 }
 
 export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isNavActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
+
+  // Close mobile dropdown on route change or Escape.
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
+  // Reference unused props so TS/ESLint stays quiet — RootShell still
+  // wires them up for back-compat, but the mobile hamburger now opens
+  // a TopBar-owned dropdown instead of the Sidebar's mobile drawer.
+  void onToggleSidebar; void sidebarOpen;
 
   const initials = user?.name
     ? user.name
@@ -60,32 +75,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           fontFamily: 'var(--font-sans)',
         }}
       >
-        {/* -- Left: mobile hamburger + logo ---------------------- */}
+        {/* -- Left: logo (always visible — clickable to return to landing) -- */}
         <div className="flex items-center gap-3">
-          {/* Hamburger -- mobile only. White stroke against the navy chrome
-              (was var(--text-primary) which renders black-on-navy in light
-              mode and is barely visible). Matches SiteNav and Lumora. */}
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors hover:bg-white/10"
-            style={{ color: '#FFFFFF' }}
-            aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-            aria-expanded={sidebarOpen}
-          >
-            {sidebarOpen ? (
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M4 4l10 10M14 4L4 14" />
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M2 4h14M2 9h14M2 14h14" />
-              </svg>
-            )}
-          </button>
-
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
+          <Link to="/" className="flex items-center gap-2.5 no-underline" aria-label="Camora — home">
             <CamoraLogo size={32} />
           </Link>
 
@@ -239,8 +231,83 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           {/* Avatar — user dropdown menu */}
           <UserDropdown variant="dark" />
 
+          {/* Mobile hamburger — pinned right, matches SiteNav and Lumora.
+              Opens a dropdown directly below the TopBar with NAV_LINKS
+              and account utilities. */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors hover:bg-white/10"
+            style={{ color: '#FFFFFF' }}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M4 4l10 10M14 4L4 14" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M2 4h14M2 9h14M2 14h14" />
+              </svg>
+            )}
+          </button>
         </div>
       </header>
+
+      {/* Mobile dropdown — drops down under the TopBar from the right
+          hamburger. Same pattern as SiteNav and Lumora. */}
+      {menuOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+            className="md:hidden fixed inset-0 z-40 cursor-default"
+            style={{ background: 'rgba(0,0,0,0.35)', top: 60 }}
+          />
+          <div
+            className="md:hidden fixed right-0 z-50 w-[260px] max-w-[90vw]"
+            style={{
+              top: 60,
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderTop: 'none',
+              borderBottomLeftRadius: 12,
+              boxShadow: '0 12px 28px rgba(0,0,0,0.20)',
+            }}
+            role="menu"
+            aria-label="Navigation menu"
+          >
+            <div className="px-4 py-3 space-y-0.5 max-h-[70vh] overflow-y-auto">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block py-2.5 text-[14px] font-semibold"
+                  style={{ color: isNavActive(link.href) ? 'var(--accent)' : 'var(--text-primary)' }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-3 mt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                {isAuthenticated && (
+                  <Link to="/profile" onClick={() => setMenuOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Profile</Link>
+                )}
+                <button type="button" onClick={() => { toggleTheme(); setMenuOpen(false); }} className="block w-full text-left py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                </button>
+                {isAuthenticated ? (
+                  <button type="button" onClick={() => { logout(); setMenuOpen(false); }} className="block w-full text-left py-2.5 text-[14px] font-semibold" style={{ color: 'var(--danger)' }}>Sign out</button>
+                ) : (
+                  <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setMenuOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sign in</Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Command palette modal */}
       <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />

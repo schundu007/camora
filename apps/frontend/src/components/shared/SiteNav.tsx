@@ -68,30 +68,9 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       }}
     >
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center px-4 sm:px-6 h-14">
-        {/* Mobile burger — sits before the logo so it lines up with the
-            same top-left position used in TopBar and the Lumora shell.
-            Hidden on desktop where the full nav fits. */}
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          className="md:hidden flex items-center justify-center w-10 h-10 -ml-2 mr-1 rounded-md transition-colors"
-          style={{ color: textColor }}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-        >
-          {open ? (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M4 4l10 10M14 4L4 14" />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M2 4h14M2 9h14M2 14h14" />
-            </svg>
-          )}
-        </button>
-
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
+        {/* Logo — always visible on every breakpoint so users can return
+            to the landing page from any Camora screen. */}
+        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0" aria-label="Camora — home">
           <CamoraLogo size={32} />
         </Link>
 
@@ -147,11 +126,31 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           )}
         </div>
 
+        {/* Mobile burger — pinned to the right end of the nav so the
+            position matches across SiteNav, TopBar, and the Lumora
+            shell. ml-auto pushes it past the (hidden) desktop links. */}
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="md:hidden flex items-center justify-center w-10 h-10 -mr-2 ml-auto rounded-md transition-colors"
+          style={{ color: textColor }}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+        >
+          {open ? (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 4l10 10M14 4L4 14" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M2 4h14M2 9h14M2 14h14" />
+            </svg>
+          )}
+        </button>
       </div>
 
-      {/* Mobile drawer — slides from left, matches Sidebar / TopBar pattern.
-          Replaced the previous dropdown so all three shells (SiteNav,
-          TopBar, Lumora) share the same hamburger → left-drawer behavior. */}
+      {/* Mobile dropdown — drops down directly under the nav from the
+          hamburger on the right. Tap-outside backdrop dismisses. */}
       {open && (
         <>
           <button
@@ -159,21 +158,22 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             aria-label="Close menu"
             onClick={() => setOpen(false)}
             className="md:hidden fixed inset-0 z-40 cursor-default"
-            style={{ background: 'rgba(0,0,0,0.45)', top: navHeight }}
+            style={{ background: 'rgba(0,0,0,0.35)', top: navHeight }}
           />
-          <aside
-            className="md:hidden fixed left-0 z-50 w-[280px] flex flex-col"
+          <div
+            className="md:hidden absolute right-0 z-50 w-[260px] max-w-[90vw]"
             style={{
               top: navHeight,
-              bottom: 0,
               background: 'var(--bg-surface)',
-              borderRight: '1px solid var(--border)',
-              boxShadow: '4px 0 18px rgba(0,0,0,0.18)',
+              border: '1px solid var(--border)',
+              borderTop: 'none',
+              borderBottomLeftRadius: 12,
+              boxShadow: '0 12px 28px rgba(0,0,0,0.20)',
             }}
             role="menu"
             aria-label="Site menu"
           >
-            <div className="px-5 py-4 space-y-1 overflow-y-auto">
+            <div className="px-4 py-3 space-y-0.5 max-h-[70vh] overflow-y-auto">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.label}
@@ -213,7 +213,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                 )}
               </div>
             </div>
-          </aside>
+          </div>
         </>
       )}
       {/* Challenge Campaign Ticker — gold band so the scrolling text
