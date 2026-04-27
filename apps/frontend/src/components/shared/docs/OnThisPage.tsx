@@ -31,24 +31,9 @@ export default function OnThisPage({
   useEffect(() => {
     if (items.length === 0) return undefined;
 
-    // The page content may scroll inside an inner overflow-y:auto container
-    // (Capra shell uses <main id="app-scroll-container">), not window. Walk
-    // up from the first section element to find the real scroll parent.
-    const findScrollParent = (start: HTMLElement | null): HTMLElement | Window => {
-      let node = start?.parentElement || null;
-      while (node && node !== document.body) {
-        const cs = getComputedStyle(node);
-        if (/(auto|scroll|overlay)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) {
-          return node;
-        }
-        node = node.parentElement;
-      }
-      return window;
-    };
-
-    const firstEl = items.map(i => document.getElementById(i.id)).find(Boolean) || null;
-    const scroller = findScrollParent(firstEl);
-
+    // Capture-phase scroll on document catches scroll events from any
+    // element — works whether the page scrolls on window or inside an
+    // inner overflow-y:auto container like Capra's #app-scroll-container.
     const handler = () => {
       let current: string | null = null;
       for (const item of items) {
@@ -61,10 +46,10 @@ export default function OnThisPage({
     };
 
     handler();
-    scroller.addEventListener('scroll', handler, { passive: true });
+    document.addEventListener('scroll', handler, { capture: true, passive: true });
     window.addEventListener('resize', handler);
     return () => {
-      scroller.removeEventListener('scroll', handler);
+      document.removeEventListener('scroll', handler, { capture: true } as EventListenerOptions);
       window.removeEventListener('resize', handler);
     };
   }, [items, offset]);
