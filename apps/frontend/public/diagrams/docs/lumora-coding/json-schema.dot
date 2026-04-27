@@ -1,0 +1,58 @@
+// Lumora Coding — Solution JSON Schema
+// Render: dot -Tpng -Gdpi=150 json-schema.dot -o json-schema.png
+digraph LumoraCodingJsonSchema {
+  graph [
+    bgcolor="white",
+    rankdir="LR",
+    splines="spline",
+    nodesep=0.4,
+    ranksep=0.7,
+    pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10.5,
+    fontcolor="#0F172A",
+    margin="0.20,0.12",
+    penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=9.5,
+    color="#64748B",
+    fontcolor="#475569",
+    penwidth=1.0,
+    arrowsize=0.6
+  ];
+
+  // Root
+  root [
+    label="AscendCodingResponse\nfields:\npitch — spoken summary\nlanguage — string\nexamples — array\nsolutions — array (length 3)",
+    fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+  ];
+
+  // Solution
+  sol [
+    label="Solution\nname — approach label\npatternTag — 1 of 27 enum\napproach — prose\ncode — complete, function-based\ncomplexity — time + space\nnarration — first-person 4–6 sentences\ntrace — array of steps\nexplanations — per-line",
+    fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"
+  ];
+
+  // Example
+  ex [
+    label="Example\ninput — any\noutput — any\nexplanation — optional",
+    fillcolor="#DCFCE7", color="#15803D", fontcolor="#166534"
+  ];
+
+  // Step
+  step [
+    label="TraceStep\nstep — int\nlabel — string\ndetail — string",
+    fillcolor="#F5F3FF", color="#6D28D9", fontcolor="#5B21B6"
+  ];
+
+  root -> sol   [label="solutions[3]"];
+  root -> ex    [label="examples[N]"];
+  sol  -> step  [label="trace[4–10]"];
+}

@@ -1,0 +1,108 @@
+// Lumora Coding — Solver Flow
+// Render: dot -Tpng -Gdpi=150 solver-flow.dot -o solver-flow.png
+digraph LumoraCodingSolverFlow {
+  graph [
+    bgcolor="white",
+    rankdir="TB",
+    splines="spline",
+    nodesep=0.4,
+    ranksep=0.55,
+    pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11,
+    fontcolor="#0F172A",
+    color="#94A3B8",
+    fillcolor="#F1F5F9",
+    margin="0.20,0.12",
+    penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10,
+    color="#64748B",
+    fontcolor="#475569",
+    penwidth=1.1,
+    arrowsize=0.7
+  ];
+
+  // ─── Inputs ──────────────────────────────────
+  subgraph cluster_inputs {
+    label="1. Inputs (CodingLayout.tsx)";
+    labeljust="l"; fontsize=11; fontcolor="#0047AB"; color="#0047AB";
+    style="rounded,filled"; fillcolor="#EFF6FF"; penwidth=1.4;
+
+    paste [label="Paste\n<textarea>\nproblemText", fillcolor="#DBEAFE", color="#0047AB"];
+    url   [label="URL\nproblemUrl\n+ Fetch button", fillcolor="#DBEAFE", color="#0047AB"];
+    image [label="Image / Screenshot\nbase64 data URL", fillcolor="#DBEAFE", color="#0047AB"];
+  }
+
+  // ─── URL fetch ────────────────────────────────
+  subgraph cluster_fetch {
+    label="2a. URL fetch (lumora-backend)";
+    labeljust="l"; fontsize=11; fontcolor="#15803D"; color="#15803D";
+    style="rounded,filled"; fillcolor="#F0FDF4"; penwidth=1.4;
+
+    fetch_route [label="POST /api/v1/coding/fetch-problem\nfetch() + HTML strip\nClaude Haiku extract first 5K chars", fillcolor="#DCFCE7", color="#15803D"];
+  }
+
+  // ─── Image OCR ────────────────────────────────
+  subgraph cluster_ocr {
+    label="2b. Screenshot OCR (lumora-backend)";
+    labeljust="l"; fontsize=11; fontcolor="#15803D"; color="#15803D";
+    style="rounded,filled"; fillcolor="#F0FDF4"; penwidth=1.4;
+
+    capture_route [label="POST /api/v1/coding/capture\nAnthropic vision API\n{ type: 'image', source: base64 }", fillcolor="#DCFCE7", color="#15803D"];
+  }
+
+  // ─── Solve endpoint ───────────────────────────
+  subgraph cluster_solve {
+    label="3. Solve endpoint (POST /api/v1/coding/solve)";
+    labeljust="l"; fontsize=11; fontcolor="#6D28D9"; color="#6D28D9";
+    style="rounded,filled"; fillcolor="#F5F3FF"; penwidth=1.4;
+
+    quota_check [label="checkLimit(coding_usage)\nfree 2/day, paid 20/day", fillcolor="#EDE9FE", color="#6D28D9"];
+    model_select [label="Pick model\nSonnet 4 (paid) /\nHaiku 4.5 (free)", fillcolor="#EDE9FE", color="#6D28D9"];
+    system_prompt [label="buildCodingSystemPrompt\n6 hard rules,\n27 canonical patternTags", fillcolor="#EDE9FE", color="#6D28D9"];
+    three_pass [label="3-pass reliability\nstream → strict-reminder →\nfallback model", fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"];
+  }
+
+  // ─── Anthropic ────────────────────────────────
+  anthropic [
+    label="Anthropic\nMAX_TOKENS_CODING = 16000\nno prompt cache",
+    fillcolor="#FFF7ED", color="#C2410C", fontcolor="#9A3412"
+  ];
+
+  // ─── Parsing ──────────────────────────────────
+  subgraph cluster_parse {
+    label="4. JSON extraction + render (browser)";
+    labeljust="l"; fontsize=11; fontcolor="#7C2D12"; color="#7C2D12";
+    style="rounded,filled"; fillcolor="#FFF7ED"; penwidth=1.4;
+
+    extract_json [label="extractJsonFromText\n4 strategies:\nfences → first-{ → balanced-brace → brace-stitch", fillcolor="#FFEDD5", color="#9A3412"];
+    sse_answer [label="SSE answer event\n{ parsed: { json, format: 'ascend_json' } }", fillcolor="#FFEDD5", color="#9A3412"];
+    render [label="3 solution cards\napproach + complexity +\nnarration + trace + per-line\nMonaco editor sync", fillcolor="#FEF3C7", color="#C9A227", fontcolor="#7C5E00"];
+  }
+
+  // ─── Persistence ──────────────────────────────
+  db [
+    label="lumora_messages\ncoding_usage\nai_hours_usage",
+    shape=cylinder,
+    fillcolor="#E0F2FE", color="#0369A1", fontcolor="#0369A1"
+  ];
+
+  // ─── Edges ────────────────────────────────────
+  paste -> quota_check [label="problemText"];
+  url -> fetch_route -> quota_check [label="cleaned text"];
+  image -> capture_route -> quota_check [label="extracted problem"];
+
+  quota_check -> model_select -> system_prompt -> three_pass;
+  three_pass -> anthropic [label="3 attempts"];
+  anthropic -> extract_json [label="JSON tokens"];
+  extract_json -> sse_answer -> render;
+  sse_answer -> db [label="recordCodingUsage"];
+}
