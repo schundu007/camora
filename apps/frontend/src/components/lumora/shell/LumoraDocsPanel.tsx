@@ -1215,30 +1215,214 @@ function PrepContentRenderer({ content }: { content: any }) {
     );
   }
 
-  // Tech Stack table
+  // Tech Stack — LC-modern card grid (used by Pitch + simple-shape sections)
   if (data.techStack && Array.isArray(data.techStack)) {
     mark('techStack');
     els.push(
       <div key="techstack">
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>Tech Stack ({data.techStack.length})</div>
-        <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid var(--border)' }}>
-          <table className="w-full text-xs">
-            <thead><tr style={{ background: 'var(--bg-elevated)' }}>
-              <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Technology</th>
-              <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Category</th>
-              <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Experience</th>
-              <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Relevance</th>
-            </tr></thead>
-            <tbody>{data.techStack.map((t: any, i: number) => (
-              <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="px-3 py-2 font-semibold" style={{ color: 'var(--cam-primary)' }}>{t.technology || t.name}</td>
-                <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{t.category}</td>
-                <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{t.experience}</td>
-                <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{t.relevance}</td>
-              </tr>
-            ))}</tbody>
-          </table>
+        <SectionHeading label={`Tech Stack · ${data.techStack.length}`} color={LC.navy} />
+        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+          {data.techStack.filter((t: any) => t && typeof t === 'object').map((t: any, i: number) => (
+            <div
+              key={i}
+              className="rounded-xl p-3.5 transition-transform hover:scale-[1.01]"
+              style={paperCard(LC.navy)}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-bold font-mono leading-tight" style={{ color: LC.navy }}>
+                    {safeText(t.technology || t.name)}
+                  </div>
+                  {t.category && (
+                    <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {safeText(t.category)}
+                    </div>
+                  )}
+                </div>
+                {t.experience && (
+                  <span
+                    className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: `${LC.gold}15`, color: LC.gold, border: `1px solid ${LC.gold}40` }}
+                  >
+                    {safeText(t.experience)}
+                  </span>
+                )}
+              </div>
+              {t.relevance && (
+                <p className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {safeText(t.relevance)}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
+      </div>
+    );
+  }
+
+  // Technologies (dedicated Tech Stack section) — comprehensive card per technology
+  if (data.technologies && Array.isArray(data.technologies) && data.technologies.length > 0) {
+    mark('technologies');
+    const importancePill = (imp: any) => {
+      const v = String(imp || '').toLowerCase();
+      const tone = v === 'high' || v === 'critical' ? LC.hard : v === 'medium' || v === 'mid' ? LC.medium : LC.easy;
+      return (
+        <span
+          className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+          style={{ background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}
+        >
+          {safeText(imp)}
+        </span>
+      );
+    };
+    els.push(
+      <div key="technologies" className="space-y-4">
+        <SectionHeading label={`Technologies · ${data.technologies.length}`} color={LC.navy} />
+        {data.technologies.filter((tech: any) => tech && typeof tech === 'object').map((tech: any, ti: number) => (
+          <article
+            key={ti}
+            className="rounded-xl overflow-hidden"
+            style={{
+              border: `1px solid ${LC.paperBorder}`,
+              background: LC.paper,
+              boxShadow: `0 1px 0 ${LC.pageRule}, 0 8px 24px -16px rgba(20,20,40,0.18)`,
+            }}
+          >
+            {/* Header */}
+            <header
+              className="px-5 pt-4 pb-3 relative"
+              style={{
+                borderBottom: `1px solid ${LC.pageRule}`,
+                background: `linear-gradient(180deg, ${LC.navy}10 0%, transparent 100%)`,
+              }}
+            >
+              <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `linear-gradient(180deg, ${LC.gold} 0%, ${LC.navy} 100%)` }} />
+              <div className="flex items-baseline gap-2.5 flex-wrap">
+                <h3 className="text-[18px] font-extrabold font-mono tracking-tight" style={{ color: LC.navy }}>
+                  {safeText(tech.name)}
+                </h3>
+                {tech.importance && importancePill(tech.importance)}
+              </div>
+              {tech.whyImportant && (
+                <p className="text-[13px] leading-relaxed mt-2" style={{ color: 'var(--text-secondary)' }}>
+                  {safeText(tech.whyImportant)}
+                </p>
+              )}
+            </header>
+
+            <div className="px-5 py-4 space-y-4">
+              {/* Concepts to Know */}
+              {Array.isArray(tech.conceptsToKnow) && tech.conceptsToKnow.length > 0 && (
+                <div>
+                  <SectionHeading label="Concepts to Know" color={LC.problem} />
+                  <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                    {tech.conceptsToKnow.filter((c: any) => c && typeof c === 'object').map((c: any, ci: number) => (
+                      <div key={ci} className="rounded-lg p-3" style={paperCard(LC.problem)}>
+                        {c.concept && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{safeText(c.concept)}</div>}
+                        {c.explanation && <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{safeText(c.explanation)}</p>}
+                        {c.whyAsked && <p className="text-xs italic mt-1.5" style={{ color: LC.problem }}>Why asked: {safeText(c.whyAsked)}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Questions */}
+              {Array.isArray(tech.questions) && tech.questions.length > 0 && (
+                <div>
+                  <SectionHeading label="Practice Questions" color={LC.approach} />
+                  <div className="space-y-2">
+                    {tech.questions.filter((q: any) => q && typeof q === 'object').map((q: any, qi: number) => (
+                      <div key={qi} className="rounded-lg overflow-hidden" style={paperCard(LC.approach)}>
+                        <div className="px-3 py-2 flex items-baseline gap-2 flex-wrap" style={{ background: `${LC.approach}14`, borderBottom: `1px solid ${LC.approach}25` }}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: `${LC.approach}20`, color: LC.approach }}>
+                            Q{qi + 1}
+                          </span>
+                          <span className="text-sm font-bold flex-1" style={{ color: 'var(--text-primary)' }}>{safeText(q.question)}</span>
+                          {q.difficulty && <DifficultyPill value={q.difficulty} />}
+                        </div>
+                        <div className="px-3 py-2.5 space-y-2">
+                          {q.answer && <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>{safeText(q.answer)}</p>}
+                          {q.codeExample && <CodeBlock code={String(q.codeExample)} language="code" />}
+                          {Array.isArray(q.followUps) && q.followUps.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.followup }}>Follow-ups</div>
+                              <ul className="space-y-0.5">
+                                {q.followUps.map((f: any, fi: number) => (
+                                  <li key={fi} className="text-xs flex gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                    <span style={{ color: LC.followup }}>↳</span>{safeText(f)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {Array.isArray(q.commonMistakes) && q.commonMistakes.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.mistake }}>Common Mistakes</div>
+                              <ul className="space-y-0.5">
+                                {q.commonMistakes.map((m: any, mi: number) => (
+                                  <li key={mi} className="text-xs flex gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                    <span style={{ color: LC.mistake }}>•</span>{safeText(m)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Best Practices vs Anti-Patterns side-by-side */}
+              {(Array.isArray(tech.bestPractices) && tech.bestPractices.length > 0) || (Array.isArray(tech.antiPatterns) && tech.antiPatterns.length > 0) ? (
+                <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                  {Array.isArray(tech.bestPractices) && tech.bestPractices.length > 0 && (
+                    <div>
+                      <SectionHeading label="Best Practices" color={LC.api} />
+                      <div className="space-y-2">
+                        {tech.bestPractices.filter((bp: any) => bp && typeof bp === 'object').map((bp: any, bi: number) => (
+                          <div key={bi} className="rounded-lg p-3" style={paperCard(LC.api)}>
+                            {bp.practice && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✓ {safeText(bp.practice)}</div>}
+                            {bp.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(bp.when)}</p>}
+                            {bp.codeExample && <div className="mt-2"><CodeBlock code={String(bp.codeExample)} language="code" /></div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {Array.isArray(tech.antiPatterns) && tech.antiPatterns.length > 0 && (
+                    <div>
+                      <SectionHeading label="Anti-Patterns" color={LC.edge} />
+                      <div className="space-y-2">
+                        {tech.antiPatterns.filter((ap: any) => ap && typeof ap === 'object').map((ap: any, ai: number) => (
+                          <div key={ai} className="rounded-lg p-3" style={paperCard(LC.edge)}>
+                            {ap.pattern && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✗ {safeText(ap.pattern)}</div>}
+                            {ap.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(ap.problem)}</p>}
+                            {ap.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(ap.solution)}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {/* Performance Topics — chip strip */}
+              {Array.isArray(tech.performanceTopics) && tech.performanceTopics.length > 0 && (
+                <div>
+                  <SectionHeading label="Performance Topics" color={LC.examples} />
+                  <div className="flex flex-wrap gap-1.5">
+                    {tech.performanceTopics.map((p: any, pi: number) => (
+                      <TagChip key={pi} label={safeText(p)} color={LC.examples} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
       </div>
     );
   }
