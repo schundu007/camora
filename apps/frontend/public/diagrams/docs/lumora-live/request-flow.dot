@@ -1,0 +1,103 @@
+// Lumora Live — End-to-End Request Flow (compact)
+// Render: dot -Tpng request-flow.dot -o request-flow.png
+digraph LumoraRequestFlow {
+  graph [
+    bgcolor="white",
+    rankdir="TB",
+    splines="spline",
+    nodesep=0.4,
+    ranksep=0.55,
+    pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11,
+    fontcolor="#0F172A",
+    color="#94A3B8",
+    fillcolor="#F1F5F9",
+    margin="0.20,0.12",
+    penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10,
+    color="#64748B",
+    fontcolor="#475569",
+    penwidth=1.1,
+    arrowsize=0.7
+  ];
+
+  // ─── 1. Capture ───────────────────────────────────────
+  subgraph cluster_1 {
+    label="1. Capture (browser)";
+    labeljust="l"; fontsize=11; fontcolor="#0047AB"; color="#0047AB";
+    style="rounded,filled"; fillcolor="#EFF6FF"; penwidth=1.4;
+
+    media [label="getUserMedia /\ngetDisplayMedia", fillcolor="#DBEAFE", color="#0047AB"];
+    rec [label="MediaRecorder\nwebm/opus + VAD\n(RMS, threshold 0.015)", fillcolor="#DBEAFE", color="#0047AB"];
+    chunk [label="Audio chunk\n(0.3 – 5.0 s)", fillcolor="#FFFFFF", color="#0047AB"];
+  }
+
+  // ─── 2. Transcription ─────────────────────────────────
+  subgraph cluster_2 {
+    label="2. Transcription (Lumora backend)";
+    labeljust="l"; fontsize=11; fontcolor="#15803D"; color="#15803D";
+    style="rounded,filled"; fillcolor="#F0FDF4"; penwidth=1.4;
+
+    transcribe_route [label="POST /api/v1/transcribe\nauth + multer + checkLimit", fillcolor="#DCFCE7", color="#15803D"];
+    diarize [label="ai-services /speaker/diarize\n(if filter_user_voice = true)", fillcolor="#DCFCE7", color="#15803D"];
+    whisper [label="ffmpeg → 16 kHz WAV\nOpenAI Whisper-1\n+ hallucination filter", fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"];
+    transcript [label="{ text, latency_ms,\n  skipped, reason }", fillcolor="#FFFFFF", color="#15803D"];
+  }
+
+  // ─── 3. Gating ────────────────────────────────────────
+  subgraph cluster_3 {
+    label="3. Question gating (browser)";
+    labeljust="l"; fontsize=11; fontcolor="#7C2D12"; color="#7C2D12";
+    style="rounded,filled"; fillcolor="#FFF7ED"; penwidth=1.4;
+
+    gate [label="accumulatedTextRef\n+ debounced isQuestion()\n(600 ms / 2000 ms)", fillcolor="#FFEDD5", color="#9A3412"];
+  }
+
+  // ─── 4. Sona stream ───────────────────────────────────
+  subgraph cluster_4 {
+    label="4. Sona answer stream (Lumora backend → Anthropic)";
+    labeljust="l"; fontsize=11; fontcolor="#6D28D9"; color="#6D28D9";
+    style="rounded,filled"; fillcolor="#F5F3FF"; penwidth=1.4;
+
+    stream_route [label="POST /api/v1/stream\nSSE: X-Accel-Buffering: no", fillcolor="#EDE9FE", color="#6D28D9"];
+    inference [label="load last 12 messages\nmodel select (Sonnet/Haiku)\nsystem prompt: cache_control ephemeral", fillcolor="#EDE9FE", color="#6D28D9"];
+    anthropic [label="Anthropic stream\ntext_delta loop", fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"];
+    sse_out [label="SSE events\nstatus → token* → answer → done", fillcolor="#EDE9FE", color="#6D28D9"];
+  }
+
+  // ─── 5. Persistence ───────────────────────────────────
+  subgraph cluster_5 {
+    label="5. Persistence + metering (Postgres)";
+    labeljust="l"; fontsize=11; fontcolor="#0369A1"; color="#0369A1";
+    style="rounded,filled"; fillcolor="#F0F9FF"; penwidth=1.4;
+
+    db [label="lumora_messages\nlumora_usage_logs\nai_hours_usage", shape=cylinder, fillcolor="#E0F2FE", color="#0369A1"];
+  }
+
+  // ─── 6. UI render ────────────────────────────────────
+  ui [
+    label="UI: appendStreamChunk\nprogressive parse of\n[HEADLINE] / [ANSWER] / [CODE]",
+    fillcolor="#FEF3C7",
+    color="#C9A227",
+    fontcolor="#7C5E00"
+  ];
+
+  // Edges — top to bottom
+  media -> rec -> chunk;
+  chunk -> transcribe_route [label="multipart upload"];
+  transcribe_route -> diarize -> whisper -> transcript;
+  transcript -> gate [label="append"];
+  gate -> stream_route [label="if complete question"];
+  stream_route -> inference -> anthropic -> sse_out;
+  sse_out -> ui [label="token / answer events"];
+  sse_out -> db [label="on answer event"];
+}

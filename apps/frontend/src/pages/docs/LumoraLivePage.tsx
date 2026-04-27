@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import DocsPageLayout from './_layout';
 import DocsCallout from '../../components/shared/docs/DocsCallout';
 import DocsTable from '../../components/shared/docs/DocsTable';
+import DocsDiagram from '../../components/shared/docs/DocsDiagram';
 
 const codeBlockStyle = {
   background: 'var(--bg-elevated)',
@@ -101,15 +102,12 @@ export default function LumoraLivePage() {
           generation. External providers — Anthropic for answer streaming, OpenAI for Whisper
           transcription — sit behind the Lumora backend.
         </p>
-        <pre style={codeBlockStyle}>{`Browser  ─────────────►  Lumora backend  ─────────►  Anthropic (Claude Sonnet/Haiku)
-(Vercel)                  (Railway)            \\
-   │                                            └──►  OpenAI (Whisper-1)
-   │
-   └─────────►  ai-services (FastAPI / Railway)
-                   ├── /speaker/{enroll,verify,diarize}  → resemblyzer
-                   └── /diagram/generate                  → Anthropic + Graphviz subprocess
-
-   Cross-cutting: Postgres (shared with Capra), Stripe (billing), Google OAuth (SSO)`}</pre>
+        <DocsDiagram
+          src="/diagrams/docs/lumora-live/system-context.png"
+          alt="System context diagram showing the candidate's browser connecting to the Lumora frontend on Vercel and the Lumora backend on Railway, which calls AI services, Postgres, Anthropic, OpenAI, Stripe, and Google OAuth."
+          label="Figure 1 — System context"
+          caption="Camora-owned services (blue) sit inside the solid rounded boundary; external providers (Anthropic, OpenAI, Stripe, Google OAuth) sit in the dashed boundary. Each edge is labeled with the concrete protocol or route that crosses it."
+        />
         <p className={bodyP} style={bodyColor}>
           Auth is shared with the Capra prep platform via the <code style={inlineCodeStyle}>cariara_sso</code> cookie
           (domain <code style={inlineCodeStyle}>.cariara.com</code>, 30-day TTL). The Lumora backend
@@ -167,27 +165,20 @@ export default function LumoraLivePage() {
           (cold), which is short enough that the candidate sees the answer flowing in while the
           interviewer is still talking.
         </p>
-        <pre style={codeBlockStyle}>{`(Browser)                       (Lumora backend)             (Providers)
-
-MediaRecorder              POST /api/v1/transcribe
-chunk (webm/opus)  ──────►  multer → ffmpeg → 16k WAV  ──►   OpenAI Whisper-1
-                            hallucination regex filter        ↓ text
-                            (optional) /speaker/diarize  ──►  ai-services
-                                                              resemblyzer cosine
-                                                              ↓ should_transcribe
-                            ◄────  { text, latency_ms }
-
-isQuestion(transcript)?
-  yes:
-POST /api/v1/stream         load last 12 messages
-{ text, mode }     ──────►  build prompt (cached)        ──►  Anthropic stream
-SSE consumer       ◄──────  res.write(event: token …)        text_delta loop
-  appendStreamChunk         on answer event:
-                              persist user + assistant msg
-                              record ai_hours_usage row
-                              record lumora_usage_logs row`}</pre>
+        <DocsDiagram
+          src="/diagrams/docs/lumora-live/request-flow.png"
+          alt="Five-phase request flow: capture in the browser, transcription on the Lumora backend with optional speaker diarization, debounced question gating in the browser, Sona answer streaming over SSE from the backend through Anthropic, and persistence + metering writes to Postgres."
+          label="Figure 2 — End-to-end request flow"
+          caption="The five phases each map to a distinct service boundary. Edges carry the actual protocol or library call that crosses the boundary — multipart upload, speaker diarization, ffmpeg + Whisper, debounced isQuestion, prompt-cached Anthropic stream, and the SSE token / answer events."
+        />
 
         <h3 id="hld-deployment" className={sectionH3}>Deployment topology</h3>
+        <DocsDiagram
+          src="/diagrams/docs/lumora-live/deployment-topology.png"
+          alt="Deployment topology with Vercel hosting the static frontend, three Railway services (lumora-backend, ascend-backend, ai-services), a managed Postgres instance, and external providers Anthropic, OpenAI, Stripe, Google OAuth."
+          label="Figure 3 — Deployment topology"
+          caption="Each Railway service lists its build runtime, listening port, and healthcheck path. The browser establishes HTTPS connections to Vercel and to both backends; Lumora-backend talks to ai-services over Railway's private network and to OpenAI / Anthropic over public HTTPS."
+        />
         <DocsTable
           columns={[
             { key: 'svc', header: 'Service' },
@@ -480,6 +471,12 @@ SSE consumer       ◄──────  res.write(event: token …)        tex
           <code style={inlineCodeStyle}>apps/lumora-backend/src</code> or a hook under{' '}
           <code style={inlineCodeStyle}>apps/frontend/src</code>.
         </p>
+        <DocsDiagram
+          src="/diagrams/docs/lumora-live/bounded-contexts.png"
+          alt="Six bounded contexts — Capture, Voice Identity, Transcription, Inference, Conversation, Metering — connected by named domain events showing the direction of communication and the payload schema on each event."
+          label="Figure 4 — Bounded contexts and domain events"
+          caption="Each context is color-coded by domain (Capture in blue, Voice Identity in violet, Transcription in green, Inference in amber, Conversation in light blue, Metering in gold). Solid color is the context surface; dashed arrows are domain events with their payload contract. Note the back-pressure path — Metering can publish QuotaExceeded which short-circuits Inference and Transcription with a 429."
+        />
         <DocsTable
           columns={[
             { key: 'ctx', header: 'Context' },
