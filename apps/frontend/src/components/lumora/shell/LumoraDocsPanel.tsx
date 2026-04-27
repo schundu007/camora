@@ -190,6 +190,21 @@ function fmtKey(k: string): string {
   return k.replace(/([A-Z])/g, ' $1').trim().replace(/^./, (c) => c.toUpperCase());
 }
 
+/** Best-effort JSON parse — returns parsed value if the string is valid JSON,
+ *  null otherwise. Used to heal stringified-object values that snuck through
+ *  schema validation or are coming back from stale localStorage. */
+function tryParseJsonValue(s: string): any {
+  if (typeof s !== 'string') return null;
+  const trimmed = s.trim();
+  if (!trimmed) return null;
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return null;
+  }
+}
+
 /** Recursively render any value: string, array (of strings or objects), or object.
  *  This is the catch-all that prevents `[object Object]` from ever leaking
  *  into the UI when nested arrays contain objects. */
@@ -197,6 +212,9 @@ function ValueRenderer({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
   if (val === null || val === undefined) return null;
 
   if (typeof val === 'string') {
+    // Heal stringified JSON — if the value is a JSON-shaped string, parse and recurse
+    const parsed = tryParseJsonValue(val);
+    if (parsed !== null) return <ValueRenderer val={parsed} depth={depth} />;
     return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{val}</span>;
   }
   if (typeof val === 'number' || typeof val === 'boolean') {
@@ -266,35 +284,77 @@ function GenericField({ label, val }: { label: string; val: any }) {
 // visual language comes through regardless of the active app theme.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** LC palette — the exact tones from leetcode.com so users instantly
- *  recognize the design language. Avoid theme tokens here on purpose. */
+/** LC + Camora palette — landing-page tones blended with LC's section colors.
+ *  Cream `paper` is the book-style page; each content type gets a tinted
+ *  card on top of it instead of a grey wall. Avoid theme tokens on purpose. */
 const LC = {
-  // Difficulty
+  // Difficulty (LC's exact tones)
   easy:   { fg: '#00B8A3', bg: 'rgba(0,184,163,0.10)',  border: 'rgba(0,184,163,0.40)' },
   medium: { fg: '#FFB800', bg: 'rgba(255,184,0,0.10)',  border: 'rgba(255,184,0,0.40)' },
   hard:   { fg: '#FF375F', bg: 'rgba(255,55,95,0.10)',  border: 'rgba(255,55,95,0.40)' },
-  // Section accents
-  problem:  '#0EA5E9',   // blue
-  examples: '#00B8A3',   // teal-green
-  approach: '#A855F7',   // purple
-  edge:     '#FF375F',   // red
-  mistake:  '#F59E0B',   // amber
-  followup: '#0EA5E9',   // blue
+
+  // Section accents — LC-inspired, paired with Camora navy/gold for brand fit
+  navy:        '#26619C',   // Camora primary
+  gold:        '#C9A227',   // Camora gold-leaf
+  problem:     '#0EA5E9',   // LC blue (description tab)
+  examples:    '#00B8A3',   // LC teal
+  approach:    '#A855F7',   // LC purple
+  edge:        '#FF375F',   // LC red
+  mistake:     '#F59E0B',   // LC amber
+  followup:    '#0EA5E9',
+  // System-design specific accents
+  requirements:  '#0EA5E9',  // blue
+  capacity:      '#A855F7',  // purple
+  architecture:  '#00B8A3',  // teal
+  database:      '#F59E0B',  // amber
+  api:           '#16A34A',  // green
+  tradeoffs:     '#EC4899',  // pink/red
+  scalability:   '#6366F1',  // indigo
+  clarify:       '#0EA5E9',  // blue (same as problem family)
+
+  // STAR
   star: {
     situation: '#00B8A3',
     task:      '#0EA5E9',
     action:    '#F59E0B',
-    result:    '#00B8A3',
+    result:    '#16A34A',
   },
-  // Code editor (VSCode-dark inspired so it pops in any theme)
+
+  // Code editor (VSCode-dark — pops on any theme)
   codeBg:    '#1E1E1E',
   codeFg:    '#D4D4D4',
   codeHdr:   '#2D2D2D',
   codeMuted: '#9CA3AF',
-  // Card surfaces (theme-agnostic — render the same in light and dark)
-  cardBg:     'rgba(127,127,127,0.04)',  // very light tint that reads on either theme
-  cardBorder: 'rgba(127,127,127,0.18)',
+
+  // LC-landing-style paper. LC uses CLEAN WHITE bodies in light mode and
+  // a near-black charcoal (#0E1116) in dark mode. We use translucent rgba
+  // so it reads on either theme without a grey wall.
+  paper:       'rgba(255,255,255,0.65)',          // white paper in light, soft over-tone in dark
+  paperBorder: 'rgba(38,97,156,0.18)',            // soft navy border (Camora primary tinted)
+  pageRule:    'rgba(38,97,156,0.22)',
+  // Bright section-color accents — LC landing uses solid, saturated heads:
+  //   Start Exploring (teal), Questions Community Contests (blue),
+  //   Companies & Candidates (amber). We mirror that cadence.
 };
+
+/** Tinted card surface — strong enough to be visible on white-paper or
+ *  dark-paper without grey walls. Used everywhere instead of bg-elevated. */
+function paperCard(accent: string) {
+  return {
+    background: `linear-gradient(180deg, ${accent}0F 0%, ${accent}05 100%)`,
+    border: `1px solid ${accent}40`,
+    boxShadow: `0 1px 0 ${accent}10`,
+  };
+}
+
+/** LC-landing-style "hero header" used at the top of every question.
+ *  Solid colored band, bright label text. */
+function sectionHero(accent: string) {
+  return {
+    background: `${accent}14`,
+    borderBottom: `2px solid ${accent}`,
+  };
+}
 
 /** Difficulty pill — Easy/Medium/Hard with LC's exact colors. */
 function DifficultyPill({ value }: { value: string }) {
@@ -463,15 +523,26 @@ function ApproachCard({ approach, index }: { approach: any; index: number }) {
   );
 }
 
-/** LC-style section heading — colored left rail + uppercase label.
- *  The rail color signals what kind of section this is at a glance. */
+/** LC-landing-style section heading — bold colored typography like their
+ *  homepage section heads ("Start Exploring", "Companies & Candidates").
+ *  Left hexagon dot + uppercase title in the section's accent color. */
 function SectionHeading({ label, color = LC.problem }: { label: string; color?: string }) {
   return (
-    <div className="flex items-center gap-2 mb-2">
-      <span className="block w-1 h-4 rounded-sm" style={{ background: color }} />
-      <span className="text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color }}>
+    <div className="flex items-center gap-2.5 mb-2.5">
+      {/* Hexagon-ish dot — LC's iconography uses geometric badges */}
+      <span
+        className="block flex-shrink-0"
+        style={{
+          width: 10,
+          height: 10,
+          background: color,
+          clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+        }}
+      />
+      <h4 className="text-[13px] font-extrabold tracking-tight" style={{ color }}>
         {label}
-      </span>
+      </h4>
+      <span className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${color}50 0%, transparent 100%)` }} />
     </div>
   );
 }
@@ -515,27 +586,34 @@ function PrepContentRenderer({ content }: { content: any }) {
   // Build elements
   const els: JSX.Element[] = [];
 
-  // Summary
+  // Summary — book-style hero block
   if (data.summary) {
     mark('summary');
     const summaryStr = String(data.summary).trim();
     const looksLikeJson = summaryStr.startsWith('{') && /["']\s*:/.test(summaryStr) && summaryStr.length > 80;
     if (looksLikeJson) {
-      // Parsing genuinely failed upstream. Don't dump raw JSON to the user —
-      // show a clear "this needs regeneration" message instead.
       els.push(
-        <div key="summary" className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px dashed var(--warning)' }}>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--warning-text)' }}>Generation incomplete</div>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            The model returned malformed output. Click <strong style={{ color: 'var(--warning-text)' }}>Re-generate</strong> above to retry.
+        <div key="summary" className="rounded-xl p-4" style={paperCard(LC.medium.fg)}>
+          <SectionHeading label="Generation Incomplete" color={LC.medium.fg} />
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+            The model returned malformed output. Click <strong style={{ color: LC.medium.fg }}>Re-generate</strong> above to retry.
           </p>
         </div>
       );
     } else {
       els.push(
-        <div key="summary" className="rounded-lg p-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>Summary</div>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
+        <div
+          key="summary"
+          className="rounded-xl p-5 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${LC.navy}0F 0%, ${LC.gold}08 100%)`,
+            border: `1px solid ${LC.navy}30`,
+            boxShadow: `0 1px 0 ${LC.gold}30`,
+          }}
+        >
+          <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `linear-gradient(180deg, ${LC.gold} 0%, ${LC.navy} 100%)` }} />
+          <SectionHeading label="Summary" color={LC.navy} />
+          <p className="text-[15px] leading-[1.65]" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
         </div>
       );
     }
@@ -565,29 +643,28 @@ function PrepContentRenderer({ content }: { content: any }) {
     );
   }
 
-  // Company Insights — schema differs by section: HR returns an object,
-  // Coding returns a string. Render appropriately for each.
+  // Company Insights — amber accent (LC landing's "Companies & Candidates" tone)
   if (data.companyInsights) {
     mark('companyInsights');
     const ci = data.companyInsights;
     els.push(
-      <div key="insights" className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--cam-primary)' }}>Company Insights</div>
+      <div key="insights" className="rounded-xl p-4" style={paperCard(LC.medium.fg)}>
+        <SectionHeading label="Company Insights" color={LC.medium.fg} />
         {typeof ci === 'string' ? (
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{ci}</p>
+          <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>{ci}</p>
         ) : Array.isArray(ci) ? (
           <ValueRenderer val={ci} />
         ) : typeof ci === 'object' ? (
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
             {Object.entries(ci).map(([k, v]) => (
-              <div key={k}>
-                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}:</span>
-                <div className="mt-0.5"><ValueRenderer val={v} /></div>
+              <div key={k} className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>{fmtKey(k)}</div>
+                <div><ValueRenderer val={v} /></div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(ci)}</p>
+          <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{String(ci)}</p>
         )}
       </div>
     );
@@ -613,29 +690,34 @@ function PrepContentRenderer({ content }: { content: any }) {
             <article
               key={i}
               className="rounded-xl overflow-hidden"
-              style={{ border: `1px solid ${LC.cardBorder}`, background: 'var(--bg-surface)' }}
+              style={{
+                border: `1px solid ${LC.paperBorder}`,
+                background: LC.paper,
+                boxShadow: `0 1px 0 ${LC.pageRule}, 0 8px 24px -16px rgba(20,20,40,0.18)`,
+              }}
             >
-              {/* ── LC-style header: number + title + difficulty pill + chips ── */}
+              {/* ── LC-style header: gold accent strip + number + title + difficulty pill + chips ── */}
               <header
-                className="px-5 pt-4 pb-3"
+                className="px-5 pt-4 pb-3 relative"
                 style={{
-                  borderBottom: `1px solid ${LC.cardBorder}`,
-                  background: `linear-gradient(180deg, ${LC.problem}06 0%, transparent 100%)`,
+                  borderBottom: `1px solid ${LC.pageRule}`,
+                  background: `linear-gradient(180deg, ${LC.gold}10 0%, transparent 100%)`,
                 }}
               >
+                <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `linear-gradient(180deg, ${LC.gold} 0%, ${LC.navy} 100%)` }} />
                 <div className="flex items-start gap-3">
                   <span
-                    className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-[13px] font-bold font-mono"
+                    className="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-[14px] font-bold font-mono"
                     style={{
-                      background: `${LC.problem}14`,
-                      color: LC.problem,
-                      border: `1px solid ${LC.problem}40`,
+                      background: LC.navy,
+                      color: '#FFFFFF',
+                      boxShadow: `0 2px 6px ${LC.navy}40`,
                     }}
                   >
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+                    <h3 className="text-[16px] font-bold leading-snug tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h3>
                     <div className="flex items-center gap-1.5 flex-wrap mt-2">
                       {q.difficulty && <DifficultyPill value={q.difficulty} />}
                       {chips.map((c, ci) => <TagChip key={ci} label={c.label} color={c.color} />)}
@@ -843,17 +925,237 @@ function PrepContentRenderer({ content }: { content: any }) {
 
                 {/* Tips */}
                 {q.tips && (qRendered.add('tips'),
-                  <div className="rounded-lg p-3 text-xs leading-relaxed" style={{ background: 'rgba(245,158,11,0.06)', color: 'var(--text-secondary)', borderLeft: '3px solid var(--warning, #F59E0B)' }}>
-                    <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Tip:</span>
-                    {Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}
+                  <div className="rounded-lg p-3 text-xs leading-relaxed" style={paperCard(LC.gold)}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.gold }}>Tip:</span>
+                    <span style={{ color: 'var(--text-primary)' }}>{Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</span>
                   </div>
                 )}
+
+                {/* ── SYSTEM DESIGN TYPED RENDERERS ── */}
+
+                {/* Clarifying Questions */}
+                {Array.isArray(q.clarifyingQuestions) && q.clarifyingQuestions.length > 0 && (() => {
+                  qRendered.add('clarifyingQuestions');
+                  return (
+                    <div>
+                      <SectionHeading label="Clarifying Questions" color={LC.clarify} />
+                      <div className="rounded-lg p-3" style={paperCard(LC.clarify)}>
+                        <ul className="space-y-1.5">
+                          {q.clarifyingQuestions.map((cq: string, ci: number) => (
+                            <li key={ci} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
+                              <span style={{ color: LC.clarify }}>?</span><span>{cq}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Requirements (functional + non-functional) */}
+                {q.requirements && typeof q.requirements === 'object' && (() => {
+                  qRendered.add('requirements');
+                  const r = q.requirements;
+                  const fn = Array.isArray(r.functional) ? r.functional : [];
+                  const nfn = Array.isArray(r.nonFunctional) ? r.nonFunctional : [];
+                  return (
+                    <div>
+                      <SectionHeading label="Requirements" color={LC.requirements} />
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                        {fn.length > 0 && (
+                          <div className="rounded-lg p-3" style={paperCard(LC.requirements)}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.requirements }}>Functional</div>
+                            <ul className="space-y-1.5">
+                              {fn.map((f: string, fi: number) => (
+                                <li key={fi} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
+                                  <span style={{ color: LC.requirements }}>•</span><span>{f}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {nfn.length > 0 && (
+                          <div className="rounded-lg p-3" style={paperCard(LC.scalability)}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.scalability }}>Non-Functional</div>
+                            <ul className="space-y-1.5">
+                              {nfn.map((f: string, fi: number) => (
+                                <li key={fi} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
+                                  <span style={{ color: LC.scalability }}>•</span><span>{f}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Capacity Estimation */}
+                {q.capacityEstimation && typeof q.capacityEstimation === 'object' && (() => {
+                  qRendered.add('capacityEstimation');
+                  const c = q.capacityEstimation;
+                  const assumptions = Array.isArray(c.assumptions) ? c.assumptions : [];
+                  const calculations = Array.isArray(c.calculations) ? c.calculations : [];
+                  return (
+                    <div>
+                      <SectionHeading label="Capacity Estimation" color={LC.capacity} />
+                      <div className="rounded-lg overflow-hidden" style={paperCard(LC.capacity)}>
+                        {assumptions.length > 0 && (
+                          <div className="px-3 py-2.5 border-b" style={{ borderColor: `${LC.capacity}25` }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Assumptions</div>
+                            <ul className="space-y-1">
+                              {assumptions.map((a: string, ai: number) => (
+                                <li key={ai} className="text-sm flex gap-2" style={{ color: 'var(--text-primary)' }}>
+                                  <span style={{ color: LC.capacity }}>›</span><span>{a}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {calculations.length > 0 && (
+                          <div className="px-3 py-2.5">
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Calculations</div>
+                            <table className="w-full text-xs">
+                              <thead><tr style={{ color: LC.capacity }}>
+                                <th className="text-left font-bold uppercase text-[9px] tracking-wider pb-1">Metric</th>
+                                <th className="text-left font-bold uppercase text-[9px] tracking-wider pb-1">Formula</th>
+                                <th className="text-right font-bold uppercase text-[9px] tracking-wider pb-1">Result</th>
+                              </tr></thead>
+                              <tbody>
+                                {calculations.filter((cl: any) => cl && typeof cl === 'object').map((cl: any, ci: number) => (
+                                  <tr key={ci} style={{ borderTop: `1px solid ${LC.capacity}15` }}>
+                                    <td className="py-1.5 pr-2 font-medium" style={{ color: 'var(--text-primary)' }}>{cl.metric}</td>
+                                    <td className="py-1.5 pr-2 font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>{cl.calculation}</td>
+                                    <td className="py-1.5 font-mono font-bold text-right" style={{ color: LC.capacity }}>{cl.result}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Architecture */}
+                {q.architecture && typeof q.architecture === 'object' && (() => {
+                  qRendered.add('architecture');
+                  const a = q.architecture;
+                  const components = Array.isArray(a.components) ? a.components : [];
+                  return (
+                    <div>
+                      <SectionHeading label="Architecture" color={LC.architecture} />
+                      {a.diagramDescription && (
+                        <div className="rounded-lg p-3 mb-2" style={paperCard(LC.architecture)}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.architecture }}>Overview</div>
+                          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{a.diagramDescription}</p>
+                        </div>
+                      )}
+                      {components.length > 0 && (
+                        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+                          {components.filter((c: any) => c && typeof c === 'object').map((c: any, ci: number) => (
+                            <div key={ci} className="rounded-lg p-3" style={paperCard(LC.architecture)}>
+                              <div className="flex items-baseline justify-between gap-2 mb-1">
+                                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
+                                {c.technology && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: `${LC.architecture}15`, color: LC.architecture }}>{c.technology}</span>}
+                              </div>
+                              {c.responsibility && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{c.responsibility}</p>}
+                              {c.whyThisChoice && <p className="text-xs leading-relaxed mt-1.5 italic" style={{ color: 'var(--text-muted)' }}>{c.whyThisChoice}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Database Design */}
+                {q.databaseDesign && typeof q.databaseDesign === 'object' && (() => {
+                  qRendered.add('databaseDesign');
+                  const db = q.databaseDesign;
+                  return (
+                    <div>
+                      <SectionHeading label="Database Design" color={LC.database} />
+                      <div className="rounded-lg p-3" style={paperCard(LC.database)}>
+                        <ValueRenderer val={db} />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* API Design */}
+                {Array.isArray(q.apiDesign) && q.apiDesign.length > 0 && (() => {
+                  qRendered.add('apiDesign');
+                  return (
+                    <div>
+                      <SectionHeading label="API Design" color={LC.api} />
+                      <div className="space-y-2">
+                        {q.apiDesign.filter((e: any) => e && typeof e === 'object').map((e: any, ei: number) => (
+                          <div key={ei} className="rounded-lg overflow-hidden" style={paperCard(LC.api)}>
+                            {e.endpoint && (
+                              <div className="px-3 py-1.5 font-mono text-[12px] font-bold" style={{ background: `${LC.api}15`, color: LC.api }}>
+                                {e.endpoint}
+                              </div>
+                            )}
+                            <div className="px-3 py-2 space-y-1.5 text-xs font-mono">
+                              {e.request && <div><span className="text-[10px] font-sans font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Request:</span><span style={{ color: 'var(--text-primary)' }}>{e.request}</span></div>}
+                              {e.response && <div><span className="text-[10px] font-sans font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Response:</span><span style={{ color: 'var(--text-primary)' }}>{e.response}</span></div>}
+                              {e.notes && <p className="text-xs font-sans mt-1 italic" style={{ color: 'var(--text-muted)' }}>{e.notes}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Trade-offs */}
+                {Array.isArray(q.tradeOffs) && q.tradeOffs.length > 0 && (() => {
+                  qRendered.add('tradeOffs');
+                  return (
+                    <div>
+                      <SectionHeading label="Trade-offs" color={LC.tradeoffs} />
+                      <div className="space-y-2">
+                        {q.tradeOffs.filter((t: any) => t && typeof t === 'object').map((t: any, ti: number) => (
+                          <div key={ti} className="rounded-lg p-3" style={paperCard(LC.tradeoffs)}>
+                            {t.decision && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{t.decision}</div>}
+                            {t.chose && <p className="text-sm" style={{ color: 'var(--text-primary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Chose:</span>{t.chose}</p>}
+                            {t.reason && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Reason:</span>{t.reason}</p>}
+                            {t.alternative && <p className="text-xs leading-relaxed mt-1 italic" style={{ color: 'var(--text-muted)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5 not-italic" style={{ color: LC.tradeoffs }}>Alt:</span>{t.alternative}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Scalability Considerations */}
+                {Array.isArray(q.scalabilityConsiderations) && q.scalabilityConsiderations.length > 0 && (() => {
+                  qRendered.add('scalabilityConsiderations');
+                  return (
+                    <div>
+                      <SectionHeading label="Scalability" color={LC.scalability} />
+                      <div className="space-y-2">
+                        {q.scalabilityConsiderations.filter((s: any) => s && typeof s === 'object').map((s: any, si: number) => (
+                          <div key={si} className="rounded-lg p-3" style={paperCard(LC.scalability)}>
+                            {s.challenge && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>⚠ {s.challenge}</div>}
+                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{s.solution}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Catch-all for any remaining question fields */}
                 {Object.entries(q).filter(([k]) => !qRendered.has(k) && k !== 'difficulty').map(([k, v]) => (
                   <div key={k}>
-                    <SectionHeading label={fmtKey(k)} color="var(--text-muted)" />
-                    <ValueRenderer val={v} />
+                    <SectionHeading label={fmtKey(k)} color={LC.navy} />
+                    <div className="rounded-lg p-3" style={paperCard(LC.navy)}>
+                      <ValueRenderer val={v} />
+                    </div>
                   </div>
                 ))}
               </div>
