@@ -8,7 +8,7 @@ export default function AdminIncidentsPage() {
       description="Common failure modes — when an LLM provider 502s, when Stripe is down, when the pool gate misfires."
       path="/docs/admin/incidents"
       eyebrow="ADMIN RUNBOOK"
-      breadcrumbs={[{ label: 'Admin', href: '/docs/admin' }, { label: 'Incidents' }]}
+      breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Incidents' }]}
       onThisPage={[
         { id: 'llm-down', label: 'LLM provider returns 5xx' },
         { id: 'stripe-down', label: 'Stripe down' },
