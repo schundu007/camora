@@ -1,0 +1,54 @@
+// Lumora Design — Diagram Cache Hierarchy
+// Render: dot -Tpng -Gdpi=150 cache-hierarchy.dot -o cache-hierarchy.png
+digraph LumoraDesignCacheHierarchy {
+  graph [
+    bgcolor="white", rankdir="LR", splines="spline",
+    nodesep=0.5, ranksep=0.85, pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box, style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11, fontcolor="#0F172A",
+    margin="0.24,0.14", penwidth=1.3
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10, color="#64748B", fontcolor="#475569",
+    penwidth=1.1, arrowsize=0.7
+  ];
+
+  // Tiers
+  l1 [
+    label="L1 — Lumora in-memory LRU\n200 entries × 24h TTL\nkey = hash(question, provider, detail)\nlatency ≈ < 1 ms\nsurvives: process restart? NO",
+    fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+  ];
+  l2 [
+    label="L2 — Postgres cache\nascend_diagram_cache\nkey = SHA-256(question + provider + detail)\nlatency ≈ 5–20 ms\nsurvives: process restart, redeploy? YES",
+    fillcolor="#DCFCE7", color="#15803D", fontcolor="#166534"
+  ];
+  l3 [
+    label="L3 — fresh generation\nai-services subprocess\nAnthropic (Sonnet 4) +\nGraphviz subprocess (60s)\nlatency ≈ 8–25 s\ncost: 1 LLM call + CPU",
+    fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"
+  ];
+
+  request [
+    label="Request",
+    shape=ellipse, fillcolor="#FEF3C7", color="#C9A227", fontcolor="#7C5E00"
+  ];
+
+  request -> l1 [label="lookup"];
+  l1 -> l2 [label="miss"];
+  l2 -> l3 [label="miss"];
+
+  l3 -> l2 [label="store", style=dashed, color="#15803D", fontcolor="#15803D"];
+  l3 -> l1 [label="warm", style=dashed, color="#0047AB", fontcolor="#0047AB"];
+  l2 -> l1 [label="warm on hit", style=dashed, color="#0047AB", fontcolor="#0047AB"];
+
+  hit_label [
+    label="Hit return path\nL1: < 1 ms\nL2: 5–20 ms\nL3 / fresh: 8–25 s",
+    shape=note, fillcolor="#F5F3FF", color="#6D28D9", fontcolor="#5B21B6"
+  ];
+
+  l1 -> hit_label [style=invis];
+}

@@ -1,0 +1,78 @@
+// Lumora Design — Architecture-Diagram Generation Pipeline
+// Render: dot -Tpng -Gdpi=150 diagram-pipeline.dot -o diagram-pipeline.png
+digraph LumoraDesignDiagramPipeline {
+  graph [
+    bgcolor="white", rankdir="TB", splines="spline",
+    nodesep=0.4, ranksep=0.55, pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box, style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11, fontcolor="#0F172A",
+    margin="0.22,0.14", penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10, color="#64748B", fontcolor="#475569",
+    penwidth=1.1, arrowsize=0.7
+  ];
+
+  // Browser request
+  browser [
+    label="Browser\nDocs / Lumora Design\nfetch /api/v1/diagram/generate",
+    shape=ellipse, fillcolor="#FEF3C7", color="#C9A227", fontcolor="#7C5E00"
+  ];
+
+  // Lumora backend layer
+  subgraph cluster_lumora {
+    label="Lumora backend";
+    labeljust="l"; fontsize=11; fontcolor="#0047AB"; color="#0047AB";
+    style="rounded,filled"; fillcolor="#EFF6FF"; penwidth=1.4;
+
+    auth [label="authenticate\n+ checkUsage('diagrams')", fillcolor="#DBEAFE", color="#0047AB"];
+    inmem_cache [label="In-memory LRU\n200 entries × 24h TTL\nkey = hash(question, provider, detail)",
+                  fillcolor="#FFFFFF", color="#0047AB"];
+    proxy [label="proxyToAIService\nAbortSignal.timeout 30s\n2 retries (backoff)\ncircuit breaker (5 fails / 30s)",
+            fillcolor="#DBEAFE", color="#0047AB"];
+  }
+
+  // ai-services layer
+  subgraph cluster_ai {
+    label="ai-services (FastAPI)";
+    labeljust="l"; fontsize=11; fontcolor="#15803D"; color="#15803D";
+    style="rounded,filled"; fillcolor="#F0FDF4"; penwidth=1.4;
+
+    db_cache [label="ascend_diagram_cache\n(Postgres)\nlookup by question hash",
+              shape=cylinder, fillcolor="#E0F2FE", color="#0369A1", fontcolor="#0369A1"];
+    prompt_build [label="Build prompt\nimports for aws/gcp/azure\nfrom diagrams.* modules",
+                  fillcolor="#DCFCE7", color="#15803D"];
+    anthropic [label="Anthropic\nclaude-sonnet-4-20250514\n4096 max_tokens",
+                fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"];
+    sanitize [label="Sanitize generated code\nstring-strip + word-boundary\nblock os.system / eval / exec /\nimport socket / urllib / shutil ...",
+              fillcolor="#DCFCE7", color="#15803D"];
+    sandbox [label="subprocess.run\ntempfile.TemporaryDirectory\n60s wall-clock timeout\nGraphviz renders PNG",
+              fillcolor="#DCFCE7", color="#15803D"];
+    output [label="output.png\n+ generated Python source",
+            fillcolor="#FFFFFF", color="#15803D"];
+  }
+
+  result [
+    label="Response\n{ image: base64,\n  code: str,\n  source: cache | fresh }",
+    shape=note, fillcolor="#F5F3FF", color="#6D28D9", fontcolor="#5B21B6"
+  ];
+
+  // Edges
+  browser -> auth;
+  auth -> inmem_cache [label="check"];
+  inmem_cache -> result [label="hit (skips ai-services entirely)", color="#15803D", fontcolor="#15803D"];
+  inmem_cache -> proxy [label="miss"];
+  proxy -> db_cache [label="forward"];
+  db_cache -> result [label="DB hit", color="#15803D", fontcolor="#15803D"];
+  db_cache -> prompt_build [label="DB miss"];
+  prompt_build -> anthropic;
+  anthropic -> sanitize -> sandbox -> output;
+  output -> db_cache [label="store"];
+  output -> result;
+  result -> inmem_cache [label="warm Lumora cache", style=dashed];
+}
