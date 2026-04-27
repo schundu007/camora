@@ -262,23 +262,52 @@ function GenericField({ label, val }: { label: string; val: any }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// LeetCode-inspired primitives — strong difficulty pills, complexity
-// badges, monospace example blocks, file-tab code headers.
+// LeetCode-inspired primitives — uses LC's actual palette hardcoded so the
+// visual language comes through regardless of the active app theme.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Difficulty pill — Easy/Medium/Hard mapping to LC's color system. */
+/** LC palette — the exact tones from leetcode.com so users instantly
+ *  recognize the design language. Avoid theme tokens here on purpose. */
+const LC = {
+  // Difficulty
+  easy:   { fg: '#00B8A3', bg: 'rgba(0,184,163,0.10)',  border: 'rgba(0,184,163,0.40)' },
+  medium: { fg: '#FFB800', bg: 'rgba(255,184,0,0.10)',  border: 'rgba(255,184,0,0.40)' },
+  hard:   { fg: '#FF375F', bg: 'rgba(255,55,95,0.10)',  border: 'rgba(255,55,95,0.40)' },
+  // Section accents
+  problem:  '#0EA5E9',   // blue
+  examples: '#00B8A3',   // teal-green
+  approach: '#A855F7',   // purple
+  edge:     '#FF375F',   // red
+  mistake:  '#F59E0B',   // amber
+  followup: '#0EA5E9',   // blue
+  star: {
+    situation: '#00B8A3',
+    task:      '#0EA5E9',
+    action:    '#F59E0B',
+    result:    '#00B8A3',
+  },
+  // Code editor (VSCode-dark inspired so it pops in any theme)
+  codeBg:    '#1E1E1E',
+  codeFg:    '#D4D4D4',
+  codeHdr:   '#2D2D2D',
+  codeMuted: '#9CA3AF',
+  // Card surfaces (theme-agnostic — render the same in light and dark)
+  cardBg:     'rgba(127,127,127,0.04)',  // very light tint that reads on either theme
+  cardBorder: 'rgba(127,127,127,0.18)',
+};
+
+/** Difficulty pill — Easy/Medium/Hard with LC's exact colors. */
 function DifficultyPill({ value }: { value: string }) {
   const v = String(value).toLowerCase();
-  const map: Record<string, { bg: string; fg: string; border: string }> = {
-    easy: { bg: 'rgba(34,197,94,0.10)', fg: '#16A34A', border: 'rgba(34,197,94,0.35)' },
-    medium: { bg: 'rgba(245,158,11,0.10)', fg: '#D97706', border: 'rgba(245,158,11,0.35)' },
-    hard: { bg: 'rgba(239,68,68,0.10)', fg: '#DC2626', border: 'rgba(239,68,68,0.35)' },
-  };
   const senior = ['senior', 'staff', 'principal'].some((s) => v.includes(s));
-  const tone = map[v] || (senior ? map.hard : v.includes('mid') ? map.medium : map.easy);
+  const tone = v.includes('hard') || senior
+    ? LC.hard
+    : v.includes('medium') || v.includes('mid')
+      ? LC.medium
+      : LC.easy;
   return (
     <span
-      className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+      className="inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-full"
       style={{ background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}
     >
       {value}
@@ -287,48 +316,55 @@ function DifficultyPill({ value }: { value: string }) {
 }
 
 /** Tag chip — subtle pill for category/topic/value. */
-function TagChip({ label, color = 'var(--cam-primary)' }: { label: string; color?: string }) {
+function TagChip({ label, color = LC.problem }: { label: string; color?: string }) {
   return (
     <span
       className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded"
-      style={{ background: `color-mix(in srgb, ${color} 8%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)` }}
+      style={{ background: `${color}1A`, color, border: `1px solid ${color}40` }}
     >
       {label}
     </span>
   );
 }
 
-/** Complexity badge — O(n), O(log n), etc — the LC time/space pill. */
+/** Complexity badge — O(n), O(log n) — LC's time/space pill, dark mono on any theme. */
 function ComplexityBadge({ kind, value }: { kind: 'time' | 'space'; value: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded"
-      style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+      className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded"
+      style={{ background: LC.codeBg, color: LC.codeFg, border: `1px solid ${LC.codeHdr}` }}
     >
-      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-        {kind === 'time' ? 'T' : 'S'}
+      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
+        {kind === 'time' ? 'TIME' : 'SPACE'}
       </span>
-      <span style={{ color: 'var(--text-primary)' }}>{value}</span>
+      <span style={{ color: '#FFFFFF' }}>{value}</span>
     </span>
   );
 }
 
-/** Code block with file-tab style header showing the language. */
+/** Code block — VSCode-dark editor look with a file-tab header. */
 function CodeBlock({ code, language = 'code' }: { code: string; language?: string }) {
   return (
-    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+    <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LC.codeHdr}` }}>
       <div
-        className="px-3 py-1.5 flex items-center justify-between"
-        style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}
+        className="px-3 py-2 flex items-center justify-between"
+        style={{ background: LC.codeHdr, borderBottom: `1px solid ${LC.codeHdr}` }}
       >
-        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          {language}
-        </span>
-        <span className="text-[10px]" style={{ color: 'var(--text-dimmed)' }}>{code.split('\n').length} lines</span>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <span className="w-2 h-2 rounded-full" style={{ background: '#FF5F56' }} />
+            <span className="w-2 h-2 rounded-full" style={{ background: '#FFBD2E' }} />
+            <span className="w-2 h-2 rounded-full" style={{ background: '#27C93F' }} />
+          </div>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
+            {language}
+          </span>
+        </div>
+        <span className="text-[10px] font-mono" style={{ color: LC.codeMuted }}>{code.split('\n').length} LOC</span>
       </div>
       <pre
-        className="px-4 py-3 text-xs leading-relaxed overflow-x-auto"
-        style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)' }}
+        className="px-4 py-3 text-[12.5px] leading-relaxed overflow-x-auto"
+        style={{ background: LC.codeBg, color: LC.codeFg, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}
       >
         <code>{code}</code>
       </pre>
@@ -336,44 +372,62 @@ function CodeBlock({ code, language = 'code' }: { code: string; language?: strin
   );
 }
 
-/** Monospace example block — LC's "Example 1:" / Input / Output / Explanation. */
+/** LC-style example block — green-tinted card with mono Input/Output/Explanation. */
 function ExampleBlock({ example, index }: { example: any; index: number }) {
   if (!example || typeof example !== 'object') return null;
   return (
-    <div className="rounded-lg p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-      <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Example {index + 1}</div>
-      <div className="space-y-1.5 text-xs font-mono">
+    <div
+      className="rounded-lg overflow-hidden"
+      style={{ background: `${LC.examples}08`, border: `1px solid ${LC.examples}33` }}
+    >
+      <div
+        className="px-3 py-1.5"
+        style={{ background: `${LC.examples}14`, borderBottom: `1px solid ${LC.examples}33` }}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: LC.examples }}>
+          Example {index + 1}
+        </span>
+      </div>
+      <div className="px-3 py-2.5 space-y-1.5 text-xs font-mono">
         {example.input && (
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>Input:</span>
+          <div className="leading-relaxed">
+            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Input:</span>
             <span style={{ color: 'var(--text-primary)' }}>{example.input}</span>
           </div>
         )}
         {example.output && (
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>Output:</span>
+          <div className="leading-relaxed">
+            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Output:</span>
             <span style={{ color: 'var(--text-primary)' }}>{example.output}</span>
           </div>
         )}
+        {example.explanation && (
+          <p className="text-xs mt-1.5 leading-relaxed font-sans" style={{ color: 'var(--text-secondary)' }}>
+            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Explanation:</span>
+            {example.explanation}
+          </p>
+        )}
       </div>
-      {example.explanation && (
-        <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>Explanation:</span>
-          {example.explanation}
-        </p>
-      )}
     </div>
   );
 }
 
-/** LeetCode-style approach card — name, description, complexity pills, code, line-by-line. */
+/** LC-style approach card — purple-accented header, complexity pills, code editor. */
 function ApproachCard({ approach, index }: { approach: any; index: number }) {
   if (!approach || typeof approach !== 'object') return null;
   return (
-    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      <div className="px-4 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Approach {index + 1}</span>
+    <div className="rounded-xl overflow-hidden" style={{ background: `${LC.approach}06`, border: `1px solid ${LC.approach}33` }}>
+      <div
+        className="px-4 py-3"
+        style={{ background: `${LC.approach}10`, borderBottom: `1px solid ${LC.approach}33` }}
+      >
+        <div className="flex items-baseline gap-2 flex-wrap mb-2">
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+            style={{ background: `${LC.approach}20`, color: LC.approach }}
+          >
+            Approach {index + 1}
+          </span>
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{approach.name}</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -388,11 +442,16 @@ function ApproachCard({ approach, index }: { approach: any; index: number }) {
         {approach.code && <CodeBlock code={approach.code} language={approach.language || 'python'} />}
         {Array.isArray(approach.lineByLine) && approach.lineByLine.length > 0 && (
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Line-by-Line</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.approach }}>Line-by-Line</div>
             <div className="space-y-1">
               {approach.lineByLine.filter((l: any) => l && typeof l === 'object').map((l: any, i: number) => (
-                <div key={i} className="grid gap-2 text-xs" style={{ gridTemplateColumns: 'minmax(0, 0.6fr) minmax(0, 1fr)' }}>
-                  <code className="font-mono px-2 py-1 rounded" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>{l.line}</code>
+                <div key={i} className="grid gap-2 text-xs" style={{ gridTemplateColumns: 'minmax(0, 0.55fr) minmax(0, 1fr)' }}>
+                  <code
+                    className="font-mono px-2 py-1 rounded text-[11.5px]"
+                    style={{ background: LC.codeBg, color: LC.codeFg, border: `1px solid ${LC.codeHdr}` }}
+                  >
+                    {l.line}
+                  </code>
                   <span className="leading-relaxed pt-1" style={{ color: 'var(--text-secondary)' }}>{l.explanation}</span>
                 </div>
               ))}
@@ -404,12 +463,15 @@ function ApproachCard({ approach, index }: { approach: any; index: number }) {
   );
 }
 
-/** Section title bar — LC's labeled heading with a tinted left rail. */
-function SectionHeading({ label, color = 'var(--cam-primary)' }: { label: string; color?: string }) {
+/** LC-style section heading — colored left rail + uppercase label.
+ *  The rail color signals what kind of section this is at a glance. */
+function SectionHeading({ label, color = LC.problem }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-2 mb-2">
-      <span className="w-1 h-4 rounded" style={{ background: color }} />
-      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>{label}</span>
+      <span className="block w-1 h-4 rounded-sm" style={{ background: color }} />
+      <span className="text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color }}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -503,20 +565,30 @@ function PrepContentRenderer({ content }: { content: any }) {
     );
   }
 
-  // Company Insights
+  // Company Insights — schema differs by section: HR returns an object,
+  // Coding returns a string. Render appropriately for each.
   if (data.companyInsights) {
     mark('companyInsights');
+    const ci = data.companyInsights;
     els.push(
       <div key="insights" className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--cam-primary)' }}>Company Insights</div>
-        <div className="grid grid-cols-1 gap-2">
-          {Object.entries(data.companyInsights).map(([k, v]) => (
-            <div key={k}>
-              <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}:</span>
-              <div className="mt-0.5"><ValueRenderer val={v} /></div>
-            </div>
-          ))}
-        </div>
+        {typeof ci === 'string' ? (
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{ci}</p>
+        ) : Array.isArray(ci) ? (
+          <ValueRenderer val={ci} />
+        ) : typeof ci === 'object' ? (
+          <div className="grid grid-cols-1 gap-2">
+            {Object.entries(ci).map(([k, v]) => (
+              <div key={k}>
+                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}:</span>
+                <div className="mt-0.5"><ValueRenderer val={v} /></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(ci)}</p>
+        )}
       </div>
     );
   }
@@ -541,19 +613,29 @@ function PrepContentRenderer({ content }: { content: any }) {
             <article
               key={i}
               className="rounded-xl overflow-hidden"
-              style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+              style={{ border: `1px solid ${LC.cardBorder}`, background: 'var(--bg-surface)' }}
             >
               {/* ── LC-style header: number + title + difficulty pill + chips ── */}
-              <header className="px-5 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+              <header
+                className="px-5 pt-4 pb-3"
+                style={{
+                  borderBottom: `1px solid ${LC.cardBorder}`,
+                  background: `linear-gradient(180deg, ${LC.problem}06 0%, transparent 100%)`,
+                }}
+              >
                 <div className="flex items-start gap-3">
                   <span
-                    className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-bold font-mono"
-                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                    className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-[13px] font-bold font-mono"
+                    style={{
+                      background: `${LC.problem}14`,
+                      color: LC.problem,
+                      border: `1px solid ${LC.problem}40`,
+                    }}
                   >
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+                    <h3 className="text-[15px] font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>{title}</h3>
                     <div className="flex items-center gap-1.5 flex-wrap mt-2">
                       {q.difficulty && <DifficultyPill value={q.difficulty} />}
                       {chips.map((c, ci) => <TagChip key={ci} label={c.label} color={c.color} />)}
@@ -593,14 +675,16 @@ function PrepContentRenderer({ content }: { content: any }) {
 
               {/* ── Body ── */}
               <div className="px-5 py-4 space-y-4">
-                {/* Problem statement */}
+                {/* Problem statement — blue rail, like LC's "Description" tab */}
                 {(q.problemStatement || q.description) && (() => {
                   qRendered.add('problemStatement', 'description');
                   const text = q.problemStatement || q.description;
                   return (
                     <div>
-                      <SectionHeading label="Problem" />
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                      <SectionHeading label="Problem" color={LC.problem} />
+                      <div className="rounded-lg p-3" style={{ background: `${LC.problem}06`, border: `1px solid ${LC.problem}25` }}>
+                        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                      </div>
                     </div>
                   );
                 })()}
@@ -611,8 +695,10 @@ function PrepContentRenderer({ content }: { content: any }) {
                   const text = q.answer || q.sampleAnswer || q.suggestedAnswer;
                   return (
                     <div>
-                      <SectionHeading label="Suggested Answer" color="var(--success)" />
-                      <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                      <SectionHeading label="Suggested Answer" color={LC.examples} />
+                      <div className="rounded-lg p-3" style={{ background: `${LC.examples}06`, border: `1px solid ${LC.examples}25` }}>
+                        <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                      </div>
                     </div>
                   );
                 })()}
