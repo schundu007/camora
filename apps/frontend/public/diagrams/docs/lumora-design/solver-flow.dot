@@ -1,0 +1,92 @@
+// Lumora Design — Solver Flow
+// Render: dot -Tpng -Gdpi=150 solver-flow.dot -o solver-flow.png
+digraph LumoraDesignSolverFlow {
+  graph [
+    bgcolor="white", rankdir="TB", splines="spline",
+    nodesep=0.4, ranksep=0.55, pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box, style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11, fontcolor="#0F172A",
+    color="#94A3B8", fillcolor="#F1F5F9",
+    margin="0.20,0.12", penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10, color="#64748B", fontcolor="#475569",
+    penwidth=1.1, arrowsize=0.7
+  ];
+
+  subgraph cluster_inputs {
+    label="1. Inputs (DesignLayout.tsx)";
+    labeljust="l"; fontsize=11; fontcolor="#0047AB"; color="#0047AB";
+    style="rounded,filled"; fillcolor="#EFF6FF"; penwidth=1.4;
+
+    text  [label="Text\nproblem statement", fillcolor="#DBEAFE", color="#0047AB"];
+    url   [label="URL\nfetch + extract", fillcolor="#DBEAFE", color="#0047AB"];
+    image [label="Image\nvision OCR", fillcolor="#DBEAFE", color="#0047AB"];
+  }
+
+  subgraph cluster_stream {
+    label="2. POST /api/v1/stream  ·  ascendMode=system-design";
+    labeljust="l"; fontsize=11; fontcolor="#6D28D9"; color="#6D28D9";
+    style="rounded,filled"; fillcolor="#F5F3FF"; penwidth=1.4;
+
+    keywords [label="isDesign keyword check\nin claude.js\n(design / architect / scale / ...)",
+              fillcolor="#EDE9FE", color="#6D28D9"];
+    model    [label="Pick model\nSonnet 4 (paid) /\nHaiku 4.5 (free)",
+              fillcolor="#EDE9FE", color="#6D28D9"];
+    prompt   [label="Design system prompt\n+ cache_control: ephemeral\nMAX_TOKENS_DESIGN = 12000",
+              fillcolor="#EDE9FE", color="#6D28D9"];
+    anthropic [label="Anthropic stream\ntext_delta loop",
+              fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"];
+  }
+
+  subgraph cluster_render {
+    label="3. Tagged-text render (browser)";
+    labeljust="l"; fontsize=11; fontcolor="#7C2D12"; color="#7C2D12";
+    style="rounded,filled"; fillcolor="#FFF7ED"; penwidth=1.4;
+
+    parse [label="parseAnswer()\n[HEADLINE] / [REQUIREMENTS] /\n[CAPACITY] / [ARCHITECTURE] /\n[DATA_MODEL] / [API] / [DEEP_DIVES]",
+           fillcolor="#FFEDD5", color="#9A3412"];
+    cards [label="StreamingAnswer cards\nprogressive fill as tokens arrive",
+           fillcolor="#FEF3C7", color="#C9A227", fontcolor="#7C5E00"];
+  }
+
+  subgraph cluster_diagram {
+    label="4. Architecture diagram (separate request)";
+    labeljust="l"; fontsize=11; fontcolor="#15803D"; color="#15803D";
+    style="rounded,filled"; fillcolor="#F0FDF4"; penwidth=1.4;
+
+    diagram_req [label="POST /api/v1/diagram/generate\n{ question, cloud_provider,\n  detail_level }",
+                fillcolor="#DCFCE7", color="#15803D"];
+    cache       [label="In-memory LRU\n200 entries, 24h TTL",
+                fillcolor="#FFFFFF", color="#15803D"];
+    proxy       [label="proxyToAIService\ncircuit breaker + 30s timeout",
+                fillcolor="#DCFCE7", color="#15803D"];
+    ai_services [label="ai-services\n/diagram/generate\nAnthropic + sandboxed Graphviz",
+                fillcolor="#DCFCE7", color="#15803D"];
+    png         [label="base64 PNG response\n+ Python source",
+                fillcolor="#FFFFFF", color="#15803D"];
+  }
+
+  db [label="lumora_messages\nai_hours_usage", shape=cylinder,
+      fillcolor="#E0F2FE", color="#0369A1", fontcolor="#0369A1"];
+
+  text -> keywords;
+  url -> keywords;
+  image -> keywords;
+  keywords -> model -> prompt -> anthropic;
+  anthropic -> parse -> cards;
+  anthropic -> db [label="answer event"];
+
+  // Diagram is fired in parallel from the UI when isDesign is detected
+  cards -> diagram_req [label="if architecture\nblock present"];
+  diagram_req -> cache [label="lookup"];
+  cache -> proxy [label="miss"];
+  proxy -> ai_services -> png;
+  png -> cache [label="store"];
+  png -> cards [label="render <img>"];
+}

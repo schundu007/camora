@@ -1,0 +1,63 @@
+// Lumora Design — Bounded Contexts
+// Render: dot -Tpng -Gdpi=150 bounded-contexts.dot -o bounded-contexts.png
+digraph LumoraDesignBoundedContexts {
+  graph [
+    bgcolor="white", rankdir="LR", splines="spline",
+    nodesep=0.5, ranksep=0.95, pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box, style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11, fontcolor="#0F172A",
+    margin="0.24,0.14", penwidth=1.3
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=9.5, color="#64748B", fontcolor="#475569",
+    penwidth=1.1, arrowsize=0.7, style=dashed
+  ];
+
+  problem_input [
+    label="Problem Input\nText / URL / image",
+    fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+  ];
+  inference [
+    label="Inference\nDesign prompt,\ncache_control: ephemeral,\nMAX_TOKENS_DESIGN 12000",
+    fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"
+  ];
+  diagram [
+    label="Diagram Generation\nLRU + DB cache,\nsandboxed subprocess,\nGraphviz render",
+    fillcolor="#DCFCE7", color="#15803D", fontcolor="#166534"
+  ];
+  presentation [
+    label="Presentation\nTagged-text cards,\narchitecture <img> embed",
+    fillcolor="#FEF3C7", color="#C9A227", fontcolor="#7C5E00"
+  ];
+  conversation [
+    label="Conversation\nlumora_messages,\nis_design metadata flag",
+    fillcolor="#E0F2FE", color="#0369A1", fontcolor="#0369A1"
+  ];
+  metering [
+    label="Metering\ndiagrams quota counter,\nai_hours_usage",
+    fillcolor="#F5F3FF", color="#6D28D9", fontcolor="#5B21B6"
+  ];
+
+  problem_input -> inference [label="QuestionSubmitted\n{ text, mode: design }"];
+  inference -> presentation [label="AnswerStreamed\n[HEADLINE]/[REQUIREMENTS]/...]"];
+  inference -> conversation [label="MessagePersisted\n{ is_design: true }"];
+  inference -> metering [label="UsageRecorded\n{ tokensIn, tokensOut }"];
+
+  presentation -> diagram [label="DiagramRequested\n{ question, provider, detail }"];
+  diagram -> presentation [label="DiagramReady\n{ image (base64), code }"];
+  diagram -> metering [label="DiagramUsageRecorded"];
+
+  metering -> inference [label="QuotaExceeded → 429",
+                         color="#C9A227", fontcolor="#7C5E00"];
+  metering -> diagram [label="QuotaExceeded → 429",
+                       color="#C9A227", fontcolor="#7C5E00"];
+
+  { rank=same; problem_input; }
+  { rank=same; inference; diagram; }
+  { rank=same; presentation; conversation; metering; }
+}
