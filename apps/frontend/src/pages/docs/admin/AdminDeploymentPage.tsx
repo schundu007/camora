@@ -8,7 +8,7 @@ export default function AdminDeploymentPage() {
       description="How each service deploys, where to look when a deploy fails, cache busting, rollbacks."
       path="/docs/admin/deployment"
       eyebrow="ADMIN RUNBOOK"
-      breadcrumbs={[{ label: 'Admin', href: '/docs/admin' }, { label: 'Deployment' }]}
+      breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Deployment' }]}
       onThisPage={[
         { id: 'auto-deploy', label: 'Auto-deploy on main' },
         { id: 'frontend', label: 'Frontend (Vercel)' },

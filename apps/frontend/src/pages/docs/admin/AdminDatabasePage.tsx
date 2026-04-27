@@ -8,7 +8,7 @@ export default function AdminDatabasePage() {
       description="Tables, idempotent migrations, when to manually intervene, common ops queries."
       path="/docs/admin/database"
       eyebrow="ADMIN RUNBOOK"
-      breadcrumbs={[{ label: 'Admin', href: '/docs/admin' }, { label: 'Database' }]}
+      breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Database' }]}
       onThisPage={[
         { id: 'tables', label: 'Tables' },
         { id: 'migrations', label: 'How migrations work' },

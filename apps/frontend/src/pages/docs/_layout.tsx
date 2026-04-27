@@ -16,7 +16,7 @@ interface DocsPageLayoutProps {
   /** Eyebrow label above the page H1 (e.g. "USER GUIDE", "ADMIN RUNBOOK"). */
   eyebrow?: string;
   /** Extra breadcrumb segments after Docs ›. Last item is the current page. */
-  breadcrumbs?: { label: string; href?: string }[];
+  breadcrumbs?: { label: string; to?: string }[];
   /** Right-rail "On this page" anchor list. */
   onThisPage: OnThisPageItem[];
   /** Page body — the actual content sections. */
@@ -41,7 +41,7 @@ export default function DocsPageLayout({
 }: DocsPageLayoutProps) {
   useEffect(() => { document.title = `${title} — Camora docs`; }, [title]);
 
-  const fullCrumbs = [{ label: 'Docs', href: '/docs' }, ...breadcrumbs];
+  const fullCrumbs = [{ label: 'Docs', to: '/docs' }, ...breadcrumbs];
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
