@@ -80,11 +80,17 @@ function formatPrepContent(content: any): any {
       // "RAW CONTENT" dump via the generic catch-all.
       return { summary: stripFences(content.rawContent) };
     }
-    // Summary contains raw JSON from a previous failed parse — extract it
-    if (content.summary && typeof content.summary === 'string' && content.summary.trim().startsWith('{') && Object.keys(content).length === 1) {
+    // Summary contains raw JSON from a previous failed parse — extract it.
+    // Drop the `Object.keys(content).length === 1` gate: cached data from
+    // earlier broken parses can carry stale neighbour fields, but the
+    // *real* payload is still inside the summary string. If extractJSON
+    // returns a richer object than the wrapper, prefer it.
+    if (content.summary && typeof content.summary === 'string' && content.summary.trim().startsWith('{')) {
       const parsed = extractJSON(content.summary);
-      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 1) return parsed;
-      return { summary: stripFences(content.summary) };
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length >= 1) {
+        // Merge — parsed wins on overlap, but we keep any extra wrapper fields
+        return { ...content, ...parsed };
+      }
     }
     return content;
   }
@@ -223,6 +229,21 @@ function PrepContentRenderer({ content }: { content: any }) {
   }
   if (!data) return <div className="text-sm" style={{ color: 'var(--text-muted)' }}>No content available</div>;
 
+  // Last-line defence — cached data from before the parser was hardened can
+  // still arrive with `summary` holding the entire raw JSON. If it looks
+  // like JSON, parse it one more time and merge so we render structured
+  // fields (companyInsights, questions, etc.) instead of dumping a wall
+  // of text into the Summary block.
+  if (data && typeof data === 'object' && typeof data.summary === 'string') {
+    const s = data.summary.trim();
+    if (s.startsWith('{') && /["']\s*:/.test(s)) {
+      const reparsed = extractJSON(s);
+      if (reparsed && typeof reparsed === 'object' && Object.keys(reparsed).length >= 1) {
+        data = { ...data, ...reparsed };
+      }
+    }
+  }
+
   // Track which keys are rendered by specific renderers
   const rendered = new Set<string>();
 
@@ -234,12 +255,27 @@ function PrepContentRenderer({ content }: { content: any }) {
   // Summary
   if (data.summary) {
     mark('summary');
-    els.push(
-      <div key="summary" className="rounded-lg p-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>Summary</div>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
-      </div>
-    );
+    const summaryStr = String(data.summary).trim();
+    const looksLikeJson = summaryStr.startsWith('{') && /["']\s*:/.test(summaryStr) && summaryStr.length > 80;
+    if (looksLikeJson) {
+      // Parsing genuinely failed upstream. Don't dump raw JSON to the user —
+      // show a clear "this needs regeneration" message instead.
+      els.push(
+        <div key="summary" className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px dashed var(--warning)' }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--warning-text)' }}>Generation incomplete</div>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            The model returned malformed output. Click <strong style={{ color: 'var(--warning-text)' }}>Re-generate</strong> above to retry.
+          </p>
+        </div>
+      );
+    } else {
+      els.push(
+        <div key="summary" className="rounded-lg p-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>Summary</div>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
+        </div>
+      );
+    }
   }
 
   // Pitch Sections
