@@ -62,6 +62,7 @@ const AdminDeploymentPage = lazy(() => import('./pages/docs/admin/AdminDeploymen
 const AdminDatabasePage = lazy(() => import('./pages/docs/admin/AdminDatabasePage'));
 const AdminRefundsPage = lazy(() => import('./pages/docs/admin/AdminRefundsPage'));
 const AdminIncidentsPage = lazy(() => import('./pages/docs/admin/AdminIncidentsPage'));
+const AdminLumoraLivePage = lazy(() => import('./pages/docs/admin/AdminLumoraLivePage'));
 const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 
 function Loading() {
@@ -295,6 +296,7 @@ export function App() {
           <Route path="/docs/admin/database" element={<AdminDatabasePage />} />
           <Route path="/docs/admin/refunds" element={<AdminRefundsPage />} />
           <Route path="/docs/admin/incidents" element={<AdminIncidentsPage />} />
+          <Route path="/docs/admin/lumora-live" element={<AdminLumoraLivePage />} />
           <Route path="/admin/teams" element={<ProtectedRoute><AdminTeamsPage /></ProtectedRoute>} />
           <Route path="/flyer" element={<FlyerPage />} />
 
