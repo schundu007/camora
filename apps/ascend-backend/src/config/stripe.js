@@ -2,10 +2,16 @@ import Stripe from 'stripe';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-// Initialize Stripe client
+// Initialize Stripe client. Tight timeout + a single retry so a slow
+// Stripe API call can never wedge the request thread for 80 seconds
+// (the SDK default), which was the root cause of 502s cascading across
+// every AI route — slow Stripe in tryAutoTopup → blocked DB connection
+// → pool exhaustion → Railway proxy returns 502.
 export const stripe = stripeSecretKey
   ? new Stripe(stripeSecretKey, {
       apiVersion: '2025-03-31.basil',
+      timeout: 5000,
+      maxNetworkRetries: 1,
     })
   : null;
 

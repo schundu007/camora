@@ -1,6 +1,17 @@
 import { checkTeamHourBudget, checkPersonalHourBudget } from '../services/teamService.js';
 import { tryAutoTopup } from '../services/autoTopupService.js';
 
+const GATE_DEADLINE_MS = 3000;
+const AUTO_TOPUP_DEADLINE_MS = 4000;
+
+/** Promise.race against a deadline. Resolves with `defaultValue` on timeout. */
+function withDeadline(promise, ms, defaultValue) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(defaultValue), ms)),
+  ]);
+}
+
 /**
  * Pool exhaustion gate for AI-hour-using routes.
  *
@@ -12,30 +23,61 @@ import { tryAutoTopup } from '../services/autoTopupService.js';
  *
  * Top-up packs (90-day expiry) extend the pool in both branches.
  *
- * Failures during the lookup fail-open (call goes through). The meter will
- * still record usage; the next call after stale state resolves will be
- * gated correctly.
+ * **Hard 3-second deadline on the entire gate.** Slow Stripe / Redis / DB
+ * never blocks an AI route past 3s — fail open and let the call proceed.
+ * The meter still records on success, so no money is lost. This is the
+ * safety net that prevents a slow downstream from cascading 502s across
+ * every AI tool.
+ *
+ * Auto-topup is also bounded — 4s budget for the Stripe charge attempt,
+ * inside the gate's overall 3s. Whichever fires first wins; either way
+ * the request is freed within ~3s.
  */
 export async function hourBudgetGate(req, res, next) {
   const userId = req.user?.id;
   if (!userId) return next(); // unauth requests handled elsewhere
 
-  try {
-    // ── Team check (pool + per-member cap) ─────────────────────
-    const team = await checkTeamHourBudget(userId);
-    if (team.has_team) {
-      if (!team.ok) {
-        // Per-member cap can NEVER be unblocked by an auto-topup — that
-        // belongs to the individual member and the cap is owner policy.
-        // Pool exhaustion CAN attempt auto-topup if the team owner enabled it.
-        if (team.reason === 'TEAM_POOL_EXHAUSTED') {
-          const charged = await tryAutoTopup({ userId, teamId: team.team_id });
-          if (charged.ok) {
-            res.setHeader('X-Auto-Topup-Charged', `${charged.hours}`);
-            return next();
-          }
+  // Wrap the whole gate in a deadline. If any branch hangs, this resolves
+  // to { _timedOut: true } and we fail open at the bottom.
+  const result = await withDeadline(
+    runGate(userId).catch(() => ({ _failed: true })),
+    GATE_DEADLINE_MS,
+    { _timedOut: true },
+  );
+
+  if (result._timedOut || result._failed) return next(); // fail open
+
+  if (result.action === 'block') {
+    return res.status(result.status || 429).json(result.body);
+  }
+  if (result.headers) {
+    for (const [key, value] of Object.entries(result.headers)) {
+      res.setHeader(key, String(value));
+    }
+  }
+  return next();
+}
+
+async function runGate(userId) {
+  // ── Team check (pool + per-member cap) ─────────────────────
+  const team = await checkTeamHourBudget(userId);
+  if (team.has_team) {
+    if (!team.ok) {
+      // Per-member cap can NEVER be unblocked by an auto-topup.
+      if (team.reason === 'TEAM_POOL_EXHAUSTED') {
+        const charged = await withDeadline(
+          tryAutoTopup({ userId, teamId: team.team_id }).catch(() => ({ ok: false })),
+          AUTO_TOPUP_DEADLINE_MS,
+          { ok: false, reason: 'TIMEOUT' },
+        );
+        if (charged.ok) {
+          return { action: 'pass', headers: { 'X-Auto-Topup-Charged': String(charged.hours) } };
         }
-        return res.status(429).json({
+      }
+      return {
+        action: 'block',
+        status: 429,
+        body: {
           error: team.reason === 'MEMBER_CAP_EXCEEDED'
             ? `You've used your per-member cap (${team.cap_hours} hr) for this period.`
             : 'Your team has used all of its AI hours for this period.',
@@ -45,23 +87,31 @@ export async function hourBudgetGate(req, res, next) {
           used_hours: team.used_hours,
           cap_hours: team.cap_hours,
           action: team.reason === 'MEMBER_CAP_EXCEEDED' ? 'ask_owner_to_raise_cap' : 'top_up_or_wait',
-        });
-      }
-      res.setHeader('X-Team-Hours-Remaining', String(Math.floor((team.remaining_hours || 0) * 100) / 100));
-      return next();
+        },
+      };
     }
+    return {
+      action: 'pass',
+      headers: { 'X-Team-Hours-Remaining': String(Math.floor((team.remaining_hours || 0) * 100) / 100) },
+    };
+  }
 
-    // ── Personal check (no team) ───────────────────────────────
-    const personal = await checkPersonalHourBudget(userId);
-    if (personal.fail_open) return next(); // internal error → don't block paying user
-    if (!personal.ok) {
-      // Same auto-topup escape hatch for solo users who opted in.
-      const charged = await tryAutoTopup({ userId });
-      if (charged.ok) {
-        res.setHeader('X-Auto-Topup-Charged', `${charged.hours}`);
-        return next();
-      }
-      return res.status(429).json({
+  // ── Personal check (no team) ───────────────────────────────
+  const personal = await checkPersonalHourBudget(userId);
+  if (personal.fail_open) return { action: 'pass' };
+  if (!personal.ok) {
+    const charged = await withDeadline(
+      tryAutoTopup({ userId }).catch(() => ({ ok: false })),
+      AUTO_TOPUP_DEADLINE_MS,
+      { ok: false, reason: 'TIMEOUT' },
+    );
+    if (charged.ok) {
+      return { action: 'pass', headers: { 'X-Auto-Topup-Charged': String(charged.hours) } };
+    }
+    return {
+      action: 'block',
+      status: 429,
+      body: {
         error: personal.plan_type === 'free'
           ? "You've used your 30 minutes of free AI time. Subscribe to Pro for 2 hrs/mo, or buy a top-up pack."
           : 'You\'ve used all of your AI hours for this period. Buy a top-up pack to continue.',
@@ -71,13 +121,13 @@ export async function hourBudgetGate(req, res, next) {
         used_hours: personal.used_hours,
         topup_hours: personal.topup_hours,
         action: personal.plan_type === 'free' ? 'upgrade_or_top_up' : 'top_up_or_wait',
-      });
-    }
-    res.setHeader('X-Personal-Hours-Remaining', String(Math.floor((personal.remaining_hours || 0) * 100) / 100));
-  } catch {
-    // Fail open — never block on internal error.
+      },
+    };
   }
-  return next();
+  return {
+    action: 'pass',
+    headers: { 'X-Personal-Hours-Remaining': String(Math.floor((personal.remaining_hours || 0) * 100) / 100) },
+  };
 }
 
 export default hourBudgetGate;

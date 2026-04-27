@@ -31,6 +31,10 @@ export function initRedis() {
       retryDelayOnFailover: 100,
       enableReadyCheck: true,
       lazyConnect: true,
+      // Hard ceiling per command. Without this, ioredis defaults to
+      // unlimited and a slow/down Redis can hang the team-id-lookup path
+      // inside hourBudgetGate, taking every AI route with it.
+      commandTimeout: 1500,
     });
 
     redisClient.on('connect', () => {
