@@ -1,0 +1,141 @@
+// Lumora Live — Deployment Topology
+// Render: dot -Tpng deployment-topology.dot -o deployment-topology.png
+digraph LumoraDeployment {
+  graph [
+    bgcolor="white",
+    rankdir="LR",
+    splines="spline",
+    nodesep=0.45,
+    ranksep=0.9,
+    pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11,
+    fontcolor="#0F172A",
+    color="#94A3B8",
+    fillcolor="#F1F5F9",
+    margin="0.22,0.14",
+    penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=9.5,
+    color="#64748B",
+    fontcolor="#475569",
+    penwidth=1.1,
+    arrowsize=0.7
+  ];
+
+  // ─── Browser ──────────────────────────────────────
+  browser [
+    label="Browser\n(Chrome / Edge / Brave)",
+    shape=ellipse,
+    fillcolor="#FEF3C7",
+    color="#C9A227",
+    fontcolor="#7C5E00"
+  ];
+
+  // ─── Vercel ───────────────────────────────────────
+  subgraph cluster_vercel {
+    label="Vercel — global edge";
+    labeljust="l"; fontsize=11; fontcolor="#0F172A"; color="#0F172A";
+    style="rounded,filled"; fillcolor="#F8FAFC"; penwidth=1.4;
+
+    vercel [
+      label="camora.cariara.com\nVite static build\nSPA rewrite → /index.html",
+      fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+    ];
+  }
+
+  // ─── Railway: Lumora backend ──────────────────────
+  subgraph cluster_lumora_railway {
+    label="Railway — Lumora Backend";
+    labeljust="l"; fontsize=11; fontcolor="#0F172A"; color="#0F172A";
+    style="rounded,filled"; fillcolor="#F8FAFC"; penwidth=1.4;
+
+    lumora_runtime [
+      label="lumora-backend\nNixpacks: nodejs_20 + ffmpeg\nPORT 8000\nGET /health",
+      fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+    ];
+  }
+
+  // ─── Railway: Ascend backend ──────────────────────
+  subgraph cluster_ascend_railway {
+    label="Railway — Ascend Backend (auth + Capra)";
+    labeljust="l"; fontsize=11; fontcolor="#0F172A"; color="#0F172A";
+    style="rounded,filled"; fillcolor="#F8FAFC"; penwidth=1.4;
+
+    ascend_runtime [
+      label="ascend-backend\nNixpacks: nodejs_20 + python3 +\ngraphviz + go + rustc + openjdk17\nPORT 3009 / GET /health",
+      fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+    ];
+  }
+
+  // ─── Railway: AI services ─────────────────────────
+  subgraph cluster_ai_railway {
+    label="Railway — AI Services";
+    labeljust="l"; fontsize=11; fontcolor="#0F172A"; color="#0F172A";
+    style="rounded,filled"; fillcolor="#F8FAFC"; penwidth=1.4;
+
+    ai_runtime [
+      label="ai-services\nDocker: python:3.11-slim +\ngraphviz + ffmpeg\nPORT 8001 / GET /health",
+      fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+    ];
+
+    embed_disk [
+      label="Persistent volume\n/data/embeddings/{user_id}.npy\n(resemblyzer 256-dim)",
+      shape=folder, fillcolor="#FFFFFF", color="#0369A1", fontcolor="#0369A1"
+    ];
+  }
+
+  // ─── Postgres ────────────────────────────────────
+  subgraph cluster_db {
+    label="Managed Postgres";
+    labeljust="l"; fontsize=11; fontcolor="#0F172A"; color="#0F172A";
+    style="rounded,filled"; fillcolor="#F0F9FF"; penwidth=1.4;
+
+    pg [
+      label="users, lumora_*,\nascend_*, ai_hours_usage\n(SSL, rejectUnauthorized: false)",
+      shape=cylinder, fillcolor="#E0F2FE", color="#0369A1", fontcolor="#0369A1"
+    ];
+  }
+
+  // ─── External providers ───────────────────────────
+  subgraph cluster_external {
+    label="External providers";
+    labeljust="l"; fontsize=11; fontcolor="#475569"; color="#94A3B8";
+    style="rounded,dashed"; bgcolor="#FAFAFA"; penwidth=1.0;
+
+    anthropic [label="Anthropic API\nClaude Sonnet 4 / Haiku 4.5\nprompt cache (5 min TTL)",
+      fillcolor="#FFF7ED", color="#C2410C", fontcolor="#9A3412"];
+    openai [label="OpenAI API\nWhisper-1",
+      fillcolor="#F0FDF4", color="#15803D", fontcolor="#166534"];
+    stripe [label="Stripe\nbilling + webhooks",
+      fillcolor="#F5F3FF", color="#6D28D9", fontcolor="#5B21B6"];
+    google_oauth [label="Google OAuth",
+      fillcolor="#F8FAFC", color="#475569", fontcolor="#334155"];
+  }
+
+  // ─── Edges ─────────────────────────────────────────
+  browser -> vercel [label="HTTPS"];
+  browser -> lumora_runtime [label="HTTPS\nfetch + SSE"];
+  browser -> ascend_runtime [label="HTTPS\nOAuth callback,\nbilling APIs"];
+
+  vercel -> browser [style=invis];
+
+  lumora_runtime -> ai_runtime [label="HTTP (within Railway)\nspeaker / diagram"];
+  lumora_runtime -> pg [label="pg pool\nSSL"];
+  lumora_runtime -> openai [label="HTTPS"];
+  lumora_runtime -> anthropic [label="HTTPS\nstreaming"];
+
+  ascend_runtime -> pg [label="pg pool\nSSL"];
+  ascend_runtime -> stripe [label="HTTPS\n+ webhook in"];
+  ascend_runtime -> google_oauth [label="OAuth flow"];
+
+  ai_runtime -> embed_disk [label="read / write\n.npy files"];
+  ai_runtime -> anthropic [label="HTTPS\ndiagram code-gen"];
+}

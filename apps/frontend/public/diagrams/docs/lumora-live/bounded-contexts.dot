@@ -1,0 +1,77 @@
+// Lumora Live — DDD Bounded Contexts
+// Render: dot -Tpng bounded-contexts.dot -o bounded-contexts.png
+digraph LumoraBoundedContexts {
+  graph [
+    bgcolor="white",
+    rankdir="LR",
+    splines="spline",
+    nodesep=0.55,
+    ranksep=1.0,
+    pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=11,
+    fontcolor="#0F172A",
+    margin="0.24,0.14",
+    penwidth=1.3
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=9.5,
+    color="#64748B",
+    fontcolor="#475569",
+    penwidth=1.1,
+    arrowsize=0.7,
+    style=dashed
+  ];
+
+  // Each context: name + stable identity color
+  capture [
+    label="Capture\nMediaRecorder, VAD,\naccumulated transcript",
+    fillcolor="#DBEAFE", color="#0047AB", fontcolor="#0047AB"
+  ];
+  voice_id [
+    label="Voice Identity\nresemblyzer embeddings,\nsliding-window diarization",
+    fillcolor="#F5F3FF", color="#6D28D9", fontcolor="#5B21B6"
+  ];
+  transcription [
+    label="Transcription\nffmpeg + Whisper-1,\nhallucination filter",
+    fillcolor="#DCFCE7", color="#15803D", fontcolor="#166534"
+  ];
+  inference [
+    label="Inference\nmodel select, prompt cache,\nAnthropic stream + Abort",
+    fillcolor="#FFEDD5", color="#9A3412", fontcolor="#9A3412"
+  ];
+  conversation [
+    label="Conversation\nlumora_conversations,\nlumora_messages, bookmarks",
+    fillcolor="#E0F2FE", color="#0369A1", fontcolor="#0369A1"
+  ];
+  metering [
+    label="Metering\nlumora_quotas, usage_logs,\nai_hours_usage",
+    fillcolor="#FEF3C7", color="#C9A227", fontcolor="#7C5E00"
+  ];
+
+  // Domain events between contexts
+  capture -> transcription [label="AudioChunkProduced"];
+  capture -> voice_id [label="AudioChunkProduced\n(when filter on)"];
+  voice_id -> transcription [label="ChunkClassified\n{ shouldTranscribe }"];
+  transcription -> capture [label="ChunkTranscribed\n{ text, latencyMs }"];
+
+  capture -> inference [label="QuestionLikelyComplete\n{ accumulatedText, mode }"];
+  inference -> conversation [label="AnswerCompleted\n{ fullAnswer, parsedSections }"];
+  inference -> metering [label="AnswerCompleted\n{ inputTokens, outputTokens }"];
+  transcription -> metering [label="UsageRecorded\n(transcription seconds)"];
+
+  metering -> inference [label="QuotaExceeded → 429", color="#C9A227", fontcolor="#7C5E00"];
+  metering -> transcription [label="QuotaExceeded → 429", color="#C9A227", fontcolor="#7C5E00"];
+
+  // Layout hints — keep producers on the left, consumers right
+  { rank=same; capture; voice_id; }
+  { rank=same; transcription; }
+  { rank=same; inference; }
+  { rank=same; conversation; metering; }
+}

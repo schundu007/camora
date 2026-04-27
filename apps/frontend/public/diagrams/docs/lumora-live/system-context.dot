@@ -1,0 +1,134 @@
+// Lumora Live — System Context Diagram
+// Render: dot -Tpng system-context.dot -o system-context.png
+digraph LumoraLiveContext {
+  graph [
+    bgcolor="white",
+    rankdir="LR",
+    splines="spline",
+    nodesep=0.5,
+    ranksep=0.9,
+    pad=0.3,
+    fontname="Inter, Helvetica, Arial, sans-serif"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=12,
+    fontcolor="#0F172A",
+    color="#94A3B8",
+    fillcolor="#F1F5F9",
+    margin="0.22,0.14",
+    penwidth=1.2
+  ];
+  edge [
+    fontname="Inter, Helvetica, Arial, sans-serif",
+    fontsize=10,
+    color="#64748B",
+    fontcolor="#475569",
+    penwidth=1.2,
+    arrowsize=0.7
+  ];
+
+  // Actor
+  candidate [
+    label="Candidate\n(in a video interview)",
+    shape=ellipse,
+    fillcolor="#FEF3C7",
+    color="#C9A227",
+    fontcolor="#7C5E00"
+  ];
+
+  // Camora-owned systems
+  subgraph cluster_camora {
+    label="Camora";
+    labeljust="l";
+    fontname="Inter, Helvetica, Arial, sans-serif";
+    fontsize=11;
+    fontcolor="#0047AB";
+    color="#0047AB";
+    style="rounded";
+    bgcolor="#F8FAFC";
+    penwidth=1.4;
+
+    frontend [
+      label="Lumora Frontend\nReact 19 / Vite 8\n(Vercel)",
+      fillcolor="#DBEAFE",
+      color="#0047AB",
+      fontcolor="#0047AB"
+    ];
+    lumora_backend [
+      label="Lumora Backend\nExpress 5 / Node 20\n(Railway)",
+      fillcolor="#DBEAFE",
+      color="#0047AB",
+      fontcolor="#0047AB"
+    ];
+    ai_services [
+      label="AI Services\nFastAPI / Python 3.11\n(Railway)",
+      fillcolor="#DBEAFE",
+      color="#0047AB",
+      fontcolor="#0047AB"
+    ];
+    postgres [
+      label="Postgres\n(shared with Capra)",
+      shape=cylinder,
+      fillcolor="#E0F2FE",
+      color="#0369A1",
+      fontcolor="#0369A1"
+    ];
+  }
+
+  // External systems
+  subgraph cluster_external {
+    label="External providers";
+    labeljust="l";
+    fontname="Inter, Helvetica, Arial, sans-serif";
+    fontsize=11;
+    fontcolor="#475569";
+    color="#94A3B8";
+    style="rounded,dashed";
+    bgcolor="#FAFAFA";
+    penwidth=1.0;
+
+    anthropic [
+      label="Anthropic API\nClaude Sonnet 4 / Haiku 4.5",
+      fillcolor="#FFF7ED",
+      color="#C2410C",
+      fontcolor="#9A3412"
+    ];
+    openai [
+      label="OpenAI API\nWhisper-1",
+      fillcolor="#F0FDF4",
+      color="#15803D",
+      fontcolor="#166534"
+    ];
+    stripe [
+      label="Stripe\nbilling + entitlements",
+      fillcolor="#F5F3FF",
+      color="#6D28D9",
+      fontcolor="#5B21B6"
+    ];
+    google_oauth [
+      label="Google OAuth\nSSO",
+      fillcolor="#F8FAFC",
+      color="#475569",
+      fontcolor="#334155"
+    ];
+  }
+
+  // Edges
+  candidate -> frontend [label="HTTPS\n(audio capture\n+ SSE answer)"];
+
+  frontend -> lumora_backend [label="POST /api/v1/transcribe\nPOST /api/v1/stream\n(SSE)"];
+  frontend -> ai_services [style=invis];
+
+  lumora_backend -> openai [label="Whisper-1\ntranscription"];
+  lumora_backend -> anthropic [label="Claude streaming\nprompt cache"];
+  lumora_backend -> ai_services [label="speaker / diagram"];
+  lumora_backend -> postgres [label="conversations\nmessages\nquotas\nai_hours"];
+
+  ai_services -> anthropic [label="diagram\ncode-gen"];
+
+  frontend -> google_oauth [label="OAuth flow", style=dashed];
+  lumora_backend -> stripe [label="billing\nwebhooks", style=dashed];
+}

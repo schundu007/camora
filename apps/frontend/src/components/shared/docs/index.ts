@@ -25,6 +25,9 @@ export type { DocsCollapsibleProps } from './DocsCollapsible';
 export { default as DocsTable } from './DocsTable';
 export type { DocsTableProps, DocsTableColumn } from './DocsTable';
 
+export { default as DocsDiagram } from './DocsDiagram';
+export type { DocsDiagramProps } from './DocsDiagram';
+
 export { default as BackToTop } from './BackToTop';
 export type { BackToTopProps } from './BackToTop';
 
