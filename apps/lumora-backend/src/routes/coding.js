@@ -12,6 +12,7 @@ import { getAnthropicClient } from '../lib/_shared/llm.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
+import { executeCode } from '../services/codeRunner.js';
 
 const router = Router();
 
@@ -833,20 +834,32 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
 // ---------------------------------------------------------------------------
 
 router.post('/execute', authenticate, async (req, res) => {
-  const { executeCode } = await import('../services/codeRunner.js');
-
-  const { code, language, test_cases: testCases } = req.body;
-
-  if (!code || !language) {
-    return res.status(400).json({ error: 'Missing code or language' });
-  }
-
+  // Wrap the entire handler so nothing escapes to the global 500 path.
+  // Code execution is best-effort by design — interpreter missing, malformed
+  // input, sandbox failure all map to a 200/400 with a readable message
+  // rather than a generic "Internal server error".
   try {
-    const result = await executeCode(code, language, testCases || []);
+    const { code, language, test_cases: testCases } = req.body || {};
+
+    if (!code || !language) {
+      return res.status(400).json({ error: 'Missing code or language' });
+    }
+    if (typeof code !== 'string' || typeof language !== 'string') {
+      return res.status(400).json({ error: 'code and language must be strings' });
+    }
+
+    // Hard 25s wall — Railway's edge proxy times out at ~30s; we must
+    // beat it so the client gets a JSON error rather than a 502 HTML.
+    const result = await Promise.race([
+      executeCode(code, language, Array.isArray(testCases) ? testCases : []),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Execution timed out after 25s')), 25_000),
+      ),
+    ]);
     return res.json(result);
   } catch (err) {
     console.error('Code execution error:', err);
-    return res.status(400).json({ error: err.message });
+    return res.status(400).json({ error: err?.message || 'Code execution failed' });
   }
 });
 
