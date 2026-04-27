@@ -246,14 +246,27 @@ export async function maybeSendPoolReminder({ scope, scopeId, ownerEmail, ownerN
 
 // Hour budget per personal plan_type. Free is a 30-min lifetime cap; paid
 // tiers reset on billing-period boundary (driven by Stripe invoice.paid).
+//
+// IMPORTANT: legacy plan_type values still live in `users` / `ascend_subscriptions`
+// rows from before the v2 SKU migration. Without explicit entries here, those
+// users would silently fall through to FREE (30 min lifetime) and hit a 429 at
+// 30 minutes. Map them to the equivalent v2 budget instead.
 const PERSONAL_HOUR_BUDGETS = {
   free: { hours: 0.5, period: 'lifetime' },
+  // v2 SKUs
   pro_monthly: { hours: 2, period: 'monthly' },
   pro_yearly: { hours: 24, period: 'yearly' },
   pro_max_monthly: { hours: 8, period: 'monthly' },
   pro_max_yearly: { hours: 96, period: 'yearly' },
-  // Capra Content (was a separate SKU earlier, kept for backwards compat
-  // in case any user holds it) — content-only, no AI hours.
+  // Legacy SKUs grandfathered to the closest v2 equivalent so existing
+  // DB rows aren't silently treated as free.
+  monthly: { hours: 2, period: 'monthly' },              // legacy → Pro monthly
+  monthly_starter: { hours: 2, period: 'monthly' },
+  monthly_pro: { hours: 8, period: 'monthly' },          // legacy unlimited → Pro Max
+  quarterly_pro: { hours: 8, period: 'monthly' },
+  annual: { hours: 24, period: 'yearly' },               // legacy → Pro yearly
+  annual_desktop: { hours: 96, period: 'yearly' },       // legacy → Pro Max yearly
+  // Capra Content variants — content-only, no AI hours.
   capra_content_monthly: { hours: 0, period: 'monthly' },
   capra_content_yearly: { hours: 0, period: 'yearly' },
 };

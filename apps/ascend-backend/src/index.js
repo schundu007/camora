@@ -1036,7 +1036,11 @@ app.use('/api/fix', authenticate, hourBudgetGate, aiLimiter, fixRouter);
 app.use('/api/transcribe', authenticate, hourBudgetGate, aiLimiter, transcribeRouter);
 app.use('/api/ascend/prep', authenticate, hourBudgetGate, apiLimiter, ascendPrepRouter);
 app.use('/api/ascend', authenticate, hourBudgetGate, aiLimiter, ascendRouter);
-app.use('/api/diagram', authenticate, hourBudgetGate, aiLimiter, diagramRouter);
+// hourBudgetGate is NOT applied at the mount because /api/diagram has
+// non-AI subroutes (/lookup, /cache-stats, /status, /debug — all cache
+// reads or admin metadata). The gate is applied inside diagramRouter on
+// just the /generate and /eraser handlers that actually call the LLM.
+app.use('/api/diagram', authenticate, aiLimiter, diagramRouter);
 app.use('/api/extract', authenticate, hourBudgetGate, aiLimiter, extractRouter);
 
 // Onboarding routes (require authentication)
