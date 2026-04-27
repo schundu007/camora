@@ -261,6 +261,159 @@ function GenericField({ label, val }: { label: string; val: any }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// LeetCode-inspired primitives — strong difficulty pills, complexity
+// badges, monospace example blocks, file-tab code headers.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Difficulty pill — Easy/Medium/Hard mapping to LC's color system. */
+function DifficultyPill({ value }: { value: string }) {
+  const v = String(value).toLowerCase();
+  const map: Record<string, { bg: string; fg: string; border: string }> = {
+    easy: { bg: 'rgba(34,197,94,0.10)', fg: '#16A34A', border: 'rgba(34,197,94,0.35)' },
+    medium: { bg: 'rgba(245,158,11,0.10)', fg: '#D97706', border: 'rgba(245,158,11,0.35)' },
+    hard: { bg: 'rgba(239,68,68,0.10)', fg: '#DC2626', border: 'rgba(239,68,68,0.35)' },
+  };
+  const senior = ['senior', 'staff', 'principal'].some((s) => v.includes(s));
+  const tone = map[v] || (senior ? map.hard : v.includes('mid') ? map.medium : map.easy);
+  return (
+    <span
+      className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+      style={{ background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}
+    >
+      {value}
+    </span>
+  );
+}
+
+/** Tag chip — subtle pill for category/topic/value. */
+function TagChip({ label, color = 'var(--cam-primary)' }: { label: string; color?: string }) {
+  return (
+    <span
+      className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded"
+      style={{ background: `color-mix(in srgb, ${color} 8%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)` }}
+    >
+      {label}
+    </span>
+  );
+}
+
+/** Complexity badge — O(n), O(log n), etc — the LC time/space pill. */
+function ComplexityBadge({ kind, value }: { kind: 'time' | 'space'; value: string }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded"
+      style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+    >
+      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        {kind === 'time' ? 'T' : 'S'}
+      </span>
+      <span style={{ color: 'var(--text-primary)' }}>{value}</span>
+    </span>
+  );
+}
+
+/** Code block with file-tab style header showing the language. */
+function CodeBlock({ code, language = 'code' }: { code: string; language?: string }) {
+  return (
+    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+      <div
+        className="px-3 py-1.5 flex items-center justify-between"
+        style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}
+      >
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          {language}
+        </span>
+        <span className="text-[10px]" style={{ color: 'var(--text-dimmed)' }}>{code.split('\n').length} lines</span>
+      </div>
+      <pre
+        className="px-4 py-3 text-xs leading-relaxed overflow-x-auto"
+        style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)' }}
+      >
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+/** Monospace example block — LC's "Example 1:" / Input / Output / Explanation. */
+function ExampleBlock({ example, index }: { example: any; index: number }) {
+  if (!example || typeof example !== 'object') return null;
+  return (
+    <div className="rounded-lg p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+      <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Example {index + 1}</div>
+      <div className="space-y-1.5 text-xs font-mono">
+        {example.input && (
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>Input:</span>
+            <span style={{ color: 'var(--text-primary)' }}>{example.input}</span>
+          </div>
+        )}
+        {example.output && (
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>Output:</span>
+            <span style={{ color: 'var(--text-primary)' }}>{example.output}</span>
+          </div>
+        )}
+      </div>
+      {example.explanation && (
+        <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>Explanation:</span>
+          {example.explanation}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** LeetCode-style approach card — name, description, complexity pills, code, line-by-line. */
+function ApproachCard({ approach, index }: { approach: any; index: number }) {
+  if (!approach || typeof approach !== 'object') return null;
+  return (
+    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+      <div className="px-4 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Approach {index + 1}</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{approach.name}</span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {approach.timeComplexity && <ComplexityBadge kind="time" value={approach.timeComplexity} />}
+          {approach.spaceComplexity && <ComplexityBadge kind="space" value={approach.spaceComplexity} />}
+        </div>
+        {approach.description && (
+          <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{approach.description}</p>
+        )}
+      </div>
+      <div className="px-4 py-3 space-y-3">
+        {approach.code && <CodeBlock code={approach.code} language={approach.language || 'python'} />}
+        {Array.isArray(approach.lineByLine) && approach.lineByLine.length > 0 && (
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Line-by-Line</div>
+            <div className="space-y-1">
+              {approach.lineByLine.filter((l: any) => l && typeof l === 'object').map((l: any, i: number) => (
+                <div key={i} className="grid gap-2 text-xs" style={{ gridTemplateColumns: 'minmax(0, 0.6fr) minmax(0, 1fr)' }}>
+                  <code className="font-mono px-2 py-1 rounded" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>{l.line}</code>
+                  <span className="leading-relaxed pt-1" style={{ color: 'var(--text-secondary)' }}>{l.explanation}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Section title bar — LC's labeled heading with a tinted left rail. */
+function SectionHeading({ label, color = 'var(--cam-primary)' }: { label: string; color?: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <span className="w-1 h-4 rounded" style={{ background: color }} />
+      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>{label}</span>
+    </div>
+  );
+}
+
 /** Rich content renderer for prep sections — accepts string or object.
  *  Renders known fields with custom layouts, then catches ALL remaining fields generically.
  *  Nothing is ever silently dropped. */
@@ -368,69 +521,257 @@ function PrepContentRenderer({ content }: { content: any }) {
     );
   }
 
-  // Questions — with STAR + coding + system design support
+  // Questions — LeetCode-inspired card layout
   if (data.questions?.length > 0) {
     mark('questions');
     els.push(
-      <div key="questions" className="space-y-4">
+      <div key="questions" className="space-y-5">
         {data.questions.map((q: any, i: number) => {
           const title = q.question || q.title || q.text || q.scenario || `Question ${i + 1}`;
-          // Collect all non-title fields for rendering
           const qRendered = new Set(['question', 'title', 'text', 'scenario']);
+
+          // Tag chips — extract metadata that should appear as small pills
+          const chips: { label: string; color: string }[] = [];
+          if (q.frequency) { qRendered.add('frequency'); chips.push({ label: q.frequency, color: 'var(--cam-primary)' }); }
+          if (q.category) { qRendered.add('category'); chips.push({ label: q.category, color: 'var(--accent)' }); }
+          if (q.companyValue) { qRendered.add('companyValue'); chips.push({ label: q.companyValue, color: 'var(--success)' }); }
+          if (q.timeLimit) { qRendered.add('timeLimit'); chips.push({ label: q.timeLimit, color: 'var(--warning-text)' }); }
+
           return (
-            <div key={i} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <div className="px-5 py-3 flex items-start gap-3" style={{ background: 'var(--bg-elevated)' }}>
-                <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>{i + 1}</span>
-                <div className="flex-1">
-                  <p className="text-sm font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>{title}</p>
-                  {q.difficulty && <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: q.difficulty === 'Hard' ? 'var(--danger)' : q.difficulty === 'Medium' ? 'var(--warning-text)' : 'var(--success)', border: `1px solid ${q.difficulty === 'Hard' ? 'var(--danger)' : q.difficulty === 'Medium' ? 'var(--warning)' : 'var(--success)'}` }}>{q.difficulty}</span>}
-                  {q.whyTheyAsk && (qRendered.add('whyTheyAsk'), <p className="text-xs mt-1 italic" style={{ color: 'var(--warning-text)' }}>Why Asked: {q.whyTheyAsk}</p>)}
-                  {q.whyThisCompanyAsks && (qRendered.add('whyThisCompanyAsks'), <p className="text-xs mt-1 italic" style={{ color: 'var(--warning-text)' }}>Why Asked: {q.whyThisCompanyAsks}</p>)}
-                  {q.companyConnection && (qRendered.add('companyConnection'), <p className="text-xs mt-1 italic" style={{ color: 'var(--cam-primary)' }}>Connect to: {q.companyConnection}</p>)}
-                  {q.category && (qRendered.add('category'), <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>{q.category}</span>)}
+            <article
+              key={i}
+              className="rounded-xl overflow-hidden"
+              style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+            >
+              {/* ── LC-style header: number + title + difficulty pill + chips ── */}
+              <header className="px-5 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                <div className="flex items-start gap-3">
+                  <span
+                    className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-bold font-mono"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                      {q.difficulty && <DifficultyPill value={q.difficulty} />}
+                      {chips.map((c, ci) => <TagChip key={ci} label={c.label} color={c.color} />)}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="px-5 py-4 space-y-3">
-                {/* Regular answer */}
-                {(q.answer || q.sampleAnswer || q.suggestedAnswer) && (qRendered.add('answer', 'sampleAnswer', 'suggestedAnswer'),
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{q.answer || q.sampleAnswer || q.suggestedAnswer}</p>
+                {/* Inline metadata strip — small italic context lines */}
+                {(q.whyTheyAsk || q.whyThisCompanyAsks || q.whatTheyTest || q.companyConnection) && (
+                  <div className="mt-3 pl-10 space-y-1">
+                    {q.whyTheyAsk && (qRendered.add('whyTheyAsk'),
+                      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Why asked:</span>
+                        {q.whyTheyAsk}
+                      </p>
+                    )}
+                    {q.whyThisCompanyAsks && (qRendered.add('whyThisCompanyAsks'),
+                      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Why asked:</span>
+                        {q.whyThisCompanyAsks}
+                      </p>
+                    )}
+                    {q.whatTheyTest && (qRendered.add('whatTheyTest'),
+                      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>What they test:</span>
+                        {q.whatTheyTest}
+                      </p>
+                    )}
+                    {q.companyConnection && (qRendered.add('companyConnection'),
+                      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--cam-primary)' }}>Connect to:</span>
+                        {q.companyConnection}
+                      </p>
+                    )}
+                  </div>
                 )}
-                {/* Description (coding) */}
-                {q.description && (qRendered.add('description'),
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{q.description}</p>
-                )}
+              </header>
+
+              {/* ── Body ── */}
+              <div className="px-5 py-4 space-y-4">
+                {/* Problem statement */}
+                {(q.problemStatement || q.description) && (() => {
+                  qRendered.add('problemStatement', 'description');
+                  const text = q.problemStatement || q.description;
+                  return (
+                    <div>
+                      <SectionHeading label="Problem" />
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                    </div>
+                  );
+                })()}
+
+                {/* Suggested answer (HR / hiring-manager / behavioral non-STAR) */}
+                {!q.situation && !q.task && !q.action && !q.result && (q.answer || q.sampleAnswer || q.suggestedAnswer) && (() => {
+                  qRendered.add('answer', 'sampleAnswer', 'suggestedAnswer');
+                  const text = q.answer || q.sampleAnswer || q.suggestedAnswer;
+                  return (
+                    <div>
+                      <SectionHeading label="Suggested Answer" color="var(--success)" />
+                      <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                    </div>
+                  );
+                })()}
+
                 {/* STAR format — behavioral */}
                 {(q.situation || q.task || q.action || q.result) && (() => {
                   qRendered.add('situation', 'task', 'action', 'result');
                   const stars = [
-                    { key: 'situation', label: 'SITUATION', bg: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: 'rgba(34,197,94,0.2)', color: '#166534' },
-                    { key: 'task', label: 'TASK', bg: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: 'rgba(59,130,246,0.2)', color: '#1e40af' },
-                    { key: 'action', label: 'ACTION', bg: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)', border: 'rgba(245,158,11,0.2)', color: '#A88817' },
-                    { key: 'result', label: 'RESULT', bg: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: 'rgba(16,185,129,0.2)', color: '#059669' },
+                    { key: 'situation', label: 'Situation', accent: '#16A34A' },
+                    { key: 'task',      label: 'Task',      accent: '#2563EB' },
+                    { key: 'action',    label: 'Action',    accent: '#D97706' },
+                    { key: 'result',    label: 'Result',    accent: '#059669' },
                   ];
                   return (
-                    <div className="space-y-3">
-                      {stars.map(s => q[s.key] && (
-                        <div key={s.key} className="p-4 rounded-xl" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                          <div className="text-xs font-bold mb-2" style={{ color: s.color }}>{s.label}</div>
-                          <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: s.color }}>{Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]}</p>
-                        </div>
-                      ))}
+                    <div>
+                      <SectionHeading label="STAR Response" />
+                      <div className="space-y-2">
+                        {stars.map((s) => q[s.key] && (
+                          <div key={s.key} className="rounded-lg p-3 flex gap-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderLeft: `3px solid ${s.accent}` }}>
+                            <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider" style={{ color: s.accent, minWidth: 64 }}>{s.label}</span>
+                            <span className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}
+
+                {/* Examples — LC-style monospace blocks */}
+                {Array.isArray(q.examples) && q.examples.length > 0 && (() => {
+                  qRendered.add('examples');
+                  return (
+                    <div>
+                      <SectionHeading label="Examples" />
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                        {q.examples.map((ex: any, ei: number) => <ExampleBlock key={ei} example={ex} index={ei} />)}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Approaches — LC-style with complexity pills */}
+                {Array.isArray(q.approaches) && q.approaches.length > 0 && (() => {
+                  qRendered.add('approaches');
+                  return (
+                    <div>
+                      <SectionHeading label="Approaches" />
+                      <div className="space-y-3">
+                        {q.approaches.map((ap: any, ai: number) => <ApproachCard key={ai} approach={ap} index={ai} />)}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Standalone code example (techstack questions) */}
+                {q.codeExample && !q.approaches && (() => {
+                  qRendered.add('codeExample');
+                  return (
+                    <div>
+                      <SectionHeading label="Code Example" />
+                      <CodeBlock code={q.codeExample} language={q.language || 'code'} />
+                    </div>
+                  );
+                })()}
+
+                {/* RRK structuredAnswer */}
+                {q.structuredAnswer && typeof q.structuredAnswer === 'object' && (() => {
+                  qRendered.add('structuredAnswer');
+                  const sa = q.structuredAnswer;
+                  const fields = ['setup', 'technicalDepth', 'tradeoffs', 'impact', 'companyRelevance'];
+                  return (
+                    <div>
+                      <SectionHeading label="Structured Answer" color="var(--success)" />
+                      <div className="space-y-2">
+                        {fields.filter((f) => sa[f]).map((f) => (
+                          <div key={f} className="rounded-lg p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cam-primary)' }}>{fmtKey(f)}</div>
+                            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{sa[f]}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Edge cases — red-tinted alert */}
+                {Array.isArray(q.edgeCases) && q.edgeCases.length > 0 && (() => {
+                  qRendered.add('edgeCases');
+                  return (
+                    <div>
+                      <SectionHeading label="Edge Cases" color="var(--danger)" />
+                      <div className="space-y-1.5">
+                        {q.edgeCases.filter((e: any) => e && typeof e === 'object').map((e: any, ei: number) => (
+                          <div key={ei} className="rounded-lg p-3 text-xs" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                            {e.case && <div className="font-bold mb-1" style={{ color: 'var(--danger)' }}>{e.case}</div>}
+                            {e.input && <div className="font-mono mb-1" style={{ color: 'var(--text-primary)' }}>{e.input}</div>}
+                            {e.explanation && <p style={{ color: 'var(--text-secondary)' }}>{e.explanation}</p>}
+                            {e.expectedOutput && <div className="font-mono mt-1" style={{ color: 'var(--text-muted)' }}>→ {e.expectedOutput}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Common mistakes — warning-tinted */}
+                {Array.isArray(q.commonMistakes) && q.commonMistakes.length > 0 && (() => {
+                  qRendered.add('commonMistakes');
+                  return (
+                    <div>
+                      <SectionHeading label="Common Mistakes" color="var(--warning-text)" />
+                      <ul className="space-y-1">
+                        {q.commonMistakes.map((m: any, mi: number) => (
+                          <li key={mi} className="text-xs flex gap-2" style={{ color: 'var(--text-secondary)' }}>
+                            <span style={{ color: 'var(--warning-text)' }}>•</span>
+                            <span>{typeof m === 'string' ? m : JSON.stringify(m)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
+                {/* Follow-ups */}
+                {(Array.isArray(q.followUpQuestions) || Array.isArray(q.followUps) || q.followUp) && (() => {
+                  qRendered.add('followUpQuestions', 'followUps', 'followUp');
+                  const items = q.followUpQuestions || q.followUps || (q.followUp ? [q.followUp] : []);
+                  return (
+                    <div>
+                      <SectionHeading label="Follow-ups" color="var(--accent)" />
+                      <ul className="space-y-1">
+                        {items.map((fu: any, fi: number) => (
+                          <li key={fi} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <span style={{ color: 'var(--accent)' }}>↳</span>
+                            <span>{typeof fu === 'string' ? fu : (fu.question || JSON.stringify(fu))}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
                 {/* Tips */}
-                {q.tips && (qRendered.add('tips'), <div className="text-xs p-3 rounded-lg italic" style={{ background: 'var(--bg-elevated)', color: 'var(--warning-text)', border: '1px solid var(--warning)' }}>{Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</div>)}
-                {q.followUp && (qRendered.add('followUp'), <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>Follow-up: {q.followUp}</p>)}
-                {/* Catch-all: render any remaining question fields generically */}
+                {q.tips && (qRendered.add('tips'),
+                  <div className="rounded-lg p-3 text-xs leading-relaxed" style={{ background: 'rgba(245,158,11,0.06)', color: 'var(--text-secondary)', borderLeft: '3px solid var(--warning, #F59E0B)' }}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Tip:</span>
+                    {Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}
+                  </div>
+                )}
+
+                {/* Catch-all for any remaining question fields */}
                 {Object.entries(q).filter(([k]) => !qRendered.has(k) && k !== 'difficulty').map(([k, v]) => (
-                  <div key={k} className="rounded-lg p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}</div>
-                    <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(v) ? (v as string[]).join('\n') : typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}</p>
+                  <div key={k}>
+                    <SectionHeading label={fmtKey(k)} color="var(--text-muted)" />
+                    <ValueRenderer val={v} />
                   </div>
                 ))}
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
