@@ -213,11 +213,11 @@ export default function PricingPage() {
                           {val === true ? (
                             ci === 0
                               ? <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: accent }}><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
-                              : <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>
+                              : <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="var(--text-secondary)" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-label="Yes"><path d="M10 3L4.5 8.5L2 6" /></svg>
                           ) : val === false ? (
-                            <span style={{ color: 'var(--border)', fontSize: 12 }}>—</span>
+                            <span aria-label="No" style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600 }}>—</span>
                           ) : (
-                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--cam-gold-leaf-text)' }}>{val}</span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide" style={{ background: 'var(--warning-subtle, #FEF3C7)', color: 'var(--warning-text)', border: '1px solid var(--warning, #F59E0B)' }}>{val}</span>
                           )}
                         </div>
                       );
