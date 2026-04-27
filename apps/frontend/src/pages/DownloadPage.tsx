@@ -136,8 +136,8 @@ function getOS(): OSType {
   return 'windows';
 }
 
-function getPrimaryPlatform(os: OSType): PlatformInfo {
-  return PLATFORMS.find(p => p.id === os) || PLATFORMS[0];
+function getPrimaryPlatform(os: OSType, platforms: PlatformInfo[]): PlatformInfo {
+  return platforms.find(p => p.id === os) || platforms[0];
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -342,7 +342,7 @@ export default function DownloadPage() {
     setDetectedOS(getOS());
   }, []);
 
-  const primary = getPrimaryPlatform(detectedOS);
+  const primary = getPrimaryPlatform(detectedOS, PLATFORMS);
 
   return (
     <div
