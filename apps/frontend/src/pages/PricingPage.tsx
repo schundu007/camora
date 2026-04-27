@@ -212,12 +212,12 @@ export default function PricingPage() {
                         <div key={k} className="px-2 py-3 flex items-center justify-center" style={{ background: ci === 0 ? 'rgba(38,97,156,0.04)' : ri % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)' }}>
                           {val === true ? (
                             ci === 0
-                              ? <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: accent }}><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
-                              : <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="var(--text-secondary)" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-label="Yes"><path d="M10 3L4.5 8.5L2 6" /></svg>
+                              ? <span className="inline-flex items-center justify-center w-6 h-6 rounded-full" style={{ background: accent }} aria-label="Yes"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
+                              : <span className="inline-flex items-center justify-center w-6 h-6 rounded-full" style={{ background: '#10B981' }} aria-label="Yes"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
                           ) : val === false ? (
-                            <span aria-label="No" style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600 }}>—</span>
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full" style={{ background: '#9CA3AF' }} aria-label="No"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h6" /></svg></span>
                           ) : (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide" style={{ background: 'var(--warning-subtle, #FEF3C7)', color: 'var(--warning-text)', border: '1px solid var(--warning, #F59E0B)' }}>{val}</span>
+                            <span className="text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wide" style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #F59E0B' }}>{val}</span>
                           )}
                         </div>
                       );
