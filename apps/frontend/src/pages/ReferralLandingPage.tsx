@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import SiteNav from '../components/shared/SiteNav';
 
 export default function ReferralLandingPage() {
   const { code } = useParams<{ code: string }>();
@@ -18,10 +19,13 @@ export default function ReferralLandingPage() {
   }, [code, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 relative" style={{ background: 'var(--cam-hero-bg)' }}>
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-      <div className="relative w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(255,255,255,0.2)', borderTopColor: 'var(--cam-gold-leaf-lt)' }} />
-      <p className="relative text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Setting up your referral...</p>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--cam-hero-bg)' }}>
+      <SiteNav />
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 relative">
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(255,255,255,0.2)', borderTopColor: 'var(--cam-gold-leaf-lt)' }} />
+        <p className="relative text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Setting up your referral...</p>
+      </div>
     </div>
   );
 }

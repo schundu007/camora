@@ -62,13 +62,16 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
       >
         {/* -- Left: mobile hamburger + logo ---------------------- */}
         <div className="flex items-center gap-3">
-          {/* Hamburger -- mobile only */}
+          {/* Hamburger -- mobile only. White stroke against the navy chrome
+              (was var(--text-primary) which renders black-on-navy in light
+              mode and is barely visible). Matches SiteNav and Lumora. */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
-            style={{ color: 'var(--text-primary)' }}
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors hover:bg-white/10"
+            style={{ color: '#FFFFFF' }}
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+            aria-expanded={sidebarOpen}
           >
             {sidebarOpen ? (
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

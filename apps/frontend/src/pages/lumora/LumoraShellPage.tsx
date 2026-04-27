@@ -222,13 +222,29 @@ export function LumoraShellPage() {
             Gradient + shadow give the header a high-fidelity modern
             feel in both themes via design tokens. */}
         <div
-          className="flex items-center h-12 px-4 shrink-0 lumora-shell-topbar gap-4"
+          className="flex items-center h-12 px-4 shrink-0 lumora-shell-topbar gap-3"
           style={{
             borderBottom: '1px solid var(--border)',
             background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
             boxShadow: '0 1px 3px rgba(38,97,156,0.06), 0 4px 16px rgba(38,97,156,0.04)',
           }}
         >
+          {/* Mobile hamburger — same top-left position used in SiteNav and
+              TopBar, opens the secondary-destinations drawer (was a "More"
+              bottom-sheet triggered from the tab bar). */}
+          <button
+            type="button"
+            onClick={() => setMobileMoreOpen(true)}
+            className="md:hidden flex items-center justify-center w-10 h-10 -ml-1 rounded-md transition-colors"
+            style={{ color: 'var(--text-primary)' }}
+            aria-label="Open menu"
+            aria-expanded={mobileMoreOpen}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M2 4h14M2 9h14M2 14h14" />
+            </svg>
+          </button>
+
           {/* LEFT — Lumora-specific tab pills. The Camora wordmark used
               to render here too, but the LumoraIconRail already shows
               the brand logo in the corner; rendering it twice on the
@@ -577,28 +593,26 @@ export function LumoraShellPage() {
             </Link>
           );
         })}
-        {/* More — opens a bottom sheet with secondary destinations */}
-        <button type="button" onClick={() => setMobileMoreOpen(true)} className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1"
-          style={{ color: ['calendar','assistants','profile','credits','pricing','sessions'].includes(activeTab) ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }}
-          aria-label="More" aria-haspopup="menu" aria-expanded={mobileMoreOpen}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></svg>
-          <span className="text-[10px] font-bold">More</span>
-          {['calendar','assistants','profile','credits','pricing','sessions'].includes(activeTab) && <span aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b" style={{ background: '#FFFFFF' }} />}
-        </button>
       </div>
 
-      {/* Mobile "More" sheet — secondary Lumora destinations (calendar, assistants, profile, credits, sessions, pricing) */}
+      {/* Mobile menu drawer — slides from the left, matches SiteNav and the
+          Sidebar (TopBar) drawer pattern. Holds secondary Lumora
+          destinations + utilities. Was a bottom sheet triggered from a
+          "More" tab; consolidated to a single hamburger entry point so
+          all three shells expose the same chrome. */}
       {mobileMoreOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setMobileMoreOpen(false)} role="dialog" aria-modal="true" aria-label="More menu">
-          <div className="flex-1" style={{ background: 'rgba(0,0,0,0.35)' }} />
-          <div onClick={e => e.stopPropagation()} className="rounded-t-2xl overflow-hidden animate-slide-in-up" style={{ background: 'var(--bg-surface)', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -8px 24px rgba(0,0,0,0.12)' }}>
+        <div className="md:hidden fixed inset-0 z-50" onClick={() => setMobileMoreOpen(false)} role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
+          <aside onClick={e => e.stopPropagation()}
+            className="absolute left-0 top-0 bottom-0 w-[280px] flex flex-col"
+            style={{ background: 'var(--bg-surface)', boxShadow: '4px 0 18px rgba(0,0,0,0.18)', borderRight: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-              <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>More</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Menu</span>
               <button type="button" onClick={() => setMobileMoreOpen(false)} aria-label="Close" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" /></svg>
               </button>
             </div>
-            <div className="py-2">
+            <div className="py-2 overflow-y-auto">
               {[
                 { id: 'calendar',   label: 'Calendar',   path: '/lumora/calendar' },
                 { id: 'sessions',   label: 'Sessions',   path: '/lumora/sessions' },
@@ -636,11 +650,11 @@ export function LumoraShellPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
       )}
 
-      {/* Mobile Audio Check — shell-level so the bottom-sheet "More → Audio check" entry can open it. */}
+      {/* Mobile Audio Check — shell-level so the drawer "Audio check" entry can open it. */}
       <AudioCheckModal isOpen={mobileAudioCheckOpen} onClose={() => setMobileAudioCheckOpen(false)} />
     </div>
     </>
