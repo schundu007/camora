@@ -420,6 +420,10 @@ function PrepContentRenderer({ content }: { content: any }) {
     { key: 'keyPoints', label: 'Key Points', color: 'var(--cam-primary)' },
     { key: 'talkingPoints', label: 'Talking Points', color: 'var(--cam-primary)' },
     { key: 'questionsToAsk', label: 'Questions to Ask', color: 'var(--accent)' },
+    { key: 'keyThemes', label: 'Key Themes', color: 'var(--cam-primary)', pill: true },
+    { key: 'generalTips', label: 'General Tips', color: 'var(--accent)' },
+    { key: 'ascendTips', label: 'Tips', color: 'var(--accent)' },
+    { key: 'studyTips', label: 'Study Tips', color: 'var(--accent)' },
   ];
   for (const f of listFields) {
     if (!data[f.key]) continue;
@@ -444,14 +448,17 @@ function PrepContentRenderer({ content }: { content: any }) {
     );
   }
 
-  // Box fields
+  // Box fields — companyInsights is intentionally NOT here; it has its own
+  // typed renderer above. Adding it would double-render.
   const boxFields = [
     { key: 'tips', label: 'Tips', bg: 'var(--bg-elevated)', border: 'var(--warning)', color: 'var(--warning-text)' },
     { key: 'deliveryTips', label: 'Delivery Tips', bg: 'var(--accent-subtle)', border: 'var(--border)', color: 'var(--cam-primary)' },
     { key: 'recentNews', label: 'Recent News', bg: 'var(--accent-subtle)', border: 'var(--border)', color: 'var(--success)' },
+    { key: 'companyContext', label: 'Company Context', bg: 'var(--bg-elevated)', border: 'var(--border)', color: 'var(--cam-primary)' },
+    { key: 'companyTechContext', label: 'Company Tech Context', bg: 'var(--bg-elevated)', border: 'var(--border)', color: 'var(--cam-primary)' },
   ];
   for (const f of boxFields) {
-    if (!data[f.key]) continue;
+    if (!data[f.key] || rendered.has(f.key)) continue;
     mark(f.key);
     const val = data[f.key];
     els.push(

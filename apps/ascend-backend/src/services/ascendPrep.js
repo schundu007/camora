@@ -2,6 +2,7 @@ import { getAnthropicClient, getOpenAIClient as getOpenAIClientFromShared } from
 import { getApiKey as getClaudeApiKey } from './claude.js';
 import { getApiKey as getOpenAIApiKey } from './openai.js';
 import { SECTION_PROMPTS } from './ascend-prep/section-prompts.js';
+import { getSchemaForSection } from './ascend-prep/section-schemas.js';
 import {
   searchInterviewQuestions,
   extractCompanyName,
@@ -35,7 +36,7 @@ const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
 const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
 const MAX_TOKENS_CUSTOM_SECTION = 16000; // Custom sections with document parsing
-const MAX_TOKENS_HAIKU_SECTION = 6000; // Non-technical sections (HR, pitch, behavioral) are shorter
+const MAX_TOKENS_HAIKU_SECTION = 12000; // Non-technical sections — behavioral STAR format needs 8-10K
 
 /**
  * Pick the right Claude model for a given section type.
@@ -158,45 +159,158 @@ async function enrichWithWebSearch(inputs, section) {
   }
 }
 
-// Generate a single section using Claude
-export async function* generateSectionClaude(section, inputs, model = DEFAULT_CLAUDE_MODEL) {
-  // Enrich inputs with web search for relevant sections
+// ─────────────────────────────────────────────────────────────────────────
+// Reliability config — mirrors lumora-backend/coding /solve so prep
+// generation stays available even when Claude is having a bad minute.
+// ─────────────────────────────────────────────────────────────────────────
+const TRANSPORT_BACKOFFS_MS = [500, 1500, 3500];
+
+function isRetryableClaudeError(err) {
+  if (!err) return false;
+  const status = err.status || err.statusCode || err?.response?.status;
+  if ([429, 502, 503, 504, 529].includes(status)) return true;
+  const msg = (err.message || '').toLowerCase();
+  return /overloaded|timeout|timed out|econnreset|fetch failed|socket hang up|network|terminated/.test(msg);
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function fallbackModelFor(primary) {
+  if (!primary) return CLAUDE_HAIKU;
+  return primary.includes('haiku') ? CLAUDE_SONNET : CLAUDE_HAIKU;
+}
+
+/**
+ * Generate a section using Anthropic tool_use. The model is forced to
+ * call a single tool whose input_schema matches the section's expected
+ * shape — the SDK delivers structured input rather than free-form text,
+ * so JSON parse failures are eliminated by construction.
+ *
+ * Streams progress chunks (synthetic "thinking" beats so the frontend
+ * spinner has something to show) and yields the final structured result.
+ */
+async function* generateSectionClaudeToolUse(section, inputs, model) {
   const enrichedInputs = await enrichWithWebSearch(inputs, section);
   const context = buildContext(enrichedInputs, section);
   const sectionPrompt = SECTION_PROMPTS[section];
+  if (!sectionPrompt) throw new Error(`Unknown section: ${section}`);
 
-  if (!sectionPrompt) {
-    throw new Error(`Unknown section: ${section}`);
+  const schema = getSchemaForSection(section);
+  if (!schema) {
+    // No schema — fall back to legacy text-streaming path
+    yield* generateSectionClaudeStreaming(section, inputs, model);
+    return;
   }
 
-  // Get company name for prompts
   const companyName = inputs.companyName || inputs.resolvedCompanyName || extractCompanyName(inputs.jobDescription || '');
+  const companyHint = companyName
+    ? `\n\nThis preparation is SPECIFICALLY for ${companyName}. Reference their real interview format, products, tech stack, and known questions. Avoid generic content.`
+    : '';
 
-  // Use extended system prompt for coding/system-design sections
+  // Compact system prompt — the schema does the structural heavy lifting,
+  // so the prompt only needs to set voice + audience.
+  const systemPrompt = `You are a senior interview coach for Camora. Your job is to produce concise, scannable, candidate-ready preparation material.
+
+Voice rules — follow exactly:
+  • Direct and specific. No filler ("It's important to note that...").
+  • Short sentences. ≤22 words. ≤3 sentences per paragraph-shaped string field.
+  • Real metrics from the resume. No fabricated numbers.
+  • Plain text in string fields. NO Markdown, NO bullets-inside-strings, NO JSON-inside-strings.
+  • Lists are arrays. Don't pack a list into a single comma-joined string.
+  • Every acronym you use ends up in the abbreviations array.${companyHint}
+
+Call the submit_prep tool exactly once with all the required fields.`;
+
+  const userMessage = `${context}\n\n${sectionPrompt}`;
+
+  const maxTokens = section.startsWith('custom')
+    ? MAX_TOKENS_CUSTOM_SECTION
+    : model === CLAUDE_HAIKU
+      ? MAX_TOKENS_HAIKU_SECTION
+      : MAX_TOKENS_PER_SECTION;
+
+  const tool = {
+    name: 'submit_prep',
+    description: `Submit the structured ${section} interview-prep content to the candidate.`,
+    input_schema: schema,
+  };
+
+  const stream = await getClaudeClient().messages.stream({
+    model,
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    tools: [tool],
+    tool_choice: { type: 'tool', name: 'submit_prep' },
+    messages: [{ role: 'user', content: userMessage }],
+  });
+
+  // Periodic synthetic chunk so the frontend SSE pipe stays warm and the
+  // spinner has something to render. Tool_use streams input_json_delta
+  // events, which aren't human-readable, so we ignore them and emit
+  // a heartbeat instead.
+  const heartbeatInterval = setInterval(() => {
+    // No-op — the chunk is yielded from the iterator below
+  }, 5000);
+
+  let stopReason = null;
+  let lastBeat = Date.now();
+  try {
+    for await (const event of stream) {
+      if (event.type === 'message_delta' && event.delta?.stop_reason) {
+        stopReason = event.delta.stop_reason;
+      }
+      // Heartbeat: every ~3s of streaming, push a tiny chunk so the
+      // frontend can show progress. Doesn't affect the final result.
+      if (Date.now() - lastBeat > 3000) {
+        lastBeat = Date.now();
+        yield { chunk: '·' };
+      }
+    }
+  } finally {
+    clearInterval(heartbeatInterval);
+  }
+
+  if (stopReason === 'max_tokens') {
+    console.warn(`[AscendPrep] tool_use truncated by max_tokens for section: ${section}`);
+    // Truncated tool_use input is invalid — let the caller retry/fallback.
+    throw new Error('TOOL_USE_TRUNCATED');
+  }
+
+  const finalMessage = await stream.finalMessage();
+  const toolUseBlock = (finalMessage.content || []).find((b) => b.type === 'tool_use');
+  if (!toolUseBlock || !toolUseBlock.input) {
+    throw new Error('TOOL_USE_NO_INPUT');
+  }
+
+  console.log(`[AscendPrep] tool_use OK for ${section} — keys: ${Object.keys(toolUseBlock.input).join(', ')}`);
+  yield { done: true, result: cleanupResult(toolUseBlock.input) };
+}
+
+/**
+ * Legacy streaming path — used as a tertiary fallback if tool_use fails
+ * twice. Streams free-form text, parses JSON with repair. Kept around
+ * because some sections occasionally need the freedom of plain text
+ * (and because it's the path we've battle-tested for months).
+ */
+async function* generateSectionClaudeStreaming(section, inputs, model) {
+  const enrichedInputs = await enrichWithWebSearch(inputs, section);
+  const context = buildContext(enrichedInputs, section);
+  const sectionPrompt = SECTION_PROMPTS[section];
+  if (!sectionPrompt) throw new Error(`Unknown section: ${section}`);
+
+  const companyName = inputs.companyName || inputs.resolvedCompanyName || extractCompanyName(inputs.jobDescription || '');
   const isDetailedSection = ['coding', 'system-design', 'techstack', 'rrk'].includes(section);
   const companyContext = companyName
-    ? `\n\nCRITICAL: You are preparing content SPECIFICALLY for ${companyName}.
-- Use ${companyName}'s actual interview format, known questions, and company culture
-- Reference ${companyName}'s real products, tech stack, and business challenges
-- Generate questions that ${companyName} is ACTUALLY known to ask (from Glassdoor, LeetCode, Blind)
-- DO NOT use generic questions - every question must be tailored to ${companyName}'s interview process
-- Include ${companyName}-specific context like their Leadership Principles, engineering culture, or values`
+    ? `\n\nThis preparation is for ${companyName}. Use their actual interview format, products, tech stack, and known questions.`
     : '';
 
   const systemPrompt = isDetailedSection
-    ? `You are an expert interview coach with deep knowledge of technical interviews at top tech companies.
-Your task is to provide COMPREHENSIVE, DETAILED preparation materials.
-For coding questions: Include COMPLETE working code with LINE-BY-LINE explanations and ALL edge cases.
-For system design: Include ASCII architecture diagrams, capacity calculations, and detailed component breakdowns.
-You MUST reference any prep materials provided by the candidate.${companyContext}
-Return ONLY valid JSON - no markdown, no code blocks. Start with { and end with }.`
-    : `You are a concise interview coach specializing in company-specific interview preparation. Give specific, actionable advice based on the resume and job description. Be direct and practical.${companyContext}
-Return ONLY valid JSON - no markdown, no code blocks, no explanations before or after. Start your response with { and end with }.`;
+    ? `You are an expert interview coach. Provide comprehensive, detailed preparation. Reference any prep materials provided.${companyContext}\nReturn ONLY valid JSON. Start with { and end with }. No code fences, no prose.`
+    : `You are a concise interview coach. Give specific, actionable advice. Be direct.${companyContext}\nReturn ONLY valid JSON. Start with { and end with }. No code fences, no prose.`;
 
-  const userMessage = `${context}\n\n${sectionPrompt}\n\nCRITICAL: Return ONLY the JSON object. Do NOT wrap in \`\`\`json code blocks. Start directly with { and end with }.`;
-
-  // Token budget: custom sections need more room for document extraction,
-  // Haiku (non-technical) sections are shorter, Sonnet (technical) get standard budget
+  const userMessage = `${context}\n\n${sectionPrompt}`;
   const maxTokens = section.startsWith('custom')
     ? MAX_TOKENS_CUSTOM_SECTION
     : model === CLAUDE_HAIKU
@@ -212,69 +326,110 @@ Return ONLY valid JSON - no markdown, no code blocks, no explanations before or 
 
   let fullText = '';
   let stopReason = null;
-
   for await (const event of stream) {
     if (event.type === 'content_block_delta' && event.delta?.text) {
       fullText += event.delta.text;
       yield { chunk: event.delta.text };
     }
-    // Capture stop reason to detect truncation
     if (event.type === 'message_delta' && event.delta?.stop_reason) {
       stopReason = event.delta.stop_reason;
     }
   }
-
-  // Log if response was truncated
   if (stopReason === 'max_tokens') {
-    console.warn(`[AscendPrep] Response truncated by max_tokens for section: ${section}`);
+    console.warn(`[AscendPrep] Streaming truncated by max_tokens for ${section}`);
   }
-  console.log(`[AscendPrep] Response completed. Stop reason: ${stopReason}, Length: ${fullText.length}`);
 
-  // Parse final result
+  // Parse + repair
   try {
-    const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/) ||
-                      fullText.match(/\{[\s\S]*\}/);
+    const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/) || fullText.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : fullText;
     const result = JSON.parse(jsonStr);
-    // Clean up all text content in the result
     yield { done: true, result: cleanupResult(result) };
-  } catch (err) {
-    console.error(`[AscendPrep] JSON parse failed for section ${section}:`, err.message);
-    console.error(`[AscendPrep] JSON error position context:`, fullText.substring(Math.max(0, 11100), 11150));
+    return;
+  } catch {}
 
-    // Try to repair common JSON issues
-    try {
-      let repairedJson = fullText;
-      // Fix truncated JSON by adding closing braces/brackets
-      if (stopReason === 'max_tokens') {
-        // Count open braces/brackets
-        const openBraces = (repairedJson.match(/\{/g) || []).length;
-        const closeBraces = (repairedJson.match(/\}/g) || []).length;
-        const openBrackets = (repairedJson.match(/\[/g) || []).length;
-        const closeBrackets = (repairedJson.match(/\]/g) || []).length;
-
-        // Add missing closing characters
-        repairedJson += '"'.repeat(repairedJson.split('"').length % 2 === 0 ? 0 : 1);
-        repairedJson += ']'.repeat(Math.max(0, openBrackets - closeBrackets));
-        repairedJson += '}'.repeat(Math.max(0, openBraces - closeBraces));
-
-        console.log(`[AscendPrep] Attempted JSON repair: added ${openBraces - closeBraces} braces, ${openBrackets - closeBrackets} brackets`);
-      }
-
-      const jsonMatch2 = repairedJson.match(/\{[\s\S]*\}/);
-      if (jsonMatch2) {
-        const result = JSON.parse(jsonMatch2[0]);
-        console.log(`[AscendPrep] JSON repair successful`);
-        yield { done: true, result: cleanupResult(result) };
-        return;
-      }
-    } catch (repairErr) {
-      console.error(`[AscendPrep] JSON repair also failed:`, repairErr.message);
+  try {
+    let str = fullText.trim();
+    const jsonStart = str.indexOf('{');
+    if (jsonStart >= 0) str = str.slice(jsonStart);
+    let inStr = false, esc = false;
+    for (let i = 0; i < str.length; i++) {
+      if (esc) { esc = false; continue; }
+      if (str[i] === '\\') { esc = true; continue; }
+      if (str[i] === '"') inStr = !inStr;
     }
+    if (inStr) str += '"';
+    str = str.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"]*"?\s*$/, '').replace(/,\s*$/, '');
+    const stack = [];
+    inStr = false; esc = false;
+    for (let i = 0; i < str.length; i++) {
+      if (esc) { esc = false; continue; }
+      if (str[i] === '\\') { esc = true; continue; }
+      if (str[i] === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (str[i] === '{') stack.push('}');
+      else if (str[i] === '[') stack.push(']');
+      else if (str[i] === '}' || str[i] === ']') stack.pop();
+    }
+    str += stack.reverse().join('');
+    const result = JSON.parse(str);
+    yield { done: true, result: cleanupResult(result) };
+    return;
+  } catch {}
 
-    // Return raw text if JSON parsing fails
-    yield { done: true, result: { rawContent: cleanupText(fullText) } };
+  // Final fallback: surface the raw text so the frontend can show
+  // a "regenerate" prompt instead of a silent failure.
+  yield { done: true, result: { rawContent: cleanupText(fullText) } };
+}
+
+/**
+ * Public entry point for Claude generation. Tries tool_use first
+ * (preferred — guarantees structured output), falls back to streaming
+ * if tool_use fails, and on transient transport errors retries with
+ * exponential-ish backoff. Final fallback flips to the opposite-tier
+ * model so a Sonnet outage doesn't kill the whole feature.
+ */
+export async function* generateSectionClaude(section, inputs, model = DEFAULT_CLAUDE_MODEL) {
+  const tryGenerator = async function* (genFn, modelToUse, label) {
+    let attempt = 0;
+    let lastErr;
+    while (attempt <= TRANSPORT_BACKOFFS_MS.length) {
+      try {
+        yield* genFn(section, inputs, modelToUse);
+        return;
+      } catch (err) {
+        lastErr = err;
+        if (!isRetryableClaudeError(err) || attempt === TRANSPORT_BACKOFFS_MS.length) {
+          throw err;
+        }
+        const wait = TRANSPORT_BACKOFFS_MS[attempt];
+        console.warn(`[AscendPrep] ${label} attempt ${attempt + 1} failed (${err.message?.slice(0, 80)}), retrying in ${wait}ms`);
+        await sleep(wait);
+        attempt += 1;
+      }
+    }
+    throw lastErr;
+  };
+
+  // Pass 1: tool_use on the preferred model
+  try {
+    yield* tryGenerator(generateSectionClaudeToolUse, model, 'tool_use');
+    return;
+  } catch (err) {
+    console.warn(`[AscendPrep] tool_use failed for ${section} on ${model}: ${err.message?.slice(0, 120)}`);
   }
+
+  // Pass 2: tool_use on the opposite-tier model
+  const fallbackModel = fallbackModelFor(model);
+  try {
+    yield* tryGenerator(generateSectionClaudeToolUse, fallbackModel, 'tool_use_fallback');
+    return;
+  } catch (err) {
+    console.warn(`[AscendPrep] tool_use fallback (${fallbackModel}) failed for ${section}: ${err.message?.slice(0, 120)}`);
+  }
+
+  // Pass 3: legacy streaming path on the preferred model — last resort.
+  yield* generateSectionClaudeStreaming(section, inputs, model);
 }
 
 // Generate a single section using OpenAI
