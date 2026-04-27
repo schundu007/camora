@@ -68,6 +68,28 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       }}
     >
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center px-4 sm:px-6 h-14">
+        {/* Mobile burger — sits before the logo so it lines up with the
+            same top-left position used in TopBar and the Lumora shell.
+            Hidden on desktop where the full nav fits. */}
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="md:hidden flex items-center justify-center w-10 h-10 -ml-2 mr-1 rounded-md transition-colors"
+          style={{ color: textColor }}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+        >
+          {open ? (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 4l10 10M14 4L4 14" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M2 4h14M2 9h14M2 14h14" />
+            </svg>
+          )}
+        </button>
+
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
           <CamoraLogo size={32} />
@@ -125,59 +147,73 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           )}
         </div>
 
-        {/* Mobile burger */}
-        <button onClick={() => setOpen(!open)} className="md:hidden p-3 -mr-2 transition-colors" style={{ color: textColor }} aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            {open
-              ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              : <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />}
-          </svg>
-        </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile drawer — slides from left, matches Sidebar / TopBar pattern.
+          Replaced the previous dropdown so all three shells (SiteNav,
+          TopBar, Lumora) share the same hamburger → left-drawer behavior. */}
       {open && (
         <>
-          {/* Tap-outside backdrop — sits below the menu, covers the rest of the viewport */}
-          <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-40 cursor-default" style={{ background: 'rgba(0,0,0,0.25)', top: 56 }} />
-        <div className="md:hidden relative z-50 px-6 py-3 space-y-1" style={{ background: 'var(--bg-surface)', backdropFilter: 'blur(12px)', borderTop: '1px solid var(--border)' }} role="menu">
-          {/* IMPORTANT: this menu sits on var(--bg-surface) which is white in
-              light mode. The parent <nav> uses #FFFFFF text against its dark
-              navy bg — DO NOT reuse those constants here, or you get
-              white-on-white. Inline text colors below pull from the
-              theme-aware --text-primary / --text-muted tokens so the menu
-              stays readable in either theme. */}
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              to={link.href}
-              onClick={() => setOpen(false)}
-              className="block py-2 text-sm font-bold"
-              style={{ color: isActive(link.href) ? 'var(--accent)' : 'var(--text-primary)' }}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <div className="pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            {isAuthenticated ? (
-              <>
-                <Link to="/account/team" onClick={() => setOpen(false)} className="flex items-center justify-between py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  <span>AI hours</span>
-                  <span className="md:hidden"><HourMeterChip variant="light" /></span>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setOpen(false)}
+            className="md:hidden fixed inset-0 z-40 cursor-default"
+            style={{ background: 'rgba(0,0,0,0.45)', top: navHeight }}
+          />
+          <aside
+            className="md:hidden fixed left-0 z-50 w-[280px] flex flex-col"
+            style={{
+              top: navHeight,
+              bottom: 0,
+              background: 'var(--bg-surface)',
+              borderRight: '1px solid var(--border)',
+              boxShadow: '4px 0 18px rgba(0,0,0,0.18)',
+            }}
+            role="menu"
+            aria-label="Site menu"
+          >
+            <div className="px-5 py-4 space-y-1 overflow-y-auto">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  onClick={() => setOpen(false)}
+                  className="block py-2.5 text-[14px] font-semibold"
+                  style={{ color: isActive(link.href) ? 'var(--accent)' : 'var(--text-primary)' }}
+                >
+                  {link.label}
                 </Link>
-                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Dashboard</Link>
-                <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Profile</Link>
-                {onboardingCompleted === false && (
-                  <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Onboarding</Link>
+              ))}
+              <div className="pt-3 mt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/account/team" onClick={() => setOpen(false)} className="flex items-center justify-between py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <span>AI hours</span>
+                      <span><HourMeterChip variant="light" /></span>
+                    </Link>
+                    <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Dashboard</Link>
+                    <Link to="/profile" onClick={() => setOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Profile</Link>
+                    {onboardingCompleted === false && (
+                      <Link to="/capra/onboarding" onClick={() => setOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Onboarding</Link>
+                    )}
+                    <Link to="/profile?tab=referrals" onClick={() => setOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Refer a Friend</Link>
+                    <button type="button" onClick={() => { toggleTheme(); setOpen(false); }} className="block w-full text-left py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                    </button>
+                    <button type="button" onClick={() => { logout(); setOpen(false); }} className="block w-full text-left py-2.5 text-[14px] font-semibold" style={{ color: 'var(--danger)' }}>Sign out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sign in</Link>
+                    <button type="button" onClick={() => { toggleTheme(); setOpen(false); }} className="block w-full text-left py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                    </button>
+                  </>
                 )}
-                <Link to="/profile?tab=referrals" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Refer a Friend</Link>
-                <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm font-bold" style={{ color: 'var(--danger)' }}>Sign out</button>
-              </>
-            ) : (
-              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Sign in</Link>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
+          </aside>
         </>
       )}
       {/* Challenge Campaign Ticker — gold band so the scrolling text
