@@ -11,8 +11,6 @@ import CapabilityDeck from '../components/landing/CapabilityDeck';
 import CountUp from '../components/shared/animation/CountUp';
 import { BentoCell } from '../components/shared/docs';
 import { HexBadge, type HexColor } from '../components/shared/HexBadge';
-import { DiagonalDivider } from '../components/shared/DiagonalDivider';
-import { MadeWithLove } from '../components/shared/MadeWithLove';
 import { StrengthsRow } from '../components/landing/StrengthsRow';
 
 /* ══════════════════════════════════════════════════════════════
@@ -166,137 +164,126 @@ export default function LandingPage() {
       <CardAnimationStyles />
       <SiteNav variant="light" />
 
-      {/* ═══════════ 1. HERO — LeetCode-style dark band w/ diagonal cut ═══════════ */}
+      {/* ═══════════ 1. HERO — dark band w/ embedded stat strip ═══════════ */}
       <section
-        className="relative pt-24 pb-32 md:pt-32 md:pb-40 px-6 text-center overflow-hidden"
+        className="relative pt-20 pb-12 md:pt-24 md:pb-16 px-6 text-center overflow-hidden"
         style={{
           background:
             'var(--cam-hero-bg)',
         }}
       >
-        {/* Subtle navy noise/glow — keeps the band from looking flat */}
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+              'radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255,255,255,0.07), transparent 70%)',
           }}
         />
 
-        <div className="relative max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: F.mono }}>
+        <div className="relative max-w-5xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <span className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: F.mono }}>
               THE CAREER PLATFORM
             </span>
           </motion.div>
 
-          <motion.h1 className="mt-6" style={{ fontFamily: F.display }}
-            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase text-white">
+          <motion.h1 className="mt-5" style={{ fontFamily: F.display }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.08 }}>
+            <span className="block text-[36px] sm:text-[48px] md:text-[60px] lg:text-[68px] font-bold leading-[1.05] tracking-tight uppercase text-white">
               ALL YOUR PREP.
             </span>
-            <span className="block text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] font-bold leading-[1.02] tracking-tight uppercase" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+            <span className="block text-[36px] sm:text-[48px] md:text-[60px] lg:text-[68px] font-bold leading-[1.05] tracking-tight uppercase" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
               ONE TRUSTED PLATFORM.
             </span>
           </motion.h1>
 
-          <motion.p className="mt-7 text-lg md:text-xl max-w-3xl mx-auto" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.55 }}
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
+          <motion.p className="mt-5 text-base md:text-lg max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.78)', lineHeight: 1.5 }}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.16 }}>
             Job discovery, interview prep, mock practice, and live AI assistance — all in one place.
           </motion.p>
 
-          {/* Single big CTA — LeetCode rule: one pill, no eye-split */}
-          <motion.div className="mt-10 flex items-center justify-center"
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
+          <motion.div className="mt-7 flex items-center justify-center gap-3 flex-wrap"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.24 }}>
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'}
-              className="press inline-flex items-center gap-2 px-10 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full transition-all hover:scale-[1.02]"
-              style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 8px 22px rgba(0,0,0,0.25)' }}>
+              className="press inline-flex items-center gap-2 px-7 py-3 text-[13px] font-bold uppercase tracking-[0.08em] rounded-full transition-all hover:scale-[1.02]"
+              style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 6px 18px rgba(0,0,0,0.22)' }}>
               {isAuthenticated ? 'GO TO DASHBOARD' : 'GET STARTED FREE'}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+            </Link>
+            <Link to="/pricing"
+              className="inline-flex items-center gap-2 px-7 py-3 text-[13px] font-bold uppercase tracking-[0.08em] rounded-full transition-all"
+              style={{ color: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.22)' }}>
+              VIEW PRICING
             </Link>
           </motion.div>
 
           {visitorCount !== null && visitorCount > 0 && (
-            <motion.p className="mt-8 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+            <motion.p className="mt-6 text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
               Trusted by <strong className="text-white">{visitorCount.toLocaleString()}+</strong> engineers worldwide
             </motion.p>
           )}
-        </div>
 
-        {/* Diagonal cut into the next (logos) section */}
-        <DiagonalDivider fill="var(--bg-surface)" slope="tl-to-br" position="bottom" height="9vh" />
+          {/* Stat strip embedded in hero — replaces the standalone STATS section */}
+          <motion.div
+            className="mt-12 md:mt-14 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.36 }}
+            style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '2rem' }}
+          >
+            {STATS.map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="text-[34px] md:text-[40px] font-bold tracking-tight leading-none text-white" style={{ fontFamily: F.display }}>
+                  <CountUp value={s.value} suffix={s.suffix} duration={1400} />
+                </p>
+                <p className="text-[10px] font-bold mt-2 uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: F.mono }}>{s.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </section>
 
-      {/* ═══════════ 2. COMPANY LOGOS — Scrolling ═══════════ */}
-      <section className="py-10 overflow-hidden bg-[var(--bg-surface)]">
-        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: 'var(--text-muted)' }}>Trusted by engineers at</p>
+      {/* ═══════════ 2. COMPANY LOGOS — Scrolling, tight band ═══════════ */}
+      <section className="py-8 overflow-hidden border-b" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] mb-5" style={{ color: 'var(--text-muted)' }}>Trusted by engineers at</p>
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, var(--bg-surface), transparent)' }} />
           <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to left, var(--bg-surface), transparent)' }} />
-          <div className="flex" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
+          <div className="flex" style={{ animation: 'scroll-logos 36s linear infinite', width: 'max-content' }}>
             {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
               <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
-                alt={c} className="h-5 object-contain opacity-30 mx-6 shrink-0" loading="lazy"
+                alt={c} className="h-5 object-contain opacity-40 mx-6 shrink-0" loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════ 3. STATS ═══════════ */}
-      <section
-        className="relative px-6 py-24 overflow-hidden"
-        style={{
-          // Left-to-right blue → white wash. Replaces the previous grass
-          // photo with the gettyimages watermark; matches the brand's blue
-          // accents and stays readable behind the dark stat numerals.
-          background:
-            'linear-gradient(90deg, #2A66AE 0%, #4F86C5 35%, #B7CFE6 70%, #FFFFFF 100%)',
-        }}
-      >
-        <div className="relative max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS.map((s, i) => (
-              <Reveal key={s.label} delay={i * 0.06}>
-                <div className="text-center">
-                  <p className="text-5xl md:text-6xl font-bold tracking-tight" style={{ fontFamily: F.display, color: 'var(--text-primary)' }}>
-                    <CountUp value={s.value} suffix={s.suffix} duration={1400} />
-                  </p>
-                  <p className="text-xs font-bold mt-3 uppercase tracking-[0.15em] text-camora-primary" style={{ fontFamily: F.mono }}>{s.label}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ 4. APPA — THE PROCESS ═══════════ */}
-      <section className="px-6 py-28 bg-[var(--bg-surface)]">
+      {/* ═══════════ 3. APPA — THE PROCESS ═══════════ */}
+      <section className="px-6 py-16 md:py-20 bg-[var(--bg-surface)]">
         <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center mb-16">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>THE PROCESS</span>
-            <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
+          <Reveal className="text-center mb-10 md:mb-12">
+            <span className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>THE PROCESS</span>
+            <h2 className="mt-3 text-[28px] md:text-[36px] font-bold tracking-tight uppercase" style={{ fontFamily: F.display, lineHeight: 1.1 }}>
               YOUR PATH TO <span style={{ color: 'var(--cam-primary)' }}>THE OFFER.</span>
             </h2>
           </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {APPA.map((step, i) => (
               <Reveal key={step.key} delay={i * 0.06}>
                 <Link to={step.href} className="card-lift block rounded-lg h-full bg-[var(--bg-surface)] border border-[var(--border)] group overflow-hidden">
-                  <div className="w-full h-40 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
+                  <div className="w-full h-32 overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
                     <step.Anim />
                   </div>
-                  <div className="p-8">
-                    <div className="mb-5">
-                      <HexBadge color={step.hexColor} size={56} icon={step.glyph} />
+                  <div className="p-5">
+                    <div className="mb-4">
+                      <HexBadge color={step.hexColor} size={44} icon={step.glyph} />
                     </div>
-                    <span className="text-xs font-bold tracking-[0.15em] uppercase text-camora-primary" style={{ fontFamily: F.mono }}>{step.label}</span>
-                    <h3 className="mt-2 text-lg font-bold tracking-tight" style={{ fontFamily: F.display }}>{step.headline}</h3>
-                    <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
-                    <span className="inline-flex items-center gap-1 mt-5 text-xs font-bold uppercase tracking-wider group-hover:gap-2 transition-all text-camora-primary">
+                    <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-camora-primary" style={{ fontFamily: F.mono }}>{step.label}</span>
+                    <h3 className="mt-1.5 text-[15px] md:text-base font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.25 }}>{step.headline}</h3>
+                    <p className="mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
+                    <span className="inline-flex items-center gap-1 mt-4 text-[11px] font-bold uppercase tracking-wider group-hover:gap-2 transition-all text-camora-primary">
                       Explore &rsaquo;
                     </span>
                   </div>
@@ -307,25 +294,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 5. CAPABILITY DECK — Everything Camora does, on loop ═══════════ */}
-      <section className="px-6 py-28" style={{ background: 'var(--cam-surface-lt)' }}>
+      {/* ═══════════ 4. CAPABILITY DECK — Everything Camora does, on loop ═══════════ */}
+      <section className="px-6 py-16 md:py-20" style={{ background: 'var(--cam-surface-lt)' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Left: text */}
             <div className="lg:w-[38%]">
               <Reveal>
-                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>CAMORA · AI COPILOT</span>
-                <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
+                <span className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>CAMORA · AI COPILOT</span>
+                <h2 className="mt-3 text-[28px] md:text-[36px] font-bold tracking-tight uppercase" style={{ fontFamily: F.display, lineHeight: 1.1 }}>
                   ONE TOOL.<br /><span style={{ color: 'var(--cam-primary)' }}>EVERY INTERVIEW.</span>
                 </h2>
-                <p className="mt-6 text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p className="mt-5 text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems — requirements through API. Company-specific prep for the full loop: HR, Hiring Manager, Coding, Design, Behavioral. Mock-interview scoring across every dimension.
                 </p>
-                <div className="mt-8 flex items-center gap-4">
-                  <Link to="/lumora" className="px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] rounded-full bg-camora-primary text-camora-mist hover:bg-camora-primaryDk transition-all">
+                <div className="mt-6 flex items-center gap-4">
+                  <Link to="/lumora" className="px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] rounded-full bg-camora-primary text-camora-mist hover:bg-camora-primaryDk transition-all">
                     TRY LIVE AI
                   </Link>
-                  <Link to="/pricing" className="text-sm font-bold uppercase tracking-wider text-camora-primary hover:text-camora-primaryDk">
+                  <Link to="/pricing" className="text-[12px] font-bold uppercase tracking-wider text-camora-primary hover:text-camora-primaryDk">
                     VIEW PRICING &rsaquo;
                   </Link>
                 </div>
@@ -342,22 +329,22 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 6. FEATURES — Bento grid ═══════════ */}
-      <section className="px-6 py-24 md:py-28 bg-[var(--bg-surface)]">
+      {/* ═══════════ 5. FEATURES — Bento grid ═══════════ */}
+      <section className="px-6 py-16 md:py-20 bg-[var(--bg-surface)]">
         <div className="max-w-6xl mx-auto">
-          <Reveal className="text-left max-w-3xl mb-12 md:mb-14">
+          <Reveal className="text-left max-w-3xl mb-10">
             <span className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: 'var(--accent)', fontFamily: F.mono }}>ONLY ON CAMORA</span>
-            <h2 className="mt-3 text-3xl md:text-5xl font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.1 }}>
+            <h2 className="mt-3 text-[28px] md:text-[36px] font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.1 }}>
               Features that set us apart.
             </h2>
-            <p className="mt-4 text-base md:text-lg" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+            <p className="mt-3 text-[15px] md:text-base" style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
               Live transcription. Architecture diagrams. AI-scored mocks. Engineered for the moment that decides the offer.
             </p>
           </Reveal>
 
           {/* Bento layout: row 1 = LIVE AI (wide) + JOB MATCHING.
               row 2 = PREP + MOCK INTERVIEWS (wide). */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5" style={{ gridAutoFlow: 'dense' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ gridAutoFlow: 'dense' }}>
             {FEATURES.map((f, i) => {
               const wide = f.label === 'LIVE AI' || f.label === 'MOCK INTERVIEWS';
               return (
@@ -369,7 +356,7 @@ export default function LandingPage() {
                     description={f.desc}
                     className="h-full"
                   >
-                    <div className="mt-4 -mx-1 rounded-lg overflow-hidden h-32 md:h-40 relative" style={{ background: 'var(--bg-elevated)' }}>
+                    <div className="mt-3 -mx-1 rounded-lg overflow-hidden h-28 md:h-32 relative" style={{ background: 'var(--bg-elevated)' }}>
                       <f.Anim />
                     </div>
                   </BentoCell>
@@ -378,12 +365,12 @@ export default function LandingPage() {
             })}
           </div>
 
-          {/* Feature highlights bar */}
-          <Reveal className="mt-12">
-            <div className="flex items-center justify-center gap-8 flex-wrap px-8 py-4 rounded-lg bg-camora-primary">
+          {/* Feature highlights bar — tighter, single row */}
+          <Reveal className="mt-8">
+            <div className="flex items-center justify-center gap-6 md:gap-8 flex-wrap px-6 py-3 rounded-lg bg-camora-primary">
               {['50+ Languages', 'Architecture Diagrams', 'Company-Specific Prep', 'Stealth Desktop App', 'Voice Filtering'].map(f => (
-                <span key={f} className="flex items-center gap-2 text-camora-mist text-xs font-bold uppercase tracking-wider">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span key={f} className="flex items-center gap-1.5 text-camora-mist text-[11px] font-bold uppercase tracking-wider">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   {f}
                 </span>
               ))}
@@ -392,14 +379,14 @@ export default function LandingPage() {
 
           {/* Skills covered — what you'll master */}
           <Reveal className="mt-8 text-center">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
+            <span className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
               SKILLS YOU'LL MASTER
             </span>
-            <div className="mt-4 flex items-center justify-center gap-2 flex-wrap max-w-4xl mx-auto">
+            <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap max-w-4xl mx-auto">
               {SKILLS.map((s) => (
                 <span
                   key={s}
-                  className="text-xs font-bold px-3 py-1.5 rounded-full transition-all hover:scale-105 bg-white border border-camora-blue-100"
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full transition-all hover:scale-105 bg-white border border-camora-blue-100"
                   style={{
                     fontFamily: F.mono,
                     color: 'var(--text-primary)',
@@ -414,10 +401,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 7. JOB URL ANALYSIS ═══════════ */}
-      <section className="px-6 py-28" style={{ background: 'var(--cam-surface-lt)' }}>
+      {/* ═══════════ 6. JOB URL ANALYSIS ═══════════ */}
+      <section className="px-6 py-16 md:py-20" style={{ background: 'var(--cam-surface-lt)' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Left: animated demo */}
             <div className="lg:w-[55%] w-full">
               <Reveal>
@@ -428,15 +415,15 @@ export default function LandingPage() {
             {/* Right: text */}
             <div className="lg:w-[45%]">
               <Reveal delay={0.12}>
-                <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>SMART PREP</span>
-                <h2 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight uppercase" style={{ fontFamily: F.display }}>
+                <span className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>SMART PREP</span>
+                <h2 className="mt-3 text-[28px] md:text-[36px] font-bold tracking-tight uppercase" style={{ fontFamily: F.display, lineHeight: 1.1 }}>
                   PASTE A JOB URL.<br /><span style={{ color: 'var(--cam-primary)' }}>GET A PREP PLAN.</span>
                 </h2>
-                <p className="mt-6 text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p className="mt-5 text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   AI analyzes the job description, identifies required skills, and generates a tailored preparation plan with coding topics, system design patterns, and behavioral questions.
                 </p>
-                <div className="mt-8">
-                  <Link to="/jobs" className="px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] rounded-full bg-camora-primary text-camora-mist hover:bg-camora-primaryDk transition-all">
+                <div className="mt-6">
+                  <Link to="/jobs" className="px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] rounded-full bg-camora-primary text-camora-mist hover:bg-camora-primaryDk transition-all">
                     TRY JOB ANALYSIS
                   </Link>
                 </div>
@@ -446,44 +433,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 8. FINAL CTA BANNER ═══════════ */}
-      <section className="px-6 py-20 bg-[var(--bg-surface)]">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-10 md:px-16 py-12 rounded-2xl" style={{ background: 'var(--cam-void)' }}>
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white uppercase tracking-tight" style={{ fontFamily: F.display }}>
-                WHERE CAREERS<br /><span style={{ color: 'var(--cam-primary-lt)' }}>TAKE OFF.</span>
-              </h2>
-              <div className="mt-4 flex flex-col gap-2">
-                {['Free to start', 'No credit card required', 'Cancel anytime'].map(t => (
-                  <span key={t} className="flex items-center gap-2 text-sm text-white/80">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary-lt)" strokeWidth="2.5"><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to={isAuthenticated ? '/capra/prepare' : '/signup'}
-                className="px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full bg-white text-camora-primary hover:bg-camora-mist">
-                GET STARTED FREE
-              </Link>
-              <Link to="/pricing"
-                className="px-8 py-4 text-sm font-bold uppercase tracking-[0.08em] rounded-full text-white border border-white/30 hover:bg-white/10">
-                VIEW PRICING
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ 9. STRENGTHS — "Companies & Candidates" pattern ═══════════ */}
-      <section className="px-6 pt-24 pb-20 bg-[var(--bg-surface)]">
-        <Reveal className="text-center mb-14 max-w-3xl mx-auto">
-          <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
+      {/* ═══════════ 7. STRENGTHS — "Both sides of the table" ═══════════ */}
+      <section className="px-6 py-16 md:py-20 bg-[var(--bg-surface)]">
+        <Reveal className="text-center mb-10 max-w-3xl mx-auto">
+          <span className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
             BUILT FOR BOTH SIDES OF THE TABLE
           </span>
-          <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.15 }}>
+          <h2 className="mt-3 text-[26px] md:text-[32px] font-bold tracking-tight" style={{ fontFamily: F.display, lineHeight: 1.15 }}>
             One platform.<br /><span style={{ color: 'var(--cam-primary)' }}>Two audiences.</span>
           </h2>
         </Reveal>
@@ -527,11 +483,6 @@ export default function LandingPage() {
             },
           ]}
         />
-      </section>
-
-      {/* ═══════════ 10. MADE WITH ❤ IN SAN JOSE ═══════════ */}
-      <section className="bg-[var(--bg-surface)] border-t" style={{ borderColor: 'var(--border)' }}>
-        <MadeWithLove city="San Jose" />
       </section>
 
       <SiteFooter variant="light" />
