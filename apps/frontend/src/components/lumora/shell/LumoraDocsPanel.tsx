@@ -1159,7 +1159,42 @@ function FormattedJD({ text }: { text: string }) {
     sections.shift();
   }
 
-  const content = sections;
+  // ─── Boilerplate split-pass ───
+  // Some JDs (NVIDIA, Meta, Google template style) append salary, equity,
+  // application, EEO paragraphs at the end of the LAST real section without
+  // explicit headers. The parser then bundles them under "Ways to Stand Out"
+  // or "Requirements" — wrong. Detect those starters and split them off into
+  // their own labeled sections.
+  type Bucket = { title: string; pattern: RegExp; color?: 'warning' | 'success' | 'muted' };
+  const BOILERPLATE_BUCKETS: Bucket[] = [
+    { title: 'Compensation', pattern: /(your\s+base\s+salary|base\s+salary\s+range|salary\s+range|will\s+also\s+be\s+eligible\s+for\s+(equity|bonus|benefits)|total\s+compensation|pay\s+(range|transparency))/i, color: 'success' },
+    { title: 'Application', pattern: /^(applications?\s+for\s+this\s+(job|role|position)|this\s+posting\s+is\s+for|deadline\s+to\s+apply|will\s+be\s+accepted\s+(at\s+least\s+)?until)/i, color: 'muted' },
+    { title: 'AI & Recruiting', pattern: /uses\s+AI\s+tools|automated\s+(screening|hiring)\s+process|AI[- ]?assisted\s+(screening|review)/i, color: 'muted' },
+    { title: 'Equal Opportunity', pattern: /(equal\s+opportunity\s+employer|fostering\s+a\s+diverse|do\s+not\s+discriminate|protected\s+by\s+law|affirmative\s+action|reasonable\s+accommodation)/i, color: 'muted' },
+  ];
+  type ContentSection = { title: string | null; items: string[]; color?: 'warning' | 'success' | 'muted' };
+  const splitSections: ContentSection[] = [];
+  for (const sec of sections) {
+    const keep: string[] = [];
+    const buckets = new Map<string, ContentSection>();
+    for (const item of sec.items) {
+      const matched = BOILERPLATE_BUCKETS.find((b) => b.pattern.test(item));
+      if (matched) {
+        if (!buckets.has(matched.title)) {
+          buckets.set(matched.title, { title: matched.title, items: [], color: matched.color });
+        }
+        buckets.get(matched.title)!.items.push(item);
+      } else {
+        keep.push(item);
+      }
+    }
+    if (keep.length > 0 || sec.title) {
+      splitSections.push({ ...sec, items: keep });
+    }
+    for (const b of buckets.values()) splitSections.push(b);
+  }
+
+  const content = splitSections;
 
   return (
     <div className="flex flex-col gap-4">
@@ -1189,28 +1224,42 @@ function FormattedJD({ text }: { text: string }) {
         </div>
       )}
 
-      {content.map((sec, i) => (
-        <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          {sec.title && (
-            <div className="px-4 py-2.5" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary)' }}>{sec.title}</h4>
+      {content.map((sec, i) => {
+        const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
+        const accent =
+          tone === 'success' ? '#16A34A' :
+          tone === 'warning' ? '#D97706' :
+          tone === 'muted'   ? 'var(--text-muted)' :
+          'var(--cam-primary)';
+        const headerBg =
+          tone === 'success' ? 'rgba(34,197,94,0.08)' :
+          tone === 'warning' ? 'rgba(245,158,11,0.08)' :
+          tone === 'muted'   ? 'var(--bg-elevated)' :
+          'var(--accent-subtle)';
+        return (
+          <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            {sec.title && (
+              <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: headerBg, borderBottom: '1px solid var(--border)' }}>
+                <span className="block w-1 h-3.5 rounded-sm" style={{ background: accent }} />
+                <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: accent }}>{sec.title}</h4>
+              </div>
+            )}
+            <div className="px-4 py-3 flex flex-col gap-1.5">
+              {sec.items.map((item, j) => {
+                if (i === 0 && !sec.title) {
+                  return <p key={j} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</p>;
+                }
+                return (
+                  <div key={j} className="flex gap-2 items-start">
+                    <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: accent }} />
+                    <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</span>
+                  </div>
+                );
+              })}
             </div>
-          )}
-          <div className="px-4 py-3 flex flex-col gap-1.5">
-            {sec.items.map((item, j) => {
-              if (i === 0 && !sec.title) {
-                return <p key={j} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</p>;
-              }
-              return (
-                <div key={j} className="flex gap-2 items-start">
-                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: 'var(--cam-primary)' }} />
-                  <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</span>
-                </div>
-              );
-            })}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
