@@ -513,8 +513,14 @@ export default function DocsPage({ onBack }) {
   const getFilteredTopics = () => {
     let topics = [];
     if (activePage === 'coding') topics = codingTopics;
-    else if (activePage === 'system-design') topics = systemDesignTopics;
-    else if (activePage === 'low-level') topics = lldTopics;
+    // System-design and Low-level pages render multiple topic arrays merged
+    // together (see line ~400 and the category renderers around line 1633 /
+    // 2131 which iterate `filteredTopics` filtered by their category map).
+    // Search must operate over the same merged set, otherwise typing
+    // matches nothing for topics that live in microservicesPatterns,
+    // systemDesignTradeoffs, concurrencyTopics, etc.
+    else if (activePage === 'system-design') topics = [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics];
+    else if (activePage === 'low-level') topics = [...lldTopics, ...lldProblems];
     else if (activePage === 'behavioral') topics = behavioralTopics;
     else if (activePage === 'microservices') topics = microservicesPatterns;
     else if (activePage === 'databases') topics = [...databaseTopics, ...sqlTopics];
