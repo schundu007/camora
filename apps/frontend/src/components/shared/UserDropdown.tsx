@@ -113,10 +113,12 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 key={item.label}
                 to={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors hover:bg-[var(--bg-elevated)]"
-                style={{ color: 'var(--text-secondary)' }}
+                className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors"
+                style={{ color: '#1E293B' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(2,6,23,0.05)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="var(--text-dimmed)" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="#64748B" viewBox="0 0 24 24" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                 </svg>
                 {item.label}
