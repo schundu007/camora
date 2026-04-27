@@ -659,13 +659,57 @@ function FormattedJD({ text }: { text: string }) {
     return false;
   };
 
-  const lines = text.split('\n');
+  // ─── Pre-pass: extract Workday-style metadata (label\nvalue line pairs) ───
+  // Workday scrapes emit `locations\nUS, CA, Santa Clara\ntime type\nFull time`
+  // — known labels precede their values on the next non-empty line. We pull
+  // those out FIRST so the heuristic section parser doesn't misclassify
+  // capitalized values as section headers.
+  const META_LABELS = [
+    /^locations?$/i,
+    /^time\s*type$/i,
+    /^posted\s*on$/i,
+    /^job\s*requisition\s*id$/i,
+    /^job\s*id$/i,
+    /^req(uisition)?\s*(id|number|#)?$/i,
+    /^department$/i,
+    /^team$/i,
+    /^employment\s*type$/i,
+    /^salary(\s*range)?$/i,
+    /^compensation$/i,
+    /^remote(\s*type)?$/i,
+    /^seniority(\s*level)?$/i,
+    /^industry$/i,
+  ];
+  // Filler tokens to drop entirely (Workday button text, breadcrumbs, etc.)
+  const FILLER = new Set(['apply', 'apply now', 'save job', 'share', 'back to search']);
+
+  const rawLines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0 && !FILLER.has(l.toLowerCase()));
+  const metadata: { label: string; value: string }[] = [];
+  const remainingLines: string[] = [];
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const isLabel = META_LABELS.some((p) => p.test(line));
+    if (isLabel && i + 1 < rawLines.length) {
+      const value = rawLines[i + 1];
+      // Sanity-check the value: it must be short and not itself a label
+      if (value.length <= 100 && !META_LABELS.some((p) => p.test(value))) {
+        metadata.push({
+          label: line.replace(/^[a-z]/, (c) => c.toUpperCase()),
+          value,
+        });
+        i += 1; // consume the value line
+        continue;
+      }
+    }
+    remainingLines.push(line);
+  }
+
+  // ─── Now run the heuristic section parser on what's left ───
   const sections: { title: string | null; items: string[] }[] = [];
   let current: { title: string | null; items: string[] } = { title: null, items: [] };
 
-  for (const line of lines) {
-    const t = line.trim();
-    if (!t) continue;
+  for (const t of remainingLines) {
     if (isHeader(t)) {
       if (current.items.length > 0 || current.title) sections.push(current);
       current = { title: t, items: [] };
@@ -675,24 +719,6 @@ function FormattedJD({ text }: { text: string }) {
   }
   if (current.items.length > 0 || current.title) sections.push(current);
 
-  // Workday-style scrapes give label/value pairs (locations → US, CA, Santa Clara;
-  // time type → Full time; posted on → 23 days ago) which the section parser
-  // splits into many tiny cards. Pack short title+value sections into a compact
-  // metadata strip so the JD doesn't stretch over a screen of one-line cards.
-  //
-  // A section is "metadata" when:
-  //   - it has a title
-  //   - the title is short (≤32 chars) and lower-case-ish (label, not heading)
-  //   - it has exactly one short item (≤80 chars)
-  const isMetadata = (s: { title: string | null; items: string[] }): boolean => {
-    if (!s.title || s.items.length !== 1) return false;
-    if (s.title.length > 32) return false;
-    if (s.items[0].length > 80) return false;
-    // Heading words exclude metadata candidates
-    if (SECTION_PATTERNS.some((p) => p.test(s.title!))) return false;
-    return true;
-  };
-
   // The very first un-titled section (if it's a single short line) is the job
   // title — promote it into a hero header instead of a body paragraph.
   let heroTitle: string | null = null;
@@ -700,16 +726,13 @@ function FormattedJD({ text }: { text: string }) {
     heroTitle = sections[0].items[0];
     sections.shift();
   }
-
-  const metadata: { label: string; value: string }[] = [];
-  const content: typeof sections = [];
-  for (const s of sections) {
-    if (isMetadata(s)) {
-      metadata.push({ label: s.title!, value: s.items[0] });
-    } else {
-      content.push(s);
-    }
+  // Or if first section's title is short and items are empty, use it as hero
+  if (!heroTitle && sections.length > 0 && sections[0].title && sections[0].items.length === 0 && sections[0].title.length < 100) {
+    heroTitle = sections[0].title;
+    sections.shift();
   }
+
+  const content = sections;
 
   return (
     <div className="flex flex-col gap-4">
