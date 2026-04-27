@@ -57,17 +57,17 @@ export default function GettingStartedPage() {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
           <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <h3 className="text-base font-bold mb-1">Capra (preparation)</h3>
+            <h3 className="text-base font-bold mb-1">Prepare</h3>
             <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
               Browse 800+ topics, do practice problems, generate company-specific prep documents.
-              <Link to="/capra/prepare" className="text-[var(--accent)] underline ml-1">Open Capra</Link>.
+              <Link to="/capra/prepare" className="text-[var(--accent)] underline ml-1">Open Prepare</Link>.
             </p>
           </div>
           <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <h3 className="text-base font-bold mb-1">Lumora (live interview)</h3>
+            <h3 className="text-base font-bold mb-1">Live Interview</h3>
             <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
               Real-time AI assistance during a Zoom / Meet / Teams interview. Paid tiers only.
-              <Link to="/lumora" className="text-[var(--accent)] underline ml-1">Open Lumora</Link>.
+              <Link to="/lumora" className="text-[var(--accent)] underline ml-1">Open Live Interview</Link>.
             </p>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function GettingStartedPage() {
       <section id="free-tier" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">What the free tier includes</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><strong>30 minutes of AI hours, lifetime</strong> — covers ~1 short Lumora session or ~3 prep generations.</li>
+          <li><strong>30 minutes of AI hours, lifetime</strong> — covers ~1 short live session or ~3 prep generations.</li>
           <li><strong>1 topic per category</strong> — browse all 800+ topic titles, deep-read 1 per category (DSA, system design, behavioral).</li>
           <li><strong>Web app only</strong> — Desktop is a paid add-on or part of Pro Max.</li>
         </ul>
@@ -88,8 +88,8 @@ export default function GettingStartedPage() {
       <section id="next-steps" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Next steps</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><Link to="/docs/prepare" className="text-[var(--accent)] underline">Capra Prepare</Link> — what's in the topic library.</li>
-          <li><Link to="/docs/lumora-live" className="text-[var(--accent)] underline">Lumora Live Interview</Link> — connecting audio for a live session.</li>
+          <li><Link to="/docs/prepare" className="text-[var(--accent)] underline">Prepare</Link> — what's in the topic library.</li>
+          <li><Link to="/docs/lumora-live" className="text-[var(--accent)] underline">Live Interview</Link> — connecting audio for a live session.</li>
           <li><Link to="/pricing" className="text-[var(--accent)] underline">Pricing</Link> — pick a plan with more AI hours.</li>
         </ul>
       </section>

@@ -22,7 +22,7 @@ export default function TopupsDocsPage() {
       <section id="how-hours-work" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">How AI hours work</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          AI hours are Camora's unit of LLM consumption. Every interaction that uses AI — Lumora live
+          AI hours are Camora's unit of LLM consumption. Every interaction that uses AI — live interview
           transcription, Sona answers, prep doc generation, system design generation, coding helper —
           consumes seconds against your pool.
         </p>
@@ -41,11 +41,11 @@ export default function TopupsDocsPage() {
       <section id="what-counts" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">What counts as an hour</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Wall-clock seconds for streaming surfaces (Lumora live transcription, inference). Token-based
+          Wall-clock seconds for streaming surfaces (live transcription, inference). Token-based
           equivalence for one-shot generations: ~20 seconds per 1K output tokens. Roughly:
         </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><strong>30-minute Lumora live session</strong> ≈ 30 minutes of pool</li>
+          <li><strong>30-minute live session</strong> ≈ 30 minutes of pool</li>
           <li><strong>Coding helper solve</strong> ≈ 30 seconds</li>
           <li><strong>System design (detailed)</strong> ≈ 90 seconds</li>
           <li><strong>Full company prep doc</strong> ≈ 2 minutes</li>

@@ -5,7 +5,7 @@ export default function VoiceFilteringDocsPage() {
   return (
     <DocsPageLayout
       title="Voice filtering"
-      description="Speaker verification — Lumora records your voiceprint once, then transcribes only the interviewer's voice during a live session."
+      description="Speaker verification — Camora records your voiceprint once, then transcribes only the interviewer's voice during a live session."
       path="/docs/voice-filtering"
       eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Voice filtering' }]}
@@ -19,7 +19,7 @@ export default function VoiceFilteringDocsPage() {
       <section id="why" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Why this exists</h2>
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          When Lumora captures audio from your microphone, it picks up everything you say too. Without
+          When Camora captures audio from your microphone, it picks up everything you say too. Without
           filtering, Sona would respond to your own answers — defeating the point. Voice filtering uses
           speaker verification to drop your voice from the transcription stream before it reaches Sona.
         </p>
@@ -28,7 +28,7 @@ export default function VoiceFilteringDocsPage() {
       <section id="enrollment" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Voice enrollment</h2>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li>Open Lumora, click the <strong>Voice Enrollment</strong> button in the top bar.</li>
+          <li>Open Camora, click the <strong>Voice Enrollment</strong> button in the top bar.</li>
           <li>Read the prompted sentence aloud once. About 5 seconds of audio is enough.</li>
           <li>Camora extracts a voiceprint embedding (a numeric fingerprint, never raw audio storage) and saves it to your account.</li>
           <li>Click <strong>Voice filter on</strong> to enable filtering for this session.</li>
@@ -42,7 +42,7 @@ export default function VoiceFilteringDocsPage() {
       <section id="how-it-works" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">How it works</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          For each audio chunk Lumora captures, the AI services backend:
+          For each audio chunk Camora captures, the AI services backend:
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Computes a speaker embedding for the chunk.</li>

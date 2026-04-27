@@ -205,6 +205,37 @@ function tryParseJsonValue(s: string): any {
   }
 }
 
+/** Defensive text coercion — guarantees a renderable React child even when
+ *  the model returns an object/array where we expected a string. Without
+ *  this guard, React throws "Objects are not valid as a React child" and
+ *  the whole panel goes blank. */
+function safeText(v: any): string {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) return v.map(safeText).filter(Boolean).join(', ');
+  if (typeof v === 'object') {
+    // Object dropped where text was expected — turn it into a readable
+    // "key: value, key: value" line instead of crashing.
+    return Object.entries(v)
+      .map(([k, vv]) => `${k}: ${safeText(vv)}`)
+      .join(' • ');
+  }
+  return String(v);
+}
+
+/** Render a leaf that *might* be an object — if it is, recurse through
+ *  ValueRenderer (which handles structure properly); if it's primitive,
+ *  render as text. Use this anywhere a model field could legally vary
+ *  between string and object. */
+function SafeLeaf({ val, className, style }: { val: any; className?: string; style?: React.CSSProperties }) {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'object') {
+    return <div className={className} style={style}><ValueRenderer val={val} /></div>;
+  }
+  return <span className={className} style={style}>{safeText(val)}</span>;
+}
+
 /** Recursively render any value: string, array (of strings or objects), or object.
  *  This is the catch-all that prevents `[object Object]` from ever leaking
  *  into the UI when nested arrays contain objects. */
@@ -941,9 +972,9 @@ function PrepContentRenderer({ content }: { content: any }) {
                       <SectionHeading label="Clarifying Questions" color={LC.clarify} />
                       <div className="rounded-lg p-3" style={paperCard(LC.clarify)}>
                         <ul className="space-y-1.5">
-                          {q.clarifyingQuestions.map((cq: string, ci: number) => (
+                          {q.clarifyingQuestions.map((cq: any, ci: number) => (
                             <li key={ci} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
-                              <span style={{ color: LC.clarify }}>?</span><span>{cq}</span>
+                              <span style={{ color: LC.clarify }}>?</span><span>{safeText(cq)}</span>
                             </li>
                           ))}
                         </ul>
@@ -966,9 +997,9 @@ function PrepContentRenderer({ content }: { content: any }) {
                           <div className="rounded-lg p-3" style={paperCard(LC.requirements)}>
                             <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.requirements }}>Functional</div>
                             <ul className="space-y-1.5">
-                              {fn.map((f: string, fi: number) => (
+                              {fn.map((f: any, fi: number) => (
                                 <li key={fi} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
-                                  <span style={{ color: LC.requirements }}>•</span><span>{f}</span>
+                                  <span style={{ color: LC.requirements }}>•</span><span>{safeText(f)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -978,9 +1009,9 @@ function PrepContentRenderer({ content }: { content: any }) {
                           <div className="rounded-lg p-3" style={paperCard(LC.scalability)}>
                             <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.scalability }}>Non-Functional</div>
                             <ul className="space-y-1.5">
-                              {nfn.map((f: string, fi: number) => (
+                              {nfn.map((f: any, fi: number) => (
                                 <li key={fi} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
-                                  <span style={{ color: LC.scalability }}>•</span><span>{f}</span>
+                                  <span style={{ color: LC.scalability }}>•</span><span>{safeText(f)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -1005,9 +1036,9 @@ function PrepContentRenderer({ content }: { content: any }) {
                           <div className="px-3 py-2.5 border-b" style={{ borderColor: `${LC.capacity}25` }}>
                             <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Assumptions</div>
                             <ul className="space-y-1">
-                              {assumptions.map((a: string, ai: number) => (
+                              {assumptions.map((a: any, ai: number) => (
                                 <li key={ai} className="text-sm flex gap-2" style={{ color: 'var(--text-primary)' }}>
-                                  <span style={{ color: LC.capacity }}>›</span><span>{a}</span>
+                                  <span style={{ color: LC.capacity }}>›</span><span>{safeText(a)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -1025,9 +1056,9 @@ function PrepContentRenderer({ content }: { content: any }) {
                               <tbody>
                                 {calculations.filter((cl: any) => cl && typeof cl === 'object').map((cl: any, ci: number) => (
                                   <tr key={ci} style={{ borderTop: `1px solid ${LC.capacity}15` }}>
-                                    <td className="py-1.5 pr-2 font-medium" style={{ color: 'var(--text-primary)' }}>{cl.metric}</td>
-                                    <td className="py-1.5 pr-2 font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>{cl.calculation}</td>
-                                    <td className="py-1.5 font-mono font-bold text-right" style={{ color: LC.capacity }}>{cl.result}</td>
+                                    <td className="py-1.5 pr-2 font-medium" style={{ color: 'var(--text-primary)' }}>{safeText(cl.metric)}</td>
+                                    <td className="py-1.5 pr-2 font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>{safeText(cl.calculation)}</td>
+                                    <td className="py-1.5 font-mono font-bold text-right" style={{ color: LC.capacity }}>{safeText(cl.result)}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1050,7 +1081,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                       {a.diagramDescription && (
                         <div className="rounded-lg p-3 mb-2" style={paperCard(LC.architecture)}>
                           <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.architecture }}>Overview</div>
-                          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{a.diagramDescription}</p>
+                          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{safeText(a.diagramDescription)}</p>
                         </div>
                       )}
                       {components.length > 0 && (
@@ -1058,11 +1089,11 @@ function PrepContentRenderer({ content }: { content: any }) {
                           {components.filter((c: any) => c && typeof c === 'object').map((c: any, ci: number) => (
                             <div key={ci} className="rounded-lg p-3" style={paperCard(LC.architecture)}>
                               <div className="flex items-baseline justify-between gap-2 mb-1">
-                                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
-                                {c.technology && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: `${LC.architecture}15`, color: LC.architecture }}>{c.technology}</span>}
+                                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{safeText(c.name)}</span>
+                                {c.technology && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: `${LC.architecture}15`, color: LC.architecture }}>{safeText(c.technology)}</span>}
                               </div>
-                              {c.responsibility && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{c.responsibility}</p>}
-                              {c.whyThisChoice && <p className="text-xs leading-relaxed mt-1.5 italic" style={{ color: 'var(--text-muted)' }}>{c.whyThisChoice}</p>}
+                              {c.responsibility && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{safeText(c.responsibility)}</p>}
+                              {c.whyThisChoice && <p className="text-xs leading-relaxed mt-1.5 italic" style={{ color: 'var(--text-muted)' }}>{safeText(c.whyThisChoice)}</p>}
                             </div>
                           ))}
                         </div>

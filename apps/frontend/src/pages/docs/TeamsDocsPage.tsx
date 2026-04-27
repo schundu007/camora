@@ -56,7 +56,7 @@ export default function TeamsDocsPage() {
             <h2 className="text-2xl font-bold mb-4">Overview</h2>
             <p className="text-[15px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
               A Camora team is a single billing scope that shares a pool of AI hours across multiple users.
-              The team owner pays the subscription; members get full access to Lumora live interview, coding
+              The team owner pays the subscription; members get full access to live interview, coding
               helper, and prep generation while the pool has hours remaining.
             </p>
             <DocsCallout variant="tip">
@@ -121,7 +121,7 @@ export default function TeamsDocsPage() {
 
             <h3 id="pooled-hours" className="text-xl font-bold mt-6 mb-3 scroll-mt-24">How pooled hours work</h3>
             <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-              All members draw from the same hour bucket. When a member transcribes audio or asks Lumora a
+              All members draw from the same hour bucket. When a member transcribes audio or asks Sona a
               question, the seconds consumed count against the team total. The pool resets at the start of
               each billing period for monthly / yearly plans, or stays fixed (no reset) for one-time packs
               like Business Starter.
