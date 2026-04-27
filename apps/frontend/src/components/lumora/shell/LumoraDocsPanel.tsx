@@ -357,11 +357,11 @@ const LC = {
   codeHdr:   '#2D2D2D',
   codeMuted: '#9CA3AF',
 
-  // LC-landing-style paper. LC uses CLEAN WHITE bodies in light mode and
-  // a near-black charcoal (#0E1116) in dark mode. We use translucent rgba
-  // so it reads on either theme without a grey wall.
-  paper:       'rgba(255,255,255,0.65)',          // white paper in light, soft over-tone in dark
-  paperBorder: 'rgba(38,97,156,0.18)',            // soft navy border (Camora primary tinted)
+  // LC-landing-style paper. Uses the active theme's bg-surface so cards
+  // are clean white in light mode and dark navy in dark mode — not a
+  // hardcoded white tint that disappears the cream text on dark theme.
+  paper:       'var(--bg-surface)',
+  paperBorder: 'rgba(38,97,156,0.22)',
   pageRule:    'rgba(38,97,156,0.22)',
   // Bright section-color accents — LC landing uses solid, saturated heads:
   //   Start Exploring (teal), Questions Community Contests (blue),
@@ -796,7 +796,7 @@ function PrepContentRenderer({ content }: { content: any }) {
               <div className="px-5 py-4 space-y-4">
                 {/* Problem statement — blue rail, like LC's "Description" tab */}
                 {(q.problemStatement || q.description) && (() => {
-                  qRendered.add('problemStatement', 'description');
+                  qRendered.add('problemStatement'); qRendered.add('description');
                   const text = q.problemStatement || q.description;
                   return (
                     <div>
@@ -810,7 +810,7 @@ function PrepContentRenderer({ content }: { content: any }) {
 
                 {/* Suggested answer (HR / hiring-manager / behavioral non-STAR) */}
                 {!q.situation && !q.task && !q.action && !q.result && (q.answer || q.sampleAnswer || q.suggestedAnswer) && (() => {
-                  qRendered.add('answer', 'sampleAnswer', 'suggestedAnswer');
+                  qRendered.add('answer'); qRendered.add('sampleAnswer'); qRendered.add('suggestedAnswer');
                   const text = q.answer || q.sampleAnswer || q.suggestedAnswer;
                   return (
                     <div>
@@ -824,7 +824,7 @@ function PrepContentRenderer({ content }: { content: any }) {
 
                 {/* STAR format — behavioral */}
                 {(q.situation || q.task || q.action || q.result) && (() => {
-                  qRendered.add('situation', 'task', 'action', 'result');
+                  qRendered.add('situation'); qRendered.add('task'); qRendered.add('action'); qRendered.add('result');
                   const stars = [
                     { key: 'situation', label: 'Situation', accent: '#16A34A' },
                     { key: 'task',      label: 'Task',      accent: '#2563EB' },
@@ -944,7 +944,7 @@ function PrepContentRenderer({ content }: { content: any }) {
 
                 {/* Follow-ups — 2-col grid when 3+ items */}
                 {(Array.isArray(q.followUpQuestions) || Array.isArray(q.followUps) || q.followUp) && (() => {
-                  qRendered.add('followUpQuestions', 'followUps', 'followUp');
+                  qRendered.add('followUpQuestions'); qRendered.add('followUps'); qRendered.add('followUp');
                   const items = q.followUpQuestions || q.followUps || (q.followUp ? [q.followUp] : []);
                   const useGrid = items.length >= 3;
                   return (
@@ -1841,89 +1841,162 @@ function FormattedJD({ text }: { text: string }) {
     return LC.navy;
   };
 
+  // LC-style icon assigner per section type — adds homepage-feel iconography
+  const iconForSection = (accent: string): string => {
+    if (accent === LC.navy)         return '◆';   // about/company
+    if (accent === LC.problem)      return '▸';   // responsibilities
+    if (accent === LC.approach)     return '◉';   // requirements
+    if (accent === LC.examples)     return '★';   // preferred / stand out
+    if (accent === LC.gold)         return '✦';   // benefits
+    if (accent === LC.architecture) return '⬢';   // tech stack
+    if (accent === LC.scalability)  return '⌘';   // experience / skills
+    if (accent === LC.tradeoffs)    return '◈';   // team / culture
+    if (accent === LC.api)          return '$';   // compensation
+    return '·';
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {heroTitle && (
         <div
-          className="rounded-xl px-5 py-4 relative overflow-hidden"
+          className="rounded-2xl relative overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${LC.navy}10 0%, ${LC.gold}08 100%)`,
-            border: `1px solid ${LC.navy}30`,
-            boxShadow: `0 1px 0 ${LC.gold}30`,
+            background: `linear-gradient(135deg, ${LC.navy} 0%, ${LC.problem} 60%, ${LC.gold} 100%)`,
+            boxShadow: `0 8px 32px -12px ${LC.navy}50`,
           }}
         >
-          <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `linear-gradient(180deg, ${LC.gold} 0%, ${LC.navy} 100%)` }} />
-          <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: LC.gold }}>Job Title</div>
-          <h3 className="text-[18px] font-extrabold leading-tight tracking-tight" style={{ color: LC.navy }}>{heroTitle}</h3>
+          {/* Hexagon decoration — LC homepage iconography */}
+          <span
+            className="absolute -top-6 -right-6 opacity-20"
+            style={{
+              width: 120,
+              height: 120,
+              background: '#FFFFFF',
+              clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+            }}
+          />
+          <span
+            className="absolute -bottom-8 -left-4 opacity-10"
+            style={{
+              width: 80,
+              height: 80,
+              background: '#FFFFFF',
+              clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+            }}
+          />
+          <div className="relative px-6 py-7">
+            <div className="flex items-center gap-2 mb-3">
+              <span
+                className="block flex-shrink-0"
+                style={{
+                  width: 12,
+                  height: 12,
+                  background: '#FFFFFF',
+                  clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                }}
+              />
+              <span
+                className="text-[11px] font-extrabold uppercase tracking-[0.22em]"
+                style={{ color: '#FFFFFF', opacity: 0.85 }}
+              >
+                Position
+              </span>
+            </div>
+            <h3 className="text-[24px] md:text-[28px] font-extrabold leading-tight tracking-tight" style={{ color: '#FFFFFF' }}>
+              {heroTitle}
+            </h3>
+          </div>
         </div>
       )}
 
       {metadata.length > 0 && (
         <div
-          className="rounded-xl px-4 py-3.5 grid gap-x-6 gap-y-3"
+          className="rounded-2xl px-5 py-4 grid gap-x-6 gap-y-4"
           style={{
             ...paperCard(LC.navy),
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           }}
         >
-          {metadata.map((m, i) => (
-            <div key={i} className="flex flex-col gap-0.5 min-w-0">
-              <span className="flex items-center gap-1.5">
+          {metadata.map((m, i) => {
+            const meta_colors = [LC.navy, LC.problem, LC.examples, LC.gold, LC.approach, LC.tradeoffs];
+            const c = meta_colors[i % meta_colors.length];
+            return (
+              <div key={i} className="flex items-start gap-2.5 min-w-0">
                 <span
-                  className="block flex-shrink-0"
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-lg mt-0.5"
                   style={{
-                    width: 6,
-                    height: 6,
-                    background: LC.navy,
-                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                    width: 28,
+                    height: 28,
+                    background: `${c}18`,
+                    border: `1px solid ${c}40`,
+                    color: c,
                   }}
-                />
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: LC.navy }}>
-                  {m.label.replace(/^[a-z]/, (c) => c.toUpperCase())}
+                >
+                  <span
+                    className="block"
+                    style={{
+                      width: 10,
+                      height: 10,
+                      background: c,
+                      clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                    }}
+                  />
                 </span>
-              </span>
-              <span className="text-[13px] truncate font-medium" style={{ color: 'var(--text-primary)' }} title={m.value}>{m.value}</span>
-            </div>
-          ))}
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: c }}>
+                    {m.label.replace(/^[a-z]/, (ch) => ch.toUpperCase())}
+                  </span>
+                  <span className="text-[13.5px] font-semibold truncate" style={{ color: 'var(--text-primary)' }} title={m.value}>{m.value}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {content.map((sec, i) => {
         const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
         const accent = accentForSection(sec.title, tone);
+        const icon = iconForSection(accent);
         return (
           <div
             key={i}
-            className="rounded-xl overflow-hidden"
+            className="rounded-2xl overflow-hidden"
             style={paperCard(accent)}
           >
             {sec.title && (
               <div
-                className="px-4 py-2.5 flex items-center gap-2.5"
+                className="px-5 py-3 flex items-center gap-3"
                 style={{
-                  background: `${accent}14`,
-                  borderBottom: `1px solid ${accent}25`,
+                  background: `linear-gradient(90deg, ${accent}28 0%, ${accent}10 100%)`,
+                  borderBottom: `2px solid ${accent}`,
                 }}
               >
                 <span
-                  className="block flex-shrink-0"
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-lg text-base font-bold"
                   style={{
-                    width: 10,
-                    height: 10,
+                    width: 32,
+                    height: 32,
                     background: accent,
-                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                    color: '#FFFFFF',
+                    boxShadow: `0 2px 6px ${accent}50`,
                   }}
-                />
-                <h4 className="text-[12px] font-extrabold tracking-tight" style={{ color: accent }}>
+                >
+                  {icon}
+                </span>
+                <h4 className="text-[14px] font-extrabold tracking-tight uppercase" style={{ color: accent, letterSpacing: '0.04em' }}>
                   {sec.title.replace(/^[a-z]/, (c) => c.toUpperCase())}
                 </h4>
-                <span className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${accent}50 0%, transparent 100%)` }} />
+                <span className="flex-1" />
+                <span className="text-[10px] font-mono font-bold" style={{ color: accent, opacity: 0.7 }}>
+                  {String(sec.items.length).padStart(2, '0')}
+                </span>
               </div>
             )}
-            <div className="px-4 py-3.5 flex flex-col gap-2">
+            <div className="px-5 py-4 flex flex-col gap-2">
               {sec.items.map((item, j) => {
                 if (i === 0 && !sec.title) {
-                  return <p key={j} className="text-[14px] leading-[1.65]" style={{ color: 'var(--text-primary)' }}>{item}</p>;
+                  return <p key={j} className="text-[14.5px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>{item}</p>;
                 }
                 return (
                   <div key={j} className="flex gap-2.5 items-start">
