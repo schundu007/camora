@@ -53,10 +53,10 @@ export default function DocsPageLayout({
           breadcrumbs={<DocsBreadcrumbs items={fullCrumbs} />}
           onThisPage={<OnThisPage items={onThisPage} />}
         >
-          <header className="mb-10">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)' }}>{eyebrow}</p>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{title}</h1>
-            <p className="text-base" style={{ color: 'var(--text-secondary)' }}>{description}</p>
+          <header className="mb-10 relative pl-4" style={{ borderLeft: '3px solid #C9A227' }}>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] mb-2" style={{ color: '#C9A227' }}>{eyebrow}</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3" style={{ color: '#26619C' }}>{title}</h1>
+            <p className="text-base leading-[1.65]" style={{ color: 'var(--text-primary)' }}>{description}</p>
           </header>
           {children}
         </DocsShell>
