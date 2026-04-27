@@ -1222,39 +1222,52 @@ function PrepContentRenderer({ content }: { content: any }) {
       <div key="techstack">
         <SectionHeading label={`Tech Stack · ${data.techStack.length}`} color={LC.navy} />
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-          {data.techStack.filter((t: any) => t && typeof t === 'object').map((t: any, i: number) => (
-            <div
-              key={i}
-              className="rounded-xl p-3.5 transition-transform hover:scale-[1.01]"
-              style={paperCard(LC.navy)}
-            >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-bold font-mono leading-tight" style={{ color: LC.navy }}>
-                    {safeText(t.technology || t.name)}
-                  </div>
-                  {t.category && (
-                    <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {safeText(t.category)}
+          {data.techStack.filter((t: any) => t && typeof t === 'object').map((t: any, i: number) => {
+            const experience = safeText(t.experience);
+            // A short experience string ("12+ years", "Expert") fits in the
+            // top-right pill; anything longer is treated as a description
+            // and rendered on its own line so it can wrap inside the card
+            // instead of overlapping the title or adjacent cards.
+            const isShortExperience = !!experience && experience.length <= 24;
+            return (
+              <div
+                key={i}
+                className="rounded-xl p-3.5 transition-transform hover:scale-[1.01] overflow-hidden"
+                style={paperCard(LC.navy)}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold font-mono leading-tight truncate" style={{ color: LC.navy }} title={safeText(t.technology || t.name)}>
+                      {safeText(t.technology || t.name)}
                     </div>
+                    {t.category && (
+                      <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                        {safeText(t.category)}
+                      </div>
+                    )}
+                  </div>
+                  {isShortExperience && (
+                    <span
+                      className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: `${LC.gold}15`, color: LC.gold, border: `1px solid ${LC.gold}40` }}
+                    >
+                      {experience}
+                    </span>
                   )}
                 </div>
-                {t.experience && (
-                  <span
-                    className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: `${LC.gold}15`, color: LC.gold, border: `1px solid ${LC.gold}40` }}
-                  >
-                    {safeText(t.experience)}
-                  </span>
+                {experience && !isShortExperience && (
+                  <p className="text-[11.5px] leading-snug mb-1.5" style={{ color: LC.gold }}>
+                    {experience}
+                  </p>
+                )}
+                {t.relevance && (
+                  <p className="text-[12px] leading-relaxed break-words" style={{ color: 'var(--text-secondary)' }}>
+                    {safeText(t.relevance)}
+                  </p>
                 )}
               </div>
-              {t.relevance && (
-                <p className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  {safeText(t.relevance)}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
