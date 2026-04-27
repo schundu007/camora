@@ -1438,24 +1438,56 @@ function PrepContentRenderer({ content }: { content: any }) {
     { key: 'ascendTips', label: 'Tips', color: 'var(--accent)' },
     { key: 'studyTips', label: 'Study Tips', color: 'var(--accent)' },
   ];
+  // Extract a primary label + optional sublabel from a list item that may
+  // arrive as a string, a {topic, frequency, rationale} object, a
+  // {question, ...} object, etc. Never falls back to JSON.stringify so
+  // the panel can't leak raw JSON into the UI.
+  const formatListItem = (t: any): { label: string; sub?: string } => {
+    if (typeof t === 'string') return { label: t };
+    if (!t || typeof t !== 'object') return { label: String(t ?? '') };
+    const label =
+      t.topic ?? t.question ?? t.title ?? t.name ?? t.label ?? t.text ?? '';
+    const sub = t.rationale ?? t.detail ?? t.description ?? undefined;
+    if (!label) return { label: '' };
+    return { label: String(label), sub: sub ? String(sub) : undefined };
+  };
+
   for (const f of listFields) {
     if (!data[f.key]) continue;
     mark(f.key);
     const items = Array.isArray(data[f.key]) ? data[f.key] : [data[f.key]];
+    const formatted = items
+      .map(formatListItem)
+      .filter((it: { label: string }) => it.label.trim().length > 0);
+    if (formatted.length === 0) continue;
     els.push(
       <div key={f.key}>
         <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: f.color }}>{f.label}</div>
         {f.pill ? (
-          <div className="flex flex-wrap gap-1.5">{items.map((t: any, i: number) => (
-            <span key={i} className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${f.color}10`, color: f.color, border: `1px solid ${f.color}30` }}>{typeof t === 'string' ? t : t?.question || t?.text || JSON.stringify(t)}</span>
-          ))}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {formatted.map((it: { label: string; sub?: string }, i: number) => (
+              <span
+                key={i}
+                title={it.sub}
+                className="text-xs px-2.5 py-1 rounded-full"
+                style={{ background: `${f.color}10`, color: f.color, border: `1px solid ${f.color}30` }}
+              >
+                {it.label}
+              </span>
+            ))}
+          </div>
         ) : (
-          <ul className="space-y-1.5">{items.map((t: any, i: number) => (
-            <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-              <span style={{ color: f.color }}>•</span>
-              {typeof t === 'string' ? t : t?.question || t?.text || JSON.stringify(t)}
-            </li>
-          ))}</ul>
+          <ul className="space-y-1.5">
+            {formatted.map((it: { label: string; sub?: string }, i: number) => (
+              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <span style={{ color: f.color }}>•</span>
+                <span>
+                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{it.label}</span>
+                  {it.sub && <span className="ml-1.5 text-[var(--text-muted)]">— {it.sub}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     );
