@@ -185,30 +185,78 @@ function extractJSON(raw: string): any {
   return null;
 }
 
-/** Generic renderer for any key-value pair */
+/** Format a key from camelCase to readable label. */
+function fmtKey(k: string): string {
+  return k.replace(/([A-Z])/g, ' $1').trim().replace(/^./, (c) => c.toUpperCase());
+}
+
+/** Recursively render any value: string, array (of strings or objects), or object.
+ *  This is the catch-all that prevents `[object Object]` from ever leaking
+ *  into the UI when nested arrays contain objects. */
+function ValueRenderer({ val, depth = 0 }: { val: any; depth?: number }): JSX.Element | null {
+  if (val === null || val === undefined) return null;
+
+  if (typeof val === 'string') {
+    return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{val}</span>;
+  }
+  if (typeof val === 'number' || typeof val === 'boolean') {
+    return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(val)}</span>;
+  }
+
+  if (Array.isArray(val)) {
+    if (val.length === 0) return null;
+    // Array of primitives — comma-join for inline display
+    const allPrimitive = val.every((x) => typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean');
+    if (allPrimitive) {
+      return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{val.map(String).join(', ')}</span>;
+    }
+    // Array of objects — render each as a nested card
+    return (
+      <ul className={`space-y-2 ${depth === 0 ? 'mt-1' : 'mt-1 ml-2'}`}>
+        {val.map((item, i) => (
+          <li key={i} className="rounded-md p-3" style={{ background: depth === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <ValueRenderer val={item} depth={depth + 1} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (typeof val === 'object') {
+    const entries = Object.entries(val).filter(([, v]) => v !== null && v !== undefined && !(Array.isArray(v) && v.length === 0));
+    if (entries.length === 0) return null;
+    return (
+      <div className="space-y-2">
+        {entries.map(([k, v]) => {
+          const isComplex = (Array.isArray(v) && v.some((x) => typeof x === 'object' && x !== null)) || (typeof v === 'object' && v !== null && !Array.isArray(v));
+          if (isComplex) {
+            return (
+              <div key={k}>
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}</div>
+                <ValueRenderer val={v} depth={depth + 1} />
+              </div>
+            );
+          }
+          return (
+            <p key={k} className="text-sm leading-relaxed">
+              <strong className="text-xs uppercase tracking-wider mr-1.5" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}:</strong>
+              <ValueRenderer val={v} depth={depth + 1} />
+            </p>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(val)}</span>;
+}
+
+/** Generic renderer for any key-value pair — wraps ValueRenderer in a labeled card. */
 function GenericField({ label, val }: { label: string; val: any }) {
   return (
     <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-      <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>{label.replace(/([A-Z])/g, ' $1').trim()}</div>
-      {typeof val === 'string' ? (
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{val}</p>
-      ) : Array.isArray(val) ? (
-        <ul className="space-y-1.5">{val.map((item: any, i: number) => (
-          <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {typeof item === 'string' ? `• ${item}` : typeof item === 'object' ? (
-              <div className="rounded-lg p-3 mb-1" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                {Object.entries(item).map(([k, v]) => (
-                  <p key={k} className="text-sm mb-1"><strong className="text-xs uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: 'var(--text-secondary)' }}>{typeof v === 'string' ? v : Array.isArray(v) ? (v as string[]).join(', ') : JSON.stringify(v)}</span></p>
-                ))}
-              </div>
-            ) : String(item)}
-          </li>
-        ))}</ul>
-      ) : typeof val === 'object' && val ? (
-        <div className="space-y-1">{Object.entries(val).map(([k, v]) => (
-          <p key={k} className="text-sm"><strong style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: 'var(--text-secondary)' }}>{typeof v === 'string' ? v : Array.isArray(v) ? (v as string[]).join(', ') : JSON.stringify(v)}</span></p>
-        ))}</div>
-      ) : <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(val)}</p>}
+      <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>{fmtKey(label)}</div>
+      <ValueRenderer val={val} />
     </div>
   );
 }
@@ -310,7 +358,10 @@ function PrepContentRenderer({ content }: { content: any }) {
         <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--cam-primary)' }}>Company Insights</div>
         <div className="grid grid-cols-1 gap-2">
           {Object.entries(data.companyInsights).map(([k, v]) => (
-            <div key={k}><span className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}:</span><p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</p></div>
+            <div key={k}>
+              <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}:</span>
+              <div className="mt-0.5"><ValueRenderer val={v} /></div>
+            </div>
           ))}
         </div>
       </div>
@@ -624,9 +675,71 @@ function FormattedJD({ text }: { text: string }) {
   }
   if (current.items.length > 0 || current.title) sections.push(current);
 
+  // Workday-style scrapes give label/value pairs (locations → US, CA, Santa Clara;
+  // time type → Full time; posted on → 23 days ago) which the section parser
+  // splits into many tiny cards. Pack short title+value sections into a compact
+  // metadata strip so the JD doesn't stretch over a screen of one-line cards.
+  //
+  // A section is "metadata" when:
+  //   - it has a title
+  //   - the title is short (≤32 chars) and lower-case-ish (label, not heading)
+  //   - it has exactly one short item (≤80 chars)
+  const isMetadata = (s: { title: string | null; items: string[] }): boolean => {
+    if (!s.title || s.items.length !== 1) return false;
+    if (s.title.length > 32) return false;
+    if (s.items[0].length > 80) return false;
+    // Heading words exclude metadata candidates
+    if (SECTION_PATTERNS.some((p) => p.test(s.title!))) return false;
+    return true;
+  };
+
+  // The very first un-titled section (if it's a single short line) is the job
+  // title — promote it into a hero header instead of a body paragraph.
+  let heroTitle: string | null = null;
+  if (sections.length > 0 && !sections[0].title && sections[0].items.length === 1 && sections[0].items[0].length < 100) {
+    heroTitle = sections[0].items[0];
+    sections.shift();
+  }
+
+  const metadata: { label: string; value: string }[] = [];
+  const content: typeof sections = [];
+  for (const s of sections) {
+    if (isMetadata(s)) {
+      metadata.push({ label: s.title!, value: s.items[0] });
+    } else {
+      content.push(s);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {sections.map((sec, i) => (
+      {heroTitle && (
+        <div className="rounded-xl px-5 py-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }}>
+          <h3 className="text-base font-bold tracking-tight" style={{ color: 'var(--cam-primary)' }}>{heroTitle}</h3>
+        </div>
+      )}
+
+      {metadata.length > 0 && (
+        <div
+          className="rounded-xl px-4 py-3 grid gap-x-6 gap-y-2"
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          }}
+        >
+          {metadata.map((m, i) => (
+            <div key={i} className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                {m.label.replace(/^[a-z]/, (c) => c.toUpperCase())}
+              </span>
+              <span className="text-[13px] truncate" style={{ color: 'var(--text-primary)' }} title={m.value}>{m.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {content.map((sec, i) => (
         <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           {sec.title && (
             <div className="px-4 py-2.5" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
@@ -635,7 +748,6 @@ function FormattedJD({ text }: { text: string }) {
           )}
           <div className="px-4 py-3 flex flex-col gap-1.5">
             {sec.items.map((item, j) => {
-              // First section without title is likely the company description — render as paragraph
               if (i === 0 && !sec.title) {
                 return <p key={j} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</p>;
               }
