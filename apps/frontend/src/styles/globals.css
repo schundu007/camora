@@ -764,6 +764,48 @@ select option:hover, select option:focus, select option:checked { background-col
 .hljs { background: transparent !important; }
 
 /* ══════════════════════════════════════════════════════════════
+   ELECTRON DRAG REGION
+   The desktop build uses titleBarStyle: 'hiddenInset' on macOS and
+   titleBarOverlay on Windows. The OS expects a slim band of empty
+   space at the top of the window where the user can grab and drag.
+   We claim the top 28px (mac) / 32px (win) of the body as a drag
+   region via a fixed pseudo-element, then exempt every interactive
+   descendant so buttons / links / inputs still receive clicks.
+   ══════════════════════════════════════════════════════════════ */
+body.electron-desktop::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  z-index: 100000;
+  pointer-events: none;
+  -webkit-app-region: drag;
+}
+
+body.electron-win::before {
+  height: 32px;
+}
+
+/* Anything interactive on the page must override the parent drag
+   region — without this, buttons inside the body would themselves
+   become draggable and lose click events. */
+body.electron-desktop button,
+body.electron-desktop a,
+body.electron-desktop input,
+body.electron-desktop textarea,
+body.electron-desktop select,
+body.electron-desktop label,
+body.electron-desktop [role='button'],
+body.electron-desktop [role='link'],
+body.electron-desktop [role='tab'],
+body.electron-desktop [role='menuitem'],
+body.electron-desktop [contenteditable='true'] {
+  -webkit-app-region: no-drag;
+}
+
+/* ══════════════════════════════════════════════════════════════
    ANIMATIONS
    ══════════════════════════════════════════════════════════════ */
 @keyframes shimmer {
