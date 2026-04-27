@@ -368,13 +368,19 @@ const LC = {
   //   Companies & Candidates (amber). We mirror that cadence.
 };
 
-/** Tinted card surface — strong enough to be visible on white-paper or
- *  dark-paper without grey walls. Used everywhere instead of bg-elevated. */
+/** Tinted card surface — strong enough to read on white-paper or dark-paper
+ *  without going invisible. Accent tint sits over `bg-surface` so dark-theme
+ *  cards retain a defined plane and body text doesn't disappear.
+ *
+ *  Two-layer background:
+ *   1. accent at 22→10% gradient (stronger than the old 6→2% washout)
+ *   2. var(--bg-surface) underneath = solid card plane in either theme
+ *  Border at 55% opacity gives a clear edge. */
 function paperCard(accent: string) {
   return {
-    background: `linear-gradient(180deg, ${accent}0F 0%, ${accent}05 100%)`,
-    border: `1px solid ${accent}40`,
-    boxShadow: `0 1px 0 ${accent}10`,
+    background: `linear-gradient(180deg, ${accent}24 0%, ${accent}10 100%), var(--bg-surface)`,
+    border: `1px solid ${accent}55`,
+    boxShadow: `0 1px 0 ${accent}1A, 0 2px 8px -3px rgba(0,0,0,0.08)`,
   };
 }
 
@@ -796,7 +802,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                     <div>
                       <SectionHeading label="Problem" color={LC.problem} />
                       <div className="rounded-lg p-3" style={{ background: `${LC.problem}06`, border: `1px solid ${LC.problem}25` }}>
-                        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{text}</p>
                       </div>
                     </div>
                   );
@@ -810,7 +816,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                     <div>
                       <SectionHeading label="Suggested Answer" color={LC.examples} />
                       <div className="rounded-lg p-3" style={{ background: `${LC.examples}06`, border: `1px solid ${LC.examples}25` }}>
-                        <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                        <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-primary)' }}>{text}</p>
                       </div>
                     </div>
                   );
@@ -832,7 +838,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                         {stars.map((s) => q[s.key] && (
                           <div key={s.key} className="rounded-lg p-3 flex gap-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderLeft: `3px solid ${s.accent}` }}>
                             <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider" style={{ color: s.accent, minWidth: 64 }}>{s.label}</span>
-                            <span className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]}</span>
+                            <span className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-primary)' }}>{Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]}</span>
                           </div>
                         ))}
                       </div>
@@ -889,7 +895,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                         {fields.filter((f) => sa[f]).map((f) => (
                           <div key={f} className="rounded-lg p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                             <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cam-primary)' }}>{fmtKey(f)}</div>
-                            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{sa[f]}</p>
+                            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{sa[f]}</p>
                           </div>
                         ))}
                       </div>
@@ -902,14 +908,14 @@ function PrepContentRenderer({ content }: { content: any }) {
                   qRendered.add('edgeCases');
                   return (
                     <div>
-                      <SectionHeading label="Edge Cases" color="var(--danger)" />
-                      <div className="space-y-1.5">
+                      <SectionHeading label="Edge Cases" color={LC.edge} />
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                         {q.edgeCases.filter((e: any) => e && typeof e === 'object').map((e: any, ei: number) => (
-                          <div key={ei} className="rounded-lg p-3 text-xs" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                            {e.case && <div className="font-bold mb-1" style={{ color: 'var(--danger)' }}>{e.case}</div>}
-                            {e.input && <div className="font-mono mb-1" style={{ color: 'var(--text-primary)' }}>{e.input}</div>}
-                            {e.explanation && <p style={{ color: 'var(--text-secondary)' }}>{e.explanation}</p>}
-                            {e.expectedOutput && <div className="font-mono mt-1" style={{ color: 'var(--text-muted)' }}>→ {e.expectedOutput}</div>}
+                          <div key={ei} className="rounded-lg p-3 text-xs" style={paperCard(LC.edge)}>
+                            {e.case && <div className="font-bold mb-1" style={{ color: LC.edge }}>{safeText(e.case)}</div>}
+                            {e.input && <div className="font-mono mb-1" style={{ color: 'var(--text-primary)' }}>{safeText(e.input)}</div>}
+                            {e.explanation && <p style={{ color: 'var(--text-primary)' }}>{safeText(e.explanation)}</p>}
+                            {e.expectedOutput && <div className="font-mono mt-1" style={{ color: 'var(--text-muted)' }}>→ {safeText(e.expectedOutput)}</div>}
                           </div>
                         ))}
                       </div>
@@ -917,17 +923,18 @@ function PrepContentRenderer({ content }: { content: any }) {
                   );
                 })()}
 
-                {/* Common mistakes — warning-tinted */}
+                {/* Common mistakes — warning-tinted, 2-col grid when 3+ items */}
                 {Array.isArray(q.commonMistakes) && q.commonMistakes.length > 0 && (() => {
                   qRendered.add('commonMistakes');
+                  const useGrid = q.commonMistakes.length >= 3;
                   return (
                     <div>
-                      <SectionHeading label="Common Mistakes" color="var(--warning-text)" />
-                      <ul className="space-y-1">
+                      <SectionHeading label="Common Mistakes" color={LC.mistake} />
+                      <ul className={useGrid ? 'grid gap-x-4 gap-y-1.5' : 'space-y-1'} style={useGrid ? { gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' } : undefined}>
                         {q.commonMistakes.map((m: any, mi: number) => (
-                          <li key={mi} className="text-xs flex gap-2" style={{ color: 'var(--text-secondary)' }}>
-                            <span style={{ color: 'var(--warning-text)' }}>•</span>
-                            <span>{typeof m === 'string' ? m : JSON.stringify(m)}</span>
+                          <li key={mi} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                            <span style={{ color: LC.mistake }}>•</span>
+                            <span>{safeText(m)}</span>
                           </li>
                         ))}
                       </ul>
@@ -935,18 +942,19 @@ function PrepContentRenderer({ content }: { content: any }) {
                   );
                 })()}
 
-                {/* Follow-ups */}
+                {/* Follow-ups — 2-col grid when 3+ items */}
                 {(Array.isArray(q.followUpQuestions) || Array.isArray(q.followUps) || q.followUp) && (() => {
                   qRendered.add('followUpQuestions', 'followUps', 'followUp');
                   const items = q.followUpQuestions || q.followUps || (q.followUp ? [q.followUp] : []);
+                  const useGrid = items.length >= 3;
                   return (
                     <div>
-                      <SectionHeading label="Follow-ups" color="var(--accent)" />
-                      <ul className="space-y-1">
+                      <SectionHeading label="Follow-ups" color={LC.followup} />
+                      <ul className={useGrid ? 'grid gap-x-4 gap-y-1.5' : 'space-y-1'} style={useGrid ? { gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' } : undefined}>
                         {items.map((fu: any, fi: number) => (
-                          <li key={fi} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                            <span style={{ color: 'var(--accent)' }}>↳</span>
-                            <span>{typeof fu === 'string' ? fu : (fu.question || JSON.stringify(fu))}</span>
+                          <li key={fi} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                            <span style={{ color: LC.followup }}>↳</span>
+                            <span>{typeof fu === 'string' ? fu : safeText(fu.question || fu)}</span>
                           </li>
                         ))}
                       </ul>
@@ -971,7 +979,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                     <div>
                       <SectionHeading label="Clarifying Questions" color={LC.clarify} />
                       <div className="rounded-lg p-3" style={paperCard(LC.clarify)}>
-                        <ul className="space-y-1.5">
+                        <ul className="grid gap-x-4 gap-y-1.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                           {q.clarifyingQuestions.map((cq: any, ci: number) => (
                             <li key={ci} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
                               <span style={{ color: LC.clarify }}>?</span><span>{safeText(cq)}</span>
@@ -1122,7 +1130,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                   return (
                     <div>
                       <SectionHeading label="API Design" color={LC.api} />
-                      <div className="space-y-2">
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))' }}>
                         {q.apiDesign.filter((e: any) => e && typeof e === 'object').map((e: any, ei: number) => (
                           <div key={ei} className="rounded-lg overflow-hidden" style={paperCard(LC.api)}>
                             {e.endpoint && (
@@ -1166,7 +1174,7 @@ function PrepContentRenderer({ content }: { content: any }) {
                   return (
                     <div>
                       <SectionHeading label="Trade-offs" color={LC.tradeoffs} />
-                      <div className="space-y-2">
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
                         {q.tradeOffs.filter((t: any) => t && typeof t === 'object').map((t: any, ti: number) => (
                           <div key={ti} className="rounded-lg p-3" style={paperCard(LC.tradeoffs)}>
                             {t.decision && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{safeText(t.decision)}</div>}
@@ -1186,11 +1194,11 @@ function PrepContentRenderer({ content }: { content: any }) {
                   return (
                     <div>
                       <SectionHeading label="Scalability" color={LC.scalability} />
-                      <div className="space-y-2">
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
                         {q.scalabilityConsiderations.filter((s: any) => s && typeof s === 'object').map((s: any, si: number) => (
                           <div key={si} className="rounded-lg p-3" style={paperCard(LC.scalability)}>
                             {s.challenge && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>⚠ {safeText(s.challenge)}</div>}
-                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{safeText(s.solution)}</p>}
+                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{safeText(s.solution)}</p>}
                           </div>
                         ))}
                       </div>
@@ -1525,7 +1533,7 @@ function PrepContentRenderer({ content }: { content: any }) {
         {Array.isArray(val) ? (
           <ul className="space-y-1">{val.map((t: string, i: number) => <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>• {t}</li>)}</ul>
         ) : typeof val === 'string' ? (
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{val}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{val}</p>
         ) : (
           <div className="space-y-1">{Object.entries(val).map(([k, v]) => (
             <p key={k} className="text-sm"><strong className="text-xs uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: 'var(--text-secondary)' }}>{typeof v === 'string' ? v : Array.isArray(v) ? (v as string[]).join(', ') : JSON.stringify(v)}</span></p>
