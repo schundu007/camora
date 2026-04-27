@@ -55,10 +55,24 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   const [audioCheckOpen, setAudioCheckOpen] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
 
+  // The Electron desktop build uses titleBarStyle: 'hiddenInset' on macOS,
+  // which keeps the red/yellow/green traffic-light buttons at (14, 14) over
+  // the page. The icon rail's logo otherwise lives in that exact spot.
+  // Reserve ~28px of top padding when running inside Electron on macOS so
+  // the wordmark sits below the controls.
+  const camo = typeof window !== 'undefined' ? (window as any).camo : undefined;
+  const needsMacChromeOffset = !!camo?.isDesktop && camo?.platform === 'darwin';
+
   return (
     <nav
-      className="hidden md:flex flex-col shrink-0 py-3 transition-all duration-200"
-      style={{ width: expanded ? 200 : 60, background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)', borderRight: '2px solid var(--cam-gold-leaf)' }}
+      className="hidden md:flex flex-col shrink-0 transition-all duration-200"
+      style={{
+        width: expanded ? 200 : 60,
+        background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)',
+        borderRight: '2px solid var(--cam-gold-leaf)',
+        paddingTop: needsMacChromeOffset ? 32 : 12,
+        paddingBottom: 12,
+      }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}
