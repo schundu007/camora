@@ -16,13 +16,13 @@ export interface PageHeroProps {
   className?: string;
 }
 
+const NAVY = '#26619C';
+const GOLD = '#C9A227';
+
 /**
- * Databricks-style hero — eyebrow label, large display heading, supporting
- * paragraph, optional CTAs, optional right-side visual. Generous vertical
- * whitespace; the heading itself does the heavy lifting visually.
- *
- * Sized for marketing/overview pages (`lg`) and internal section headers
- * (`md`). Stays single-column under 768px; splits 60/40 above.
+ * LC-inspired hero — gold→navy gradient accent rail on the left, gold eyebrow
+ * with hexagon glyph, navy/gold gradient paper backdrop. Matches the prepkit
+ * hero treatment so the whole product reads as one design system.
  */
 export default function PageHero({
   eyebrow,
@@ -43,29 +43,48 @@ export default function PageHero({
   return (
     <section
       className={`relative ${padY} px-6 md:px-10 ${className}`}
-      style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}
+      style={{
+        background: `linear-gradient(135deg, ${NAVY}10 0%, ${GOLD}08 100%), var(--bg-surface)`,
+        borderBottom: `1px solid ${NAVY}30`,
+      }}
     >
+      {/* Left accent rail — gold→navy */}
+      <span
+        className="absolute left-0 top-0 bottom-0 w-1"
+        style={{ background: `linear-gradient(180deg, ${GOLD} 0%, ${NAVY} 100%)` }}
+      />
       <div className="max-w-[var(--page-max,1280px)] mx-auto">
         <div className={visual ? 'grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-8 md:gap-12 items-center' : ''}>
           <div>
             {eyebrow && (
-              <p
-                className="text-[11px] font-bold uppercase tracking-[0.18em] mb-4"
-                style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}
-              >
-                {eyebrow}
-              </p>
+              <div className="flex items-center gap-2 mb-4">
+                <span
+                  className="block flex-shrink-0"
+                  style={{
+                    width: 10,
+                    height: 10,
+                    background: GOLD,
+                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                  }}
+                />
+                <p
+                  className="text-[11px] font-extrabold uppercase tracking-[0.18em]"
+                  style={{ color: GOLD, fontFamily: 'var(--font-mono)' }}
+                >
+                  {eyebrow}
+                </p>
+              </div>
             )}
             <h1
-              className={`font-bold tracking-tight ${titleSize} ${titleLeading}`}
-              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+              className={`font-extrabold tracking-tight ${titleSize} ${titleLeading}`}
+              style={{ color: NAVY, fontFamily: 'var(--font-display)' }}
             >
               {title}
             </h1>
             {subtitle && (
               <p
                 className="mt-5 text-base md:text-lg max-w-2xl"
-                style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}
+                style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}
               >
                 {subtitle}
               </p>

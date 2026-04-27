@@ -1,5 +1,8 @@
-import { ReactNode, ElementType } from 'react';
+import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+
+const NAVY = '#26619C';
+const GOLD = '#C9A227';
 
 export interface DocsCardProps {
   children: ReactNode;
@@ -19,8 +22,8 @@ export interface DocsCardProps {
 }
 
 /**
- * NVIDIA-style flat card: 1px border, no shadow, navy border-color shift on hover.
- * Replaces the heavier shadowed/gradient cards used previously.
+ * LC-inspired card: navy-tinted paper background, hexagon eyebrow, gold→navy
+ * gradient on hover, subtle lift transform. No grey walls.
  */
 export default function DocsCard({
   children,
@@ -35,61 +38,88 @@ export default function DocsCard({
   const interactive = Boolean(to || href || onClick);
   const padding = density === 'compact' ? 'p-4' : 'p-6';
 
-  const base =
-    `block bg-[var(--bg-surface)] border border-[var(--border)] rounded-md ${padding} ` +
-    `transition-colors ${interactive ? 'hover:border-[var(--accent)] cursor-pointer' : ''} ` +
+  const baseClass =
+    `block rounded-xl ${padding} transition-all ` +
+    `${interactive ? 'cursor-pointer hover:scale-[1.01]' : ''} ` +
     className;
+
+  const baseStyle = {
+    background: `linear-gradient(180deg, ${NAVY}08 0%, ${NAVY}03 100%)`,
+    border: `1px solid ${NAVY}30`,
+    boxShadow: `0 1px 0 ${NAVY}10`,
+  } as const;
+
+  const hoverStyle = interactive
+    ? ({
+        ['--card-hover-border' as any]: `${GOLD}60`,
+      } as const)
+    : {};
 
   const inner = (
     <>
       {eyebrow && (
-        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-1.5">
-          {eyebrow}
+        <div className="flex items-center gap-1.5 mb-2">
+          <span
+            className="block flex-shrink-0"
+            style={{
+              width: 8,
+              height: 8,
+              background: GOLD,
+              clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+            }}
+          />
+          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: GOLD }}>
+            {eyebrow}
+          </div>
         </div>
       )}
       {title && (
-        <div className="text-[15px] font-semibold text-[var(--text-primary)] mb-1.5 leading-snug">
+        <div className="text-[15.5px] font-bold mb-1.5 leading-snug" style={{ color: NAVY }}>
           {title}
         </div>
       )}
-      <div className="text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
+      <div className="text-[14px] leading-[1.65]" style={{ color: 'var(--text-primary)' }}>
         {children}
       </div>
+      {interactive && (
+        <div className="mt-3 flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: NAVY }}>
+          <span>Read more</span>
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 6h6M6 3l3 3-3 3" />
+          </svg>
+        </div>
+      )}
     </>
   );
 
+  const combinedStyle = { ...baseStyle, ...hoverStyle };
+
   if (to) {
     return (
-      <Link to={to} className={base}>
+      <Link to={to} className={baseClass} style={combinedStyle}>
         {inner}
       </Link>
     );
   }
   if (href) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={base}
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer" className={baseClass} style={combinedStyle}>
         {inner}
       </a>
     );
   }
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={`${base} text-left w-full`}>
+      <button type="button" onClick={onClick} className={`${baseClass} text-left w-full`} style={combinedStyle}>
         {inner}
       </button>
     );
   }
-  return <div className={base}>{inner}</div>;
+  return <div className={baseClass} style={combinedStyle}>{inner}</div>;
 }
 
 /**
- * Grid wrapper for DocsCard — responsive 1/2/3-column layout with tight gutters
- * matching NVIDIA's compact card grids.
+ * Grid wrapper for DocsCard — responsive 1/2/3-column layout with tight gutters.
  */
 export function DocsCardGrid({
   children,
