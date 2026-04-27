@@ -42,6 +42,7 @@ export const extraSystemDesignProblemCategoryMap = {
   'fb-post-search': 'infrastructure',
   'price-tracking-service': 'specialized',
   'youtube-top-k-trending': 'streaming',
+  'vehicle-registration': 'specialized',
 };
 
 export const extraSystemDesigns = [
@@ -8571,6 +8572,122 @@ manipulation_flags: video_id, flag_type (bot_traffic|view_farm|click_fraud), con
       'ClickHouse vs Redis for counters — chose ClickHouse for historical analysis, Redis for real-time top-K',
       'Per-region trending vs global — chose per-region with configurable geographic granularity',
       'CDN-cached trending vs real-time query — chose CDN with 5-min TTL to serve millions without backend load'
+    ],
+
+  },
+
+  // ─── NEW: Vehicle Registration System ────────────────────────────────
+  {
+    id: 'vehicle-registration',
+    isNew: true,
+    title: 'Vehicle Registration System',
+    subtitle: 'DMV-Style Vehicle Registry & Title Service',
+    icon: 'truck',
+    color: '#92400e',
+    difficulty: 'Medium',
+    description: 'Design a state-level vehicle registration platform that handles new registrations, title transfers, renewals, and law-enforcement lookups across millions of vehicles.',
+
+    introduction: `A state DMV / RTO vehicle registration system is the authoritative record of who owns which vehicle. Every car on the road has a row in this database. The system underpins title transfers (the legal handoff of ownership), annual registration renewals, license-plate issuance, lien recording for auto loans, emissions/inspection compliance, and high-volume read traffic from law enforcement and insurance carriers running plate/VIN lookups.
+
+The interesting tension in this design is between low write throughput (a single state issues a few hundred thousand registrations and transfers per day) and very high read throughput (police MDTs, toll gantries, parking enforcement, insurers, and rental-car return desks may run hundreds of millions of plate lookups per day, often with sub-100ms latency requirements). A naive design that optimizes only for the low-write side falls over the moment a state-wide ALPR network or insurance verification feed turns on.
+
+Ownership transfer is the operation that breaks naive schemas. A title transfer must atomically: discharge any existing lien, change the owner record, generate a new registration certificate, mark the old plates for retention or surrender, and produce an immutable audit record. Two title-transfer requests on the same VIN — common when a dealer and a private party race — must not both succeed, even when applications are submitted simultaneously through different channels (kiosk, online, mailed paper form, branch counter).
+
+Privacy law (DPPA in the US) restricts what owner information can be returned for which lookup reason. The lookup API is therefore not a single endpoint — it's a permissioned set of endpoints where the response shape depends on the caller's authorization (police get full owner PII, insurance gets policy-relevance subset, the public-facing recall lookup gets only make/model/year). This is a great problem for discussing access control as a first-class architectural concern, not an afterthought.
+
+Inter-state coordination matters too. When a vehicle moves from California to Texas, Texas must verify CA registration is in good standing and that no theft / salvage / lemon flag exists. NMVTIS is the federal title information clearinghouse that exists for exactly this; the state system has to publish to and query against it.`,
+
+    functionalRequirements: [
+      'Register a new vehicle: assign plate, issue title, persist owner + lien data',
+      'Transfer ownership: atomic title transfer with lien discharge and audit trail',
+      'Renew registration annually: payment, emissions/insurance verification, sticker issuance',
+      'Plate / VIN lookup with permission-aware response (police, insurer, public recall)',
+      'Record and release lienholders (banks, credit unions financing the vehicle)',
+      'Mark vehicles as stolen, salvage, lemon, or junked — flags propagate to lookup',
+      'Inter-state title transfer with NMVTIS verification before issuing a new title',
+      'Driver-facing self-service: renew online, update address, pay reinstatement fees',
+    ],
+    nonFunctionalRequirements: [
+      'Plate/VIN lookup p99 under 100ms (law enforcement requires real-time response)',
+      'Strong consistency on ownership records — no concurrent transfer can both succeed',
+      'Immutable audit log for every title change (legal evidence requirement)',
+      'Support 30M registered vehicles per state, 100M+ lookups/day at peak',
+      '99.95% availability for the lookup API; planned downtime acceptable for write APIs',
+      'Permission-scoped responses — DPPA / state privacy law compliance is non-negotiable',
+    ],
+    dataModel: {
+      description: 'Authoritative vehicle/owner/title schema with append-only audit log and lien sub-records',
+      schema: `vehicles: vin (PK, 17-char), make, model, year, body_type, color, odometer, fuel_type, gross_weight, status (active|stolen|salvage|junked|sold_out_of_state), created_at
+plates: plate_number (PK), state, plate_type (passenger|commercial|vanity|disability), vehicle_vin (FK, nullable when retained), issued_at, expires_at, status (active|surrendered|on_hold)
+owners: owner_id (PK), legal_name, dob, address, dl_number (FK), entity_type (individual|business|fleet)
+registrations: registration_id (PK), vin (FK), owner_id (FK), plate_number (FK), effective_at, expires_at, status (active|expired|suspended), payment_id, emissions_pass_at, insurance_policy_id
+titles: title_id (PK), vin (FK), owner_id (FK), title_type (clean|salvage|rebuilt|junk), issued_at, superseded_by (FK, nullable), prior_state, brand_codes[]
+liens: lien_id (PK), title_id (FK), lienholder_id, position (1|2), amount, recorded_at, released_at (nullable)
+title_events: event_id (PK), vin, prior_title_id, new_title_id, event_type (new|transfer|duplicate|salvage_brand|interstate_in|interstate_out), submitted_by, processed_by, processed_at, evidence_blob_url
+lookup_audit: audit_id (PK), caller_id, caller_role (leo|insurer|public|internal), query_type (plate|vin), query_value, reason_code, response_fields_returned[], queried_at`,
+      examples: [
+        { table: 'vehicles', label: 'Active passenger vehicle', json: '{ "vin": "1HGCM82633A123456", "make": "Honda", "model": "Accord", "year": 2024, "body_type": "sedan", "color": "Silver", "odometer": 18420, "fuel_type": "gasoline", "gross_weight": 3540, "status": "active", "created_at": "2024-03-12T15:08:21Z" }' },
+        { table: 'registrations', label: 'Current annual registration', json: '{ "registration_id": "reg-tx-2025-882019", "vin": "1HGCM82633A123456", "owner_id": "own-tx-40192", "plate_number": "TX-LMK-4421", "effective_at": "2025-04-12T00:00:00Z", "expires_at": "2026-04-12T00:00:00Z", "status": "active", "payment_id": "pay-9201847", "emissions_pass_at": "2025-04-08T11:14:00Z", "insurance_policy_id": "pol-stf-882901" }' },
+        { table: 'liens', label: 'Open primary lien', json: '{ "lien_id": "lien-882029", "title_id": "ttl-tx-882019", "lienholder_id": "ent-toyota-financial", "position": 1, "amount": 24850, "recorded_at": "2024-03-12T15:08:21Z", "released_at": null }' },
+        { table: 'title_events', label: 'Private-party title transfer', json: '{ "event_id": "evt-tx-882020", "vin": "1HGCM82633A123456", "prior_title_id": "ttl-tx-770318", "new_title_id": "ttl-tx-882019", "event_type": "transfer", "submitted_by": "kiosk-houston-04", "processed_by": "clerk-9281", "processed_at": "2024-03-12T15:08:21Z", "evidence_blob_url": "s3://dmv-evidence/tx/2024/03/12/882020.pdf" }' },
+        { table: 'lookup_audit', label: 'Police plate lookup', json: '{ "audit_id": "aud-tx-90218472", "caller_id": "leo-hpd-badge-4421", "caller_role": "leo", "query_type": "plate", "query_value": "TX-LMK-4421", "reason_code": "traffic_stop", "response_fields_returned": ["vin","make","model","year","color","registered_owner","status_flags"], "queried_at": "2025-04-18T22:14:08Z" }' },
+      ]
+    },
+    apiDesign: {
+      description: 'REST API split by surface — public self-service, government/insurer lookup, and internal write workflow',
+      endpoints: [
+        { method: 'POST', path: '/api/registrations', params: '{ vin, owner, plate_choice?, evidence_docs[] }', response: '{ registration_id, plate_number, expires_at }', notes: 'Citizen self-service or clerk endpoint; runs NMVTIS check + payment auth before commit' },
+        { method: 'POST', path: '/api/titles/transfer', params: '{ vin, current_owner_id, new_owner, sale_price, lien_release? }', response: '{ new_title_id, plate_disposition }', notes: 'Atomic transfer with lien discharge — see key questions for concurrency design' },
+        { method: 'POST', path: '/api/registrations/:id/renew', params: '{ payment_token, emissions_record_id?, insurance_policy }', response: '{ new_expires_at, sticker_serial }', notes: 'Renewal pipeline with verification fan-out' },
+        { method: 'GET', path: '/api/lookup/plate/:plate', params: '{ reason_code, caller_token }', response: 'Permission-scoped vehicle + owner record', notes: 'Response shape varies by caller role; every call writes to lookup_audit' },
+        { method: 'GET', path: '/api/lookup/vin/:vin', params: '{ reason_code, caller_token }', response: 'Permission-scoped vehicle + title + brand history', notes: 'Same authz model as plate lookup' },
+        { method: 'POST', path: '/api/liens', params: '{ title_id, lienholder_id, amount, position }', response: '{ lien_id }', notes: 'Recorded by lender; blocks future transfer until release_at is set' },
+        { method: 'POST', path: '/api/vehicles/:vin/flag', params: '{ flag (stolen|salvage|junked), source, evidence }', response: '{ status }', notes: 'Pushes to NMVTIS and invalidates lookup cache for this VIN' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you make a title transfer atomic across owner change, lien discharge, and plate disposition?', answer: 'Wrap the whole transfer in a single database transaction on a relational primary (PostgreSQL with serializable isolation, or CockroachDB if you need multi-region). Inside the transaction: (1) SELECT FOR UPDATE the current title row by vin, which serializes any concurrent transfer attempt on the same VIN, (2) verify no open liens (or that the discharge document is attached), (3) verify the vehicle status is not stolen/junked, (4) UPDATE the existing title row to set superseded_by, INSERT the new title row, INSERT the new owner record if the buyer is new, UPDATE plates either to retain (seller keeps plate, plate becomes detached) or surrender (plate goes back to inventory), (5) INSERT a row into title_events with the full evidence pointer, (6) commit. Outside the transaction, publish a TitleTransferred event to Kafka so downstream consumers (lookup cache, NMVTIS publisher, audit warehouse) update. Two simultaneous transfers on the same VIN: the SELECT FOR UPDATE blocks the second one; when it unblocks the title is already superseded, the precondition fails, and the second transaction aborts cleanly. Never try to coordinate this with eventually-consistent stores or distributed sagas — the legal requirement is that one transfer wins atomically.' },
+      { question: 'How do you serve 100M+ plate/VIN lookups per day with p99 < 100ms?', answer: 'Read-side architecture is independent from the write side. (1) The write path commits to PostgreSQL primary, then a CDC stream (Debezium → Kafka) projects each change into a denormalized read model — one document per VIN containing the vehicle, current registration, current owner (just the fields lookup is allowed to expose), plate, and active flags. (2) The read model lives in a key-value store (DynamoDB or Cassandra) keyed by both VIN and plate, replicated to every region that hosts a read replica. (3) In front of the KV store sits a Redis cache keyed by plate/VIN with a 5-minute TTL; flag changes publish an invalidation message that proactively expires affected keys. (4) The lookup API runs in every region close to the caller (police MDTs, toll gantries) and reads cache → KV → never the primary. With this layering, p99 is ~5ms cache-hit, ~30ms KV-fall-through; the 100ms budget is comfortably met. The primary database never sees lookup traffic, so registration writes are not impacted by an ALPR campaign.' },
+      { question: 'How do you enforce DPPA / privacy rules on the lookup response?', answer: 'Authorization is computed at the API gateway, not in business logic. Every caller has a role and a contract that lists allowed reason codes and the field set returned for each. (1) The caller presents an OAuth token whose claims include role (leo|insurer|public|internal) and agency, (2) The gateway looks up a policy document for that (role, reason_code) pair, which yields an explicit allow-list of fields, (3) The response from the read model is filtered through that allow-list before serialization, so a misconfigured handler cannot leak more than the policy permits, (4) Every lookup writes a row to lookup_audit including the reason code and the exact field set returned — this is the artifact subpoenaed when a misuse complaint arrives. Policies are versioned and reviewed by counsel; there is no path for engineers to bypass them. Public recall lookups (NHTSA-style "is my VIN under recall") return only make/model/year, no owner data — they hit a separate, cacheable, unauthenticated endpoint.' },
+      { question: 'How does the renewal pipeline coordinate emissions, insurance, and payment without each becoming a hard sync dependency?', answer: 'Treat the renewal as a state machine with externally-verified preconditions. (1) When the owner submits a renewal, create a renewal_attempt row in PENDING with the supplied emissions_record_id and insurance_policy. (2) Fan out three async checks: emissions service verifies the record is recent and passing, insurance verification service queries the carrier API to confirm an active policy, payment processor authorizes (not yet captures) the fee. (3) Each check publishes a result event; the renewal orchestrator advances the state machine when all three are green, captures payment, issues the new sticker, and emits a RegistrationRenewed event. (4) If any check fails, the state machine moves to BLOCKED with a specific reason the citizen can act on (re-test emissions, upload proof of insurance, etc.). The benefit: the renewal API returns 202 immediately with a status URL; even when one of the verifiers is slow or temporarily down, the other checks still progress, and the user sees a clear "waiting on insurance carrier" message rather than a generic timeout. Treat each verifier failure as recoverable — never lose the citizens submission.' },
+      { question: 'How do you handle inter-state title transfers and prevent title washing?', answer: 'Title washing is the fraud where a salvage-branded vehicle is moved to a state that does not honor the brand, getting a clean title issued. NMVTIS exists to stop exactly this. (1) Before issuing any new title — including for a vehicle moving in from another state — query NMVTIS by VIN. (2) NMVTIS returns the title history across all states, including any salvage / junk / rebuilt brands ever applied. (3) Carry the existing brand codes forward into the new title; never issue a clean title over a known salvage brand. (4) When a vehicle is registered out of state from your state, mark vehicles.status = sold_out_of_state and publish that change to NMVTIS so the receiving state sees it. Implementation: a publisher consumes title_events from Kafka and pushes to NMVTIS; a lookup-time check against a local NMVTIS mirror keeps p99 reasonable while a slower nightly reconciliation catches any drift. The local mirror is read-only and is the source of truth for "is this VIN flagged in another state."' },
+      { question: 'How do you scale write throughput for a peak day (e.g., end-of-month registration deadline)?', answer: 'Writes are bursty but bounded — even a peak day is hundreds of thousands of registrations, not millions per second. The strategy is to shed load from the synchronous critical path rather than scale the relational primary horizontally. (1) The citizen-facing renewal/registration submission writes to a durable submission queue (Postgres outbox or Kafka) and returns 202 with a tracking id; the actual title/registration row write happens in a worker that drains the queue at a steady rate the database can absorb. (2) Plate-issuance is partitioned: each region/county pulls plate numbers from a pre-allocated batch, so plate assignment doesnt contend on a global counter. (3) Read traffic is fully isolated on the read model (see lookup question), so write spikes never starve reads. (4) The relational primary can still be vertically scaled and use connection pooling (PgBouncer) to absorb a 10x write spike; if a state genuinely outgrows a single primary, partition by VIN range or county before reaching for a NewSQL system, since cross-shard transfers are rare.' },
+    ],
+    basicImplementation: {
+      title: 'Single-Region DMV',
+      diagramSrc: '/diagrams/vehicle-registration/impl-basic.png',
+      description: 'PostgreSQL primary with synchronous lookups and a single web tier — the architecture a state would actually deploy first.',
+      svgTemplate: null,
+      problems: [
+        'Lookup traffic from law enforcement competes with registration writes on the same DB',
+        'No CDC means the audit warehouse and NMVTIS publisher run as nightly batch jobs and miss real-time fraud signals',
+        'Permission filtering is implemented in handler code, so each new endpoint reintroduces DPPA risk',
+        'Renewal pipeline is synchronous — a slow insurance carrier API stalls every renewal in flight',
+      ],
+    },
+    advancedImplementation: {
+      title: 'Production Vehicle Registration Platform',
+      diagramSrc: '/diagrams/vehicle-registration/impl-advanced.png',
+      description: 'Write-side relational primary with CDC into a regionally-replicated lookup read model, policy-enforced API gateway, and an event-driven renewal state machine.',
+      svgTemplate: null,
+      keyPoints: [
+        'PostgreSQL (or CockroachDB for multi-region) primary with serializable transactions for title transfers',
+        'Debezium CDC into Kafka, materialized into a per-VIN denormalized document store for lookups',
+        'Policy-driven API gateway enforces DPPA field-level allow-lists outside business logic',
+        'Renewal state machine fans out to emissions, insurance, and payment verifiers asynchronously',
+        'NMVTIS publisher and local mirror keep inter-state title history consistent and fast to query',
+        'Append-only title_events and lookup_audit tables provide legally admissible history',
+      ],
+      databaseChoice: 'PostgreSQL primary for vehicles/titles/registrations/liens (transactional core), DynamoDB or Cassandra for the lookup read model, Redis for the lookup hot cache, Kafka as the CDC and event backbone, S3 for evidence document blobs',
+      caching: 'Hot cache by plate and VIN with proactive invalidation on flag change; per-region read-model replicas keep police MDT lookups within the local region; recall lookup endpoint is fully CDN-cached because no owner data is returned',
+    },
+    keyDecisions: [
+      'Serializable PostgreSQL transactions vs distributed sagas for title transfer — chose serializable because the legal requirement is atomic ownership change, not eventual consistency',
+      'Separate read model via CDC vs read replicas of the OLTP DB — chose CDC because lookup needs a denormalized shape and DPPA-safe field projection, not a row-by-row mirror',
+      'Policy-driven gateway authorization vs in-handler checks — chose gateway because every endpoint inherits DPPA enforcement automatically, and policy review happens once per policy not once per route',
+      'Asynchronous renewal state machine vs synchronous pipeline — chose async so a slow carrier API does not stall every citizen submission, and partial failures expose actionable next steps',
+      'NMVTIS local mirror plus async publisher vs synchronous federation queries — chose mirror because lookup latency budget cannot tolerate a federation hop on the critical path',
+      'Append-only title_events / lookup_audit vs audit columns on row updates — chose append-only because legal evidence requires immutable history, and row history is hard to query for subpoena response',
     ],
 
   },
