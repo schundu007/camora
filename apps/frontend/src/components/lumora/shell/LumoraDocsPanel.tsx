@@ -3,6 +3,7 @@
  * Sidebar sections + upload zones + Generate button.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import hljs from 'highlight.js';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';
 
@@ -439,8 +440,64 @@ function ComplexityBadge({ kind, value }: { kind: 'time' | 'space'; value: strin
   );
 }
 
-/** Code block — VSCode-dark editor look with a file-tab header. */
+/** Map any caller-supplied language token onto a hljs-recognised id. */
+function resolveHljsLanguage(input?: string): { id: string | null; label: string } {
+  const raw = (input || '').trim().toLowerCase();
+  if (!raw || raw === 'code' || raw === 'plaintext' || raw === 'text') {
+    return { id: null, label: raw || 'code' };
+  }
+  const aliases: Record<string, string> = {
+    js: 'javascript',
+    jsx: 'javascript',
+    ts: 'typescript',
+    tsx: 'typescript',
+    sh: 'bash',
+    shell: 'bash',
+    zsh: 'bash',
+    yml: 'yaml',
+    py: 'python',
+    rb: 'ruby',
+    rs: 'rust',
+    'c++': 'cpp',
+    cs: 'csharp',
+    'objective-c': 'objectivec',
+    tf: 'terraform',
+    hcl: 'terraform',
+    docker: 'dockerfile',
+    md: 'markdown',
+  };
+  const id = aliases[raw] ?? raw;
+  // hljs.getLanguage returns undefined for unregistered ids — fall back to
+  // auto-detect in that case so the caller's label is still shown.
+  return { id: hljs.getLanguage(id) ? id : null, label: input || raw };
+}
+
+/** Code block — VSCode-dark editor look with a file-tab header + hljs highlighting. */
 function CodeBlock({ code, language = 'code' }: { code: string; language?: string }) {
+  const codeRef = useRef<HTMLElement>(null);
+  const { id: hljsLang, label } = resolveHljsLanguage(language);
+
+  useEffect(() => {
+    if (!codeRef.current) return;
+    // Reset any prior hljs decoration before re-highlighting (handles stream
+    // updates where the code text grows token-by-token).
+    codeRef.current.removeAttribute('data-highlighted');
+    try {
+      if (hljsLang) {
+        const html = hljs.highlight(code, { language: hljsLang, ignoreIllegals: true }).value;
+        codeRef.current.innerHTML = html;
+      } else {
+        const html = hljs.highlightAuto(code).value;
+        codeRef.current.innerHTML = html;
+      }
+      codeRef.current.setAttribute('data-highlighted', 'yes');
+    } catch {
+      // hljs.highlight throws if the language is unregistered after our
+      // resolveHljsLanguage check — fall back to the raw text.
+      codeRef.current.textContent = code;
+    }
+  }, [code, hljsLang]);
+
   return (
     <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LC.codeHdr}` }}>
       <div
@@ -454,16 +511,18 @@ function CodeBlock({ code, language = 'code' }: { code: string; language?: strin
             <span className="w-2 h-2 rounded-full" style={{ background: '#27C93F' }} />
           </div>
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
-            {language}
+            {label}
           </span>
         </div>
         <span className="text-[10px] font-mono" style={{ color: LC.codeMuted }}>{code.split('\n').length} LOC</span>
       </div>
       <pre
         className="px-4 py-3 text-[12.5px] leading-relaxed overflow-x-auto"
-        style={{ background: LC.codeBg, color: LC.codeFg, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}
+        style={{ background: LC.codeBg, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}
       >
-        <code>{code}</code>
+        <code ref={codeRef} className={hljsLang ? `language-${hljsLang} hljs` : 'hljs'} style={{ background: 'transparent' }}>
+          {code}
+        </code>
       </pre>
     </div>
   );
