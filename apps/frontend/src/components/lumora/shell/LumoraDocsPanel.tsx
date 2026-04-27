@@ -1127,13 +1127,31 @@ function PrepContentRenderer({ content }: { content: any }) {
                           <div key={ei} className="rounded-lg overflow-hidden" style={paperCard(LC.api)}>
                             {e.endpoint && (
                               <div className="px-3 py-1.5 font-mono text-[12px] font-bold" style={{ background: `${LC.api}15`, color: LC.api }}>
-                                {e.endpoint}
+                                {safeText(e.endpoint)}
                               </div>
                             )}
-                            <div className="px-3 py-2 space-y-1.5 text-xs font-mono">
-                              {e.request && <div><span className="text-[10px] font-sans font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Request:</span><span style={{ color: 'var(--text-primary)' }}>{e.request}</span></div>}
-                              {e.response && <div><span className="text-[10px] font-sans font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Response:</span><span style={{ color: 'var(--text-primary)' }}>{e.response}</span></div>}
-                              {e.notes && <p className="text-xs font-sans mt-1 italic" style={{ color: 'var(--text-muted)' }}>{e.notes}</p>}
+                            <div className="px-3 py-2 space-y-1.5 text-xs">
+                              {e.request !== undefined && e.request !== null && (
+                                <div>
+                                  <div className="text-[10px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Request</div>
+                                  {typeof e.request === 'object' ? (
+                                    <pre className="font-mono text-[11px] p-2 rounded overflow-x-auto" style={{ background: `${LC.api}08`, color: 'var(--text-primary)', border: `1px solid ${LC.api}20` }}>{JSON.stringify(e.request, null, 2)}</pre>
+                                  ) : (
+                                    <div className="font-mono" style={{ color: 'var(--text-primary)' }}>{safeText(e.request)}</div>
+                                  )}
+                                </div>
+                              )}
+                              {e.response !== undefined && e.response !== null && (
+                                <div>
+                                  <div className="text-[10px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Response</div>
+                                  {typeof e.response === 'object' ? (
+                                    <pre className="font-mono text-[11px] p-2 rounded overflow-x-auto" style={{ background: `${LC.api}08`, color: 'var(--text-primary)', border: `1px solid ${LC.api}20` }}>{JSON.stringify(e.response, null, 2)}</pre>
+                                  ) : (
+                                    <div className="font-mono" style={{ color: 'var(--text-primary)' }}>{safeText(e.response)}</div>
+                                  )}
+                                </div>
+                              )}
+                              {e.notes && <p className="text-xs font-sans mt-1 italic" style={{ color: 'var(--text-muted)' }}>{safeText(e.notes)}</p>}
                             </div>
                           </div>
                         ))}
@@ -1151,10 +1169,10 @@ function PrepContentRenderer({ content }: { content: any }) {
                       <div className="space-y-2">
                         {q.tradeOffs.filter((t: any) => t && typeof t === 'object').map((t: any, ti: number) => (
                           <div key={ti} className="rounded-lg p-3" style={paperCard(LC.tradeoffs)}>
-                            {t.decision && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{t.decision}</div>}
-                            {t.chose && <p className="text-sm" style={{ color: 'var(--text-primary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Chose:</span>{t.chose}</p>}
-                            {t.reason && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Reason:</span>{t.reason}</p>}
-                            {t.alternative && <p className="text-xs leading-relaxed mt-1 italic" style={{ color: 'var(--text-muted)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5 not-italic" style={{ color: LC.tradeoffs }}>Alt:</span>{t.alternative}</p>}
+                            {t.decision && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{safeText(t.decision)}</div>}
+                            {t.chose && <p className="text-sm" style={{ color: 'var(--text-primary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Chose:</span>{safeText(t.chose)}</p>}
+                            {t.reason && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Reason:</span>{safeText(t.reason)}</p>}
+                            {t.alternative && <p className="text-xs leading-relaxed mt-1 italic" style={{ color: 'var(--text-muted)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5 not-italic" style={{ color: LC.tradeoffs }}>Alt:</span>{safeText(t.alternative)}</p>}
                           </div>
                         ))}
                       </div>
@@ -1171,8 +1189,8 @@ function PrepContentRenderer({ content }: { content: any }) {
                       <div className="space-y-2">
                         {q.scalabilityConsiderations.filter((s: any) => s && typeof s === 'object').map((s: any, si: number) => (
                           <div key={si} className="rounded-lg p-3" style={paperCard(LC.scalability)}>
-                            {s.challenge && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>⚠ {s.challenge}</div>}
-                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{s.solution}</p>}
+                            {s.challenge && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>⚠ {safeText(s.challenge)}</div>}
+                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{safeText(s.solution)}</p>}
                           </div>
                         ))}
                       </div>
