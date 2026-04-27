@@ -31,6 +31,24 @@ export default function OnThisPage({
   useEffect(() => {
     if (items.length === 0) return undefined;
 
+    // The page content may scroll inside an inner overflow-y:auto container
+    // (Capra shell uses <main id="app-scroll-container">), not window. Walk
+    // up from the first section element to find the real scroll parent.
+    const findScrollParent = (start: HTMLElement | null): HTMLElement | Window => {
+      let node = start?.parentElement || null;
+      while (node && node !== document.body) {
+        const cs = getComputedStyle(node);
+        if (/(auto|scroll|overlay)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) {
+          return node;
+        }
+        node = node.parentElement;
+      }
+      return window;
+    };
+
+    const firstEl = items.map(i => document.getElementById(i.id)).find(Boolean) || null;
+    const scroller = findScrollParent(firstEl);
+
     const handler = () => {
       let current: string | null = null;
       for (const item of items) {
@@ -43,10 +61,10 @@ export default function OnThisPage({
     };
 
     handler();
-    window.addEventListener('scroll', handler, { passive: true });
+    scroller.addEventListener('scroll', handler, { passive: true });
     window.addEventListener('resize', handler);
     return () => {
-      window.removeEventListener('scroll', handler);
+      scroller.removeEventListener('scroll', handler);
       window.removeEventListener('resize', handler);
     };
   }, [items, offset]);
