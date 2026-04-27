@@ -13,6 +13,7 @@ export default function AdminOverviewPage() {
       onThisPage={[
         { id: 'service-map', label: 'Service map' },
         { id: 'data-flow', label: 'Data flow' },
+        { id: 'architecture-deep-dives', label: 'Architecture deep-dives' },
         { id: 'admin-access', label: 'Admin access' },
         { id: 'common-tasks', label: 'Common admin tasks' },
       ]}
@@ -73,6 +74,18 @@ export default function AdminOverviewPage() {
           <li>ascend-backend → Anthropic Claude with prompt cache + streaming response.</li>
           <li>Every step records seconds + tokens to `ai_hours_usage` for budget tracking.</li>
         </ol>
+      </section>
+
+      <section id="architecture-deep-dives" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">Architecture deep-dives</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Per-feature HLD / LLD / DDD references with diagrams. These are the internal
+          architecture pages — for end-user how-to-use-it documentation, see the user guides under{' '}
+          <Link to="/docs" className="text-[var(--accent)] underline">/docs</Link>.
+        </p>
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          <li><Link to="/docs/admin/lumora-live" className="text-[var(--accent)] underline">Lumora Live architecture</Link> — audio capture, transcription, Sona stream, voice filter, diagrams, bounded contexts.</li>
+        </ul>
       </section>
 
       <section id="admin-access" className="mb-10 scroll-mt-24">
