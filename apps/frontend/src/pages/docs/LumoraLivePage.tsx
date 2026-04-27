@@ -11,13 +11,13 @@ const bodyColor = { color: 'var(--text-secondary)' };
 export default function LumoraLivePage() {
   return (
     <DocsPageLayout
-      title="Lumora Live Interview"
-      description="How to set up and use Lumora during a real interview — audio capture, the three answer modes, screen-share safety, sessions, and troubleshooting."
+      title="Live Interview"
+      description="How to set up and use Camora during a real interview — audio capture, the three answer modes, screen-share safety, sessions, and troubleshooting."
       path="/docs/lumora-live"
       eyebrow="USER GUIDE"
-      breadcrumbs={[{ label: 'Lumora Live' }]}
+      breadcrumbs={[{ label: 'Live Interview' }]}
       onThisPage={[
-        { id: 'what-it-does', label: 'What Lumora does' },
+        { id: 'what-it-does', label: 'What it does' },
         { id: 'before', label: 'Before the call' },
         { id: 'audio', label: 'Audio setup' },
         { id: 'audio-system', label: 'Tab audio (recommended)', depth: 1 },
@@ -30,9 +30,9 @@ export default function LumoraLivePage() {
       ]}
     >
       <section id="what-it-does" className="mb-12 scroll-mt-24">
-        <h2 className={sectionH2}>What Lumora does</h2>
+        <h2 className={sectionH2}>What it does</h2>
         <p className={bodyP} style={bodyColor}>
-          Lumora listens to your interviewer through your computer's audio, transcribes their
+          Camora listens to your interviewer through your computer's audio, transcribes their
           questions in real time, and streams a structured answer from <strong>Sona</strong> — your
           AI interview helper — into a side panel only you can see. You read it, internalize the
           structure, then answer in your own voice.
@@ -54,7 +54,7 @@ export default function LumoraLivePage() {
           <li>Click <strong>Audio Check</strong>. The modal verifies microphone and tab-audio permissions. Don't skip this — a permission popup mid-interview is distracting.</li>
           <li>Pick the right tab — Coding, Design, or Behavioral — based on what's coming.</li>
           <li>Open your resume / job context pane so Sona can reference it during answers (especially behavioral ones).</li>
-          <li>If you're using microphone capture, finish <Link to="/docs/voice-filtering" className="text-[var(--accent)] underline">Voice enrollment</Link> first — it takes ten seconds and prevents Lumora from transcribing your own voice.</li>
+          <li>If you're using microphone capture, finish <Link to="/docs/voice-filtering" className="text-[var(--accent)] underline">Voice enrollment</Link> first — it takes ten seconds and prevents Camora from transcribing your own voice.</li>
         </ol>
         <DocsCallout variant="tip">
           Doing all four of these <strong>fifteen minutes before</strong> the call leaves time to
@@ -65,14 +65,14 @@ export default function LumoraLivePage() {
       <section id="audio" className="mb-12 scroll-mt-24">
         <h2 className={sectionH2}>Audio setup</h2>
         <p className={bodyP} style={bodyColor}>
-          Lumora has two ways to hear your interviewer. Pick one — they're not used together.
+          Camora has two ways to hear your interviewer. Pick one — they're not used together.
         </p>
 
         <h3 id="audio-system" className={sectionH3}>Tab audio (recommended)</h3>
         <p className={bodyP} style={bodyColor}>
-          The cleanest path. Click the <strong>System Audio</strong> button in the Lumora top bar.
+          The cleanest path. Click the <strong>System Audio</strong> button in the Camora top bar.
           Chrome opens its share-tab picker — choose your Zoom / Meet / Teams window and check{' '}
-          <strong>Share tab audio</strong>. From that point Lumora hears only your interviewer's
+          <strong>Share tab audio</strong>. From that point Camora hears only your interviewer's
           voice, not yours, so there's nothing to filter and no risk of transcribing your own
           answers back into the panel.
         </p>
@@ -86,9 +86,9 @@ export default function LumoraLivePage() {
 
         <h3 id="audio-mic" className={sectionH3}>Microphone + voice filter</h3>
         <p className={bodyP} style={bodyColor}>
-          If you can't use tab audio, point Lumora at your microphone and turn on{' '}
+          If you can't use tab audio, point Camora at your microphone and turn on{' '}
           <strong>Voice filtering</strong>. You record ten seconds of your voice once during
-          enrollment; from then on, Lumora skips any audio that matches your voiceprint and only
+          enrollment; from then on, Camora skips any audio that matches your voiceprint and only
           transcribes the other speaker(s) — i.e. the interviewer.
         </p>
         <p className={bodyP} style={bodyColor}>
@@ -128,7 +128,7 @@ export default function LumoraLivePage() {
           </li>
           <li>
             <strong>Cmd+B</strong> (Ctrl+B on Windows / Linux) instantly blanks the screen. Use it
-            the moment the interviewer asks you to share — Lumora keeps running underneath, so when
+            the moment the interviewer asks you to share — Camora keeps running underneath, so when
             you toggle back nothing has been lost.
           </li>
           <li>
@@ -152,12 +152,12 @@ export default function LumoraLivePage() {
         <h2 className={sectionH2}>Screen-share safety</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px] mb-3" style={bodyColor}>
           <li>
-            Lumora runs in a separate browser tab. When the interviewer asks you to share, share
+            Camora runs in a separate browser tab. When the interviewer asks you to share, share
             your <em>specific window</em> (e.g. CoderPad, your IDE) — never the full desktop.
           </li>
           <li>
             If you're forced into a full-screen share, hit <strong>Cmd+B</strong> immediately —
-            Lumora goes black instantly, audio capture continues, and you can toggle it back when
+            Camora goes black instantly, audio capture continues, and you can toggle it back when
             the share ends.
           </li>
           <li>
@@ -177,7 +177,7 @@ export default function LumoraLivePage() {
           <Link to="/lumora/sessions" className="text-[var(--accent)] underline">/lumora/sessions</Link>.
           Review the questions you struggled with, bookmark answers worth re-reading, and feed
           them into your <Link to="/capra/prepare" className="text-[var(--accent)] underline">
-          Capra Prepare
+          Prepare
           </Link>{' '}
           notes so the gaps surface in your next study session.
         </p>
@@ -197,12 +197,12 @@ export default function LumoraLivePage() {
           ]}
           rows={[
             { s: '"No audio detected" message stays on after the call starts.', c: 'You picked the wrong tab in the share-tab dialog, or forgot to tick "Share tab audio".', f: 'Click the System Audio button again and re-pick — make sure the audio checkbox is ticked.' },
-            { s: 'Lumora is transcribing your own voice back at you.', c: 'You\'re on the microphone path without voice filtering enabled.', f: 'Enable Voice filtering in the Lumora top bar, or switch to tab audio. See /docs/voice-filtering.' },
+            { s: 'Camora is transcribing your own voice back at you.', c: 'You\'re on the microphone path without voice filtering enabled.', f: 'Enable Voice filtering in the Camora top bar, or switch to tab audio. See /docs/voice-filtering.' },
             { s: 'No answer streams in after a question.', c: 'Sona didn\'t hear a complete question — the gating heuristic is conservative.', f: 'Click Re-answer to force submission, or wait until the interviewer finishes the next sentence.' },
             { s: 'Sona answered in coding format but the question was design.', c: 'Auto-routing misclassified the question.', f: 'Switch to the Design tab and click Re-answer. The question text is preserved.' },
             { s: 'Architecture diagram never appears on a design answer.', c: 'Generated code tripped the sanitizer or the renderer hit its 60s timeout.', f: 'The prose answer is unaffected. Rephrase the question more concretely (specific cloud, specific components) and resubmit.' },
             { s: '"Daily limit reached" before the interview is over.', c: 'Free-tier daily quota.', f: 'Upgrade to a paid plan from /pricing — the cap lifts immediately.' },
-            { s: 'Cmd+B blanks the screen but doesn\'t unblank.', c: 'Focus is in another window when you press the shortcut a second time.', f: 'Click the Lumora window first, then press Cmd+B again.' },
+            { s: 'Cmd+B blanks the screen but doesn\'t unblank.', c: 'Focus is in another window when you press the shortcut a second time.', f: 'Click the Camora window first, then press Cmd+B again.' },
           ]}
         />
       </section>

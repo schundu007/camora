@@ -41,7 +41,7 @@ export default function DesktopDocsPage() {
         <h2 className="text-2xl font-bold mb-3">Features</h2>
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           The desktop app is the same Camora web frontend embedded in an Electron shell. All features
-          (Lumora live, coding helper, system design, prep) work identically. The differences are
+          (live interview, coding helper, system design, prep) work identically. The differences are
           OS-level capabilities the browser can't provide: invisibility to screen capture, global hotkeys,
           tray integration.
         </p>

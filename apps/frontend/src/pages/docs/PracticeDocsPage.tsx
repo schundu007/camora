@@ -5,11 +5,11 @@ import DocsCallout from '../../components/shared/docs/DocsCallout';
 export default function PracticeDocsPage() {
   return (
     <DocsPageLayout
-      title="Capra Practice"
+      title="Practice"
       description="DSA problems, Blind 75, system design exercises, and behavioral STAR drills."
       path="/docs/practice"
       eyebrow="USER GUIDE"
-      breadcrumbs={[{ label: 'Capra Practice' }]}
+      breadcrumbs={[{ label: 'Practice' }]}
       onThisPage={[
         { id: 'overview', label: 'Overview' },
         { id: 'dsa-problems', label: 'DSA problems' },
@@ -23,7 +23,7 @@ export default function PracticeDocsPage() {
         <h2 className="text-2xl font-bold mb-3">Overview</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Practice complements <Link to="/docs/prepare" className="text-[var(--accent)] underline">Prepare</Link> — instead of reading topics, you solve problems.
-          Open <Link to="/capra/practice" className="text-[var(--accent)] underline">Capra Practice</Link> from the main nav.
+          Open <Link to="/capra/practice" className="text-[var(--accent)] underline">Practice</Link> from the main nav.
         </p>
       </section>
 
@@ -38,7 +38,7 @@ export default function PracticeDocsPage() {
         <h3 id="blind-75" className="text-xl font-bold mt-6 mb-3 scroll-mt-24">Blind 75</h3>
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           The canonical Blind 75 list is curated as a guided track — open
-          <Link to="/capra/blind75" className="text-[var(--accent)] underline ml-1">Capra Blind 75</Link>. Topics are ordered by category
+          <Link to="/capra/blind75" className="text-[var(--accent)] underline ml-1">Blind 75</Link>. Topics are ordered by category
           and difficulty so you build pattern recognition, not just solve random problems.
         </p>
       </section>

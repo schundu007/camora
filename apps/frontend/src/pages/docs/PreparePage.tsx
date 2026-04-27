@@ -5,11 +5,11 @@ import DocsCallout from '../../components/shared/docs/DocsCallout';
 export default function PrepareDocsPage() {
   return (
     <DocsPageLayout
-      title="Capra Prepare"
+      title="Prepare"
       description="Browse 800+ interview prep topics, generate company-specific prep documents, and track your progress."
       path="/docs/prepare"
       eyebrow="USER GUIDE"
-      breadcrumbs={[{ label: 'Capra Prepare' }]}
+      breadcrumbs={[{ label: 'Prepare' }]}
       onThisPage={[
         { id: 'topic-library', label: 'Topic library' },
         { id: 'categories', label: 'Categories', depth: 1 },
@@ -22,12 +22,12 @@ export default function PrepareDocsPage() {
       <section id="topic-library" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Topic library</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Capra ships with 800+ curated interview topics covering DSA, system design, low-level design,
+          Camora ships with 800+ curated interview topics covering DSA, system design, low-level design,
           behavioral STAR stories, and language-specific deep dives. Each topic has a written explanation,
           worked examples, and (where relevant) cached architecture diagrams.
         </p>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Open <Link to="/capra/prepare" className="text-[var(--accent)] underline">Capra Prepare</Link> from
+          Open <Link to="/capra/prepare" className="text-[var(--accent)] underline">Prepare</Link> from
           the main nav. The dashboard surfaces the four core categories.
         </p>
 
@@ -75,9 +75,9 @@ export default function PrepareDocsPage() {
       <section id="company-prep" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Company-specific prep</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          For Pro Max and Business plans, Capra can generate a multi-section prep document tailored to a
+          For Pro Max and Business plans, Camora can generate a multi-section prep document tailored to a
           target company's known interview format and culture. Open the <strong>Generate prep</strong> button on
-          the prepare dashboard, enter the company + role, and Capra produces:
+          the prepare dashboard, enter the company + role, and Camora produces:
         </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Likely DSA topics with rationale</li>
@@ -104,7 +104,7 @@ export default function PrepareDocsPage() {
       <section id="progress-tracking" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Progress tracking</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Capra tracks read topics, completion status, and bookmarks per user. Topics show a checkmark when
+          Camora tracks read topics, completion status, and bookmarks per user. Topics show a checkmark when
           you've read them; the prepare dashboard shows your category-level completion percentage.
         </p>
       </section>

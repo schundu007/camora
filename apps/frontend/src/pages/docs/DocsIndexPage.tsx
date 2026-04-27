@@ -12,11 +12,11 @@ interface DocCard {
 
 const USER_GUIDES: DocCard[] = [
   { title: 'Getting started', description: 'Sign up, onboarding, and your first interview prep session.', href: '/docs/getting-started' },
-  { title: 'Capra Prepare', description: 'Browse 800+ prep topics, generate company-specific prep, free tier limits.', href: '/docs/prepare' },
-  { title: 'Capra Practice', description: 'DSA problems, system design exercises, behavioral STAR practice.', href: '/docs/practice' },
-  { title: 'Lumora Live Interview', description: 'Connect audio, use Sona, capture system audio, run a live interview.', href: '/docs/lumora-live' },
-  { title: 'Lumora Coding Helper', description: 'Multi-language coding playground with three-approach solutions and complexity analysis.', href: '/docs/lumora-coding' },
-  { title: 'Lumora System Design', description: 'Architecture diagrams, design patterns, scaling drills.', href: '/docs/lumora-design' },
+  { title: 'Prepare', description: 'Browse 800+ prep topics, generate company-specific prep, free tier limits.', href: '/docs/prepare' },
+  { title: 'Practice', description: 'DSA problems, system design exercises, behavioral STAR practice.', href: '/docs/practice' },
+  { title: 'Live Interview', description: 'Connect audio, use Sona, capture system audio, run a live interview.', href: '/docs/lumora-live' },
+  { title: 'Coding helper', description: 'Multi-language coding playground with three-approach solutions and complexity analysis.', href: '/docs/lumora-coding' },
+  { title: 'System Design', description: 'Architecture diagrams, design patterns, scaling drills.', href: '/docs/lumora-design' },
   { title: 'Account & billing', description: 'Plans, payment methods, cancel and resume subscriptions.', href: '/docs/account' },
   { title: 'Team sharing', description: 'Invite mates, share AI hours, set per-member caps, configure auto top-up.', href: '/docs/teams' },
   { title: 'Top-ups & AI hours', description: 'How AI hours work, when to top up, auto-topup configuration, refunds.', href: '/docs/topups' },

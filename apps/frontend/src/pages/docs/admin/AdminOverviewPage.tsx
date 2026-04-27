@@ -84,7 +84,9 @@ export default function AdminOverviewPage() {
           <Link to="/docs" className="text-[var(--accent)] underline">/docs</Link>.
         </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><Link to="/docs/admin/lumora-live" className="text-[var(--accent)] underline">Lumora Live architecture</Link> — audio capture, transcription, Sona stream, voice filter, diagrams, bounded contexts.</li>
+          <li><Link to="/docs/admin/lumora-live" className="text-[var(--accent)] underline">Live Interview architecture</Link> — audio capture, transcription, Sona stream, voice filter, diagrams, bounded contexts.</li>
+          <li><Link to="/docs/admin/lumora-coding" className="text-[var(--accent)] underline">Coding architecture</Link> — solver pipeline, system prompt + JSON contract, 3-pass reliability, JSON extraction.</li>
+          <li><Link to="/docs/admin/lumora-design" className="text-[var(--accent)] underline">System Design architecture</Link> — tagged-text answer rendering, diagram generation pipeline, three-tier cache, code sanitizer.</li>
         </ul>
       </section>
 

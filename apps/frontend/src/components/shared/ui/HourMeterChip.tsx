@@ -66,7 +66,7 @@ export function HourMeterChip({ variant = 'light' }: { variant?: 'light' | 'dark
   return (
     <Link
       to="/account/team"
-      className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all hover:opacity-80"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all hover:opacity-80"
       style={{ background: bgColor }}
       title={`${formatHours(budget.remaining_hours)} of AI hours remaining${isExhausted ? ' — buy a top-up to keep going' : ''}`}
       aria-label={`${formatHours(budget.remaining_hours)} AI hours remaining`}
