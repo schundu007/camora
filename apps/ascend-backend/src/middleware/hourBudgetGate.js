@@ -4,6 +4,18 @@ import { tryAutoTopup } from '../services/autoTopupService.js';
 const GATE_DEADLINE_MS = 3000;
 const AUTO_TOPUP_DEADLINE_MS = 4000;
 
+// Owner / admin emails bypass the gate entirely — they shouldn't be
+// paywalled by their own hour budgets while testing or operating the
+// product. Source of truth: OWNER_EMAILS env (preferred) or ADMIN_EMAILS
+// (existing var) so a single change in Railway keeps both gates aligned.
+const OWNER_EMAILS = new Set(
+  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)),
+);
+function isOwnerEmail(email) {
+  return !!email && OWNER_EMAILS.has(String(email).toLowerCase());
+}
+
 /** Promise.race against a deadline. Resolves with `defaultValue` on timeout. */
 function withDeadline(promise, ms, defaultValue) {
   return Promise.race([
@@ -36,6 +48,13 @@ function withDeadline(promise, ms, defaultValue) {
 export async function hourBudgetGate(req, res, next) {
   const userId = req.user?.id;
   if (!userId) return next(); // unauth requests handled elsewhere
+
+  // Owner / admin bypass — they should never be gated by hour budgets
+  // on their own product. Same emails the rest of the app uses for admin.
+  if (isOwnerEmail(req.user?.email)) {
+    res.setHeader('X-Hour-Budget-Bypass', 'owner');
+    return next();
+  }
 
   // Wrap the whole gate in a deadline. If any branch hangs, this resolves
   // to { _timedOut: true } and we fail open at the bottom.

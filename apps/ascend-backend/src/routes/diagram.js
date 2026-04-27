@@ -8,6 +8,7 @@ import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
 import { recordTokens } from '../services/aiHoursMeter.js';
+import { hourBudgetGate } from '../middleware/hourBudgetGate.js';
 
 const router = Router();
 
@@ -39,7 +40,7 @@ function hashProblem(text) {
  * POST /api/diagram/eraser
  * Generate an architecture diagram using Eraser.io (with DB caching)
  */
-router.post('/eraser', async (req, res, next) => {
+router.post('/eraser', hourBudgetGate, async (req, res, next) => {
   try {
     const { description, detailLevel = 'overview', cacheKey } = req.body;
 
@@ -127,7 +128,7 @@ router.post('/eraser', async (req, res, next) => {
  * POST /api/diagram/generate
  * Generate a cloud architecture diagram using Python diagrams library (with DB caching)
  */
-router.post('/generate', async (req, res, next) => {
+router.post('/generate', hourBudgetGate, async (req, res, next) => {
   req.setTimeout(120000);
   res.setTimeout(120000);
   try {
