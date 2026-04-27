@@ -1769,29 +1769,67 @@ function FormattedJD({ text }: { text: string }) {
     }
   }
 
+  // Section accent inference — pick an LC-palette color based on what the
+  // section is talking about. Falls back to navy for unknown sections.
+  const accentForSection = (title: string | null, explicitTone?: string): string => {
+    if (explicitTone === 'success') return LC.api;
+    if (explicitTone === 'warning') return LC.medium.fg;
+    if (explicitTone === 'muted')   return 'var(--text-muted)';
+    if (!title) return LC.navy;
+    const t = title.toLowerCase();
+    if (/(about|company|who\s+we\s+are|overview|introduction)/i.test(t)) return LC.navy;
+    if (/(responsib|what\s+you'?ll?\s+do|key\s+role|day[- ]to[- ]day)/i.test(t)) return LC.problem;
+    if (/(requirement|qualification|must\s+have|what\s+we\s+need|what\s+we\s+expect)/i.test(t)) return LC.approach;
+    if (/(preferred|nice\s+to\s+have|bonus|stand\s+out|plus)/i.test(t)) return LC.examples;
+    if (/(benefit|perk|what\s+we\s+offer|reward)/i.test(t)) return LC.gold;
+    if (/(tech\s+stack|technolog|tool|stack)/i.test(t)) return LC.architecture;
+    if (/(experience|skill|expertise)/i.test(t)) return LC.scalability;
+    if (/(team|culture|values)/i.test(t)) return LC.tradeoffs;
+    return LC.navy;
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {heroTitle && (
-        <div className="rounded-xl px-5 py-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }}>
-          <h3 className="text-base font-bold tracking-tight" style={{ color: 'var(--cam-primary)' }}>{heroTitle}</h3>
+        <div
+          className="rounded-xl px-5 py-4 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${LC.navy}10 0%, ${LC.gold}08 100%)`,
+            border: `1px solid ${LC.navy}30`,
+            boxShadow: `0 1px 0 ${LC.gold}30`,
+          }}
+        >
+          <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `linear-gradient(180deg, ${LC.gold} 0%, ${LC.navy} 100%)` }} />
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: LC.gold }}>Job Title</div>
+          <h3 className="text-[18px] font-extrabold leading-tight tracking-tight" style={{ color: LC.navy }}>{heroTitle}</h3>
         </div>
       )}
 
       {metadata.length > 0 && (
         <div
-          className="rounded-xl px-4 py-3 grid gap-x-6 gap-y-2"
+          className="rounded-xl px-4 py-3.5 grid gap-x-6 gap-y-3"
           style={{
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)',
+            ...paperCard(LC.navy),
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           }}
         >
           {metadata.map((m, i) => (
             <div key={i} className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                {m.label.replace(/^[a-z]/, (c) => c.toUpperCase())}
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="block flex-shrink-0"
+                  style={{
+                    width: 6,
+                    height: 6,
+                    background: LC.navy,
+                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                  }}
+                />
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: LC.navy }}>
+                  {m.label.replace(/^[a-z]/, (c) => c.toUpperCase())}
+                </span>
               </span>
-              <span className="text-[13px] truncate" style={{ color: 'var(--text-primary)' }} title={m.value}>{m.value}</span>
+              <span className="text-[13px] truncate font-medium" style={{ color: 'var(--text-primary)' }} title={m.value}>{m.value}</span>
             </div>
           ))}
         </div>
@@ -1799,33 +1837,53 @@ function FormattedJD({ text }: { text: string }) {
 
       {content.map((sec, i) => {
         const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
-        const accent =
-          tone === 'success' ? '#16A34A' :
-          tone === 'warning' ? '#D97706' :
-          tone === 'muted'   ? 'var(--text-muted)' :
-          'var(--cam-primary)';
-        const headerBg =
-          tone === 'success' ? 'rgba(34,197,94,0.08)' :
-          tone === 'warning' ? 'rgba(245,158,11,0.08)' :
-          tone === 'muted'   ? 'var(--bg-elevated)' :
-          'var(--accent-subtle)';
+        const accent = accentForSection(sec.title, tone);
         return (
-          <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <div
+            key={i}
+            className="rounded-xl overflow-hidden"
+            style={paperCard(accent)}
+          >
             {sec.title && (
-              <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: headerBg, borderBottom: '1px solid var(--border)' }}>
-                <span className="block w-1 h-3.5 rounded-sm" style={{ background: accent }} />
-                <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: accent }}>{sec.title}</h4>
+              <div
+                className="px-4 py-2.5 flex items-center gap-2.5"
+                style={{
+                  background: `${accent}14`,
+                  borderBottom: `1px solid ${accent}25`,
+                }}
+              >
+                <span
+                  className="block flex-shrink-0"
+                  style={{
+                    width: 10,
+                    height: 10,
+                    background: accent,
+                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                  }}
+                />
+                <h4 className="text-[12px] font-extrabold tracking-tight" style={{ color: accent }}>
+                  {sec.title.replace(/^[a-z]/, (c) => c.toUpperCase())}
+                </h4>
+                <span className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${accent}50 0%, transparent 100%)` }} />
               </div>
             )}
-            <div className="px-4 py-3 flex flex-col gap-1.5">
+            <div className="px-4 py-3.5 flex flex-col gap-2">
               {sec.items.map((item, j) => {
                 if (i === 0 && !sec.title) {
-                  return <p key={j} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</p>;
+                  return <p key={j} className="text-[14px] leading-[1.65]" style={{ color: 'var(--text-primary)' }}>{item}</p>;
                 }
                 return (
-                  <div key={j} className="flex gap-2 items-start">
-                    <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: accent }} />
-                    <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</span>
+                  <div key={j} className="flex gap-2.5 items-start">
+                    <span
+                      className="block flex-shrink-0 mt-1.5"
+                      style={{
+                        width: 6,
+                        height: 6,
+                        background: accent,
+                        clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                      }}
+                    />
+                    <span className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-primary)' }}>{item}</span>
                   </div>
                 );
               })}
