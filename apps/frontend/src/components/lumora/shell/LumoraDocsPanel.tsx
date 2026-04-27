@@ -1111,32 +1111,99 @@ function FormattedJD({ text }: { text: string }) {
   const FILLER = new Set(['apply', 'apply now', 'save job', 'share', 'back to search']);
 
   const rawLines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0 && !FILLER.has(l.toLowerCase()));
-  const metadata: { label: string; value: string }[] = [];
-  const remainingLines: string[] = [];
 
+  // ─── Pass 1: Workday metadata pairs (label → next-line value) ───
+  const metadata: { label: string; value: string }[] = [];
+  const afterMetadata: string[] = [];
   for (let i = 0; i < rawLines.length; i++) {
     const line = rawLines[i];
     const isLabel = META_LABELS.some((p) => p.test(line));
     if (isLabel && i + 1 < rawLines.length) {
       const value = rawLines[i + 1];
-      // Sanity-check the value: it must be short and not itself a label
       if (value.length <= 100 && !META_LABELS.some((p) => p.test(value))) {
-        metadata.push({
-          label: line.replace(/^[a-z]/, (c) => c.toUpperCase()),
-          value,
-        });
-        i += 1; // consume the value line
+        metadata.push({ label: line.replace(/^[a-z]/, (c) => c.toUpperCase()), value });
+        i += 1;
         continue;
       }
     }
-    remainingLines.push(line);
+    afterMetadata.push(line);
   }
 
-  // ─── Now run the heuristic section parser on what's left ───
+  // ─── Pass 2: BOILERPLATE EXTRACTION (LINE-LEVEL) ───
+  // Run BEFORE the section parser so boilerplate lines never end up
+  // misclassified under "Ways to Stand Out", "Requirements", etc. Aggressive
+  // keyword matching — any of these substrings (case-insensitive, anywhere
+  // in the line) routes the line into its bucket.
+  type Bucket = { title: string; keywords: string[]; color?: 'warning' | 'success' | 'muted' };
+  const BUCKETS: Bucket[] = [
+    {
+      title: 'Compensation',
+      color: 'success',
+      keywords: [
+        'base salary', 'salary range', 'salary will be', 'pay range', 'pay transparency',
+        'total compensation', 'comp range', 'cash compensation', 'annual salary',
+        'starting salary', 'eligible for equity', 'eligible for bonus', 'eligible for benefits',
+        'equity and benefits', 'equity & benefits', 'usd for level', 'usd - ', 'usd-',
+        'usd per year', '$/year', 'per year (', 'compensation package',
+      ],
+    },
+    {
+      title: 'Application',
+      color: 'muted',
+      keywords: [
+        'applications for this', 'application deadline', 'will be accepted until',
+        'will be accepted at least until', 'accepted at least until', 'this posting is for',
+        'existing vacancy', 'apply by ', 'closing date', 'deadline to apply',
+      ],
+    },
+    {
+      title: 'AI & Recruiting',
+      color: 'muted',
+      keywords: [
+        'uses ai tools', 'ai tools in its recruiting', 'ai-assisted screening',
+        'ai assisted screening', 'automated screening', 'automated hiring',
+        'recruiting processes', 'automated decisions',
+      ],
+    },
+    {
+      title: 'Equal Opportunity',
+      color: 'muted',
+      keywords: [
+        'equal opportunity employer', 'fostering a diverse', 'highly value diversity',
+        'do not discriminate', 'protected by law', 'affirmative action',
+        'reasonable accommodation', 'minorities, women, veterans', 'equal employment',
+        'race, religion, color, national origin', 'gender, gender expression',
+        'sexual orientation', 'veteran status', 'disability status',
+      ],
+    },
+  ];
+
+  const matchBucket = (line: string): Bucket | null => {
+    const lower = line.toLowerCase();
+    for (const b of BUCKETS) {
+      if (b.keywords.some((k) => lower.includes(k))) return b;
+    }
+    return null;
+  };
+
+  const bucketedLines = new Map<string, string[]>();
+  const linesForParser: string[] = [];
+  for (const line of afterMetadata) {
+    const matched = matchBucket(line);
+    if (matched) {
+      if (!bucketedLines.has(matched.title)) bucketedLines.set(matched.title, []);
+      bucketedLines.get(matched.title)!.push(line);
+    } else {
+      linesForParser.push(line);
+    }
+  }
+
+  // ─── Pass 3: Run the heuristic section parser on what's LEFT ───
+  // Boilerplate lines are gone, so the parser only sees real JD content.
   const sections: { title: string | null; items: string[] }[] = [];
   let current: { title: string | null; items: string[] } = { title: null, items: [] };
 
-  for (const t of remainingLines) {
+  for (const t of linesForParser) {
     if (isHeader(t)) {
       if (current.items.length > 0 || current.title) sections.push(current);
       current = { title: t, items: [] };
@@ -1146,55 +1213,26 @@ function FormattedJD({ text }: { text: string }) {
   }
   if (current.items.length > 0 || current.title) sections.push(current);
 
-  // The very first un-titled section (if it's a single short line) is the job
-  // title — promote it into a hero header instead of a body paragraph.
+  // Hero promotion (job title)
   let heroTitle: string | null = null;
   if (sections.length > 0 && !sections[0].title && sections[0].items.length === 1 && sections[0].items[0].length < 100) {
     heroTitle = sections[0].items[0];
     sections.shift();
   }
-  // Or if first section's title is short and items are empty, use it as hero
   if (!heroTitle && sections.length > 0 && sections[0].title && sections[0].items.length === 0 && sections[0].title.length < 100) {
     heroTitle = sections[0].title;
     sections.shift();
   }
 
-  // ─── Boilerplate split-pass ───
-  // Some JDs (NVIDIA, Meta, Google template style) append salary, equity,
-  // application, EEO paragraphs at the end of the LAST real section without
-  // explicit headers. The parser then bundles them under "Ways to Stand Out"
-  // or "Requirements" — wrong. Detect those starters and split them off into
-  // their own labeled sections.
-  type Bucket = { title: string; pattern: RegExp; color?: 'warning' | 'success' | 'muted' };
-  const BOILERPLATE_BUCKETS: Bucket[] = [
-    { title: 'Compensation', pattern: /(your\s+base\s+salary|base\s+salary\s+range|salary\s+range|will\s+also\s+be\s+eligible\s+for\s+(equity|bonus|benefits)|total\s+compensation|pay\s+(range|transparency))/i, color: 'success' },
-    { title: 'Application', pattern: /^(applications?\s+for\s+this\s+(job|role|position)|this\s+posting\s+is\s+for|deadline\s+to\s+apply|will\s+be\s+accepted\s+(at\s+least\s+)?until)/i, color: 'muted' },
-    { title: 'AI & Recruiting', pattern: /uses\s+AI\s+tools|automated\s+(screening|hiring)\s+process|AI[- ]?assisted\s+(screening|review)/i, color: 'muted' },
-    { title: 'Equal Opportunity', pattern: /(equal\s+opportunity\s+employer|fostering\s+a\s+diverse|do\s+not\s+discriminate|protected\s+by\s+law|affirmative\s+action|reasonable\s+accommodation)/i, color: 'muted' },
-  ];
+  // ─── Build final content list: real sections first, then boilerplate buckets ───
   type ContentSection = { title: string | null; items: string[]; color?: 'warning' | 'success' | 'muted' };
-  const splitSections: ContentSection[] = [];
-  for (const sec of sections) {
-    const keep: string[] = [];
-    const buckets = new Map<string, ContentSection>();
-    for (const item of sec.items) {
-      const matched = BOILERPLATE_BUCKETS.find((b) => b.pattern.test(item));
-      if (matched) {
-        if (!buckets.has(matched.title)) {
-          buckets.set(matched.title, { title: matched.title, items: [], color: matched.color });
-        }
-        buckets.get(matched.title)!.items.push(item);
-      } else {
-        keep.push(item);
-      }
+  const content: ContentSection[] = [...sections];
+  for (const b of BUCKETS) {
+    const items = bucketedLines.get(b.title);
+    if (items && items.length > 0) {
+      content.push({ title: b.title, items, color: b.color });
     }
-    if (keep.length > 0 || sec.title) {
-      splitSections.push({ ...sec, items: keep });
-    }
-    for (const b of buckets.values()) splitSections.push(b);
   }
-
-  const content = splitSections;
 
   return (
     <div className="flex flex-col gap-4">
