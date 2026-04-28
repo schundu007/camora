@@ -2386,7 +2386,45 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
+            {/* Sync indicator — proves writes are reaching the lumora
+                backend (lumora_prep_state). "Saved" means the JD/resume/
+                companies have landed in Postgres and will be available
+                on the webapp / any other device after sign-in. */}
+            <span
+              className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1"
+              title={
+                !token ? 'Not signed in — changes are local-only and will not appear on the webapp.'
+                  : syncStatus === 'saving' ? 'Writing to lumora_prep_state…'
+                  : syncStatus === 'saved'  ? 'Synced to backend. Reachable from any device while signed in.'
+                  : syncStatus === 'error'  ? 'Sync failed. Open the dev tools console (View → Toggle Developer Tools) for details. Local copy is preserved.'
+                  : 'Idle'
+              }
+              style={{
+                color:
+                  !token ? 'rgba(255,255,255,0.55)'
+                  : syncStatus === 'error'  ? '#FCA5A5'
+                  : syncStatus === 'saving' ? 'rgba(255,255,255,0.85)'
+                  : syncStatus === 'saved'  ? '#A7F3D0'
+                  : 'rgba(255,255,255,0.55)',
+              }}
+            >
+              <span
+                aria-hidden="true"
+                className="inline-block w-1.5 h-1.5 rounded-full"
+                style={{
+                  background:
+                    !token ? 'rgba(255,255,255,0.35)'
+                    : syncStatus === 'error'  ? '#F87171'
+                    : syncStatus === 'saving' ? '#FCD34D'
+                    : syncStatus === 'saved'  ? '#34D399'
+                    : 'rgba(255,255,255,0.35)',
+                }}
+              />
+              {!token ? 'Local only' : syncStatus === 'saving' ? 'Saving…' : syncStatus === 'saved' ? 'Saved' : syncStatus === 'error' ? 'Sync failed' : 'Idle'}
+            </span>
+          </div>
           {/* The new-company input must take priority over the dropdown.
               Auto-init sets activeCompany = "My Interview" on first mount,
               so without this hoist the dropdown branch always wins and
