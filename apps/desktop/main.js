@@ -16,6 +16,7 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 let crashCount = 0;
+let contentProtected = false;
 
 // ── Window State Persistence ─────────────────────────────────────────────────
 function loadWindowState() {
@@ -65,6 +66,36 @@ function createWindow() {
   });
 
   if (state.isMaximized) mainWindow.maximize();
+
+  // Content protection (NSWindowSharingNone on macOS / equivalent on
+  // Windows) is the "invisible to screen capture" flag — Zoom / Meet /
+  // Teams / OBS / QuickTime see through to the desktop underneath.
+  // Default is OFF so the user's own screenshot/screen-recording tools
+  // work normally on their own machine. Cmd+B toggles it on/off as a
+  // panic switch right before an interview share starts.
+  contentProtected = false;
+  try {
+    mainWindow.setContentProtection(false);
+  } catch (err) {
+    console.warn('[contentProtection] not supported:', err?.message);
+  }
+
+  // Google's OAuth screen refuses any browser whose User-Agent contains
+  // "Electron" — sign-in shows "This browser or app may not be secure"
+  // and never completes. Override the UA for Google's domains so OAuth
+  // works in the packaged desktop app. Chrome-on-macOS keeps the engine
+  // claim truthful while not tripping the embedded-webview heuristic.
+  const SAFE_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+  const GOOGLE_HOSTS = /(^|\.)(google\.com|googleusercontent\.com|gstatic\.com|googleapis\.com|youtube\.com)$/i;
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, cb) => {
+    try {
+      const host = new URL(details.url).hostname;
+      if (GOOGLE_HOSTS.test(host)) {
+        details.requestHeaders['User-Agent'] = SAFE_UA;
+      }
+    } catch {}
+    cb({ requestHeaders: details.requestHeaders });
+  });
 
   mainWindow.loadURL(APP_URL);
 
@@ -212,10 +243,32 @@ function navigateTo(urlPath) {
 
 // ── App Lifecycle ────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
-  // Request microphone access on macOS
+  // Request microphone access on macOS. If access is denied at the OS
+  // level (TCC has a 'denied' entry from a prior rebuild whose cdhash
+  // doesn't match this build), the prompt won't fire and the wizard
+  // will silently show 0 microphones. Detect that state and open System
+  // Settings → Privacy & Security → Microphone directly so the user can
+  // toggle it on with one click instead of hunting through panes.
   if (process.platform === 'darwin') {
     try {
-      await systemPreferences.askForMediaAccess('microphone');
+      const before = systemPreferences.getMediaAccessStatus('microphone');
+      if (before === 'granted') {
+        // Already good — nothing to do.
+      } else if (before === 'denied') {
+        // TCC has a hard-deny entry. askForMediaAccess won't reprompt;
+        // user must flip the switch in System Settings. Open the right
+        // pane directly so they don't have to navigate.
+        console.warn('[mic] previously denied — opening System Settings');
+        shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone');
+      } else {
+        // 'not-determined' or 'restricted' — try the prompt path.
+        const granted = await systemPreferences.askForMediaAccess('microphone');
+        if (!granted) {
+          // Prompt didn't yield a grant. Open Settings as a safety net.
+          console.warn('[mic] askForMediaAccess did not grant — opening System Settings');
+          shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone');
+        }
+      }
     } catch (err) {
       console.error('Mic access request failed:', err);
     }
@@ -241,8 +294,28 @@ app.whenReady().then(async () => {
   if (process.platform === 'darwin') trayIcon.setTemplateImage(true);
   tray = createTray(trayIcon, showWindow, navigateTo);
 
-  // Global hotkey: Cmd/Ctrl+Shift+C
+  // Global hotkey: Cmd/Ctrl+Shift+C — focus the app from anywhere.
   globalShortcut.register('CommandOrControl+Shift+C', showWindow);
+
+  // Cmd/Ctrl+B → toggle "invisible to screen share". When ON, Zoom/
+  // Meet/Teams/OBS/QuickTime see straight through the Camora window to
+  // whatever's behind it; the user still sees Camora normally on their
+  // own display. When OFF (default), screen capture works normally so
+  // the user can take their own screenshots, record demos, etc.
+  // Notification toast tells the user which state they just entered
+  // because the only visible-to-the-user difference is on the OTHER
+  // side of the share, which they can't verify mid-call.
+  globalShortcut.register('CommandOrControl+B', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    contentProtected = !contentProtected;
+    try {
+      mainWindow.setContentProtection(contentProtected);
+    } catch (err) {
+      console.warn('[contentProtection] toggle failed:', err?.message);
+      return;
+    }
+    mainWindow.webContents.send('content-protection-changed', contentProtected);
+  });
 
   // macOS: show window when dock icon is clicked
   app.on('activate', showWindow);
@@ -313,6 +386,49 @@ app.on('open-url', (event, url) => {
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 ipcMain.handle('get-platform', () => process.platform);
 ipcMain.handle('get-version', () => app.getVersion());
+
+// IPC handlers backing the preload's media-access bridge. The preload
+// exposes these channels for the renderer to call, but the handlers
+// were never registered in main.js — every call from the renderer
+// hung silently. That's been a hidden cause of the "Grant microphone
+// access" button doing nothing on the desktop app.
+
+// Read current TCC status without prompting.
+ipcMain.handle('get-media-access-status', (_e, kind) => {
+  if (process.platform !== 'darwin') return 'granted';
+  try {
+    return systemPreferences.getMediaAccessStatus(kind || 'microphone');
+  } catch {
+    return 'unknown';
+  }
+});
+
+// Trigger macOS prompt; resolves true on grant, false otherwise.
+// Note: macOS only prompts once per "not-determined" state. If TCC
+// has a 'denied' entry already, this returns false WITHOUT prompting.
+ipcMain.handle('ask-for-media-access', async (_e, kind) => {
+  if (process.platform !== 'darwin') return true;
+  try {
+    return await systemPreferences.askForMediaAccess(kind || 'microphone');
+  } catch {
+    return false;
+  }
+});
+
+// Open System Settings directly to a Privacy & Security section.
+// section ∈ 'Microphone' | 'Camera' | 'ScreenCapture' | 'Accessibility'.
+ipcMain.handle('open-system-privacy', (_e, section) => {
+  if (process.platform !== 'darwin') return false;
+  const map = {
+    Microphone: 'Privacy_Microphone',
+    Camera: 'Privacy_Camera',
+    ScreenCapture: 'Privacy_ScreenCapture',
+    Accessibility: 'Privacy_Accessibility',
+  };
+  const anchor = map[section] || 'Privacy_Microphone';
+  shell.openExternal(`x-apple.systempreferences:com.apple.preference.security?${anchor}`);
+  return true;
+});
 
 // Window control handlers (called from preload.js)
 ipcMain.on('window-minimize', () => mainWindow?.minimize());
