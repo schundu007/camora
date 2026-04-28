@@ -12,9 +12,10 @@ contextBridge.exposeInMainWorld('camo', {
   getMediaAccessStatus: (kind) => ipcRenderer.invoke('get-media-access-status', kind),
   openSystemPrivacy: (section) => ipcRenderer.invoke('open-system-privacy', section),
 
-  // Screen capture
-  listWindows: () => ipcRenderer.invoke('list-windows'),
-  captureWindow: (sourceId) => ipcRenderer.invoke('capture-window', sourceId),
+  // Screen capture — single call, no modal. macOS draws its own
+  // window-select cursor; user clicks the target window. Resolves to
+  // a PNG dataURL or null (Escape/permission denied).
+  captureInteractive: () => ipcRenderer.invoke('capture-interactive'),
 
   // Document export
   // savePdf({ html: string, filename?: string }) → { ok, path? } or { canceled: true }

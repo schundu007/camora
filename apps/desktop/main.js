@@ -56,7 +56,8 @@ function createWindow() {
     minWidth: 900, minHeight: 600,
     title: 'Camora',
     backgroundColor: '#0a0a0a',
-    titleBarStyle: 'hiddenInset',
+    // Default macOS title bar — keeps traffic lights in their own strip
+    // above the web app so they never overlap the in-app nav header.
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -113,46 +114,42 @@ app.on('second-instance', () => {
   }
 });
 
-// ── IPC: capture sources ────────────────────────────────────────────────
-ipcMain.handle('list-windows', async () => {
-  try {
-    const sources = await desktopCapturer.getSources({
-      types: ['window', 'screen'],
-      thumbnailSize: { width: 1, height: 1 },
-      fetchWindowIcons: false,
-    });
-    return sources.map((s) => ({
-      id: s.id,
-      name: s.name,
-      kind: s.id.startsWith('screen:') ? 'screen' : 'window',
-    }));
-  } catch (err) {
-    console.error('[capture] list-windows failed:', err);
-    return [];
-  }
-});
-
-// Capture chosen window/screen via macOS native /usr/sbin/screencapture.
-// Triggers SR permission prompt naturally on first call. Full native res.
-ipcMain.handle('capture-window', async (_e, sourceId) => {
-  if (!sourceId) return null;
-  const m = String(sourceId).match(/^(window|screen):(\d+):/);
-  if (!m) return null;
-  const [, kind, idNum] = m;
+// ── IPC: native macOS window picker ────────────────────────────────────
+// Click Capture → macOS draws its own window-select cursor (camera icon
+// on hover) → user clicks the window to capture → screencapture writes
+// the PNG. No in-app modal, no list, no thumbnails. The system-native
+// UX every other capture tool uses.
+//
+// Hides our own window first so it doesn't appear in the list, then
+// re-shows it after the capture completes (or the user presses Escape).
+ipcMain.handle('capture-interactive', async () => {
   const tmp = path.join(os.tmpdir(), `camora-cap-${Date.now()}-${process.pid}.png`);
-  const args = kind === 'window'
-    ? ['-x', '-t', 'png', '-o', '-l', idNum, tmp]
-    : ['-x', '-t', 'png', '-o', `-D${Number(idNum) + 1}`, tmp];
+  const wasVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
+  if (wasVisible) {
+    mainWindow.hide();
+    // Give the compositor a frame to actually unmap the window before
+    // screencapture enumerates the on-screen window list.
+    await new Promise((r) => setTimeout(r, 120));
+  }
   try {
-    await new Promise((res, rej) => execFile('/usr/sbin/screencapture', args, (err) => err ? rej(err) : res()));
+    // -w: window selection mode (camera-icon cursor on hover, click to capture).
+    // -o: don't add a window's drop shadow to the screenshot.
+    // -t png: full-res PNG (not JPEG).
+    // If the user presses Escape, screencapture exits 1 and writes nothing.
+    await new Promise((res) => {
+      execFile('/usr/sbin/screencapture', ['-w', '-o', '-t', 'png', tmp], () => res());
+    });
+    if (!fs.existsSync(tmp)) return null; // user pressed Escape
     const buf = fs.readFileSync(tmp);
     fs.unlink(tmp, () => {});
     if (!buf.length) return null;
     return `data:image/png;base64,${buf.toString('base64')}`;
   } catch (err) {
-    console.error('[capture] screencapture failed:', err);
+    console.error('[capture] interactive screencapture failed:', err);
     fs.unlink(tmp, () => {});
     return null;
+  } finally {
+    if (wasVisible && mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
   }
 });
 
