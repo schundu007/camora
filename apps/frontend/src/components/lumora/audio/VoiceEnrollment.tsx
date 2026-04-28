@@ -46,6 +46,16 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
     }
   }, [token, setVoiceEnrolled]);
 
+  // Defensive: clear stuck `isEnrolling=true` on mount. The flag is persisted
+  // in the Zustand store, so an earlier enrollment that errored or got
+  // interrupted (closed tab, network drop) would leave the unenroll button
+  // permanently disabled across reloads. No active recording can survive a
+  // mount, so resetting here is always safe.
+  useEffect(() => {
+    if (isEnrolling) setIsEnrolling(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const cleanup = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -265,9 +275,13 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         style={isLight ? {
           fontSize: '13px',
           padding: '10px 16px',
-          color: '#ffffff',
-          background: voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--text-primary)',
-          border: '1px solid var(--border)',
+          // Filter ON  → solid brand pill, white text (high contrast)
+          // Filter OFF → neutral surface, primary text on its own bg
+          //   (was white-on-cream — using --text-primary as a *background*
+          //   produced an unreadable beige fill).
+          color: voiceFilterEnabled ? '#ffffff' : 'var(--text-primary)',
+          background: voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--bg-elevated)',
+          border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--border)'}`,
         } : {
           fontSize: '11px',
           padding: '4px 8px',
