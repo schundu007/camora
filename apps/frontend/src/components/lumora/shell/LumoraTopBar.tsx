@@ -6,6 +6,7 @@ import { LumoraSettings } from './LumoraSettings';
 import ScreenCaptureButton from '@/components/lumora/shared/ScreenCaptureButton';
 import { useTheme } from '@/hooks/useTheme';
 import { HourMeterChip } from '@/components/shared/ui/HourMeterChip';
+import { ContextBadge } from './ContextBadge';
 import type { LumoraTab } from './LumoraIconRail';
 
 function ThemeToggleButton() {
@@ -77,6 +78,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
           )}
         </div>
         <VoiceEnrollment disabled={false} />
+        <ContextBadge variant="light" />
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium" style={{ background: C.elevated, border: `1px solid ${C.border}`, color: C.muted }}>
           {status === 'recording' ? <><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Recording</> : 'Ready to assist'}
         </div>
@@ -119,6 +121,10 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
 
       {/* Right: voice + status + settings */}
       <div className="flex items-center gap-2 min-w-[120px] justify-end">
+        {/* What context Sona has loaded — green when JD/Resume connected,
+            amber when missing. Tooltip lists exactly what's loaded. */}
+        <ContextBadge variant="dark" />
+
         {/* Voice enrollment / filter toggle */}
         <VoiceEnrollment disabled={false} />
 
