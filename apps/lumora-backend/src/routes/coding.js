@@ -1133,11 +1133,13 @@ Begin output now. No preamble.`;
     });
 
     let problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
-    // Guard: model sometimes leaks a description despite the prompt.
-    // If the response opens with "I can/see/notice" or "The screenshot/image
-    // shows/appears" or "It looks/seems like", treat as NO_PROBLEM_FOUND —
-    // those are descriptions of the image, not the extracted problem.
-    if (/^(i (can|see|notice|cannot|don[''']?t)\b|the (screenshot|image|window) (shows|appears|seems|is)|it (looks|seems|appears)|sorry|unfortunately|i'?m unable)/i.test(problem)) {
+    // Guard against description-leaks. We only treat short, refusal-shaped
+    // replies as NO_PROBLEM_FOUND — long replies that just happen to start
+    // with "I'd..." or "The..." are real extractions and must pass through.
+    // Real LeetCode/HackerRank extractions are always >300 chars.
+    const looksLikeRefusal = problem.length < 300
+      && /^(i (cannot|can'?t|am unable|am not able|don'?t see)|i'?m (unable|sorry)|sorry|unfortunately|the (screenshot|image|window) (does not|doesn'?t|appears (?:to be )?(?:blank|empty|dark|minimi[sz]ed)))/i.test(problem);
+    if (looksLikeRefusal) {
       problem = 'NO_PROBLEM_FOUND';
     }
 

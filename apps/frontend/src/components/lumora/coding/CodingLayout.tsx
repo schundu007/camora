@@ -642,8 +642,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       });
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to fetch');
       const data = await resp.json();
-      setProblemText(data.problem);
+      const text = String(data.problem || '').trim();
+      setProblemText(text);
       setInputMode('paste');
+      // Auto-generate after fetch — URL tab is one-click solve, same UX
+      // contract as IMAGE: input in, answer out, no extra button.
+      if (text) {
+        setStreamError(null);
+        setTestResults([]);
+        setTestCases([]);
+        setOutput('');
+        setShowFixPrompt(false);
+        clearStreamChunks();
+        setParsedBlocks([]);
+        setJsonSolution(null);
+        setCode(getDefaultCode(language));
+        setCollapsedCards(new Set());
+        setActiveSolutionIdx(0);
+        setIsOutputCollapsed(true);
+        setProblemTab('solution');
+        onSubmit(text, language);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
