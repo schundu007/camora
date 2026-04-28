@@ -112,11 +112,32 @@ export default function MockInterviewPage() {
 
   /* ── render ─────────────────────────────────────────────────────── */
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: '#000000', fontFamily: 'var(--font-sans)' }}>
+    <div
+      className="fixed inset-0 flex flex-col"
+      style={{
+        // Layered atmospheric background:
+        //  1. Subtle navy radial spotlight at the top center (draws the eye
+        //     to the transcript area without competing with content)
+        //  2. Cyan wash at the bottom that blends into the wireframe globe
+        //  3. Pure-black canvas underneath
+        background:
+          'radial-gradient(ellipse 65% 55% at 28% 38%, rgba(38,97,156,0.18), transparent 70%),' +
+          'radial-gradient(ellipse 70% 45% at 50% 110%, rgba(34,211,238,0.14), transparent 70%),' +
+          '#000000',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
       {/* ── Top bar ───────────────────────────────────────────────── */}
       <div
-        className="flex items-center px-5 sm:px-8 shrink-0"
-        style={{ height: 56, background: '#0F1219', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        className="flex items-center px-5 sm:px-8 shrink-0 relative z-30"
+        style={{
+          height: 56,
+          background: 'linear-gradient(180deg, rgba(15,18,25,0.92) 0%, rgba(15,18,25,0.78) 100%)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
+        }}
       >
         <Link to="/" className="flex items-center gap-2.5 no-underline" aria-label="Camora — home">
           <CamoraLogo size={26} />
@@ -166,16 +187,30 @@ export default function MockInterviewPage() {
               )}
             </div>
 
-            {/* RIGHT — webcam float */}
-            <div className="flex items-start justify-center lg:justify-end shrink-0">
+            {/* RIGHT — webcam float with ambient halo + corner indicators */}
+            <div className="flex items-start justify-center lg:justify-end shrink-0 relative">
+              {/* Cyan halo behind the camera — adds depth without a hard border */}
+              <div
+                aria-hidden="true"
+                className="absolute pointer-events-none"
+                style={{
+                  width: 360,
+                  height: 260,
+                  background:
+                    'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(34,211,238,0.22), transparent 70%)',
+                  filter: 'blur(28px)',
+                  zIndex: -1,
+                }}
+              />
               <div
                 className="relative rounded-2xl overflow-hidden"
                 style={{
                   width: 320,
                   height: 220,
-                  background: '#1A1D24',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: '0 18px 40px rgba(0,0,0,0.55)',
+                  background: 'linear-gradient(135deg, #1A1D24 0%, #0F1219 100%)',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  boxShadow:
+                    '0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
               >
                 {webcamOn ? (
@@ -200,6 +235,26 @@ export default function MockInterviewPage() {
                     {webcamError}
                   </div>
                 )}
+                {/* Recording indicator — top-left corner of the camera */}
+                {webcamOn && !webcamError && (
+                  <div
+                    className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full"
+                    style={{
+                      background: 'rgba(0,0,0,0.5)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="w-1.5 h-1.5 rounded-full animate-pulse"
+                      style={{ background: '#EF4444', boxShadow: '0 0 8px rgba(239,68,68,0.8)' }}
+                    />
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-white/85">Live</span>
+                  </div>
+                )}
+                {/* Corner tick marks (cinematic feel) */}
+                <CornerTicks />
               </div>
             </div>
           </div>
@@ -351,59 +406,89 @@ function DotsIcon() {
   );
 }
 
-/* ── decorative wireframe ───────────────────────────────────────── */
+/* Cinematic corner tick marks on the webcam — pure decoration */
+function CornerTicks() {
+  const tick = 'absolute w-3 h-3 border-cyan-400/40';
+  return (
+    <>
+      <span aria-hidden="true" className={`${tick} top-2 left-2 border-t border-l rounded-tl`} />
+      <span aria-hidden="true" className={`${tick} top-2 right-2 border-t border-r rounded-tr`} />
+      <span aria-hidden="true" className={`${tick} bottom-2 left-2 border-b border-l rounded-bl`} />
+      <span aria-hidden="true" className={`${tick} bottom-2 right-2 border-b border-r rounded-br`} />
+    </>
+  );
+}
+
+/* ── decorative wireframe (animated) ───────────────────────────── */
 function WireframeGlobe() {
   // 14 concentric arcs forming a hemispherical "globe" sitting at the
   // bottom of the canvas. Cyan/teal stroke at 0.10–0.22 alpha so the
   // text above stays readable. Scales to viewport via 100% width.
+  // The whole thing breathes — subtle vertical translate + opacity
+  // shimmer — to feel alive without distracting from the transcript.
   return (
-    <svg
-      aria-hidden="true"
-      className="absolute inset-x-0 bottom-0 w-full pointer-events-none select-none"
-      viewBox="0 0 1600 320"
-      preserveAspectRatio="none"
-      style={{ height: '36%' }}
-    >
-      <defs>
-        <linearGradient id="globe-fade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(8,145,178,0)" />
-          <stop offset="60%" stopColor="rgba(8,145,178,0.18)" />
-          <stop offset="100%" stopColor="rgba(8,145,178,0.32)" />
-        </linearGradient>
-      </defs>
-      {Array.from({ length: 14 }).map((_, i) => {
-        const rx = 200 + i * 140;
-        const ry = 14 + i * 14;
-        const opacity = 0.10 + i * 0.012;
-        return (
-          <ellipse
-            key={i}
-            cx="800"
-            cy="380"
-            rx={rx}
-            ry={ry}
-            fill="none"
-            stroke={`rgba(34,211,238,${opacity})`}
-            strokeWidth="1"
-          />
-        );
-      })}
-      {/* Vertical meridian lines for the "longitude" feel */}
-      {Array.from({ length: 13 }).map((_, i) => {
-        const cx = 100 + i * 120;
-        return (
-          <line
-            key={`m-${i}`}
-            x1={cx}
-            y1="320"
-            x2="800"
-            y2="380"
-            stroke="rgba(34,211,238,0.10)"
-            strokeWidth="0.6"
-          />
-        );
-      })}
-    </svg>
+    <>
+      <style>{`
+        @keyframes globe-breathe {
+          0%, 100% { transform: translateY(0); opacity: 1; }
+          50%      { transform: translateY(-6px); opacity: 0.92; }
+        }
+        @keyframes globe-shimmer {
+          0%, 100% { stroke-opacity: 1; }
+          50%      { stroke-opacity: 0.6; }
+        }
+      `}</style>
+      <svg
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 w-full pointer-events-none select-none"
+        viewBox="0 0 1600 320"
+        preserveAspectRatio="none"
+        style={{ height: '38%', animation: 'globe-breathe 7s ease-in-out infinite' }}
+      >
+        <defs>
+          <radialGradient id="globe-glow" cx="50%" cy="100%" r="60%">
+            <stop offset="0%" stopColor="rgba(34,211,238,0.18)" />
+            <stop offset="60%" stopColor="rgba(34,211,238,0.06)" />
+            <stop offset="100%" stopColor="rgba(34,211,238,0)" />
+          </radialGradient>
+        </defs>
+        {/* Soft glow under the wireframe */}
+        <ellipse cx="800" cy="320" rx="900" ry="180" fill="url(#globe-glow)" />
+        {Array.from({ length: 14 }).map((_, i) => {
+          const rx = 200 + i * 140;
+          const ry = 14 + i * 14;
+          const opacity = 0.10 + i * 0.014;
+          return (
+            <ellipse
+              key={i}
+              cx="800"
+              cy="380"
+              rx={rx}
+              ry={ry}
+              fill="none"
+              stroke={`rgba(34,211,238,${opacity})`}
+              strokeWidth="1"
+              style={{ animation: `globe-shimmer ${5 + (i % 3)}s ease-in-out ${i * 0.15}s infinite` }}
+            />
+          );
+        })}
+        {/* Vertical meridian lines for the "longitude" feel */}
+        {Array.from({ length: 13 }).map((_, i) => {
+          const cx = 100 + i * 120;
+          return (
+            <line
+              key={`m-${i}`}
+              x1={cx}
+              y1="320"
+              x2="800"
+              y2="380"
+              stroke="rgba(34,211,238,0.10)"
+              strokeWidth="0.6"
+            />
+          );
+        })}
+      </svg>
+    </>
   );
 }
 
