@@ -2341,7 +2341,23 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
           <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
-          {prepData.activeCompany ? (
+          {/* The new-company input must take priority over the dropdown.
+              Auto-init sets activeCompany = "My Interview" on first mount,
+              so without this hoist the dropdown branch always wins and
+              clicking "+ Add Company" inside the dropdown silently sets
+              showNewCompany=true with no visible change. */}
+          {showNewCompany ? (
+            <div className="space-y-1.5">
+              <input ref={newCompanyRef} value={newCompanyName} onChange={(e) => setNewCompanyName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') addCompany(); if (e.key === 'Escape') setShowNewCompany(false); }}
+                placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <div className="flex gap-1.5">
+                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>Create</button>
+                <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
+              </div>
+            </div>
+          ) : prepData.activeCompany ? (
             <div className="relative">
               <button onClick={() => setShowDropdown(!showDropdown)}
                 className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold"
@@ -2373,17 +2389,6 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                   </div>
                 </>
               )}
-            </div>
-          ) : showNewCompany ? (
-            <div className="space-y-1.5">
-              <input ref={newCompanyRef} value={newCompanyName} onChange={(e) => setNewCompanyName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') addCompany(); if (e.key === 'Escape') setShowNewCompany(false); }}
-                placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-              <div className="flex gap-1.5">
-                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>Create</button>
-                <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
-              </div>
             </div>
           ) : (
             <button onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
