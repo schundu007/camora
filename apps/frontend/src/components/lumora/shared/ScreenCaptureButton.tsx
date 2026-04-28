@@ -4,31 +4,26 @@ import { useAuth } from '@/contexts/AuthContext';
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 /* ── ScreenCaptureButton ────────────────────────────────────────
-   "Capture problem" flow. Two paths depending on environment:
+   "Capture problem" button. One responsibility: get a screenshot of
+   whatever the user wants OCR'd, send it to /api/v1/coding/capture,
+   hand the cleaned problem text back to the caller via onCaptured.
 
-   1. Desktop (Electron): the main process exposes `camo.listCaptureSources`
-      which calls desktopCapturer.getSources and returns thumbnails. We
-      render our own picker modal so the user can choose which window
-      (HackerRank tab, CodeSignal tab, design canvas, etc.) to OCR. This
-      replaces the default getDisplayMedia handler that auto-picked the
-      primary screen — no picker showed up at all, so users had no way
-      to target a specific window.
+   Capture path is environment-specific:
 
-   2. Browser: navigator.mediaDevices.getDisplayMedia falls back to the
-      browser's native picker.
+     • Desktop (Electron):
+         camo.captureScreenshot() shells out to macOS `screencapture -i`.
+         User sees the standard ⌘⇧4 crosshair, presses Space to enter
+         window-selection mode, clicks their LeetCode/HackerRank tab.
+         macOS captures at the window's full native resolution and
+         returns a PNG. Esc cancels cleanly.
 
-   Either path captures a single JPEG frame and POSTs it to
-   /api/v1/coding/capture which runs Claude Vision OCR and returns the
-   cleaned problem statement, then onCaptured is called with the text. */
+     • Browser (any Chromium):
+         navigator.mediaDevices.getDisplayMedia opens the browser's
+         native picker. Same idea, just less polished.
+
+   Both paths produce a single PNG dataURL that goes straight to OCR. */
 
 type CaptureKind = 'coding' | 'design';
-
-interface CaptureSource {
-  id: string;
-  name: string;
-  kind: 'screen' | 'window';
-  thumbnail: string; // data URL
-}
 
 interface Props {
   kind?: CaptureKind;
@@ -44,30 +39,19 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
   const { token } = useAuth();
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [pickerSources, setPickerSources] = useState<CaptureSource[] | null>(null);
 
-  // Capture a single frame from a MediaStream, return as PNG data URL.
-  // PNG is lossless — JPEG @ 85% blurred small problem-statement text
-  // enough that Claude Vision OCR returned 422 "couldn't find a problem"
-  // even on captures of legitimate LeetCode tabs. We cap at 2560 wide
-  // so a 4K capture still fits in the backend's 10MB JSON limit while
-  // staying well above OCR's readability threshold.
-  const grabFrame = useCallback(async (stream: MediaStream): Promise<string> => {
+  // Browser fallback: capture a single frame from a getDisplayMedia
+  // stream. Only used when running outside Electron.
+  const grabFrameFromStream = useCallback(async (stream: MediaStream): Promise<string> => {
     const track = stream.getVideoTracks()[0];
     const video = document.createElement('video');
     video.srcObject = stream;
     video.muted = true;
     await video.play();
-    // Wait for first decoded frame
     await new Promise(r => setTimeout(r, 200));
     const settings = track.getSettings();
-    const srcW = video.videoWidth || settings.width || 1280;
-    const srcH = video.videoHeight || settings.height || 720;
-    const MAX_W = 2560;
-    const scale = srcW > MAX_W ? MAX_W / srcW : 1;
-    const w = Math.round(srcW * scale);
-    const h = Math.round(srcH * scale);
-    console.info(`[capture] source ${srcW}×${srcH}, output ${w}×${h} (scale=${scale.toFixed(2)})`);
+    const w = video.videoWidth || settings.width || 1280;
+    const h = video.videoHeight || settings.height || 720;
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
@@ -76,12 +60,9 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     ctx.drawImage(video, 0, 0, w, h);
     stream.getTracks().forEach(t => t.stop());
     video.srcObject = null;
-    const dataUrl = canvas.toDataURL('image/png');
-    console.info(`[capture] PNG payload ${(dataUrl.length / 1024 / 1024).toFixed(2)} MB`);
-    return dataUrl;
+    return canvas.toDataURL('image/png');
   }, []);
 
-  // Send the captured frame to the OCR endpoint and surface the result.
   const ocrAndDeliver = useCallback(async (dataUrl: string) => {
     setStatus('Reading problem…');
     const res = await fetch(`${API_URL}/api/v1/coding/capture`, {
@@ -100,111 +81,48 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     setStatus(null);
   }, [kind, onCaptured, token]);
 
-  // Capture a specific source by id. On desktop we route through the
-  // main-process IPC `capture-source-image` which calls desktopCapturer
-  // with a 4096-pixel thumbnail and returns the source's actual content
-  // at full native resolution — bypassing Chromium's video-pipeline
-  // downscaling that produced unreadably small images from the
-  // previous getUserMedia({ chromeMediaSourceId }) path. Falls back to
-  // the video-pipeline path if the IPC isn't available (older desktop
-  // build) or returns null (Screen Recording denied).
-  const captureBySourceId = useCallback(async (sourceId: string) => {
-    setBusy(true);
-    setStatus('Capturing…');
-    try {
-      const camo = (window as any).camo;
-      let dataUrl: string | null = null;
-
-      if (typeof camo?.captureSourceImage === 'function') {
-        const png: string | null = await camo.captureSourceImage(sourceId);
-        if (png && png.startsWith('data:image/')) {
-          console.info(`[capture] received ${(png.length / 1024 / 1024).toFixed(2)} MB PNG from main`);
-          dataUrl = png;
-        } else {
-          console.warn('[capture] capture-source-image returned no data, falling back to getUserMedia');
-        }
-      }
-
-      if (!dataUrl) {
-        // Fallback: Chromium video pipeline (legacy path). Used only if
-        // the new IPC isn't installed yet or returned null.
-        let stream: MediaStream | null = null;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: {
-              // @ts-ignore — Chromium-specific constraints accepted by Electron
-              mandatory: {
-                chromeMediaSource: 'desktop',
-                chromeMediaSourceId: sourceId,
-                minWidth: 1280,
-                maxWidth: 3840,
-                minHeight: 720,
-                maxHeight: 2160,
-                maxFrameRate: 1,
-              },
-            } as any,
-          });
-          dataUrl = await grabFrame(stream);
-        } finally {
-          if (stream) stream.getTracks().forEach(t => t.stop());
-        }
-      }
-
-      if (!dataUrl) throw new Error('No image captured (Screen Recording permission may be denied)');
-      await ocrAndDeliver(dataUrl);
-      setStatus(null);
-    } catch (err: any) {
-      console.error('[capture] source capture failed:', err);
-      setStatus(err?.message || 'Capture failed');
-    } finally {
-      setBusy(false);
-    }
-  }, [grabFrame, ocrAndDeliver]);
-
   const capture = useCallback(async () => {
     if (busy) return;
     setStatus(null);
 
     const camo = (window as any).camo;
-    // Desktop path: open our own picker modal seeded from desktopCapturer.
-    if (camo?.isDesktop && typeof camo.listCaptureSources === 'function') {
-      // Pre-check Screen Recording TCC. Without it, getSources returns
-      // sources but the subsequent getUserMedia({chromeMediaSourceId})
-      // call fails silently — the picker closes with no feedback and
-      // the user thinks the button is broken. Surface the permission
-      // gap up front instead.
+
+    // Desktop path — macOS native screencapture.
+    if (camo?.isDesktop && typeof camo.captureScreenshot === 'function') {
+      // Pre-check Screen Recording TCC so we can give a clear message
+      // if it's denied (otherwise screencapture just returns null and
+      // the user has no idea why).
       if (camo.platform === 'darwin' && typeof camo.getMediaAccessStatus === 'function') {
         try {
           const screenStatus = await camo.getMediaAccessStatus('screen');
           if (screenStatus !== 'granted') {
-            setStatus('Screen Recording permission needed — click here to open System Settings');
-            // Open Settings on the next click of the toast, or directly:
+            setStatus('Screen Recording permission needed. Opening System Settings — toggle Camora ON, then quit + reopen Camora.');
             camo.openSystemPrivacy?.('ScreenCapture');
             return;
           }
         } catch { /* non-fatal */ }
       }
+
       try {
         setBusy(true);
-        setStatus('Loading windows…');
-        const sources: CaptureSource[] = await camo.listCaptureSources();
-        setBusy(false);
-        setStatus(null);
-        if (!Array.isArray(sources) || sources.length === 0) {
-          setStatus('No windows or screens found to capture');
+        setStatus('Pick a window…');
+        const png: string | null = await camo.captureScreenshot();
+        if (!png) {
+          // User pressed Esc / selected nothing.
+          setStatus(null);
           return;
         }
-        setPickerSources(sources);
+        await ocrAndDeliver(png);
       } catch (err: any) {
-        console.error('[capture] listCaptureSources failed:', err);
+        console.error('[capture] screencapture failed:', err);
+        setStatus(err?.message || 'Capture failed');
+      } finally {
         setBusy(false);
-        setStatus(err?.message || 'Could not list capture sources');
       }
       return;
     }
 
-    // Browser fallback: getDisplayMedia (browser shows its own picker).
+    // Browser fallback — getDisplayMedia.
     if (!navigator.mediaDevices?.getDisplayMedia) {
       setStatus('Screen capture not supported in this browser');
       return;
@@ -212,153 +130,79 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     let stream: MediaStream | null = null;
     try {
       setBusy(true);
+      setStatus('Pick a window…');
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: 1 } as MediaTrackConstraints,
         audio: false,
       });
-      const dataUrl = await grabFrame(stream);
+      const dataUrl = await grabFrameFromStream(stream);
       stream = null;
       await ocrAndDeliver(dataUrl);
     } catch (err: any) {
       if (err?.name === 'NotAllowedError' || err?.name === 'AbortError') {
-        // User cancelled the picker — not an error worth showing
-        setStatus(null);
+        setStatus(null); // user cancelled
       } else {
+        console.error('[capture] getDisplayMedia failed:', err);
         setStatus(err?.message || 'Capture failed');
       }
     } finally {
       if (stream) stream.getTracks().forEach(t => t.stop());
       setBusy(false);
     }
-  }, [busy, grabFrame, ocrAndDeliver]);
+  }, [busy, grabFrameFromStream, ocrAndDeliver]);
 
   const tooltip = label || (kind === 'design' ? 'Capture design problem' : 'Capture coding problem');
 
-  // Render the trigger plus the desktop-only picker modal.
-  return (
-    <>
-      {variant === 'label' ? (
-        <button
-          type="button"
-          onClick={capture}
-          disabled={busy}
-          title={status || tooltip}
-          aria-label={tooltip}
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${className || ''}`}
-          style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)', border: '1px solid var(--border)', opacity: busy ? 0.85 : 1 }}
-        >
-          {busy ? (
-            <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-              <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <circle cx="12" cy="12" r="3" />
-              <path d="M8 5l1.5-2h5L16 5" />
-            </svg>
-          )}
-          <span>{status || (busy ? 'Capturing…' : 'Capture')}</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={capture}
-          disabled={busy}
-          title={status || tooltip}
-          aria-label={tooltip}
-          className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors disabled:opacity-60 ${className || ''}`}
-          style={{ color: busy ? 'var(--cam-primary)' : 'var(--text-secondary)' }}
-        >
-          {busy ? (
-            <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-              <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <circle cx="12" cy="12" r="3" />
-              <path d="M8 5l1.5-2h5L16 5" />
-            </svg>
-          )}
-        </button>
-      )}
+  if (variant === 'label') {
+    return (
+      <button
+        type="button"
+        onClick={capture}
+        disabled={busy}
+        title={status || tooltip}
+        aria-label={tooltip}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${className || ''}`}
+        style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)', border: '1px solid var(--border)', opacity: busy ? 0.85 : 1 }}
+      >
+        {busy ? (
+          <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="M8 5l1.5-2h5L16 5" />
+          </svg>
+        )}
+        <span>{status || (busy ? 'Capturing…' : 'Capture')}</span>
+      </button>
+    );
+  }
 
-      {pickerSources && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Pick a window to capture"
-          className="fixed inset-0 z-[1000] flex items-center justify-center px-4 py-6"
-          style={{ background: 'rgba(2,6,23,0.72)', backdropFilter: 'blur(6px)' }}
-          onClick={(e) => { if (e.target === e.currentTarget) setPickerSources(null); }}
-        >
-          <div
-            className="w-full max-w-3xl rounded-2xl flex flex-col"
-            style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.55)',
-              maxHeight: '88vh',
-            }}
-          >
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Pick the {kind === 'design' ? 'design' : 'coding'} problem to capture</h2>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  Choose the window or screen showing the problem. We grab one frame and OCR it; we don't keep the screenshot.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPickerSources(null)}
-                className="flex items-center justify-center w-8 h-8 rounded-md transition-colors"
-                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
-                aria-label="Close"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              {(['window', 'screen'] as const).map((group) => {
-                const items = pickerSources.filter((s) => s.kind === group);
-                if (items.length === 0) return null;
-                return (
-                  <section key={group} className="mb-5 last:mb-0">
-                    <h3 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
-                      {group === 'window' ? 'Application windows' : 'Entire screens'}
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {items.map((s) => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => {
-                            setPickerSources(null);
-                            void captureBySourceId(s.id);
-                          }}
-                          className="text-left rounded-lg overflow-hidden transition-all hover:scale-[1.02]"
-                          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                        >
-                          {s.thumbnail
-                            ? <img src={s.thumbnail} alt={s.name} className="block w-full" style={{ aspectRatio: '16 / 10', objectFit: 'cover' }} />
-                            : <div className="w-full" style={{ aspectRatio: '16 / 10', background: 'var(--bg-surface)' }} />
-                          }
-                          <div className="px-2.5 py-2">
-                            <p className="text-[12px] font-semibold truncate" style={{ color: 'var(--text-primary)' }} title={s.name}>{s.name}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+  return (
+    <button
+      type="button"
+      onClick={capture}
+      disabled={busy}
+      title={status || tooltip}
+      aria-label={tooltip}
+      className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors disabled:opacity-60 ${className || ''}`}
+      style={{ color: busy ? 'var(--cam-primary)' : 'var(--text-secondary)' }}
+    >
+      {busy ? (
+        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+          <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <circle cx="12" cy="12" r="3" />
+          <path d="M8 5l1.5-2h5L16 5" />
+        </svg>
       )}
-    </>
+    </button>
   );
 }
