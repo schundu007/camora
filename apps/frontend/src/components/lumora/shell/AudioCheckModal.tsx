@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { loadAudioPrefs, patchAudioPrefs } from '@/lib/audio-preferences';
+import { useInterviewStore } from '@/stores/interview-store';
 
 /* ── AudioCheckModal ─────────────────────────────────────────
    Full audio configuration panel for Lumora. Reachable from the
@@ -22,11 +24,14 @@ interface Props {
 }
 
 export function AudioCheckModal({ isOpen, onClose }: Props) {
+  const interviewerActive = useInterviewStore((s) => s.interviewerAudio.active);
   const [permission, setPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
   const [inputs, setInputs] = useState<AudioInputDevice[]>([]);
   const [outputs, setOutputs] = useState<AudioOutputDevice[]>([]);
-  const [selectedInput, setSelectedInput] = useState<string>('');
-  const [selectedOutput, setSelectedOutput] = useState<string>('');
+  // Initialize from canonical prefs so the modal shows whatever the
+  // wizard / live capture is using, not just the OS default.
+  const [selectedInput, setSelectedInput] = useState<string>(() => loadAudioPrefs().micDeviceId || '');
+  const [selectedOutput, setSelectedOutput] = useState<string>(() => loadAudioPrefs().speakerDeviceId || '');
   const [echoCancel, setEchoCancel] = useState(true);
   const [noiseSuppress, setNoiseSuppress] = useState(true);
   const [autoGain, setAutoGain] = useState(true);
@@ -70,8 +75,23 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
       });
       setInputs(ins);
       setOutputs(outs);
-      if (ins.length && !selectedInput) setSelectedInput(ins[0].deviceId);
-      if (outs.length && !selectedOutput) setSelectedOutput(outs[0].deviceId);
+      // Honor the canonical prefs first; fall back to OS default if the
+      // saved device isn't connected anymore.
+      const prefs = loadAudioPrefs();
+      if (ins.length) {
+        if (!selectedInput && prefs.micDeviceId && ins.some(d => d.deviceId === prefs.micDeviceId)) {
+          setSelectedInput(prefs.micDeviceId);
+        } else if (!selectedInput) {
+          setSelectedInput(ins[0].deviceId);
+        }
+      }
+      if (outs.length) {
+        if (!selectedOutput && prefs.speakerDeviceId && outs.some(d => d.deviceId === prefs.speakerDeviceId)) {
+          setSelectedOutput(prefs.speakerDeviceId);
+        } else if (!selectedOutput) {
+          setSelectedOutput(outs[0].deviceId);
+        }
+      }
     } catch (err: any) {
       setToast(err?.message || 'Could not list audio devices');
     }
@@ -132,12 +152,30 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
     return () => { stopStream(); };
   }, [isOpen, enumerate, stopStream]);
 
-  // Start/restart mic when selected device or processing toggles change
+  // Start/restart mic when selected device or processing toggles change.
+  // Skip the test stream entirely when the live interviewer-audio
+  // capture is active — opening a second getUserMedia on the same
+  // physical mic mid-interview can corrupt buffers on Chrome/macOS
+  // and silently fail on iOS Safari. The user can still pick a new
+  // device (it persists), they just won't see a level meter until
+  // they pause the interview.
   useEffect(() => {
     if (!isOpen || !selectedInput) return;
+    if (interviewerActive) return;
     startMic(selectedInput);
     return () => { stopStream(); };
-  }, [isOpen, selectedInput, echoCancel, noiseSuppress, autoGain, startMic, stopStream]);
+  }, [isOpen, interviewerActive, selectedInput, echoCancel, noiseSuppress, autoGain, startMic, stopStream]);
+
+  // Persist mic + speaker choices to the canonical prefs store so the
+  // wizard, live AudioCapture, and this modal stay in sync.
+  useEffect(() => {
+    if (!isOpen || !selectedInput) return;
+    patchAudioPrefs({ micDeviceId: selectedInput });
+  }, [isOpen, selectedInput]);
+  useEffect(() => {
+    if (!isOpen || !selectedOutput) return;
+    patchAudioPrefs({ speakerDeviceId: selectedOutput });
+  }, [isOpen, selectedOutput]);
 
   // Close on Escape — backdrop click was the only escape path before.
   useEffect(() => {
@@ -247,6 +285,28 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
 
         {/* Body — scrollable */}
         <div className="flex-1 overflow-auto p-5 space-y-5">
+          {/* Active-capture warning. The modal cannot open its own
+              getUserMedia stream while the live interviewer audio
+              capture is running — concurrent streams on the same
+              device can corrupt buffers on Chrome/macOS and silently
+              fail on iOS Safari. We let the user change device
+              selection (which persists), but suppress the test stream
+              until they stop the live capture. */}
+          {interviewerActive && (
+            <div
+              className="px-3 py-2.5 rounded-md text-[12px] flex items-start gap-2"
+              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.45)', color: 'var(--text-primary)' }}
+            >
+              <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#F59E0B' }} />
+              <div>
+                <div className="font-bold">Live interview is recording</div>
+                <div className="mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                  Device changes here are saved and apply immediately, but the level meter and recording test are paused so we don't fight with the live capture. Stop the live capture from the topbar pill if you want to test in real time.
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Permission status */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[12px]" style={{
             background: 'var(--bg-elevated)',
@@ -356,7 +416,8 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={toggleRecording}
-                disabled={permission === 'denied'}
+                disabled={permission === 'denied' || interviewerActive}
+                title={interviewerActive ? 'Stop the live interview from the topbar to use the recording test.' : undefined}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors disabled:opacity-40"
                 style={recState === 'recording'
                   ? { color: '#FFFFFF', background: 'var(--danger)', border: '1px solid var(--danger)' }
