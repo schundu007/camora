@@ -371,9 +371,12 @@ ipcMain.handle('relaunch-app', () => {
 // system audio, any screen will do).
 ipcMain.handle('list-capture-sources', async () => {
   try {
+    // Smaller thumbnails — desktopCapturer.getSources is dominated by
+    // thumbnail rendering time. 160×100 is enough to recognise a window
+    // visually and is ~4× faster than 320×200 on a multi-window desktop.
     const sources = await desktopCapturer.getSources({
       types: ['window', 'screen'],
-      thumbnailSize: { width: 320, height: 200 },
+      thumbnailSize: { width: 160, height: 100 },
       fetchWindowIcons: false,
     });
     return sources.map((s) => ({
