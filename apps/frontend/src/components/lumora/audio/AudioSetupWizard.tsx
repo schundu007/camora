@@ -58,6 +58,12 @@ export function AudioSetupWizard({
   const { token } = useAuth();
   const setInterviewerAudio = useInterviewStore((s) => s.setInterviewerAudio);
   const everConnected = useInterviewStore((s) => s.interviewerAudio.everConnected);
+  // The candidate-mic AudioCapture might already be running (continuous
+  // mode auto-starts on tab load). The wizard's mic-level monitor must
+  // not also open getUserMedia on the same device — concurrent streams
+  // on the same physical mic fail unpredictably and were the actual
+  // source of the "AudioContext encountered an error" spam.
+  const candidateMicActive = useInterviewStore((s) => s.isRecording);
   const [prefs, setPrefs] = useState<AudioPreferences>(loadAudioPrefs);
 
   // Hydrate prefs from backend on mount so the user's mic/speaker/method
@@ -196,19 +202,28 @@ export function AudioSetupWizard({
   // without a circular dependency.
   const stopMicMonitorRef = useRef<(() => void) | null>(null);
 
-  const stopMicMonitor = useCallback(() => {
+  const stopMicMonitor = useCallback(async () => {
     if (micRafRef.current) cancelAnimationFrame(micRafRef.current);
     micRafRef.current = null;
-    micCtxRef.current?.close().catch(() => {});
-    micCtxRef.current = null;
+    // Stop tracks BEFORE awaiting close — track.stop() releases the
+    // underlying device synchronously; ctx.close() is async and
+    // sometimes lingers. Doing it in this order avoids the device
+    // being briefly held open by an old AudioContext while a new
+    // getUserMedia call tries to acquire it (which produced the
+    // "AudioContext encountered an error" spam).
     micStreamRef.current?.getTracks().forEach((t) => t.stop());
     micStreamRef.current = null;
+    try { await micCtxRef.current?.close(); } catch {}
+    micCtxRef.current = null;
     setMicLevel(0);
   }, []);
-  useEffect(() => { stopMicMonitorRef.current = stopMicMonitor; }, [stopMicMonitor]);
+  useEffect(() => { stopMicMonitorRef.current = () => { void stopMicMonitor(); }; }, [stopMicMonitor]);
 
   const startMicMonitor = useCallback(async (deviceId: string | null) => {
-    stopMicMonitor();
+    // Wait for the previous stream + AudioContext to fully tear down
+    // before grabbing the device again — a half-released device flap
+    // is what triggered the AudioContext-error console spam.
+    await stopMicMonitor();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: deviceId ? { deviceId: { exact: deviceId } } : true,
@@ -239,13 +254,21 @@ export function AudioSetupWizard({
 
   useEffect(() => {
     if (!open) {
-      stopMicMonitor();
+      void stopMicMonitor();
       return;
     }
     if (!permissionGranted) return;
-    startMicMonitor(prefs.micDeviceId);
-    return () => stopMicMonitor();
-  }, [open, permissionGranted, prefs.micDeviceId, startMicMonitor, stopMicMonitor]);
+    // Don't open a second stream on the same mic if the live capture
+    // (candidate or interviewer) is already running. The wizard's
+    // level meter just shows static "0%" in this case; the user can
+    // pause the live capture from the topbar to test.
+    if (candidateMicActive || interviewer.active) {
+      void stopMicMonitor();
+      return;
+    }
+    void startMicMonitor(prefs.micDeviceId);
+    return () => { void stopMicMonitor(); };
+  }, [open, permissionGranted, candidateMicActive, interviewer.active, prefs.micDeviceId, startMicMonitor, stopMicMonitor]);
 
   /* ── auto-resolve method when devices are enumerated ──────────── */
   useEffect(() => {

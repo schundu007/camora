@@ -221,19 +221,47 @@ export const documentsAPI = {
 
 // Audio preferences — mic/speaker/capture-method choices. Schema-
 // agnostic; the AudioSetupWizard on the frontend owns the shape.
+//
+// The backend route was added in the same release as the wizard;
+// while Railway is still rolling out the deploy the route returns
+// 404. Without a circuit breaker every prefs edit would spam the
+// console and the user's network tab on every keystroke. Once we
+// see a 404 (route missing) or 410 (route deprecated) we stop
+// trying for the rest of the session and fall back to localStorage.
+let backendUnavailable = false;
 export const audioPrefsAPI = {
-  getState: (token: string) =>
-    fetchAPI<{ data: unknown; updated_at: string | null }>(
-      '/api/v1/audio-prefs/state',
-      {},
-      token,
-    ),
-  putState: (token: string, data: unknown) =>
-    fetchAPI<{ updated_at: string }>(
-      '/api/v1/audio-prefs/state',
-      { method: 'PUT', body: JSON.stringify({ data }) },
-      token,
-    ),
+  getState: async (token: string) => {
+    if (backendUnavailable) return { data: null, updated_at: null };
+    try {
+      return await fetchAPI<{ data: unknown; updated_at: string | null }>(
+        '/api/v1/audio-prefs/state',
+        {},
+        token,
+      );
+    } catch (err: any) {
+      if (err?.status === 404 || err?.status === 410) {
+        backendUnavailable = true;
+        console.warn('[audioPrefs] backend route unavailable — using localStorage only.');
+      }
+      return { data: null, updated_at: null };
+    }
+  },
+  putState: async (token: string, data: unknown) => {
+    if (backendUnavailable) return { updated_at: '' };
+    try {
+      return await fetchAPI<{ updated_at: string }>(
+        '/api/v1/audio-prefs/state',
+        { method: 'PUT', body: JSON.stringify({ data }) },
+        token,
+      );
+    } catch (err: any) {
+      if (err?.status === 404 || err?.status === 410) {
+        backendUnavailable = true;
+        console.warn('[audioPrefs] backend route unavailable — switching to localStorage only.');
+      }
+      return { updated_at: '' };
+    }
+  },
 };
 
 // Prep workspace persistence — JSON blob keyed by user. Mirrors the
