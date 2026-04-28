@@ -87,18 +87,29 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   }, [onTranscription, setStatus]);
 
   const scheduleQuestionCheck = useCallback(() => {
-    // After receiving a chunk, wait for "no new chunks" before deciding the
-    // question is complete. The wait is adaptive:
-    //   - if the accumulated text already trips isQuestion() (ends with "?",
-    //     starts with an interrogative, or contains an interview verb), we
-    //     fire after 600 ms — enough to let one more in-flight chunk land
-    //     without making the user wait the full debounce window.
-    //   - otherwise we fall back to the conservative 2000 ms so half-spoken
-    //     monologues don't get prematurely sent to the LLM.
+    // After receiving a chunk, wait for "no new chunks" before flushing
+    // the accumulated transcript. Punctuation-aware so a single question
+    // doesn't get split into two when the speaker pauses mid-sentence:
+    //
+    //   ends with `?` or `!`  →  900 ms   (done — punctuation is decisive)
+    //   ends with `.`         →  1500 ms  (likely done, but speakers often
+    //                                       continue with another sentence
+    //                                       after a brief breath)
+    //   no terminal punct.    →  2800 ms  (mid-sentence pause — wait long
+    //                                       enough that any natural breath
+    //                                       won't trigger a premature flush)
+    //
+    // The previous heuristic dropped to 600 ms whenever isQuestion() tripped
+    // on the partial text, so "tell me about a time <breath> you triaged a
+    // CI failure" would get split — the partial "tell me about a time"
+    // alone trips the interview-verb gate.
     if (questionCheckTimerRef.current) clearTimeout(questionCheckTimerRef.current);
     const accumulated = accumulatedTextRef.current.trim();
-    const looksComplete = isQuestion(accumulated);
-    const wait = looksComplete ? 600 : 2000;
+    const lastChar = accumulated.slice(-1);
+    const wait =
+      lastChar === '?' || lastChar === '!' ? 900 :
+      lastChar === '.' ? 1500 :
+      2800;
     questionCheckTimerRef.current = window.setTimeout(() => {
       if (accumulatedTextRef.current.trim().length > 5) {
         flushAccumulatedText();
