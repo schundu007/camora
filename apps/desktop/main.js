@@ -362,6 +362,35 @@ ipcMain.handle('relaunch-app', () => {
   app.exit(0);
 });
 
+// List screens + windows the user can capture, with thumbnail previews,
+// so the renderer can show its own picker UI (Camora's brand-styled
+// modal) instead of relying on Chromium's default getDisplayMedia
+// dialog. Used by the "Capture problem" button in coding/design tabs;
+// the interviewer-audio loopback path uses the auto-pick handler in
+// setDisplayMediaRequestHandler above (no picker — it just needs
+// system audio, any screen will do).
+ipcMain.handle('list-capture-sources', async () => {
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['window', 'screen'],
+      thumbnailSize: { width: 320, height: 200 },
+      fetchWindowIcons: false,
+    });
+    return sources.map((s) => ({
+      id: s.id,
+      name: s.name,
+      // Use display_id so screen vs. window can be distinguished by the
+      // renderer; window IDs look like "window:<n>:<n>", screens look
+      // like "screen:<n>:0".
+      kind: s.id.startsWith('screen:') ? 'screen' : 'window',
+      thumbnail: s.thumbnail.toDataURL(),
+    }));
+  } catch (err) {
+    console.error('[capture] list-capture-sources failed:', err);
+    return [];
+  }
+});
+
 // Window control handlers (called from preload.js)
 ipcMain.on('window-minimize', () => mainWindow?.minimize());
 ipcMain.on('window-maximize', () => {
