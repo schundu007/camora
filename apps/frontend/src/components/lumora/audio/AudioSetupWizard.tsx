@@ -106,18 +106,38 @@ export function AudioSetupWizard({
   const sessionDismissed = useRef<boolean>((() => {
     try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch { return false; }
   })());
+  // External force-open trigger (e.g. icon-rail "Audio check" entry).
+  const [externalForceOpen, setExternalForceOpen] = useState(false);
+  useEffect(() => {
+    const handler = () => {
+      sessionDismissed.current = false;
+      try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+      setExternalForceOpen(true);
+    };
+    window.addEventListener('lumora:open-audio-wizard', handler);
+    return () => window.removeEventListener('lumora:open-audio-wizard', handler);
+  }, []);
 
   /* ── visibility ─────────────────────────────────────────────────── */
   const open = useMemo(() => {
-    if (forceOpen) return true;
+    if (forceOpen || externalForceOpen) return true;
     if (sessionDismissed.current) return false;
-    if (prefs.setupCompleted && everConnected) return false;
+    // Mic-only never sets `everConnected` (no second stream), so trust
+    // setupCompleted on its own. For other methods we want a live
+    // connection before we suppress the wizard.
+    if (prefs.setupCompleted && (everConnected || prefs.captureMethod === 'mic-only')) return false;
     return true;
-  }, [forceOpen, prefs.setupCompleted, everConnected]);
+  }, [forceOpen, externalForceOpen, prefs.setupCompleted, everConnected, prefs.captureMethod]);
 
   const dismiss = useCallback(() => {
     try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
     sessionDismissed.current = true;
+    setExternalForceOpen(false);
+    // Stop the wizard's mic-monitor stream immediately so it can't
+    // overlap with the live AudioCapture's getUserMedia call. Without
+    // this, on some hardware the second getUserMedia returned a
+    // silent track for a few hundred ms.
+    stopMicMonitorRef.current?.();
     onClose?.();
   }, [onClose]);
 
@@ -172,6 +192,9 @@ export function AudioSetupWizard({
   const micStreamRef = useRef<MediaStream | null>(null);
   const micCtxRef = useRef<AudioContext | null>(null);
   const micRafRef = useRef<number | null>(null);
+  // Ref so `dismiss` (declared above) can call the latest stopMicMonitor
+  // without a circular dependency.
+  const stopMicMonitorRef = useRef<(() => void) | null>(null);
 
   const stopMicMonitor = useCallback(() => {
     if (micRafRef.current) cancelAnimationFrame(micRafRef.current);
@@ -182,6 +205,7 @@ export function AudioSetupWizard({
     micStreamRef.current = null;
     setMicLevel(0);
   }, []);
+  useEffect(() => { stopMicMonitorRef.current = stopMicMonitor; }, [stopMicMonitor]);
 
   const startMicMonitor = useCallback(async (deviceId: string | null) => {
     stopMicMonitor();

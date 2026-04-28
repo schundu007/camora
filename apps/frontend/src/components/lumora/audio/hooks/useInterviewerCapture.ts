@@ -120,7 +120,11 @@ export function useInterviewerCapture(options: CaptureOptions) {
 
   const [state, setState] = useState<CaptureState>({
     isCapturing: false,
-    isSupported: isElectron() || supportsTabShare() || true /* virtual-mic always available where getUserMedia is */,
+    // "Supported" here means at least one method besides mic-only is
+    // viable. The wizard always offers virtual-mic and mic-only as
+    // fallbacks, so this only gates the topbar pill's "Browser
+    // unsupported" warning.
+    isSupported: isElectron() || supportsTabShare(),
     error: null,
     audioLevel: 0,
     resolvedMethod: null,
@@ -135,6 +139,12 @@ export function useInterviewerCapture(options: CaptureOptions) {
   const speechStartTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const maxRecordingTimerRef = useRef<number | null>(null);
+  // Flag the onstop handler reads to know whether to restart the
+  // recorder after delivering the final blob. Setting this from the
+  // VAD silence timer or the max-recording-duration timer avoids the
+  // chunks-cleared-before-onstop race that previously dropped the
+  // last segment of every utterance.
+  const pendingRestartRef = useRef(false);
 
   const cleanup = useCallback(() => {
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
@@ -156,6 +166,7 @@ export function useInterviewerCapture(options: CaptureOptions) {
     audioContextRef.current = null;
     analyserRef.current = null;
     streamRef.current = null;
+    pendingRestartRef.current = false;
   }, []);
 
   useEffect(() => cleanup, [cleanup]);
@@ -217,6 +228,9 @@ export function useInterviewerCapture(options: CaptureOptions) {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
       mediaRecorder.onstop = () => {
+        // Build the blob FIRST so the chunks we just collected end up
+        // in the user's transcript instead of being dropped by an
+        // overeager restart timer.
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         if (blob.size > 0 && speechStartTimeRef.current) {
           const speechDuration = Date.now() - speechStartTimeRef.current;
@@ -224,6 +238,20 @@ export function useInterviewerCapture(options: CaptureOptions) {
         }
         chunksRef.current = [];
         speechStartTimeRef.current = null;
+
+        // Now that the blob is delivered, restart the recorder if
+        // either the silence timer or the max-duration timer asked
+        // for one. Synchronous restart inside onstop is the only
+        // way to guarantee we don't clear chunks before they're read.
+        if (pendingRestartRef.current && streamRef.current?.active) {
+          pendingRestartRef.current = false;
+          try {
+            mediaRecorderRef.current?.start();
+            setState((p) => ({ ...p, isCapturing: true }));
+          } catch (err) {
+            console.warn('[InterviewerCapture] restart failed', err);
+          }
+        }
       };
 
       audioStream.getAudioTracks()[0].onended = () => {
@@ -241,15 +269,10 @@ export function useInterviewerCapture(options: CaptureOptions) {
             if (!speechStartTimeRef.current) {
               speechStartTimeRef.current = Date.now() - minSpeechDuration - 100;
             }
+            // onstop will read this and start the next recording
+            // after the blob has been delivered.
+            pendingRestartRef.current = true;
             mediaRecorderRef.current.stop();
-            setTimeout(() => {
-              if (streamRef.current?.active) {
-                chunksRef.current = [];
-                speechStartTimeRef.current = null;
-                mediaRecorderRef.current?.start();
-                setState((p) => ({ ...p, isCapturing: true }));
-              }
-            }, 100);
           }
         }, maxRecordingDuration);
       }
@@ -276,15 +299,11 @@ export function useInterviewerCapture(options: CaptureOptions) {
         } else if (speechStartTimeRef.current && !silenceTimerRef.current) {
           silenceTimerRef.current = window.setTimeout(() => {
             if (mediaRecorderRef.current?.state === 'recording') {
+              // Same race-free pattern: ask onstop to restart once
+              // the final chunks have been flushed into the blob.
+              pendingRestartRef.current = true;
               mediaRecorderRef.current.stop();
               onRecordingStop?.();
-              setTimeout(() => {
-                if (streamRef.current?.active) {
-                  chunksRef.current = [];
-                  speechStartTimeRef.current = null;
-                  mediaRecorderRef.current?.start();
-                }
-              }, 100);
             }
           }, silenceDuration);
         }
