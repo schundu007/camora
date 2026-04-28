@@ -651,15 +651,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     }
   };
 
-  const handleExtractFromImage = async () => {
-    if (!imageFile) { setError('Select an image first'); return; }
+  // Extract → set problem text → optionally chain into solution generation.
+  // Takes an explicit file (not state) so it can be called the moment an
+  // image is dropped/picked, before setImageFile React-renders.
+  const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
     setError(null);
     setProblemText('');
     try {
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append('image', file);
       const resp = await fetch(`${API_BASE_URL}/api/v1/coding/extract-from-image`, {
         credentials: 'include',
         method: 'POST',
@@ -668,36 +670,61 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       });
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to extract');
       const data = await resp.json();
-      setProblemText(data.problem);
+      const text = String(data.problem || '').trim();
+      setProblemText(text);
       setInputMode('paste');
+      if (autoGenerate && text) {
+        // Mirror handleGenerateSolution's reset-then-submit pattern.
+        setStreamError(null);
+        setTestResults([]);
+        setTestCases([]);
+        setOutput('');
+        setShowFixPrompt(false);
+        clearStreamChunks();
+        setParsedBlocks([]);
+        setJsonSolution(null);
+        setCode(getDefaultCode(language));
+        setCollapsedCards(new Set());
+        setActiveSolutionIdx(0);
+        setIsOutputCollapsed(true);
+        setProblemTab('solution');
+        onSubmit(text, language);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [token, language, clearStreamChunks, onSubmit]);
+
+  // Manual "Extract Text" button (kept as a fallback / opt-out path).
+  const handleExtractFromImage = useCallback(() => {
+    if (!imageFile) { setError('Select an image first'); return; }
+    void extractAndMaybeGenerate(imageFile, false);
+  }, [imageFile, extractAndMaybeGenerate]);
+
+  // Drop/select an image → preview + auto-extract + auto-generate solution.
+  // No more manual click chain: image in, answer out.
+  const acceptImage = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+    setError(null);
+    void extractAndMaybeGenerate(file, true);
+  }, [extractAndMaybeGenerate]);
 
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-      setError(null);
-    }
-  }, []);
+    if (file) acceptImage(file);
+  }, [acceptImage]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith('image/')) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  }, []);
+    if (file) acceptImage(file);
+  }, [acceptImage]);
 
   const addTestCase = () => { if (testCases.length < MAX_TEST_CASES) setTestCases([...testCases, { input: '', expected: '' }]); };
   const removeTestCase = (i: number) => { if (testCases.length > 1) setTestCases(testCases.filter((_, j) => j !== i)); };
@@ -970,16 +997,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
                                 </div>
-                                <p className="text-xs" style={{ color: t.textDim }}>Drop image or click to upload</p>
+                                <p className="text-xs" style={{ color: t.textDim }}>Drop image or click — auto-extracts and answers</p>
                               </div>
                             )}
                           </div>
-                          {imageFile && (
-                            <button onClick={handleExtractFromImage} disabled={isProcessing}
-                              className="w-full py-2 text-xs font-medium rounded-lg border border-[var(--border)] hover:bg-[rgba(38,97,156,0.04)] disabled:opacity-50 transition-all"
+                          {isProcessing && (
+                            <div className="w-full py-2 text-xs font-medium rounded-lg flex items-center justify-center gap-2"
                               style={{ background: t.sectionBg, color: t.text }}>
-                              {isProcessing ? 'Extracting...' : 'Extract Text'}
-                            </button>
+                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              Reading the problem…
+                            </div>
                           )}
                         </div>
                       )}

@@ -16,7 +16,7 @@
 
 const {
   app, BrowserWindow, BrowserView, globalShortcut, systemPreferences,
-  session, shell, ipcMain, desktopCapturer, dialog,
+  session, shell, ipcMain, desktopCapturer, dialog, nativeImage,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -140,9 +140,34 @@ ipcMain.handle('capture-interactive', async () => {
       execFile('/usr/sbin/screencapture', ['-w', '-o', '-t', 'png', tmp], () => res());
     });
     if (!fs.existsSync(tmp)) return null; // user pressed Escape
-    const buf = fs.readFileSync(tmp);
+    let buf = fs.readFileSync(tmp);
     fs.unlink(tmp, () => {});
     if (!buf.length) return null;
+
+    // Anthropic's vision API rejects images whose base64 payload exceeds
+    // 5 MB (5,242,880 bytes). Native screencapture on Retina/HiDPI screens
+    // routinely produces 4–8 MB PNGs. Downscale to keep base64 under 4.8 MB
+    // (some safety margin under the 5 MB cap). Iterate at most a few times.
+    const MAX_BASE64 = 4_800_000;
+    const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
+    if (base64Size(buf) > MAX_BASE64) {
+      let img = nativeImage.createFromBuffer(buf);
+      let { width, height } = img.getSize();
+      // First try shrinking to 1920px wide (more than enough for OCR; still
+      // resolves small font on dual-pane editors).
+      const targetW = Math.min(width, 1920);
+      img = img.resize({ width: targetW, quality: 'best' });
+      buf = img.toPNG();
+      // If still too large, switch to JPEG quality 85 — keeps text crisp
+      // and roughly halves the size vs PNG on screenshots with gradients.
+      if (base64Size(buf) > MAX_BASE64) {
+        buf = img.toJPEG(85);
+        const dataUrl = `data:image/jpeg;base64,${buf.toString('base64')}`;
+        console.info(`[capture] resized to ${img.getSize().width}px JPEG, ${buf.length} bytes`);
+        return dataUrl;
+      }
+      console.info(`[capture] resized to ${img.getSize().width}px PNG, ${buf.length} bytes`);
+    }
     return `data:image/png;base64,${buf.toString('base64')}`;
   } catch (err) {
     console.error('[capture] interactive screencapture failed:', err);
