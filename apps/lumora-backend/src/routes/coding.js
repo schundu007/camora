@@ -8,6 +8,7 @@
  * POST /execute — Run code against test cases (Python, JS, Ruby).
  */
 import { Router } from 'express';
+import multer from 'multer';
 import { getAnthropicClient } from '../lib/_shared/llm.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -1097,6 +1098,57 @@ The screenshot may show a window where the problem is partially visible (scrolle
   } catch (err) {
     console.error('capture error:', err?.message || err);
     res.status(500).json({ error: err?.message || 'Capture failed' });
+  }
+});
+
+/* ── POST /extract-from-image — OCR a problem from an uploaded image ──
+   Frontend IMAGE tab (Coding + Design) uploads a file via multipart
+   FormData. Same OCR pipeline as /capture above; just accepts a
+   multipart upload instead of a base64 dataURL JSON body so the user
+   can drag-drop a file or paste from clipboard.
+
+   Body: multipart, field "image" = the image file (jpeg/png/webp).
+   Returns: { problem: string, kind: 'coding' | 'design' }. */
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+});
+
+router.post('/extract-from-image', authenticate, imageUpload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image uploaded (expected multipart field "image")' });
+    }
+    const mediaType = req.file.mimetype && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)
+      ? req.file.mimetype
+      : 'image/jpeg';
+    const data = req.file.buffer.toString('base64');
+    const kind = (req.body?.kind === 'design') ? 'design' : 'coding';
+    const isDesign = kind === 'design';
+    const prompt = isDesign
+      ? `You are extracting a SYSTEM DESIGN interview question from an uploaded image. Return ONLY the problem statement — the company/platform asking, the product or system to design, scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary or headers.\n\nThe image may be a partial screenshot or photo. Return what you can read; partial extraction is far more useful than a refusal. Reply NO_PROBLEM_FOUND only if the image truly contains zero design-question text.`
+      : `You are extracting a CODING interview problem from an uploaded image. Return the problem statement: description, input/output format, constraints, and any visible example cases. Preserve code blocks, formatting, and math notation. Do not solve it.\n\nThe image may be a partial screenshot, a photo, or a cropped tab. Return what you can read; if you only see the title and a few lines, return that. Reply NO_PROBLEM_FOUND only if the image truly contains zero coding-problem text.`;
+
+    const msg = await anthropicClient.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 2000,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
+          { type: 'text', text: prompt },
+        ],
+      }],
+    });
+
+    const problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    if (!problem || problem === 'NO_PROBLEM_FOUND') {
+      return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
+    }
+    res.json({ problem, kind });
+  } catch (err) {
+    console.error('extract-from-image error:', err?.message || err);
+    res.status(500).json({ detail: err?.message || 'Image extraction failed' });
   }
 });
 

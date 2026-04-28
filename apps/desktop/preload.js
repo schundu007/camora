@@ -25,10 +25,13 @@ contextBridge.exposeInMainWorld('camo', {
   // the running Chromium audio service after a process restart, so the
   // wizard uses this when TCC says 'granted' but getUserMedia 404s.
   relaunch: () => ipcRenderer.invoke('relaunch-app'),
-  // One-shot "Capture problem" screenshot. Shows the macOS native
-  // crosshair / window picker (Cmd+Shift+4 UX), captures at full native
-  // resolution, returns PNG dataURL or null on cancel.
-  captureScreenshot: () => ipcRenderer.invoke('capture-screenshot'),
+  // List of capturable windows + screens. Returns [{id, name, kind}]
+  // with NO thumbnails so the IPC is near-instant — the picker opens
+  // immediately with window titles.
+  listCaptureSources: () => ipcRenderer.invoke('list-capture-sources'),
+  // Capture the chosen source at full native resolution, returns PNG
+  // dataURL. Bypasses Chromium's video pipeline.
+  captureSourceImage: (sourceId) => ipcRenderer.invoke('capture-source-image', sourceId),
   onUpdateAvailable: (cb) => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.on('update-available', (_, info) => cb(info));
