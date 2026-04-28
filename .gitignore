@@ -16,3 +16,6 @@ coverage/
 .vercel/
 .vercel
 .env*.local
+
+# Local self-signed code-signing cert for desktop dev builds — never commit
+apps/desktop/.local-cert/
