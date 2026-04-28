@@ -430,6 +430,16 @@ ipcMain.handle('open-system-privacy', (_e, section) => {
   return true;
 });
 
+// Relaunch + quit. macOS won't surface microphone devices to Chromium
+// once they're granted via System Settings while the app is already
+// running — getUserMedia keeps returning NotFoundError until the
+// process restarts. The wizard calls this when it detects that exact
+// stuck state so the user can fix it with one click.
+ipcMain.handle('relaunch-app', () => {
+  app.relaunch();
+  app.exit(0);
+});
+
 // Window control handlers (called from preload.js)
 ipcMain.on('window-minimize', () => mainWindow?.minimize());
 ipcMain.on('window-maximize', () => {
