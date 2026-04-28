@@ -40,20 +40,16 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   // The `variant` prop is preserved for back-compat but no longer drives colors.
   void variant;
   const isLight = theme === 'light';
-  // All chrome colors come from CSS vars so [data-theme="dark"] in globals.css
-  // flips the nav with the rest of the app.
-  // Lapis-tinted vertical gradient + soft shadow gives the marketing nav
-  // the same high-fidelity feel as the in-app TopBar. Both flip cleanly
-  // via design tokens.
-  // Dark navy nav — same look in both light and dark themes. Near-black
-  // navy stripe sits visibly above the page hero gradients beneath
-  // (which use the brighter cam-primary range), with a 3px gold-leaf
-  // underline as the separator.
-  const navBg = 'var(--cam-hero-strip)';
-  const navShadow = '0 6px 22px rgba(0,0,0,0.45)';
+  // LeetCode-style chrome: neutral charcoal that sits dark on every page
+  // background (light mode whites, dark mode navies). Navy is reserved for
+  // accents per project memory ("Charcoal + Navy Accent"). Gold-leaf is
+  // demoted from a heavy 3px underline to a thin 1px brand line so the
+  // chrome reads as enterprise-grade rather than marketing-banner.
+  const navBg = '#1A1D24';
+  const navShadow = '0 1px 0 rgba(255,255,255,0.04), 0 6px 18px rgba(0,0,0,0.28)';
   const borderClass = '';
   const textColor = '#FFFFFF';
-  const textMuted = 'rgba(255,255,255,0.92)';
+  const textMuted = 'rgba(255,255,255,0.78)';
   const activeBg = 'var(--cam-gold-leaf)';
   const activeColor = '#020617';
 
@@ -63,7 +59,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       style={{
         background: navBg,
         boxShadow: navShadow,
-        borderBottom: '3px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid rgba(201,162,39,0.35)',
         fontFamily: 'var(--font-sans)',
       }}
     >

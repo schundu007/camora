@@ -45,11 +45,15 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     show: false,
+    title: 'Camora',
     backgroundColor: '#0D0C14',
     icon: path.join(__dirname, 'icon.png'),
-    titleBarStyle: isMac ? 'hiddenInset' : 'default',
-    titleBarOverlay: !isMac ? { color: '#0D0C14', symbolColor: '#6366f1', height: 36 } : undefined,
-    trafficLightPosition: isMac ? { x: 14, y: 14 } : undefined,
+    // Use the native window chrome on every platform — full title bar with
+    // standard traffic lights / Windows controls. The previous `hiddenInset`
+    // mode required CSS shims to avoid the controls overlapping the SiteNav,
+    // and it made the fixed-nav math awkward (headline was clipped). A real
+    // title bar is the convention for enterprise desktop apps and removes
+    // the entire class of issues.
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -64,21 +68,16 @@ function createWindow() {
 
   mainWindow.loadURL(APP_URL);
 
+  // Pin the OS title bar to "Camora" — without this, the document.title
+  // (e.g. "Camora — Apply, Prepare, Practice & Attend") leaks into the
+  // native chrome and visually duplicates the page nav.
+  mainWindow.webContents.on('page-title-updated', (e) => e.preventDefault());
+
   // Show when ready (avoid white flash)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
   });
-
-  // Inject CSS to avoid traffic light overlap on macOS
-  if (isMac) {
-    mainWindow.webContents.on('did-finish-load', () => {
-      mainWindow.webContents.insertCSS(`
-        header:first-of-type > div:first-child { padding-left: 72px !important; }
-        .lumora-app-bg > header:first-child > div:first-child { padding-left: 72px !important; }
-      `).catch(() => {});
-    });
-  }
 
   // Save state on resize/move (debounced)
   let saveTimeout;
