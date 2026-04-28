@@ -9,7 +9,45 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
+import sharp from 'sharp';
 import { getAnthropicClient } from '../lib/_shared/llm.js';
+
+/* ── Anthropic image-size guard ────────────────────────────────────────
+   Anthropic's vision API caps inline base64 images at 5 MB
+   (5,242,880 bytes of base64 payload). Native macOS screencapture on
+   HiDPI displays produces 4–8 MB PNGs that exceed this. Downscale via
+   sharp until under the cap; prefer PNG for OCR sharpness, fall back
+   to JPEG q85 if the image is still too large after resizing.
+
+   Returns { mediaType, data } where data is a base64 string. */
+async function ensureImageWithinAnthropicLimit(rawBase64, mediaType) {
+  const MAX_BASE64 = 4_800_000; // safety margin under the 5 MB ceiling
+  if (rawBase64.length <= MAX_BASE64) return { mediaType, data: rawBase64 };
+
+  let buf = Buffer.from(rawBase64, 'base64');
+  // First pass: cap width at 1920px (still plenty for OCR on Sonnet 4.5).
+  let resized = await sharp(buf)
+    .resize({ width: 1920, withoutEnlargement: true, fit: 'inside' })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+  let b64 = resized.toString('base64');
+  if (b64.length <= MAX_BASE64) return { mediaType: 'image/png', data: b64 };
+
+  // Second pass: re-encode at 1600px JPEG quality 85.
+  resized = await sharp(buf)
+    .resize({ width: 1600, withoutEnlargement: true, fit: 'inside' })
+    .jpeg({ quality: 85, progressive: true })
+    .toBuffer();
+  b64 = resized.toString('base64');
+  if (b64.length <= MAX_BASE64) return { mediaType: 'image/jpeg', data: b64 };
+
+  // Third pass: aggressive 1280px JPEG q75 — last resort.
+  resized = await sharp(buf)
+    .resize({ width: 1280, withoutEnlargement: true, fit: 'inside' })
+    .jpeg({ quality: 75, progressive: true })
+    .toBuffer();
+  return { mediaType: 'image/jpeg', data: resized.toString('base64') };
+}
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
@@ -1062,6 +1100,9 @@ router.post('/capture', authenticate, async (req, res) => {
       return res.status(413).json({ error: 'screenshot too large — try a smaller capture region' });
     }
 
+    // Auto-downscale if the screenshot exceeds Anthropic's 5 MB base64 cap.
+    ({ mediaType, data } = await ensureImageWithinAnthropicLimit(data, mediaType));
+
     const isDesign = kind === 'design';
     const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
     const prompt = `You are an OCR engine. Output ONE OF EXACTLY TWO things and nothing else:
@@ -1129,10 +1170,12 @@ router.post('/extract-from-image', authenticate, imageUpload.single('image'), as
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded (expected multipart field "image")' });
     }
-    const mediaType = req.file.mimetype && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)
+    let mediaType = req.file.mimetype && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)
       ? req.file.mimetype
       : 'image/jpeg';
-    const data = req.file.buffer.toString('base64');
+    let data = req.file.buffer.toString('base64');
+    // Auto-downscale if the upload exceeds Anthropic's 5 MB base64 cap.
+    ({ mediaType, data } = await ensureImageWithinAnthropicLimit(data, mediaType));
     const kind = (req.body?.kind === 'design') ? 'design' : 'coding';
     const isDesign = kind === 'design';
     const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';

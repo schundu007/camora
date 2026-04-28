@@ -158,15 +158,19 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       }
       const data = await resp.json();
       if (data.problem) {
-        setProblemText(data.problem);
+        const text = String(data.problem).trim();
+        setProblemText(text);
         setInputTab('text');
         setErrorMsg(null);
+        // Auto-generate the design solution — image in, answer out.
+        if (text) handleSubmit(text);
       } else {
         setErrorMsg('Could not extract text from this image. Try a clearer screenshot.');
       }
     } catch (err: any) {
       setErrorMsg(err?.message || 'Image extraction failed. Please try again.');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleSubmit = useCallback(async (overrideText?: string) => {
