@@ -161,6 +161,10 @@ export function AudioSetupWizard({
 
   /* ── device enumeration ────────────────────────────────────────── */
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  // True when TCC says 'granted' but Chromium's audio device list is
+  // still empty — the only reliable fix is to relaunch the Electron
+  // process. Surfaces a "Restart Camora" button in the wizard.
+  const [needsRelaunch, setNeedsRelaunch] = useState(false);
 
   const requestPermission = useCallback(async () => {
     setPermissionError(null);
@@ -199,9 +203,35 @@ export function AudioSetupWizard({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setPermissionGranted(true);
+      setNeedsRelaunch(false);
       return true;
     } catch (err: any) {
       const isDesktop = !!camo?.isDesktop;
+
+      // Stuck-state detection: TCC says 'granted' (the user toggled
+      // Camora ON in System Settings → Privacy & Security → Microphone)
+      // but Chromium's audio device list is still empty so getUserMedia
+      // throws NotFoundError. Chromium only re-enumerates devices on
+      // launch / when askForMediaAccess resolves; flipping the toggle
+      // in System Settings while the app is running doesn't trigger it.
+      // The only reliable fix is to relaunch the Electron process.
+      if (err?.name === 'NotFoundError' && isDesktop) {
+        let tccStatus: string | undefined;
+        try {
+          tccStatus = camo?.getMediaAccessStatus
+            ? await camo.getMediaAccessStatus('microphone')
+            : undefined;
+        } catch { /* ignore */ }
+        if (tccStatus === 'granted') {
+          setNeedsRelaunch(true);
+          setPermissionError(
+            'Camora is allowed in System Settings, but macOS only gives the running app the new permission after a restart. Click Restart Camora and you\'ll be back here in a second with your mic working.',
+          );
+          setPermissionGranted(false);
+          return false;
+        }
+      }
+
       const msg = err?.name === 'NotAllowedError'
         ? 'Microphone permission was denied. On macOS, check System Settings → Privacy & Security → Microphone. In the browser, click the lock icon in the address bar → Site settings → Microphone → Allow.'
         : err?.name === 'NotFoundError'
@@ -300,10 +330,18 @@ export function AudioSetupWizard({
       // Stale `prefs.micDeviceId` referencing a now-unavailable device
       // (unplugged USB mic, removed BlackHole, prior session id) blew
       // the wizard up with a tight retry loop that spammed
-      // "AudioContext encountered an error". Recover by clearing the
-      // stale id from prefs and retrying with the default mic.
-      if (err?.name === 'NotFoundError' && deviceId) {
-        console.warn('[AudioWizard] saved mic not found; clearing and retrying with default', deviceId);
+      // "AudioContext encountered an error". Chrome reports this as
+      // NotFoundError on macOS but as OverconstrainedError on Linux /
+      // some Chromium builds — both must clear the stale id and retry
+      // with the default mic, otherwise the deps-driven effect re-fires
+      // forever on the same broken constraint.
+      const stale = !!deviceId && (
+        err?.name === 'NotFoundError' ||
+        err?.name === 'OverconstrainedError' ||
+        err?.name === 'ConstraintNotSatisfiedError'
+      );
+      if (stale) {
+        console.warn('[AudioWizard] saved mic unavailable; clearing and retrying with default', deviceId, err?.name);
         try {
           setPrefs((p) => patchAudioPrefs({ ...p, micDeviceId: null }));
         } catch { /* ignore */ }
@@ -511,14 +549,25 @@ export function AudioSetupWizard({
                   <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
                     {permissionError || 'Camora needs permission to list your microphones. Click below.'}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => { void enumerate(); }}
-                    className="px-3 py-1 text-[11px] font-bold rounded-md"
-                    style={{ background: 'var(--accent)', color: '#fff' }}
-                  >
-                    Grant microphone access
-                  </button>
+                  {needsRelaunch ? (
+                    <button
+                      type="button"
+                      onClick={() => { (window as any).camo?.relaunch?.(); }}
+                      className="px-3 py-1 text-[11px] font-bold rounded-md"
+                      style={{ background: 'var(--accent)', color: '#fff' }}
+                    >
+                      Restart Camora
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { void enumerate(); }}
+                      className="px-3 py-1 text-[11px] font-bold rounded-md"
+                      style={{ background: 'var(--accent)', color: '#fff' }}
+                    >
+                      Grant microphone access
+                    </button>
+                  )}
                 </div>
               </div>
             )}

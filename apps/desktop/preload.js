@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld('camo', {
   // Open the macOS Privacy & Security panel directly to the right
   // section so the user doesn't have to dig through System Settings.
   openSystemPrivacy: (section) => ipcRenderer.invoke('open-system-privacy', section),
+  // Restart the Electron process. Required after the user toggles
+  // microphone permission in System Settings while the app is running:
+  // Chromium's audio device list stays empty until relaunch.
+  relaunch: () => ipcRenderer.invoke('relaunch-app'),
   onUpdateAvailable: (cb) => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.on('update-available', (_, info) => cb(info));
