@@ -15,7 +15,7 @@
  * evolution stays in the client.
  */
 import { Router } from 'express';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { refreshCompanyContext } from '../services/companyContext.js';
 
