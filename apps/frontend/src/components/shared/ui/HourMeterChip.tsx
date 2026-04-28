@@ -12,7 +12,17 @@ interface BudgetData {
   exhausted: boolean;
 }
 
-function formatHours(h: number): string {
+// Coerce anything (undefined / null / string / NaN) into a finite number.
+// The budget endpoint sometimes returns a 500 body or a partial object —
+// without this, formatHours(undefined) throws "Cannot read properties of
+// undefined (reading 'toFixed')" and crashes the whole React tree.
+const toNum = (v: unknown): number => {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+function formatHours(value: unknown): string {
+  const h = toNum(value);
   if (h <= 0) return '0';
   if (h < 1) return `${Math.round(h * 60)}m`;
   return `${h.toFixed(1)}h`;
@@ -41,8 +51,22 @@ export function HourMeterChip({ variant = 'light' }: { variant?: 'light' | 'dark
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (cancelled || !data) return;
-        setBudget(data);
+        if (cancelled || !data || typeof data !== 'object') return;
+        // Validate the response has the numeric fields we need before
+        // setting state — a malformed body (server error, partial
+        // object, HTML error page) would otherwise propagate undefined
+        // numbers into the render path and crash on .toFixed.
+        const pool = toNum((data as any).pool_hours);
+        const used = toNum((data as any).used_hours);
+        const remaining = toNum((data as any).remaining_hours);
+        if (!Number.isFinite(pool) || !Number.isFinite(used) || !Number.isFinite(remaining)) return;
+        setBudget({
+          source: (data as any).source === 'team' ? 'team' : 'personal',
+          pool_hours: pool,
+          used_hours: used,
+          remaining_hours: remaining,
+          exhausted: !!(data as any).exhausted,
+        });
       })
       .catch(() => { /* silent — chip is optional */ });
     return () => { cancelled = true; };
