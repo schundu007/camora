@@ -13,6 +13,13 @@ dotenv.config();
 
 const app = express();
 
+// Railway sits behind a reverse proxy and forwards the client IP via
+// X-Forwarded-For. Without `trust proxy`, Express ignores the header
+// and express-rate-limit (which keys per-IP) throws
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR on every request — service runs
+// but every API call 500s. `1` trusts a single hop (Railway's edge).
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet());
 app.use(cors({
