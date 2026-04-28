@@ -6,7 +6,6 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogConfirm } from '@/components/shared/Dialog';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
-import { MicButtonLarge } from './companion/mic-button-large';
 
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
 const C = {
@@ -570,14 +569,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 shrink-0 flex flex-col items-center gap-2">
-        {/* Mic + AUTO toggle — click AUTO before the interview to keep Sona
-            listening continuously (auto-restarts, persists across reloads). */}
+        {/* Mic + AUTO toggle — single source of truth for capture.
+            Click AUTO before the interview to keep Sona listening
+            continuously (auto-restarts, persists across reloads).
+            The previous MicButtonLarge was removed: it ran its own
+            independent getUserMedia stream, which competed with this
+            one for the same physical mic and produced two visible
+            mic controls that confused users. The mic button inside
+            UnifiedMicButton is the one-shot capture; AUTO is the
+            continuous toggle. */}
         <div className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl"
           style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <AudioCapture onTranscription={handleAutoTranscription} />
         </div>
-        {/* Prominent centered one-shot mic — kept for explicit single-question capture */}
-        <MicButtonLarge onResult={(text) => ask(text)} disabled={streaming} />
         {/* Text input row */}
         <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
