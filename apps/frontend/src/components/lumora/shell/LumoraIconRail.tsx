@@ -46,9 +46,16 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
     return false;
   };
 
-  const itemStyle = (active: boolean) => ({
+  const itemStyle = (active: boolean): React.CSSProperties => ({
     color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
     background: active ? 'var(--cam-gold-leaf)' : 'transparent',
+    // Active items get an outward gold glow so the current tab reads
+    // unmistakably across the rail's deep navy gradient.
+    boxShadow: active
+      ? '0 0 0 1px rgba(217,181,67,0.55), 0 4px 14px rgba(217,181,67,0.32), inset 0 1px 0 rgba(255,255,255,0.18)'
+      : 'none',
+    fontWeight: active ? 700 : 500,
+    transition: 'background-color 200ms, color 200ms, box-shadow 200ms, transform 150ms',
   });
 
   const [expanded, setExpanded] = useState(false);
@@ -65,11 +72,18 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
 
   return (
     <nav
-      className="hidden md:flex flex-col shrink-0 transition-all duration-200"
+      className="hidden md:flex flex-col shrink-0 transition-all duration-200 relative"
       style={{
         width: expanded ? 200 : 60,
-        background: 'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)',
+        // Layered atmospheric rail:
+        //   1. Cyan glow at top-right (catches the eye when the rail expands)
+        //   2. Vertical navy gradient with a brighter mid (the existing look)
+        //   3. Soft gold halo behind the gold border line (warmth)
+        background:
+          'radial-gradient(circle at 100% 0%, rgba(34,211,238,0.14), transparent 55%),' +
+          'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)',
         borderRight: '2px solid var(--cam-gold-leaf)',
+        boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.06), 4px 0 24px rgba(0,0,0,0.25)',
         paddingTop: needsMacChromeOffset ? 32 : 12,
         paddingBottom: 12,
       }}
