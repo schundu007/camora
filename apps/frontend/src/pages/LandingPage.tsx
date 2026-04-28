@@ -243,8 +243,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ 2. COMPANY LOGOS — Scrolling, tight band ═══════════ */}
-      <section className="py-8 overflow-hidden border-b" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+      {/* ═══════════ 2. COMPANY LOGOS — Scrolling, no separator ═══════════ */}
+      <section className="py-8 overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] mb-5" style={{ color: 'var(--text-muted)' }}>Trusted by engineers at</p>
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 z-10" style={{ background: 'linear-gradient(to right, var(--bg-surface), transparent)' }} />
