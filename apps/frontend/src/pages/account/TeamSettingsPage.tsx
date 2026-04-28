@@ -86,7 +86,13 @@ interface TopupRow {
   created_at: string;
 }
 
-function formatHours(h: number) {
+// Coerce-then-format. The budget endpoint sometimes returns undefined
+// or a non-numeric body (server error, partial object, HTML error
+// page); without this guard, `.toFixed` on undefined crashes the
+// whole page.
+function formatHours(value: unknown) {
+  const n = typeof value === 'number' ? value : Number(value);
+  const h = Number.isFinite(n) ? n : 0;
   if (h < 0.01) return '0';
   if (h < 1) return `${(h * 60).toFixed(0)} min`;
   return `${h.toFixed(1)} hr`;
@@ -659,7 +665,7 @@ export default function TeamSettingsPage() {
                       <div key={t.id} className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold">
-                            {t.hours} hr{t.hours !== 1 ? 's' : ''} · ${(t.amount_cents / 100).toFixed(2)}
+                            {t.hours} hr{t.hours !== 1 ? 's' : ''} · ${(Number(t.amount_cents || 0) / 100).toFixed(2)}
                             {t.auto_charged && (
                               <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>
                             )}
