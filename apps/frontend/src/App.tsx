@@ -14,6 +14,7 @@ const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // ── Lumora pages (live interview) ───────────────────────
 const LumoraShellPage = lazy(() => import('./pages/lumora/LumoraShellPage'));
+const MockInterviewPage = lazy(() => import('./pages/lumora/MockInterviewPage'));
 
 // ── Capra pages (preparation) ───────────────────────────
 const CapraDashboard = lazy(() => import('./pages/capra/DashboardPage'));
@@ -312,6 +313,7 @@ export function App() {
 
           {/* ── Lumora: Live Interview (PAID — own layout, no shell) ── */}
           <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/mock" element={<PaidRoute><MockInterviewPage /></PaidRoute>} />
           <Route path="/lumora/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/behavioral" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
