@@ -10,7 +10,7 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 
    Two paths:
 
-     • Desktop (Electron): camo.listCaptureSources / camo.captureSourceImage.
+     • Desktop (Electron): camo.listWindows / camo.captureSourceImage.
        List is fetched with thumbnailSize 1×1 so the IPC returns in
        tens of milliseconds. Capture re-fetches at 4096px for OCR.
 
@@ -117,7 +117,7 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     setStatus(null);
 
     const camo = (window as any).camo;
-    if (camo?.isDesktop && typeof camo.listCaptureSources === 'function') {
+    if (camo?.isDesktop && typeof camo.listWindows === 'function') {
       // Open picker IMMEDIATELY with empty array (= loading state).
       // Don't pre-check SR permission — getMediaAccessStatus('screen')
       // returns 'unknown' for unbound cdhashes which would block us
@@ -126,14 +126,14 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
       setPickerError(null);
       setPickerQuery('');
       try {
-        const sources: CaptureSource[] = await camo.listCaptureSources();
+        const sources: CaptureSource[] = await camo.listWindows();
         if (!Array.isArray(sources) || sources.length === 0) {
           setPickerError('No windows or screens detected');
           return;
         }
         setPickerSources(sources);
       } catch (err: any) {
-        console.error('[capture] listCaptureSources failed:', err);
+        console.error('[capture] listWindows failed:', err);
         setPickerError(err?.message || 'Could not list windows');
       }
       return;
