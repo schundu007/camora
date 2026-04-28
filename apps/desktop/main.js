@@ -314,6 +314,54 @@ app.on('open-url', (event, url) => {
 ipcMain.handle('get-platform', () => process.platform);
 ipcMain.handle('get-version', () => app.getVersion());
 
+// macOS TCC bridge. The renderer cannot read or trigger AVCaptureDevice
+// authorization itself — getUserMedia silently returns NotFoundError when
+// permission isn't granted, so we expose the systemPreferences API here.
+//   * 'media-access-status'   → 'not-determined' | 'granted' | 'denied' | 'restricted' | 'unknown'
+//   * 'ask-media-access'      → triggers the macOS dialog (only on first
+//                                'not-determined'; subsequent calls just
+//                                return the cached answer immediately)
+//   * 'open-system-privacy'   → jumps to the right pane of System Settings
+//                                so the user doesn't have to hunt for it
+//   * 'relaunch-app'          → relaunches the Electron process. macOS
+//                                only surfaces a freshly-granted device to
+//                                the running Chromium audio service after
+//                                a process restart, so the wizard uses
+//                                this as the recovery path when TCC says
+//                                'granted' but getUserMedia still 404s.
+ipcMain.handle('get-media-access-status', (_e, kind) => {
+  if (process.platform !== 'darwin') return 'granted';
+  try {
+    return systemPreferences.getMediaAccessStatus(kind || 'microphone');
+  } catch {
+    return 'unknown';
+  }
+});
+ipcMain.handle('ask-for-media-access', async (_e, kind) => {
+  if (process.platform !== 'darwin') return true;
+  try {
+    return await systemPreferences.askForMediaAccess(kind || 'microphone');
+  } catch {
+    return false;
+  }
+});
+ipcMain.handle('open-system-privacy', (_e, section) => {
+  if (process.platform !== 'darwin') return false;
+  const map = {
+    Microphone: 'Privacy_Microphone',
+    Camera: 'Privacy_Camera',
+    ScreenCapture: 'Privacy_ScreenCapture',
+    Accessibility: 'Privacy_Accessibility',
+  };
+  const anchor = map[section] || 'Privacy_Microphone';
+  shell.openExternal(`x-apple.systempreferences:com.apple.preference.security?${anchor}`);
+  return true;
+});
+ipcMain.handle('relaunch-app', () => {
+  app.relaunch();
+  app.exit(0);
+});
+
 // Window control handlers (called from preload.js)
 ipcMain.on('window-minimize', () => mainWindow?.minimize());
 ipcMain.on('window-maximize', () => {

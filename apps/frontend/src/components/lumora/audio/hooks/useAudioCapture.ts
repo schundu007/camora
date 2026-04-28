@@ -94,9 +94,13 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         autoGainControl: true,
       };
 
-      // Use specific device if provided
+      // Use specific device if provided. `ideal` (not `exact`) so a
+      // stale/missing saved device falls back to the system default
+      // instead of throwing OverconstrainedError — that error used to
+      // re-trigger the auto-start effect on every render and produced
+      // the AudioContext-error spam in the console.
       if (deviceId) {
-        audioConstraints.deviceId = { exact: deviceId };
+        audioConstraints.deviceId = { ideal: deviceId };
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
