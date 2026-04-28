@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { loadAudioPrefs, patchAudioPrefs } from '@/lib/audio-preferences';
 
 export interface AudioDevice {
   deviceId: string;
@@ -15,7 +16,11 @@ interface UseAudioDevicesReturn {
   refreshDevices: () => Promise<void>;
 }
 
-const STORAGE_KEY = 'vassist-selected-microphone';
+// Legacy localStorage key — only read for one-time migration. The
+// canonical mic device is now lumora_audio_prefs_v1.micDeviceId, set
+// by the AudioSetupWizard. Two competing keys silently picked
+// different mics during interviews.
+const LEGACY_KEY = 'vassist-selected-microphone';
 
 export function useAudioDevices(): UseAudioDevicesReturn {
   const [devices, setDevices] = useState<AudioDevice[]>([]);
@@ -66,14 +71,25 @@ export function useAudioDevices(): UseAudioDevicesReturn {
 
       setDevices(audioInputs);
 
-      // Restore previously selected device
-      const savedDeviceId = localStorage.getItem(STORAGE_KEY);
-      if (savedDeviceId && audioInputs.some(d => d.deviceId === savedDeviceId)) {
-        setSelectedDeviceIdState(savedDeviceId);
-      } else if (audioInputs.length > 0) {
-        // Default to first device (usually "default" or system default)
-        setSelectedDeviceIdState(audioInputs[0].deviceId);
+      // Resolve which device to use, in priority order:
+      //   1. lumora_audio_prefs_v1.micDeviceId (canonical, set by wizard)
+      //   2. legacy `vassist-selected-microphone` — migrate into prefs
+      //   3. first enumerated device
+      const prefs = loadAudioPrefs();
+      let resolved: string | null = null;
+      if (prefs.micDeviceId && audioInputs.some(d => d.deviceId === prefs.micDeviceId)) {
+        resolved = prefs.micDeviceId;
+      } else {
+        const legacy = localStorage.getItem(LEGACY_KEY);
+        if (legacy && audioInputs.some(d => d.deviceId === legacy)) {
+          resolved = legacy;
+          // One-time migration so future reads come from the canonical key.
+          patchAudioPrefs({ micDeviceId: legacy });
+        } else if (audioInputs.length > 0) {
+          resolved = audioInputs[0].deviceId;
+        }
       }
+      setSelectedDeviceIdState(resolved);
     } catch (err: any) {
       setError(err.message || 'Failed to enumerate audio devices');
     } finally {
@@ -83,7 +99,11 @@ export function useAudioDevices(): UseAudioDevicesReturn {
 
   const setSelectedDeviceId = useCallback((deviceId: string) => {
     setSelectedDeviceIdState(deviceId);
-    localStorage.setItem(STORAGE_KEY, deviceId);
+    // Canonical store: lumora_audio_prefs_v1.micDeviceId. Also write
+    // the legacy key so any straggler reader stays in sync until the
+    // legacy code path is fully removed.
+    patchAudioPrefs({ micDeviceId: deviceId });
+    try { localStorage.setItem(LEGACY_KEY, deviceId); } catch {}
   }, []);
 
   // Initial enumeration
@@ -104,6 +124,23 @@ export function useAudioDevices(): UseAudioDevicesReturn {
       navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
     };
   }, [enumerateDevices]);
+
+  // React to wizard updates — when the user picks a mic in the
+  // AudioSetupWizard, the AudioCapture should switch to it without
+  // needing a reload.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const refresh = () => {
+      const prefs = loadAudioPrefs();
+      if (prefs.micDeviceId) setSelectedDeviceIdState(prefs.micDeviceId);
+    };
+    window.addEventListener('lumora:audio-prefs-updated', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('lumora:audio-prefs-updated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
 
   return {
     devices,

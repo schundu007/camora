@@ -16,7 +16,7 @@ import SharedPricingCards from '../../components/shared/PricingCards';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
-import { AudioCheckModal } from '../../components/lumora/shell/AudioCheckModal';
+import { requestAudioSetup } from '../../lib/audio-preferences';
 import { InterviewerAudioProvider } from '../../components/lumora/audio/InterviewerAudio';
 import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard';
 import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
@@ -36,7 +36,6 @@ export function LumoraShellPage() {
   // inputValue removed — copilot now manages its own state
   const [blanked, setBlanked] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
-  const [mobileAudioCheckOpen, setMobileAudioCheckOpen] = useState(false);
   const { theme: currentTheme, toggle: toggleTheme } = useTheme();
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
@@ -645,7 +644,7 @@ export function LumoraShellPage() {
               {/* Utilities — desktop reaches these from the icon rail bottom; mobile gets them here. */}
               <div className="border-t mt-1 pt-1" style={{ borderColor: 'var(--border)' }}>
                 <button type="button"
-                  onClick={() => { setMobileMoreOpen(false); setMobileAudioCheckOpen(true); }}
+                  onClick={() => { setMobileMoreOpen(false); requestAudioSetup(); }}
                   className="w-full flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-black/5"
                   style={{ color: 'var(--text-primary)' }}>
                   <span>Audio check</span>
@@ -668,8 +667,6 @@ export function LumoraShellPage() {
         </div>
       )}
 
-      {/* Mobile Audio Check — shell-level so the dropdown "Audio check" entry can open it. */}
-      <AudioCheckModal isOpen={mobileAudioCheckOpen} onClose={() => setMobileAudioCheckOpen(false)} />
     </div>
     </InterviewerAudioProvider>
   );

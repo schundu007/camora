@@ -62,6 +62,20 @@ export function patchAudioPrefs(patch: Partial<AudioPreferences>): AudioPreferen
   return next;
 }
 
+/**
+ * Open the AudioSetupWizard from anywhere — used by the icon-rail
+ * "Audio check" entry. The wizard listens to this custom event and
+ * force-opens, replacing the legacy AudioCheckModal that opened a
+ * concurrent getUserMedia stream and could clash with active capture.
+ */
+export const OPEN_AUDIO_WIZARD_EVENT = 'lumora:open-audio-wizard';
+
+export function requestAudioSetup(): void {
+  try {
+    window.dispatchEvent(new CustomEvent(OPEN_AUDIO_WIZARD_EVENT));
+  } catch {}
+}
+
 /* ── Environment + virtual-mic detection ─────────────────────────────── */
 
 export function isElectron(): boolean {
