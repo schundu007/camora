@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
-import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/AudioCapture';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { LumoraSettings } from './LumoraSettings';
 import ScreenCaptureButton from '@/components/lumora/shared/ScreenCaptureButton';
@@ -68,8 +68,6 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
           <AudioCapture onTranscription={onTranscription} />
-          <div className="w-px h-5 mx-1" style={{ background: C.border }} />
-          <SystemAudioButton onTranscription={onTranscription} disabled={false} />
           {canCapture && onCapturedProblem && (
             <>
               <div className="w-px h-5 mx-1" style={{ background: C.border }} />
@@ -108,8 +106,6 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
           }}
         >
           <AudioCapture onTranscription={onTranscription} />
-          <div className="w-px h-5" style={{ background: 'rgba(201,162,39,0.35)' }} />
-          <SystemAudioButton onTranscription={onTranscription} disabled={false} />
           {canCapture && onCapturedProblem && (
             <>
               <div className="w-px h-5" style={{ background: 'rgba(201,162,39,0.35)' }} />
