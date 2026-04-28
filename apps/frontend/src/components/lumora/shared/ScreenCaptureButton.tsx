@@ -73,37 +73,16 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     if (busy) return;
     setStatus(null);
 
-    const camo = (window as any).camo;
-    if (camo?.isDesktop && typeof camo.captureInteractive === 'function') {
-      setBusy(true);
-      try {
-        const png: string | null = await camo.captureInteractive();
-        if (!png) {
-          // User pressed Escape, OR Screen Recording is denied.
-          const screenStatus = await camo.getMediaAccessStatus?.('screen').catch(() => null);
-          if (screenStatus && screenStatus !== 'granted') {
-            camo.openSystemPrivacy?.('ScreenCapture');
-            setStatus('Grant Screen Recording in System Settings');
-          } else {
-            setStatus(null); // user canceled
-          }
-          return;
-        }
-        await ocrAndDeliver(png);
-      } catch (err: any) {
-        console.error('[capture] interactive failed:', err);
-        setStatus(err?.message || 'Capture failed');
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-
-    // Browser fallback — Chrome/Safari's own getDisplayMedia picker.
     if (!navigator.mediaDevices?.getDisplayMedia) {
       setStatus('Screen capture not supported in this browser');
       return;
     }
+
+    // One path for both browser and desktop. On the desktop, macOS
+    // Sequoia+ shows Apple's own system picker (windows, displays,
+    // Chrome tabs) via Electron's setDisplayMediaRequestHandler with
+    // useSystemPicker: true. On a regular browser, Chrome/Safari
+    // shows its own picker. No in-app modal, no native cursor.
     let stream: MediaStream | null = null;
     try {
       setBusy(true);
@@ -112,12 +91,21 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
         video: { frameRate: 1 } as MediaTrackConstraints,
         audio: false,
       });
+      setStatus('Capturing…');
       const dataUrl = await grabFrameFromStream(stream);
       stream = null;
       await ocrAndDeliver(dataUrl);
     } catch (err: any) {
       if (err?.name === 'NotAllowedError' || err?.name === 'AbortError') {
-        setStatus(null);
+        // User canceled the picker, or Screen Recording denied.
+        const camo = (window as any).camo;
+        const screenStatus = await camo?.getMediaAccessStatus?.('screen').catch(() => null);
+        if (screenStatus && screenStatus !== 'granted') {
+          camo?.openSystemPrivacy?.('ScreenCapture');
+          setStatus('Grant Screen Recording in System Settings');
+        } else {
+          setStatus(null);
+        }
       } else {
         console.error('[capture] getDisplayMedia failed:', err);
         setStatus(err?.message || 'Capture failed');

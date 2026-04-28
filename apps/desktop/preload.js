@@ -19,10 +19,10 @@ contextBridge.exposeInMainWorld('camo', {
   // restart, so the audio wizard uses this once SR/Mic is granted.
   relaunch: () => ipcRenderer.invoke('relaunch-app'),
 
-  // Screen capture — NO MODAL. NO PICKER UI. Camora hides, macOS draws
-  // its own window-select cursor, user clicks the target window, capture
-  // is written. Single call. Returns JPEG/PNG dataURL or null.
-  captureInteractive: () => ipcRenderer.invoke('capture-interactive'),
+  // Screen capture goes through navigator.mediaDevices.getDisplayMedia
+  // directly — no IPC. macOS Sequoia+ shows Apple's own system picker
+  // (windows, displays, Chrome tabs, audio sharing) via Electron's
+  // setDisplayMediaRequestHandler with useSystemPicker: true.
 
   // Document export
   // savePdf({ html: string, filename?: string }) → { ok, path? } or { canceled: true }
