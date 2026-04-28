@@ -55,6 +55,7 @@ const AccountDocsPage = lazy(() => import('./pages/docs/AccountPage'));
 const TopupsDocsPage = lazy(() => import('./pages/docs/TopupsPage'));
 const DesktopDocsPage = lazy(() => import('./pages/docs/DesktopPage'));
 const VoiceFilteringDocsPage = lazy(() => import('./pages/docs/VoiceFilteringPage'));
+const AudioSetupDocsPage = lazy(() => import('./pages/docs/AudioSetupPage'));
 const AdminOverviewPage = lazy(() => import('./pages/docs/admin/AdminOverviewPage'));
 const AdminStripePage = lazy(() => import('./pages/docs/admin/AdminStripePage'));
 const AdminEnvVarsPage = lazy(() => import('./pages/docs/admin/AdminEnvVarsPage'));
@@ -291,6 +292,7 @@ export function App() {
           <Route path="/docs/topups" element={<TopupsDocsPage />} />
           <Route path="/docs/desktop" element={<DesktopDocsPage />} />
           <Route path="/docs/voice-filtering" element={<VoiceFilteringDocsPage />} />
+          <Route path="/docs/audio-setup" element={<AudioSetupDocsPage />} />
           <Route path="/docs/admin" element={<AdminOverviewPage />} />
           <Route path="/docs/admin/stripe" element={<AdminStripePage />} />
           <Route path="/docs/admin/env-vars" element={<AdminEnvVarsPage />} />

@@ -22,6 +22,7 @@ const USER_GUIDES: DocCard[] = [
   { title: 'Top-ups & AI hours', description: 'How AI hours work, when to top up, auto-topup configuration, refunds.', href: '/docs/topups' },
   { title: 'Desktop app', description: 'Stealth-mode desktop client with global hotkey, system audio, and BYOK.', href: '/docs/desktop' },
   { title: 'Voice filtering', description: 'Speaker verification — only transcribe the interviewer, not your own voice.', href: '/docs/voice-filtering' },
+  { title: 'Audio setup', description: 'Mics, speakers, system loopback, BlackHole / VoiceMeeter — every customer setup.', href: '/docs/audio-setup' },
 ];
 
 const ADMIN_RUNBOOKS: DocCard[] = [

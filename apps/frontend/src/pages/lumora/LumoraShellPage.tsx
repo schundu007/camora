@@ -19,6 +19,7 @@ import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 import { AudioCheckModal } from '../../components/lumora/shell/AudioCheckModal';
 import { InterviewerAudioProvider } from '../../components/lumora/audio/InterviewerAudio';
 import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard';
+import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
 import { useTheme } from '../../hooks/useTheme';
 import type { ParsedBlock } from '../../types';
 import { dialogConfirm } from '../../components/shared/Dialog';
@@ -192,6 +193,7 @@ export function LumoraShellPage() {
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}
     {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
+    {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <SilentStreamBanner />}
     {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
     {blanked && (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000000' }} onClick={() => setBlanked(false)}>
