@@ -19,11 +19,10 @@ contextBridge.exposeInMainWorld('camo', {
   // restart, so the audio wizard uses this once SR/Mic is granted.
   relaunch: () => ipcRenderer.invoke('relaunch-app'),
 
-  // Screen capture — in-app window picker UX.
-  // listWindows() → [{id, name, kind}] for the renderer's picker.
-  // captureWindow(id) → JPEG dataURL (auto-downscaled to <5 MB) or null.
-  listWindows: () => ipcRenderer.invoke('list-windows'),
-  captureWindow: (sourceId) => ipcRenderer.invoke('capture-window', sourceId),
+  // Screen capture — NO MODAL. NO PICKER UI. Camora hides, macOS draws
+  // its own window-select cursor, user clicks the target window, capture
+  // is written. Single call. Returns JPEG/PNG dataURL or null.
+  captureInteractive: () => ipcRenderer.invoke('capture-interactive'),
 
   // Document export
   // savePdf({ html: string, filename?: string }) → { ok, path? } or { canceled: true }
