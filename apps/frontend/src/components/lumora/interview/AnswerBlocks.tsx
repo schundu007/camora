@@ -458,20 +458,50 @@ function GridCard({
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const hasFullHeight = className.includes('h-full');
   return (
-    <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col rounded-lg ${className}`}>
+    <div
+      className={`relative border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col rounded-lg ${className}`}
+      style={{
+        boxShadow: '0 4px 14px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.03)',
+      }}
+    >
+      <style>{`
+        @keyframes gridcard-shimmer {
+          0%   { background-position: -200% 50%; }
+          100% { background-position: 200% 50%; }
+        }
+      `}</style>
       <button
         onClick={() => collapsible && setCollapsed(!collapsed)}
-        className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:brightness-110' : 'cursor-default'}`}
+        className={`relative flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:brightness-110' : 'cursor-default'}`}
         style={{
-          background: 'var(--cam-hero-strip)',
+          // Richer header — inner cyan glow at top-right + the existing
+          // navy strip beneath. Reads as a lit chrome bar instead of flat.
+          background:
+            'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(34,211,238,0.18), transparent 60%),' +
+            'var(--cam-hero-strip)',
           borderBottom: '2px solid var(--cam-gold-leaf)',
         }}
       >
+        {/* Animated gold shimmer line riding the gold border-bottom — a
+            slow 4s sweep that signals "this is an active surface" without
+            being noisy. Pure CSS, no JS, GPU-only. */}
+        <span
+          aria-hidden="true"
+          className="absolute left-0 right-0 -bottom-[2px] h-[2px] pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)',
+            backgroundSize: '200% 100%',
+            animation: 'gridcard-shimmer 4s linear infinite',
+            mixBlendMode: 'overlay',
+          }}
+        />
         <span className="flex items-center gap-2">
-          {/* Per-section accent dot — keeps the existing titleColor
-              variation as a small visual code (PROBLEM accent, EDGE
-              CASES warning, FOLLOW-UP danger, etc.) */}
-          <span className={`inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`} />
+          {/* Per-section accent dot — color tag with a subtle outer halo */}
+          <span
+            className={`relative inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`}
+            style={{ filter: 'drop-shadow(0 0 4px currentColor)' }}
+          />
           <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
             {title}
           </span>
