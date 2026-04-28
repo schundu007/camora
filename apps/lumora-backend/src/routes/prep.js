@@ -17,6 +17,7 @@
 import { Router } from 'express';
 import { query } from '@camora/shared-db';
 import { authenticate } from '../middleware/authenticate.js';
+import { refreshCompanyContext } from '../services/companyContext.js';
 
 const router = Router();
 
@@ -65,11 +66,59 @@ router.put('/state', async (req, res, next) => {
        RETURNING updated_at`,
       [req.user.id, serialized],
     );
+
+    // Fire-and-forget company-context warm-up so by the time the user
+    // starts the live interview, Sona's briefing cache is already
+    // populated. detectFromPrepData scans filenames + JD body for
+    // allowlisted companies; unknown companies are silently skipped.
+    try {
+      const detected = detectCompanyFromPrepData(data);
+      if (detected) {
+        refreshCompanyContext(detected).catch(() => {});
+      }
+    } catch {}
+
     res.json({ updated_at: r.rows[0].updated_at });
   } catch (err) {
     next(err);
   }
 });
+
+/**
+ * Lightweight company detection on the prep-kit blob — looks at the
+ * active workspace's JD body, resume body, and original filenames for
+ * allowlisted company names. Mirrors the frontend logic so warm-up
+ * triggers without requiring the client to send the company.
+ */
+function detectCompanyFromPrepData(data) {
+  if (!data || typeof data !== 'object') return null;
+  const key = data.activeCompany || data.companies?.[0];
+  if (!key) return null;
+  const doc = data.data?.[key];
+  if (!doc) return null;
+  const haystack = [doc.jdFile, doc.resumeFile, doc.jd, doc.resume]
+    .filter(Boolean)
+    .join(' \n ');
+  if (!haystack) return null;
+  const tokens = [
+    'NVIDIA', 'Google', 'Meta', 'Apple', 'Amazon', 'Microsoft', 'Netflix',
+    'Stripe', 'Anthropic', 'OpenAI', 'Uber', 'Airbnb', 'Tesla', 'Databricks',
+    'Snowflake', 'Shopify', 'Cloudflare', 'GitHub', 'Datadog', 'Pinterest',
+    'LinkedIn', 'TikTok', 'ByteDance', 'Salesforce', 'Oracle', 'Intel', 'AMD',
+    'Adobe', 'Coinbase', 'Robinhood', 'Plaid', 'Notion', 'Figma', 'Vercel',
+    'Supabase', 'MongoDB', 'Spotify', 'Reddit', 'Discord', 'Atlassian',
+    'Dropbox', 'Slack', 'Twilio', 'DoorDash', 'Lyft', 'Instacart', 'Snap',
+    'PayPal', 'Palantir', 'Cohere',
+  ];
+  const scores = {};
+  for (const t of tokens) {
+    const re = new RegExp(`(^|[^A-Za-z])${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Za-z]|$)`, 'gi');
+    const m = haystack.match(re);
+    if (m) scores[t] = m.length;
+  }
+  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+  return best ? best[0] : null;
+}
 
 router.delete('/state', async (req, res, next) => {
   try {

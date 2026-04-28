@@ -172,6 +172,12 @@ async function runMigrations() {
         data JSONB NOT NULL DEFAULT '{}'::jsonb,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS lumora_company_context (
+        company TEXT PRIMARY KEY,
+        briefing TEXT NOT NULL,
+        sources_json JSONB,
+        refreshed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
       `CREATE TABLE IF NOT EXISTS ai_hour_topups (
         id BIGSERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -233,6 +239,7 @@ import usageRouter from './routes/usage.js';
 import jobsRouter from './routes/jobs.js';
 import storiesRouter from './routes/stories.js';
 import prepRouter from './routes/prep.js';
+import companyContextRouter from './routes/companyContext.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
@@ -248,6 +255,7 @@ app.use('/api/v1/billing', paymentLimiter, billingRouter);
 app.use('/api/v1/conversations', apiLimiter, conversationsRouter);
 app.use('/api/v1/documents', apiLimiter, documentsRouter);
 app.use('/api/v1/prep', apiLimiter, prepRouter);
+app.use('/api/v1/company-context', apiLimiter, companyContextRouter);
 app.use('/api/v1/transcribe', aiLimiter, transcriptionRouter);
 app.use('/api/v1/speaker', aiLimiter, speakerRouter);
 app.use('/api/v1/diagram', aiLimiter, diagramRouter);
