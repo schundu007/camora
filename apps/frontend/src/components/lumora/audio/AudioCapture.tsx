@@ -281,11 +281,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }
   }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus]);
 
+  // "User manually paused mid-Auto" flag — when set, the auto-restart
+  // effect honors it instead of yanking the mic back on. Cleared the
+  // moment the user manually resumes (or turns Auto off entirely).
+  const userPausedRef = useRef(false);
+
   // Auto-restart recording after transcription
   useEffect(() => {
     if (shouldRestart && startRecordingRef.current) {
       setShouldRestart(false);
       if (!continuousMode) return; // Only auto-restart in live mode
+      if (userPausedRef.current) return; // user manually paused — stay paused
       // Small delay before restarting to let state settle
       const timer = setTimeout(() => {
         startRecordingRef.current?.();
@@ -302,19 +308,26 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       stopRecording();
       setIsRecording(false);
       stopListenTimer();
-      setStatus('ready', 'Paused - press Cmd+M to resume');
+      // If Auto is on, this is a "pause Sona" rather than a one-shot stop
+      if (continuousMode) {
+        userPausedRef.current = true;
+        setStatus('ready', 'Sona paused — click mic or ⌘M to resume');
+      } else {
+        setStatus('ready', 'Paused - press Cmd+M to resume');
+      }
     } else {
+      userPausedRef.current = false;
       startRecording();
       setIsRecording(true);
       startListenTimer();
-      setStatus('listen', 'Listening...');
+      setStatus('listen', continuousMode ? 'Live - listening...' : 'Listening...');
     }
-  }, [storeIsRecording, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
+  }, [storeIsRecording, continuousMode, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
 
-  // Keyboard shortcuts - only in manual mode
+  // Keyboard shortcuts — Cmd+M (toggle) + Escape (stop) work regardless
+  // of Auto state. The user needs silent, instant mute mid-interview;
+  // gating these on continuousMode trapped them when Auto was on.
   useEffect(() => {
-    if (continuousMode) return; // Skip shortcuts in continuous mode
-
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in any editable element
       const el = e.target as HTMLElement;
@@ -444,28 +457,31 @@ function UnifiedMicButton({
 
   return (
     <div className="flex items-center gap-2 shrink-0">
-      {/* Mic button — single click toggles one-shot recording */}
+      {/* Mic button — always clickable. When Auto is ON, click pauses
+          Sona's listening (mute) and another click resumes. Manual
+          override is critical mid-interview when the user needs to
+          stop Sona on a dime — disabling the button traps the user. */}
       <div className="relative inline-flex">
         <button
           type="button"
           onClick={handleToggle}
-          disabled={continuousMode}
           className="relative flex items-center justify-center rounded-full transition-all select-none w-10 h-10 sm:w-8 sm:h-8"
           style={{
             background: isLive || isRec ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
             border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
             color: isLive || isRec ? 'var(--accent)' : 'var(--text-muted)',
             boxShadow: isLive ? '0 0 0 3px rgba(38,97,156,0.18)' : 'none',
-            opacity: continuousMode ? 0.5 : 1,
-            cursor: continuousMode ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
           }}
-          aria-pressed={isRec}
+          aria-pressed={isRec || isLive}
           title={
             isLive
-              ? 'Auto is on — mic is controlled by Sona. Click AUTO to turn off.'
+              ? 'Sona is listening — click to pause. Auto stays on; click again to resume.'
               : isRec
                 ? 'Recording — click to stop'
-                : 'Click to record one answer'
+                : continuousMode
+                  ? 'Sona is paused — click to resume listening.'
+                  : 'Click to record one answer'
           }
         >
           {isLive ? (
