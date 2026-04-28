@@ -167,6 +167,11 @@ async function runMigrations() {
       )`,
       // Top-up credits — manual checkouts + auto-topup off-session charges.
       // 90-day expiry; sums into the pool for any unexpired rows.
+      `CREATE TABLE IF NOT EXISTS lumora_prep_state (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        data JSONB NOT NULL DEFAULT '{}'::jsonb,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
       `CREATE TABLE IF NOT EXISTS ai_hour_topups (
         id BIGSERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -227,6 +232,7 @@ import analyticsRouter from './routes/analytics.js';
 import usageRouter from './routes/usage.js';
 import jobsRouter from './routes/jobs.js';
 import storiesRouter from './routes/stories.js';
+import prepRouter from './routes/prep.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
@@ -241,6 +247,7 @@ app.use('/api/v1/coding', aiLimiter, codingRouter);
 app.use('/api/v1/billing', paymentLimiter, billingRouter);
 app.use('/api/v1/conversations', apiLimiter, conversationsRouter);
 app.use('/api/v1/documents', apiLimiter, documentsRouter);
+app.use('/api/v1/prep', apiLimiter, prepRouter);
 app.use('/api/v1/transcribe', aiLimiter, transcriptionRouter);
 app.use('/api/v1/speaker', aiLimiter, speakerRouter);
 app.use('/api/v1/diagram', aiLimiter, diagramRouter);

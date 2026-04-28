@@ -213,4 +213,26 @@ export const documentsAPI = {
     }, token),
 };
 
+// Prep workspace persistence — JSON blob keyed by user. Mirrors the
+// localStorage shape the Prep Kit panel writes (PrepData), so hydration
+// is just "fetch then setState".
+export const prepAPI = {
+  getState: (token: string) =>
+    fetchAPI<{ data: unknown; updated_at: string | null }>(
+      '/api/v1/prep/state',
+      {},
+      token,
+    ),
+
+  putState: (token: string, data: unknown) =>
+    fetchAPI<{ updated_at: string }>(
+      '/api/v1/prep/state',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ data }),
+      },
+      token,
+    ),
+};
+
 export { APIError };
