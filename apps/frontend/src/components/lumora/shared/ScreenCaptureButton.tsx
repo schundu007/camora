@@ -46,7 +46,12 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
   const [status, setStatus] = useState<string | null>(null);
   const [pickerSources, setPickerSources] = useState<CaptureSource[] | null>(null);
 
-  // Capture a single frame from a MediaStream, return as JPEG data URL.
+  // Capture a single frame from a MediaStream, return as PNG data URL.
+  // PNG is lossless — JPEG @ 85% blurred small problem-statement text
+  // enough that Claude Vision OCR returned 422 "couldn't find a problem"
+  // even on captures of legitimate LeetCode tabs. We cap at 2560 wide
+  // so a 4K capture still fits in the backend's 10MB JSON limit while
+  // staying well above OCR's readability threshold.
   const grabFrame = useCallback(async (stream: MediaStream): Promise<string> => {
     const track = stream.getVideoTracks()[0];
     const video = document.createElement('video');
@@ -56,8 +61,13 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     // Wait for first decoded frame
     await new Promise(r => setTimeout(r, 200));
     const settings = track.getSettings();
-    const w = video.videoWidth || settings.width || 1280;
-    const h = video.videoHeight || settings.height || 720;
+    const srcW = video.videoWidth || settings.width || 1280;
+    const srcH = video.videoHeight || settings.height || 720;
+    const MAX_W = 2560;
+    const scale = srcW > MAX_W ? MAX_W / srcW : 1;
+    const w = Math.round(srcW * scale);
+    const h = Math.round(srcH * scale);
+    console.info(`[capture] source ${srcW}×${srcH}, output ${w}×${h} (scale=${scale.toFixed(2)})`);
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
@@ -66,7 +76,9 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     ctx.drawImage(video, 0, 0, w, h);
     stream.getTracks().forEach(t => t.stop());
     video.srcObject = null;
-    return canvas.toDataURL('image/jpeg', 0.85);
+    const dataUrl = canvas.toDataURL('image/png');
+    console.info(`[capture] PNG payload ${(dataUrl.length / 1024 / 1024).toFixed(2)} MB`);
+    return dataUrl;
   }, []);
 
   // Send the captured frame to the OCR endpoint and surface the result.
