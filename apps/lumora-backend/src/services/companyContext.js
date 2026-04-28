@@ -14,7 +14,7 @@
  * culture frame from companyCulture.js is the fallback.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 
 const FETCH_TIMEOUT_MS = 6000;
 const FETCH_BUDGET_MS = 14000;       // total time across all sources per company

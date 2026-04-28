@@ -6,7 +6,7 @@
  * across devices and browsers. Same pattern as lumora_prep_state.
  */
 import { Router } from 'express';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
