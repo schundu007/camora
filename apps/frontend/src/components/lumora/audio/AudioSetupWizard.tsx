@@ -248,32 +248,60 @@ export function AudioSetupWizard({
     // before grabbing the device again — a half-released device flap
     // is what triggered the AudioContext-error console spam.
     await stopMicMonitor();
+
+    // Helper: try a getUserMedia call with these constraints, return the
+    // resulting stream or rethrow.
+    const tryAcquire = (constraints: MediaStreamConstraints) =>
+      navigator.mediaDevices.getUserMedia(constraints);
+
+    let stream: MediaStream | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      stream = await tryAcquire({
         audio: deviceId ? { deviceId: { exact: deviceId } } : true,
       });
-      micStreamRef.current = stream;
-      const ctx = new AudioContext();
-      micCtxRef.current = ctx;
-      const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      const tick = () => {
-        analyser.getByteFrequencyData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          const v = data[i] / 255;
-          sum += v * v;
+    } catch (err: any) {
+      // Stale `prefs.micDeviceId` referencing a now-unavailable device
+      // (unplugged USB mic, removed BlackHole, prior session id) blew
+      // the wizard up with a tight retry loop that spammed
+      // "AudioContext encountered an error". Recover by clearing the
+      // stale id from prefs and retrying with the default mic.
+      if (err?.name === 'NotFoundError' && deviceId) {
+        console.warn('[AudioWizard] saved mic not found; clearing and retrying with default', deviceId);
+        try {
+          setPrefs((p) => patchAudioPrefs({ ...p, micDeviceId: null }));
+        } catch { /* ignore */ }
+        try {
+          stream = await tryAcquire({ audio: true });
+        } catch (err2: any) {
+          console.warn('[AudioWizard] mic monitor fallback failed', err2);
+          return;
         }
-        setMicLevel(Math.sqrt(sum / data.length));
-        micRafRef.current = requestAnimationFrame(tick);
-      };
-      tick();
-    } catch (err) {
-      console.warn('[AudioWizard] mic monitor failed', err);
+      } else {
+        console.warn('[AudioWizard] mic monitor failed', err);
+        return;
+      }
     }
+
+    if (!stream) return;
+    micStreamRef.current = stream;
+    const ctx = new AudioContext();
+    micCtxRef.current = ctx;
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    src.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const tick = () => {
+      analyser.getByteFrequencyData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = data[i] / 255;
+        sum += v * v;
+      }
+      setMicLevel(Math.sqrt(sum / data.length));
+      micRafRef.current = requestAnimationFrame(tick);
+    };
+    tick();
   }, [stopMicMonitor]);
 
   useEffect(() => {
