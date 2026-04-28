@@ -400,8 +400,22 @@ export function AudioSetupWizard({
       void stopMicMonitor();
       return;
     }
-    void startMicMonitor(prefs.micDeviceId);
-    return () => { void stopMicMonitor(); };
+    // Defer the wizard's getUserMedia by ~400 ms so the live AudioCapture
+    // (which auto-starts on mount with its own 200 ms delay) wins the
+    // race for the device. If candidateMicActive flips true during the
+    // wait, abort — that's the live capture already taking the stream
+    // and our second getUserMedia call would emit the AudioContext
+    // "encountered an error" log entry on Chromium / macOS.
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      void startMicMonitor(prefs.micDeviceId);
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      void stopMicMonitor();
+    };
   }, [open, permissionGranted, candidateMicActive, interviewer.active, prefs.micDeviceId, startMicMonitor, stopMicMonitor]);
 
   /* ── Screen Recording TCC status (macOS only, electron-loopback) ── */
