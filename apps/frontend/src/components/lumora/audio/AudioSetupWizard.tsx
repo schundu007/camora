@@ -109,14 +109,18 @@ export function AudioSetupWizard({
   const [micLevel, setMicLevel] = useState(0);
   const [speakerTestPlaying, setSpeakerTestPlaying] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const sessionDismissed = useRef<boolean>((() => {
+  // sessionDismissed must be STATE — using a ref meant the dismiss
+  // handler set the value but never triggered a re-render, so the
+  // open-useMemo wouldn't recompute and Skip / X / Escape all looked
+  // dead from the user's perspective.
+  const [sessionDismissed, setSessionDismissed] = useState<boolean>(() => {
     try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch { return false; }
-  })());
+  });
   // External force-open trigger (e.g. icon-rail "Audio check" entry).
   const [externalForceOpen, setExternalForceOpen] = useState(false);
   useEffect(() => {
     const handler = () => {
-      sessionDismissed.current = false;
+      setSessionDismissed(false);
       try { sessionStorage.removeItem(SESSION_KEY); } catch {}
       setExternalForceOpen(true);
     };
@@ -127,17 +131,17 @@ export function AudioSetupWizard({
   /* ── visibility ─────────────────────────────────────────────────── */
   const open = useMemo(() => {
     if (forceOpen || externalForceOpen) return true;
-    if (sessionDismissed.current) return false;
+    if (sessionDismissed) return false;
     // Mic-only never sets `everConnected` (no second stream), so trust
     // setupCompleted on its own. For other methods we want a live
     // connection before we suppress the wizard.
     if (prefs.setupCompleted && (everConnected || prefs.captureMethod === 'mic-only')) return false;
     return true;
-  }, [forceOpen, externalForceOpen, prefs.setupCompleted, everConnected, prefs.captureMethod]);
+  }, [forceOpen, externalForceOpen, sessionDismissed, prefs.setupCompleted, everConnected, prefs.captureMethod]);
 
   const dismiss = useCallback(() => {
     try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
-    sessionDismissed.current = true;
+    setSessionDismissed(true);
     setExternalForceOpen(false);
     // Stop the wizard's mic-monitor stream immediately so it can't
     // overlap with the live AudioCapture's getUserMedia call. Without
