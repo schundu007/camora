@@ -403,7 +403,27 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const sd = result?.systemDesign;
 
   return (
-    <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
+    <div
+      className={embedded ? 'flex-1 flex flex-col min-h-0 relative' : 'h-screen w-full flex flex-col lumora-app-bg relative'}
+      style={
+        embedded
+          ? {
+              // Subtle atmospheric backdrop layered behind the panels —
+              // navy spotlight at top-left + cyan wash at bottom-right.
+              background:
+                'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(38,97,156,0.08), transparent 70%),' +
+                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(34,211,238,0.06), transparent 70%)',
+            }
+          : undefined
+      }
+    >
+      <style>{`
+        @keyframes design-pulse-ring {
+          0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.45); }
+          70%  { box-shadow: 0 0 0 10px rgba(38,97,156,0); }
+          100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+        }
+      `}</style>
       {/* Header — hidden when embedded in LumoraShell */}
       {!embedded && (
       <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
@@ -476,9 +496,22 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(38,97,156,0.06)] border border-[rgba(38,97,156,0.2)] rounded-lg">
-              <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
-              <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+              style={{
+                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(34,211,238,0.10) 100%)',
+                border: '1px solid rgba(38,97,156,0.42)',
+                boxShadow: '0 0 18px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{
+                  background: 'var(--cam-gold-leaf-lt)',
+                  animation: 'design-pulse-ring 1.4s ease-out infinite',
+                }}
+              />
+              <span className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">Generating</span>
             </div>
           )}
 
