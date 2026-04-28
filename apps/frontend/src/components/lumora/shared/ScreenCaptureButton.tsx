@@ -100,44 +100,64 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     setStatus(null);
   }, [kind, onCaptured, token]);
 
-  // Capture a specific source by id (Electron only — uses chromeMediaSourceId).
+  // Capture a specific source by id. On desktop we route through the
+  // main-process IPC `capture-source-image` which calls desktopCapturer
+  // with a 4096-pixel thumbnail and returns the source's actual content
+  // at full native resolution — bypassing Chromium's video-pipeline
+  // downscaling that produced unreadably small images from the
+  // previous getUserMedia({ chromeMediaSourceId }) path. Falls back to
+  // the video-pipeline path if the IPC isn't available (older desktop
+  // build) or returns null (Screen Recording denied).
   const captureBySourceId = useCallback(async (sourceId: string) => {
     setBusy(true);
     setStatus('Capturing…');
-    let stream: MediaStream | null = null;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          // @ts-ignore — Chromium-specific constraints accepted by Electron's
-          // desktopCapturer for chromeMediaSourceId-based capture. Without
-          // maxWidth/maxHeight the default frame is small (~640×360) and
-          // Claude Vision OCR fails with 422 "couldn't find a problem".
-          // Bump to 4K so a full LeetCode / HackerRank tab captures every
-          // line of the problem statement at readable resolution.
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-            minWidth: 1280,
-            maxWidth: 3840,
-            minHeight: 720,
-            maxHeight: 2160,
-            maxFrameRate: 1,
-          },
-        } as any,
-      });
-      const dataUrl = await grabFrame(stream);
-      stream = null;
+      const camo = (window as any).camo;
+      let dataUrl: string | null = null;
+
+      if (typeof camo?.captureSourceImage === 'function') {
+        const png: string | null = await camo.captureSourceImage(sourceId);
+        if (png && png.startsWith('data:image/')) {
+          console.info(`[capture] received ${(png.length / 1024 / 1024).toFixed(2)} MB PNG from main`);
+          dataUrl = png;
+        } else {
+          console.warn('[capture] capture-source-image returned no data, falling back to getUserMedia');
+        }
+      }
+
+      if (!dataUrl) {
+        // Fallback: Chromium video pipeline (legacy path). Used only if
+        // the new IPC isn't installed yet or returned null.
+        let stream: MediaStream | null = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              // @ts-ignore — Chromium-specific constraints accepted by Electron
+              mandatory: {
+                chromeMediaSource: 'desktop',
+                chromeMediaSourceId: sourceId,
+                minWidth: 1280,
+                maxWidth: 3840,
+                minHeight: 720,
+                maxHeight: 2160,
+                maxFrameRate: 1,
+              },
+            } as any,
+          });
+          dataUrl = await grabFrame(stream);
+        } finally {
+          if (stream) stream.getTracks().forEach(t => t.stop());
+        }
+      }
+
+      if (!dataUrl) throw new Error('No image captured (Screen Recording permission may be denied)');
       await ocrAndDeliver(dataUrl);
       setStatus(null);
     } catch (err: any) {
       console.error('[capture] source capture failed:', err);
-      // Keep the error visible — auto-clearing meant the user clicked
-      // capture, picked a window, the modal closed, and they saw nothing
-      // because the toast had already cleared by the time they looked.
       setStatus(err?.message || 'Capture failed');
     } finally {
-      if (stream) stream.getTracks().forEach(t => t.stop());
       setBusy(false);
     }
   }, [grabFrame, ocrAndDeliver]);

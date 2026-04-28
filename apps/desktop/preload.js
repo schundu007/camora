@@ -27,9 +27,14 @@ contextBridge.exposeInMainWorld('camo', {
   relaunch: () => ipcRenderer.invoke('relaunch-app'),
   // Source list for the "Capture problem" picker. Returns an array of
   // { id, name, kind: 'screen' | 'window', thumbnail (dataUrl) } so
-  // the renderer can render its own picker modal and pass back a
-  // chosen source id to seed getUserMedia({ chromeMediaSourceId }).
+  // the renderer can render its own picker modal.
   listCaptureSources: () => ipcRenderer.invoke('list-capture-sources'),
+  // Re-fetch the chosen source at full native resolution (up to 4096px)
+  // and return its PNG dataURL. Bypasses Chromium's video pipeline so
+  // the OCR'd image isn't downscaled — required because the previous
+  // getUserMedia({chromeMediaSourceId}) path returned an unreadably
+  // small frame that Claude Vision rejected with 422.
+  captureSourceImage: (sourceId) => ipcRenderer.invoke('capture-source-image', sourceId),
   onUpdateAvailable: (cb) => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.on('update-available', (_, info) => cb(info));
