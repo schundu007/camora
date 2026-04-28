@@ -1063,12 +1063,20 @@ router.post('/capture', authenticate, async (req, res) => {
 
     const isDesign = kind === 'design';
     const prompt = isDesign
-      ? `Extract the SYSTEM DESIGN interview question from this screenshot. Return ONLY the problem statement — the company/platform asking, the product or system to design, any scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary. If the screenshot does not contain a system design question, reply with exactly: NO_PROBLEM_FOUND.`
-      : `Extract the CODING interview problem from this screenshot. Return the full problem statement exactly: description, input format, output format, constraints, and all example cases (input / output / explanation). Preserve code blocks, example formatting, and math/exponent notation. Do not solve it, do not add commentary or headers like "Problem:". If the screenshot does not contain a coding problem, reply with exactly: NO_PROBLEM_FOUND.`;
+      ? `You are extracting a SYSTEM DESIGN interview question from a screenshot. Return ONLY the problem statement — the company/platform asking, the product or system to design, any scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary or headers.
+
+The screenshot may show a window where the problem is partially visible (scrolled, split-pane editor, dark-mode code panel). Even if you only see the problem TITLE and a couple of lines, return what you can read — partial extraction is far more useful than a refusal. Only reply with exactly NO_PROBLEM_FOUND if the screenshot truly contains zero design-question text (e.g., it's a blank window, a terminal, or a totally unrelated app).`
+      : `You are extracting a CODING interview problem from a screenshot. Return the problem statement: description, input format, output format, constraints, and example cases when they're visible. Preserve code blocks, example formatting, and math/exponent notation. Do not solve it, do not add commentary or headers like "Problem:".
+
+The screenshot may show a window where the problem is partially visible (scrolled past the title, split-pane editor with the problem panel collapsed, dark-mode code panel covering text). Even if you only see the problem TITLE plus a few lines, return what you can read — partial extraction is far more useful than a refusal. If you see a recognizable LeetCode/HackerRank/CodeSignal problem title (e.g., "Two Sum", "Valid Parentheses"), include it even when the body is offscreen. Only reply with exactly NO_PROBLEM_FOUND if the screenshot truly contains zero coding-problem text (e.g., it's a blank window, a terminal showing only a shell prompt, or a totally unrelated app like Slack/Mail).`;
 
     const client = anthropicClient;
+    // Sonnet 4.5 — Haiku 4.5 was over-refusing on legitimate captures
+    // (returning NO_PROBLEM_FOUND on partial-but-readable screenshots
+    // of LeetCode tabs in dark mode, split-pane editors, etc.). Sonnet
+    // is more accurate at OCR + content classification on small text.
     const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2000,
       messages: [{
         role: 'user',
@@ -1082,7 +1090,7 @@ router.post('/capture', authenticate, async (req, res) => {
     const problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
 
     if (!problem || problem === 'NO_PROBLEM_FOUND') {
-      return res.status(422).json({ error: "Couldn't find a problem in that screenshot. Try capturing the tab with the problem statement visible." });
+      return res.status(422).json({ error: "Couldn't find a problem in that screenshot. Make sure the LeetCode/HackerRank tab is visible (not minimized, not hidden behind another window) and the problem statement is on screen — then try CAPTURE again." });
     }
 
     res.json({ problem, kind: isDesign ? 'design' : 'coding' });
