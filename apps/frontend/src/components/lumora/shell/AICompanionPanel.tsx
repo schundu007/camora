@@ -157,15 +157,51 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // doesn't ship off the edge on small windows. 400×560 is the desktop
   // default; on phones the panel claims most of the width with a 24px
   // gutter and stays within the visible vertical area.
-  const [panelWidth, setPanelWidth] = useState(() =>
-    typeof window === 'undefined' ? 400 : Math.min(400, Math.max(280, window.innerWidth - 48))
-  );
-  const [panelHeight, setPanelHeight] = useState(() =>
-    typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96))
-  );
-  const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh'>(false);
+  //
+  // Size + position persist via localStorage so the panel keeps the
+  // exact dimensions the user picked across reloads — interview-day
+  // setup is one-and-done.
+  const PANEL_PREFS_KEY = 'lumora_sona_panel_v1';
+  const loadPanelPrefs = () => {
+    try {
+      const raw = localStorage.getItem(PANEL_PREFS_KEY);
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (typeof p?.w !== 'number' || typeof p?.h !== 'number') return null;
+      return p as { w: number; h: number; x: number; y: number };
+    } catch { return null; }
+  };
+  const savedPrefs = typeof window === 'undefined' ? null : loadPanelPrefs();
+  const [panelWidth, setPanelWidth] = useState(() => {
+    if (savedPrefs?.w && typeof window !== 'undefined') {
+      return Math.min(savedPrefs.w, window.innerWidth - 16);
+    }
+    return typeof window === 'undefined' ? 400 : Math.min(400, Math.max(280, window.innerWidth - 48));
+  });
+  const [panelHeight, setPanelHeight] = useState(() => {
+    if (savedPrefs?.h && typeof window !== 'undefined') {
+      return Math.min(savedPrefs.h, window.innerHeight - 16);
+    }
+    return typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96));
+  });
+  const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh' | 'e' | 's' | 'es'>(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState(() => savedPrefs ? { x: savedPrefs.x, y: savedPrefs.y } : { x: 0, y: 0 });
+
+  // Debounced write-through of size + position
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(PANEL_PREFS_KEY, JSON.stringify({
+          w: panelWidth,
+          h: panelHeight,
+          x: position.x,
+          y: position.y,
+        }));
+      } catch { /* ignore */ }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [panelWidth, panelHeight, position.x, position.y]);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; mode: string } | null>(null);
@@ -211,19 +247,34 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     dragRef.current = { startX: e.clientX, startY: e.clientY, origX: position.x, origY: position.y };
   };
 
-  // Resize handlers — edges and corner
+  // Resize handlers — edges and corners. The panel is anchored to the
+  // bottom-right; left/top handles grow it INWARD (dragging away from
+  // the anchor), right/bottom handles grow it OUTWARD. Max width/height
+  // clamp to viewport so the user can fill the screen on big monitors
+  // (was capped at 800×900 — too small for 4K + ultrawide setups).
   useEffect(() => {
     if (!isResizing) return;
     const handleMove = (e: MouseEvent) => {
       if (!resizeRef.current) return;
       const r = resizeRef.current;
+      const maxW = typeof window !== 'undefined' ? window.innerWidth - 16 : 1600;
+      const maxH = typeof window !== 'undefined' ? window.innerHeight - 16 : 1200;
+
+      // Width — left handles use (startX - e.clientX), right handles use (e.clientX - startX)
       if (r.mode === 'w' || r.mode === 'wh') {
         const dX = r.startX - e.clientX;
-        setPanelWidth(Math.min(Math.max(300, r.startW + dX), 800));
+        setPanelWidth(Math.min(Math.max(300, r.startW + dX), maxW));
+      } else if (r.mode === 'e' || r.mode === 'es') {
+        const dX = e.clientX - r.startX;
+        setPanelWidth(Math.min(Math.max(300, r.startW + dX), maxW));
       }
+      // Height — top handles use (startY - e.clientY), bottom handles use (e.clientY - startY)
       if (r.mode === 'h' || r.mode === 'wh') {
         const dY = r.startY - e.clientY;
-        setPanelHeight(Math.min(Math.max(300, r.startH + dY), 900));
+        setPanelHeight(Math.min(Math.max(300, r.startH + dY), maxH));
+      } else if (r.mode === 's' || r.mode === 'es') {
+        const dY = e.clientY - r.startY;
+        setPanelHeight(Math.min(Math.max(300, r.startH + dY), maxH));
       }
     };
     const handleUp = () => { setIsResizing(false); resizeRef.current = null; };
@@ -353,12 +404,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         transition: isDragging ? 'none' : 'all 0.2s ease',
       }}
     >
-      {/* Resize handles — left edge, top edge, top-left corner */}
+      {/* Resize handles — all four edges + all four corners. Mac-window-
+          style: drag any edge to grow in that direction, drag a corner
+          for diagonal resize. */}
       {!maximized && (
         <>
+          {/* Edges */}
           <div className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('w'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'w' }; }} />
+          <div className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('e'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'e' }; }} />
           <div className="absolute left-0 top-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('h'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'h' }; }} />
+          <div className="absolute left-0 bottom-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('s'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 's' }; }} />
+          {/* Corners */}
           <div className="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('wh'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'wh' }; }} />
+          <div className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('es'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'es' }; }} />
         </>
       )}
 
