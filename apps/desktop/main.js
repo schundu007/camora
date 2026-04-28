@@ -1,6 +1,8 @@
 const { app, BrowserWindow, globalShortcut, systemPreferences, session, shell, nativeImage, ipcMain, desktopCapturer } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const { execFile } = require('child_process');
 const { createTray } = require('./tray');
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -369,61 +371,59 @@ ipcMain.handle('relaunch-app', () => {
 // the interviewer-audio loopback path uses the auto-pick handler in
 // setDisplayMediaRequestHandler above (no picker — it just needs
 // system audio, any screen will do).
-ipcMain.handle('list-capture-sources', async () => {
-  try {
-    // Smaller thumbnails — desktopCapturer.getSources is dominated by
-    // thumbnail rendering time. 160×100 is enough to recognise a window
-    // visually and is ~4× faster than 320×200 on a multi-window desktop.
-    const sources = await desktopCapturer.getSources({
-      types: ['window', 'screen'],
-      thumbnailSize: { width: 160, height: 100 },
-      fetchWindowIcons: false,
-    });
-    return sources.map((s) => ({
-      id: s.id,
-      name: s.name,
-      // Use display_id so screen vs. window can be distinguished by the
-      // renderer; window IDs look like "window:<n>:<n>", screens look
-      // like "screen:<n>:0".
-      kind: s.id.startsWith('screen:') ? 'screen' : 'window',
-      thumbnail: s.thumbnail.toDataURL(),
-    }));
-  } catch (err) {
-    console.error('[capture] list-capture-sources failed:', err);
-    return [];
-  }
-});
+// One-shot screenshot for the "Capture problem" flow. Replaces the
+// previous in-app picker + chromeMediaSourceId pipeline (which had
+// resolution problems and a 5-second picker open). Now: shell out to
+// macOS's native `screencapture -i`, which:
+//
+//   • shows the user the standard ⌘⇧4 crosshair (familiar UX)
+//   • lets them press SPACE to switch to window-selection mode + click
+//     the LeetCode / HackerRank window (or drag a rectangle)
+//   • captures at the window's actual native resolution (no downscale)
+//   • respects Screen Recording TCC (same permission gate as before)
+//
+// We hide the Camora window briefly so the user can see/click their
+// LeetCode tab underneath, then bring Camora back up.
+//
+// Returns null on cancel (user pressed Esc) or capture failure.
+ipcMain.handle('capture-screenshot', async () => {
+  if (process.platform !== 'darwin') return null;
 
-// Re-fetch a source at full native resolution and return its PNG dataURL
-// for OCR. This is the canonical capture path now: getSources with a
-// 4096-pixel thumbnail returns the source's actual content at native
-// size (capped to that limit), bypassing Chromium's video-pipeline
-// downscaling that produced unreadably small JPEGs from the previous
-// getUserMedia({ chromeMediaSourceId }) approach. macOS Screen
-// Recording TCC is still required.
-ipcMain.handle('capture-source-image', async (_e, sourceId) => {
+  // Hide our own window so it's not in the user's way / accidentally
+  // selected. The renderer's modal also hides itself.
+  const restoreFocus = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
+  if (restoreFocus) mainWindow.hide();
+
+  const tmp = path.join(os.tmpdir(), `camora-cap-${Date.now()}-${process.pid}.png`);
   try {
-    if (!sourceId) return null;
-    const sources = await desktopCapturer.getSources({
-      types: ['window', 'screen'],
-      thumbnailSize: { width: 4096, height: 4096 },
-      fetchWindowIcons: false,
+    await new Promise((resolve, reject) => {
+      // -i  interactive (crosshair; SPACE → window picker; ESC → cancel)
+      // -t  output format
+      // -o  no shadow on window captures
+      // -x  no camera-shutter sound
+      execFile('/usr/sbin/screencapture', ['-i', '-t', 'png', '-o', '-x', tmp], (err) => {
+        if (err) reject(err); else resolve(null);
+      });
     });
-    const target = sources.find((s) => s.id === sourceId);
-    if (!target) {
-      console.warn('[capture] source not found:', sourceId);
+    // If the user pressed Esc or selected nothing, screencapture exits
+    // cleanly without writing a file.
+    if (!fs.existsSync(tmp)) {
+      console.info('[capture] cancelled (no file written)');
       return null;
     }
-    if (target.thumbnail.isEmpty()) {
-      console.warn('[capture] empty thumbnail for', sourceId, '— Screen Recording denied?');
-      return null;
-    }
-    const size = target.thumbnail.getSize();
-    console.info(`[capture] source-image ${size.width}×${size.height} for ${sourceId}`);
-    return target.thumbnail.toDataURL();
+    const buf = fs.readFileSync(tmp);
+    fs.unlinkSync(tmp);
+    console.info(`[capture] screenshot ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+    return 'data:image/png;base64,' + buf.toString('base64');
   } catch (err) {
-    console.error('[capture] capture-source-image failed:', err);
+    console.error('[capture] screencapture failed:', err);
+    try { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); } catch {}
     return null;
+  } finally {
+    if (restoreFocus && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
   }
 });
 
