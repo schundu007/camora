@@ -359,16 +359,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         handleToggle();
       }
 
-      // Backtick (`): one-key mic start/stop. Cheap to reach mid-
-      // interview without a chord. The editable-element guard above
-      // already prevents conflicts when the user is typing in a
-      // textarea/Monaco/contentEditable. Match by code (Backquote)
-      // so it works on layouts where shift+` produces ~.
-      if ((e.key === '`' || e.code === 'Backquote') && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        handleToggle();
-      }
-
       // Escape: Stop mic
       if (SHORTCUTS.STOP_MIC.includes(e.key) && storeIsRecording) {
         e.preventDefault();

@@ -164,56 +164,19 @@ export function AudioSetupWizard({
 
   const requestPermission = useCallback(async () => {
     setPermissionError(null);
-
-    // Desktop app path: Chromium's getUserMedia silently returns
-    // NotFoundError on macOS when AVCaptureDevice authorization is
-    // anything but 'authorized' — it does NOT trigger the native OS
-    // prompt itself. Only `systemPreferences.askForMediaAccess` does.
-    // Route through the main-process bridge first so the user actually
-    // sees the macOS "Camora wants to access the microphone" dialog.
-    // If TCC already says 'denied' (sticky from a prior denial),
-    // openSystemPrivacy('Microphone') jumps straight to the right pane.
-    const camo = (window as any).camo;
-    if (camo?.askForMediaAccess) {
-      try {
-        const status: string | undefined = camo.getMediaAccessStatus
-          ? await camo.getMediaAccessStatus('microphone')
-          : undefined;
-        if (status === 'denied') {
-          camo.openSystemPrivacy?.('Microphone');
-          setPermissionError(
-            'Microphone access was previously denied. We just opened System Settings → Privacy & Security → Microphone. Toggle Camora ON, then come back and click Refresh.',
-          );
-          setPermissionGranted(false);
-          return false;
-        }
-        if (status !== 'granted') {
-          await camo.askForMediaAccess('microphone');
-        }
-      } catch {
-        // fall through to getUserMedia path
-      }
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setPermissionGranted(true);
       return true;
     } catch (err: any) {
-      const isDesktop = !!camo?.isDesktop;
       const msg = err?.name === 'NotAllowedError'
         ? 'Microphone permission was denied. On macOS, check System Settings → Privacy & Security → Microphone. In the browser, click the lock icon in the address bar → Site settings → Microphone → Allow.'
         : err?.name === 'NotFoundError'
-        ? isDesktop
-          ? 'macOS hasn\'t granted Camora microphone access yet. We just opened System Settings — toggle Camora ON under Privacy & Security → Microphone, then click Refresh.'
-          : 'No microphone found. Plug one in or check your audio device settings.'
+        ? 'No microphone found. Plug one in or check your audio device settings.'
         : err?.name === 'NotReadableError'
         ? 'Another app is using your mic. Close Zoom/Teams/Slack/QuickTime and try again.'
         : `Microphone access failed: ${err?.message || err?.name || 'unknown error'}`;
-      if (err?.name === 'NotFoundError' && isDesktop) {
-        camo?.openSystemPrivacy?.('Microphone');
-      }
       setPermissionError(msg);
       setPermissionGranted(false);
       return false;
