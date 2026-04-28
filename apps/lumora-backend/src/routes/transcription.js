@@ -187,19 +187,44 @@ router.post(
       const rawText = await transcribe(file.buffer, file.originalname || 'audio.webm');
       const latencyMs = Math.round(performance.now() - start);
 
-      // Filter Whisper hallucinations (phantom text on silence/low audio)
+      // Filter Whisper hallucinations (phantom text on silence/low audio).
+      // Whisper trained on YouTube falls back to outros/outtros on silence
+      // ("thanks for watching", "subscribe"), single short foreign tokens
+      // ("lanja", "uh", isolated kana/cyrillic chars), or generic ack words
+      // ("okay", "you"). These never reflect a real interview question,
+      // and letting them through pollutes the QUESTIONS panel + wastes an
+      // LLM call. The frontend has a parallel filter in AudioCapture.tsx
+      // (isLikelyRealSpeech) for defense in depth — if either side drops
+      // the chunk, it never reaches the accumulator.
       const HALLUCINATION_PATTERNS = [
         /^thank(s| you)?\s*(for)?\s*(watching|listening|viewing|tuning in)/i,
         /^(please\s+)?(like\s+and\s+)?subscribe/i,
         /^(bye|goodbye|see you)\s*(next time|later|soon)?\.?$/i,
-        /^(okay|ok)\.?\s*$/i,
+        /^(okay|ok|alright|all right)\.?\s*$/i,
+        /^(yeah|yep|yup|nah|nope|uh|um|hmm|huh)\.?\s*$/i,
+        /^you\.?$/i,
+        /^thanks\.?$/i,
+        /^thank you( so much| very much)?\.?$/i,
+        /^(see you|see ya|cya|goodnight|good night)\.?$/i,
         /^\.+$/,
+        /^[\s.,!?-]+$/,                  // pure punctuation
         /^(\s*thank you\.?\s*)+$/i,
         /^\s*$/,
       ];
       const trimmed = rawText.trim();
-      if (HALLUCINATION_PATTERNS.some(p => p.test(trimmed))) {
-        console.info(`[Whisper] Filtered hallucination: "${trimmed}"`);
+      const isHallucinationByPattern = HALLUCINATION_PATTERNS.some(p => p.test(trimmed));
+
+      // Single short token without punctuation is almost always
+      // hallucination — Whisper picking a random word out of silence
+      // / room noise. A real interview question is at least a few
+      // words; a one-word follow-up like "really?" carries punctuation
+      // and gets through the regex above.
+      const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+      const hasTerminalPunct = /[?!.]$/.test(trimmed);
+      const isShortNoise = wordCount <= 1 && trimmed.length < 14 && !hasTerminalPunct;
+
+      if (isHallucinationByPattern || isShortNoise) {
+        console.info(`[Whisper] Filtered hallucination: "${trimmed}" (pattern=${isHallucinationByPattern}, shortNoise=${isShortNoise})`);
         return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered' });
       }
 

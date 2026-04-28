@@ -20,6 +20,33 @@ const SHORTCUTS = {
   STOP_MIC: ['Escape'] as string[],
 };
 
+// Whisper hallucinates on near-silence with random short tokens that
+// the backend's regex filter doesn't catch ("lanja", "you", "uh",
+// foreign-language fragments, etc.). We discard these on the frontend
+// before they pollute the question accumulator.
+//
+// Heuristic: a real interview question is rarely a single short word.
+// We require either:
+//   • >= 3 words, OR
+//   • >= 14 chars, OR
+//   • ends with `?` or `!` (decisive — punctuation almost never appears
+//     in hallucinated chunks)
+//
+// This is intentionally conservative: false negatives (rejecting a
+// legitimate "what?" follow-up) are recoverable — the user just speaks
+// a fuller sentence. False positives (passing through "lanja") wreck
+// the QUESTIONS panel and waste an LLM call.
+function isLikelyRealSpeech(raw: string): boolean {
+  const text = (raw || '').trim();
+  if (!text) return false;
+  const last = text.slice(-1);
+  if (last === '?' || last === '!') return true;
+  const words = text.split(/\s+/);
+  if (words.length >= 3) return true;
+  if (text.length >= 14) return true;
+  return false;
+}
+
 interface AudioCaptureProps {
   onTranscription?: (text: string) => void;
   autoStart?: boolean;
@@ -183,11 +210,18 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           setShouldRestart(true);
           return;
         }
-        if (result.text) {
+        if (result.text && isLikelyRealSpeech(result.text)) {
           accumulatedTextRef.current += ' ' + result.text;
           lastChunkTimeRef.current = Date.now();
           setStatus('listen', `Heard: "${accumulatedTextRef.current.trim().slice(-60)}..."`);
           scheduleQuestionCheck();
+        } else if (result.text) {
+          // Suspected hallucination on a near-silent chunk — log and
+          // discard. The transcript is shown in status briefly so the
+          // user can tell we're still alive, but it never reaches the
+          // accumulator and never gets sent to Sona.
+          console.info('[Live] Discarding suspected hallucination:', result.text);
+          setStatus('listen', 'Listening...');
         }
         setShouldRestart(true);
       } catch (err: any) {
