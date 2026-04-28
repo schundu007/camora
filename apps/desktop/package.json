@@ -42,7 +42,13 @@
       "entitlements": "entitlements.mac.plist",
       "entitlementsInherit": "entitlements.mac.plist",
       "darkModeSupport": true,
-      "identity": "Camora Local Dev"
+      "identity": "Camora Local Dev",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Camora needs microphone access to transcribe your interview audio in real time.",
+        "NSCameraUsageDescription": "Camora may use the camera during interview practice sessions.",
+        "NSScreenCaptureUsageDescription": "Camora captures the screen so it can read coding/system-design problems and share interviewer audio with the AI.",
+        "NSAppleEventsUsageDescription": "Camora uses Apple events for window automation."
+      }
     },
     "dmg": {
       "title": "Camora",
