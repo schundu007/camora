@@ -2106,6 +2106,125 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     setJdFetching(false);
   };
 
+  // Build a clean printable HTML document for one or all sections and
+  // open it in a new window so the user can print or "Save as PDF" from
+  // their OS print dialog. Light-mode styled regardless of the app's
+  // theme so the output is readable on paper.
+  const printableStylesheet = `
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; padding: 48px; max-width: 760px; margin: 0 auto; color: #111827; line-height: 1.55; }
+    header { margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid #0F1B2D; }
+    header h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px 0; color: #0F1B2D; }
+    header .meta { font-size: 12px; color: #6B7280; }
+    h2 { font-size: 18px; margin: 28px 0 10px 0; color: #0F1B2D; padding-bottom: 4px; border-bottom: 1px solid #E5E7EB; }
+    h3 { font-size: 15px; margin: 18px 0 6px 0; color: #1F2937; }
+    p { margin: 0 0 10px 0; }
+    ul, ol { margin: 0 0 12px 0; padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    code { font-family: 'IBM Plex Mono', Menlo, monospace; font-size: 12px; background: #F3F4F6; padding: 1px 4px; border-radius: 3px; }
+    pre { background: #F3F4F6; padding: 12px 14px; border-radius: 6px; font-size: 12px; overflow-x: auto; margin: 10px 0; }
+    pre code { background: none; padding: 0; }
+    .section { page-break-inside: avoid; }
+    .section + .section { page-break-before: always; margin-top: 0; }
+    .pre-wrap { white-space: pre-wrap; }
+    @media print { body { padding: 24px; max-width: none; } }
+  `;
+
+  const renderSectionToHtml = useCallback((sectionId: string, sectionContent: any): string => {
+    const label = SIDEBAR_SECTIONS.find((s) => s.id === sectionId)?.label || sectionId;
+    if (!sectionContent) return '';
+    // Convert the structured object/string into a printable HTML body.
+    // We deliberately serialise to a text-first format (keys → headings,
+    // arrays → lists, strings → paragraphs) instead of trying to clone
+    // the React-rendered DOM, which would carry along screen-only
+    // styles that look terrible on paper.
+    const escape = (s: string) => s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    const renderValue = (v: any, depth = 0): string => {
+      if (v === null || v === undefined) return '';
+      if (typeof v === 'string') {
+        // Convert markdown-ish ``` fences to <pre><code>
+        const trimmed = v.trim();
+        if (trimmed.startsWith('```') && trimmed.endsWith('```')) {
+          const body = trimmed.replace(/^```\w*\n?/, '').replace(/```$/, '');
+          return `<pre><code>${escape(body)}</code></pre>`;
+        }
+        // Preserve newlines.
+        return `<p class="pre-wrap">${escape(v)}</p>`;
+      }
+      if (typeof v === 'number' || typeof v === 'boolean') return `<p>${escape(String(v))}</p>`;
+      if (Array.isArray(v)) {
+        if (v.every((x) => typeof x === 'string' || typeof x === 'number')) {
+          return `<ul>${v.map((x) => `<li>${escape(String(x))}</li>`).join('')}</ul>`;
+        }
+        return v.map((x) => renderValue(x, depth + 1)).join('');
+      }
+      if (typeof v === 'object') {
+        return Object.entries(v).map(([k, val]) => {
+          const heading = k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase()).replace(/_/g, ' ');
+          const headingTag = depth === 0 ? 'h2' : 'h3';
+          return `<${headingTag}>${escape(heading)}</${headingTag}>${renderValue(val, depth + 1)}`;
+        }).join('');
+      }
+      return '';
+    };
+
+    return `<section class="section"><h1 style="font-size:22px;margin:0 0 16px 0;color:#0F1B2D;">${escape(label)}</h1>${renderValue(sectionContent)}</section>`;
+  }, []);
+
+  const openPrintWindow = useCallback((sections: { id: string; content: any }[], titleSuffix: string) => {
+    const company = prepData.activeCompany || 'Interview Prep';
+    const w = window.open('', '_blank', 'width=900,height=1100');
+    if (!w) {
+      // eslint-disable-next-line no-alert
+      window.alert('Pop-up blocked — allow pop-ups for camora.cariara.com to print prep documents.');
+      return;
+    }
+    const dateStr = new Date().toLocaleDateString();
+    const body = sections
+      .filter((s) => s.content)
+      .map((s) => renderSectionToHtml(s.id, s.content))
+      .join('\n');
+    w.document.write(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>${company} — ${titleSuffix} — Camora</title>
+<style>${printableStylesheet}</style></head>
+<body>
+<header>
+  <h1>${company}</h1>
+  <p class="meta">${titleSuffix} · Generated ${dateStr} · Camora Prep Kit</p>
+</header>
+${body || '<p>No generated content yet.</p>'}
+</body></html>`);
+    w.document.close();
+    // Trigger the print dialog after the new window has rendered.
+    const trigger = () => { try { w.focus(); w.print(); } catch { /* ignore */ } };
+    if (w.document.readyState === 'complete') setTimeout(trigger, 250);
+    else w.onload = () => setTimeout(trigger, 250);
+  }, [prepData.activeCompany, renderSectionToHtml, printableStylesheet]);
+
+  const printActiveSection = useCallback(() => {
+    if (!prepData.activeCompany) return;
+    const data = prepData.data[prepData.activeCompany];
+    const content = data?.sections?.[activeSection];
+    if (!content) return;
+    const label = SIDEBAR_SECTIONS.find((s) => s.id === activeSection)?.label || activeSection;
+    openPrintWindow([{ id: activeSection, content }], label);
+  }, [prepData, activeSection, openPrintWindow]);
+
+  const printAllSections = useCallback(() => {
+    if (!prepData.activeCompany) return;
+    const data = prepData.data[prepData.activeCompany];
+    if (!data?.sections) return;
+    const ordered = SIDEBAR_SECTIONS
+      .filter((s) => data.sections[s.id])
+      .map((s) => ({ id: s.id, content: data.sections[s.id] }));
+    if (ordered.length === 0) return;
+    openPrintWindow(ordered, 'Full prep packet');
+  }, [prepData, openPrintWindow]);
+
   const fetchJdUrl = async (url: string) => {
     if (!url.trim()) return;
     setJdFetching(true);
@@ -2650,6 +2769,34 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>Generated</span>
+                )}
+                {state.sections[activeSection] && (
+                  <button
+                    onClick={printActiveSection}
+                    title="Print or save this section as PDF"
+                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                      <path d="M6 9V2h12v7" />
+                      <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                      <rect x="6" y="14" width="12" height="8" />
+                    </svg>
+                    Print / PDF
+                  </button>
+                )}
+                {Object.keys(state.sections).length > 1 && (
+                  <button
+                    onClick={printAllSections}
+                    title="Print or save the full prep packet (all generated sections) as PDF"
+                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Print all
+                  </button>
                 )}
                 {hasRequiredDocs && (
                   <button
