@@ -88,14 +88,12 @@ function createWindow() {
     });
   });
 
-  // Close to tray instead of quitting
-  mainWindow.on('close', (e) => {
-    if (!isQuitting) {
-      e.preventDefault();
-      mainWindow.hide();
-      if (isMac && app.dock) app.dock.hide();
-    }
-  });
+  // Close = quit. The previous behavior preventDefaulted the close
+  // event and hid the window+dock so the process kept running in the
+  // tray; clicking the close button looked like nothing happened, and
+  // reopening reused the same hidden window instead of starting fresh.
+  // The tray icon remains as a quick relaunch entry — clicking it
+  // creates a brand-new window via showWindow().
 
   // Crash recovery with backoff (max 3 attempts)
   mainWindow.webContents.on('render-process-gone', (_, details) => {
@@ -273,8 +271,13 @@ app.on('will-quit', () => {
   globalShortcut.unregisterAll();
 });
 
+// Quit on every platform when the last window closes. macOS apps
+// conventionally stay running with no windows, but Camora is a
+// single-window app and the user reported closing it didn't fully
+// terminate the process — matching the user's expectation that close
+// means close.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  app.quit();
 });
 
 // Deep link protocol: camora://
