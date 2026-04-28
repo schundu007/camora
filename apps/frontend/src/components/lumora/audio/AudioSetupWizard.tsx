@@ -156,15 +156,35 @@ export function AudioSetupWizard({
   }, [dismiss]);
 
   /* ── device enumeration ────────────────────────────────────────── */
-  const enumerate = useCallback(async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) return;
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+
+  const requestPermission = useCallback(async () => {
+    setPermissionError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setPermissionGranted(true);
-    } catch {
-      // continue without permission — labels will be missing
+      return true;
+    } catch (err: any) {
+      const msg = err?.name === 'NotAllowedError'
+        ? 'Microphone permission was denied. On macOS, check System Settings → Privacy & Security → Microphone. In the browser, click the lock icon in the address bar → Site settings → Microphone → Allow.'
+        : err?.name === 'NotFoundError'
+        ? 'No microphone found. Plug one in or check your audio device settings.'
+        : err?.name === 'NotReadableError'
+        ? 'Another app is using your mic. Close Zoom/Teams/Slack/QuickTime and try again.'
+        : `Microphone access failed: ${err?.message || err?.name || 'unknown error'}`;
+      setPermissionError(msg);
+      setPermissionGranted(false);
+      return false;
     }
+  }, []);
+
+  const enumerate = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+    // Always request permission so labels are populated. We previously
+    // swallowed the failure and ended up with an empty mic dropdown
+    // when the user denied or the OS hadn't granted permission.
+    await requestPermission();
     const devs = await navigator.mediaDevices.enumerateDevices();
     setInputs(
       devs
@@ -184,7 +204,7 @@ export function AudioSetupWizard({
           groupId: d.groupId,
         })),
     );
-  }, []);
+  }, [requestPermission]);
 
   useEffect(() => {
     if (!open) return;
@@ -406,19 +426,60 @@ export function AudioSetupWizard({
             title="Your microphone"
             subtitle="The mic that captures your voice."
           >
-            <select
-              value={prefs.micDeviceId || ''}
-              onChange={(e) => setMic(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            >
-              <option value="">System default</option>
-              {inputs.map((d) => (
-                <option key={d.deviceId} value={d.deviceId}>
-                  {d.label}{isVirtualMicLabel(d.label) ? ' — virtual loopback' : ''}
-                </option>
-              ))}
-            </select>
+            {/* Permission / no-devices diagnostics. Until permission is
+                granted, Chrome returns audioinputs with empty labels
+                (or none at all), so the dropdown is useless. Surface a
+                clear retry path instead of silently showing an empty
+                "System default" option. */}
+            {(permissionError || (!permissionGranted && inputs.length <= 1)) && (
+              <div
+                className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
+                style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+              >
+                <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#F59E0B' }} />
+                <div className="flex-1">
+                  <div className="font-bold mb-0.5">Microphone access needed</div>
+                  <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    {permissionError || 'Camora needs permission to list your microphones. Click below.'}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { void enumerate(); }}
+                    className="px-3 py-1 text-[11px] font-bold rounded-md"
+                    style={{ background: 'var(--accent)', color: '#fff' }}
+                  >
+                    Grant microphone access
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <select
+                value={prefs.micDeviceId || ''}
+                onChange={(e) => setMic(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-sm"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              >
+                <option value="">System default</option>
+                {inputs.map((d) => (
+                  <option key={d.deviceId} value={d.deviceId}>
+                    {d.label}{isVirtualMicLabel(d.label) ? ' — virtual loopback' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => { void enumerate(); }}
+                className="px-3 py-2 text-[11px] font-bold rounded-lg"
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                title="Re-enumerate devices (after plugging in a new mic, or granting permission)"
+              >
+                Refresh
+              </button>
+            </div>
+            <div className="text-[10px] mt-1" style={{ color: 'var(--text-dimmed)' }}>
+              {inputs.length} microphone{inputs.length === 1 ? '' : 's'} detected
+            </div>
             <LevelMeter level={micLevel} label="Speak now to test" active={micLevel > 0.012} />
           </Section>
 
@@ -542,6 +603,35 @@ export function AudioSetupWizard({
               title="Connect and verify"
               subtitle="Hit connect, then have the interviewer say something. The bars should rise."
             >
+              {/* Method-mismatch warning. The user picked a method
+                  that requires an environment they aren't in.
+                  Without this, "Connect" silently fails and the user
+                  has no idea why. */}
+              {prefs.captureMethod === 'electron-loopback' && !isElectron() && (
+                <div
+                  className="mb-2 p-2.5 rounded-lg text-[12px]"
+                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                >
+                  <strong>Desktop loopback requires the Camora desktop app.</strong> You're in a regular browser — switch to <em>Share a browser tab</em> above, or download the desktop app.
+                </div>
+              )}
+              {prefs.captureMethod === 'tab-share' && !supportsTabShare() && (
+                <div
+                  className="mb-2 p-2.5 rounded-lg text-[12px]"
+                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                >
+                  <strong>Tab share isn't supported in this browser.</strong> Use Chrome or Edge, the Camora desktop app, or pick <em>Virtual loopback</em> / <em>Mic-only fallback</em>.
+                </div>
+              )}
+              {prefs.captureMethod === 'virtual-mic' && !prefs.virtualMicDeviceId && (
+                <div
+                  className="mb-2 p-2.5 rounded-lg text-[12px]"
+                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                >
+                  <strong>Pick a virtual loopback device above.</strong> Connect won't work until you select a virtual mic.
+                </div>
+              )}
+
               <div className="flex gap-2 items-center mb-2">
                 {!interviewerReady ? (
                   <button
@@ -575,7 +665,12 @@ export function AudioSetupWizard({
                   className="mt-2 rounded-lg p-2.5 text-xs"
                   style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}
                 >
-                  {interviewer.error}
+                  <strong>Connect failed:</strong> {interviewer.error}
+                  {prefs.captureMethod === 'electron-loopback' && (
+                    <div className="mt-1.5" style={{ color: '#dc2626' }}>
+                      On macOS this usually means Screen Recording permission is denied. Open <strong>System Settings → Privacy &amp; Security → Screen Recording</strong>, enable Camora, and quit + relaunch the app.
+                    </div>
+                  )}
                 </div>
               )}
             </Section>
