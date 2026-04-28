@@ -298,31 +298,43 @@ process.on('uncaughtException', (err) => {
 
 // Start
 const PORT = config.port;
-runMigrations().then(() => {
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    logger.info({ port: PORT }, 'Lumora backend started');
-  });
 
-  // Graceful shutdown — stop accepting connections, drain, close the DB pool,
-  // exit. Previously exit happened before closePool so in-flight queries could
-  // be severed and sockets leaked on deploy.
-  let shuttingDown = false;
-  const shutdown = async (signal) => {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    logger.info({ signal }, 'Shutdown signal received');
-    const forceTimer = setTimeout(() => { logger.error('Forced shutdown after timeout'); process.exit(1); }, 15_000);
-    server.close(async () => {
-      logger.info('HTTP server closed');
-      try { await closePool(); logger.info('DB pool closed'); }
-      catch (err) { logger.error({ err: err?.message }, 'closePool failed'); }
-      clearTimeout(forceTimer);
-      process.exit(0);
-    });
-  };
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
+// Bind the HTTP listener BEFORE awaiting migrations so Railway's
+// /health probe can succeed within the 2-minute deadline. Each
+// `query()` blocks up to 10s on connect; with ~50 migrations a slow
+// or unreachable DB would push first-listen past 8 minutes and the
+// service would fail healthcheck → restart loop → never come up.
+//
+// Migrations now run in the background. They're idempotent
+// (CREATE TABLE IF NOT EXISTS) so retrying on the next deploy is
+// safe; a runtime failure surfaces in logs but doesn't block boot.
+const server = app.listen(PORT, '0.0.0.0', () => {
+  logger.info({ port: PORT }, 'Lumora backend listening (migrations running in background)');
 });
+
+runMigrations().catch((err) => {
+  logger.error({ err: err?.message }, 'Background migrations failed');
+});
+
+// Graceful shutdown — stop accepting connections, drain, close the DB pool,
+// exit. Previously exit happened before closePool so in-flight queries could
+// be severed and sockets leaked on deploy.
+let shuttingDown = false;
+const shutdown = async (signal) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info({ signal }, 'Shutdown signal received');
+  const forceTimer = setTimeout(() => { logger.error('Forced shutdown after timeout'); process.exit(1); }, 15_000);
+  server.close(async () => {
+    logger.info('HTTP server closed');
+    try { await closePool(); logger.info('DB pool closed'); }
+    catch (err) { logger.error({ err: err?.message }, 'closePool failed'); }
+    clearTimeout(forceTimer);
+    process.exit(0);
+  });
+};
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason);
