@@ -7,7 +7,7 @@ import SEO from '../../components/shared/SEO';
 import { dialogConfirm, dialogAlert } from '../../components/shared/Dialog';
 import UsageEstimateBadge from '../../components/shared/ui/UsageEstimateBadge';
 
-const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface MemberRow {
   user_id: number;
