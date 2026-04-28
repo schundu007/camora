@@ -88,28 +88,35 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   const scheduleQuestionCheck = useCallback(() => {
     // After receiving a chunk, wait for "no new chunks" before flushing
-    // the accumulated transcript. Punctuation-aware so a single question
-    // doesn't get split into two when the speaker pauses mid-sentence:
+    // the accumulated transcript. We balance two failure modes:
+    //   (a) flush too early → one question becomes 2-3 fragments
+    //   (b) flush too late  → users wait 2-3 extra seconds for Sona
     //
-    //   ends with `?` or `!`  →  900 ms   (done — punctuation is decisive)
-    //   ends with `.`         →  1500 ms  (likely done, but speakers often
-    //                                       continue with another sentence
-    //                                       after a brief breath)
-    //   no terminal punct.    →  2800 ms  (mid-sentence pause — wait long
-    //                                       enough that any natural breath
-    //                                       won't trigger a premature flush)
+    // Heuristic: punctuation + question-shape + length signals.
     //
-    // The previous heuristic dropped to 600 ms whenever isQuestion() tripped
-    // on the partial text, so "tell me about a time <breath> you triaged a
-    // CI failure" would get split — the partial "tell me about a time"
-    // alone trips the interview-verb gate.
+    //   ends with `?` or `!`              →  500 ms   (decisive)
+    //   ends with `.`  AND looks-question →  700 ms   (sentence boundary on
+    //                                                  a question stem)
+    //   ends with `.`                     →  1100 ms  (might continue)
+    //   long (>140 chars) + looks-question →  900 ms  (Whisper-no-punct)
+    //   looks-question                    →  1300 ms  (interview verbs)
+    //   no signals                        →  2000 ms  (mid-sentence pause)
+    //
+    // Whisper rarely emits `?`, so we lean on isQuestion() to decide
+    // whether the stem is the WHOLE question (length > 140 chars in a
+    // questionable shape ≈ a complete utterance).
     if (questionCheckTimerRef.current) clearTimeout(questionCheckTimerRef.current);
     const accumulated = accumulatedTextRef.current.trim();
     const lastChar = accumulated.slice(-1);
+    const looksQuestion = isQuestion(accumulated);
+    const longEnough = accumulated.length > 140;
     const wait =
-      lastChar === '?' || lastChar === '!' ? 900 :
-      lastChar === '.' ? 1500 :
-      2800;
+      lastChar === '?' || lastChar === '!' ? 500 :
+      lastChar === '.' && looksQuestion ? 700 :
+      lastChar === '.' ? 1100 :
+      longEnough && looksQuestion ? 900 :
+      looksQuestion ? 1300 :
+      2000;
     questionCheckTimerRef.current = window.setTimeout(() => {
       if (accumulatedTextRef.current.trim().length > 5) {
         flushAccumulatedText();
