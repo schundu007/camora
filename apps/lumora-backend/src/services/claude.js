@@ -341,6 +341,24 @@ export async function* streamResponse(question, history, options = {}) {
   const { getCultureFrame } = await import('./companyCulture.js');
   const cultureFrame = getCultureFrame(systemContext || '');
 
+  // Live web briefing — cached engineering-blog + GitHub summary that
+  // companyContext.js produces. Cache-only on the read path so we never
+  // add latency to the answer; a stale/missing entry kicks off an async
+  // refresh that the next request will see.
+  let companyBriefing = '';
+  try {
+    const { getCompanyContext, detectCompanyFromContext } = await import('./companyContext.js');
+    const company = detectCompanyFromContext(systemContext || '');
+    if (company) {
+      const briefing = await getCompanyContext(company);
+      if (briefing) {
+        companyBriefing = `\n\n=== COMPANY BRIEFING — ${company} (auto-fetched, ~${briefing.length} chars) ===\n${briefing}\n=== END BRIEFING ===\n\nUse this briefing to ground answers in the company's actual recent work. Cite specific projects/posts when relevant, but do not invent details that aren't in the briefing.`;
+      }
+    }
+  } catch (err) {
+    console.warn('[claude] company briefing lookup failed', err.message);
+  }
+
   // Select system prompt and max_tokens
   let systemPrompt;
   let maxTokens;
@@ -365,7 +383,7 @@ ABSOLUTE RULES:
 
 ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
-${cultureFrame}
+${cultureFrame}${companyBriefing}
 
 Think: What would fit on a sticky note that helps someone ace this question?`;
     // Raised from 600 → 1200: 600 truncated full STAR answers (Action = 3 bullets +
