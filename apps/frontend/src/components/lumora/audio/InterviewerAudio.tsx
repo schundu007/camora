@@ -146,54 +146,144 @@ export function useInterviewerAudio(): Ctx {
 
 /* ── Topbar pill ─────────────────────────────────────────────────────── */
 
+/**
+ * The pill is the canonical "is Sona hearing the interviewer?" UI.
+ * Four visible states (idle / connecting / live / error), one click
+ * always does the right thing for the current state — no need to
+ * open the wizard for routine on/off/reconnect.
+ *
+ *   idle    → click → start() (debounced if multiple clicks)
+ *   connecting (waiting on getDisplayMedia picker / system loopback)
+ *           → button disabled, spinner, no-op on click
+ *   live    → click → stop()
+ *   error   → click → retry start()
+ *
+ * Voice level bars animate during live state so the user has
+ * continuous proof that audio is actually flowing — not just a
+ * static "ON" indicator that can be lying.
+ */
 export function InterviewerAudioPill() {
-  const { active, isSupported, level, start, stop } = useInterviewerAudio();
+  const { active, isSupported, level, error, start, stop } = useInterviewerAudio();
+  const [connecting, setConnecting] = useState(false);
 
-  if (!isSupported) {
+  // Reset connecting once active flips on (or an error fires).
+  useEffect(() => {
+    if (active || error) setConnecting(false);
+  }, [active, error]);
+
+  const onClick = useCallback(async () => {
+    if (connecting) return;
+    if (active) {
+      stop();
+      return;
+    }
+    setConnecting(true);
+    try {
+      await start();
+    } catch {
+      // start() resolves; errors land in `error` state.
+    } finally {
+      // Safety: if start() returned but capture didn't begin (e.g.
+      // user cancelled the picker), unstick the connecting flag.
+      setTimeout(() => setConnecting(false), 1500);
+    }
+  }, [active, connecting, start, stop]);
+
+  // Decide visual state and copy
+  type State = 'unsupported' | 'idle' | 'connecting' | 'live' | 'error';
+  const state: State = !isSupported ? 'unsupported'
+    : connecting ? 'connecting'
+    : active ? 'live'
+    : error ? 'error'
+    : 'idle';
+
+  const palette = {
+    unsupported: { bg: 'rgba(220,38,38,0.85)', fg: '#fff', border: 'rgba(220,38,38,0.85)', dot: '#fff' },
+    idle:        { bg: 'rgba(220,38,38,0.12)', fg: '#dc2626', border: 'rgba(220,38,38,0.45)', dot: '#dc2626' },
+    connecting:  { bg: 'rgba(245,158,11,0.14)', fg: '#b45309', border: 'rgba(245,158,11,0.55)', dot: '#f59e0b' },
+    live:        { bg: 'var(--accent-subtle)', fg: 'var(--accent)', border: 'var(--accent)', dot: 'var(--accent)' },
+    error:       { bg: 'rgba(220,38,38,0.16)', fg: '#dc2626', border: 'rgba(220,38,38,0.65)', dot: '#dc2626' },
+  }[state];
+
+  const label = {
+    unsupported: 'Browser unsupported',
+    idle: 'Connect interviewer',
+    connecting: 'Connecting…',
+    live: 'Interviewer ON',
+    error: 'Reconnect',
+  }[state];
+
+  const tooltip = {
+    unsupported: 'This browser cannot capture interviewer audio. Use Chrome, Edge, or the Camora desktop app.',
+    idle: 'Click to start interviewer audio capture. Picker opens for tab share / system loopback per your setup.',
+    connecting: 'Waiting for the share picker or system loopback to come online…',
+    live: `Live — Sona is hearing the interviewer. Click to stop. ${level > 0.012 ? 'Voice detected.' : 'Connected, awaiting voice.'}`,
+    error: error ? `Last attempt failed: ${error}. Click to retry.` : 'Last attempt failed. Click to retry.',
+  }[state];
+
+  // The unsupported state has no click action — just a warning chip.
+  if (state === 'unsupported') {
     return (
       <span
-        className="hidden sm:inline text-[11px] font-bold px-2 py-1 rounded-lg"
-        style={{ color: '#fff', background: 'rgba(220,38,38,0.85)' }}
-        title="This browser cannot capture interviewer audio. Use Chrome, Edge, or the Camora desktop app."
+        className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-lg shrink-0"
+        style={{ color: palette.fg, background: palette.bg }}
+        title={tooltip}
       >
-        Browser unsupported
+        <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full" style={{ background: palette.dot }} />
+        {label}
       </span>
     );
   }
 
   return (
     <button
-      onClick={() => (active ? stop() : start())}
-      className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
-      style={
-        active
-          ? { background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent)' }
-          : { background: 'rgba(220,38,38,0.12)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.45)' }
-      }
-      title={active ? 'Interviewer audio is live — click to stop' : 'Connect interviewer audio: share the Zoom/Meet/Teams tab and check "Share tab audio"'}
+      onClick={onClick}
+      disabled={state === 'connecting'}
+      className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0 disabled:cursor-wait"
+      style={{ background: palette.bg, color: palette.fg, border: `1px solid ${palette.border}` }}
+      title={tooltip}
+      aria-pressed={state === 'live'}
+      aria-label={label}
     >
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728"
+      {state === 'connecting' ? (
+        <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+          <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+          <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+        </svg>
+      ) : state === 'live' ? (
+        // Solid green dot with subtle glow when voice is detected, faded when waiting.
+        <span
+          aria-hidden="true"
+          className="w-2 h-2 rounded-full transition-all"
+          style={{
+            background: palette.dot,
+            boxShadow: level > 0.012 ? `0 0 6px ${palette.dot}` : 'none',
+            opacity: level > 0.012 ? 1 : 0.6,
+          }}
         />
-      </svg>
-      <span className="hidden xl:inline">{active ? 'Interviewer ON' : 'Interviewer OFF'}</span>
-      {active && (
-        <span className="flex items-center gap-0.5" aria-hidden="true">
-          {[0, 1, 2, 3].map((i) => (
-            <span
-              key={i}
-              className="block w-0.5 rounded-full transition-all duration-75"
-              style={{
-                height: 4 + i * 2,
-                background: level > i * 0.02 ? 'var(--accent)' : 'currentColor',
-                opacity: level > i * 0.02 ? 1 : 0.3,
-              }}
-            />
-          ))}
+      ) : (
+        // idle and error share the broadcast icon — different palette only
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728" />
+        </svg>
+      )}
+      <span className="hidden xl:inline">{label}</span>
+      {state === 'live' && (
+        <span className="flex items-end gap-0.5 h-3" aria-hidden="true">
+          {[0, 1, 2, 3].map((i) => {
+            const lit = level > i * 0.02;
+            return (
+              <span
+                key={i}
+                className="block w-0.5 rounded-full transition-all duration-75"
+                style={{
+                  height: lit ? 4 + i * 2 : 3,
+                  background: palette.dot,
+                  opacity: lit ? 1 : 0.3,
+                }}
+              />
+            );
+          })}
         </span>
       )}
     </button>
