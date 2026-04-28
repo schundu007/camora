@@ -98,10 +98,18 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
         audio: false,
         video: {
           // @ts-ignore — Chromium-specific constraints accepted by Electron's
-          // desktopCapturer for chromeMediaSourceId-based capture.
+          // desktopCapturer for chromeMediaSourceId-based capture. Without
+          // maxWidth/maxHeight the default frame is small (~640×360) and
+          // Claude Vision OCR fails with 422 "couldn't find a problem".
+          // Bump to 4K so a full LeetCode / HackerRank tab captures every
+          // line of the problem statement at readable resolution.
           mandatory: {
             chromeMediaSource: 'desktop',
             chromeMediaSourceId: sourceId,
+            minWidth: 1280,
+            maxWidth: 3840,
+            minHeight: 720,
+            maxHeight: 2160,
             maxFrameRate: 1,
           },
         } as any,
@@ -109,14 +117,16 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
       const dataUrl = await grabFrame(stream);
       stream = null;
       await ocrAndDeliver(dataUrl);
+      setStatus(null);
     } catch (err: any) {
       console.error('[capture] source capture failed:', err);
+      // Keep the error visible — auto-clearing meant the user clicked
+      // capture, picked a window, the modal closed, and they saw nothing
+      // because the toast had already cleared by the time they looked.
       setStatus(err?.message || 'Capture failed');
     } finally {
       if (stream) stream.getTracks().forEach(t => t.stop());
       setBusy(false);
-      // Auto-clear the toast after a moment so it doesn't linger
-      setTimeout(() => setStatus(null), 3000);
     }
   }, [grabFrame, ocrAndDeliver]);
 
@@ -127,10 +137,28 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     const camo = (window as any).camo;
     // Desktop path: open our own picker modal seeded from desktopCapturer.
     if (camo?.isDesktop && typeof camo.listCaptureSources === 'function') {
+      // Pre-check Screen Recording TCC. Without it, getSources returns
+      // sources but the subsequent getUserMedia({chromeMediaSourceId})
+      // call fails silently — the picker closes with no feedback and
+      // the user thinks the button is broken. Surface the permission
+      // gap up front instead.
+      if (camo.platform === 'darwin' && typeof camo.getMediaAccessStatus === 'function') {
+        try {
+          const screenStatus = await camo.getMediaAccessStatus('screen');
+          if (screenStatus !== 'granted') {
+            setStatus('Screen Recording permission needed — click here to open System Settings');
+            // Open Settings on the next click of the toast, or directly:
+            camo.openSystemPrivacy?.('ScreenCapture');
+            return;
+          }
+        } catch { /* non-fatal */ }
+      }
       try {
         setBusy(true);
+        setStatus('Loading windows…');
         const sources: CaptureSource[] = await camo.listCaptureSources();
         setBusy(false);
+        setStatus(null);
         if (!Array.isArray(sources) || sources.length === 0) {
           setStatus('No windows or screens found to capture');
           return;
