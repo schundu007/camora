@@ -68,11 +68,92 @@ const INTERVIEW_VERBS_ANYWHERE = [
 ];
 
 /**
+ * Whisper hallucinations — phantom transcriptions Whisper produces on
+ * silence or unclear audio. Trained heavily on YouTube, so it falls back
+ * to common outros/outtros when the audio is ambiguous. These never
+ * reflect anything the interviewer actually said and must NOT be sent
+ * to Sona, or the answer panel fills with nonsense.
+ *
+ * Match is whole-utterance (the transcript is exactly or nearly this);
+ * substring matching would false-positive on legitimate "thanks" mid-
+ * sentence in a real interview.
+ */
+const WHISPER_HALLUCINATIONS = [
+  'thanks for watching',
+  'thank you for watching',
+  'thanks for watching!',
+  'thank you for watching!',
+  'thanks for watching.',
+  'thank you for watching.',
+  'thank you',
+  'thank you.',
+  'thank you!',
+  'thanks',
+  'thanks.',
+  'thanks!',
+  'thank you so much',
+  'thank you so much.',
+  'thank you very much',
+  'thank you very much.',
+  'subscribe to my channel',
+  'please subscribe',
+  'like and subscribe',
+  'don\'t forget to subscribe',
+  'see you next time',
+  'see you in the next video',
+  'see you',
+  'see you next',
+  'bye',
+  'bye.',
+  'bye!',
+  'bye-bye',
+  'goodbye',
+  'goodbye.',
+  'i love you',
+  'i love you.',
+  'okay bye',
+  'okay, bye',
+  'okay, bye.',
+  'thanks for listening',
+  'thank you for listening',
+  'thanks for joining',
+  'thank you for joining',
+  '[music]',
+  '[applause]',
+  '[silence]',
+  '[laughter]',
+  '...',
+  '. . .',
+  '..',
+];
+
+/**
+ * True if the utterance is a known Whisper hallucination — phantom
+ * transcription that must be discarded before any auto-submit.
+ */
+function isWhisperHallucination(raw: string): boolean {
+  const text = (raw || '').trim().toLowerCase();
+  if (!text) return false;
+  // Exact-match the whole transcript against a known hallucination.
+  if (WHISPER_HALLUCINATIONS.includes(text)) return true;
+  // Pure punctuation / dots
+  if (/^[.\s]+$/.test(text)) return true;
+  // Single repeated word (e.g. "you you you you")
+  if (/^(\S+)(\s+\1)+$/i.test(text)) return true;
+  return false;
+}
+
+/**
  * True if the utterance looks like something Sona should attempt to answer.
  */
 export function isQuestion(raw: string): boolean {
   const text = (raw || '').trim().toLowerCase();
   if (!text) return false;
+
+  // Whisper hallucination filter (silence / noise produces phantom
+  // "Thanks for watching" / "Subscribe" / "Bye" transcripts) — these
+  // must NEVER hit the LLM or the answer panel fills with nonsense.
+  if (isWhisperHallucination(text)) return false;
 
   // Too short to be a meaningful question ("ok", "yeah sure", etc.)
   if (text.length < 12) return false;
@@ -107,6 +188,7 @@ export function isQuestion(raw: string): boolean {
 export function questionReason(raw: string): { isQuestion: boolean; reason: string } {
   const text = (raw || '').trim().toLowerCase();
   if (!text) return { isQuestion: false, reason: 'empty' };
+  if (isWhisperHallucination(text)) return { isQuestion: false, reason: 'whisper hallucination' };
   if (text.length < 12) return { isQuestion: false, reason: 'too short' };
   if (text.split(/\s+/).length < 4) return { isQuestion: false, reason: 'too few words' };
   if (text.endsWith('?')) return { isQuestion: true, reason: 'ends with ?' };
