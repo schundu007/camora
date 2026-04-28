@@ -17,7 +17,8 @@ import SharedPricingCards from '../../components/shared/PricingCards';
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 import { AudioCheckModal } from '../../components/lumora/shell/AudioCheckModal';
-import { InterviewerAudioProvider, InterviewerSetupGate } from '../../components/lumora/audio/InterviewerAudio';
+import { InterviewerAudioProvider } from '../../components/lumora/audio/InterviewerAudio';
+import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard';
 import { useTheme } from '../../hooks/useTheme';
 import type { ParsedBlock } from '../../types';
 import { dialogConfirm } from '../../components/shared/Dialog';
@@ -187,11 +188,10 @@ export function LumoraShellPage() {
 
   return (
     <InterviewerAudioProvider onTranscription={handleTranscription}>
-    {/* Scope the audio-setup gate to the live interview tab only — it
-        renders a fullscreen modal that would otherwise block prepkit,
-        calendar, sessions, profile, etc., none of which use interviewer
-        audio. */}
-    {activeTab === 'interview' && <InterviewerSetupGate />}
+    {/* Audio setup wizard — only mounted on live-interview tabs where
+        we actually need audio. The wizard auto-opens on first session
+        until the user finishes setup, then stays out of the way. */}
+    {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
     {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
     {blanked && (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000000' }} onClick={() => setBlanked(false)}>

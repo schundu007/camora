@@ -231,7 +231,14 @@ async def speaker_diarize(
         sample_rate = 16000
         window_size = int(1.6 * sample_rate)   # 1.6 second windows
         hop_size = int(0.8 * sample_rate)       # 0.8 second hop (50% overlap)
-        threshold = 0.70                         # slightly lower for segment-level
+        # 0.70 was too strict for the mic-only fallback path: a
+        # candidate with a cold or a slightly different mic position
+        # would drop below the threshold and get misclassified as the
+        # interviewer (or worse, the interviewer would misclassify as
+        # the candidate and we'd skip transcription). 0.62 keeps the
+        # false-positive rate manageable while massively reducing
+        # false negatives.
+        threshold = 0.62
 
         segments = []
         total_windows = 0

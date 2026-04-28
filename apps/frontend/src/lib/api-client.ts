@@ -219,6 +219,23 @@ export const documentsAPI = {
     }, token),
 };
 
+// Audio preferences — mic/speaker/capture-method choices. Schema-
+// agnostic; the AudioSetupWizard on the frontend owns the shape.
+export const audioPrefsAPI = {
+  getState: (token: string) =>
+    fetchAPI<{ data: unknown; updated_at: string | null }>(
+      '/api/v1/audio-prefs/state',
+      {},
+      token,
+    ),
+  putState: (token: string, data: unknown) =>
+    fetchAPI<{ updated_at: string }>(
+      '/api/v1/audio-prefs/state',
+      { method: 'PUT', body: JSON.stringify({ data }) },
+      token,
+    ),
+};
+
 // Prep workspace persistence — JSON blob keyed by user. Mirrors the
 // localStorage shape the Prep Kit panel writes (PrepData), so hydration
 // is just "fetch then setState".
