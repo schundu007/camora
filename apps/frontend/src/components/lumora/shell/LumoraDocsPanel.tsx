@@ -2225,50 +2225,6 @@ ${body || '<p>No generated content yet.</p>'}
     openPrintWindow(ordered, 'Full prep packet');
   }, [prepData, openPrintWindow]);
 
-  // Download the full prep packet as a Word-compatible .doc file. Word,
-  // Pages, and Google Docs all open Office-namespace HTML wrapped in a
-  // .doc extension natively — no docx library needed. The user can
-  // then open it, edit, and Save As PDF / DOCX from inside Word.
-  const downloadAsDoc = useCallback(() => {
-    if (!prepData.activeCompany) return;
-    const data = prepData.data[prepData.activeCompany];
-    if (!data?.sections) return;
-    const ordered = SIDEBAR_SECTIONS
-      .filter((s) => data.sections[s.id])
-      .map((s) => ({ id: s.id, content: data.sections[s.id] }));
-    if (ordered.length === 0) return;
-    const company = prepData.activeCompany;
-    const dateStr = new Date().toLocaleDateString();
-    const body = ordered.map((s) => renderSectionToHtml(s.id, s.content)).join('\n');
-    const doc = `<!doctype html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="utf-8">
-<title>${company} — Prep Packet</title>
-<style>${printableStylesheet}</style>
-</head>
-<body>
-<header><h1>${company}</h1><p class="meta">Full prep packet · Generated ${dateStr} · Camora Prep Kit</p></header>
-${body}
-</body></html>`;
-    const blob = new Blob(['﻿' + doc], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${company.replace(/[^A-Za-z0-9]+/g, '_')}_Prep_Packet.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }, [prepData, renderSectionToHtml, printableStylesheet]);
-
-  // Download the full prep packet as a PDF via the browser's print
-  // pipeline. Opens a clean printable window and auto-fires the print
-  // dialog with destination defaulted to "Save as PDF" — one click in
-  // Chrome/Edge to land the file on disk.
-  const downloadAsPdf = useCallback(() => {
-    printAllSections();
-  }, [printAllSections]);
-
   const fetchJdUrl = async (url: string) => {
     if (!url.trim()) return;
     setJdFetching(true);
@@ -2814,38 +2770,10 @@ ${body}
                 {state.sections[activeSection] && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>Generated</span>
                 )}
-                {Object.keys(state.sections).length >= 1 && (
-                  <>
-                    <button
-                      onClick={downloadAsPdf}
-                      title="Download all generated sections as a PDF (full prep packet). Saves directly through your browser's print dialog — pick 'Save as PDF' as the destination."
-                      className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all"
-                      style={{ background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)' }}>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      PDF
-                    </button>
-                    <button
-                      onClick={downloadAsDoc}
-                      title="Download all generated sections as a Word document (.doc). Opens directly in Word, Pages, or Google Docs — print or convert to PDF from there."
-                      className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all"
-                      style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      Word
-                    </button>
-                  </>
-                )}
                 {state.sections[activeSection] && (
                   <button
                     onClick={printActiveSection}
-                    title="Print just this section (or save it as PDF from the print dialog)"
+                    title="Print or save this section as PDF"
                     className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors"
                     style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
@@ -2853,7 +2781,21 @@ ${body}
                       <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
                       <rect x="6" y="14" width="12" height="8" />
                     </svg>
-                    Print
+                    Print / PDF
+                  </button>
+                )}
+                {Object.keys(state.sections).length > 1 && (
+                  <button
+                    onClick={printAllSections}
+                    title="Print or save the full prep packet (all generated sections) as PDF"
+                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Print all
                   </button>
                 )}
                 {hasRequiredDocs && (
