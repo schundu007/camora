@@ -7,6 +7,7 @@ import hljs from 'highlight.js';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';
 import { prepAPI } from '../../../lib/api-client';
+import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '../../../lib/prepDownload';
 
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -2410,6 +2411,41 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     await generateOneSection(section);
   }, [generateOneSection]);
 
+  /** Build the title + ordered section list for download. */
+  const buildDownloadPayload = useCallback(() => {
+    const company = prepData.activeCompany || 'Interview';
+    const generated = SIDEBAR_SECTIONS
+      .filter((s) => s.id !== 'input' && s.id !== 'jd-view' && state.sections[s.id])
+      .map((s) => ({ id: s.id, label: s.label, content: state.sections[s.id] }));
+    return { title: `${company} — Interview Prep`, sections: sectionsToPrepSections(generated) };
+  }, [prepData.activeCompany, state.sections]);
+
+  const [downloading, setDownloading] = useState<'pdf' | 'docx' | null>(null);
+  const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
+
+  const handleDownload = useCallback(async (kind: 'pdf' | 'docx') => {
+    if (downloading) return;
+    const { title, sections } = buildDownloadPayload();
+    if (sections.length === 0) {
+      setDownloadMsg('Generate at least one section first');
+      setTimeout(() => setDownloadMsg(null), 3000);
+      return;
+    }
+    setDownloading(kind);
+    setDownloadMsg(null);
+    const fn = kind === 'pdf' ? downloadPrepAsPdf : downloadPrepAsDocx;
+    const result = await fn(title, sections);
+    setDownloading(null);
+    if (result.ok) {
+      setDownloadMsg(`Saved as ${kind.toUpperCase()}`);
+    } else if (result.error) {
+      setDownloadMsg(`Failed: ${result.error}`);
+    }
+    if (result.ok || result.error) setTimeout(() => setDownloadMsg(null), 2500);
+  }, [downloading, buildDownloadPayload]);
+
+  const generatedCount = SIDEBAR_SECTIONS.filter((s) => s.id !== 'input' && s.id !== 'jd-view' && state.sections[s.id]).length;
+
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
 
   return (
@@ -2650,6 +2686,43 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>Generated</span>
+                )}
+                {generatedCount >= 1 && (
+                  <>
+                    <button
+                      onClick={() => handleDownload('pdf')}
+                      disabled={downloading !== null}
+                      title={`Download all ${generatedCount} generated section${generatedCount === 1 ? '' : 's'} as one PDF`}
+                      className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all disabled:opacity-40"
+                      style={{ background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)' }}>
+                      {downloading === 'pdf' ? (
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      )}
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => handleDownload('docx')}
+                      disabled={downloading !== null}
+                      title={`Download all ${generatedCount} generated section${generatedCount === 1 ? '' : 's'} as a Word document`}
+                      className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all disabled:opacity-40"
+                      style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+                      {downloading === 'docx' ? (
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      )}
+                      Word
+                    </button>
+                  </>
+                )}
+                {downloadMsg && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{downloadMsg}</span>
                 )}
                 {hasRequiredDocs && (
                   <button

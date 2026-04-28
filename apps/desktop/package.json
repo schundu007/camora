@@ -1,0 +1,50 @@
+{
+  "name": "@camora/desktop",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Camora Desktop — native shell for camora.cariara.com with system-audio loopback, screen capture, and document export",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:dmg": "rm -rf build && electron-builder --mac --arm64 && bash ./post-build.sh"
+  },
+  "dependencies": {
+    "docx": "^9.0.3"
+  },
+  "devDependencies": {
+    "electron": "35.7.5",
+    "electron-builder": "26.0.18"
+  },
+  "build": {
+    "appId": "com.cariara.camora",
+    "productName": "Camora",
+    "artifactName": "Camora-${version}-${arch}.${ext}",
+    "directories": { "output": "build" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.icns",
+      "node_modules/docx/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] }
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Camora",
+      "iconSize": 100,
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
+    }
+  }
+}
