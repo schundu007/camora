@@ -121,6 +121,14 @@ export function AudioSetupWizard({
     onClose?.();
   }, [onClose]);
 
+  // Escape closes the wizard — every other modal in the app honors it
+  // and users were getting trapped here without an obvious dismiss.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [dismiss]);
+
   /* ── device enumeration ────────────────────────────────────────── */
   const enumerate = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -327,6 +335,21 @@ export function AudioSetupWizard({
               Pick your microphone, speakers, and how Camora should hear the interviewer. Works with any device — AirPods, USB mics, audio interfaces, virtual loopback (BlackHole / VoiceMeeter / Loopback).
             </p>
           </div>
+          {/* Explicit X close — the bottom-left "Skip for this session" link
+              was the only dismiss affordance and users were missing it,
+              especially on tall layouts where the footer scrolls offscreen
+              before the modal finishes mounting. */}
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="Close"
+            className="w-8 h-8 -mr-1 -mt-1 rounded-md flex items-center justify-center transition-colors hover:bg-black/5"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         <div className="px-6 pb-3 space-y-5">

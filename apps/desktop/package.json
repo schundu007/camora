@@ -41,7 +41,8 @@
       "hardenedRuntime": true,
       "entitlements": "entitlements.mac.plist",
       "entitlementsInherit": "entitlements.mac.plist",
-      "darkModeSupport": true
+      "darkModeSupport": true,
+      "identity": "Camora Local Dev"
     },
     "dmg": {
       "title": "Camora",
