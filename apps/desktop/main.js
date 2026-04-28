@@ -394,6 +394,39 @@ ipcMain.handle('list-capture-sources', async () => {
   }
 });
 
+// Re-fetch a source at full native resolution and return its PNG dataURL
+// for OCR. This is the canonical capture path now: getSources with a
+// 4096-pixel thumbnail returns the source's actual content at native
+// size (capped to that limit), bypassing Chromium's video-pipeline
+// downscaling that produced unreadably small JPEGs from the previous
+// getUserMedia({ chromeMediaSourceId }) approach. macOS Screen
+// Recording TCC is still required.
+ipcMain.handle('capture-source-image', async (_e, sourceId) => {
+  try {
+    if (!sourceId) return null;
+    const sources = await desktopCapturer.getSources({
+      types: ['window', 'screen'],
+      thumbnailSize: { width: 4096, height: 4096 },
+      fetchWindowIcons: false,
+    });
+    const target = sources.find((s) => s.id === sourceId);
+    if (!target) {
+      console.warn('[capture] source not found:', sourceId);
+      return null;
+    }
+    if (target.thumbnail.isEmpty()) {
+      console.warn('[capture] empty thumbnail for', sourceId, '— Screen Recording denied?');
+      return null;
+    }
+    const size = target.thumbnail.getSize();
+    console.info(`[capture] source-image ${size.width}×${size.height} for ${sourceId}`);
+    return target.thumbnail.toDataURL();
+  } catch (err) {
+    console.error('[capture] capture-source-image failed:', err);
+    return null;
+  }
+});
+
 // Window control handlers (called from preload.js)
 ipcMain.on('window-minimize', () => mainWindow?.minimize());
 ipcMain.on('window-maximize', () => {
