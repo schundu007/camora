@@ -2161,7 +2161,12 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     setJdEditText(clip);
   };
 
-  useEffect(() => { savePrepData(prepData); }, [prepData]);
+  useEffect(() => {
+    savePrepData(prepData);
+    // Notify in-tab listeners (ContextBadge, etc.) — the storage event
+    // doesn't fire in the tab that wrote the value.
+    try { window.dispatchEvent(new CustomEvent('lumora:context-updated')); } catch {}
+  }, [prepData]);
 
   // Auto-create default company if none exists
   useEffect(() => {
