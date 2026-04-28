@@ -161,22 +161,94 @@ export function AudioSetupWizard({
 
   /* ── device enumeration ────────────────────────────────────────── */
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  // True when TCC says 'granted' but Chromium's audio device list is
+  // still empty — only fixable by relaunching the Electron process.
+  // Surfaces the "Restart Camora" button.
+  const [needsRelaunch, setNeedsRelaunch] = useState(false);
+  // macOS Screen Recording TCC status — required by getDisplayMedia
+  // (the Connect-system-audio path). Read-only on macOS; you can't
+  // programmatically prompt for it, so the wizard surfaces a CTA to
+  // open System Settings before the user clicks Connect.
+  const [screenRecordingStatus, setScreenRecordingStatus] = useState<string>('unknown');
 
   const requestPermission = useCallback(async () => {
     setPermissionError(null);
+    const camo = (window as any).camo;
+    const isDesktop = !!camo?.isDesktop;
+
+    // Step 1 — read TCC status on macOS Electron. The renderer can't
+    // poll AVCaptureDevice authorization itself, so we route through
+    // the main-process bridge. On non-macOS / browsers, this is a
+    // no-op and we fall straight to getUserMedia.
+    let tcc: string | undefined;
+    if (camo?.getMediaAccessStatus) {
+      try { tcc = await camo.getMediaAccessStatus('microphone'); }
+      catch { /* unknown */ }
+    }
+
+    // Step 2 — pre-empt sticky 'denied'. Chromium's getUserMedia would
+    // just throw NotAllowedError without ever showing the OS prompt.
+    // Open System Settings to the right pane and tell the user what
+    // to flip; needsRelaunch=false because the relaunch button only
+    // helps after they've actually granted permission.
+    if (tcc === 'denied') {
+      camo?.openSystemPrivacy?.('Microphone');
+      setNeedsRelaunch(false);
+      setPermissionError(
+        'Microphone access was denied for Camora. We just opened System Settings → Privacy & Security → Microphone — toggle Camora ON, then come back and click Refresh.',
+      );
+      setPermissionGranted(false);
+      return false;
+    }
+
+    // Step 3 — first-launch prompt. macOS only shows the dialog once
+    // per 'not-determined' state; subsequent calls return the cached
+    // answer immediately so this is safe to invoke unconditionally.
+    if (camo?.askForMediaAccess && tcc !== 'granted') {
+      try { await camo.askForMediaAccess('microphone'); }
+      catch { /* fall through to getUserMedia */ }
+    }
+
+    // Step 4 — actually attempt to acquire a stream.
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setPermissionGranted(true);
+      setNeedsRelaunch(false);
       return true;
     } catch (err: any) {
+      // Stuck-state detection. macOS doesn't surface a freshly-granted
+      // device to the running Chromium audio service — the device list
+      // stays empty until the next process launch, so getUserMedia
+      // throws NotFoundError despite TCC saying 'granted'. The only
+      // reliable recovery is a relaunch.
+      let postGrantTcc: string | undefined = tcc;
+      if (err?.name === 'NotFoundError' && isDesktop && camo?.getMediaAccessStatus) {
+        try { postGrantTcc = await camo.getMediaAccessStatus('microphone'); }
+        catch { /* keep old value */ }
+      }
+      if (err?.name === 'NotFoundError' && postGrantTcc === 'granted') {
+        setNeedsRelaunch(true);
+        setPermissionError(
+          'Camora is allowed in System Settings, but macOS only gives the running app the new permission after a restart. Click Restart Camora — you\'ll be back here in a second with your mic working.',
+        );
+        setPermissionGranted(false);
+        return false;
+      }
+
       const msg = err?.name === 'NotAllowedError'
         ? 'Microphone permission was denied. On macOS, check System Settings → Privacy & Security → Microphone. In the browser, click the lock icon in the address bar → Site settings → Microphone → Allow.'
         : err?.name === 'NotFoundError'
-        ? 'No microphone found. Plug one in or check your audio device settings.'
+        ? isDesktop
+          ? 'macOS hasn\'t granted Camora microphone access yet. We just opened System Settings — toggle Camora ON under Privacy & Security → Microphone, then click Refresh.'
+          : 'No microphone found. Plug one in or check your audio device settings.'
         : err?.name === 'NotReadableError'
         ? 'Another app is using your mic. Close Zoom/Teams/Slack/QuickTime and try again.'
         : `Microphone access failed: ${err?.message || err?.name || 'unknown error'}`;
+      if (err?.name === 'NotFoundError' && isDesktop) {
+        camo?.openSystemPrivacy?.('Microphone');
+      }
+      setNeedsRelaunch(false);
       setPermissionError(msg);
       setPermissionGranted(false);
       return false;
@@ -256,17 +328,27 @@ export function AudioSetupWizard({
 
     let stream: MediaStream | null = null;
     try {
+      // `ideal` (not `exact`) so a stale/missing saved deviceId falls
+      // back to the system default instead of throwing — the previous
+      // `exact` constraint produced an OverconstrainedError loop that
+      // re-fired the deps-driven effect on every render and spammed
+      // the AudioContext-error log.
       stream = await tryAcquire({
-        audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+        audio: deviceId ? { deviceId: { ideal: deviceId } } : true,
       });
     } catch (err: any) {
-      // Stale `prefs.micDeviceId` referencing a now-unavailable device
-      // (unplugged USB mic, removed BlackHole, prior session id) blew
-      // the wizard up with a tight retry loop that spammed
-      // "AudioContext encountered an error". Recover by clearing the
-      // stale id from prefs and retrying with the default mic.
-      if (err?.name === 'NotFoundError' && deviceId) {
-        console.warn('[AudioWizard] saved mic not found; clearing and retrying with default', deviceId);
+      // Belt-and-suspenders: if the browser still rejects despite the
+      // ideal constraint (e.g. some Chromium builds treat ideal as
+      // exact when nothing else matches), clear the saved id and retry
+      // with the default mic. NotFoundError covers macOS, Overconstrained
+      // covers Linux / older Chromium.
+      const stale = !!deviceId && (
+        err?.name === 'NotFoundError' ||
+        err?.name === 'OverconstrainedError' ||
+        err?.name === 'ConstraintNotSatisfiedError'
+      );
+      if (stale) {
+        console.warn('[AudioWizard] saved mic unavailable; clearing and retrying with default', deviceId, err?.name);
         try {
           setPrefs((p) => patchAudioPrefs({ ...p, micDeviceId: null }));
         } catch { /* ignore */ }
@@ -321,6 +403,27 @@ export function AudioSetupWizard({
     void startMicMonitor(prefs.micDeviceId);
     return () => { void stopMicMonitor(); };
   }, [open, permissionGranted, candidateMicActive, interviewer.active, prefs.micDeviceId, startMicMonitor, stopMicMonitor]);
+
+  /* ── Screen Recording TCC status (macOS only, electron-loopback) ── */
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.isDesktop || camo.platform !== 'darwin') return;
+    if (!camo.getMediaAccessStatus) return;
+    if (!open) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const s = await camo.getMediaAccessStatus('screen');
+        if (!cancelled) setScreenRecordingStatus(s || 'unknown');
+      } catch { /* ignore */ }
+    };
+    check();
+    // Re-poll every 2s while the wizard is open so the UI reflects
+    // the toggle state when the user grants permission and switches
+    // back. Cheap (one IPC call).
+    const t = window.setInterval(check, 2000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [open]);
 
   /* ── auto-resolve method when devices are enumerated ──────────── */
   useEffect(() => {
@@ -474,14 +577,25 @@ export function AudioSetupWizard({
                   <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
                     {permissionError || 'Camora needs permission to list your microphones. Click below.'}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => { void enumerate(); }}
-                    className="px-3 py-1 text-[11px] font-bold rounded-md"
-                    style={{ background: 'var(--accent)', color: '#fff' }}
-                  >
-                    Grant microphone access
-                  </button>
+                  {needsRelaunch ? (
+                    <button
+                      type="button"
+                      onClick={() => { (window as any).camo?.relaunch?.(); }}
+                      className="px-3 py-1 text-[11px] font-bold rounded-md"
+                      style={{ background: 'var(--accent)', color: '#fff' }}
+                    >
+                      Restart Camora
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { void enumerate(); }}
+                      className="px-3 py-1 text-[11px] font-bold rounded-md"
+                      style={{ background: 'var(--accent)', color: '#fff' }}
+                    >
+                      Grant microphone access
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -661,6 +775,45 @@ export function AudioSetupWizard({
                   style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
                 >
                   <strong>Pick a virtual loopback device above.</strong> Connect won't work until you select a virtual mic.
+                </div>
+              )}
+              {/* macOS-only: Screen Recording permission is required for
+                  system-audio loopback (it goes through getDisplayMedia,
+                  which on macOS sits behind the Screen Recording TCC).
+                  We can't programmatically prompt; the user has to flip
+                  the toggle in System Settings and relaunch — surface
+                  this BEFORE they click Connect so they don't hit a
+                  silent failure. */}
+              {prefs.captureMethod === 'electron-loopback' && isElectron() && screenRecordingStatus !== 'granted' && screenRecordingStatus !== 'unknown' && (
+                <div
+                  className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
+                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                >
+                  <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#F59E0B' }} />
+                  <div className="flex-1">
+                    <div className="font-bold mb-0.5">Screen Recording permission needed</div>
+                    <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      macOS routes system audio through the Screen Recording API. Toggle Camora ON in System Settings, then click Restart Camora — Connect system audio will work after the relaunch.
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { (window as any).camo?.openSystemPrivacy?.('ScreenCapture'); }}
+                        className="px-3 py-1 text-[11px] font-bold rounded-md"
+                        style={{ background: 'var(--accent)', color: '#fff' }}
+                      >
+                        Open System Settings
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { (window as any).camo?.relaunch?.(); }}
+                        className="px-3 py-1 text-[11px] font-bold rounded-md"
+                        style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                      >
+                        Restart Camora
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

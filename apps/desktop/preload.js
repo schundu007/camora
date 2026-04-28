@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld('camo', {
   // Open the macOS Privacy & Security panel directly to the right
   // section so the user doesn't have to dig through System Settings.
   openSystemPrivacy: (section) => ipcRenderer.invoke('open-system-privacy', section),
+  // Quit + relaunch. macOS only surfaces a freshly-granted device to
+  // the running Chromium audio service after a process restart, so the
+  // wizard uses this when TCC says 'granted' but getUserMedia 404s.
+  relaunch: () => ipcRenderer.invoke('relaunch-app'),
   onUpdateAvailable: (cb) => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.on('update-available', (_, info) => cb(info));
