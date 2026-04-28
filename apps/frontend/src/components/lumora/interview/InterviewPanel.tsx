@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { StreamingAnswer } from './StreamingAnswer';
-import { DiagonalDivider } from '@/components/shared/DiagonalDivider';
 import { DatabricksThumb, type DatabricksColor } from '@/components/shared/DatabricksThumb';
 
 interface InterviewPanelProps {
@@ -29,24 +28,66 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0;
 
   return (
-    <main className="flex-1 min-h-0 overflow-auto flex flex-col">
+    <main
+      className="flex-1 min-h-0 overflow-auto flex flex-col relative"
+      style={{
+        // Layered atmospheric backdrop — subtle navy spotlight at the top
+        // and a faint cyan wash at the bottom. Pulls focus to the streaming
+        // answer area without competing with content. Pairs cleanly with
+        // the cam-hero-bg used in the Dashboard's hero band.
+        background:
+          'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(38,97,156,0.06), transparent 70%),' +
+          'radial-gradient(ellipse 70% 40% at 50% 105%, rgba(34,211,238,0.05), transparent 70%),' +
+          'var(--bg-surface)',
+      }}
+    >
+      <style>{`
+        @keyframes lumora-pulse-ring {
+          0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.4); }
+          70%  { box-shadow: 0 0 0 12px rgba(38,97,156,0); }
+          100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+        }
+        @keyframes lumora-glow-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50%      { background-position: 100% 50%; }
+        }
+      `}</style>
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-auto w-full mx-auto px-2 sm:px-3 py-2" style={{ maxWidth: 'min(700px, 100%)' }}>
-          {/* Current streaming question */}
+        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto w-full mx-auto px-3 sm:px-4 py-3" style={{ maxWidth: 'min(720px, 100%)' }}>
+          {/* Current streaming question — glowing pill with a pulse ring */}
           {isStreaming && question && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(38,97,156,0.03)', border: '1px solid rgba(38,97,156,0.13)' }}>
-              <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: 'rgba(38,97,156,0.08)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
+            <div
+              className="relative flex items-center gap-3 px-4 py-3 rounded-xl shrink-0 overflow-hidden"
+              style={{
+                background:
+                  'linear-gradient(110deg, rgba(38,97,156,0.10) 0%, rgba(34,211,238,0.06) 50%, rgba(38,97,156,0.10) 100%)',
+                backgroundSize: '200% 200%',
+                border: '1px solid rgba(38,97,156,0.30)',
+                boxShadow: '0 4px 20px rgba(38,97,156,0.18), inset 0 1px 0 rgba(255,255,255,0.04)',
+                animation: 'lumora-glow-shift 4s ease-in-out infinite',
+              }}
+            >
+              <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold"
+                  style={{
+                    background: 'var(--cam-primary)',
+                    color: '#FFFFFF',
+                    fontFamily: 'var(--font-code)',
+                    animation: 'lumora-pulse-ring 1.6s ease-out infinite',
+                  }}
+                >
                   •
                 </span>
-                <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: 'var(--cam-primary)' }} />
               </div>
-              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
+              <span className="text-[14px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
                 {question}
               </span>
-              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: 'var(--cam-primary)' }}>generating...</span>
+              <span className="text-[10px] shrink-0 animate-pulse font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-code)', color: 'var(--cam-primary)' }}>
+                Generating
+              </span>
             </div>
           )}
 
@@ -143,34 +184,56 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
   return (
     <div className="flex-1 overflow-auto flex flex-col">
-      {/* Hero — LeetCode-style dark navy band full-bleed, with the big
-          digital clock anchoring the page. White HH:MM, gold AM/PM,
-          diagonal cut at the bottom carving into bg-surface. */}
+      {/* Hero — atmospheric dark band with the big digital clock and
+          a soft fade-out into the body (no harsh diagonal divider —
+          per "less boxes/lines" feedback, sections flow seamlessly). */}
       <div
         className="relative overflow-hidden"
-        style={{
-          background:
-            'var(--cam-hero-bg)',
-        }}
+        style={{ background: 'var(--cam-hero-bg)' }}
       >
+        {/* White spotlight at top + cyan wash inside the navy */}
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
+              'radial-gradient(ellipse 70% 60% at 80% 30%, rgba(34,211,238,0.10), transparent 60%),' +
+              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.10), transparent 70%)',
           }}
         />
-        <div className="relative px-3 sm:px-4 md:px-6 pt-5 md:pt-7 pb-12 md:pb-14">
+        <div className="relative px-3 sm:px-4 md:px-6 pt-5 md:pt-7 pb-10 md:pb-12">
           <div className="flex items-baseline gap-2 leading-none" style={{ color: '#FFFFFF', fontFamily: 'var(--font-code)' }}>
-            <span className="font-bold tabular-nums" style={{ fontSize: 'clamp(48px, 8vw, 72px)', letterSpacing: '-0.02em' }}>{hh12}:{mm}</span>
-            <span className="font-semibold tabular-nums" style={{ fontSize: 'clamp(18px, 2.5vw, 24px)', color: 'var(--cam-gold-leaf-lt)' }}>{ampm}</span>
+            <span
+              className="font-bold tabular-nums"
+              style={{
+                fontSize: 'clamp(48px, 8vw, 72px)',
+                letterSpacing: '-0.02em',
+                textShadow: '0 0 24px rgba(255,255,255,0.18)',
+              }}
+            >
+              {hh12}:{mm}
+            </span>
+            <span
+              className="font-semibold tabular-nums"
+              style={{
+                fontSize: 'clamp(18px, 2.5vw, 24px)',
+                color: 'var(--cam-gold-leaf-lt)',
+                textShadow: '0 0 18px rgba(217,181,67,0.35)',
+              }}
+            >
+              {ampm}
+            </span>
           </div>
-          <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{dateStr}</div>
+          <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.78)' }}>{dateStr}</div>
           <h1 className="mt-4 text-xl font-bold text-white">{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Launch an AI assistant for your next interview.</p>
         </div>
-        <DiagonalDivider fill="var(--bg-surface)" slope="tl-to-br" position="bottom" height="36px" />
+        {/* Soft fade into the body — replaces the diagonal divider */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
+          style={{ background: 'linear-gradient(180deg, transparent, var(--bg-surface))' }}
+        />
       </div>
 
       <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-2 md:pb-3">
@@ -184,22 +247,56 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use interview co-pilots.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {COPILOTS.map(cp => (
-            <button key={cp.name} onClick={cp.onClick} className="group text-left rounded-xl overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5" style={{ background: 'rgba(38,97,156,0.04)', border: '1px solid rgba(38,97,156,0.15)' }}>
-              {/* Compact Unsplash hero strip — duotone-navy filter unifies
-                  all 3 photos into one brand mood. ~50px tall on a 400px
-                  card so the title/description below stay the focus. */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '8 / 1', background: 'var(--cam-primary-dk)' }}>
-                <img src={cp.image} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'grayscale(100%) contrast(1.05) brightness(0.85)' }} />
+            <button
+              key={cp.name}
+              onClick={cp.onClick}
+              className="group relative text-left rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+              style={{
+                background: 'linear-gradient(135deg, rgba(38,97,156,0.06) 0%, rgba(34,211,238,0.04) 100%)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.05)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow =
+                  '0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 36px rgba(38,97,156,0.22), 0 0 0 1px rgba(38,97,156,0.32)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow =
+                  '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.05)';
+              }}
+            >
+              {/* Hero photo strip — duotone-navy filter unifies the 3
+                  photos. Tall enough at 90px to show the imagery, short
+                  enough that the title is still the focus. */}
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '5 / 1', background: 'var(--cam-primary-dk)' }}>
+                <img
+                  src={cp.image}
+                  alt=""
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ filter: 'grayscale(100%) contrast(1.08) brightness(0.78)' }}
+                />
                 <div aria-hidden="true" className="absolute inset-0" style={{ background: 'var(--cam-primary)', mixBlendMode: 'multiply' }} />
-                <div aria-hidden="true" className="absolute inset-0" style={{ background: 'var(--cam-primary-lt)', mixBlendMode: 'screen', opacity: 0.35 }} />
+                <div aria-hidden="true" className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.45) 100%)' }} />
+                {/* Top-right gold accent — like a brand tag */}
+                <span
+                  aria-hidden="true"
+                  className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
+                  style={{ background: 'var(--cam-gold-leaf-lt)', boxShadow: '0 0 8px rgba(217,181,67,0.6)' }}
+                />
               </div>
               <div className="p-5">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(38,97,156,0.1)' }}>{cp.icon}</div>
-                  <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{cp.name}</span>
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
+                    style={{ background: 'rgba(38,97,156,0.12)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}
+                  >
+                    {cp.icon}
+                  </div>
+                  <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{cp.name}</span>
                 </div>
-                <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{cp.desc}</p>
-                <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--cam-primary)' }}>
+                <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{cp.desc}</p>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all group-hover:gap-2" style={{ color: 'var(--cam-primary)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
                   Launch
                 </span>
@@ -222,13 +319,32 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <button
               key={p.text}
               onClick={() => handlePromptClick(p)}
-              className="group flex items-center gap-3 text-left p-3 rounded-xl transition-all"
-              style={{ border: '1px solid rgba(38,97,156,0.2)' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(38,97,156,0.5)'; e.currentTarget.style.background = 'rgba(38,97,156,0.04)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(38,97,156,0.2)'; e.currentTarget.style.background = 'transparent'; }}
+              className="group flex items-center gap-3 text-left p-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
+                border: '1px solid rgba(38,97,156,0.10)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.32)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(38,97,156,0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.10)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               <PromptThumb type={p.type} />
               <span className="text-[13px] leading-snug flex-1" style={{ color: 'var(--text-secondary)' }}>{p.text}</span>
+              <svg
+                className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+                style={{ color: 'var(--cam-primary)' }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           ))}
         </div>
