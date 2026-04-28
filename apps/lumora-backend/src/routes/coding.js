@@ -1063,19 +1063,22 @@ router.post('/capture', authenticate, async (req, res) => {
     }
 
     const isDesign = kind === 'design';
-    const prompt = isDesign
-      ? `You are extracting a SYSTEM DESIGN interview question from a screenshot. Return ONLY the problem statement — the company/platform asking, the product or system to design, any scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary or headers.
+    const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
+    const prompt = `You are an OCR engine. Output ONE OF EXACTLY TWO things and nothing else:
 
-The screenshot may show a window where the problem is partially visible (scrolled, split-pane editor, dark-mode code panel). Even if you only see the problem TITLE and a couple of lines, return what you can read — partial extraction is far more useful than a refusal. Only reply with exactly NO_PROBLEM_FOUND if the screenshot truly contains zero design-question text (e.g., it's a blank window, a terminal, or a totally unrelated app).`
-      : `You are extracting a CODING interview problem from a screenshot. Return the problem statement: description, input format, output format, constraints, and example cases when they're visible. Preserve code blocks, example formatting, and math/exponent notation. Do not solve it, do not add commentary or headers like "Problem:".
+  1. The literal text of the ${subject} as it appears in the screenshot. Preserve formatting: code blocks, examples, constraints, math notation, line breaks. Do NOT solve it. Do NOT add headers like "Problem:" or "Here is...". Do NOT translate or paraphrase. Just transcribe.
+  2. The exact token NO_PROBLEM_FOUND (no other characters) if the screenshot does not contain readable problem text.
 
-The screenshot may show a window where the problem is partially visible (scrolled past the title, split-pane editor with the problem panel collapsed, dark-mode code panel covering text). Even if you only see the problem TITLE plus a few lines, return what you can read — partial extraction is far more useful than a refusal. If you see a recognizable LeetCode/HackerRank/CodeSignal problem title (e.g., "Two Sum", "Valid Parentheses"), include it even when the body is offscreen. Only reply with exactly NO_PROBLEM_FOUND if the screenshot truly contains zero coding-problem text (e.g., it's a blank window, a terminal showing only a shell prompt, or a totally unrelated app like Slack/Mail).`;
+CRITICAL RULES — violations break the product:
+  • NEVER describe what's in the image ("I can see a coding interface...", "The screenshot shows..." → ALWAYS return NO_PROBLEM_FOUND instead).
+  • NEVER apologize, explain limitations, or comment on image quality.
+  • NEVER summarize. Transcribe verbatim.
+  • If you can read even a partial problem (just the title + a few lines, e.g. a LeetCode header that says "Two Sum" with the description scrolled below), transcribe what's there.
+  • If the image is dark / blurry / cropped to a code editor / terminal / unrelated app (Slack, Mail, browser homepage, Camora itself) → NO_PROBLEM_FOUND.
+
+Begin output now. No preamble.`;
 
     const client = anthropicClient;
-    // Sonnet 4.5 — Haiku 4.5 was over-refusing on legitimate captures
-    // (returning NO_PROBLEM_FOUND on partial-but-readable screenshots
-    // of LeetCode tabs in dark mode, split-pane editors, etc.). Sonnet
-    // is more accurate at OCR + content classification on small text.
     const msg = await client.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2000,
@@ -1088,10 +1091,17 @@ The screenshot may show a window where the problem is partially visible (scrolle
       }],
     });
 
-    const problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    let problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    // Guard: model sometimes leaks a description despite the prompt.
+    // If the response opens with "I can/see/notice" or "The screenshot/image
+    // shows/appears" or "It looks/seems like", treat as NO_PROBLEM_FOUND —
+    // those are descriptions of the image, not the extracted problem.
+    if (/^(i (can|see|notice|cannot|don[''']?t)\b|the (screenshot|image|window) (shows|appears|seems|is)|it (looks|seems|appears)|sorry|unfortunately|i'?m unable)/i.test(problem)) {
+      problem = 'NO_PROBLEM_FOUND';
+    }
 
     if (!problem || problem === 'NO_PROBLEM_FOUND') {
-      return res.status(422).json({ error: "Couldn't find a problem in that screenshot. Make sure the LeetCode/HackerRank tab is visible (not minimized, not hidden behind another window) and the problem statement is on screen — then try CAPTURE again." });
+      return res.status(422).json({ error: "Couldn't read a problem in that screenshot. Make sure the LeetCode/HackerRank/CodeSignal tab is visible and the problem statement is on screen — not minimized, not behind another window — then try CAPTURE again." });
     }
 
     res.json({ problem, kind: isDesign ? 'design' : 'coding' });
@@ -1125,9 +1135,20 @@ router.post('/extract-from-image', authenticate, imageUpload.single('image'), as
     const data = req.file.buffer.toString('base64');
     const kind = (req.body?.kind === 'design') ? 'design' : 'coding';
     const isDesign = kind === 'design';
-    const prompt = isDesign
-      ? `You are extracting a SYSTEM DESIGN interview question from an uploaded image. Return ONLY the problem statement — the company/platform asking, the product or system to design, scale/constraint hints, and any requirements listed. Do not solve it, do not add commentary or headers.\n\nThe image may be a partial screenshot or photo. Return what you can read; partial extraction is far more useful than a refusal. Reply NO_PROBLEM_FOUND only if the image truly contains zero design-question text.`
-      : `You are extracting a CODING interview problem from an uploaded image. Return the problem statement: description, input/output format, constraints, and any visible example cases. Preserve code blocks, formatting, and math notation. Do not solve it.\n\nThe image may be a partial screenshot, a photo, or a cropped tab. Return what you can read; if you only see the title and a few lines, return that. Reply NO_PROBLEM_FOUND only if the image truly contains zero coding-problem text.`;
+    const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
+    const prompt = `You are an OCR engine. Output ONE OF EXACTLY TWO things and nothing else:
+
+  1. The literal text of the ${subject} as it appears in the image. Preserve formatting: code blocks, examples, constraints, math notation, line breaks. Do NOT solve it. Do NOT add headers like "Problem:" or "Here is...". Do NOT translate or paraphrase. Just transcribe.
+  2. The exact token NO_PROBLEM_FOUND (no other characters) if the image does not contain readable problem text.
+
+CRITICAL RULES — violations break the product:
+  • NEVER describe what's in the image ("I can see...", "The image shows..." → ALWAYS return NO_PROBLEM_FOUND instead).
+  • NEVER apologize, explain limitations, or comment on image quality.
+  • NEVER summarize. Transcribe verbatim.
+  • If you can read even a partial problem, transcribe what's there.
+  • If the image is dark / blurry / cropped to an unrelated context → NO_PROBLEM_FOUND.
+
+Begin output now. No preamble.`;
 
     const msg = await anthropicClient.messages.create({
       model: 'claude-sonnet-4-5-20250929',
@@ -1141,7 +1162,10 @@ router.post('/extract-from-image', authenticate, imageUpload.single('image'), as
       }],
     });
 
-    const problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    let problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    if (/^(i (can|see|notice|cannot|don[''']?t)\b|the (screenshot|image|window) (shows|appears|seems|is)|it (looks|seems|appears)|sorry|unfortunately|i'?m unable)/i.test(problem)) {
+      problem = 'NO_PROBLEM_FOUND';
+    }
     if (!problem || problem === 'NO_PROBLEM_FOUND') {
       return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
     }
