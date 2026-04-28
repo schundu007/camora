@@ -187,7 +187,11 @@ export function LumoraShellPage() {
 
   return (
     <InterviewerAudioProvider onTranscription={handleTranscription}>
-    <InterviewerSetupGate />
+    {/* Scope the audio-setup gate to the live interview tab only — it
+        renders a fullscreen modal that would otherwise block prepkit,
+        calendar, sessions, profile, etc., none of which use interviewer
+        audio. */}
+    {activeTab === 'interview' && <InterviewerSetupGate />}
     {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
     {blanked && (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000000' }} onClick={() => setBlanked(false)}>
