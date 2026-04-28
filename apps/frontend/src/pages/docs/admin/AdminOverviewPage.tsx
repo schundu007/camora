@@ -47,10 +47,6 @@ export default function AdminOverviewPage() {
                 <td className="px-4 py-2.5">apps/ai-services</td><td className="px-4 py-2.5">Railway (Docker)</td>
                 <td className="px-4 py-2.5">internal only</td><td className="px-4 py-2.5">FastAPI + Whisper + diarization</td>
               </tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5">apps/desktop</td><td className="px-4 py-2.5">GitHub Releases</td>
-                <td className="px-4 py-2.5">github.com/schundu007/camora</td><td className="px-4 py-2.5">Electron shell, embeds web frontend</td>
-              </tr>
             </tbody>
           </table>
         </div>
