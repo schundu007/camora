@@ -25,6 +25,11 @@ contextBridge.exposeInMainWorld('camo', {
   // the running Chromium audio service after a process restart, so the
   // wizard uses this when TCC says 'granted' but getUserMedia 404s.
   relaunch: () => ipcRenderer.invoke('relaunch-app'),
+  // Source list for the "Capture problem" picker. Returns an array of
+  // { id, name, kind: 'screen' | 'window', thumbnail (dataUrl) } so
+  // the renderer can render its own picker modal and pass back a
+  // chosen source id to seed getUserMedia({ chromeMediaSourceId }).
+  listCaptureSources: () => ipcRenderer.invoke('list-capture-sources'),
   onUpdateAvailable: (cb) => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.on('update-available', (_, info) => cb(info));
