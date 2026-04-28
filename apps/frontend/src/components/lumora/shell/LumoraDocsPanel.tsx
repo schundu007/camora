@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import hljs from 'highlight.js';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';
+import { prepAPI } from '../../../lib/api-client';
 
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -2161,12 +2162,57 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     setJdEditText(clip);
   };
 
+  // Tracks whether the initial backend hydration has run. We only enable
+  // write-through after hydration so we don't overwrite the server with
+  // an empty/stale local state on first render.
+  const hydratedRef = useRef(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const writeTimerRef = useRef<number | null>(null);
+
+  // Hydrate from backend on mount — gives Sona access to materials
+  // uploaded on a different device or after browser data was cleared.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await prepAPI.getState(token);
+        if (cancelled) return;
+        if (r.data && typeof r.data === 'object' && Object.keys(r.data as object).length > 0) {
+          setPrepData(r.data as PrepData);
+        }
+      } catch (err) {
+        // Backend offline — fall back to localStorage that's already loaded.
+        console.warn('[prep] hydrate failed, using localStorage', err);
+      } finally {
+        hydratedRef.current = true;
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
   useEffect(() => {
     savePrepData(prepData);
     // Notify in-tab listeners (ContextBadge, etc.) — the storage event
     // doesn't fire in the tab that wrote the value.
     try { window.dispatchEvent(new CustomEvent('lumora:context-updated')); } catch {}
-  }, [prepData]);
+
+    // Debounced write-through to the backend. Skip until hydration has
+    // run (first render after mount would otherwise PUT the empty
+    // initial state and clobber the server copy).
+    if (!hydratedRef.current || !token) return;
+    if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
+    setSyncStatus('saving');
+    writeTimerRef.current = window.setTimeout(async () => {
+      try {
+        await prepAPI.putState(token, prepData);
+        setSyncStatus('saved');
+      } catch (err) {
+        console.warn('[prep] write-through failed', err);
+        setSyncStatus('error');
+      }
+    }, 1500);
+  }, [prepData, token]);
 
   // Auto-create default company if none exists
   useEffect(() => {
