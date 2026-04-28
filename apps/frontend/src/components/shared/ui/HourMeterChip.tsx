@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface BudgetData {
   source: 'team' | 'personal';
