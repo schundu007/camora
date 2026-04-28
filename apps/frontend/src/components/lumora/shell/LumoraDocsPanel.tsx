@@ -2690,22 +2690,58 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       </div>
 
       {jdModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={closeJdModal}>
-          <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden" style={{ background: 'var(--bg-surface)' }} onClick={(e) => e.stopPropagation()}>
-            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
-              <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
+        /* Camora + LeetCode-style modal: charcoal-tinted backdrop with
+           blur, charcoal header strip with gold-leaf seam, solid brand
+           Save pill, ghost Cancel with border. Same chrome language as
+           SiteNav / SiteFooter so popups read as the same product. */
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+          style={{ background: 'rgba(2,6,23,0.62)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+          onClick={closeJdModal}
+        >
+          <div
+            className="w-full max-w-2xl rounded-xl overflow-hidden flex flex-col"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 24px 70px rgba(0,0,0,0.45)', maxHeight: 'calc(100vh - 6rem)' }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="jd-modal-title"
+          >
+            {/* Header — charcoal strip with gold-leaf seam, matches SiteNav */}
+            <div
+              className="px-5 py-3.5 flex items-center justify-between shrink-0"
+              style={{ background: '#1A1D24', borderBottom: '1px solid rgba(201,162,39,0.35)' }}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="inline-block w-1 h-5 rounded-sm"
+                  style={{ background: 'var(--cam-gold-leaf)' }}
+                />
+                <h3 id="jd-modal-title" className="text-[15px] font-bold tracking-tight" style={{ color: '#FFFFFF', fontFamily: 'var(--font-sans)' }}>Job Description</h3>
+              </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => jdFileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                <button
+                  onClick={() => jdFileInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}
+                >
                   Upload File
                 </button>
-                <button onClick={closeJdModal} className="p-1 rounded" style={{ color: 'var(--text-muted)' }}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <button
+                  onClick={closeJdModal}
+                  aria-label="Close"
+                  className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.7)' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
             </div>
-            <div className="p-4">
-              <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>Paste job posting URL</label>
+
+            {/* Body */}
+            <div className="px-5 py-5 overflow-y-auto">
+              <label className="block text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--text-muted)' }}>Paste job posting URL</label>
               <div className="flex items-center gap-2">
                 <input
                   type="url"
@@ -2714,30 +2750,38 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                   onKeyDown={(e) => { if (e.key === 'Enter' && jdUrl.trim() && !jdFetching) { e.preventDefault(); fetchJdUrl(jdUrl); } }}
                   placeholder="https://nvidia.wd5.myworkdayjobs.com/..."
                   disabled={jdFetching}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs"
-                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  className="flex-1 px-3 py-2 rounded-md text-[13px] focus:outline-none focus:ring-2"
+                  style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 />
-                <button onClick={pasteJdFromClipboard} disabled={jdFetching}
-                  className="px-3 py-2 rounded text-xs font-medium" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)', opacity: jdFetching ? 0.5 : 1, cursor: jdFetching ? 'not-allowed' : 'pointer' }}
-                  title="Paste URL or JD text from clipboard">
+                <button
+                  onClick={pasteJdFromClipboard}
+                  disabled={jdFetching}
+                  className="px-3 py-2 rounded-md text-[12px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                  title="Paste URL or JD text from clipboard"
+                >
                   Paste
                 </button>
-                <button onClick={() => fetchJdUrl(jdUrl)} disabled={!jdUrl.trim() || jdFetching}
-                  className="px-3 py-2 rounded text-xs font-bold" style={{ background: 'var(--cam-primary)', color: '#fff', opacity: (!jdUrl.trim() || jdFetching) ? 0.5 : 1, cursor: (!jdUrl.trim() || jdFetching) ? 'not-allowed' : 'pointer' }}>
+                <button
+                  onClick={() => fetchJdUrl(jdUrl)}
+                  disabled={!jdUrl.trim() || jdFetching}
+                  className="px-4 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: 'var(--cam-primary)', color: '#FFFFFF', boxShadow: (!jdUrl.trim() || jdFetching) ? 'none' : '0 4px 12px rgba(38,97,156,0.32)' }}
+                >
                   {jdFetching ? 'Fetching…' : 'Fetch JD'}
                 </button>
               </div>
-              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[11px] mt-2" style={{ color: 'var(--text-muted)' }}>
                 Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn, and most career pages.
               </p>
-              {jdUrlError && <p className="text-[11px] mt-1.5" style={{ color: 'var(--danger)' }}>{jdUrlError}</p>}
+              {jdUrlError && <p className="text-[11px] mt-2 font-semibold" style={{ color: 'var(--danger)' }}>{jdUrlError}</p>}
 
               <textarea
                 value={jdEditText}
                 onChange={(e) => setJdEditText(e.target.value)}
                 placeholder="Or paste the full job description text here..."
-                className="w-full mt-3 p-3 rounded-lg text-xs resize-none"
-                style={{ height: '240px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                className="w-full mt-4 p-3 rounded-md text-[13px] resize-none focus:outline-none"
+                style={{ height: '240px', background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}
               />
               <input ref={jdFileInputRef} type="file" accept=".pdf,.docx,.doc,.txt,.md" className="hidden"
                 onChange={async (e) => {
@@ -2752,16 +2796,25 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                   } finally { setJdFetching(false); }
                 }} />
             </div>
-            <div className="px-4 py-3 flex justify-end gap-2" style={{ borderTop: '1px solid var(--border)' }}>
-              <button onClick={closeJdModal} className="px-4 py-2 rounded text-xs font-medium" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>Cancel</button>
+
+            {/* Footer */}
+            <div className="px-5 py-3 flex justify-end gap-2 shrink-0" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+              <button
+                onClick={closeJdModal}
+                className="px-4 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-colors"
+                style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+              >
+                Cancel
+              </button>
               <button
                 onClick={() => {
                   if (jdEditText.trim()) setState(p => ({ ...p, jd: jdEditText.trim(), jdFile: undefined }));
                   closeJdModal();
                 }}
                 disabled={!jdEditText.trim()}
-                className="px-4 py-2 rounded text-xs font-bold"
-                style={{ background: 'var(--cam-primary)', color: '#fff', opacity: jdEditText.trim() ? 1 : 0.5, cursor: jdEditText.trim() ? 'pointer' : 'not-allowed' }}>
+                className="px-5 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: 'var(--cam-primary)', color: '#FFFFFF', boxShadow: jdEditText.trim() ? '0 4px 12px rgba(38,97,156,0.32)' : 'none' }}
+              >
                 Save
               </button>
             </div>
