@@ -411,12 +411,30 @@ export function LumoraShellPage() {
 
           {/* Sessions page */}
           {activeTab === 'sessions' && (
-            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              {/* LeetCode navy hero w/ gold underline */}
-              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
-                <div className="max-w-3xl mx-auto px-6 py-6 w-full">
-                  <h2 className="text-3xl font-extrabold mb-2 text-white">Sessions</h2>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)' }}>{history.length}</span> saved.</p>
+            <div
+              className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto"
+              style={{
+                background:
+                  'radial-gradient(ellipse 50% 40% at 0% 0%, rgba(38,97,156,0.06), transparent 70%),' +
+                  'radial-gradient(ellipse 60% 40% at 100% 100%, rgba(34,211,238,0.04), transparent 70%),' +
+                  'var(--bg-surface)',
+              }}
+            >
+              {/* Atmospheric navy hero w/ cyan inner glow + gold underline */}
+              <div
+                className="shrink-0 relative"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(34,211,238,0.14), transparent 60%),' +
+                    'var(--cam-hero-strip)',
+                  borderBottom: '2px solid var(--cam-gold-leaf)',
+                }}
+              >
+                <div className="max-w-3xl mx-auto px-6 py-6 w-full relative">
+                  <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.12)' }}>Sessions</h2>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                    Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 14px rgba(217,181,67,0.45)' }}>{history.length}</span> saved.
+                  </p>
                 </div>
               </div>
               <div className="max-w-3xl mx-auto px-6 py-6 w-full">
@@ -436,12 +454,23 @@ export function LumoraShellPage() {
                 </div>
                 {history.length === 0 ? (
                   <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
-                    <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    <div className="relative w-14 h-14 mx-auto mb-3">
+                      {/* Outward pulse ring under the icon — invites action */}
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-0 rounded-full animate-ping"
+                        style={{ background: 'rgba(38,97,156,0.10)' }}
+                      />
+                      <svg className="relative w-12 h-12 mx-auto mt-1 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
                     <p className="text-sm font-medium">No sessions yet</p>
                     <p className="text-xs mt-1">Start an interview to see your history here.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {history.slice().reverse().map((entry: any, revIdx: number) => {
                       const realIdx = history.length - 1 - revIdx;
                       return (
@@ -451,13 +480,33 @@ export function LumoraShellPage() {
                           tabIndex={0}
                           onClick={() => { setFocusedEntry(realIdx); navigate('/lumora'); }}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocusedEntry(realIdx); navigate('/lumora'); } }}
-                          className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors"
-                          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                          className="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
+                            border: '1px solid rgba(38,97,156,0.10)',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.borderColor = 'rgba(38,97,156,0.32)';
+                            e.currentTarget.style.boxShadow = '0 8px 22px rgba(38,97,156,0.16)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.borderColor = 'rgba(38,97,156,0.10)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
                         >
-                          <span className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-bold shrink-0"
-                            style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)', fontFamily: 'var(--font-code)' }}>
+                          <span
+                            className="flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold shrink-0"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
+                              color: '#FFFFFF',
+                              fontFamily: 'var(--font-code)',
+                              boxShadow: '0 2px 6px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.16)',
+                            }}
+                          >
                             {realIdx + 1}
                           </span>
                           <div className="flex-1 min-w-0">
