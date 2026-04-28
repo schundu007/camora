@@ -17,6 +17,7 @@ import SharedPricingCards from '../../components/shared/PricingCards';
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 import { AudioCheckModal } from '../../components/lumora/shell/AudioCheckModal';
+import { InterviewerAudioProvider, InterviewerSetupGate } from '../../components/lumora/audio/InterviewerAudio';
 import { useTheme } from '../../hooks/useTheme';
 import type { ParsedBlock } from '../../types';
 import { dialogConfirm } from '../../components/shared/Dialog';
@@ -185,7 +186,8 @@ export function LumoraShellPage() {
   }, [activeTab]);
 
   return (
-    <>
+    <InterviewerAudioProvider onTranscription={handleTranscription}>
+    <InterviewerSetupGate />
     {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
     {blanked && (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000000' }} onClick={() => setBlanked(false)}>
@@ -663,7 +665,7 @@ export function LumoraShellPage() {
       {/* Mobile Audio Check — shell-level so the dropdown "Audio check" entry can open it. */}
       <AudioCheckModal isOpen={mobileAudioCheckOpen} onClose={() => setMobileAudioCheckOpen(false)} />
     </div>
-    </>
+    </InterviewerAudioProvider>
   );
 }
 

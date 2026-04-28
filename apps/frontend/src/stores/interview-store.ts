@@ -56,6 +56,16 @@ interface InterviewState {
   isEnrolling: boolean;
   autoEnrollPending: boolean; // true when record-interviewer is waiting for first audio chunk
 
+  // Interviewer audio (tab/system audio capture — the dedicated interviewer
+  // stream). Distinct from the candidate's own mic. When `active` is false,
+  // Lumora cannot hear the interviewer at all.
+  interviewerAudio: {
+    active: boolean;
+    level: number;
+    error: string | null;
+    everConnected: boolean; // true after first successful connect this session
+  };
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -84,6 +94,7 @@ interface InterviewState {
   setVoiceFilterEnabled: (enabled: boolean) => void;
   setIsEnrolling: (enrolling: boolean) => void;
   setAutoEnrollPending: (pending: boolean) => void;
+  setInterviewerAudio: (patch: Partial<InterviewState['interviewerAudio']>) => void;
   reset: () => void;
 }
 
@@ -115,6 +126,12 @@ const initialState = {
   voiceFilterEnabled: true, // Enable by default when enrolled
   isEnrolling: false,
   autoEnrollPending: false,
+  interviewerAudio: {
+    active: false,
+    level: 0,
+    error: null as string | null,
+    everConnected: false,
+  },
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -204,6 +221,9 @@ export const useInterviewStore = create<InterviewState>()(
   setIsEnrolling: (enrolling) => set({ isEnrolling: enrolling }),
 
   setAutoEnrollPending: (pending) => set({ autoEnrollPending: pending }),
+
+  setInterviewerAudio: (patch) =>
+    set((state) => ({ interviewerAudio: { ...state.interviewerAudio, ...patch } })),
 
   reset: () => set(initialState),
     }),
