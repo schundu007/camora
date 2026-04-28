@@ -114,32 +114,48 @@ app.on('second-instance', () => {
   }
 });
 
-// ── IPC: native macOS window picker ────────────────────────────────────
-// Click Capture → macOS draws its own window-select cursor (camera icon
-// on hover) → user clicks the window to capture → screencapture writes
-// the PNG. No in-app modal, no list, no thumbnails. The system-native
-// UX every other capture tool uses.
-//
-// Hides our own window first so it doesn't appear in the list, then
-// re-shows it after the capture completes (or the user presses Escape).
-ipcMain.handle('capture-interactive', async () => {
-  const tmp = path.join(os.tmpdir(), `camora-cap-${Date.now()}-${process.pid}.png`);
-  const wasVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
-  if (wasVisible) {
-    mainWindow.hide();
-    // Give the compositor a frame to actually unmap the window before
-    // screencapture enumerates the on-screen window list.
-    await new Promise((r) => setTimeout(r, 120));
-  }
+// ── IPC: in-app window picker ──────────────────────────────────────────
+// list-windows: returns titles + IDs (no thumbnails, instant return).
+// The renderer renders the picker; user picks a window; we then call
+// capture-window with the chosen sourceId. This restores the
+// "click Capture → list of windows → pick one → done" UX.
+ipcMain.handle('list-windows', async () => {
   try {
-    // -w: window selection mode (camera-icon cursor on hover, click to capture).
-    // -o: don't add a window's drop shadow to the screenshot.
-    // -t png: full-res PNG (not JPEG).
-    // If the user presses Escape, screencapture exits 1 and writes nothing.
-    await new Promise((res) => {
-      execFile('/usr/sbin/screencapture', ['-w', '-o', '-t', 'png', tmp], () => res());
+    const sources = await desktopCapturer.getSources({
+      types: ['window', 'screen'],
+      thumbnailSize: { width: 1, height: 1 },
+      fetchWindowIcons: false,
     });
-    if (!fs.existsSync(tmp)) return null; // user pressed Escape
+    return sources
+      // Hide Camora's own window from the list — easy to mis-click on it.
+      .filter((s) => !/^Camora$/i.test(s.name))
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        kind: s.id.startsWith('screen:') ? 'screen' : 'window',
+      }));
+  } catch (err) {
+    console.error('[capture] list-windows failed:', err);
+    return [];
+  }
+});
+
+// capture-window: takes a sourceId from list-windows, captures that
+// specific window via /usr/sbin/screencapture -l<windowID> -t png.
+// Full native resolution, triggers SR permission prompt the standard
+// way on first call, downscales to <5 MB before returning.
+ipcMain.handle('capture-window', async (_e, sourceId) => {
+  if (!sourceId) return null;
+  const m = String(sourceId).match(/^(window|screen):(\d+):/);
+  if (!m) return null;
+  const [, kind, idNum] = m;
+  const tmp = path.join(os.tmpdir(), `camora-cap-${Date.now()}-${process.pid}.png`);
+  const args = kind === 'window'
+    ? ['-x', '-t', 'png', '-o', '-l', idNum, tmp]
+    : ['-x', '-t', 'png', '-o', `-D${Number(idNum) + 1}`, tmp];
+  try {
+    await new Promise((res, rej) => execFile('/usr/sbin/screencapture', args, (err) => err ? rej(err) : res()));
+    if (!fs.existsSync(tmp)) return null;
     let buf = fs.readFileSync(tmp);
     fs.unlink(tmp, () => {});
     if (!buf.length) return null;
@@ -183,9 +199,21 @@ ipcMain.handle('get-media-access-status', (_e, kind) => {
   if (process.platform !== 'darwin') return 'granted';
   return systemPreferences.getMediaAccessStatus(kind || 'microphone');
 });
+ipcMain.handle('ask-for-media-access', async (_e, kind) => {
+  if (process.platform !== 'darwin') return true;
+  try {
+    return await systemPreferences.askForMediaAccess(kind || 'microphone');
+  } catch {
+    return false;
+  }
+});
 ipcMain.handle('open-system-privacy', (_e, section) => {
   const sec = section || 'Microphone';
   return shell.openExternal(`x-apple.systempreferences:com.apple.preference.security?Privacy_${sec}`);
+});
+ipcMain.handle('relaunch-app', () => {
+  app.relaunch();
+  app.exit(0);
 });
 
 // ── IPC: download — real PDF via Chromium printToPDF ───────────────────
