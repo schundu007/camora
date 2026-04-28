@@ -84,21 +84,27 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
     return canvas.toDataURL('image/png');
   }, []);
 
-  // Capture a specific source via the desktop IPC, then OCR.
+  // Capture a specific window via /usr/sbin/screencapture in the main
+  // process, then OCR. screencapture triggers macOS's standard Screen
+  // Recording permission prompt on first use; if denied, returns null
+  // and we open System Settings so the user can grant.
   const captureBySourceId = useCallback(async (sourceId: string) => {
     const camo = (window as any).camo;
-    if (!camo?.captureSourceImage) {
+    if (!camo?.captureWindow) {
       setStatus('Capture not supported');
       return;
     }
     setBusy(true);
     setStatus('Capturing…');
     try {
-      const png: string | null = await camo.captureSourceImage(sourceId);
-      if (!png) throw new Error('No image — Screen Recording permission may be denied');
+      const png: string | null = await camo.captureWindow(sourceId);
+      if (!png) {
+        camo.openSystemPrivacy?.('ScreenCapture');
+        throw new Error('Screen Recording permission needed — grant in System Settings, then try again');
+      }
       await ocrAndDeliver(png);
     } catch (err: any) {
-      console.error('[capture] source capture failed:', err);
+      console.error('[capture] window capture failed:', err);
       setStatus(err?.message || 'Capture failed');
     } finally {
       setBusy(false);
@@ -112,20 +118,10 @@ export default function ScreenCaptureButton({ kind = 'coding', onCaptured, varia
 
     const camo = (window as any).camo;
     if (camo?.isDesktop && typeof camo.listCaptureSources === 'function') {
-      // Pre-check Screen Recording so we can give a clear message
-      // instead of getting empty thumbnails.
-      if (camo.platform === 'darwin' && typeof camo.getMediaAccessStatus === 'function') {
-        try {
-          const screenStatus = await camo.getMediaAccessStatus('screen');
-          if (screenStatus !== 'granted') {
-            setStatus('Screen Recording permission needed — opening System Settings');
-            camo.openSystemPrivacy?.('ScreenCapture');
-            return;
-          }
-        } catch { /* non-fatal */ }
-      }
-
       // Open picker IMMEDIATELY with empty array (= loading state).
+      // Don't pre-check SR permission — getMediaAccessStatus('screen')
+      // returns 'unknown' for unbound cdhashes which would block us
+      // before screencapture can trigger the system prompt naturally.
       setPickerSources([]);
       setPickerError(null);
       setPickerQuery('');

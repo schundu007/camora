@@ -396,33 +396,39 @@ ipcMain.handle('list-capture-sources', async () => {
   }
 });
 
-// Capture the chosen window/screen at full native resolution.
-// Re-fetch via desktopCapturer.getSources with a 4096-pixel thumbnail
-// size — that returns the source's actual content at native dimensions
-// (capped to 4096 if larger). Bypasses Chromium's video pipeline that
-// silently downscaled chromeMediaSourceId captures to ~640×360.
-ipcMain.handle('capture-source-image', async (_e, sourceId) => {
+// Capture the chosen window at full native resolution via macOS's
+// /usr/sbin/screencapture. This is what Cleanshot, Loom, Slack etc.
+// use under the hood — it triggers the standard Screen Recording
+// permission prompt on first use and writes a real PNG file. Bypasses
+// the Electron desktopCapturer thumbnail path which silently returned
+// empty bitmaps when SR was denied for the running cdhash.
+ipcMain.handle('capture-window-native', async (_e, sourceId) => {
+  if (!sourceId) return null;
+  // Source IDs from desktopCapturer look like "window:12345:0" or "screen:0:0".
+  const match = String(sourceId).match(/^(window|screen):(\d+):/);
+  if (!match) return null;
+  const [, kind, idNum] = match;
+  const tmpFile = path.join(os.tmpdir(), `camora-cap-${Date.now()}-${process.pid}.png`);
+  // -x: silent (no shutter sound), -t png, -o: don't add metadata
+  // window: -l<id>; screen: -D<displayID> (idNum is 0-based; displays are 1-based)
+  const args = kind === 'window'
+    ? ['-x', '-t', 'png', '-o', '-l', idNum, tmpFile]
+    : ['-x', '-t', 'png', '-o', `-D${Number(idNum) + 1}`, tmpFile];
   try {
-    if (!sourceId) return null;
-    const sources = await desktopCapturer.getSources({
-      types: ['window', 'screen'],
-      thumbnailSize: { width: 4096, height: 4096 },
-      fetchWindowIcons: false,
+    await new Promise((resolve, reject) => {
+      execFile('/usr/sbin/screencapture', args, (err) => err ? reject(err) : resolve());
     });
-    const target = sources.find((s) => s.id === sourceId);
-    if (!target) {
-      console.warn('[capture] source not found:', sourceId);
+    const buf = fs.readFileSync(tmpFile);
+    fs.unlink(tmpFile, () => {});
+    if (!buf.length) {
+      console.warn('[capture] screencapture wrote empty file — Screen Recording denied?');
       return null;
     }
-    if (target.thumbnail.isEmpty()) {
-      console.warn('[capture] empty thumbnail for', sourceId, '— Screen Recording denied?');
-      return null;
-    }
-    const size = target.thumbnail.getSize();
-    console.info(`[capture] source-image ${size.width}×${size.height} for ${sourceId}`);
-    return target.thumbnail.toDataURL();
+    console.info(`[capture] screencapture ${kind}=${idNum} → ${buf.length} bytes`);
+    return `data:image/png;base64,${buf.toString('base64')}`;
   } catch (err) {
-    console.error('[capture] capture-source-image failed:', err);
+    console.error('[capture] screencapture failed:', err);
+    fs.unlink(tmpFile, () => {});
     return null;
   }
 });

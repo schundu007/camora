@@ -29,9 +29,9 @@ contextBridge.exposeInMainWorld('camo', {
   // with NO thumbnails so the IPC is near-instant — the picker opens
   // immediately with window titles.
   listCaptureSources: () => ipcRenderer.invoke('list-capture-sources'),
-  // Capture the chosen source at full native resolution, returns PNG
-  // dataURL. Bypasses Chromium's video pipeline.
-  captureSourceImage: (sourceId) => ipcRenderer.invoke('capture-source-image', sourceId),
+  // Capture the chosen window at full native resolution via macOS's
+  // /usr/sbin/screencapture. Returns PNG dataURL or null if denied.
+  captureWindow: (sourceId) => ipcRenderer.invoke('capture-window-native', sourceId),
   onUpdateAvailable: (cb) => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.on('update-available', (_, info) => cb(info));
