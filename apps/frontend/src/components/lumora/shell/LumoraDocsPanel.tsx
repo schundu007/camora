@@ -2178,8 +2178,27 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       try {
         const r = await prepAPI.getState(token);
         if (cancelled) return;
-        if (r.data && typeof r.data === 'object' && Object.keys(r.data as object).length > 0) {
+        const remoteHasData = r.data && typeof r.data === 'object' && Object.keys(r.data as object).length > 0;
+        if (remoteHasData) {
           setPrepData(r.data as PrepData);
+        } else {
+          // Server has nothing for this user yet but local already has
+          // companies/JD/resume from a previous session. Push the local
+          // copy up now — without this nudge, the write-through effect
+          // never fires (it keys on prepData changes, and hydration
+          // completing isn't a prepData change), so cross-device sync
+          // would silently never start.
+          const localHasData = prepData && (prepData.companies?.length > 0 || Object.keys(prepData.data || {}).length > 0);
+          if (localHasData) {
+            setSyncStatus('saving');
+            try {
+              await prepAPI.putState(token, prepData);
+              if (!cancelled) setSyncStatus('saved');
+            } catch (err) {
+              console.warn('[prep] initial backfill failed', err);
+              if (!cancelled) setSyncStatus('error');
+            }
+          }
         }
       } catch (err) {
         // Backend offline — fall back to localStorage that's already loaded.
@@ -2189,6 +2208,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       }
     })();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
