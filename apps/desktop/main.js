@@ -149,8 +149,13 @@ function createWindow() {
   // audio, video }) and just receives a working stream.
   session.defaultSession.setDisplayMediaRequestHandler(
     (_request, callback) => {
+      // Fallback path (older macOS, Linux): include both screens AND
+      // windows so the screen-capture-OCR flow can grab a Chrome tab,
+      // not just the primary display. Returns the first available
+      // source to preserve the auto-pick interviewer-audio behavior
+      // when the system picker isn't available.
       desktopCapturer
-        .getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
+        .getSources({ types: ['screen', 'window'], thumbnailSize: { width: 0, height: 0 } })
         .then((sources) => {
           if (!sources.length) {
             callback({});
@@ -163,6 +168,16 @@ function createWindow() {
           callback({});
         });
     },
+    // Auto-pick the primary screen so the interviewer-audio loopback
+    // flow works without an extra picker step. The macOS system picker
+    // doesn't auto-include system audio — users had to manually tick
+    // "Share audio" in the picker, and missing that toggle returned a
+    // zero-audio-track stream that surfaced as "No system audio
+    // detected". The Capture-problem screenshot flow (which DOES need
+    // a picker so the user can choose their HackerRank / CodeSignal tab)
+    // is being moved to a separate IPC path that calls desktopCapturer
+    // directly with a custom UI — that change is the right place to
+    // give the user control over which surface to capture.
     { useSystemPicker: false },
   );
 
