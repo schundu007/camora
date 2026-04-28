@@ -196,6 +196,12 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
     try {
       const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
       const ctx = new Ctx();
+      // Chromium sometimes spawns the context in 'suspended' state even
+      // inside a user-gesture click handler — resume() is a no-op when
+      // already running, but unblocks the silent-but-not-erroring case.
+      if (ctx.state === 'suspended') {
+        try { await ctx.resume(); } catch {}
+      }
       if (supportsSinkId && selectedOutput && 'setSinkId' in (ctx as any)) {
         try { await (ctx as any).setSinkId(selectedOutput); } catch {}
       }
@@ -211,6 +217,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
       osc.stop(ctx.currentTime + 1);
       osc.onended = () => ctx.close();
     } catch (err: any) {
+      console.error('[AudioCheck] test tone failed', err);
       setToast(err?.message || 'Could not play test tone');
     }
   }, [supportsSinkId, selectedOutput]);
@@ -395,11 +402,17 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
             )}
             <div className="mt-3 flex items-center gap-2">
               <button
+                type="button"
                 onClick={playTestTone}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors"
-                style={{ color: '#FFFFFF', background: 'var(--cam-primary-dk)', border: '1px solid var(--cam-primary-dk)' }}
+                className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-bold uppercase tracking-wider rounded-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  color: '#FFFFFF',
+                  background: 'var(--cam-primary)',
+                  border: '1px solid var(--cam-primary)',
+                  boxShadow: '0 4px 12px rgba(38,97,156,0.32)',
+                }}
               >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 Play test tone
