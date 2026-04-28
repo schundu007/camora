@@ -2167,7 +2167,17 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   // an empty/stale local state on first render.
   const hydratedRef = useRef(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [syncError, setSyncError] = useState<string | null>(null);
   const writeTimerRef = useRef<number | null>(null);
+
+  const formatSyncError = (err: unknown): string => {
+    if (err && typeof err === 'object') {
+      const e = err as { status?: number; message?: string };
+      if (typeof e.status === 'number') return `HTTP ${e.status} — ${e.message || 'request failed'}`;
+      if (e.message) return String(e.message);
+    }
+    return String(err);
+  };
 
   // Hydrate from backend on mount — gives Sona access to materials
   // uploaded on a different device or after browser data was cleared.
@@ -2193,10 +2203,10 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             setSyncStatus('saving');
             try {
               await prepAPI.putState(token, prepData);
-              if (!cancelled) setSyncStatus('saved');
+              if (!cancelled) { setSyncStatus('saved'); setSyncError(null); }
             } catch (err) {
               console.warn('[prep] initial backfill failed', err);
-              if (!cancelled) setSyncStatus('error');
+              if (!cancelled) { setSyncStatus('error'); setSyncError(formatSyncError(err)); }
             }
           }
         }
@@ -2227,9 +2237,11 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       try {
         await prepAPI.putState(token, prepData);
         setSyncStatus('saved');
+        setSyncError(null);
       } catch (err) {
         console.warn('[prep] write-through failed', err);
         setSyncStatus('error');
+        setSyncError(formatSyncError(err));
       }
     }, 1500);
   }, [prepData, token]);
@@ -2445,6 +2457,15 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               {!token ? 'Local only' : syncStatus === 'saving' ? 'Saving…' : syncStatus === 'saved' ? 'Saved' : syncStatus === 'error' ? 'Sync failed' : 'Idle'}
             </span>
           </div>
+          {syncStatus === 'error' && syncError && (
+            <p
+              className="text-[9px] mt-1 leading-snug break-all"
+              style={{ color: '#FCA5A5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+              title={syncError}
+            >
+              {syncError}
+            </p>
+          )}
           {/* The new-company input must take priority over the dropdown.
               Auto-init sets activeCompany = "My Interview" on first mount,
               so without this hoist the dropdown branch always wins and

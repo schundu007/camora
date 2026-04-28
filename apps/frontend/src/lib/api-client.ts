@@ -29,9 +29,15 @@ async function fetchAPI<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // The local `headers` (built above with Content-Type + caller-passed
+  // options.headers + Authorization) is the authoritative set. A previous
+  // line tried `headers: { ...getAuthHeaders() }` here as a fallback, but
+  // (a) it referenced an unimported helper, throwing ReferenceError on
+  // every fetchAPI call (broke prep state sync, speaker enroll status,
+  // documents listing, etc.), and (b) it was dead anyway because the
+  // local `headers` overrides it via key order in this object literal.
   const response = await fetch(`${API_URL}${endpoint}`, {
     credentials: 'include',
-    headers: { ...getAuthHeaders() },
     ...options,
     headers,
   });
