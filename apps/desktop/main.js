@@ -90,6 +90,17 @@ function createWindow() {
 
 // ── Lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
+  // Clear the HTTP cache on every launch. Electron caches index.html and
+  // hashed asset chunks aggressively, which means a Vercel deploy that
+  // changed a chunk hash often serves the OLD HTML pointing at a chunk
+  // that is now missing — or a STALE chunk that doesn't match the
+  // preload's IPC surface. Wiping the cache here costs ~one extra
+  // network round-trip on launch and makes "fresh deploy = fresh app".
+  try {
+    await session.defaultSession.clearCache();
+    await session.defaultSession.clearStorageData({ storages: ['shadercache', 'cachestorage'] });
+  } catch {}
+
   // Prompt for mic at launch so it's a one-time UX, not a surprise mid-interview.
   if (process.platform === 'darwin') {
     try { await systemPreferences.askForMediaAccess('microphone'); } catch {}
@@ -99,6 +110,12 @@ app.whenReady().then(async () => {
   globalShortcut.register('CommandOrControl+B', () => {
     if (!mainWindow) return;
     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+  });
+  globalShortcut.register('CommandOrControl+R', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
+  });
+  globalShortcut.register('CommandOrControl+Shift+R', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
   });
 });
 
