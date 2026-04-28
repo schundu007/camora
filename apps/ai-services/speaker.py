@@ -275,7 +275,12 @@ async def speaker_diarize(
                 })
 
         interviewer_ratio = interviewer_windows / max(total_windows, 1)
-        should_transcribe = interviewer_ratio > 0.15
+        # Always transcribe if any interviewer voice is present. The
+        # previous 15%-floor dropped short questions ("Tell me about
+        # yourself.") and any clip where the candidate happened to
+        # speak first. The downstream caller (transcription.js) decides
+        # what to surface based on the per-segment labels we return.
+        should_transcribe = interviewer_windows > 0
 
         print(f"[Diarize] {len(merged)} segments, interviewer={interviewer_ratio:.0%}, transcribe={should_transcribe}")
         return {

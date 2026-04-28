@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, systemPreferences, session, shell, nativeImage, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, systemPreferences, session, shell, nativeImage, ipcMain, desktopCapturer } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { createTray } = require('./tray');
@@ -140,6 +140,35 @@ function createWindow() {
     return allowed.includes(permission);
   });
 
+  // ── Native system-audio loopback for getDisplayMedia ─────────────────
+  // Without this handler, calling getDisplayMedia() inside Electron throws
+  // "Not supported" and the renderer falls back to the (unavailable in our
+  // packaged build) browser picker. By providing a handler we route the
+  // call straight to a primary-display video source plus `audio: 'loopback'`
+  // — Electron uses ScreenCaptureKit on macOS 13+ and WASAPI loopback on
+  // Windows, so the user gets system audio without installing BlackHole or
+  // any virtual audio cable. The renderer code (useTabAudioCapture) is
+  // unchanged: it still calls navigator.mediaDevices.getDisplayMedia({
+  // audio, video }) and just receives a working stream.
+  session.defaultSession.setDisplayMediaRequestHandler(
+    (_request, callback) => {
+      desktopCapturer
+        .getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
+        .then((sources) => {
+          if (!sources.length) {
+            callback({});
+            return;
+          }
+          callback({ video: sources[0], audio: 'loopback' });
+        })
+        .catch((err) => {
+          console.error('[displayMedia] desktopCapturer failed:', err);
+          callback({});
+        });
+    },
+    { useSystemPicker: false },
+  );
+
   return mainWindow;
 }
 
@@ -182,9 +211,21 @@ app.whenReady().then(async () => {
 
   createWindow();
 
-  // System tray — use template image on macOS for dark/light mode
-  const trayIconPath = path.join(__dirname, 'icons.iconset', 'icon_16x16.png');
-  const trayIcon = nativeImage.createFromPath(trayIconPath);
+  // System tray — use template image on macOS for dark/light mode.
+  // Load 16x16 (1x) plus a 32x32 retina representation; without the @2x
+  // rep the menu bar shows nothing on retina displays for some assets.
+  const trayIcon = nativeImage.createFromPath(
+    path.join(__dirname, 'icons.iconset', 'icon_16x16.png')
+  );
+  if (trayIcon.isEmpty()) {
+    console.error('[tray] icon_16x16.png failed to load — tray will be invisible');
+  }
+  const tray2x = nativeImage.createFromPath(
+    path.join(__dirname, 'icons.iconset', 'icon_32x32.png')
+  );
+  if (!tray2x.isEmpty()) {
+    trayIcon.addRepresentation({ scaleFactor: 2.0, buffer: tray2x.toPNG() });
+  }
   if (process.platform === 'darwin') trayIcon.setTemplateImage(true);
   tray = createTray(trayIcon, showWindow, navigateTo);
 
