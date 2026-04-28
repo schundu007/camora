@@ -79,22 +79,13 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  // getDisplayMedia routing.
-  //
-  // useSystemPicker: true → on macOS 15 (Sequoia)+ the system shows
-  // Apple's own native screen-share picker which lists every visible
-  // window (including each Chrome tab as a separate entry), every
-  // display, and audio sharing. It's the same picker FaceTime, Zoom,
-  // and Quick Look use, so users already know it.
-  //
-  // The handler below is the fallback path for older macOS or if the
-  // system picker fails to render — auto-picks the primary screen with
-  // loopback audio so the audio-setup wizard still works.
+  // Audio loopback for interviewer audio (Zoom/Meet capture without virtual cables).
+  // Auto-pick the primary screen so users don't have to click through a picker.
   session.defaultSession.setDisplayMediaRequestHandler((_req, callback) => {
     desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
       .then((sources) => callback(sources.length ? { video: sources[0], audio: 'loopback' } : {}))
       .catch(() => callback({}));
-  }, { useSystemPicker: true });
+  }, { useSystemPicker: false });
 }
 
 // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -140,12 +131,65 @@ app.on('second-instance', () => {
   }
 });
 
-// Note: screen capture for OCR no longer has a dedicated IPC. The
-// renderer calls navigator.mediaDevices.getDisplayMedia() directly,
-// and macOS's native system picker (configured via the
-// setDisplayMediaRequestHandler above) handles the window/tab/screen
-// selection. Same code path as the browser fallback. Less surface
-// area, less to break, native UX.
+// ── IPC: macOS-native window capture (NO MODAL) ────────────────────────
+// Click Capture → Camora hides → macOS draws its own window-select
+// cursor (camera icon on hover) → user clicks any window → capture
+// written → Camora reappears. No in-app picker, no list, no thumbs.
+ipcMain.handle('capture-interactive', async () => {
+  const tmp = path.join(os.tmpdir(), `camora-cap-${Date.now()}-${process.pid}.png`);
+  const wasVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
+  if (wasVisible) {
+    mainWindow.hide();
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  try {
+    // -W: start in window-selection mode (camera icon, click to capture).
+    // User can also press Space to switch between window mode and region
+    // selection — same as Cmd+Shift+5 on macOS.
+    // -o: don't include the window's drop shadow.
+    // -t png: full-res PNG.
+    // If user presses Escape, screencapture exits 1 and writes nothing.
+    await new Promise((res) => {
+      execFile('/usr/sbin/screencapture', ['-W', '-o', '-t', 'png', tmp], () => res());
+    });
+    if (!fs.existsSync(tmp)) return null;
+    let buf = fs.readFileSync(tmp);
+    fs.unlink(tmp, () => {});
+    if (!buf.length) return null;
+
+    // Anthropic's vision API rejects images whose base64 payload exceeds
+    // 5 MB (5,242,880 bytes). Native screencapture on Retina/HiDPI screens
+    // routinely produces 4–8 MB PNGs. Downscale to keep base64 under 4.8 MB
+    // (some safety margin under the 5 MB cap). Iterate at most a few times.
+    const MAX_BASE64 = 4_800_000;
+    const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
+    if (base64Size(buf) > MAX_BASE64) {
+      let img = nativeImage.createFromBuffer(buf);
+      let { width, height } = img.getSize();
+      // First try shrinking to 1920px wide (more than enough for OCR; still
+      // resolves small font on dual-pane editors).
+      const targetW = Math.min(width, 1920);
+      img = img.resize({ width: targetW, quality: 'best' });
+      buf = img.toPNG();
+      // If still too large, switch to JPEG quality 85 — keeps text crisp
+      // and roughly halves the size vs PNG on screenshots with gradients.
+      if (base64Size(buf) > MAX_BASE64) {
+        buf = img.toJPEG(85);
+        const dataUrl = `data:image/jpeg;base64,${buf.toString('base64')}`;
+        console.info(`[capture] resized to ${img.getSize().width}px JPEG, ${buf.length} bytes`);
+        return dataUrl;
+      }
+      console.info(`[capture] resized to ${img.getSize().width}px PNG, ${buf.length} bytes`);
+    }
+    return `data:image/png;base64,${buf.toString('base64')}`;
+  } catch (err) {
+    console.error('[capture] interactive screencapture failed:', err);
+    fs.unlink(tmp, () => {});
+    return null;
+  } finally {
+    if (wasVisible && mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+  }
+});
 
 // ── IPC: media access (used by the renderer for actionable error UX) ───
 ipcMain.handle('get-media-access-status', (_e, kind) => {
