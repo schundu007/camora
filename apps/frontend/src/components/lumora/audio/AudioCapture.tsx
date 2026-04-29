@@ -304,13 +304,19 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
     silenceThreshold: Math.max(threshold, 0.003),
-    // Live mode shaves the end-of-utterance debounce so Sona can fire
-    // faster on each turn — 1500ms felt sluggish in real interviews.
-    // Manual (push-to-talk) keeps the longer window because the user is
-    // composing a thought and natural pauses are common there.
-    silenceDuration: continuousMode ? 800 : 1500,
+    // Auto mode chunks each utterance — 800ms of silence ends a chunk
+    // so Sona can answer turn-by-turn.
+    // Manual mode is a hard toggle: silenceDuration: 0 disables the
+    // VAD-driven auto-stop entirely. Recording keeps going until the
+    // user clicks the mic again (or hits the 5-minute safety ceiling).
+    // Previously this was 1500ms, which let a single natural pause
+    // kill the recording mid-question — the user complaint was "manual
+    // mic on is unstable, switches off after 2-3 sec".
+    silenceDuration: continuousMode ? 800 : 0,
     minSpeechDuration: 300,
-    maxRecordingDuration: continuousMode ? 5000 : 30000, // Live: 5s chunks, Manual: 30s max
+    // Live: 5s chunks; Manual: 5-minute safety ceiling so a forgotten
+    // hot mic eventually closes itself.
+    maxRecordingDuration: continuousMode ? 5000 : 300000,
     deviceId: selectedDeviceId,
   });
 
@@ -382,6 +388,25 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }
   }, [storeIsRecording, continuousMode, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
 
+  // Toggle continuous mode (Auto on/off). Defined before the keydown
+  // listener so the backtick-key branch can reference it without hitting
+  // a temporal-dead-zone error on render.
+  const handleModeToggle = useCallback(() => {
+    const newMode = !continuousMode;
+    setContinuousMode(newMode);
+    if (newMode && !storeIsRecording) {
+      startRecording();
+      setIsRecording(true);
+      startListenTimer();
+      setStatus('listen', 'Live - listening...');
+    } else if (!newMode && storeIsRecording) {
+      stopRecording();
+      setIsRecording(false);
+      stopListenTimer();
+      setStatus('ready', 'Auto off');
+    }
+  }, [continuousMode, storeIsRecording, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
+
   // Keyboard shortcuts — Cmd+M (toggle) + Escape (stop) work regardless
   // of Auto state. The user needs silent, instant mute mid-interview;
   // gating these on continuousMode trapped them when Auto was on.
@@ -407,13 +432,15 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         return;
       }
 
-      // Backquote (` / ~): toggle mic — push-to-talk-style global hotkey
-      // that works in Coding, Design, and Behavioral views. Ignored when
-      // any modifier key is pressed so we don't steal Cmd+`/Ctrl+` from
-      // window managers / browsers.
+      // Backquote (` / ~): hard mic on/off across Coding, Design, and
+      // Behavioral views. Routes to handleModeToggle (Auto) rather than
+      // handleToggle (single-shot) so the mic stays on until the user
+      // presses ` again — single-shot's VAD stops on 1.5s of silence,
+      // which made the backtick feel "unstable" (mic would die mid-thought).
+      // Ignored when any modifier is held (Cmd+`/Ctrl+` belong to the OS).
       if (e.code === SHORTCUTS.TOGGLE_MIC_CODE && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
-        handleToggle();
+        handleModeToggle();
         return;
       }
 
@@ -429,26 +456,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [continuousMode, handleToggle, storeIsRecording, stopRecording, setIsRecording, stopListenTimer, setStatus]);
-
-  // Toggle continuous mode - must be defined before early returns
-  const handleModeToggle = useCallback(() => {
-    const newMode = !continuousMode;
-    setContinuousMode(newMode);
-    if (newMode && !storeIsRecording) {
-      // Start listening when switching to continuous mode
-      startRecording();
-      setIsRecording(true);
-      startListenTimer();
-      setStatus('listen', 'Live - listening...');
-    } else if (!newMode && storeIsRecording) {
-      // Turning Auto off — stop the live stream so the mic light goes off
-      stopRecording();
-      setIsRecording(false);
-      stopListenTimer();
-      setStatus('ready', 'Auto off');
-    }
-  }, [continuousMode, storeIsRecording, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
+  }, [continuousMode, handleToggle, handleModeToggle, storeIsRecording, stopRecording, setIsRecording, stopListenTimer, setStatus]);
 
   // Silent Auto toggle: Cmd/Ctrl+Shift+A works from anywhere on the Lumora
   // page, including while Auto is ON. A keystroke is inaudible to the
