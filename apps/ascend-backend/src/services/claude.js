@@ -336,7 +336,7 @@ Rules:
 - For Terraform: use proper resource blocks
 - For Jenkins: use declarative pipeline syntax`;
 
-const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 export async function solveProblem(problemText, language = 'auto', fast = true, model = DEFAULT_MODEL) {
   const languageInstruction = language === 'auto'

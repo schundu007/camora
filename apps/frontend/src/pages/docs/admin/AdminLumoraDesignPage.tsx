@@ -109,7 +109,7 @@ export default function AdminLumoraDesignPage() {
           ]}
           rows={[
             { k: 'Endpoint', v: 'POST /api/v1/stream (shared with general inference)', why: 'Design is a mode of inference, not its own service. The mode is detected by keyword in the prompt builder.' },
-            { k: 'Model (paid)', v: 'claude-sonnet-4-20250514', why: 'Sonnet handles capacity estimates and trade-off reasoning materially better than Haiku.' },
+            { k: 'Model (paid)', v: 'claude-sonnet-4-6', why: 'Sonnet handles capacity estimates and trade-off reasoning materially better than Haiku.' },
             { k: 'Model (free)', v: 'claude-haiku-4-5-20251001', why: 'Same as general inference for free tier — design answers are still useful at Haiku quality, just less detailed.' },
             { k: 'max_tokens', v: '12,000 (MAX_TOKENS_DESIGN)', why: 'Tagged-text design answers run long: requirements + capacity + architecture + data model + API + deep-dives. 12K leaves headroom for all sections.' },
             { k: 'Prompt cache', v: 'Enabled (cache_control: ephemeral)', why: 'Design system prompt is large and stable; the 5-minute Anthropic prompt cache makes follow-up questions in the same session much faster.' },

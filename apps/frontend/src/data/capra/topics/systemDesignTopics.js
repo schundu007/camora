@@ -18159,7 +18159,7 @@ app.get('/api/chat/stream', authenticate, async (req, res) => {
   res.flushHeaders();
 
   const stream = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     messages: [{ role: 'user', content: req.query.prompt }],
     stream: true,
   });

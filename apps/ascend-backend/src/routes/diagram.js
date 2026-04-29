@@ -235,7 +235,7 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
               surface: 'capra_diagram',
               tokensIn: Math.ceil(mermaidPrompt.length / 4),
               tokensOut: Math.ceil(mermaidCode.length / 4),
-              model: 'claude-sonnet-4-20250514',
+              model: 'claude-sonnet-4-6',
             });
           }
           return res.json({ success: true, type: 'mermaid', mermaid_code: mermaidCode.trim(), cloud_provider: provider, cached: false });
@@ -279,7 +279,7 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
         surface: 'capra_diagram',
         tokensIn: Math.ceil((question || '').length / 4),
         tokensOut: 1500,
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
       });
     }
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });

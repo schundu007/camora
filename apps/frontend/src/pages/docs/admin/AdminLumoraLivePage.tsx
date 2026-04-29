@@ -353,7 +353,7 @@ export default function AdminLumoraLivePage() {
           <li>
             Pick a model. Behavioral and free-tier requests get{' '}
             <code style={inlineCodeStyle}>claude-haiku-4-5-20251001</code>; paid coding/design requests get{' '}
-            <code style={inlineCodeStyle}>claude-sonnet-4-20250514</code>. Quick mode caps at{' '}
+            <code style={inlineCodeStyle}>claude-sonnet-4-6</code>. Quick mode caps at{' '}
             <code style={inlineCodeStyle}>MAX_TOKENS_QUICK = 2000</code>; design mode raises that to{' '}
             <code style={inlineCodeStyle}>MAX_TOKENS_DESIGN = 12000</code>; the copilot sidebar with
             the <code style={inlineCodeStyle}>[SHORT]</code> prefix caps at 1200.
@@ -417,7 +417,7 @@ export default function AdminLumoraLivePage() {
             <code style={inlineCodeStyle}>from diagrams.aws.compute import EC2, ECS</code>).
           </li>
           <li>
-            Calls Anthropic (<code style={inlineCodeStyle}>claude-sonnet-4-20250514</code>, 4096 max
+            Calls Anthropic (<code style={inlineCodeStyle}>claude-sonnet-4-6</code>, 4096 max
             tokens) to generate Python code that uses the{' '}
             <code style={inlineCodeStyle}>diagrams</code> library.
           </li>

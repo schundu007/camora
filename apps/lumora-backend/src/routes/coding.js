@@ -101,7 +101,7 @@ const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2
 const CLAUDE_MAX_TRANSPORT_RETRIES = 2;
 const CLAUDE_TRANSPORT_BACKOFFS_MS = [500, 1500]; // per reinforcement note
 const FALLBACK_MODEL_PAID = 'claude-haiku-4-5-20251001';
-const FALLBACK_MODEL_FREE = 'claude-sonnet-4-20250514';
+const FALLBACK_MODEL_FREE = 'claude-sonnet-4-6';
 
 function isRetryableClaudeError(err) {
   if (!err) return false;
@@ -1138,7 +1138,7 @@ Begin output now. No preamble.`;
 
     const client = anthropicClient;
     const msg = await client.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       messages: [{
         role: 'user',
@@ -1213,7 +1213,7 @@ CRITICAL RULES — violations break the product:
 Begin output now. No preamble.`;
 
     const msg = await anthropicClient.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       messages: [{
         role: 'user',

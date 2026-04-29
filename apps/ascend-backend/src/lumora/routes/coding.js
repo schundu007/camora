@@ -55,7 +55,7 @@ const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2
 const CLAUDE_MAX_TRANSPORT_RETRIES = 2;
 const CLAUDE_TRANSPORT_BACKOFFS_MS = [500, 1500]; // per reinforcement note
 const FALLBACK_MODEL_PAID = 'claude-haiku-4-5-20251001';
-const FALLBACK_MODEL_FREE = 'claude-sonnet-4-20250514';
+const FALLBACK_MODEL_FREE = 'claude-sonnet-4-6';
 
 function isRetryableClaudeError(err) {
   if (!err) return false;
@@ -86,7 +86,7 @@ function truncateForLog(text, max = 2048) {
 function getModelForUser(req) {
   const plan = req.user?.plan_type || 'free';
   if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
-  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
+  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
 }
 
 /**

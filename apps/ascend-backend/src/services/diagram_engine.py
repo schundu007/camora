@@ -475,7 +475,7 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
 
     # Attempt 1
     resp = client.messages.create(
-        model="claude-sonnet-4-20250514", max_tokens=4096,
+        model="claude-sonnet-4-6", max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
     body = extract_code(resp.content[0].text)
@@ -506,7 +506,7 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
             import_hint = f"\nThe class '{bad_class}' does NOT exist in '{bad_module}'. Remove it and use a diagrams.onprem equivalent instead (e.g. from diagrams.onprem.database, diagrams.onprem.inmemory, diagrams.onprem.queue, etc)."
 
         fix_resp = client.messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=4096,
+            model="claude-sonnet-4-6", max_tokens=4096,
             messages=[
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": body},
@@ -530,7 +530,7 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
 
         available = build_import_list(provider)
         fallback_resp = client.messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=4096,
+            model="claude-sonnet-4-6", max_tokens=4096,
             messages=[
                 {"role": "user", "content": f"""Generate a simple cloud architecture diagram for: {question}
 

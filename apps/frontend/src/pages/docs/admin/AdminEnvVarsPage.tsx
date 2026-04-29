@@ -65,7 +65,7 @@ export default function AdminEnvVarsPage() {
           <li><code>AI_HOURS_SEC_PER_1K_OUT</code> — token-to-seconds conversion. Default: <code>20</code>.</li>
           <li><code>AI_HOURS_SEC_PER_1K_IN</code> — Default: <code>2</code>.</li>
           <li><code>CLAUDE_MODEL</code> — free-tier model. Default: <code>claude-haiku-4-5-20251001</code>.</li>
-          <li><code>CLAUDE_MODEL_PAID</code> — paid-tier model. Default: <code>claude-sonnet-4-20250514</code>.</li>
+          <li><code>CLAUDE_MODEL_PAID</code> — paid-tier model. Default: <code>claude-sonnet-4-6</code>.</li>
         </ul>
       </section>
 

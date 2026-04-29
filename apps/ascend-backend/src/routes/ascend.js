@@ -175,7 +175,7 @@ Give a STAFF ENGINEER level answer tailored to the candidate's background and th
       }
 
       const anthropic = new Anthropic({ apiKey });
-      const selectedModel = model || 'claude-sonnet-4-20250514';
+      const selectedModel = model || 'claude-sonnet-4-6';
       console.log('[Ascend] Creating Claude stream with model:', selectedModel);
 
       const stream = await anthropic.messages.stream({
@@ -234,7 +234,7 @@ router.post('/extract-text', upload.single('file'), async (req, res) => {
       const base64 = buffer.toString('base64');
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 8000,
         messages: [{
           role: 'user',
@@ -268,7 +268,7 @@ router.post('/extract-text', upload.single('file'), async (req, res) => {
       const base64 = buffer.toString('base64');
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 8000,
         messages: [{
           role: 'user',

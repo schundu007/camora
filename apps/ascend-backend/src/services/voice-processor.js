@@ -191,7 +191,7 @@ class VoiceSession {
 
     // Options
     this.provider = options.provider || 'claude';
-    this.model = options.model || 'claude-sonnet-4-20250514';
+    this.model = options.model || 'claude-sonnet-4-6';
     this.jobDescription = options.jobDescription || '';
     this.resume = options.resume || '';
     this.prepMaterial = options.prepMaterial || '';
@@ -581,7 +581,7 @@ RULES:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: this.model || 'claude-sonnet-4-20250514',
+        model: this.model || 'claude-sonnet-4-6',
         max_tokens: CONFIG.MAX_ANSWER_TOKENS,
         system: systemPrompt,
         messages: messages.map(m => ({

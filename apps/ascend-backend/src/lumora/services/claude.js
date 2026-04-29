@@ -10,7 +10,7 @@ import { parseAnswer } from './answerParser.js';
 // Config
 // ---------------------------------------------------------------------------
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
-const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-20250514';
+const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-6';
 
 /** Select model by plan. Paid users on coding/design get Sonnet for accuracy;
  *  behavioral stays on Haiku (fast, cheap, quality is fine for short STAR). */
