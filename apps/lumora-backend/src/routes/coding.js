@@ -786,8 +786,20 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     }
   }
 
-  // ── Pass 3: fallback-tier model with strict reminder ────────────────────
-  if (!parsedJson) {
+  // ── Pass 3: cross-tier fallback (cost-gated) ────────────────────────────
+  // When primary is Haiku, the Pass 3 fallback would escalate to Sonnet
+  // and burn ~12x more output cost on what's almost always a prompt /
+  // schema problem (Haiku rarely fails because Sonnet would do better;
+  // it fails because the prompt is asking for malformed JSON). User hit
+  // their Anthropic spend cap on 2026-04-29 — disable the cross-tier
+  // escalation when on Haiku to keep cost predictable. Free-tier users
+  // (Haiku→Sonnet path) and paid users (Sonnet→Haiku path) used to share
+  // this code; now only the cheap direction (Sonnet→Haiku) actually fires.
+  const ALLOW_CROSS_TIER_FALLBACK = !String(primaryModel).includes('haiku');
+  if (!parsedJson && !ALLOW_CROSS_TIER_FALLBACK) {
+    console.log(`[coding/solve] skipping Pass 3 — cross-tier fallback disabled for ${primaryModel} (cost guard)`);
+  }
+  if (!parsedJson && ALLOW_CROSS_TIER_FALLBACK) {
     passTag = 'fallback_model';
     const fbModel = fallbackModelFor(primaryModel);
     sendEvent('status', { state: 'warn', msg: 'Switching to backup model…' });
