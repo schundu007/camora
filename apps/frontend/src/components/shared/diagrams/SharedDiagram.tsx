@@ -182,7 +182,7 @@ export default function SharedDiagram({
           onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
           onMouseUp={() => setDragging(false)} onMouseLeave={() => setDragging(false)}>
           <img src={imageUrl} alt="Architecture diagram" draggable={false}
-            style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'center', maxWidth: 'none', height: 'auto' }} />
+            style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'center', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', height: 'auto' }} />
         </div>
       )}
     </div>
