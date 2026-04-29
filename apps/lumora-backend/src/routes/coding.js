@@ -81,6 +81,7 @@ import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
 import { executeCode } from '../services/codeRunner.js';
+import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
 
 const router = Router();
 
@@ -594,6 +595,27 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     conversation_id: conversationId,
   });
 
+  // ── Answer-cache lookup ───────────────────────────────────────────────
+  // Repeated coding problems (Two Sum, Tiny URL, etc.) used to fire
+  // the model every time. Skip the LLM entirely on a hit — replay the
+  // structured answer we cached on the first solve.
+  const cacheKey = buildAnswerCacheKey({
+    question: problem,
+    systemContext,
+    plan: planType,
+    route: 'solve',
+    language: lang,
+    model: getModelForUser(req),
+  });
+  const cachedAnswer = await cacheGet(cacheKey);
+  if (cachedAnswer) {
+    logCacheEvent('HIT', cacheKey, { route: 'solve', plan: planType, lang });
+    sendEvent('answer', { ...cachedAnswer, fromCache: true });
+    sendEvent('done', { ok: true, fromCache: true });
+    return res.end();
+  }
+  logCacheEvent('MISS', cacheKey, { route: 'solve', plan: planType, lang });
+
   sendEvent('status', { state: 'write', msg: `Generating ${lang} solution...` });
 
   // ── Build messages array (with optional conversation history) ───────────
@@ -882,7 +904,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   }
   const parsed = { json: parsedJson, format: 'ascend_json' };
 
-  sendEvent('answer', {
+  const answerPayload = {
     question: problem.slice(0, 100),
     raw: rawAnswer,
     parsed,
@@ -893,6 +915,13 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     latency_ms: latencyMs,
     model_used: modelUsed,
     recovery_pass: passTag,
+  };
+  sendEvent('answer', answerPayload);
+
+  // Cache the structured answer for future repeats of the same problem.
+  // Fire-and-forget so a slow Redis write doesn't delay the SSE close.
+  cacheSet(cacheKey, answerPayload).catch((err) => {
+    console.warn('[coding/solve] cache write failed:', err.message);
   });
 
   // ── Persist to database (fire-and-forget) ───────────────────────────────

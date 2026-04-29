@@ -15,6 +15,7 @@ import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
+import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
 
 const router = Router();
 
@@ -264,6 +265,61 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       clientDisconnected = true;
     });
 
+    // ── Answer-cache lookup ─────────────────────────────────────────────
+    // Repeated questions (e.g., "design a tiny URL") used to fire the
+    // model every time. Now we hash the request + plan + model and
+    // serve a cached structured answer when available, skipping the
+    // entire LLM call. Usage still meters so the paywall stays correct.
+    const cacheKey = buildAnswerCacheKey({
+      question,
+      systemContext,
+      detailLevel,
+      plan: userPlan,
+      route: 'stream',
+    });
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      logCacheEvent('HIT', cacheKey, { route: 'stream', plan: userPlan });
+      // Replay the cached answer SSE-style. Emit stream_start so the
+      // frontend can wire conversation_id, then a single answer event
+      // with the cached payload. No per-token streaming — we have the
+      // whole answer already.
+      sendSSE(res, 'stream_start', {
+        conversation_id: conversationId,
+        question: cached.question || cleanTitle,
+        is_design: cached.is_design || false,
+        is_coding: cached.is_coding || false,
+      });
+      sendSSE(res, 'answer', { ...cached, conversation_id: conversationId, fromCache: true });
+      sendSSE(res, 'done', { ok: true, fromCache: true });
+
+      // Persist the user message + cached assistant reply so the
+      // conversation transcript still records the exchange.
+      try {
+        const userMsgId = uuidv4();
+        const assistantMsgId = uuidv4();
+        await query(
+          `INSERT INTO lumora_messages (id, conversation_id, role, content) VALUES ($1, $2, $3, $4)`,
+          [userMsgId, conversationId, 'user', cleanTitle],
+        );
+        await query(
+          `INSERT INTO lumora_messages (id, conversation_id, role, content, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            assistantMsgId,
+            conversationId,
+            'assistant',
+            cached.raw || '',
+            JSON.stringify({ parsed: cached.parsed, fromCache: true }),
+          ],
+        );
+      } catch (persistErr) {
+        console.warn('[inference/stream] cached-answer persist failed:', persistErr.message);
+      }
+      return res.end();
+    }
+    logCacheEvent('MISS', cacheKey, { route: 'stream', plan: userPlan });
+
     // Stream tokens (empty history for new conversation)
     for await (const evt of streamResponse(question, [], {
       useSearch,
@@ -285,6 +341,15 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       }
 
       sendSSE(res, evt.event, evt.data);
+    }
+
+    // Persist successful answers to the cache for future repeats. Skip
+    // when the client bailed early or the answer never arrived (model
+    // error, parse failure, etc.).
+    if (finalAnswer && !clientDisconnected) {
+      cacheSet(cacheKey, finalAnswer).catch((err) => {
+        console.warn('[inference/stream] cache write failed:', err.message);
+      });
     }
 
     // Save messages
