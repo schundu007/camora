@@ -9,8 +9,29 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
-import sharp from 'sharp';
 import { getAnthropicClient } from '../lib/_shared/llm.js';
+
+// Lazy-load sharp. The native binary fails to resolve on some Railway
+// build images (linux-x64 vs darwin-arm64 mismatch in the lockfile),
+// which used to crash the whole backend at boot. Resolve at first use
+// instead so an image-rescale failure becomes a per-request degrade
+// rather than a process-wide outage. ensureImageWithinAnthropicLimit
+// returns the original payload unchanged if sharp can't be loaded.
+let _sharpModule = null;
+let _sharpLoadFailed = false;
+async function loadSharp() {
+  if (_sharpLoadFailed) return null;
+  if (_sharpModule) return _sharpModule;
+  try {
+    const mod = await import('sharp');
+    _sharpModule = mod.default || mod;
+    return _sharpModule;
+  } catch (err) {
+    console.warn('[coding] sharp unavailable — skipping image resize. Reason:', err?.message || err);
+    _sharpLoadFailed = true;
+    return null;
+  }
+}
 
 /* ── Anthropic image-size guard ────────────────────────────────────────
    Anthropic's vision API caps inline base64 images at 5 MB
@@ -23,6 +44,14 @@ import { getAnthropicClient } from '../lib/_shared/llm.js';
 async function ensureImageWithinAnthropicLimit(rawBase64, mediaType) {
   const MAX_BASE64 = 4_800_000; // safety margin under the 5 MB ceiling
   if (rawBase64.length <= MAX_BASE64) return { mediaType, data: rawBase64 };
+
+  const sharp = await loadSharp();
+  if (!sharp) {
+    // Sharp not available on this build — pass through and let
+    // Anthropic decide. Most desktop screenshots compress under the
+    // limit on the client (electron's nativeImage already shrinks).
+    return { mediaType, data: rawBase64 };
+  }
 
   let buf = Buffer.from(rawBase64, 'base64');
   // First pass: cap width at 1920px (still plenty for OCR on Sonnet 4.5).
