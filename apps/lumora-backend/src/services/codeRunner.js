@@ -118,6 +118,41 @@ function runInSandbox(cmd, filePath, stdinData) {
 // Direct execution — no test cases
 // ---------------------------------------------------------------------------
 
+/**
+ * When stdout is empty AND the code contains function/class definitions
+ * but no print / call at the top level, "(no output)" is technically
+ * correct but unhelpful — users tend to read it as "my code is broken."
+ * Return a friendlier hint pointing them at the Test Cases tab or
+ * inline print() instead.
+ */
+function emptyOutputHint(code, runtime) {
+  const trimmed = String(code || '').trim();
+  if (!trimmed) return '(empty file — nothing to run)';
+
+  const definesFn = /(^|\n)\s*(def\s+\w+|function\s+\w+|class\s+\w+|fn\s+\w+|func\s+\w+|public\s+\w+|sub\s+\w+)/i.test(trimmed);
+  const printCalls = {
+    python:     /\bprint\s*\(/,
+    javascript: /(console\.(log|info|warn|error)|process\.stdout\.write)\s*\(/,
+    ruby:       /\b(puts|print|p)\s+/,
+    php:        /\b(echo|print_r?|var_dump)\s*\(/,
+    perl:       /\b(print|say|warn)\b/,
+    lua:        /\bprint\s*\(/,
+    bash:       /\b(echo|printf)\b/,
+    java:       /System\.out\.print/,
+    c:          /\b(printf|puts|fputs)\b/,
+    cpp:        /\b(printf|puts|std::cout|cout\s*<<)/,
+    rust:       /\bprintln!\s*\(/,
+    go:         /\bfmt\.(Print|Println|Printf)\s*\(/,
+  };
+  const printRe = printCalls[runtime];
+  const hasPrint = printRe ? printRe.test(trimmed) : false;
+
+  if (definesFn && !hasPrint) {
+    return '(no output) — your code only defines a function. Add a test case in the "Test Cases" tab to call it, or include a print/console.log in the code itself.';
+  }
+  return '(no output)';
+}
+
 async function directExecute(code, runtime) {
   const id = randomUUID();
   const tmpBase = join(tmpdir(), `lumora-${id}`);
@@ -133,7 +168,7 @@ async function directExecute(code, runtime) {
       const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath]);
       if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
-      return { direct_output: out.trim() || '(no output)' };
+      return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
       await unlink(srcPath).catch(() => {});
     }
@@ -151,7 +186,7 @@ async function directExecute(code, runtime) {
       const { stdout, stderr, exitCode } = await runCommand(cmd, args, { timeout: COMPILE_TIMEOUT_MS });
       if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
-      return { direct_output: out.trim() || '(no output)' };
+      return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
       await unlink(srcPath).catch(() => {});
     }
@@ -171,7 +206,7 @@ async function directExecute(code, runtime) {
       const { stdout, stderr, exitCode } = await runCommand(binPath, []);
       if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
-      return { direct_output: out.trim() || '(no output)' };
+      return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
       await unlink(srcPath).catch(() => {});
       await unlink(binPath).catch(() => {});
@@ -194,7 +229,7 @@ async function directExecute(code, runtime) {
       const { stdout, stderr, exitCode } = await runCommand('java', ['-cp', srcDir, className]);
       if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
-      return { direct_output: out.trim() || '(no output)' };
+      return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
       await rm(srcDir, { recursive: true }).catch(() => {});
     }
