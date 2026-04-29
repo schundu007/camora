@@ -66,7 +66,13 @@ const anthropicClient = getAnthropicClient();
 
 // 16k default — 8k sometimes truncated 3-solution JSON mid-field (explanations + traces)
 // leaving the frontend with un-parseable preamble + open braces.
-const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16000', 10);
+// 4000 (down from 16000) caps Sonnet generation at ~25–30s of streaming
+// at ~130 tok/s, getting end-to-end /solve under ~30s instead of 60s+.
+// User explicitly authorized trimming max_tokens for coding latency
+// (overrides the earlier "no output trim" rule for this endpoint only).
+// Override in prod via MAX_TOKENS_CODING env if a complex problem
+// genuinely needs more headroom.
+const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '4000', 10);
 const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
 
 // ── Reliability config ────────────────────────────────────────────────
