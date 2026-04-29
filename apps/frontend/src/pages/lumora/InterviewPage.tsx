@@ -57,13 +57,40 @@ export function InterviewPage() {
     }
   }, [inputValue, handleSubmit]);
 
+  // Pending question queue. In Auto mode, a second question can land
+  // (Whisper returns a fresh transcript) while Sona is still streaming
+  // the answer to the first. The previous behavior fired handleSubmit
+  // immediately, which inside `useStreamingInterview` aborts the prior
+  // /stream via its shared AbortController — so Q1's answer would die
+  // mid-stream and the interviewer would see a half-answer disappear.
+  // We now stash the latest pending question (single-slot, latest wins)
+  // and drain it the moment isStreaming flips false.
+  const pendingQuestionRef = useRef<string | null>(null);
+
   const handleTranscription = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     // Only fire Sona on actual interview questions — skip the
     // interviewer's intro, experience story, and small talk.
-    if (isQuestion(trimmed)) handleSubmit(trimmed);
-  }, [handleSubmit]);
+    if (!isQuestion(trimmed)) return;
+    if (isStreaming) {
+      // Keep only the latest queued Q. If the interviewer rephrases
+      // mid-stream ("walk me through it… actually, just describe the
+      // architecture") we want the rephrase to win, not the original.
+      pendingQuestionRef.current = trimmed;
+      return;
+    }
+    handleSubmit(trimmed);
+  }, [handleSubmit, isStreaming]);
+
+  // Drain queued question once the active stream finishes.
+  useEffect(() => {
+    if (isStreaming) return;
+    const queued = pendingQuestionRef.current;
+    if (!queued) return;
+    pendingQuestionRef.current = null;
+    handleSubmit(queued);
+  }, [isStreaming, handleSubmit]);
 
   if (blanked) {
     return (
