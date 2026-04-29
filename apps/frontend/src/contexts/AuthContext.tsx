@@ -17,8 +17,22 @@ interface AuthUser {
   email: string;
   name?: string;
   image?: string;
+  /** Some backends serve the avatar as `picture` (Google's claim name);
+   *  normalizeUser() copies it into `image` so UserDropdown only has to
+   *  read one field. Kept on the type so the property survives at runtime. */
+  picture?: string;
   onboarding_completed?: boolean;
   job_roles?: string[];
+}
+
+// Lumora's /me returns `image`; Ascend's /me returns `picture` (Google's
+// claim name). Normalize both into `image` so every consumer reads one
+// field. Empty strings are dropped — Ascend sometimes returns picture:""
+// for users who signed up before the field was populated.
+function normalizeUser(u: any): AuthUser | null {
+  if (!u || typeof u !== 'object') return null;
+  const image = (u.image && String(u.image).trim()) || (u.picture && String(u.picture).trim()) || undefined;
+  return { ...u, image };
 }
 
 interface SubscriptionInfo {
@@ -99,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (res.ok) {
             const data = await res.json();
             setToken(data.access_token);
-            setUser(data.user);
+            setUser(normalizeUser(data.user));
             setOnboardingCompleted(true);
             authed = true;
           }
@@ -147,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // `lumorab.cariara.com` runs ascend-backend, so we unwrap data.user
               // when present; otherwise we strip the access_token from the flat body.
               const { access_token: _at, ...flat } = data;
-              setUser(data.user ?? flat);
+              setUser(normalizeUser(data.user ?? flat));
             }
           } catch { /* network error */ }
           // Check onboarding
@@ -223,7 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // ascend-backend. Unwrap data.user when present.
             const { access_token: _at, ...flat } = data;
             void _at;
-            setUser(data.user ?? flat);
+            setUser(normalizeUser(data.user ?? flat));
 
             // Fetch onboarding status from Capra backend using the fresh token
             try {
