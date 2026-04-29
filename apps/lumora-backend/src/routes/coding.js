@@ -786,20 +786,15 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     }
   }
 
-  // ── Pass 3: cross-tier fallback (cost-gated) ────────────────────────────
-  // When primary is Haiku, the Pass 3 fallback would escalate to Sonnet
-  // and burn ~12x more output cost on what's almost always a prompt /
-  // schema problem (Haiku rarely fails because Sonnet would do better;
-  // it fails because the prompt is asking for malformed JSON). User hit
-  // their Anthropic spend cap on 2026-04-29 — disable the cross-tier
-  // escalation when on Haiku to keep cost predictable. Free-tier users
-  // (Haiku→Sonnet path) and paid users (Sonnet→Haiku path) used to share
-  // this code; now only the cheap direction (Sonnet→Haiku) actually fires.
-  const ALLOW_CROSS_TIER_FALLBACK = !String(primaryModel).includes('haiku');
-  if (!parsedJson && !ALLOW_CROSS_TIER_FALLBACK) {
-    console.log(`[coding/solve] skipping Pass 3 — cross-tier fallback disabled for ${primaryModel} (cost guard)`);
-  }
-  if (!parsedJson && ALLOW_CROSS_TIER_FALLBACK) {
+  // ── Pass 3: cross-tier fallback ─────────────────────────────────────────
+  // Re-enabled after the cost-guard caused user-visible failures: when
+  // Haiku produces un-parseable JSON twice, Sonnet usually does succeed
+  // (different model, different malformed-JSON failure modes). The
+  // cost is bounded because Pass 3 only fires on real parse failures,
+  // not on every request, and uses the same MAX_TOKENS cap. Spend
+  // protection now lives at the Anthropic console daily-cap layer
+  // instead of in code where it caused outages.
+  if (!parsedJson) {
     passTag = 'fallback_model';
     const fbModel = fallbackModelFor(primaryModel);
     sendEvent('status', { state: 'warn', msg: 'Switching to backup model…' });
