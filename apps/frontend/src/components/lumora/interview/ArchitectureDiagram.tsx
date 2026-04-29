@@ -222,17 +222,22 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         </div>
       )}
 
-      {/* Image */}
+      {/* Image — fits container width by default; pan/zoom controls let
+          the user drill in. The previous maxWidth:'none' made the image
+          render at native pixel size (3600px wide before the DPI cut)
+          and overflow the design panel. */}
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '600px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '500px', maxHeight: '70vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
             style={{
               transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
               transformOrigin: 'center center',
-              maxWidth: 'none',
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
               height: 'auto',
             }} />
         </div>

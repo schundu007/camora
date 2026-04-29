@@ -67,16 +67,20 @@ from diagrams import Diagram, Cluster, Edge
 from diagrams.onprem.client import Users
 {{IMPORTS}}
 graph_attr = {
-    "fontsize": "22",
+    "fontsize": "20",
     "fontname": "DejaVu Sans Bold",
     "fontcolor": "#111827",
     "bgcolor": "white",
-    "pad": "0.4",
-    "dpi": "200",
-    "nodesep": "0.9",
-    "ranksep": "1.1",
+    "pad": "0.3",
+    # Reduced from dpi=200 size=18,12 (3600x2400 px) to dpi=110 size=14,8
+    # (1540x880 px). Previous output overflowed the in-app viewport and
+    # forced users to zoom out manually. New size still prints crisply
+    # and fits naturally in the design panel.
+    "dpi": "110",
+    "nodesep": "0.7",
+    "ranksep": "0.9",
     "splines": "spline",
-    "size": "18,12!",
+    "size": "14,8!",
     "ratio": "compress",
 }
 
@@ -153,6 +157,47 @@ def get_prompt(question, provider, detail_level, direction):
 
     available = build_import_list(provider)
 
+    # Provider-specific example. The previous version hardcoded AWS imports
+    # in the example, which biased the model so heavily that picking GCP /
+    # Azure still emitted AWS diagrams. Now the example uses the provider's
+    # actual imports so picking GCP gets a GCP diagram.
+    examples_by_provider = {
+        "aws": {
+            "imports": (
+                "from diagrams.aws.network import CloudFront, ALB, Route53\n"
+                "from diagrams.aws.compute import ECS\n"
+                "from diagrams.aws.database import RDS, ElastiCache\n"
+                "from diagrams.aws.storage import S3"
+            ),
+            "edge": "dns = Route53(\"DNS\")\n        cdn = CloudFront(\"CDN\")",
+            "app": "lb = ALB(\"Load Balancer\")\n        api = ECS(\"API Server\")",
+            "data": "cache = ElastiCache(\"Redis Cache\")\n        db = RDS(\"PostgreSQL\")\n        store = S3(\"File Storage\")",
+        },
+        "gcp": {
+            "imports": (
+                "from diagrams.gcp.network import LoadBalancing, CDN, DNS\n"
+                "from diagrams.gcp.compute import GKE\n"
+                "from diagrams.gcp.database import SQL, Memorystore\n"
+                "from diagrams.gcp.storage import GCS"
+            ),
+            "edge": "dns = DNS(\"DNS\")\n        cdn = CDN(\"Cloud CDN\")",
+            "app": "lb = LoadBalancing(\"Load Balancer\")\n        api = GKE(\"GKE Cluster\")",
+            "data": "cache = Memorystore(\"Redis Cache\")\n        db = SQL(\"Cloud SQL\")\n        store = GCS(\"Cloud Storage\")",
+        },
+        "azure": {
+            "imports": (
+                "from diagrams.azure.network import FrontDoors, CDNProfiles, DNSZones\n"
+                "from diagrams.azure.compute import AKS\n"
+                "from diagrams.azure.database import SQLDatabases, CacheForRedis\n"
+                "from diagrams.azure.storage import BlobStorage"
+            ),
+            "edge": "dns = DNSZones(\"DNS\")\n        cdn = CDNProfiles(\"CDN\")",
+            "app": "lb = FrontDoors(\"Front Door\")\n        api = AKS(\"AKS Cluster\")",
+            "data": "cache = CacheForRedis(\"Redis Cache\")\n        db = SQLDatabases(\"SQL Database\")\n        store = BlobStorage(\"Blob Storage\")",
+        },
+    }
+    example = examples_by_provider.get(provider, examples_by_provider["aws"])
+
     if detail_level == "overview":
         scope = """OVERVIEW MODE: Generate 8-12 nodes in 3 clusters.
 Clusters: "Edge & CDN", "Application", "Data Stores"
@@ -162,19 +207,28 @@ Show the main request flow from clients to data and back."""
 Clusters: "Edge & Security", "Application Tier" (with nested "Auto Scaling" sub-cluster), "Data Tier", "Async Processing", "Observability"
 Show: CDN, WAF, auth, API gateway, multiple app instances, cache, primary DB + replica, message queue, workers, log storage, monitoring."""
 
+    direction_hint = (
+        "LAYOUT DIRECTION: Left-to-right (LR). Position upstream nodes (clients, DNS, CDN) on the LEFT and downstream data stores on the RIGHT."
+        if direction == "LR" else
+        "LAYOUT DIRECTION: Top-to-bottom (TB). Position upstream nodes (clients, DNS, CDN) at the TOP and downstream data stores at the BOTTOM."
+    )
+
     return f"""Generate Python code for a cloud architecture diagram using the `diagrams` library.
 
 SYSTEM: {question}
+CLOUD PROVIDER: {provider.upper()} — you MUST use ONLY {provider} imports listed below. Do NOT use imports from any other cloud provider.
+{direction_hint}
+DETAIL LEVEL: {detail_level.upper()}
 {scope}
 
 I will wrap your output inside a template that already has:
 - `import os`, `from diagrams import Diagram, Cluster, Edge`
-- Diagram() constructor with graph_attr (300 DPI, spline arrows, white bg)
+- Diagram() constructor with graph_attr (white bg, spline arrows)
 - node_attr and edge_attr already set
 
 YOUR OUTPUT must have TWO parts:
 
-PART 1 — IMPORTS: Only import the specific node classes you actually use. Pick from:
+PART 1 — IMPORTS: Only import the specific {provider} node classes you actually use. Pick from:
 {available}
 
 PART 2 — BODY: The indented code (4 spaces) that goes inside `with Diagram(...):`
@@ -197,29 +251,23 @@ RULES:
 5. Each variable name must be unique
 6. Only import classes you actually use — don't import everything
 7. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call — I add those
-8. Design REAL components for THIS system
+8. Design REAL components for THIS system using {provider.upper()} services
+9. NEVER mix providers (no aws.* if provider is gcp; no gcp.* if provider is azure, etc.)
 
-EXAMPLE OUTPUT:
-from diagrams.aws.network import CloudFront, ALB, Route53
-from diagrams.aws.compute import ECS
-from diagrams.aws.database import RDS, ElastiCache
-from diagrams.aws.storage import S3
+EXAMPLE OUTPUT (using {provider.upper()} services for clarity — adapt to the question above):
+{example["imports"]}
 from diagrams.onprem.client import Users
 
     users = Users("Clients")
 
     with Cluster("Edge & CDN", graph_attr={CLUSTER_COLORS["edge"]}):
-        dns = Route53("DNS")
-        cdn = CloudFront("CDN")
+        {example["edge"]}
 
     with Cluster("Application", graph_attr={CLUSTER_COLORS["app"]}):
-        lb = ALB("Load Balancer")
-        api = ECS("API Server")
+        {example["app"]}
 
     with Cluster("Data Stores", graph_attr={CLUSTER_COLORS["data"]}):
-        cache = ElastiCache("Redis Cache")
-        db = RDS("PostgreSQL")
-        store = S3("File Storage")
+        {example["data"]}
 
     users >> Edge(label="HTTPS", color="#2563eb", penwidth="2.0") >> dns
     dns >> Edge(color="#2563eb", penwidth="2.0") >> cdn
@@ -230,6 +278,7 @@ from diagrams.onprem.client import Users
     api >> Edge(label="upload", color="#ea580c", penwidth="2.0") >> store
 
 NOW generate for: {question}
+REMEMBER: Use {provider.upper()} services only. {direction_hint}
 Return ONLY the Python code (imports + indented body). No explanation. No markdown fences."""
 
 
@@ -579,7 +628,21 @@ def main():
     parser.add_argument("--direction", default="LR")
     args = parser.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
-    provider = args.provider if args.provider != "auto" else "aws"
+    # When provider is "auto", infer from question keywords. Falling back
+    # to AWS unconditionally (the previous behavior) meant users never
+    # got GCP / Azure diagrams unless they explicitly picked the
+    # provider — even when the question literally said "Cloud Run" or
+    # "Azure Functions".
+    if args.provider == "auto":
+        q = (args.question or "").lower()
+        if any(kw in q for kw in ("gcp", "google cloud", "cloud run", "gke", "bigquery", "firebase", "firestore", "spanner", "pub/sub", "pubsub", "dataflow", "bigtable")):
+            provider = "gcp"
+        elif any(kw in q for kw in ("azure", "aks", "cosmos", "blob storage", "service bus", "event grid", "front door", "synapse")):
+            provider = "azure"
+        else:
+            provider = "aws"
+    else:
+        provider = args.provider
     try:
         result = generate_diagram(
             question=args.question, provider=provider,
