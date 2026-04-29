@@ -342,7 +342,15 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           setStreaming(false);
         },
         onError: (data: any) => {
-          setMessages(prev => [...prev, { role: 'ai', text: `Error: ${data.message || 'Something went wrong'}`, time: new Date() }]);
+          // Backend SSE error frames vary in field name (msg/message/detail/error).
+          // Earlier code read only `data.message` so every error rendered as the
+          // useless "Something went wrong" — the real reason was being thrown
+          // away. Log the full envelope so we can see what came back.
+          console.error('[Sona] stream error frame:', data);
+          const msg = data?.msg || data?.message || data?.detail || data?.error
+            || (typeof data === 'string' ? data : null)
+            || 'Something went wrong';
+          setMessages(prev => [...prev, { role: 'ai', text: `Error: ${msg}`, time: new Date() }]);
           setStreamText('');
           setStreaming(false);
         },
