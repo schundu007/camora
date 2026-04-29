@@ -26,6 +26,20 @@ const SHORTCUTS = {
   TOGGLE_MIC_CODE: 'Backquote',
 };
 
+// Debug logger — gated behind localStorage.lumora_mic_debug === 'on'.
+// Off by default. Flip it on in DevTools when the mic misbehaves and
+// every state transition (start, speech, silence, stop, restart,
+// error, heartbeat-recover, visibility-recover) shows up in the
+// console with a single grep target: `[mic]`.
+function dlog(event: string, data?: Record<string, unknown>) {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (localStorage.getItem('lumora_mic_debug') !== 'on') return;
+    // eslint-disable-next-line no-console
+    console.log(`[mic] ${event}`, data ?? {});
+  } catch { /* noop */ }
+}
+
 // Whisper hallucinates on near-silence with random short tokens that
 // the backend's regex filter doesn't catch ("lanja", "you", "uh",
 // foreign-language fragments, etc.). We discard these on the frontend
@@ -63,7 +77,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const { token } = useAuth();
 
   const [mounted, setMounted] = useState(false);
-  const [shouldRestart, setShouldRestart] = useState(false);
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
   // Persist so the user sets Auto ON/OFF once before the interview and
   // never has to click (audible!) during the call. Stored under a
@@ -104,6 +117,18 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const accumulatedTextRef = useRef('');
   const lastChunkTimeRef = useRef(0);
   const questionCheckTimerRef = useRef<number | null>(null);
+
+  // "User manually paused mid-Auto" flag — when set, handleRecordingStop
+  // and the heartbeat/visibility safety nets honor it instead of yanking
+  // the mic back on. Cleared the moment the user manually resumes (or
+  // turns Auto off entirely).
+  const userPausedRef = useRef(false);
+
+  // Heartbeat plumbing — declared up here so handleAudioLevel can bump
+  // the timestamp on every analyser tick. See the heartbeat useEffect
+  // below for the full rationale.
+  const lastHealthyAtRef = useRef(Date.now());
+  const isStartingRef = useRef(false);
 
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();
@@ -153,7 +178,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     questionCheckTimerRef.current = window.setTimeout(() => {
       if (accumulatedTextRef.current.trim().length > 5) {
         flushAccumulatedText();
-        setShouldRestart(true);
       }
     }, wait);
   }, [flushAccumulatedText]);
@@ -204,7 +228,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     // question than to feed user-voice noise to Sona.
     if (voiceFilterEnabled && !voiceEnrolled && !(autoEnrollPending && voiceMode === 'record-interviewer')) {
       setStatus('warn', 'Voice filter is ON — enroll your voice in Audio Check first.');
-      setShouldRestart(continuousModeRef.current);
       return;
     }
 
@@ -218,36 +241,38 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
           if (result.reason === 'hallucination_filtered') {
-            // Whisper hallucination — silently restart
+            // Whisper hallucination — mic is already restarting via
+            // handleRecordingStop. No-op here.
             setStatus('listen', 'Listening...');
+            dlog('chunk_skipped', { reason: 'hallucination' });
           } else {
             const ratio = result.interviewer_ratio;
             const msg = ratio !== undefined
               ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
               : 'Your voice detected - filtering...';
             setStatus('listen', msg);
+            dlog('chunk_skipped', { reason: 'voice_match', ratio });
           }
-          setShouldRestart(true);
           return;
         }
         if (result.text && isLikelyRealSpeech(result.text)) {
           accumulatedTextRef.current += ' ' + result.text;
           lastChunkTimeRef.current = Date.now();
           setStatus('listen', `Heard: "${accumulatedTextRef.current.trim().slice(-60)}..."`);
+          dlog('chunk_accepted', { len: result.text.length, accumLen: accumulatedTextRef.current.length });
           scheduleQuestionCheck();
         } else if (result.text) {
           // Suspected hallucination on a near-silent chunk — log and
           // discard. The transcript is shown in status briefly so the
           // user can tell we're still alive, but it never reaches the
           // accumulator and never gets sent to Sona.
-          console.info('[Live] Discarding suspected hallucination:', result.text);
+          dlog('chunk_discarded_short', { text: result.text });
           setStatus('listen', 'Listening...');
         }
-        setShouldRestart(true);
       } catch (err: any) {
         console.error('[Live] Transcription error:', err.message);
         setStatus('warn', 'Transcription error - retrying');
-        setShouldRestart(true);
+        dlog('chunk_error', { msg: err?.message });
       }
     } else {
       // MANUAL MODE: send entire recording as one question
@@ -263,7 +288,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
               ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
               : 'Your voice detected - filtering...';
             setStatus('listen', msg);
-            setShouldRestart(true);
             return;
           }
         }
@@ -287,23 +311,42 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   const handleAudioLevel = useCallback((level: number) => {
     setAudioLevel(level);
+    // Ground-truth heartbeat: this callback only fires while the analyser
+    // loop is actually running, which means the AudioContext is alive
+    // and the MediaRecorder is wired up. If 4s pass without one of these
+    // bumps, the heartbeat effect treats the recorder as stalled and
+    // forces a fresh restart.
+    lastHealthyAtRef.current = Date.now();
   }, [setAudioLevel]);
 
   const handleRecordingStop = useCallback(() => {
-    // Sync store state when VAD stops recording
+    // Sync store state when VAD/maxDuration/onerror stops recording.
+    // This is the SOLE owner of auto-mode restart — any other restart
+    // path (e.g. transcription completion) caused the mic to be killed
+    // mid-utterance via cleanup(). One owner = one deterministic loop.
     setIsRecording(false);
     stopListenTimer();
     setStatus('transcribe', 'Processing...');
+    dlog('recorder_stopped', { continuous: continuousModeRef.current, paused: userPausedRef.current });
 
-    // In live mode, immediately restart recording for the next question
-    // Use ref to always get latest continuousMode value
-    if (continuousModeRef.current) {
+    if (continuousModeRef.current && !userPausedRef.current) {
+      // 250 ms gives the browser time to finalize the previous blob
+      // dispatch (onstop → ondataavailable) before we tear down audio
+      // resources for the next recording.
       setTimeout(() => {
+        // Re-check inside the timeout: the user may have flipped Auto
+        // off or paused during the 250 ms window. Without this gate,
+        // the mic would re-arm against the user's intent.
+        if (!continuousModeRef.current || userPausedRef.current) {
+          dlog('restart_aborted', { continuous: continuousModeRef.current, paused: userPausedRef.current });
+          return;
+        }
+        dlog('restart_after_chunk');
         startRecordingRef.current?.();
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
-      }, 200);
+      }, 250);
     }
   }, [setIsRecording, stopListenTimer, startListenTimer, setStatus]);
 
@@ -317,19 +360,32 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
+    // Surface MediaRecorder/track errors in the status bar so the user
+    // knows the mic dropped (e.g., USB unplug, permission revoked,
+    // codec failure). The heartbeat will retry automatically; this is
+    // just to break the silent-failure mode.
+    onRecorderError: (msg) => setStatus('warn', `Mic: ${msg} — recovering...`),
     silenceThreshold: Math.max(threshold, 0.003),
-    // Auto mode chunks each utterance — 800ms of silence ends a chunk
-    // so Sona can answer turn-by-turn.
-    // Manual mode: 3s silence window. Long enough to ride through
-    // natural mid-thought pauses (the previous 1500ms was killing the
-    // recording during normal sentence breaks) but short enough that
-    // the recording still closes itself when the user is genuinely
-    // done speaking.
-    silenceDuration: continuousMode ? 800 : 3000,
+    // Auto mode: 1500 ms of trailing silence ends a chunk. The previous
+    // 800 ms was too aggressive — natural mid-sentence breath / pause
+    // breaks ("Tell me about a time… [breath]… I handled conflict")
+    // were tripping the silence stop, fragmenting one question into
+    // 2-3 transcription cycles, each of which lost ~200 ms of audio
+    // across the restart. 1500 ms holds through a normal pause but
+    // still feels live (Sona starts answering ~1.5 s after the
+    // interviewer finishes).
+    // Manual mode: 3 s silence window — long enough to ride through
+    // natural mid-thought pauses but short enough that the recording
+    // closes itself when the user is genuinely done speaking.
+    silenceDuration: continuousMode ? 1500 : 3000,
     minSpeechDuration: 300,
-    // Live: 5s chunks; Manual: 5-minute safety ceiling so a forgotten
-    // hot mic eventually closes itself.
-    maxRecordingDuration: continuousMode ? 5000 : 300000,
+    // Auto mode: 30 s ceiling. The prior 5 s ceiling force-fragmented
+    // every behavioral question (which routinely run 20-45 s) and made
+    // the double-restart kill window fire 6+ times per answer. 30 s
+    // covers nearly all real interview questions while still preventing
+    // a runaway recording if VAD silence detection misfires.
+    // Manual mode: 5 min — a forgotten hot mic eventually closes itself.
+    maxRecordingDuration: continuousMode ? 30000 : 300000,
     deviceId: selectedDeviceId,
   });
 
@@ -353,32 +409,92 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
+        dlog('mount_autostart');
       }, 200);
       return () => clearTimeout(timer);
     }
   }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus]);
 
-  // "User manually paused mid-Auto" flag — when set, the auto-restart
-  // effect honors it instead of yanking the mic back on. Cleared the
-  // moment the user manually resumes (or turns Auto off entirely).
-  const userPausedRef = useRef(false);
-
-  // Auto-restart recording after transcription
+  // Heartbeat: detect when Auto is on but the recorder has actually
+  // stopped (encoder error swallowed, MediaRecorder internal failure,
+  // OS sleep/wake, USB device reattach, permission revoked-then-restored).
+  // Without this, the store and the actual recorder state can diverge —
+  // UI says "listening" but no chunks ever arrive, and the only fix is
+  // for the user to manually toggle Auto off/on. Heartbeat closes that
+  // gap automatically within ~4 seconds. Ground-truth signal is
+  // lastHealthyAtRef which is bumped from handleAudioLevel (only fires
+  // while the analyser loop is actually running).
   useEffect(() => {
-    if (shouldRestart && startRecordingRef.current) {
-      setShouldRestart(false);
-      if (!continuousMode) return; // Only auto-restart in live mode
-      if (userPausedRef.current) return; // user manually paused — stay paused
-      // Small delay before restarting to let state settle
-      const timer = setTimeout(() => {
+    const interval = window.setInterval(() => {
+      if (!continuousModeRef.current || userPausedRef.current) {
+        lastHealthyAtRef.current = Date.now();
+        return;
+      }
+      // Reading store directly inside the interval avoids re-running
+      // this effect on every isRecording flip (which would cancel and
+      // re-create the timer in a tight loop).
+      const state = useInterviewStore.getState();
+      if (state.isRecording) {
+        // Note: lastHealthyAtRef is bumped from the audio-level
+        // callback in handleAudioLevel — that fires only while the
+        // analyser loop is actually running. We treat store-says-
+        // recording as a soft signal; the audio-level bump is the
+        // ground truth.
+        return;
+      }
+      const stalledMs = Date.now() - lastHealthyAtRef.current;
+      if (stalledMs > 4000 && !isStartingRef.current) {
+        isStartingRef.current = true;
+        dlog('heartbeat_recover', { stalledMs });
+        try {
+          startRecordingRef.current?.();
+          setIsRecording(true);
+          startListenTimer();
+          setStatus('listen', 'Live - listening...');
+        } finally {
+          // Release the lock after a beat so we don't re-fire on the
+          // next tick before getUserMedia resolves.
+          window.setTimeout(() => { isStartingRef.current = false; }, 1500);
+        }
+        lastHealthyAtRef.current = Date.now();
+      }
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [setIsRecording, startListenTimer, setStatus]);
+
+  // Tab visibility: Chrome auto-suspends AudioContext when the tab is
+  // backgrounded. While suspended, the analyser produces all-zero
+  // frequency data — VAD never sees speech, no chunks fire, and the
+  // current recording will eventually drop (no speechStartTime → blob
+  // discarded by useAudioCapture). On refocus, do a clean restart so
+  // the next chunk lands on a fresh AudioContext + MediaRecorder pair.
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!continuousModeRef.current || userPausedRef.current) return;
+      const state = useInterviewStore.getState();
+      if (state.isRecording) {
+        // Even if the store says "recording", the AudioContext likely
+        // got suspended. Force a fresh start to be safe.
+        dlog('visibility_refresh_active');
+      } else {
+        dlog('visibility_recover_idle');
+      }
+      if (isStartingRef.current) return;
+      isStartingRef.current = true;
+      try {
         startRecordingRef.current?.();
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [shouldRestart, continuousMode, setIsRecording, startListenTimer, setStatus]);
+      } finally {
+        window.setTimeout(() => { isStartingRef.current = false; }, 1500);
+      }
+      lastHealthyAtRef.current = Date.now();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [setIsRecording, startListenTimer, setStatus]);
 
   const handleToggle = useCallback(() => {
     if (storeIsRecording) {
