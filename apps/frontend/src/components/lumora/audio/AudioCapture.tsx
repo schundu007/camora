@@ -194,6 +194,20 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       // Also transcribe this first chunk (no filtering yet)
     }
 
+    // FAIL-CLOSED: if the user has the voice filter ON but never enrolled,
+    // we cannot actually filter their voice. Previously we silently sent
+    // filter_user_voice=false and transcribed everything (including the
+    // user's own speech) — the toggle showed ON but did nothing. That
+    // produced "filter is on but Sona still answers my voice."
+    // Now: skip transcription entirely and surface a clear status that
+    // points the user to the enrollment flow. Better to drop a real
+    // question than to feed user-voice noise to Sona.
+    if (voiceFilterEnabled && !voiceEnrolled && !(autoEnrollPending && voiceMode === 'record-interviewer')) {
+      setStatus('warn', 'Voice filter is ON — enroll your voice in Audio Check first.');
+      setShouldRestart(continuousModeRef.current);
+      return;
+    }
+
     const shouldFilterVoice = voiceEnrolled && voiceFilterEnabled;
     const isLiveMode = continuousModeRef.current;
 
