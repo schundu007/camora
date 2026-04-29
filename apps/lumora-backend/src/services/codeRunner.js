@@ -376,6 +376,25 @@ def _parse_params(s, func):
         return params
     except:
         pass
+    # Fallback: whitespace/newline-separated values when the function
+    # takes multiple params. Handles common interview-stdin formats:
+    #   "5 3"      → [5, 3]
+    #   "5\\n3"     → [5, 3]
+    #   "hello world" with 2 string params → ['hello', 'world']
+    # Without this, "5 3" parses as the single string "5 3" and the
+    # call becomes add(s="5 3") — missing positional argument.
+    if param_names and len(param_names) > 1:
+        parts = re.split(r'[\\s,]+', s.strip())
+        parts = [p for p in parts if p]
+        if len(parts) == len(param_names):
+            return [_eval(p) for p in parts]
+        # Pad/truncate gracefully — fewer parts than params means the
+        # final ones default to None; extra parts collapse into the last
+        # via _eval so e.g. variadic helpers still work.
+        if len(parts) > len(param_names):
+            head = [_eval(p) for p in parts[:len(param_names) - 1]]
+            tail = ' '.join(parts[len(param_names) - 1:])
+            return head + [_eval(tail)]
     return [_eval(s)]
 
 def _find_target_func(user_code):
