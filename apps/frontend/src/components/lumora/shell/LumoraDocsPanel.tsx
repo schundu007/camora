@@ -1705,60 +1705,6 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste, onCli
   );
 }
 
-/** Tiny copy-to-clipboard pill — used in the JD viewer header and inside
- *  FormattedJD section headers. Reads its text lazily via getText so callers
- *  can compute the payload only on click. */
-function CopyTextBtn({
-  getText,
-  title,
-  variant = 'subtle',
-}: {
-  getText: () => string;
-  title?: string;
-  variant?: 'subtle' | 'accent';
-}) {
-  const [copied, setCopied] = useState(false);
-  const handle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const txt = getText();
-    if (!txt) return;
-    const done = () => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    };
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(txt).then(done).catch(() => {
-        // Fallback for non-secure contexts (older Electron, http)
-        const ta = document.createElement('textarea');
-        ta.value = txt;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
-      });
-    }
-  };
-  const accentStyle =
-    variant === 'accent'
-      ? { color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }
-      : { color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' };
-  return (
-    <button
-      onClick={handle}
-      title={title || 'Copy to clipboard'}
-      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg transition-all"
-      style={accentStyle}
-    >
-      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-      </svg>
-      {copied ? 'Copied' : 'Copy'}
-    </button>
-  );
-}
-
 /** Parse JD text into structured sections and render beautifully */
 function FormattedJD({ text }: { text: string }) {
   if (!text?.trim()) return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No job description added yet.</p>;
@@ -2126,22 +2072,6 @@ function FormattedJD({ text }: { text: string }) {
                 <span className="text-[10px] font-mono font-bold" style={{ color: accent, opacity: 0.7 }}>
                   {String(sec.items.length).padStart(2, '0')}
                 </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const payload = (sec.title ? `${sec.title}\n` : '') + sec.items.map((it) => `• ${it}`).join('\n');
-                    navigator.clipboard?.writeText(payload);
-                    const btn = e.currentTarget;
-                    const original = btn.textContent;
-                    btn.textContent = 'Copied';
-                    setTimeout(() => { btn.textContent = original; }, 1500);
-                  }}
-                  title="Copy section"
-                  className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-all"
-                  style={{ color: accent, border: `1px solid ${accent}55`, background: `${accent}12` }}
-                >
-                  Copy
-                </button>
               </div>
             )}
             <div className="px-5 py-4 flex flex-col gap-2">
@@ -2183,7 +2113,6 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const newCompanyRef = useRef<HTMLInputElement>(null);
   const jdFileInputRef = useRef<HTMLInputElement>(null);
-  const generatedContentRef = useRef<HTMLDivElement>(null);
   const [jdModalOpen, setJdModalOpen] = useState(false);
   const [jdUrl, setJdUrl] = useState('');
   const [jdEditText, setJdEditText] = useState('');
@@ -2809,10 +2738,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           <div className="flex-1 flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
-              <div className="flex items-center gap-2">
-                <CopyTextBtn getText={() => state.jd} title="Copy full JD to clipboard" />
-                <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }}>Edit</button>
-              </div>
+              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }}>Edit</button>
             </div>
             <div className="flex-1 overflow-auto p-6 select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
               <FormattedJD text={state.jd} />
@@ -2828,12 +2754,6 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>Generated</span>
-                )}
-                {state.sections[activeSection] && (
-                  <CopyTextBtn
-                    getText={() => generatedContentRef.current?.innerText?.trim() || ''}
-                    title={`Copy ${SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label || 'section'} to clipboard`}
-                  />
                 )}
                 {hasRequiredDocs && (
                   <button
@@ -2851,7 +2771,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 )}
               </div>
             </div>
-            <div ref={generatedContentRef} className="flex-1 overflow-auto p-6 select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
+            <div className="flex-1 overflow-auto p-6 select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
               {sectionStatus[activeSection] === 'generating' ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: 'var(--cam-primary)', borderTopColor: 'transparent' }} />

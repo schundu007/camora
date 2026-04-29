@@ -23,7 +23,10 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execFile } = require('child_process');
-const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = require('docx');
+const {
+  Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType,
+  Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
+} = require('docx');
 
 const APP_URL = process.env.CAMORA_URL || 'https://camora.cariara.com';
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
@@ -362,6 +365,37 @@ ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
             : [new TextRun({ text: lbl, bold: true })],
         }));
       } else if (b.type === 'spacer') {
+        children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 120, after: 120 } }));
+      } else if (b.type === 'table' && Array.isArray(b.rows) && b.rows.length > 0) {
+        const rows = b.rows;
+        const cols = rows[0].length;
+        const headerRow = new TableRow({
+          tableHeader: true,
+          children: rows[0].map((cell) => new TableCell({
+            width: { size: Math.floor(100 / cols), type: WidthType.PERCENTAGE },
+            shading: { type: ShadingType.CLEAR, color: 'auto', fill: '0047AB' },
+            children: [new Paragraph({ children: [new TextRun({ text: xmlSafe(cell), bold: true, color: 'FFFFFF' })] })],
+          })),
+        });
+        const bodyRows = rows.slice(1).map((r, idx) => new TableRow({
+          children: r.map((cell) => new TableCell({
+            width: { size: Math.floor(100 / cols), type: WidthType.PERCENTAGE },
+            shading: idx % 2 === 1 ? { type: ShadingType.CLEAR, color: 'auto', fill: 'F4F7FB' } : undefined,
+            children: [new Paragraph({ children: [new TextRun({ text: xmlSafe(cell) })] })],
+          })),
+        }));
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [headerRow, ...bodyRows],
+          borders: {
+            top:    { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+            bottom: { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+            left:   { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+            right:  { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+            insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0' },
+            insideVertical:   { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0' },
+          },
+        }));
         children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 120, after: 120 } }));
       } else {
         children.push(new Paragraph({ children: [new TextRun({ text })] }));
