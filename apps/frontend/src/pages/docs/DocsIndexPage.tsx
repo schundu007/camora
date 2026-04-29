@@ -42,7 +42,44 @@ function DocCardLink({ card }: { card: DocCard }) {
       className="group block rounded-xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
-      <h3 className="text-base font-bold mb-1.5 group-hover:underline" style={{ color: 'var(--text-primary)' }}>{card.title}</h3>
+      <div className="flex items-start justify-between gap-3 mb-1.5">
+        <h3 className="text-base font-bold group-hover:underline" style={{ color: 'var(--text-primary)' }}>{card.title}</h3>
+        {/* Visible URL path next to the title — the previous design hid
+            the link inside the <Link> wrapper, which made docs harder
+            to scan / share. The chip is click-to-copy (doesn't navigate
+            so the parent <Link> still owns the row). */}
+        <span
+          role="button"
+          tabIndex={0}
+          title="Click to copy link"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const url = window.location.origin + card.href;
+            const node = e.currentTarget as HTMLSpanElement;
+            const original = node.textContent || card.href;
+            navigator.clipboard?.writeText(url).then(() => {
+              node.textContent = 'copied';
+              setTimeout(() => { if (node) node.textContent = original; }, 1200);
+            });
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).click();
+            }
+          }}
+          className="shrink-0 inline-flex items-center text-[10.5px] font-mono px-2 py-0.5 rounded-md transition-colors hover:bg-black/10"
+          style={{
+            color: 'var(--text-muted)',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          }}
+        >
+          {card.href}
+        </span>
+      </div>
       <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{card.description}</p>
     </Link>
   );
