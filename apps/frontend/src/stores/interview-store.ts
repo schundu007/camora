@@ -123,7 +123,10 @@ const initialState = {
   useSearch: false,
   voiceMode: 'filter-candidate' as const,
   voiceEnrolled: false,
-  voiceFilterEnabled: true, // Enable by default when enrolled
+  // Default OFF — turning the filter on without enrollment makes
+  // AudioCapture fail closed (it can't filter what it hasn't sampled).
+  // The auto-enroll flow flips this to true on a successful first chunk.
+  voiceFilterEnabled: false,
   isEnrolling: false,
   autoEnrollPending: false,
   interviewerAudio: {
