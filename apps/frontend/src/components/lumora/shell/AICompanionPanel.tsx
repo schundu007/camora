@@ -455,14 +455,18 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         </>
       )}
 
-      {/* Header — LeetCode-style dark navy band with gold underline.
-          Tool window, so no diagonal wedge — the gold hairline carries
-          the same design grammar without crowding the chat surface. */}
+      {/* Header — neutral elevated chrome with a thin navy accent line
+          underneath. The previous LeetCode-style dark navy band painted
+          the entire top of every Lumora answer view lapis-blue, which
+          violated the "navy is accent only, never page chrome" rule and
+          made every card below look pale-blue by association. The
+          underline still carries the brand without flooding the surface. */}
       <div
         className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
         style={{
-          background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          background: 'var(--bg-surface)',
+          borderBottom: '1px solid var(--border)',
+          boxShadow: 'inset 0 -2px 0 var(--accent)',
           borderRadius: embedded || maximized ? 0 : '16px 16px 0 0',
         }}
         onMouseDown={embedded ? undefined : startDrag}
@@ -470,15 +474,15 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Left: clear + close (embedded) or clear + new (floating) */}
         <div className="flex items-center gap-0.5">
           <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
-            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="Clear history">
+            className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Clear history">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
           </button>
           {embedded ? (
-            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="Close">
+            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Close">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </button>
           ) : (
-            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="New chat">
+            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="New chat">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
             </button>
           )}
@@ -487,9 +491,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Center: title + mode toggle */}
         <div className="flex-1 flex items-center justify-center gap-2">
           <SonaAvatar size={18} />
-          <span className="text-[11px] font-bold text-white">Sona</span>
-          {activeAssistant && <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}>{activeAssistant.company || activeAssistant.role || 'Custom'}</span>}
-          <div className="flex items-center rounded-md p-0.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
+          <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>Sona</span>
+          {activeAssistant && (
+            <span
+              className="text-[8px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}
+            >
+              {activeAssistant.company || activeAssistant.role || 'Custom'}
+            </span>
+          )}
+          <div
+            className="flex items-center rounded-md p-0.5"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+          >
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
                 key={mode}
@@ -500,8 +514,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   fontWeight: 700,
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
-                  color: answerMode === mode ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.75)',
-                  background: answerMode === mode ? 'var(--cam-gold-leaf)' : 'transparent',
+                  color: answerMode === mode ? '#FFFFFF' : 'var(--text-muted)',
+                  background: answerMode === mode ? 'var(--accent)' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -514,11 +528,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.75)' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
@@ -532,8 +546,14 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       {/* Chat — side-by-side when embedded, top-to-bottom when floating */}
       {embedded ? (
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          {/* Left: stories + questions */}
-          <div className="w-[280px] shrink-0 overflow-auto border-r" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+          {/* Left: stories + questions. Subtle bg-elevated tint so it
+              reads as chrome/navigation; the main reading area stays on
+              bg-surface (white) so answer cards have somewhere to lift
+              off from. */}
+          <div
+            className="w-[280px] shrink-0 overflow-auto border-r"
+            style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}
+          >
             <StoryBankPanel
               stories={activeAssistant?.stories}
               activeArchetype={(() => {
@@ -573,28 +593,46 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             ) : (
               <div className="space-y-3">
                 {messages.filter(m => m.role === 'ai').map((msg, i) => (
-                  <div key={i} className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <div className="flex items-center gap-2 mb-2">
+                  <div
+                    key={i}
+                    className="rounded-xl p-5"
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: '1px solid var(--border)' }}>
                       <SonaAvatar size={18} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Sona</span>
                     </div>
-                    {/* Multi-column flow so a long answer fans left→right instead of
-                        forcing 2–3 viewports of vertical scroll during a live interview. */}
-                    <div className="answer-flow gap-x-8 columns-1 lg:columns-2 2xl:columns-3 [&>div]:contents [&>div>div]:contents">
+                    {/* Single-column read with column-width fallback set in
+                        globals.css. On very wide displays the .answer-flow
+                        rule splits into 2 columns at ~1100px+, never 3.
+                        Three narrow columns of dense bullets was the
+                        readability killer in the prior layout. */}
+                    <div className="answer-flow [&>div]:contents [&>div>div]:contents">
                       <AnswerView text={msg.text} />
                     </div>
                   </div>
                 ))}
                 {streaming && (
-                  <div className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="rounded-xl p-5"
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: '1px solid var(--border)' }}>
                       <SonaAvatar size={18} active />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--cam-primary-dk)' }}>Sona is answering…</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Sona is answering…</span>
                     </div>
                     {streamText ? (
-                      <div className="answer-flow gap-x-8 columns-1 lg:columns-2 2xl:columns-3 [&>div]:contents [&>div>div]:contents">
+                      <div className="answer-flow [&>div]:contents [&>div>div]:contents">
                         <AnswerView text={cleanTags(streamText)} streaming />
-                        <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-primary)' }} />
+                        <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--accent)' }} />
                       </div>
                     ) : (
                       <span className="animate-pulse text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>
@@ -635,7 +673,15 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 </div>
               ) : (
-                <div key={i} className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div
+                  key={i}
+                  className="rounded-xl p-3"
+                  style={{
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border)',
+                    boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 20px -12px rgba(15,23,42,0.10)',
+                  }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
                     <SonaAvatar size={14} />
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
@@ -644,7 +690,14 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 </div>
               ))}
               {streaming && (
-                <div className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div
+                  className="rounded-xl p-3"
+                  style={{
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border)',
+                    boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 20px -12px rgba(15,23,42,0.10)',
+                  }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
                     <SonaAvatar size={14} active />
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
