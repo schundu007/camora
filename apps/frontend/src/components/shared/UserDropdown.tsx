@@ -74,8 +74,8 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
         onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
-        {user.image ? (
-          <img src={user.image} alt="" className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full object-cover`} style={{ boxShadow: `0 0 0 1px ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}` }} referrerPolicy="no-referrer" />
+        {(user.image || (user as any).picture) ? (
+          <img src={user.image || (user as any).picture} alt="" className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full object-cover`} style={{ boxShadow: `0 0 0 1px ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}` }} referrerPolicy="no-referrer" />
         ) : (
           <div className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full flex items-center justify-center text-[11px] font-bold`} style={{ background: isDark ? 'rgba(255,255,255,0.2)' : 'var(--accent)', color: isDark ? '#fff' : '#fff' }}>
             {initials}
