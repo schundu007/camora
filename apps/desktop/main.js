@@ -175,15 +175,33 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('activate', () => { if (!mainWindow) createWindow(); else mainWindow.show(); });
+
+// Dock-icon click on macOS. Previous handler was `mainWindow.show()`
+// only — that left minimized windows minimized and hidden windows
+// behind whatever app was foreground, so the user had to click the
+// Dock twice to actually see Camora. Mirror the second-instance
+// pattern: recreate if destroyed, restore if minimized, show + focus
+// in every case so the window comes forward on the FIRST click.
+app.on('activate', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  if (!mainWindow.isVisible()) mainWindow.show();
+  mainWindow.focus();
+});
 app.on('before-quit', () => { isQuitting = true; });
 app.on('will-quit', () => globalShortcut.unregisterAll());
 
 app.on('second-instance', () => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
   }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  if (!mainWindow.isVisible()) mainWindow.show();
+  mainWindow.focus();
 });
 
 // ── IPC: macOS-native window capture (NO MODAL) ────────────────────────
