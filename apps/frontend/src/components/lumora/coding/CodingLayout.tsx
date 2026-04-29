@@ -438,6 +438,31 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     if (isStreaming) setProblemTab('solution');
   }, [isStreaming]);
 
+  // ── Auto-run after solution completes ───────────────────────────────────
+  // User asked for "instant working answers — don't ask me to add test
+  // cases manually." When the model returns examples and the solve
+  // stream completes, fire handleRun automatically so the user lands on
+  // a Solution + Output panel that already shows passing/failing tests.
+  // The autoRunFiredRef guard prevents the effect from re-firing on
+  // every state change after the run completes.
+  const autoRunFiredRef = useRef(false);
+  useEffect(() => {
+    if (isStreaming) {
+      autoRunFiredRef.current = false; // reset for the next solution
+      return;
+    }
+    if (autoRunFiredRef.current) return;
+    if (isRunning) return;
+    if (!code || !code.trim()) return;
+    if (!testCases || testCases.length === 0) return;
+    // Only fire if at least one test case has a real input — empty
+    // placeholders shouldn't trigger a useless empty run.
+    const hasRealInput = testCases.some((tc) => tc.input && tc.input.trim().length > 0);
+    if (!hasRealInput) return;
+    autoRunFiredRef.current = true;
+    handleRun();
+  }, [isStreaming, code, testCases, isRunning, handleRun]);
+
   // ── Parse solution from stream ──────────────────────────────────────────
 
   useEffect(() => {
