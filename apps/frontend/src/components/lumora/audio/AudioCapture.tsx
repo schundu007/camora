@@ -15,9 +15,15 @@ export const SystemAudioButton = (_props: { onTranscription?: (text: string) => 
   return <InterviewerAudioPill />;
 };
 
-// Keyboard shortcuts — use Cmd/Ctrl+M to avoid conflict with typing
+// Keyboard shortcuts — use Cmd/Ctrl+M to avoid conflict with typing.
+// Backquote (` / ~) toggles the mic push-to-talk-style. We match by
+// `e.code === 'Backquote'` rather than `e.key` so the binding fires
+// regardless of whether Shift is held (the user thinks of it as the
+// "tilde key" but the unshifted glyph is `). Same physical position
+// across QWERTY/Dvorak/AZERTY layouts.
 const SHORTCUTS = {
   STOP_MIC: ['Escape'] as string[],
+  TOGGLE_MIC_CODE: 'Backquote',
 };
 
 // Whisper hallucinates on near-silence with random short tokens that
@@ -365,7 +371,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         userPausedRef.current = true;
         setStatus('ready', 'Sona paused — click mic or ⌘M to resume');
       } else {
-        setStatus('ready', 'Paused - press Cmd+M to resume');
+        setStatus('ready', 'Paused - press ` or Cmd+M to resume');
       }
     } else {
       userPausedRef.current = false;
@@ -398,6 +404,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
         e.preventDefault();
         handleToggle();
+        return;
+      }
+
+      // Backquote (` / ~): toggle mic — push-to-talk-style global hotkey
+      // that works in Coding, Design, and Behavioral views. Ignored when
+      // any modifier key is pressed so we don't steal Cmd+`/Ctrl+` from
+      // window managers / browsers.
+      if (e.code === SHORTCUTS.TOGGLE_MIC_CODE && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        handleToggle();
+        return;
       }
 
       // Escape: Stop mic
@@ -406,7 +423,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         stopRecording();
         setIsRecording(false);
         stopListenTimer();
-        setStatus('ready', 'Paused - press Cmd+M to resume');
+        setStatus('ready', 'Paused - press ` or Cmd+M to resume');
       }
     };
 
@@ -528,12 +545,12 @@ function UnifiedMicButton({
           aria-pressed={isRec || isLive}
           title={
             isLive
-              ? 'Sona is listening — click to pause. Auto stays on; click again to resume.'
+              ? 'Sona is listening — click or press ` to pause. Auto stays on; click again to resume.'
               : isRec
-                ? 'Recording — click to stop'
+                ? 'Recording — click or press ` to stop'
                 : continuousMode
-                  ? 'Sona is paused — click to resume listening.'
-                  : 'Click to record one answer'
+                  ? 'Sona is paused — click or press ` to resume listening.'
+                  : 'Click or press ` to record one answer'
           }
         >
           {isLive ? (
