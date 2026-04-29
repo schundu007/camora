@@ -101,7 +101,7 @@ router.post('/', validate('solve'), async (req, res, next) => {
     if (!userModel && userId && provider === 'claude') {
       const subStatus = await freeUsageService.getSubscriptionStatus(userId);
       userModel = (subStatus.hasSubscription)
-        ? 'claude-sonnet-4-20250514'
+        ? 'claude-sonnet-4-6'
         : 'claude-haiku-4-5-20251001';
     }
 
@@ -237,7 +237,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
         const subStatus = await freeUsageService.getSubscriptionStatus(userId);
         userPlanType = subStatus.planType;
         userModel = (subStatus.hasSubscription)
-          ? 'claude-sonnet-4-20250514'
+          ? 'claude-sonnet-4-6'
           : 'claude-haiku-4-5-20251001';
         logger.debug({ userId, model: userModel, hasSubscription: subStatus.hasSubscription }, 'Model selected based on plan');
       }

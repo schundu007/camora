@@ -30,7 +30,7 @@ function getOpenAIClient() {
   return getOpenAIClientFromShared(apiKey);
 }
 
-const CLAUDE_SONNET = 'claude-sonnet-4-20250514';
+const CLAUDE_SONNET = 'claude-sonnet-4-6';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';

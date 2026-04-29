@@ -61,7 +61,7 @@ router.post('/', handleUpload, async (req, res) => {
     if (!userModel && req.user?.id && provider === 'claude') {
       const subStatus = await freeUsageService.getSubscriptionStatus(req.user.id);
       userModel = (subStatus.hasSubscription)
-        ? 'claude-sonnet-4-20250514'
+        ? 'claude-sonnet-4-6'
         : 'claude-haiku-4-5-20251001';
     }
 
