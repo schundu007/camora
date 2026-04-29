@@ -320,13 +320,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     silenceThreshold: Math.max(threshold, 0.003),
     // Auto mode chunks each utterance — 800ms of silence ends a chunk
     // so Sona can answer turn-by-turn.
-    // Manual mode is a hard toggle: silenceDuration: 0 disables the
-    // VAD-driven auto-stop entirely. Recording keeps going until the
-    // user clicks the mic again (or hits the 5-minute safety ceiling).
-    // Previously this was 1500ms, which let a single natural pause
-    // kill the recording mid-question — the user complaint was "manual
-    // mic on is unstable, switches off after 2-3 sec".
-    silenceDuration: continuousMode ? 800 : 0,
+    // Manual mode: 3s silence window. Long enough to ride through
+    // natural mid-thought pauses (the previous 1500ms was killing the
+    // recording during normal sentence breaks) but short enough that
+    // the recording still closes itself when the user is genuinely
+    // done speaking.
+    silenceDuration: continuousMode ? 800 : 3000,
     minSpeechDuration: 300,
     // Live: 5s chunks; Manual: 5-minute safety ceiling so a forgotten
     // hot mic eventually closes itself.
