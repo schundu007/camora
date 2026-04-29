@@ -338,12 +338,15 @@ ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
     }
     for (const b of (section.blocks || [])) {
       const text = xmlSafe(b.text);
+      const lbl = xmlSafe(b.label);
       if (b.type === 'h1') {
         children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text, bold: true })] }));
       } else if (b.type === 'h2') {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text, bold: true })] }));
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text, bold: true })], spacing: { before: 200, after: 80 } }));
       } else if (b.type === 'h3') {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun({ text, bold: true })] }));
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun({ text, bold: true })], spacing: { before: 160, after: 60 } }));
+      } else if (b.type === 'h4') {
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_4, children: [new TextRun({ text, bold: true })], spacing: { before: 120, after: 40 } }));
       } else if (b.type === 'li') {
         children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text })] }));
       } else if (b.type === 'code') {
@@ -351,6 +354,15 @@ ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
           children: [new TextRun({ text, font: 'Menlo', size: 18 })],
           shading: { type: 'clear', color: 'auto', fill: 'F4F4F4' },
         }));
+      } else if (b.type === 'field') {
+        children.push(new Paragraph({
+          spacing: { after: 60 },
+          children: text
+            ? [new TextRun({ text: lbl, bold: true }), new TextRun({ text: ' ' + text })]
+            : [new TextRun({ text: lbl, bold: true })],
+        }));
+      } else if (b.type === 'spacer') {
+        children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 120, after: 120 } }));
       } else {
         children.push(new Paragraph({ children: [new TextRun({ text })] }));
       }
