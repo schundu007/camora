@@ -26,6 +26,7 @@ const { execFile } = require('child_process');
 const {
   Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType,
   Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
+  Header, Footer, PageNumber,
 } = require('docx');
 
 const APP_URL = process.env.CAMORA_URL || 'https://camora.cariara.com';
@@ -290,11 +291,14 @@ ipcMain.handle('save-pdf', async (_e, { html, filename }) => {
     fs.writeFileSync(tmpHtml, html, 'utf8');
     await printer.loadFile(tmpHtml);
     // Wait one paint tick so fonts/CSS are committed before printing.
-    await new Promise((r) => setTimeout(r, 150));
+    await new Promise((r) => setTimeout(r, 200));
     const pdf = await printer.webContents.printToPDF({
       printBackground: true,
       pageSize: 'Letter',
-      margins: { top: 0.6, bottom: 0.6, left: 0.6, right: 0.6 },
+      // Margins are baked into the @page rules in the HTML so Chromium
+      // doesn't double up; pass 0 here.
+      margins: { top: 0, bottom: 0, left: 0, right: 0 },
+      preferCSSPageSize: true,
     });
     fs.writeFileSync(result.filePath, pdf);
     return { ok: true, path: result.filePath };
@@ -308,8 +312,9 @@ ipcMain.handle('save-pdf', async (_e, { html, filename }) => {
 });
 
 // ── IPC: download — real DOCX via docx package ─────────────────────────
-// Renderer sends a structured tree: [{ heading: "...", blocks: [{type:"p"|"h1"|"h2"|"li"|"code", text:"..."}] }, ...]
-// We turn it into a real .docx (not HTML-as-doc).
+// Book-style: cover page, table of contents, chapter pages with running
+// header + page-number footer, callouts, Q&A, tables. Mirrors the in-app
+// FormattedJD aesthetic with navy + cream + charcoal palette.
 ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
   if (!Array.isArray(sections) || sections.length === 0) return { ok: false, error: 'no sections' };
   const result = await dialog.showSaveDialog(mainWindow, {
@@ -322,89 +327,205 @@ ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
   // Word rejects XML control chars (U+0000..U+001F except tab/lf/cr) and
   // U+FFFE/U+FFFF — strip them or the .docx is flagged "corrupted" on open.
   const xmlSafe = (s) => String(s == null ? '' : s).replace(/[ --￾￿]/g, '');
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
+  const splitTitle = (full) => {
+    const s = String(full || '');
+    const dashIdx = s.search(/[—–-]/);
+    if (dashIdx > 0) return { main: s.slice(0, dashIdx).trim(), sub: s.slice(dashIdx + 1).trim() };
+    return { main: s, sub: '' };
+  };
+  const SEP = ' · ';
 
-  const children = [];
-  if (title) {
-    children.push(new Paragraph({
-      heading: HeadingLevel.TITLE,
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: xmlSafe(title), bold: true })],
+  const buildTable = (rows) => {
+    const cols = rows[0].length;
+    const headerRow = new TableRow({
+      tableHeader: true,
+      children: rows[0].map((cell) => new TableCell({
+        width: { size: Math.floor(100 / cols), type: WidthType.PERCENTAGE },
+        shading: { type: ShadingType.CLEAR, color: 'auto', fill: '0047AB' },
+        margins: { top: 120, bottom: 120, left: 160, right: 160 },
+        children: [new Paragraph({ children: [new TextRun({ text: xmlSafe(cell).toUpperCase(), bold: true, color: 'FFFFFF', size: 18, characterSpacing: 8 })] })],
+      })),
+    });
+    const bodyRows = rows.slice(1).map((r, idx) => new TableRow({
+      children: r.map((cell) => new TableCell({
+        width: { size: Math.floor(100 / cols), type: WidthType.PERCENTAGE },
+        shading: idx % 2 === 1 ? { type: ShadingType.CLEAR, color: 'auto', fill: 'F4F7FB' } : undefined,
+        margins: { top: 100, bottom: 100, left: 160, right: 160 },
+        children: [new Paragraph({ children: [new TextRun({ text: xmlSafe(cell), color: '2A2A2A', size: 22 })] })],
+      })),
     }));
-  }
-  for (const section of sections) {
-    if (section.heading) {
-      children.push(new Paragraph({
-        heading: HeadingLevel.HEADING_1,
-        children: [new TextRun({ text: xmlSafe(section.heading), bold: true })],
-        spacing: { before: 280, after: 120 },
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [headerRow, ...bodyRows],
+      borders: {
+        top:    { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+        bottom: { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+        left:   { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+        right:  { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0' },
+        insideVertical:   { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0' },
+      },
+    });
+  };
+
+  const buildCallout = (label, body, tone) => {
+    const accent = tone === 'warn' ? 'C77A00' : '0047AB';
+    const fill = tone === 'warn' ? 'FFF8EC' : 'EEF4FB';
+    const lines = String(body || '').split('\n');
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [new TableRow({
+        children: [new TableCell({
+          shading: { type: ShadingType.CLEAR, color: 'auto', fill },
+          margins: { top: 200, bottom: 200, left: 280, right: 280 },
+          children: [
+            new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: String(label || 'NOTE').toUpperCase(), bold: true, color: accent, size: 16, characterSpacing: 22 })] }),
+            ...lines.map((line) => new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: xmlSafe(line), color: '2A2A2A', size: 22 })] })),
+          ],
+        })],
+      })],
+      borders: {
+        top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+        bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+        right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+        left: { style: BorderStyle.SINGLE, size: 24, color: accent },
+        insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+        insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      },
+    });
+  };
+
+  const buildQA = (question, answer) => {
+    const out = [];
+    out.push(new Paragraph({
+      spacing: { before: 200, after: 80 },
+      indent: { left: 360 },
+      border: { left: { style: BorderStyle.SINGLE, size: 18, color: 'C5D4E8', space: 8 } },
+      children: [
+        new TextRun({ text: ' Q ', bold: true, color: 'FFFFFF', shading: { type: ShadingType.CLEAR, color: 'auto', fill: '0047AB' }, size: 18 }),
+        new TextRun({ text: '  ' + xmlSafe(question), bold: true, color: '0A0A0A', size: 24 }),
+      ],
+    }));
+    for (const line of String(answer || '').split('\n')) {
+      out.push(new Paragraph({
+        spacing: { after: 80 },
+        indent: { left: 360 },
+        border: { left: { style: BorderStyle.SINGLE, size: 18, color: 'C5D4E8', space: 8 } },
+        children: line.trim() ? [new TextRun({ text: xmlSafe(line), color: '2A2A2A', size: 22 })] : [new TextRun({ text: '' })],
       }));
     }
-    for (const b of (section.blocks || [])) {
+    return out;
+  };
+
+  const blocksToChildren = (blocks) => {
+    const out = [];
+    for (const b of (blocks || [])) {
       const text = xmlSafe(b.text);
       const lbl = xmlSafe(b.label);
-      if (b.type === 'h1') {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text, bold: true })] }));
-      } else if (b.type === 'h2') {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text, bold: true })], spacing: { before: 200, after: 80 } }));
-      } else if (b.type === 'h3') {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun({ text, bold: true })], spacing: { before: 160, after: 60 } }));
-      } else if (b.type === 'h4') {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_4, children: [new TextRun({ text, bold: true })], spacing: { before: 120, after: 40 } }));
-      } else if (b.type === 'li') {
-        children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text })] }));
-      } else if (b.type === 'code') {
-        children.push(new Paragraph({
-          children: [new TextRun({ text, font: 'Menlo', size: 18 })],
-          shading: { type: 'clear', color: 'auto', fill: 'F4F4F4' },
-        }));
-      } else if (b.type === 'field') {
-        children.push(new Paragraph({
-          spacing: { after: 60 },
-          children: text
-            ? [new TextRun({ text: lbl, bold: true }), new TextRun({ text: ' ' + text })]
-            : [new TextRun({ text: lbl, bold: true })],
-        }));
-      } else if (b.type === 'spacer') {
-        children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 120, after: 120 } }));
-      } else if (b.type === 'table' && Array.isArray(b.rows) && b.rows.length > 0) {
-        const rows = b.rows;
-        const cols = rows[0].length;
-        const headerRow = new TableRow({
-          tableHeader: true,
-          children: rows[0].map((cell) => new TableCell({
-            width: { size: Math.floor(100 / cols), type: WidthType.PERCENTAGE },
-            shading: { type: ShadingType.CLEAR, color: 'auto', fill: '0047AB' },
-            children: [new Paragraph({ children: [new TextRun({ text: xmlSafe(cell), bold: true, color: 'FFFFFF' })] })],
-          })),
-        });
-        const bodyRows = rows.slice(1).map((r, idx) => new TableRow({
-          children: r.map((cell) => new TableCell({
-            width: { size: Math.floor(100 / cols), type: WidthType.PERCENTAGE },
-            shading: idx % 2 === 1 ? { type: ShadingType.CLEAR, color: 'auto', fill: 'F4F7FB' } : undefined,
-            children: [new Paragraph({ children: [new TextRun({ text: xmlSafe(cell) })] })],
-          })),
-        }));
-        children.push(new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [headerRow, ...bodyRows],
-          borders: {
-            top:    { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
-            bottom: { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
-            left:   { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
-            right:  { style: BorderStyle.SINGLE, size: 4, color: 'C5D4E8' },
-            insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0' },
-            insideVertical:   { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0' },
-          },
-        }));
-        children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 120, after: 120 } }));
-      } else {
-        children.push(new Paragraph({ children: [new TextRun({ text })] }));
+      if (b.type === 'h1') out.push(new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 280, after: 140 }, children: [new TextRun({ text, bold: true, color: '0A0A0A' })] }));
+      else if (b.type === 'h2') out.push(new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 100 }, children: [new TextRun({ text, bold: true, color: '0A0A0A' })] }));
+      else if (b.type === 'h3') out.push(new Paragraph({ heading: HeadingLevel.HEADING_3, spacing: { before: 240, after: 80 }, children: [new TextRun({ text: text.toUpperCase(), bold: true, color: '0047AB', characterSpacing: 24, size: 22 })] }));
+      else if (b.type === 'h4') out.push(new Paragraph({ heading: HeadingLevel.HEADING_4, spacing: { before: 160, after: 60 }, children: [new TextRun({ text, bold: true, color: '333333' })] }));
+      else if (b.type === 'lead') out.push(new Paragraph({
+        spacing: { before: 200, after: 280 },
+        indent: { left: 360 },
+        border: { left: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 12 } },
+        children: [new TextRun({ text, italics: true, color: '2A2A2A', size: 26 })],
+      }));
+      else if (b.type === 'li') out.push(new Paragraph({ bullet: { level: 0 }, spacing: { after: 60 }, children: [new TextRun({ text, color: '2A2A2A', size: 22 })] }));
+      else if (b.type === 'code') out.push(new Paragraph({
+        shading: { type: ShadingType.CLEAR, color: 'auto', fill: 'F5F5F0' },
+        children: [new TextRun({ text, font: 'Menlo', size: 19, color: '2A2A2A' })],
+      }));
+      else if (b.type === 'field') out.push(new Paragraph({
+        spacing: { after: 80 },
+        children: text
+          ? [new TextRun({ text: lbl, bold: true, color: '0047AB', size: 22 }), new TextRun({ text: ' ' + text, color: '2A2A2A', size: 22 })]
+          : [new TextRun({ text: lbl, bold: true, color: '0047AB', size: 22 })],
+      }));
+      else if (b.type === 'spacer') out.push(new Paragraph({
+        spacing: { before: 120, after: 120 },
+        border: { bottom: { style: BorderStyle.DOTTED, size: 4, color: 'C0C0C0', space: 1 } },
+        children: [new TextRun({ text: '' })],
+      }));
+      else if (b.type === 'table' && Array.isArray(b.rows) && b.rows.length > 0) {
+        out.push(buildTable(b.rows));
+        out.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 80, after: 120 } }));
       }
+      else if (b.type === 'callout') {
+        const tone = /watch|warn|pitfall/i.test(lbl) ? 'warn' : 'info';
+        out.push(buildCallout(lbl || 'Note', b.text || '', tone));
+        out.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 80, after: 120 } }));
+      }
+      else if (b.type === 'qa') for (const p of buildQA(text, b.answer || '')) out.push(p);
+      else out.push(new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text, color: '2A2A2A', size: 22 })] }));
     }
-  }
+    return out;
+  };
+
+  const { main, sub } = splitTitle(title);
+  const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const coverChildren = [
+    new Paragraph({ spacing: { before: 1200, after: 0 }, children: [new TextRun({ text: 'CAMORA' + SEP + 'INTERVIEW PREP', bold: true, color: '0047AB', size: 20, characterSpacing: 32 })] }),
+    new Paragraph({ spacing: { before: 200, after: 600 }, border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({ spacing: { before: 2400, after: 0 }, children: [new TextRun({ text: 'BRIEFING', bold: true, color: '0047AB', size: 18, characterSpacing: 32 })] }),
+    new Paragraph({ spacing: { before: 200, after: 240 }, children: [new TextRun({ text: xmlSafe(main), bold: true, color: '0A0A0A', size: 84 })] }),
+    sub ? new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: xmlSafe(sub), italics: true, color: '555555', size: 30 })] }) : new Paragraph({ children: [new TextRun({ text: '' })] }),
+    new Paragraph({ spacing: { before: 3200, after: 0 }, border: { top: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({ spacing: { before: 200, after: 0 }, children: [new TextRun({ text: xmlSafe(today.toUpperCase()), bold: true, color: '888888', size: 18, characterSpacing: 32 })] }),
+  ];
+
+  const tocChildren = [
+    new Paragraph({ spacing: { before: 480, after: 100 }, children: [new TextRun({ text: 'TABLE OF CONTENTS', bold: true, color: '0047AB', size: 20, characterSpacing: 32 })] }),
+    new Paragraph({ spacing: { after: 240 }, children: [new TextRun({ text: 'Inside this briefing', bold: true, color: '0A0A0A', size: 56 })] }),
+    new Paragraph({ spacing: { after: 320 }, border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
+    ...sections.map((s, i) => new Paragraph({
+      spacing: { before: 80, after: 80 },
+      border: { bottom: { style: BorderStyle.DOTTED, size: 2, color: 'CCCCCC', space: 1 } },
+      children: [
+        new TextRun({ text: (ROMAN[i] || String(i + 1)) + '   ', bold: true, color: '0047AB', size: 20, characterSpacing: 24 }),
+        new TextRun({ text: xmlSafe(s.heading), color: '1A1A1A', size: 24 }),
+      ],
+    })),
+  ];
+
+  const bodySections = sections.map((s, i) => ({
+    headers: {
+      default: new Header({
+        children: [new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [new TextRun({
+            text: (ROMAN[i] || String(i + 1)) + SEP + xmlSafe(s.heading).toUpperCase(),
+            color: '999999', size: 16, characterSpacing: 28,
+          })],
+        })],
+      }),
+    },
+    footers: {
+      default: new Footer({
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: [PageNumber.CURRENT], color: '888888', size: 16 })] })],
+      }),
+    },
+    properties: { page: { margin: { top: 1440, right: 1224, bottom: 1440, left: 1224 } } },
+    children: [
+      new Paragraph({ spacing: { before: 720, after: 120 }, children: [new TextRun({ text: 'CHAPTER ' + (ROMAN[i] || String(i + 1)), bold: true, color: '0047AB', size: 20, characterSpacing: 32 })] }),
+      new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: xmlSafe(s.heading), bold: true, color: '0A0A0A', size: 60 })] }),
+      new Paragraph({ spacing: { after: 320 }, border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
+      ...blocksToChildren(s.blocks),
+    ],
+  }));
 
   try {
-    const doc = new Document({ sections: [{ children }] });
+    const doc = new Document({
+      styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
+      sections: [
+        { properties: { page: { margin: { top: 720, right: 720, bottom: 720, left: 720 } } }, children: coverChildren },
+        { properties: { page: { margin: { top: 1080, right: 1224, bottom: 1080, left: 1224 } } }, children: tocChildren },
+        ...bodySections,
+      ],
+    });
     const buf = await Packer.toBuffer(doc);
     fs.writeFileSync(result.filePath, buf);
     return { ok: true, path: result.filePath };
