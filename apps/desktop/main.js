@@ -17,6 +17,7 @@
 const {
   app, BrowserWindow, BrowserView, globalShortcut, systemPreferences,
   session, shell, ipcMain, desktopCapturer, dialog, nativeImage,
+  Menu, MenuItem, clipboard,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -77,6 +78,56 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http')) shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  // Right-click context menu — Electron doesn't ship one by default, so the
+  // web view has no Copy/Paste/Select All. Build it from the contextmenu
+  // params so we only show entries that make sense for the click target.
+  mainWindow.webContents.on('context-menu', (_e, params) => {
+    const menu = new Menu();
+    const hasSelection = !!(params.selectionText && params.selectionText.trim().length > 0);
+    const editable = !!params.isEditable;
+
+    if (params.misspelledWord && Array.isArray(params.dictionarySuggestions)) {
+      for (const s of params.dictionarySuggestions) {
+        menu.append(new MenuItem({ label: s, click: () => mainWindow.webContents.replaceMisspelling(s) }));
+      }
+      if (params.dictionarySuggestions.length > 0) menu.append(new MenuItem({ type: 'separator' }));
+    }
+
+    if (editable) {
+      menu.append(new MenuItem({ role: 'cut', enabled: hasSelection }));
+      menu.append(new MenuItem({ role: 'copy', enabled: hasSelection }));
+      menu.append(new MenuItem({ role: 'paste' }));
+      menu.append(new MenuItem({ role: 'pasteAndMatchStyle' }));
+      menu.append(new MenuItem({ type: 'separator' }));
+      menu.append(new MenuItem({ role: 'selectAll' }));
+    } else if (hasSelection) {
+      menu.append(new MenuItem({ role: 'copy' }));
+      menu.append(new MenuItem({ role: 'selectAll' }));
+    }
+
+    if (params.linkURL) {
+      if (menu.items.length > 0) menu.append(new MenuItem({ type: 'separator' }));
+      menu.append(new MenuItem({
+        label: 'Open Link in Browser',
+        click: () => shell.openExternal(params.linkURL),
+      }));
+      menu.append(new MenuItem({
+        label: 'Copy Link',
+        click: () => clipboard.writeText(params.linkURL),
+      }));
+    }
+
+    if (params.mediaType === 'image' && params.srcURL) {
+      if (menu.items.length > 0) menu.append(new MenuItem({ type: 'separator' }));
+      menu.append(new MenuItem({
+        label: 'Copy Image Address',
+        click: () => clipboard.writeText(params.srcURL),
+      }));
+    }
+
+    if (menu.items.length > 0) menu.popup({ window: mainWindow });
   });
 
   // Audio loopback for interviewer audio (Zoom/Meet capture without virtual cables).
@@ -229,8 +280,14 @@ ipcMain.handle('save-pdf', async (_e, { html, filename }) => {
     show: false,
     webPreferences: { offscreen: true, contextIsolation: true, nodeIntegration: false },
   });
+  // data: URLs over a few hundred KB are flaky in Chromium — produces blank
+  // or truncated PDFs that look "corrupted". Render from a temp file instead.
+  const tmpHtml = path.join(os.tmpdir(), `camora-prep-${Date.now()}.html`);
   try {
-    await printer.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    fs.writeFileSync(tmpHtml, html, 'utf8');
+    await printer.loadFile(tmpHtml);
+    // Wait one paint tick so fonts/CSS are committed before printing.
+    await new Promise((r) => setTimeout(r, 150));
     const pdf = await printer.webContents.printToPDF({
       printBackground: true,
       pageSize: 'Letter',
@@ -242,6 +299,7 @@ ipcMain.handle('save-pdf', async (_e, { html, filename }) => {
     console.error('[pdf] printToPDF failed:', err);
     return { ok: false, error: String(err?.message || err) };
   } finally {
+    try { fs.unlinkSync(tmpHtml); } catch {}
     printer.destroy();
   }
 });
@@ -258,24 +316,28 @@ ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
   });
   if (result.canceled || !result.filePath) return { ok: false, canceled: true };
 
+  // Word rejects XML control chars (U+0000..U+001F except tab/lf/cr) and
+  // U+FFFE/U+FFFF — strip them or the .docx is flagged "corrupted" on open.
+  const xmlSafe = (s) => String(s == null ? '' : s).replace(/[ --￾￿]/g, '');
+
   const children = [];
   if (title) {
     children.push(new Paragraph({
       heading: HeadingLevel.TITLE,
       alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: title, bold: true })],
+      children: [new TextRun({ text: xmlSafe(title), bold: true })],
     }));
   }
   for (const section of sections) {
     if (section.heading) {
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
-        children: [new TextRun({ text: String(section.heading), bold: true })],
+        children: [new TextRun({ text: xmlSafe(section.heading), bold: true })],
         spacing: { before: 280, after: 120 },
       }));
     }
     for (const b of (section.blocks || [])) {
-      const text = String(b.text || '');
+      const text = xmlSafe(b.text);
       if (b.type === 'h1') {
         children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text, bold: true })] }));
       } else if (b.type === 'h2') {
