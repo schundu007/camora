@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-# build-marker: 2026-04-26T05:55:00Z (forces Railway to invalidate stale Nixpacks snapshot)
+# build-marker: 2026-04-28T22:00:00Z (forces Railway to invalidate stale snapshot
+# after the language-runtime slimdown — drops ~2 GB of rarely-used languages)
+#
 # Custom Dockerfile (replaces nixpacks.toml). See ascend-backend/Dockerfile
 # for the full rationale — short version: Nixpacks bakes every Railway service
 # variable into the image as ARG/ENV, leaking secrets into the layer history.
@@ -11,56 +13,49 @@ ENV DEBIAN_FRONTEND=noninteractive \
     NODE_ENV=production
 
 # Lumora's "run code in N languages" feature (services/codeRunner.js) needs
-# interpreters/compilers for the supported languages. We mirror the previous
-# nixpacks `nixPkgs` list using Debian apt packages where they exist.
+# interpreters/compilers for the supported languages. The KEPT set covers
+# the languages that actually show up in coding interviews.
 #
-# NOT included here (require third-party install paths and aren't worth the
-# build risk for the immediate deploy fix): dart, kotlin, swift. The runner
-# already returns a clear "language not supported" error if the binary is
-# absent. Re-add them in a follow-up commit when needed.
+# DROPPED for image-size + boot-time savings (~2 GB total):
+#   - GHC (Haskell)         ~800 MB
+#   - Mono (.NET)           ~300 MB
+#   - R (r-base-core)       ~400 MB
+#   - Scala + Clojure       ~600 MB
+#   - OCaml                 ~80 MB
+#   - Elixir                ~80 MB
+#   - Julia (juliaup)       ~200 MB
+#   - TCL                   ~30 MB
+#
+# Users in those languages still see the LLM-generated code (the model
+# happily writes Haskell). Only the in-app "Run" button is unavailable —
+# codeRunner.js returns a clear "language not supported" error.
+#
+# Re-add a language by adding the apt package here, restoring the runner
+# config in services/codeRunner.js, and re-listing it in routes/coding.js
+# SUPPORTED_LANGUAGES.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       # Audio + diagnostics
       ffmpeg curl ca-certificates bash \
-      # Core toolchains
+      # Always-needed core
       python3 python3-venv \
       ruby \
       gcc g++ build-essential \
       openjdk-17-jdk-headless \
       golang \
       rustc cargo \
-      # Scripting languages
+      # Common scripting
       php-cli \
       perl \
       lua5.4 \
-      # Functional + statistical
-      ghc \
-      r-base-core \
-      elixir \
-      ocaml \
-      # JVM ecosystem
-      scala \
-      clojure \
-      # .NET via Mono
-      mono-runtime mono-mcs \
-      # Dynamic
-      tcl \
  && rm -rf /var/lib/apt/lists/*
-
-# Julia — installed via juliaup because the Debian-packaged Julia is older
-# than the language pack expects, and the upstream nixpkgs julia binary
-# wasn't cache-available (which is why the old nixpacks.toml also went
-# through juliaup).
-RUN curl -fsSL https://install.julialang.org \
-      | sh -s -- --yes -p /opt/juliaup --default-channel release \
- && ln -sf /opt/juliaup/bin/julia /usr/local/bin/julia \
- && ln -sf /opt/juliaup/bin/juliaup /usr/local/bin/juliaup
 
 WORKDIR /app
 
 # Install JS deps first so source-only changes don't bust this layer.
 COPY package.json ./
-RUN npm install --no-audit --no-fund --omit=optional
+RUN npm install --no-audit --no-fund --omit=optional \
+ && npm cache clean --force
 
 # App source last — most-changed layer, smallest cache invalidation cost.
 COPY src/ ./src/

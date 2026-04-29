@@ -15,6 +15,8 @@ export default function AdminIncidentsPage() {
         { id: 'gate-misfire', label: 'Pool gate misfire' },
         { id: 'auto-topup-runaway', label: 'Auto top-up runaway' },
         { id: 'webhook-delivery', label: 'Webhook delivery issues' },
+        { id: 'sharp-boot-crash', label: 'Backend boot crash from native module' },
+        { id: 'retired-model-id', label: 'Anthropic 400 from retired model ID' },
         { id: 'kill-switches', label: 'Operator kill switches' },
       ]}
     >
@@ -83,6 +85,63 @@ export default function AdminIncidentsPage() {
           <li>Replay a missed event: click the event ID → Resend.</li>
           <li>Manual fallback: query <code>ascend_subscriptions</code> for stale rows; correct via DB.</li>
         </ul>
+      </section>
+
+      <section id="sharp-boot-crash" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">Backend boot crash from native module (sharp)</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          <strong>Symptoms:</strong> lumora-backend on Railway crash-looping at boot with{' '}
+          <code>Error: Could not load the "sharp" module using the linux-x64 runtime</code>. All Sona /
+          coding / behavioral routes return errors because the process never finishes starting. Frontend
+          shows generic "Error: Something went wrong" bubbles.
+        </p>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          <strong>Root cause:</strong> <code>sharp</code> is a native Node module that ships
+          platform-specific prebuilt binaries. The lockfile committed from a Mac dev machine pinned the
+          darwin-arm64 binary, so on Railway's linux-x64 runtime the require fails. Because{' '}
+          <code>routes/coding.js</code> imported sharp at top-of-file, the failure happened at module
+          evaluation and crashed the process before Express could bind a port.
+        </p>
+        <p className="text-[15px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
+          <strong>Mitigation (commit <code>2b0f915a</code>):</strong>
+        </p>
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          <li>Lazy-load sharp with a <code>loadSharp()</code> async helper called only from the function that uses it (<code>ensureImageWithinAnthropicLimit</code>).</li>
+          <li>Wrap the import in try/catch. On failure log a warning <em>once</em> and set a module-level flag so subsequent calls skip the import attempt.</li>
+          <li>The function returns the original base64 unchanged when sharp is unavailable — Anthropic decides whether the image is too large per request, instead of the entire backend going down.</li>
+        </ul>
+        <DocsCallout variant="tip">
+          Apply the same lazy-load pattern to any future native Node module (<code>better-sqlite3</code>,
+          <code>node-pty</code>, <code>canvas</code>, etc.). Top-of-file requires for native modules are
+          always a deploy hazard.
+        </DocsCallout>
+      </section>
+
+      <section id="retired-model-id" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">Anthropic 400 from retired model ID</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          <strong>Symptoms:</strong> Sona behavioral / inference paths return{' '}
+          <code>{`Error: 400 {"type":"error","error":{"type":"invalid_request_error",…}}`}</code> with no
+          successful answers. Coding works (it was on Haiku, behavioral paid users were on the retired ID).
+        </p>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          <strong>Root cause:</strong> hardcoded model IDs went stale. <code>claude-sonnet-4-20250514</code>{' '}
+          (Sonnet 4.0) and <code>claude-sonnet-4-5-20250929</code> (Sonnet 4.5) were retired by Anthropic.
+          Every request using those IDs returns 400 <code>invalid_request_error</code>.
+        </p>
+        <p className="text-[15px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
+          <strong>Mitigation (commit <code>1389fc8d</code>):</strong>
+        </p>
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          <li>Repo-wide sweep: replaced both retired IDs with <code>claude-sonnet-4-6</code> across 22 files (lumora-backend, ascend-backend, ai-services, frontend data, admin docs).</li>
+          <li>Verified Railway env vars: if <code>CLAUDE_MODEL_PAID</code> is set there, the env wins over the code default — must also be updated to a current ID.</li>
+        </ul>
+        <DocsCallout variant="warning">
+          Hardcoded model IDs across the codebase is a recurring tax. The model picker in Lumora Settings
+          (in progress) will let users override per-surface so future model bumps only require updating
+          the central registry in <code>apps/frontend/src/lib/claude-models.ts</code> plus any backend
+          fallback constants.
+        </DocsCallout>
       </section>
 
       <section id="kill-switches" className="mb-10 scroll-mt-24">

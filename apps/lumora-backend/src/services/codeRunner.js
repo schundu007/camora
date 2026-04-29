@@ -37,27 +37,16 @@ const RUNTIME_MAP = {
   cpp: 'cpp',
   go: 'go',
   rust: 'rust',
-  csharp: 'csharp',
-  objectivec: 'objectivec',
   // Interpreted
   php: 'php',
-  swift: 'swift',
-  kotlin: 'kotlin',
-  scala: 'scala',
   bash: 'bash',
   perl: 'perl',
   lua: 'lua',
-  r: 'r',
-  haskell: 'haskell',
-  elixir: 'elixir',
-  erlang: 'erlang',
-  ocaml: 'ocaml',
-  dart: 'dart',
-  julia: 'julia',
-  tcl: 'tcl',
-  clojure: 'clojure',
-  fsharp: 'fsharp',
-  vb: 'vb',
+  // Note: csharp, objective-c, swift, kotlin, scala, r, haskell, elixir,
+  // erlang, ocaml, dart, julia, tcl, clojure, fsharp, vb were dropped from
+  // the runtime image to reduce backend Docker size from 1.4 GB to ~700 MB.
+  // The Sona model still GENERATES code in those languages (free with the
+  // LLM); only the in-app "Run" button is unavailable for them.
 };
 
 // ---------------------------------------------------------------------------
@@ -65,6 +54,7 @@ const RUNTIME_MAP = {
 // ---------------------------------------------------------------------------
 
 // Interpreted: execFile(cmd, [filePath])
+// Trimmed set — see normalize-aliases comment above for what was dropped.
 const INTERPRETED = {
   python:     { cmd: 'python3',  ext: '.py' },
   javascript: { cmd: 'node',     ext: '.js' },
@@ -73,37 +63,19 @@ const INTERPRETED = {
   perl:       { cmd: 'perl',     ext: '.pl' },
   lua:        { cmd: 'lua',      ext: '.lua' },
   bash:       { cmd: 'bash',     ext: '.sh' },
-  r:          { cmd: 'Rscript',  ext: '.R' },
-  haskell:    { cmd: 'runghc',   ext: '.hs' },
-  swift:      { cmd: 'swift',    ext: '.swift' },
-  elixir:     { cmd: 'elixir',   ext: '.exs' },
-  ocaml:      { cmd: 'ocaml',    ext: '.ml' },
-  julia:      { cmd: 'julia',    ext: '.jl' },
-  tcl:        { cmd: 'tclsh',    ext: '.tcl' },
-  erlang:     { cmd: 'escript',  ext: '.erl' },
-  scala:      { cmd: 'scala',    ext: '.scala' },
-  clojure:    { cmd: 'clojure',  ext: '.clj' },
-  fsharp:     { cmd: 'dotnet-script', ext: '.fsx' },
-  vb:         { cmd: 'vbnc',     ext: '.vb' },
 };
 
 // Subcommand: execFile(cmd, [subcmd, filePath])
 const SUBCOMMAND = {
-  go:     { cmd: 'go',      subcmd: 'run',     ext: '.go' },
-  dart:   { cmd: 'dart',    subcmd: 'run',     ext: '.dart' },
-  kotlin: { cmd: 'kotlinc', subcmd: '-script', ext: '.kts' },
+  go: { cmd: 'go', subcmd: 'run', ext: '.go' },
 };
 
 // Compiled: compile first, then run the binary
 const COMPILED = {
-  c:          { compiler: 'gcc', ext: '.c',  args: (s, o) => [s, '-o', o, '-lm'] },
-  cpp:        { compiler: 'g++', ext: '.cpp', args: (s, o) => [s, '-o', o, '-lm'] },
-  rust:       { compiler: 'rustc', ext: '.rs', args: (s, o) => [s, '-o', o] },
-  objectivec: { compiler: 'gcc', ext: '.m',  args: (s, o) => [s, '-o', o, '-lobjc', '-lm'] },
+  c:    { compiler: 'gcc',   ext: '.c',  args: (s, o) => [s, '-o', o, '-lm'] },
+  cpp:  { compiler: 'g++',   ext: '.cpp', args: (s, o) => [s, '-o', o, '-lm'] },
+  rust: { compiler: 'rustc', ext: '.rs', args: (s, o) => [s, '-o', o] },
 };
-
-// C# uses mcs + mono (two separate commands)
-const CSHARP_CONFIG = { compiler: 'mcs', runner: 'mono', ext: '.cs' };
 
 // Java needs class name matching
 const JAVA_EXT = '.java';
@@ -228,27 +200,11 @@ async function directExecute(code, runtime) {
     }
   }
 
-  // ── C# (mcs compile + mono run) ──
-  if (runtime === 'csharp') {
-    const srcPath = `${tmpBase}.cs`;
-    const binPath = `${tmpBase}.exe`;
-    await writeFile(srcPath, code, 'utf8');
-    try {
-      const mcs = await which('mcs');
-      if (!mcs) throw new Error("Compiler 'mcs' (Mono) not found on server");
-      const compile = await runCommand('mcs', [`-out:${binPath}`, srcPath], { timeout: COMPILE_TIMEOUT_MS });
-      if (compile.exitCode !== 0) return { direct_output: `Compilation Error:\n${compile.stderr}` };
-      const { stdout, stderr, exitCode } = await runCommand('mono', [binPath]);
-      if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
-      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
-      return { direct_output: out.trim() || '(no output)' };
-    } finally {
-      await unlink(srcPath).catch(() => {});
-      await unlink(binPath).catch(() => {});
-    }
-  }
+  // C# / Mono branch removed — Mono runtime dropped from the Docker
+  // image to slim the build (~300 MB savings). The model still GENERATES
+  // C# code; only in-app execution is unavailable.
 
-  throw new Error(`No execution strategy for runtime: ${runtime}`);
+  throw new Error(`Language not supported for execution on the server: ${runtime}. Generation works fine; only the Run button is disabled for this language.`);
 }
 
 // ---------------------------------------------------------------------------
