@@ -52,6 +52,8 @@ export interface StreamOptions {
   useSearch?: boolean;
   systemContext?: string;
   detailLevel?: 'basic' | 'full';
+  /** Anthropic model ID. Empty/undefined → backend uses its env/default. */
+  model?: string;
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
@@ -73,6 +75,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     useSearch = false,
     systemContext,
     detailLevel,
+    model,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -107,6 +110,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         use_search: useSearch,
         ...(systemContext ? { system_context: systemContext } : {}),
         ...(detailLevel ? { detail_level: detailLevel } : {}),
+        ...(model ? { model } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,
@@ -232,6 +236,8 @@ export interface CodingStreamOptions {
   language: string;
   token: string;
   systemContext?: string;
+  /** Anthropic model ID. Empty/undefined → backend uses its env/default. */
+  model?: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
   onToken?: (data: TokenEvent) => void;
@@ -251,6 +257,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     language,
     token,
     systemContext,
+    model,
     signal: externalSignal,
     onStreamStart,
     onToken,

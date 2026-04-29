@@ -180,9 +180,14 @@ function fallbackModelFor(primaryModel) {
 }
 
 /**
- * All 51 supported languages.
- * Claude can generate solutions for any of these; test execution is only
- * available for the subset that has a local runtime (see codeRunner.js).
+ * Languages Claude can generate solutions for. All listed here are valid
+ * for /solve. The in-app "Run" button only works for the subset whose
+ * interpreters/compilers are baked into the Docker image — see
+ * codeRunner.js for the runnable list. Languages dropped from the runtime
+ * image (csharp, swift, kotlin, scala, r, haskell, elixir, erlang,
+ * clojure, ocaml, fsharp, dart, julia, groovy, objective-c, matlab,
+ * powershell, vb) still generate; only their Run button is disabled and
+ * surfaces a clear "execution not supported" message.
  */
 const SUPPORTED_LANGUAGES = [
   'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp',

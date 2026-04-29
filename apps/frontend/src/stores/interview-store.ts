@@ -56,6 +56,19 @@ interface InterviewState {
   isEnrolling: boolean;
   autoEnrollPending: boolean; // true when record-interviewer is waiting for first audio chunk
 
+  // Claude model preferences. Per-surface (coding/behavioral/design/prep)
+  // so the user can pick "Haiku for coding speed, Sonnet for design depth"
+  // independently. Empty string = use Camora's recommended default for
+  // that surface (see DEFAULT_MODELS in lib/claude-models.ts). The chosen
+  // ID rides with every /solve and /stream request — backend honors it
+  // and falls back to env/default if unset.
+  modelOverrides: {
+    coding: string;
+    behavioral: string;
+    design: string;
+    prep: string;
+  };
+
   // Interviewer audio (tab/system audio capture — the dedicated interviewer
   // stream). Distinct from the candidate's own mic. When `active` is false,
   // Lumora cannot hear the interviewer at all.
@@ -92,6 +105,7 @@ interface InterviewState {
   setVoiceMode: (mode: 'filter-candidate' | 'record-interviewer') => void;
   setVoiceEnrolled: (enrolled: boolean) => void;
   setVoiceFilterEnabled: (enabled: boolean) => void;
+  setModelOverride: (surface: 'coding' | 'behavioral' | 'design' | 'prep', modelId: string) => void;
   setIsEnrolling: (enrolling: boolean) => void;
   setAutoEnrollPending: (pending: boolean) => void;
   setInterviewerAudio: (patch: Partial<InterviewState['interviewerAudio']>) => void;
@@ -127,6 +141,8 @@ const initialState = {
   // AudioCapture fail closed (it can't filter what it hasn't sampled).
   // The auto-enroll flow flips this to true on a successful first chunk.
   voiceFilterEnabled: false,
+  // Empty strings → backend uses Camora's recommended default per surface.
+  modelOverrides: { coding: '', behavioral: '', design: '', prep: '' },
   isEnrolling: false,
   autoEnrollPending: false,
   interviewerAudio: {
@@ -220,6 +236,8 @@ export const useInterviewStore = create<InterviewState>()(
   setVoiceEnrolled: (enrolled) => set({ voiceEnrolled: enrolled }),
 
   setVoiceFilterEnabled: (enabled) => set({ voiceFilterEnabled: enabled }),
+  setModelOverride: (surface, modelId) =>
+    set((state) => ({ modelOverrides: { ...state.modelOverrides, [surface]: modelId } })),
 
   setIsEnrolling: (enrolling) => set({ isEnrolling: enrolling }),
 
@@ -240,6 +258,7 @@ export const useInterviewStore = create<InterviewState>()(
         history: state.history,
         voiceMode: state.voiceMode,
         voiceEnrolled: state.voiceEnrolled,
+        modelOverrides: state.modelOverrides,
       }),
       migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
     }
