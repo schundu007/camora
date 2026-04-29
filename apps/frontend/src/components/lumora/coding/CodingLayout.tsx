@@ -72,6 +72,52 @@ function getDefaultCode(lang: string): string {
   return python?.template || `class Solution:\n    def solve(self, nums, target):\n        pass`;
 }
 
+/**
+ * Extract the `code` field from a partial JSON stream so the user
+ * sees code being typed live instead of staring at a skeleton spinner
+ * for 25–30s. Walks the string after `"code"` past the opening quote
+ * and decodes simple escape sequences. Returns null if the field
+ * hasn't started streaming yet, or the (possibly partial) string.
+ */
+function extractStreamingCode(raw: string): string | null {
+  if (!raw) return null;
+  // Try first solution's code first; fall back to top-level code.
+  const idx = raw.indexOf('"code"');
+  if (idx < 0) return null;
+  const colonIdx = raw.indexOf(':', idx + 6);
+  if (colonIdx < 0) return null;
+  const openQuote = raw.indexOf('"', colonIdx + 1);
+  if (openQuote < 0) return null;
+  let i = openQuote + 1;
+  let result = '';
+  while (i < raw.length) {
+    const c = raw[i];
+    if (c === '\\' && i + 1 < raw.length) {
+      const next = raw[i + 1];
+      if (next === 'n') result += '\n';
+      else if (next === 't') result += '\t';
+      else if (next === 'r') result += '\r';
+      else if (next === '"') result += '"';
+      else if (next === '\\') result += '\\';
+      else if (next === '/') result += '/';
+      else if (next === 'u' && i + 5 < raw.length) {
+        const hex = raw.slice(i + 2, i + 6);
+        const code = parseInt(hex, 16);
+        if (!isNaN(code)) result += String.fromCharCode(code);
+        i += 6;
+        continue;
+      } else result += next;
+      i += 2;
+    } else if (c === '"') {
+      return result;
+    } else {
+      result += c;
+      i++;
+    }
+  }
+  return result; // partial — generation still in progress
+}
+
 /** Format seconds as MM:SS */
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -1076,35 +1122,49 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     </div>
                   </div>
                 )}
-                {/* Streaming state — spinner + skeleton cards. We never dump the
-                    raw JSON stream to screen; users only see parsed cards once
-                    the solution has been structured. */}
-                {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--accent-subtle)', border: `1px solid ${t.cardBorder}` }}>
-                      <div className="relative w-4 h-4 shrink-0">
-                        <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
+                {/* Streaming state. As soon as the model starts emitting
+                    the `code` field we show it character-by-character so
+                    the user sees the answer being typed live (target:
+                    ~1–2s to first visible character). Until the code
+                    field begins, fall back to a thin skeleton row. */}
+                {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (() => {
+                  const liveCode = extractStreamingCode(streamingSolution);
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--accent-subtle)', border: `1px solid ${t.cardBorder}` }}>
+                        <div className="relative w-4 h-4 shrink-0">
+                          <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
+                        </div>
+                        <span className="text-xs font-semibold" style={{ color: t.headerText }}>
+                          {liveCode ? 'Streaming code…' : 'Generating solution…'}
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold" style={{ color: t.headerText }}>Generating solution...</span>
-                    </div>
-                    {/* Skeleton cards — give the user a sense of progress without exposing raw JSON */}
-                    <div className="space-y-2">
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                      {liveCode && liveCode.length > 0 ? (
+                        <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                          <div className="h-8 px-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider" style={{ background: t.headerBg, color: t.headerText, borderBottom: `1px solid ${t.cardBorder}` }}>
+                            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
+                            Live · Solution
+                          </div>
+                          <pre className="p-3 text-[12px] leading-[1.55] overflow-x-auto whitespace-pre" style={{ background: t.cardBg, color: t.headerText, fontFamily: 'var(--font-mono)' }}>
+                            <code>{liveCode}</code>
+                            <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm align-middle" style={{ background: 'var(--accent)' }} />
+                          </pre>
+                        </div>
+                      ) : (
+                        <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
                           <div className="h-8 px-3 flex items-center gap-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                             <div className="w-5 h-5 rounded-md animate-pulse" style={{ background: t.badgeBg }} />
-                            <div className="h-3 rounded animate-pulse" style={{ width: `${40 + i * 15}%`, background: t.surfaceBg }} />
+                            <div className="h-3 rounded animate-pulse" style={{ width: '55%', background: t.surfaceBg }} />
                           </div>
                           <div className="p-3 space-y-2">
                             <div className="h-2.5 rounded animate-pulse" style={{ width: '85%', background: t.surfaceBg }} />
                             <div className="h-2.5 rounded animate-pulse" style={{ width: '70%', background: t.surfaceBg }} />
-                            <div className="h-2.5 rounded animate-pulse" style={{ width: '60%', background: t.surfaceBg }} />
                           </div>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* JSON Solution — Modern Cards */}
                 {sd && (
