@@ -95,13 +95,11 @@ const anthropicClient = getAnthropicClient();
 
 // 16k default — 8k sometimes truncated 3-solution JSON mid-field (explanations + traces)
 // leaving the frontend with un-parseable preamble + open braces.
-// 1500 token cap targets ~5–6s end-to-end with Haiku 4.5 (~300 tok/s):
-//   • Whisper handled out-of-band before /solve fires
-//   • TTFT  ~0.5–1s on a warm prompt cache
-//   • 1500 tokens / 300 tok/s ≈ 5s of streaming
-//   • render ~0.3s
-// Bump via MAX_TOKENS_CODING env if the answer is being cut off mid-code.
-const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '1500', 10);
+// 16k default — 8k sometimes truncated 3-solution JSON mid-field
+// (explanations + traces) leaving the frontend with un-parseable
+// preamble + open braces. Reverted from the 1500/4000/6000 latency
+// experiments after answer quality regressed visibly.
+const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16000', 10);
 const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
 
 // ── Reliability config ────────────────────────────────────────────────
@@ -158,13 +156,15 @@ function truncateForLog(text, max = 2048) {
  * Select the Claude model based on the user's subscription plan.
  * Free users get Haiku (cheaper), paid users get Sonnet (more capable).
  */
+/**
+ * Select the Claude model based on the user's subscription plan.
+ * Free users get Haiku (cheaper), paid users get Sonnet (more capable).
+ * Restored after the all-Haiku experiment produced weaker answers.
+ */
 function getModelForUser(req) {
-  // Haiku 4.5 by default for ALL users — Sonnet's tok/s budget can't
-  // hit the 5–6s target the user demanded. Haiku 4.5 streams ~3x
-  // faster (~300 tok/s vs Sonnet's ~130). Quality on coding-interview
-  // problems is acceptable; quality-conscious paid users can opt back
-  // into Sonnet by setting CLAUDE_MODEL=claude-sonnet-4-6 on Railway.
-  return process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
+  const plan = req.user?.plan_type || 'free';
+  if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
+  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
 }
 
 /**
