@@ -198,7 +198,11 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         setState(prev => ({ ...prev, audioLevel: rms }));
         onAudioLevel?.(rms);
 
-        // Voice activity detection
+        // Voice activity detection. silenceDuration <= 0 disables the
+        // silence-driven auto-stop entirely — caller wants a hard
+        // toggle (mic stays on until explicit stopRecording). Used by
+        // manual mic mode where natural pauses shouldn't kill the
+        // recording mid-question.
         if (rms > silenceThreshold) {
           if (!speechStartTimeRef.current) {
             speechStartTimeRef.current = Date.now();
@@ -208,7 +212,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
             clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = null;
           }
-        } else if (speechStartTimeRef.current && !silenceTimerRef.current) {
+        } else if (silenceDuration > 0 && speechStartTimeRef.current && !silenceTimerRef.current) {
           console.log(`[VAD] Silence detected after speech, starting ${silenceDuration}ms countdown`);
           silenceTimerRef.current = window.setTimeout(() => {
             if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
