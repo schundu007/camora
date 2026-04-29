@@ -138,8 +138,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     try {
       const saved = sessionStorage.getItem(storageKey);
       if (!saved) return [];
-      const parsed = JSON.parse(saved) as Array<{ role: 'user' | 'ai'; text: string; time: string }>;
-      return parsed.map(m => ({ ...m, time: new Date(m.time) }));
+      const parsed = JSON.parse(saved) as Array<{ role: 'user' | 'ai'; text: unknown; time: string }>;
+      // Filter persisted bad entries (e.g. "[object Object]" or non-string
+      // text from earlier buggy versions) so they don't keep haunting the
+      // QUESTIONS panel across sessions.
+      return parsed
+        .filter((m) =>
+          (m.role === 'user' || m.role === 'ai') &&
+          typeof m.text === 'string' &&
+          m.text.trim().length > 0 &&
+          m.text !== '[object Object]' &&
+          !m.text.startsWith('[object '),
+        )
+        .map((m) => ({ role: m.role, text: m.text as string, time: new Date(m.time) }));
     } catch { return []; }
   });
 
@@ -294,6 +305,14 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
   // Ask a question — streams independently
   const ask = useCallback(async (question: string) => {
+    // Defensive: an upstream caller occasionally hands us a non-string
+    // (event object, transcription envelope, etc.). Coercing to "" lets
+    // it through as `[object Object]` which then renders in the
+    // QUESTIONS panel and wastes an LLM call.
+    if (typeof question !== 'string') {
+      console.warn('[Sona] ask() received non-string question, dropping:', question);
+      return;
+    }
     const trimmed = question.trim();
     if (!trimmed || !token) return;
     if (streaming) {
@@ -358,6 +377,14 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
   // Stable handler for continuous-mic transcriptions (no deps → never rebuilds).
   const handleAutoTranscription = useCallback((text: string) => {
+    // Type-guard: AudioCapture's onTranscription is typed as (string)
+    // but the runtime contract has been violated in the past (the
+    // QUESTIONS panel was showing `[object Object]`). Drop anything
+    // that isn't a non-empty string.
+    if (typeof text !== 'string' || !text.trim()) {
+      console.warn('[Sona] handleAutoTranscription received non-string:', text);
+      return;
+    }
     askRef.current?.(text);
   }, []);
 
