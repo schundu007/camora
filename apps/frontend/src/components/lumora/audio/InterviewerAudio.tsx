@@ -3,7 +3,7 @@ import { useInterviewerCapture } from './hooks/useInterviewerCapture';
 import { useAuth } from '@/contexts/AuthContext';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useInterviewStore } from '@/stores/interview-store';
-import { loadAudioPrefs, type AudioPreferences } from '@/lib/audio-preferences';
+import { isElectron, loadAudioPrefs, type AudioPreferences } from '@/lib/audio-preferences';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Interviewer-audio architecture
@@ -110,6 +110,24 @@ export function InterviewerAudioProvider({
       setStatus('listen', 'Interviewer audio live');
     }
   }, [isCapturing, error, setInterviewerAudio, setStatus]);
+
+  // Auto-start interviewer capture on desktop. Browsers must wait for a
+  // user gesture (Chromium security), so we leave them to the manual
+  // pill click. On Electron the loopback handler in main.js returns the
+  // primary screen + audio:'loopback' without showing a picker, so it's
+  // safe to fire on mount. Without this, the candidate had to find and
+  // click "Connect interviewer" before any Zoom audio reached Sona,
+  // which made it look like the speech-to-text was broken when really
+  // we just hadn't been given the audio stream.
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (!isElectron()) return;
+    if (!isSupported) return;
+    if (isCapturing) return;
+    autoStartedRef.current = true;
+    startCapture().catch(() => { /* failure surfaces in `error` and the pill */ });
+  }, [isSupported, isCapturing, startCapture]);
 
   const stop = useCallback(() => {
     stopCapture();
