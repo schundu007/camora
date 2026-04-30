@@ -58,6 +58,8 @@ export function AudioSetupWizard({
   const { token } = useAuth();
   const setInterviewerAudio = useInterviewStore((s) => s.setInterviewerAudio);
   const everConnected = useInterviewStore((s) => s.interviewerAudio.everConnected);
+  const voiceEnrolled = useInterviewStore((s) => s.voiceEnrolled);
+  const voiceFilterEnabled = useInterviewStore((s) => s.voiceFilterEnabled);
   // The candidate-mic AudioCapture might already be running (continuous
   // mode auto-starts on tab load). The wizard's mic-level monitor must
   // not also open getUserMedia on the same device — concurrent streams
@@ -720,6 +722,20 @@ export function AudioSetupWizard({
                 badge={detectedVirtualMic ? 'detected' : undefined}
               />
               <MethodCard
+                value="room-mic"
+                current={prefs.captureMethod}
+                onPick={setMethod}
+                title="Room mic (any speaker)"
+                desc="Captures the interviewer's voice through your laptop mic. Works with Bluetooth speakers (JBL, Jabra), wired speakers, phone-on-speaker — anything audible."
+                badge={voiceEnrolled && voiceFilterEnabled ? 'voice filter ✓' : 'needs voice enrollment'}
+                disabled={!voiceEnrolled || !voiceFilterEnabled}
+                disabledNote={!voiceEnrolled
+                  ? 'Enroll your voice first so the backend can subtract you from the room ambient.'
+                  : !voiceFilterEnabled
+                    ? 'Turn voice filter on so Sona ignores your own voice.'
+                    : undefined}
+              />
+              <MethodCard
                 value="mic-only"
                 current={prefs.captureMethod}
                 onPick={setMethod}
@@ -750,6 +766,25 @@ export function AudioSetupWizard({
                 {!detectedVirtualMic && (
                   <div className="text-[11px] mt-1.5" style={{ color: 'var(--warning-text, #f59e0b)' }}>
                     No common loopback driver detected. Install BlackHole (macOS), VoiceMeeter (Windows), or Loopback, route your call into it, then refresh this list.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {prefs.captureMethod === 'room-mic' && (
+              <div className="mt-3 p-3 rounded-lg text-[12px] leading-relaxed"
+                style={{ background: 'rgba(38,97,156,0.06)', border: '1px solid rgba(38,97,156,0.30)', color: 'var(--text-primary)' }}>
+                <div className="font-bold mb-1">How room mic works</div>
+                <div style={{ color: 'var(--text-secondary)' }}>
+                  Your laptop mic captures everything in the room — interviewer audio bleeding from any speaker
+                  (JBL, Jabra, AirPods, conference room) plus your own voice. The backend uses your enrolled
+                  voice profile to subtract you, so only the interviewer reaches Sona.
+                </div>
+                {(!voiceEnrolled || !voiceFilterEnabled) && (
+                  <div className="mt-2 font-bold" style={{ color: '#dc2626' }}>
+                    ⚠ {!voiceEnrolled
+                      ? 'Voice not enrolled — Sona will answer your own voice. Enroll first.'
+                      : 'Voice filter is off — turn it on or Sona will answer your own voice.'}
                   </div>
                 )}
               </div>

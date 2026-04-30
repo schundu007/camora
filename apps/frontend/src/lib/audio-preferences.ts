@@ -11,7 +11,7 @@
 
 const STORAGE_KEY = 'lumora_audio_prefs_v1';
 
-export type CaptureMethod = 'auto' | 'electron-loopback' | 'tab-share' | 'virtual-mic' | 'mic-only';
+export type CaptureMethod = 'auto' | 'electron-loopback' | 'tab-share' | 'virtual-mic' | 'room-mic' | 'mic-only';
 
 export interface AudioPreferences {
   /** How interviewer audio is captured. `auto` picks the best path. */

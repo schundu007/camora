@@ -36,6 +36,9 @@ interface CaptureOptions {
   method: CaptureMethod;
   /** Required when method === 'virtual-mic'. */
   virtualMicDeviceId?: string | null;
+  /** Used when method === 'room-mic' — the candidate's chosen mic.
+   *  null = system default. */
+  micDeviceId?: string | null;
   onAudioData?: (blob: Blob) => void;
   onAudioLevel?: (level: number) => void;
   onRecordingStop?: () => void;
@@ -58,6 +61,7 @@ interface CaptureState {
 async function acquireStream(
   method: Exclude<CaptureMethod, 'auto' | 'mic-only'>,
   virtualMicDeviceId: string | null,
+  micDeviceId: string | null,
 ): Promise<MediaStream> {
   if (method === 'electron-loopback' || method === 'tab-share') {
     if (!navigator.mediaDevices?.getDisplayMedia) {
@@ -101,6 +105,31 @@ async function acquireStream(
     });
   }
 
+  if (method === 'room-mic') {
+    // Room-mic captures the candidate's laptop mic and treats whatever
+    // it picks up as the interviewer source. Works for ANY external
+    // playback path (Bluetooth speaker like JBL/Jabra, wired speaker,
+    // phone-on-speakerphone, conference-room audio, anything audible).
+    // Voice enrollment + filter_user_voice on the transcription side
+    // is what splits the candidate's own voice from the room ambient.
+    //
+    // Important: keep echoCancellation/noiseSuppression OFF — both
+    // would scrub interviewer audio bleeding back through the mic.
+    // We WANT the bleed; that's the entire signal.
+    const audioConstraints: MediaTrackConstraints = micDeviceId
+      ? { deviceId: { exact: micDeviceId } }
+      : {};
+    return navigator.mediaDevices.getUserMedia({
+      audio: {
+        ...audioConstraints,
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      },
+      video: false,
+    });
+  }
+
   throw new Error(`Unsupported method: ${method}`);
 }
 
@@ -108,6 +137,7 @@ export function useInterviewerCapture(options: CaptureOptions) {
   const {
     method,
     virtualMicDeviceId = null,
+    micDeviceId = null,
     onAudioData,
     onAudioLevel,
     onRecordingStop,
@@ -193,7 +223,9 @@ export function useInterviewerCapture(options: CaptureOptions) {
       let resolved: Exclude<CaptureMethod, 'auto'>;
       if (method === 'auto') {
         // Without an enumerated device list we conservatively pick:
-        // electron > virtual-mic-if-id > tab-share.
+        // electron > virtual-mic-if-id > tab-share. Room-mic is
+        // user-opt-in (voice enrollment is required) so we never
+        // pick it automatically.
         if (isElectron()) resolved = 'electron-loopback';
         else if (virtualMicDeviceId) resolved = 'virtual-mic';
         else if (supportsTabShare()) resolved = 'tab-share';
@@ -210,7 +242,7 @@ export function useInterviewerCapture(options: CaptureOptions) {
         return;
       }
 
-      const audioStream = await acquireStream(resolved, virtualMicDeviceId);
+      const audioStream = await acquireStream(resolved, virtualMicDeviceId, micDeviceId);
       streamRef.current = audioStream;
 
       const audioContext = new AudioContext();
@@ -318,6 +350,7 @@ export function useInterviewerCapture(options: CaptureOptions) {
   }, [
     method,
     virtualMicDeviceId,
+    micDeviceId,
     cleanup,
     onAudioData,
     onAudioLevel,
