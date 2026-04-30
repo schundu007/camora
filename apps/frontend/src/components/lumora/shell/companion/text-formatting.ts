@@ -25,8 +25,16 @@ export function extractAnswer(parsed: any): string {
 export function cleanTags(text: string): string {
   let t = text;
 
-  // Tag markers.
-  t = t.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|PROBLEM|APPROACH|COMPLEXITY|WALKTHROUGH|TESTCASES)\]/gi, '');
+  // Pitch-mode tags get visual section headers so the candidate can
+  // glance at "where's my JD coverage cheat-sheet" without parsing
+  // brackets. Done BEFORE the generic tag-strip so the labels survive.
+  t = t.replace(/\[PITCH\]/gi, '\n\n');
+  t = t.replace(/\[\/PITCH\]/gi, '');
+  t = t.replace(/\[JD_COVERAGE\]/gi, '\n\n**JD coverage cheat-sheet**\n');
+  t = t.replace(/\[\/JD_COVERAGE\]/gi, '');
+
+  // Generic tag strip — opening + closing forms of every known section.
+  t = t.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|PROBLEM|APPROACH|COMPLEXITY|WALKTHROUGH|TESTCASES|PITCH|JD_COVERAGE)\]/gi, '');
 
   // Fenced JSON — ```json { ... } ``` or plain ``` { ... } ``` — keep inner content.
   t = t.replace(/```(?:json|JSON)?\s*\n?([\s\S]*?)\n?```/g, '$1');
