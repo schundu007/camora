@@ -668,25 +668,26 @@ function UnifiedMicButton({
   const isRec = !continuousMode && storeIsRecording;
 
   return (
-    // Tinted pillbox groups Mic + AUTO + meter into a single visual
-    // unit so users immediately spot where the audio controls live —
-    // previously they were three separate small icons floating in a
-    // 42 px header and easy to overlook.
+    // LeetCode pillbox groups MIC + AUTO + meter into one tool-window
+    // unit, matching the Sona panel header and tab bar. Navy hero-strip
+    // background + 2px gold-leaf underline so the audio controls read
+    // as first-class chrome instead of fading into the surrounding bar.
     <div
       className="flex items-center gap-2 shrink-0 pl-2 pr-2.5 py-1 rounded-lg"
       style={{
-        background: isLive || isRec ? 'var(--accent-subtle)' : 'transparent',
-        border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
-        transition: 'background 200ms, border-color 200ms',
+        background: 'var(--cam-hero-strip)',
+        border: '1px solid var(--cam-primary-dk)',
+        boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)',
       }}
       aria-label="Audio controls"
     >
       {/* Group label — tiny mono "MIC" tag tells the user what this
           cluster is, even when no controls are active. Hidden on the
-          narrowest screens to save horizontal room. */}
+          narrowest screens to save horizontal room. White-on-navy now
+          that the container uses cam-hero-strip. */}
       <span
         className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'rgba(255,255,255,0.85)' }}
         aria-hidden="true"
       >
         MIC
@@ -697,17 +698,19 @@ function UnifiedMicButton({
           override is critical mid-interview when the user needs to
           stop Sona on a dime — disabling the button traps the user.
           Sized 36×36 at all breakpoints (was 32–40 reversed) so the
-          target is consistent on touch and mouse. */}
+          target is consistent on touch and mouse. Active state lights
+          up gold-leaf to match the AUTO toggle and SHORT/DETAILED
+          tabs — one consistent active grammar across Lumora. */}
       <div className="relative inline-flex">
         <button
           type="button"
           onClick={handleToggle}
           className="relative flex items-center justify-center rounded-full transition-all select-none w-9 h-9"
           style={{
-            background: isLive || isRec ? 'var(--bg-app)' : 'var(--bg-elevated)',
-            border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
-            color: isLive || isRec ? 'var(--accent)' : 'var(--text-secondary)',
-            boxShadow: isLive ? '0 0 0 3px rgba(38,97,156,0.18)' : 'none',
+            background: isLive || isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+            border: `1px solid ${isLive || isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
+            color: isLive || isRec ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.90)',
+            boxShadow: isLive ? '0 0 0 3px rgba(201,162,39,0.35)' : 'none',
             cursor: 'pointer',
           }}
           aria-pressed={isRec || isLive}
@@ -745,32 +748,34 @@ function UnifiedMicButton({
             </svg>
           )}
 
-          {/* Pulsing halo when actively recording */}
+          {/* Pulsing halo when actively recording — gold-leaf to match
+              the active mic-button fill and overall LeetCode active
+              affordance. */}
           {(isLive || isRec) && (
             <span
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
-                border: '1px solid var(--accent)',
+                border: '1px solid var(--cam-gold-leaf)',
                 animation: 'mic-pulse 1.4s ease-out infinite',
-                opacity: 0.6,
+                opacity: 0.7,
               }}
             />
           )}
         </button>
       </div>
 
-      {/* AUTO toggle — one click turns continuous listening on, one
-          click turns it off. Bumped to 11 px text + 10/4 padding so
-          the pill is legible at a glance instead of disappearing into
-          the chrome. */}
+      {/* AUTO toggle — gold-on-navy when active, white-on-navy
+          inactive. Same active grammar as the SHORT/DETAILED toggle
+          and the top tabs so the user reads "active = gold-leaf"
+          consistently across the whole shell. */}
       <button
         type="button"
         onClick={handleModeToggle}
         className="text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors"
         style={{
-          color: isLive ? 'var(--accent)' : 'var(--text-secondary)',
-          background: isLive ? 'var(--bg-app)' : 'var(--bg-elevated)',
-          border: `1px solid ${isLive ? 'var(--accent)' : 'var(--border)'}`,
+          color: isLive ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
+          background: isLive ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+          border: `1px solid ${isLive ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
           fontFamily: 'var(--font-mono)',
         }}
         title={isLive
@@ -781,13 +786,12 @@ function UnifiedMicButton({
         {isLive ? '● AUTO' : 'AUTO'}
       </button>
 
-      {/* Audio-level meter — wider (3 px) bars on a tinted track so
-          they remain visible when silent (used to vanish into the
-          border when audioLevel = 0). Each bar lights up as the
-          rolling RMS crosses its threshold. */}
+      {/* Audio-level meter — bars light up gold-leaf as the rolling
+          RMS crosses each threshold. Track is a translucent white
+          well on the navy strip so silent bars are still visible. */}
       <div
         className="flex items-end gap-[3px] shrink-0 px-1 py-0.5 rounded"
-        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}
         aria-hidden="true"
       >
         {[0, 1, 2, 3, 4].map((i) => {
@@ -798,8 +802,8 @@ function UnifiedMicButton({
               className="w-[3px] rounded-full transition-all duration-75"
               style={{
                 height: `${8 + i * 2}px`,
-                background: lit ? 'var(--accent)' : 'var(--border-strong, var(--border))',
-                opacity: lit ? 1 : 0.55,
+                background: lit ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)',
+                opacity: lit ? 1 : 0.6,
               }}
             />
           );
