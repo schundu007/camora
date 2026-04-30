@@ -3,7 +3,7 @@ import { useInterviewerCapture } from './hooks/useInterviewerCapture';
 import { useAuth } from '@/contexts/AuthContext';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useInterviewStore } from '@/stores/interview-store';
-import { isElectron, loadAudioPrefs, type AudioPreferences } from '@/lib/audio-preferences';
+import { isElectron, loadAudioPrefs, type AudioPreferences, type CaptureMethod } from '@/lib/audio-preferences';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Interviewer-audio architecture
@@ -42,11 +42,20 @@ export function InterviewerAudioProvider({
   children: React.ReactNode;
 }) {
   const { token } = useAuth();
-  const { setInterviewerAudio, setStatus } = useInterviewStore();
+  const { setInterviewerAudio, setStatus, voiceEnrolled, voiceFilterEnabled } = useInterviewStore();
   const onTranscriptionRef = useRef(onTranscription);
   useEffect(() => {
     onTranscriptionRef.current = onTranscription;
   }, [onTranscription]);
+
+  // Track the resolved capture method so handleAudioData picks the right
+  // filter_user_voice value. Room-mic is the only path where the
+  // candidate's voice and the interviewer's voice share a single stream
+  // and the backend must split them server-side via Resemblyzer.
+  const resolvedMethodRef = useRef<Exclude<CaptureMethod, 'auto'> | null>(null);
+  const handleMethodResolved = useCallback((m: Exclude<CaptureMethod, 'auto'>) => {
+    resolvedMethodRef.current = m;
+  }, []);
 
   const handleAudioData = useCallback(
     async (blob: Blob) => {
@@ -58,9 +67,10 @@ export function InterviewerAudioProvider({
         console.log('[InterviewerAudio] blob too small, skipping', { bytes: blob.size });
         return;
       }
+      const filterUserVoice = resolvedMethodRef.current === 'room-mic' && voiceEnrolled && voiceFilterEnabled;
       try {
-        console.log('[InterviewerAudio] transcribing', { bytes: blob.size });
-        const result = await transcriptionAPI.transcribe(token, blob, 'interviewer.webm', false);
+        console.log('[InterviewerAudio] transcribing', { bytes: blob.size, method: resolvedMethodRef.current, filterUserVoice });
+        const result = await transcriptionAPI.transcribe(token, blob, 'interviewer.webm', filterUserVoice);
         const text = result.text?.trim();
         if (result.skipped) {
           console.warn('[InterviewerAudio] backend skipped', { reason: result.reason, text });
@@ -76,7 +86,7 @@ export function InterviewerAudioProvider({
         console.error('[InterviewerAudio] transcription failed', err);
       }
     },
-    [token],
+    [token, voiceEnrolled, voiceFilterEnabled],
   );
 
   const handleAudioLevel = useCallback(
@@ -110,8 +120,10 @@ export function InterviewerAudioProvider({
   } = useInterviewerCapture({
     method: prefs.captureMethod,
     virtualMicDeviceId: prefs.virtualMicDeviceId,
+    micDeviceId: prefs.micDeviceId,
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
+    onMethodResolved: handleMethodResolved,
     silenceThreshold: 0.012,
     silenceDuration: 1200,
     minSpeechDuration: 400,
