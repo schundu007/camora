@@ -66,6 +66,29 @@ export function InterviewPage() {
   // We now stash the latest pending question (single-slot, latest wins)
   // and drain it the moment isStreaming flips false.
   const pendingQuestionRef = useRef<string | null>(null);
+  // Last-submitted question + timestamp, for de-duplication. Auto mode
+  // re-captures the tail of an utterance (echo, room reverb, system
+  // audio overlap) and the accumulator can rebuild the same string a
+  // second time. Without this guard, the queue drains a duplicate
+  // question right after Q1 finishes streaming. 30 s window is short
+  // enough that a genuine "ask the same question again" later still
+  // works; long enough to absorb tail-echo across a 20-30 s answer.
+  const lastSubmittedRef = useRef<{ text: string; at: number } | null>(null);
+
+  const isDuplicate = useCallback((q: string): boolean => {
+    const last = lastSubmittedRef.current;
+    if (!last) return false;
+    if (Date.now() - last.at > 30_000) return false;
+    // Normalize: lowercase, collapse whitespace, drop trailing punct.
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').replace(/[.!?]+$/, '').trim();
+    return norm(q) === norm(last.text);
+  }, []);
+
+  const submitDeduped = useCallback((q: string) => {
+    if (isDuplicate(q)) return;
+    lastSubmittedRef.current = { text: q, at: Date.now() };
+    handleSubmit(q);
+  }, [handleSubmit, isDuplicate]);
 
   const handleTranscription = useCallback((text: string) => {
     const trimmed = text.trim();
@@ -77,11 +100,14 @@ export function InterviewPage() {
       // Keep only the latest queued Q. If the interviewer rephrases
       // mid-stream ("walk me through it… actually, just describe the
       // architecture") we want the rephrase to win, not the original.
+      // Also skip queueing duplicates of the in-flight question — a
+      // re-captured tail should not become a second answer.
+      if (isDuplicate(trimmed)) return;
       pendingQuestionRef.current = trimmed;
       return;
     }
-    handleSubmit(trimmed);
-  }, [handleSubmit, isStreaming]);
+    submitDeduped(trimmed);
+  }, [isStreaming, isDuplicate, submitDeduped]);
 
   // Drain queued question once the active stream finishes.
   useEffect(() => {
@@ -89,8 +115,8 @@ export function InterviewPage() {
     const queued = pendingQuestionRef.current;
     if (!queued) return;
     pendingQuestionRef.current = null;
-    handleSubmit(queued);
-  }, [isStreaming, handleSubmit]);
+    submitDeduped(queued);
+  }, [isStreaming, submitDeduped]);
 
   if (blanked) {
     return (
