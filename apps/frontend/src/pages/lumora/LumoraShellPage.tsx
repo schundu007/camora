@@ -23,6 +23,7 @@ import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBa
 import { useTheme } from '../../hooks/useTheme';
 import type { ParsedBlock } from '../../types';
 import { dialogConfirm } from '../../components/shared/Dialog';
+import { isQuestion } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 
@@ -167,11 +168,20 @@ export function LumoraShellPage() {
   const designCaptureRef = useRef<((text: string) => void) | null>(null);
 
   const handleTranscription = useCallback((text: string) => {
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
     if (activeTab === 'coding' && codingProblemRef.current) {
       codingProblemRef.current(text);
     } else if (activeTab === 'design' && designProblemRef.current) {
       designProblemRef.current(text);
+    } else if (activeTab === 'behavioral') {
+      // Behavioral fullscreen renders the embedded AICompanionPanel — the
+      // InterviewPage UI is hidden, so routing through useStreamingInterview
+      // would stream the answer to a surface no one can see. Forward the
+      // interviewer's question to the panel via a custom event instead.
+      // Gate on isQuestion() so background chatter doesn't fire Sona.
+      if (!isQuestion(trimmed)) return;
+      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
     } else {
       handleSubmit(text);
     }
