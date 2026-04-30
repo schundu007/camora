@@ -248,7 +248,21 @@ export function LumoraShellPage() {
               to render here too, but the LumoraIconRail already shows
               the brand logo in the corner; rendering it twice on the
               same screen was duplicate brand chrome (per user feedback). */}
-          <div className="hidden md:flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {/* Tab pills — LeetCode treatment: navy hero-strip background
+              for the container so the bar pops off the white top
+              chrome (the previous bg-elevated tint blended into the
+              page), with a thin gold-leaf underline. Active tab
+              flips to gold-leaf with dark navy text — same active
+              affordance as the SHORT/DETAILED toggle so the
+              navigation grammar is consistent across the app. */}
+          <div
+            className="hidden md:flex items-center gap-1 p-1 rounded-lg shrink-0"
+            style={{
+              background: 'var(--cam-hero-strip)',
+              border: '1px solid var(--cam-primary-dk)',
+              boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)',
+            }}
+          >
             {[
               { id: 'interview', label: 'Home', path: '/lumora' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
@@ -257,9 +271,16 @@ export function LumoraShellPage() {
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
-                <Link key={tab.id} to={tab.path}
-                  className="px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all"
-                  style={isActive ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
+                <Link
+                  key={tab.id}
+                  to={tab.path}
+                  className="px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all"
+                  style={isActive
+                    ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+                    : { color: 'rgba(255,255,255,0.85)' }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
                   {tab.label}
                 </Link>
               );

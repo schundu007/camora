@@ -508,18 +508,16 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         </>
       )}
 
-      {/* Header — neutral elevated chrome with a thin navy accent line
-          underneath. The previous LeetCode-style dark navy band painted
-          the entire top of every Lumora answer view lapis-blue, which
-          violated the "navy is accent only, never page chrome" rule and
-          made every card below look pale-blue by association. The
-          underline still carries the brand without flooding the surface. */}
+      {/* Header — LeetCode treatment: navy --cam-hero-strip background
+          with a 2px gold-leaf underline. Matches StreamingCodingCard
+          headers used elsewhere in Lumora so the panel reads as a
+          first-class tool window, not flat chrome. Children below are
+          re-themed for white-on-navy contrast. */}
       <div
         className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
         style={{
-          background: 'var(--bg-surface)',
-          borderBottom: '1px solid var(--border)',
-          boxShadow: 'inset 0 -2px 0 var(--accent)',
+          background: 'var(--cam-hero-strip)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
           borderRadius: embedded || maximized ? 0 : '16px 16px 0 0',
         }}
         onMouseDown={embedded ? undefined : startDrag}
@@ -533,43 +531,46 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           <button
             onClick={exportSession}
             disabled={messages.length === 0}
-            className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ color: 'var(--text-muted)' }}
+            className="p-1 rounded-md transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ color: 'rgba(255,255,255,0.85)' }}
             title="Export session (.md)"
             aria-label="Export session as Markdown"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
           </button>
           <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
-            className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Clear history">
+            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="Clear history">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
           </button>
           {embedded ? (
-            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Close">
+            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="Close">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </button>
           ) : (
-            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="New chat">
+            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="New chat">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
             </button>
           )}
         </div>
 
-        {/* Center: title + mode toggle */}
+        {/* Center: title + mode toggle. Title white-on-navy, company
+            chip in gold-leaf, SHORT/DETAILED tabs use the same gold
+            highlight as the StreamingCodingCard pattern so the active
+            mode is unmistakable on a navy strip. */}
         <div className="flex-1 flex items-center justify-center gap-2">
           <SonaAvatar size={18} />
-          <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>Sona</span>
+          <span className="text-[11px] font-bold tracking-wide text-white">Sona</span>
           {activeAssistant && (
             <span
               className="text-[8px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}
             >
               {activeAssistant.company || activeAssistant.role || 'Custom'}
             </span>
           )}
           <div
             className="flex items-center rounded-md p-0.5"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
           >
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
@@ -581,8 +582,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   fontWeight: 700,
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
-                  color: answerMode === mode ? '#FFFFFF' : 'var(--text-muted)',
-                  background: answerMode === mode ? 'var(--accent)' : 'transparent',
+                  color: answerMode === mode ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.8)',
+                  background: answerMode === mode ? 'var(--cam-gold-leaf)' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -595,11 +596,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
@@ -717,25 +718,35 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 {messages.map((msg, i) => msg.role !== 'ai' ? null : (
                   <div
                     key={i}
-                    className="rounded-xl p-5 group"
+                    className="rounded-lg overflow-hidden group"
                     style={{
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
                       boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
                     }}
                   >
-                    <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                      <SonaAvatar size={18} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Sona</span>
+                    {/* LeetCode header strip — navy gradient + gold-leaf
+                        underline + white uppercase title. Same pattern as
+                        StreamingCodingCard so every Lumora card reads as
+                        a tool window with consistent chrome. */}
+                    <div
+                      className="flex items-center gap-2 px-4 py-2"
+                      style={{
+                        background: 'var(--cam-hero-strip)',
+                        borderBottom: '2px solid var(--cam-gold-leaf)',
+                      }}
+                    >
+                      <SonaAvatar size={16} />
+                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">Sona</span>
                       <span className="ml-auto flex items-center gap-1">
                         {/* Delete is always visible (not hover-only) per
                             project rule on visible destructive actions. */}
                         <button
                           onClick={() => deleteQAPair(i)}
-                          className="p-1 rounded-md text-[10px] font-bold transition-colors"
-                          style={{ color: 'var(--text-muted)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger, #DC2626)'; e.currentTarget.style.borderColor = 'var(--danger, #DC2626)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                          className="p-1 rounded-md transition-colors"
+                          style={{ color: 'rgba(255,255,255,0.8)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'transparent'; }}
                           title="Delete this Q&A"
                           aria-label="Delete this Q&A"
                         >
@@ -743,32 +754,42 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                         </button>
                       </span>
                     </div>
-                    <div className="answer-flow">
+                    <div className="p-5 answer-flow">
                       <AnswerView text={msg.text} />
                     </div>
                   </div>
                 ))}
                 {streaming && (
                   <div
-                    className="rounded-xl p-5"
+                    className="rounded-lg overflow-hidden"
                     style={{
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
                       boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
                     }}
                   >
-                    <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                      <SonaAvatar size={18} active />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Sona is answering…</span>
+                    <div
+                      className="flex items-center gap-2 px-4 py-2"
+                      style={{
+                        background: 'var(--cam-hero-strip)',
+                        borderBottom: '2px solid var(--cam-gold-leaf)',
+                      }}
+                    >
+                      <SonaAvatar size={16} active />
+                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">
+                        Sona is answering…
+                      </span>
                     </div>
-                    {streamText ? (
-                      <div className="answer-flow">
-                        <AnswerView text={cleanTags(streamText)} streaming />
-                        <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--accent)' }} />
-                      </div>
-                    ) : (
-                      <span className="animate-pulse text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>
-                    )}
+                    <div className="p-5">
+                      {streamText ? (
+                        <div className="answer-flow">
+                          <AnswerView text={cleanTags(streamText)} streaming />
+                          <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} />
+                        </div>
+                      ) : (
+                        <span className="animate-pulse text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -807,35 +828,47 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               ) : (
                 <div
                   key={i}
-                  className="rounded-xl p-3"
+                  className="rounded-lg overflow-hidden"
                   style={{
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border)',
                     boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 20px -12px rgba(15,23,42,0.10)',
                   }}
                 >
-                  <div className="flex items-center gap-1.5 mb-2">
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5"
+                    style={{
+                      background: 'var(--cam-hero-strip)',
+                      borderBottom: '2px solid var(--cam-gold-leaf)',
+                    }}
+                  >
                     <SonaAvatar size={14} />
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
+                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase text-white">Sona</span>
                   </div>
-                  <div className="min-w-0"><AnswerView text={msg.text} /></div>
+                  <div className="p-3 min-w-0"><AnswerView text={msg.text} /></div>
                 </div>
               ))}
               {streaming && (
                 <div
-                  className="rounded-xl p-3"
+                  className="rounded-lg overflow-hidden"
                   style={{
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border)',
                     boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 20px -12px rgba(15,23,42,0.10)',
                   }}
                 >
-                  <div className="flex items-center gap-1.5 mb-2">
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5"
+                    style={{
+                      background: 'var(--cam-hero-strip)',
+                      borderBottom: '2px solid var(--cam-gold-leaf)',
+                    }}
+                  >
                     <SonaAvatar size={14} active />
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>Sona</span>
+                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase text-white">Sona is answering…</span>
                   </div>
-                  <div>
-                    {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
+                  <div className="p-3">
+                    {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} /></>
                       : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
                   </div>
                 </div>

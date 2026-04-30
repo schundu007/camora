@@ -1329,7 +1329,33 @@ img { max-width: 100%; height: auto; }
   column-count: 1 !important;
   column-width: auto;
 }
-.answer-flow strong { font-weight: 600; color: var(--text-primary); }
+/* Headings inside the answer body adopt the LeetCode card treatment:
+   navy uppercase tracking with a thin gold-leaf underline on h2 so the
+   user can scan section markers (HEADLINE / PITCH / JD coverage) without
+   hunting through plain black/white prose. */
+.answer-flow h1,
+.answer-flow h2,
+.answer-flow h3,
+.answer-flow h4 {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+.answer-flow h1 { font-size: 16px; }
+.answer-flow h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--cam-gold-leaf);
+  padding-bottom: 4px;
+}
+.answer-flow h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+.answer-flow h4 { font-size: 12px; }
+/* Bold inline emphasis stays in body color but heavier weight, so a
+   bolded keyword inside a sentence doesn't read as a section header. */
+.answer-flow strong { font-weight: 700; color: var(--text-primary); }
 .answer-flow code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 0.92em;
@@ -1337,6 +1363,7 @@ img { max-width: 100%; height: auto; }
   border-radius: 4px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
+  color: var(--accent-text);
 }
 /* Spacing between flowed leaf items (paragraphs, bullets, STAR cards). */
 .answer-flow > * + * { margin-top: 6px; }
