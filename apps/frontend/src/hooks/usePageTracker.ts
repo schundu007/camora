@@ -14,14 +14,32 @@ export function usePageTracker() {
     if (pathname === lastTracked.current) return;
     lastTracked.current = pathname;
 
-    fetch(`${API}/api/visitors/pageview`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: pathname,
-        email: user?.email || null,
-        referrer: document.referrer || null,
-      }),
-    }).catch(() => {});
+    // Fire-and-forget analytics. We deliberately avoid Content-Type:
+    // application/json because that triggers a CORS preflight, and the
+    // pageview endpoint isn't worth blocking page loads on. sendBeacon
+    // sends as a "simple" request (no preflight, no CORS headers needed
+    // beyond the response Access-Control-Allow-Origin), survives across
+    // tab close, and ignores response status — which is exactly the
+    // semantics of a pixel-tracker. Falls back to keepalive fetch with a
+    // text/plain Blob if sendBeacon is missing (older browsers, some
+    // Electron contexts).
+    const payload = JSON.stringify({
+      path: pathname,
+      email: user?.email || null,
+      referrer: document.referrer || null,
+    });
+    const url = `${API}/api/visitors/pageview`;
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        navigator.sendBeacon(url, new Blob([payload], { type: 'text/plain;charset=UTF-8' }));
+      } else {
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {});
+      }
+    } catch { /* ignore */ }
   }, [pathname, user?.email]);
 }
