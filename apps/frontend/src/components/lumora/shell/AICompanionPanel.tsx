@@ -159,6 +159,59 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     try { sessionStorage.setItem(storageKey, JSON.stringify(messages.map(m => ({ ...m, time: m.time.toISOString() })))); } catch { /* quota */ }
   }, [messages, storageKey]);
 
+  // Delete a Sona card AND the user question that prompted it. Q&A
+  // turns alternate (user, ai, user, ai, ...) so the matching question
+  // is the last `role: 'user'` message before the AI message at index
+  // `aiIdx`. We splice both out atomically so the QUESTIONS rail and
+  // the answers rail stay in sync.
+  const deleteQAPair = useCallback(async (aiIdx: number) => {
+    const ok = await dialogConfirm({
+      title: 'Delete this Q&A?',
+      message: 'Removes both the question (left rail) and Sona\'s answer.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setMessages(prev => {
+      if (aiIdx < 0 || aiIdx >= prev.length || prev[aiIdx].role !== 'ai') return prev;
+      let userIdx = -1;
+      for (let i = aiIdx - 1; i >= 0; i--) {
+        if (prev[i].role === 'user') { userIdx = i; break; }
+      }
+      const next = prev.filter((_, i) => i !== aiIdx && i !== userIdx);
+      return next;
+    });
+  }, []);
+
+  // Export the full Q&A transcript as a Markdown file so the user can
+  // archive it after the interview, paste into Notion/Obsidian, or
+  // convert to PDF locally. Markdown is the lowest-common-denominator
+  // format that round-trips into every doc tool. PDF/DOCX export needs
+  // a backend renderer (Puppeteer/Pandoc) which is a separate task.
+  const exportSession = useCallback(() => {
+    if (messages.length === 0) return;
+    const role = activeAssistant?.role || activeAssistant?.company || 'Behavioral';
+    const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const lines: string[] = [`# Lumora — ${role} session`, `> ${stamp}`, ''];
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      if (m.role === 'user') {
+        lines.push(`## Q: ${m.text}`, '');
+      } else {
+        lines.push('### Sona:', '', cleanTags(m.text), '', '---', '');
+      }
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lumora-${role.toLowerCase().replace(/\s+/g, '-')}-${stamp.replace(/[: ]/g, '-')}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [messages, activeAssistant]);
+
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
@@ -471,8 +524,22 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         }}
         onMouseDown={embedded ? undefined : startDrag}
       >
-        {/* Left: clear + close (embedded) or clear + new (floating) */}
+        {/* Left: export + clear + close (embedded) or clear + new (floating) */}
         <div className="flex items-center gap-0.5">
+          {/* Session export — Markdown for now (works in every editor +
+              converts cleanly to PDF/DOCX via Pandoc or any browser
+              "Save as PDF"). A native PDF/DOCX renderer needs a backend
+              hop and is tracked separately. */}
+          <button
+            onClick={exportSession}
+            disabled={messages.length === 0}
+            className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ color: 'var(--text-muted)' }}
+            title="Export session (.md)"
+            aria-label="Export session as Markdown"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          </button>
           <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
             className="p-1 rounded-md transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }} title="Clear history">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -576,26 +643,81 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 </div>
               )}
-              {messages.filter(m => m.role === 'user').map((msg, i) => (
-                <div key={i} className="px-3 py-2 rounded-lg text-[11px] font-medium" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
-                  <p>{msg.text}</p>
-                  <span className="text-[8px] mt-1 block" style={{ color: 'var(--text-muted)' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              {/* Iterate the full messages array (not a filtered copy) so
+                  each user message keeps its ORIGINAL index — the delete
+                  button needs that index to find and remove the matching
+                  AI answer. */}
+              {messages.map((msg, origIdx) => msg.role !== 'user' ? null : (
+                <div
+                  key={origIdx}
+                  className="group px-3 py-2 rounded-lg text-[11px] font-medium flex items-start gap-2"
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="break-words">
+                      {/* Defensive: if a buggy version persisted a non-string,
+                          show a placeholder instead of the literal
+                          "[object Object]" so the rail still reads cleanly
+                          before the user clears history. */}
+                      {typeof msg.text === 'string' && msg.text.trim() ? msg.text : '(empty question — deleted via clear)'}
+                    </p>
+                    <span className="text-[8px] mt-1 block" style={{ color: 'var(--text-muted)' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const ok = await dialogConfirm({
+                        title: 'Delete this Q&A?',
+                        message: 'Removes both the question and Sona\'s answer.',
+                        confirmLabel: 'Delete',
+                        tone: 'danger',
+                      });
+                      if (!ok) return;
+                      // Find the AI message immediately following this user
+                      // message and drop both. Walking forward (rather than
+                      // assuming origIdx + 1) handles cases where the AI
+                      // message hasn't arrived yet (delete the question
+                      // alone) or a network error inserted an error reply.
+                      setMessages(prev => {
+                        if (origIdx < 0 || origIdx >= prev.length || prev[origIdx].role !== 'user') return prev;
+                        let aiIdx = -1;
+                        for (let j = origIdx + 1; j < prev.length; j++) {
+                          if (prev[j].role === 'ai') { aiIdx = j; break; }
+                          if (prev[j].role === 'user') break; // next question started, no answer arrived
+                        }
+                        return prev.filter((_, k) => k !== origIdx && k !== aiIdx);
+                      });
+                    }}
+                    className="shrink-0 p-1 rounded-md transition-colors"
+                    style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger, #DC2626)'; e.currentTarget.style.borderColor = 'var(--danger, #DC2626)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'transparent'; }}
+                    title="Delete this Q&A"
+                    aria-label="Delete this Q&A"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                  </button>
                 </div>
               ))}
             </div>
           </div>
-          {/* Right: answers */}
+          {/* Right: answers. Cards are width-capped at 880px (≈80-char
+              line length, the typographic sweet spot for sustained
+              reading) and centered in the available space. Without the
+              cap, dense bullet lists stretched the full panel width
+              (~1700px on a 16:10 monitor) and the eye couldn't track
+              from line to line — that was the actual readability
+              failure, not a color choice. */}
           <div ref={scrollRef} className="flex-1 overflow-auto p-4">
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
               <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
                 <p className="text-xs">Answers will appear here</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {messages.filter(m => m.role === 'ai').map((msg, i) => (
+              <div className="space-y-3 mx-auto" style={{ maxWidth: 880 }}>
+                {messages.map((msg, i) => msg.role !== 'ai' ? null : (
                   <div
                     key={i}
-                    className="rounded-xl p-5"
+                    className="rounded-xl p-5 group"
                     style={{
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
@@ -605,13 +727,23 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: '1px solid var(--border)' }}>
                       <SonaAvatar size={18} />
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Sona</span>
+                      <span className="ml-auto flex items-center gap-1">
+                        {/* Delete is always visible (not hover-only) per
+                            project rule on visible destructive actions. */}
+                        <button
+                          onClick={() => deleteQAPair(i)}
+                          className="p-1 rounded-md text-[10px] font-bold transition-colors"
+                          style={{ color: 'var(--text-muted)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger, #DC2626)'; e.currentTarget.style.borderColor = 'var(--danger, #DC2626)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                          title="Delete this Q&A"
+                          aria-label="Delete this Q&A"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                        </button>
+                      </span>
                     </div>
-                    {/* Single-column read with column-width fallback set in
-                        globals.css. On very wide displays the .answer-flow
-                        rule splits into 2 columns at ~1100px+, never 3.
-                        Three narrow columns of dense bullets was the
-                        readability killer in the prior layout. */}
-                    <div className="answer-flow [&>div]:contents [&>div>div]:contents">
+                    <div className="answer-flow">
                       <AnswerView text={msg.text} />
                     </div>
                   </div>
@@ -630,7 +762,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Sona is answering…</span>
                     </div>
                     {streamText ? (
-                      <div className="answer-flow [&>div]:contents [&>div>div]:contents">
+                      <div className="answer-flow">
                         <AnswerView text={cleanTags(streamText)} streaming />
                         <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--accent)' }} />
                       </div>

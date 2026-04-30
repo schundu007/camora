@@ -1305,33 +1305,17 @@ img { max-width: 100%; height: auto; }
   font-family: 'Inter', sans-serif;
   /* Comfortable reading defaults — the previous default leaned on the
      parent text-sm cascade which produced ~13px Inter at 1.4 line-height,
-     too dense for an interview. */
+     too dense for an interview.
+     Single column always: the prior multi-column layout split dense
+     bullet lists into 3-4 narrow strips on wide monitors and made the
+     answer impossible to track left-to-right. The parent card width is
+     capped at ~880px so a single column gives ~80-char line length —
+     the typographic sweet spot. Wide screens center the card. */
   font-size: 14.5px;
   line-height: 1.65;
   color: var(--text-primary);
-  /* `balance` distributes content evenly across columns so the card's height
-     ≈ total_content / column_count. Without it (or with `auto` on an
-     unbounded container) all content piles into column 1 and the rest stay
-     empty — defeats the whole purpose. */
-  column-fill: balance;
-  /* Floor each column at ~360px so a wide screen doesn't compress the
-     text into 3 narrow strips. Above ~1100px we get 2 columns; below,
-     a single comfortable column. The wrapper still uses Tailwind's
-     `columns-*` utilities for explicit count overrides, but this rule
-     guards against the worst case. */
-  column-width: 360px;
-  column-gap: 32px;
-}
-.answer-flow > *,
-.answer-flow p,
-.answer-flow li,
-.answer-flow h2,
-.answer-flow h3,
-.answer-flow h4,
-.answer-flow pre {
-  break-inside: avoid-column;
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
+  column-count: 1 !important;
+  column-width: auto;
 }
 .answer-flow strong { font-weight: 600; color: var(--text-primary); }
 .answer-flow code {
@@ -1342,6 +1326,5 @@ img { max-width: 100%; height: auto; }
   background: var(--bg-elevated);
   border: 1px solid var(--border);
 }
-/* A bit more breathing room between flowed items than the previous 4px,
-   without ballooning the overall height. */
+/* Spacing between flowed leaf items (paragraphs, bullets, STAR cards). */
 .answer-flow > * + * { margin-top: 6px; }
