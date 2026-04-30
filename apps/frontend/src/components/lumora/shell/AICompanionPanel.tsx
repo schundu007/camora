@@ -1012,37 +1012,44 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                        !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
                        enrollmentStale ? 'Voice prints drift with mic / room changes — re-enroll to keep filtering accurate.' :
                        'Sona ignores you and replies only to the interviewer.';
+          // Single-row layout: status (left) | mic + AUTO (centered) |
+          // enrollment buttons (right). The mic stays optically centered
+          // because both side cells are flex-1 and the middle is shrink-0.
+          // On phones (<sm) the side cells stack into a column so the mic
+          // pill never gets squeezed into a single tile-wide strip.
           return (
-            <div className="w-full flex items-center gap-2 px-3 py-2 rounded-xl"
+            <div className="w-full grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 py-2 rounded-xl"
               style={{ background: bg, border: `1px solid ${border}` }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                <path d="M19 10v2a7 7 0 01-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </svg>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] md:text-[11px] font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{title}</p>
-                <p className="text-[10px] leading-tight" style={{ color: 'var(--text-muted)' }}>{hint}</p>
+              {/* LEFT — status icon + title + hint */}
+              <div className="flex items-center gap-2 min-w-0 justify-self-start">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+                  <path d="M19 10v2a7 7 0 01-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+                <div className="min-w-0">
+                  <p className="text-[12px] md:text-[11px] font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</p>
+                  <p className="text-[10px] leading-tight truncate" style={{ color: 'var(--text-muted)' }}>{hint}</p>
+                </div>
               </div>
-              <VoiceEnrollment disabled={false} variant="light" />
+              {/* MIDDLE — MIC + AUTO controls. Owns its own pill chrome
+                  so it reads as the primary action even on a tinted
+                  banner background. */}
+              <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl shrink-0 justify-self-center"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <AudioCapture onTranscription={handleAutoTranscription} />
+              </div>
+              {/* RIGHT — Filter On / Remove Enrollment buttons. The
+                  VoiceEnrollment "light" variant lays them out in a
+                  row so they sit on a single line beside the mic. */}
+              <div className="flex items-center justify-end justify-self-end">
+                <VoiceEnrollment disabled={false} variant="light" />
+              </div>
             </div>
           );
         })()}
-        {/* Mic + AUTO toggle — single source of truth for capture.
-            Click AUTO before the interview to keep Sona listening
-            continuously (auto-restarts, persists across reloads).
-            The previous MicButtonLarge was removed: it ran its own
-            independent getUserMedia stream, which competed with this
-            one for the same physical mic and produced two visible
-            mic controls that confused users. The mic button inside
-            UnifiedMicButton is the one-shot capture; AUTO is the
-            continuous toggle. */}
-        <div className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <AudioCapture onTranscription={handleAutoTranscription} />
-        </div>
         {/* Text input row — taller + larger text on mobile so the iOS
             keyboard shows up at a comfortable size and the placeholder
             doesn't trigger Safari's text-zoom (it kicks in below 16px). */}
