@@ -4,6 +4,54 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { StreamingAnswer } from './StreamingAnswer';
 import { DatabricksThumb, type DatabricksColor } from '@/components/shared/DatabricksThumb';
 
+// LeetCode-style row classification — purely structural (numbered
+// Q.<#> + category pill on the right). Per the navy-palette memory we
+// keep one accent color and differentiate categories by label text
+// only, NOT by hue (no green/yellow/red Easy/Medium/Hard).
+type QuestionCategory = 'behavioral' | 'coding' | 'design';
+function categorize(q: string, isCodingFlag = false, isDesignFlag = false): QuestionCategory {
+  if (isDesignFlag) return 'design';
+  if (isCodingFlag) return 'coding';
+  const t = (q || '').trim();
+  if (/^\[SYSTEM DESIGN\]/i.test(t)) return 'design';
+  // Coding submits prefix the displayTitle with [LANGUAGE] (see
+  // useStreamingInterview.handleCodingSubmit). A trailing word like
+  // [PYTHON] / [TYPESCRIPT] is the signal.
+  if (/^\[[A-Z+#.\-]{2,16}\]/.test(t)) return 'coding';
+  return 'behavioral';
+}
+const CATEGORY_LABEL: Record<QuestionCategory, string> = {
+  behavioral: 'BEHAVIORAL',
+  coding: 'CODING',
+  design: 'DESIGN',
+};
+function CategoryPill({ category }: { category: QuestionCategory }) {
+  return (
+    <span
+      className="font-mono text-[9px] font-bold tracking-[0.18em] px-2 py-0.5 rounded shrink-0 uppercase"
+      style={{
+        background: 'var(--accent-subtle)',
+        color: 'var(--accent)',
+        border: '1px solid var(--accent)',
+      }}
+      aria-label={`Category: ${CATEGORY_LABEL[category]}`}
+    >
+      {CATEGORY_LABEL[category]}
+    </span>
+  );
+}
+function QNumber({ n }: { n: number }) {
+  return (
+    <span
+      className="font-mono text-[11px] font-bold tabular-nums shrink-0"
+      style={{ color: 'var(--accent)' }}
+      aria-hidden="true"
+    >
+      Q.{n}
+    </span>
+  );
+}
+
 interface InterviewPanelProps {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
@@ -20,7 +68,12 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
     parsedBlocks,
     error,
     setError,
+    history,
   } = useInterviewStore();
+  // Q.<#> numbering counts the active stream as the next entry in
+  // history, so users see "Q.7" land before it gets persisted as #7.
+  const activeQNumber = history.length + 1;
+  const activeCategory = categorize(question || '', isCodingQuestion, isDesignQuestion);
 
   // Home tab = dashboard by default. Past sessions live on /lumora/sessions,
   // not here. Only switch off the dashboard while a question is actively
@@ -82,9 +135,11 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                   •
                 </span>
               </div>
+              <QNumber n={activeQNumber} />
               <span className="text-[14px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
                 {question}
               </span>
+              <CategoryPill category={activeCategory} />
               <span className="text-[10px] shrink-0 animate-pulse font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-code)', color: 'var(--cam-primary)' }}>
                 Generating
               </span>
