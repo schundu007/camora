@@ -689,9 +689,16 @@ app.get('/api/visitors/count', async (req, res) => {
 });
 
 // Universal page-view tracker — no auth required
-app.post('/api/visitors/pageview', apiLimiter, async (req, res) => {
+// `express.text()` here so the route also accepts the text/plain bodies
+// sent by navigator.sendBeacon — see apps/frontend/src/hooks/usePageTracker.ts.
+// Using text/plain avoids a CORS preflight on every page navigation.
+app.post('/api/visitors/pageview', apiLimiter, express.text({ type: 'text/plain', limit: '32kb' }), async (req, res) => {
   try {
-    const { path, email, referrer } = req.body || {};
+    let body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body || '{}'); } catch { body = {}; }
+    }
+    const { path, email, referrer } = body || {};
     if (!path) return res.status(400).json({ error: 'path required' });
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
     const userAgent = req.headers['user-agent'] || null;
