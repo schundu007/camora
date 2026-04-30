@@ -8,6 +8,23 @@ interface SessionSidebarProps {
   onSelectEntry: (index: number) => void;
 }
 
+// LeetCode-style classification — single-hue navy palette, label-only
+// differentiation (no Easy/Medium/Hard color semantics, per the navy
+// palette memory). Coding submits arrive prefixed with [LANGUAGE];
+// design submits with [SYSTEM DESIGN]; everything else is behavioral.
+type QuestionCategory = 'behavioral' | 'coding' | 'design';
+function categorize(q: string): QuestionCategory {
+  const t = (q || '').trim();
+  if (/^\[SYSTEM DESIGN\]/i.test(t)) return 'design';
+  if (/^\[[A-Z+#.\-]{2,16}\]/.test(t)) return 'coding';
+  return 'behavioral';
+}
+const CATEGORY_LABEL: Record<QuestionCategory, string> = {
+  behavioral: 'BEH',
+  coding: 'CODE',
+  design: 'DSGN',
+};
+
 function groupByDate(history: { question: string; timestamp: Date }[]) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -115,10 +132,28 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                       >
                         <button
                           onClick={() => { onSelectEntry(item.index); if (window.innerWidth < 1024) onClose(); }}
-                          className="w-full text-left px-4 py-2 text-[13px] transition-all truncate block hover:bg-[var(--bg-elevated)]"
+                          className="w-full text-left px-4 py-2 text-[13px] transition-all flex items-center gap-2 hover:bg-[var(--bg-elevated)]"
                           style={{ color: 'var(--text-secondary)' }}
                         >
-                          {item.question}
+                          <span
+                            className="font-mono text-[10px] font-bold tabular-nums shrink-0"
+                            style={{ color: 'var(--accent)' }}
+                            aria-hidden="true"
+                          >
+                            Q.{item.index + 1}
+                          </span>
+                          <span className="flex-1 truncate min-w-0">{item.question}</span>
+                          <span
+                            className="font-mono text-[8.5px] font-bold tracking-[0.16em] px-1.5 py-0.5 rounded shrink-0 uppercase"
+                            style={{
+                              background: 'var(--accent-subtle)',
+                              color: 'var(--accent)',
+                              border: '1px solid var(--accent)',
+                            }}
+                            aria-label={`Category: ${CATEGORY_LABEL[categorize(item.question)]}`}
+                          >
+                            {CATEGORY_LABEL[categorize(item.question)]}
+                          </span>
                         </button>
                         {/* Delete on hover */}
                         {hoveredIdx === item.index && (

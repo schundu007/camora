@@ -668,20 +668,45 @@ function UnifiedMicButton({
   const isRec = !continuousMode && storeIsRecording;
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
+    // Tinted pillbox groups Mic + AUTO + meter into a single visual
+    // unit so users immediately spot where the audio controls live —
+    // previously they were three separate small icons floating in a
+    // 42 px header and easy to overlook.
+    <div
+      className="flex items-center gap-2 shrink-0 pl-2 pr-2.5 py-1 rounded-lg"
+      style={{
+        background: isLive || isRec ? 'var(--accent-subtle)' : 'transparent',
+        border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
+        transition: 'background 200ms, border-color 200ms',
+      }}
+      aria-label="Audio controls"
+    >
+      {/* Group label — tiny mono "MIC" tag tells the user what this
+          cluster is, even when no controls are active. Hidden on the
+          narrowest screens to save horizontal room. */}
+      <span
+        className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
+        style={{ color: 'var(--text-muted)' }}
+        aria-hidden="true"
+      >
+        MIC
+      </span>
+
       {/* Mic button — always clickable. When Auto is ON, click pauses
           Sona's listening (mute) and another click resumes. Manual
           override is critical mid-interview when the user needs to
-          stop Sona on a dime — disabling the button traps the user. */}
+          stop Sona on a dime — disabling the button traps the user.
+          Sized 36×36 at all breakpoints (was 32–40 reversed) so the
+          target is consistent on touch and mouse. */}
       <div className="relative inline-flex">
         <button
           type="button"
           onClick={handleToggle}
-          className="relative flex items-center justify-center rounded-full transition-all select-none w-10 h-10 sm:w-8 sm:h-8"
+          className="relative flex items-center justify-center rounded-full transition-all select-none w-9 h-9"
           style={{
-            background: isLive || isRec ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+            background: isLive || isRec ? 'var(--bg-app)' : 'var(--bg-elevated)',
             border: `1px solid ${isLive || isRec ? 'var(--accent)' : 'var(--border)'}`,
-            color: isLive || isRec ? 'var(--accent)' : 'var(--text-muted)',
+            color: isLive || isRec ? 'var(--accent)' : 'var(--text-secondary)',
             boxShadow: isLive ? '0 0 0 3px rgba(38,97,156,0.18)' : 'none',
             cursor: 'pointer',
           }}
@@ -698,7 +723,7 @@ function UnifiedMicButton({
         >
           {isLive ? (
             // Live: filled sound-wave / auto glyph
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <rect x="2" y="10" width="2" height="4" rx="1" />
               <rect x="6" y="6" width="2" height="12" rx="1" />
               <rect x="10" y="2" width="2" height="20" rx="1" />
@@ -707,13 +732,13 @@ function UnifiedMicButton({
             </svg>
           ) : isRec ? (
             // Recording: filled pause bars
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16" rx="1" />
               <rect x="14" y="4" width="4" height="16" rx="1" />
             </svg>
           ) : (
             // Idle: outlined mic
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
               <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
               <line x1="12" y1="19" x2="12" y2="22" />
@@ -734,14 +759,17 @@ function UnifiedMicButton({
         </button>
       </div>
 
-      {/* AUTO toggle — one click turns continuous listening on, one click turns it off */}
+      {/* AUTO toggle — one click turns continuous listening on, one
+          click turns it off. Bumped to 11 px text + 10/4 padding so
+          the pill is legible at a glance instead of disappearing into
+          the chrome. */}
       <button
         type="button"
         onClick={handleModeToggle}
-        className="text-[10px] sm:text-[9px] font-bold uppercase tracking-[0.16em] px-3 py-2 sm:px-2 sm:py-1 rounded transition-colors"
+        className="text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors"
         style={{
-          color: isLive ? 'var(--accent)' : 'var(--text-muted)',
-          background: isLive ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+          color: isLive ? 'var(--accent)' : 'var(--text-secondary)',
+          background: isLive ? 'var(--bg-app)' : 'var(--bg-elevated)',
           border: `1px solid ${isLive ? 'var(--accent)' : 'var(--border)'}`,
           fontFamily: 'var(--font-mono)',
         }}
@@ -753,18 +781,29 @@ function UnifiedMicButton({
         {isLive ? '● AUTO' : 'AUTO'}
       </button>
 
-      {/* Audio-level bars */}
-      <div className="flex items-center gap-0.5 shrink-0" aria-hidden="true">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="w-0.5 rounded-full transition-all duration-75"
-            style={{
-              height: `${6 + i * 2}px`,
-              background: audioLevel > i * 0.02 ? 'var(--accent)' : 'var(--border)',
-            }}
-          />
-        ))}
+      {/* Audio-level meter — wider (3 px) bars on a tinted track so
+          they remain visible when silent (used to vanish into the
+          border when audioLevel = 0). Each bar lights up as the
+          rolling RMS crosses its threshold. */}
+      <div
+        className="flex items-end gap-[3px] shrink-0 px-1 py-0.5 rounded"
+        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+        aria-hidden="true"
+      >
+        {[0, 1, 2, 3, 4].map((i) => {
+          const lit = audioLevel > i * 0.02;
+          return (
+            <div
+              key={i}
+              className="w-[3px] rounded-full transition-all duration-75"
+              style={{
+                height: `${8 + i * 2}px`,
+                background: lit ? 'var(--accent)' : 'var(--border-strong, var(--border))',
+                opacity: lit ? 1 : 0.55,
+              }}
+            />
+          );
+        })}
       </div>
 
       <style>{`
