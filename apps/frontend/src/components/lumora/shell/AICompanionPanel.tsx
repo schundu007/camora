@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext, type LumoraStory } from '@/lib/lumora-assistant';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
@@ -135,6 +136,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // and Design entries — without this, the Sessions tab only saw the
   // InterviewPage history and Behavioral chats vanished on tab close.
   const addHistoryEntry = useInterviewStore(s => s.addHistoryEntry);
+
+  // Voice-filter state — surfaces directly in the input area so users can
+  // tell whether their own voice is being transcribed. Behavioral has no
+  // LumoraTopBar (only coding/design tabs do), so this is the ONLY place
+  // the user can see/toggle the filter from inside this view.
+  const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
+  const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
 
   // Persist Behavioral messages per-assistant in sessionStorage so refresh doesn't
   // wipe an in-progress interview. Cleared when the user explicitly clears chat.
@@ -965,6 +973,41 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       <div className="px-3 pt-2 shrink-0 flex flex-col items-center gap-2 lumora-companion-input-row"
         data-embedded={embedded ? 'true' : 'false'}
       >
+        {/* Voice-filter banner — Behavioral has no LumoraTopBar, so the
+            voice-filter status was invisible here and Sona was answering
+            the candidate's own voice. This row makes the state explicit:
+              · Not enrolled  → red warning + Enroll My Voice
+              · Enrolled, off → amber warning + Filter Off toggle
+              · Enrolled, on  → quiet green confirmation
+            The VoiceEnrollment component handles enroll / toggle / unenroll. */}
+        {embedded && (
+          <div className="w-full flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{
+              background: voiceFilterEnabled && voiceEnrolled ? 'rgba(16,185,129,0.08)' : !voiceEnrolled ? 'rgba(220,38,38,0.08)' : 'rgba(245,158,11,0.10)',
+              border: `1px solid ${voiceFilterEnabled && voiceEnrolled ? 'rgba(16,185,129,0.35)' : !voiceEnrolled ? 'rgba(220,38,38,0.35)' : 'rgba(245,158,11,0.40)'}`,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={voiceFilterEnabled && voiceEnrolled ? '#10b981' : !voiceEnrolled ? '#dc2626' : '#d97706'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+              <path d="M19 10v2a7 7 0 01-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] md:text-[11px] font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+                {!voiceEnrolled ? 'Enroll your voice to filter it out' :
+                 !voiceFilterEnabled ? 'Your voice is being transcribed' :
+                 'Filter on — only the interviewer is heard'}
+              </p>
+              <p className="text-[10px] leading-tight" style={{ color: 'var(--text-muted)' }}>
+                {!voiceEnrolled ? 'Sona will answer YOUR voice until you enroll.' :
+                 !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
+                 'Sona ignores you and replies only to the interviewer.'}
+              </p>
+            </div>
+            <VoiceEnrollment disabled={false} variant="light" />
+          </div>
+        )}
         {/* Mic + AUTO toggle — single source of truth for capture.
             Click AUTO before the interview to keep Sona listening
             continuously (auto-restarts, persists across reloads).
