@@ -2314,7 +2314,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         if (cancelled) return;
         const remoteHasData = r.data && typeof r.data === 'object' && Object.keys(r.data as object).length > 0;
         if (remoteHasData) {
-          setPrepData(r.data as PrepData);
+          // Server payload predates the studyDocs[] schema, so run every
+          // company through migrateStudyDocs() before committing to state
+          // — otherwise renders that touch state.studyDocs.length crash.
+          const remote = r.data as PrepData;
+          for (const company of Object.keys(remote.data || {})) {
+            remote.data[company] = migrateStudyDocs(remote.data[company]);
+          }
+          setPrepData(remote);
         } else {
           // Server has nothing for this user yet but local already has
           // companies/JD/resume from a previous session. Push the local
@@ -2384,8 +2391,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Get active company's doc state
-  const state = prepData.activeCompany ? (prepData.data[prepData.activeCompany] || EMPTY_DOC) : EMPTY_DOC;
+  // Get active company's doc state. Run through migrateStudyDocs every
+  // read so any older payload that slipped past the loader/hydrate (e.g.
+  // a company entry created before the studyDocs schema landed) still
+  // exposes an array, not undefined.
+  const state = migrateStudyDocs(
+    prepData.activeCompany ? (prepData.data[prepData.activeCompany] || EMPTY_DOC) : EMPTY_DOC
+  );
   const setState = (updater: DocState | ((prev: DocState) => DocState)) => {
     const company = prepData.activeCompany;
     if (!company) return;
