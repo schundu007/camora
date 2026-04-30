@@ -63,6 +63,37 @@ function isCodingQuestion(question) {
   return CODING_KEYWORDS.some((kw) => q.includes(kw));
 }
 
+/**
+ * Detect "introduce yourself" / "tell me about yourself" / "elevator
+ * pitch" style questions. These are NOT behavioral STAR questions and
+ * should NOT be answered with ARCHETYPE + Situation/Task/Action/Result —
+ * they need a 90-120 second JD-mapped narrative pitch that the
+ * candidate can read aloud as a single continuous block. Match against
+ * the cleaned question (no [SHORT] prefix).
+ */
+function isElevatorPitch(question) {
+  const q = String(question || '').toLowerCase().trim();
+  const PHRASES = [
+    'tell me about yourself',
+    'tell us about yourself',
+    'introduce yourself',
+    'walk me through your background',
+    'walk me through your resume',
+    'walk us through your background',
+    'walk us through your resume',
+    'tell me your story',
+    'tell me about your background',
+    'tell us about your background',
+    'elevator pitch',
+    'give me your elevator pitch',
+    'give me a quick intro',
+    'give me a brief intro',
+    'who are you',
+    'so tell me about yourself',
+  ];
+  return PHRASES.some(p => q.includes(p));
+}
+
 // ---------------------------------------------------------------------------
 // System prompts
 // ---------------------------------------------------------------------------
@@ -383,7 +414,55 @@ export async function* streamResponse(question, history, options = {}) {
   let systemPrompt;
   let maxTokens;
 
-  if (isShortMode) {
+  // Elevator-pitch path — detected ahead of the generic short-mode
+  // branch so "tell me about yourself" gets a 90-120 sec JD-mapped
+  // narrative instead of an ARCHETYPE + STAR breakdown.
+  const isPitch = isShortMode && isElevatorPitch(cleanQuestion);
+
+  if (isPitch) {
+    systemPrompt = `You ARE the candidate in a LIVE interview happening right now. The interviewer just asked the candidate to introduce themselves. Write a 90–120 second ELEVATOR PITCH the candidate will read aloud verbatim — no editing, no rewording.
+
+═══ VOICE — NON-NEGOTIABLE ═══
+- FIRST PERSON throughout. "I'm a…", "I've owned…", "I led…", "I built…".
+- NEVER write "you" / "your" / "the candidate" / third-person references.
+- This is the candidate's spoken intro. It must sound like one continuous, confident pitch — not bullet points.
+
+═══ STRUCTURE (locked — do not deviate) ═══
+The output MUST have EXACTLY these sections, in this order, on separate lines, with the section labels included verbatim so the frontend can format them:
+
+[HEADLINE]
+ONE sentence. Title + total years + core domain + the SINGLE most JD-relevant strength. ~25 words. This is what the interviewer hears in the first 8 seconds and decides whether to keep listening.
+[/HEADLINE]
+
+[PITCH]
+A flowing 4–6 sentence narrative (NOT bullets) that:
+1. Opens with current/most recent role and a concrete signature accomplishment (named system + metric).
+2. Threads the TOP 3–4 JD requirements through specific past projects with NAMED systems and METRICS. If the JD calls for X and the candidate did X at Trackonomy/OSDU/etc., name the company AND the system AND the metric. NO generic claims like "extensive experience in CI/CD" — always: "at Trackonomy I owned the Jenkins + Azure DevOps Pipelines + GitHub Actions stack for C++ embedded firmware CI" / "at OSDU I ran 1000s of GitLab-CI pipeline runs" / "I built agent-based caching that cut a build from 8 hours to 20–25 minutes".
+3. For any JD requirement the candidate doesn't directly match, BRIDGE — name the closest analog in the candidate's experience and state willingness to ramp ("I haven't shipped Isaac ROS specifically, but I've done multi-arch C++ CI for embedded targets which translates directly").
+4. Closes with WHY this role + WHY now — one sentence tying their trajectory to the company's mission.
+Total: 200–280 words. At ~140 wpm that's 85–120 seconds — fits the interviewer's attention window and leaves room for follow-ups.
+[/PITCH]
+
+[JD_COVERAGE]
+A short audit grid the candidate can glance at while speaking — for each top JD requirement, one line: "<requirement> → <my proof point in 6–10 words>". 4–6 lines max. Pure mapping, no prose. This is the cheat-sheet for handling probes after the pitch.
+[/JD_COVERAGE]
+
+═══ CONSISTENCY RULES ═══
+- ALWAYS lead the [PITCH] with the same flagship accomplishment — the most JD-relevant one. If asked to introduce again, the pitch must come out structurally identical, not a different highlight.
+- ALWAYS use the same NAMED systems + numeric metrics from the resume. Never paraphrase a metric ("a few thousand" instead of "1000s") and never substitute a different project for the same JD bullet across renders.
+- Specificity over polish: a concrete "8 hours → 20–25 minutes" beats any adjective.
+- If the resume / JD context is empty, fall back to the candidate's strongest technical identity stated in the [HEADLINE] — but say so plainly, do not invent companies or numbers.
+
+${resume ? `=== CANDIDATE BACKGROUND ===\n${resume}` : ''}
+${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}
+${cultureFrame}${companyBriefing}
+
+Write the pitch now. Treat it as the most important 90 seconds of the candidate's day.`;
+    // Pitch needs more headroom than a STAR answer — full pitch +
+    // headline + JD coverage grid runs ~400-450 tokens; 1500 leaves
+    // breathing room without inviting filler.
+    maxTokens = 1500;
+  } else if (isShortMode) {
     // Ultra-concise mode — copilot sidebar during live interviews
     systemPrompt = `You ARE the candidate in an ACTIVE interview RIGHT NOW. You are NOT an assistant or coach watching from the side — you are speaking AS the candidate, in their voice, so they can read your answer aloud verbatim without changing a single word.
 
@@ -407,6 +486,12 @@ ABSOLUTE RULES:
 8. If there's code in the answer, use \`\`\`python code blocks — NEVER inline code as plain text.
 9. Bold the most important keywords with **bold**.
 10. The ARCHETYPE line is ONLY for behavioral questions — do NOT emit it for coding, design, or concept questions.
+
+═══ JD-FIT + CONSISTENCY (every answer) ═══
+- THREAD the JOB DESCRIPTION through every answer. Each answer must visibly map to a JD requirement — pick the proof point that is most JD-relevant, not just the one most readily available.
+- USE NAMED SYSTEMS AND CONCRETE METRICS from the resume. Always: "at Trackonomy I ran Jenkins + Azure DevOps Pipelines + GitHub Actions for C++ embedded CI", "at OSDU 1000s of GitLab-CI pipeline runs", "agent-based caching cut builds from 8 hours to 20–25 minutes". NEVER paraphrase a metric or strip a system name. NEVER write "extensive experience in CI/CD" when "Jenkins + ADO Pipelines + GitHub Actions at Trackonomy" is on the table.
+- BRIDGE missing-experience cases. If the JD requires something the candidate hasn't done literally, name the CLOSEST ANALOG from the resume and say so explicitly: "I haven't shipped Isaac ROS, but I've done multi-arch C++ CI for embedded firmware which is the same problem shape — I'm eager to ramp on the ROS-specific bits."
+- LOCK the same proof point to the same archetype. If "Conflict" → Trackonomy story today, "Conflict" must be the SAME Trackonomy story next time. The candidate may be asked again in the same interview; consistency builds credibility.
 
 ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
@@ -481,6 +566,15 @@ IMPORTANT CODE FORMATTING RULE:
     const stream = client.messages.stream({
       model: chosenModel,
       max_tokens: maxTokens,
+      // Pin temperature low for consistency. The candidate complained
+      // that asking the same question twice produced completely
+      // different answers — that's expected at the default temp ~1.0.
+      // 0.2 keeps light natural variation in phrasing but locks down
+      // the structural choices: which past project, which metric,
+      // which JD requirement to lead with. Combined with the v2
+      // answer cache, repeat questions either hit the cache verbatim
+      // or regenerate to nearly the same answer.
+      temperature: 0.2,
       system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages,
     }, signal ? { signal } : undefined);

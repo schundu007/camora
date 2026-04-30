@@ -67,9 +67,41 @@ function getClient() {
  * field that affects the model output should appear here so a config
  * change naturally invalidates the namespace.
  */
+/**
+ * Aggressive question normalization for cache lookup. Speech-to-text
+ * produces small variations on the same spoken question — trailing
+ * "please", filler words ("um", "uh"), inconsistent punctuation,
+ * leading "so" or "okay" — and the previous lowercase+trim was too
+ * conservative, so identical questions hashed to different keys and
+ * the cache effectively never hit on the behavioral panel. This
+ * collapses cosmetic differences while preserving the actual
+ * meaning-bearing words.
+ */
+function normalizeQuestionForCache(raw) {
+  let q = String(raw || '').toLowerCase().trim();
+  // Strip leading filler interjections (one pass; multiple back-to-back
+  // get peeled in a follow-up loop below).
+  const FILLER_LEADERS = ['so ', 'um ', 'uh ', 'well ', 'okay ', 'ok ', 'alright ', 'right '];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const f of FILLER_LEADERS) {
+      if (q.startsWith(f)) { q = q.slice(f.length); changed = true; break; }
+    }
+  }
+  // Strip polite trailers that don't change semantics
+  q = q.replace(/(\bplease\b|\bif you don'?t mind\b|\bthanks\b|\bthank you\b)[\s.?!]*$/i, '').trim();
+  // Drop trailing punctuation entirely — "Tell me about yourself."
+  // and "Tell me about yourself" should map to one cache entry.
+  q = q.replace(/[\s.?!,;:]+$/g, '');
+  // Collapse all whitespace
+  q = q.replace(/\s+/g, ' ').trim();
+  return q;
+}
+
 export function buildAnswerCacheKey(parts) {
   const normalized = JSON.stringify({
-    q: String(parts.question || '').trim().toLowerCase().replace(/\s+/g, ' '),
+    q: normalizeQuestionForCache(parts.question),
     sc: parts.systemContext ? crypto.createHash('sha1').update(String(parts.systemContext)).digest('hex').slice(0, 12) : null,
     dl: parts.detailLevel || null,
     pl: parts.plan || null,
@@ -78,8 +110,11 @@ export function buildAnswerCacheKey(parts) {
     lg: parts.language || null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // Versioned prefix lets us bump v1→v2 if the cached payload shape changes.
-  return `lumora:answer:v1:${h}`;
+  // Versioned prefix lets us bump when the normalization or payload
+  // shape changes. Bumped v1→v2 alongside the new normalizer so old
+  // entries (which used the looser "lowercase+collapse" key) don't
+  // shadow the cleaner v2 keys.
+  return `lumora:answer:v2:${h}`;
 }
 
 export async function cacheGet(key) {
