@@ -5,6 +5,7 @@ import { getActiveAssistant, buildSystemContext, type LumoraStory } from '@/lib/
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
+import { isQuestion } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { useInterviewStore } from '@/stores/interview-store';
@@ -506,8 +507,27 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       console.warn('[Sona] handleAutoTranscription received non-string:', text);
       return;
     }
+    // Gate on isQuestion so monologues / acknowledgments don't fire Sona.
+    if (!isQuestion(text)) return;
     askRef.current?.(text);
   }, []);
+
+  // When embedded in /lumora/behavioral, listen for interviewer-audio
+  // transcriptions forwarded from LumoraShellPage. The shell's
+  // useStreamingInterview path renders into InterviewPage which is
+  // hidden behind this embedded panel — so the answer would otherwise
+  // disappear into nothing.
+  useEffect(() => {
+    if (!embedded) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ text?: string }>).detail;
+      const text = typeof detail?.text === 'string' ? detail.text.trim() : '';
+      if (!text) return;
+      askRef.current?.(text);
+    };
+    window.addEventListener('lumora:behavioral-question', handler);
+    return () => window.removeEventListener('lumora:behavioral-question', handler);
+  }, [embedded]);
 
   // Embedded mode = render inline, skip minimized/floating
   useEffect(() => {
