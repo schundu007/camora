@@ -210,8 +210,15 @@ router.post('/stream', async (req, res) => {
   // Set SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  // Proxy keepalive — write an SSE comment every 15s so Railway's HTTP/2 edge
+  // doesn't reset an apparently-idle stream when Claude is between tokens.
+  const keepalive = setInterval(() => {
+    if (!res.writableEnded) res.write(': ping\n\n');
+  }, 15000);
+  res.on('close', () => clearInterval(keepalive));
 
   const inputs = { jobDescription, resume, coverLetter, prepMaterials, documentation };
 
@@ -238,6 +245,7 @@ router.post('/stream', async (req, res) => {
     console.error('[InterviewPrep] Stream error:', err);
     res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
   } finally {
+    clearInterval(keepalive);
     res.end();
   }
 });
@@ -283,8 +291,15 @@ router.post('/section', async (req, res) => {
   // Set SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  // Proxy keepalive — write an SSE comment every 15s so Railway's HTTP/2 edge
+  // doesn't reset an apparently-idle stream when Claude is between tokens.
+  const keepalive = setInterval(() => {
+    if (!res.writableEnded) res.write(': ping\n\n');
+  }, 15000);
+  res.on('close', () => clearInterval(keepalive));
 
   // Include explicit company name for company-specific content generation
   const inputs = { jobDescription, resume, coverLetter, prepMaterials, documentation, customDocumentContent, customDocumentName, companyName };
@@ -321,6 +336,7 @@ router.post('/section', async (req, res) => {
     console.error('[InterviewPrep] Section error:', err);
     res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
   } finally {
+    clearInterval(keepalive);
     res.end();
   }
 });
