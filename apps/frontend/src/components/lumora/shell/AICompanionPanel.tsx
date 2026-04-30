@@ -479,6 +479,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     if (embedded) setMinimized(false);
   }, [embedded]);
 
+  // Mobile drawer for the Questions / Story Bank rail. The 280px sidebar
+  // is hidden on screens <md and accessible via a hamburger in the header.
+  // Auto-closes when a question is tapped from the drawer so the user
+  // returns to the answer view immediately.
+  const [mobileRailOpen, setMobileRailOpen] = useState(false);
+  useEffect(() => { if (!embedded) setMobileRailOpen(false); }, [embedded]);
+
   // Minimized = floating icon button
   if (minimized && !embedded) {
     return (
@@ -549,6 +556,23 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       >
         {/* Left: export + clear + close (embedded) or clear + new (floating) */}
         <div className="flex items-center gap-0.5">
+          {/* Mobile-only: toggle the Questions/Story Bank drawer. The
+              280px rail is hidden <md so the answer card gets the full
+              viewport width — a phone-sized side rail truncates both
+              the question text and the answer to the point of being
+              unusable. This button surfaces the rail as a slide-over. */}
+          {embedded && (
+            <button
+              onClick={() => setMobileRailOpen(v => !v)}
+              className="md:hidden p-2 rounded-md transition-colors hover:bg-white/10"
+              style={{ color: 'rgba(255,255,255,0.9)' }}
+              title="Questions"
+              aria-label="Open questions panel"
+              aria-expanded={mobileRailOpen}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+            </button>
+          )}
           {/* Session export — Markdown for now (works in every editor +
               converts cleanly to PDF/DOCX via Pandoc or any browser
               "Save as PDF"). A native PDF/DOCX renderer needs a backend
@@ -582,12 +606,12 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             chip in gold-leaf, SHORT/DETAILED tabs use the same gold
             highlight as the StreamingCodingCard pattern so the active
             mode is unmistakable on a navy strip. */}
-        <div className="flex-1 flex items-center justify-center gap-2">
+        <div className="flex-1 flex items-center justify-center gap-2 min-w-0">
           <SonaAvatar size={18} />
           <span className="text-[11px] font-bold tracking-wide text-white">Sona</span>
           {activeAssistant && (
             <span
-              className="text-[8px] font-semibold px-1.5 py-0.5 rounded"
+              className="hidden sm:inline text-[8px] font-semibold px-1.5 py-0.5 rounded truncate max-w-[120px]"
               style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}
             >
               {activeAssistant.company || activeAssistant.role || 'Custom'}
@@ -638,15 +662,44 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
       {/* Chat — side-by-side when embedded, top-to-bottom when floating */}
       {embedded ? (
-        <div className="flex-1 flex min-h-0 overflow-hidden">
+        <div className="flex-1 flex min-h-0 overflow-hidden relative">
+          {/* Mobile scrim — taps anywhere outside the drawer to close it. */}
+          {mobileRailOpen && (
+            <div
+              className="md:hidden absolute inset-0 z-30"
+              style={{ background: 'rgba(0,0,0,0.4)' }}
+              onClick={() => setMobileRailOpen(false)}
+              aria-hidden="true"
+            />
+          )}
           {/* Left: stories + questions. Subtle bg-elevated tint so it
               reads as chrome/navigation; the main reading area stays on
               bg-surface (white) so answer cards have somewhere to lift
-              off from. */}
+              off from.
+
+              Mobile: rendered as a slide-over drawer (≤md) keyed off
+              mobileRailOpen; on md+ it stays a fixed 280px column. */}
           <div
-            className="w-[280px] shrink-0 overflow-auto border-r"
-            style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}
+            className={`shrink-0 overflow-auto border-r transition-transform md:translate-x-0
+              ${mobileRailOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+              md:relative md:w-[280px] md:max-w-none
+              absolute md:static inset-y-0 left-0 z-40 w-[82vw] max-w-[320px]`}
+            style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)', boxShadow: mobileRailOpen ? '0 10px 30px rgba(0,0,0,0.25)' : undefined }}
           >
+            {/* Mobile-only header inside the drawer with a close button so
+                touch users have an obvious dismiss. The scrim handles taps
+                outside, but a visible X is the discoverable affordance. */}
+            <div className="md:hidden flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)' }}>Menu</span>
+              <button
+                onClick={() => setMobileRailOpen(false)}
+                className="p-2 rounded-md"
+                style={{ color: 'var(--text-muted)' }}
+                aria-label="Close menu"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
             <StoryBankPanel
               stories={activeAssistant?.stories}
               activeArchetype={(() => {
@@ -662,7 +715,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   <p className="text-[10px] mb-3" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
-                      <button key={s} onClick={() => ask(s)} className="w-full text-left px-3 py-2 rounded-lg text-[11px] transition-all" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+                      <button key={s} onClick={() => { ask(s); setMobileRailOpen(false); }} className="w-full text-left px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] transition-all" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}>{s}</button>
                     ))}
@@ -676,7 +729,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               {messages.map((msg, origIdx) => msg.role !== 'user' ? null : (
                 <div
                   key={origIdx}
-                  className="group px-3 py-2 rounded-lg text-[11px] font-medium flex items-start gap-2"
+                  className="group px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] font-medium flex items-start gap-2"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 >
                   <div className="flex-1 min-w-0">
@@ -733,13 +786,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               (~1700px on a 16:10 monitor) and the eye couldn't track
               from line to line — that was the actual readability
               failure, not a color choice. */}
-          <div ref={scrollRef} className="flex-1 overflow-auto p-4">
+          <div ref={scrollRef} className="flex-1 overflow-auto p-3 sm:p-4 md:p-5 min-w-0">
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
               <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
-                <p className="text-xs">Answers will appear here</p>
+                <p className="text-sm md:text-xs px-4 text-center">Tap the menu to pick a starter question, or use the mic below.</p>
               </div>
             ) : (
-              <div className="space-y-3 mx-auto" style={{ maxWidth: 880 }}>
+              <div className="space-y-3 sm:space-y-4 mx-auto w-full" style={{ maxWidth: 880 }}>
                 {messages.map((msg, i) => msg.role !== 'ai' ? null : (
                   <div
                     key={i}
@@ -779,7 +832,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                         </button>
                       </span>
                     </div>
-                    <div className="p-5 answer-flow">
+                    <div className="p-4 sm:p-5 answer-flow">
                       <AnswerView text={msg.text} />
                     </div>
                   </div>
@@ -805,7 +858,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                         Sona is answering…
                       </span>
                     </div>
-                    <div className="p-5">
+                    <div className="p-4 sm:p-5">
                       {streamText ? (
                         <div className="answer-flow">
                           <AnswerView text={cleanTags(streamText)} streaming />
@@ -903,8 +956,15 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         </div>
       )}
 
-      {/* Input */}
-      <div className="px-3 pb-3 pt-2 shrink-0 flex flex-col items-center gap-2">
+      {/* Input — on mobile (when embedded) the LumoraShell bottom nav
+          (fixed, 56px + safe-area-inset-bottom) sits over the bottom of
+          the panel. Without bottom padding the mic + send row hides
+          behind it. The wrapper class ladders padding by breakpoint;
+          the inline style replicates it so safe-area is included on
+          mobile-Safari notch devices. */}
+      <div className="px-3 pt-2 shrink-0 flex flex-col items-center gap-2 lumora-companion-input-row"
+        data-embedded={embedded ? 'true' : 'false'}
+      >
         {/* Mic + AUTO toggle — single source of truth for capture.
             Click AUTO before the interview to keep Sona listening
             continuously (auto-restarts, persists across reloads).
@@ -918,16 +978,18 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <AudioCapture onTranscription={handleAutoTranscription} />
         </div>
-        {/* Text input row */}
-        <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        {/* Text input row — taller + larger text on mobile so the iOS
+            keyboard shows up at a comfortable size and the placeholder
+            doesn't trigger Safari's text-zoom (it kicks in below 16px). */}
+        <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
-            placeholder={answerMode === 'short' ? 'Type a question...' : 'Type a question...'}
-            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
-            style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)', fontSize: '10px' }} disabled={streaming} />
+            placeholder="Type a question..."
+            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[10px]"
+            style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            <button onClick={handleSubmit} className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4 md:w-3 md:h-3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
         </div>
