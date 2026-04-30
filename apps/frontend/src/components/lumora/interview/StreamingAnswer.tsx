@@ -125,7 +125,15 @@ function StreamingAnswerList({ content, isComplete }: { content: string; isCompl
         const text = hasLabel ? line.slice(colonIdx + 1).trim() : line;
 
         return (
-          <div key={i} className="text-base text-[var(--text-muted)] leading-relaxed">
+          <div
+            key={i}
+            style={{
+              fontFamily: 'var(--font-answer)',
+              fontSize: 'var(--fs-answer-body)',
+              lineHeight: 'var(--lh-answer)',
+              color: 'var(--text-muted)',
+            }}
+          >
             {label && <span className="font-semibold text-[var(--accent)] mr-1">{label}:</span>}
             {text}
           </div>
@@ -243,7 +251,14 @@ function StreamingCodingCard({
       </div>
       <div className="p-4">
         {block ? (
-          <p className="text-base text-[var(--text-muted)] leading-relaxed">
+          <p
+            style={{
+              fontFamily: 'var(--font-answer)',
+              fontSize: 'var(--fs-answer-lead)',
+              lineHeight: 'var(--lh-answer)',
+              color: 'var(--text-muted)',
+            }}
+          >
             {cleanText(block.content)}
             {!block.isComplete && <Cursor />}
           </p>
