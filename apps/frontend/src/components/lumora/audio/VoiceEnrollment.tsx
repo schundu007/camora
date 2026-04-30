@@ -267,7 +267,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
   }
 
   return (
-    <div className={isLight ? 'flex flex-col gap-2 shrink-0' : 'flex items-center gap-1 shrink-0'}>
+    <div className={isLight ? 'flex flex-row items-center gap-2 shrink-0 flex-wrap' : 'flex items-center gap-1 shrink-0'}>
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
