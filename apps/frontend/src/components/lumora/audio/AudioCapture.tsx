@@ -57,8 +57,14 @@ function dlog(event: string, data?: Record<string, unknown>) {
 // a fuller sentence. False positives (passing through "lanja") wreck
 // the QUESTIONS panel and waste an LLM call.
 function isLikelyRealSpeech(raw: string): boolean {
-  const text = (raw || '').trim();
+  // Defensive: if a non-string slips through (Whisper backend edge
+  // case — see the matching guard in lumora-backend transcription.js),
+  // reject. Whisper has never legitimately produced "[object Object]"
+  // text; if it appears, it is upstream pollution, not speech.
+  if (typeof raw !== 'string') return false;
+  const text = raw.trim();
   if (!text) return false;
+  if (text.includes('[object Object]')) return false;
   const last = text.slice(-1);
   if (last === '?' || last === '!') return true;
   const words = text.split(/\s+/);

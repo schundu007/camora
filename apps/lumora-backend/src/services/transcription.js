@@ -82,14 +82,21 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
       prompt: TECHNICAL_PROMPT,
     });
 
-    // Handle both string response (response_format: text) and object response
+    // Handle both string response (response_format: text) and object response.
+    // The OpenAI SDK normally returns `{ text: "..." }`; on transient
+    // API hiccups it has been observed to return objects without a
+    // `text` field. The previous fallback ran `String(response).trim()`
+    // which produced the literal `"[object Object]"` — that bypassed
+    // every hallucination filter and ended up flushed as a "question"
+    // in the Lumora accumulator. Return empty for unknown shapes so
+    // the route's hallucination filter drops the chunk cleanly.
     let text = '';
     if (typeof response === 'string') {
       text = response.trim();
-    } else if (response?.text) {
+    } else if (typeof response?.text === 'string') {
       text = response.text.trim();
     } else {
-      text = String(response).trim();
+      console.warn('[Whisper] Unexpected response shape, dropping chunk:', typeof response);
     }
     return text;
   } finally {
