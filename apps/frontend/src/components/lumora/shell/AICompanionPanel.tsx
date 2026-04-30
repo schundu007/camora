@@ -143,6 +143,22 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // the user can see/toggle the filter from inside this view.
   const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
   const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
+  const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
+  const ensureVoiceEnrolledAt = useInterviewStore(s => s.ensureVoiceEnrolledAt);
+
+  // Backfill the enrollment timestamp for users who enrolled before
+  // we tracked it. Without this, they'd have voiceEnrolled=true but a
+  // null timestamp forever, and the stale-nudge would never fire.
+  useEffect(() => { ensureVoiceEnrolledAt(); }, [ensureVoiceEnrolledAt]);
+
+  // Stale enrollment — Resemblyzer embeddings drift over time as the
+  // user's mic, room, and even voice change. After ~7d we nudge the
+  // user to refresh. Days-since-enroll feeds the inline banner copy.
+  const enrollmentAgeDays = useMemo(() => {
+    if (!voiceEnrolled || !voiceEnrolledAt) return null;
+    return Math.floor((Date.now() - voiceEnrolledAt) / (1000 * 60 * 60 * 24));
+  }, [voiceEnrolled, voiceEnrolledAt]);
+  const enrollmentStale = enrollmentAgeDays !== null && enrollmentAgeDays >= 7;
 
   // Persist Behavioral messages per-assistant in sessionStorage so refresh doesn't
   // wipe an in-progress interview. Cleared when the user explicitly clears chat.
@@ -976,38 +992,44 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         {/* Voice-filter banner — Behavioral has no LumoraTopBar, so the
             voice-filter status was invisible here and Sona was answering
             the candidate's own voice. This row makes the state explicit:
-              · Not enrolled  → red warning + Enroll My Voice
-              · Enrolled, off → amber warning + Filter Off toggle
-              · Enrolled, on  → quiet green confirmation
+              · Not enrolled       → red warning + Enroll My Voice
+              · Enrolled, off      → amber warning + Filter Off toggle
+              · Enrolled, on       → quiet green confirmation
+              · Enrolled, on, ≥7d  → amber stale-nudge: refresh enrollment
             The VoiceEnrollment component handles enroll / toggle / unenroll. */}
-        {embedded && (
-          <div className="w-full flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{
-              background: voiceFilterEnabled && voiceEnrolled ? 'rgba(16,185,129,0.08)' : !voiceEnrolled ? 'rgba(220,38,38,0.08)' : 'rgba(245,158,11,0.10)',
-              border: `1px solid ${voiceFilterEnabled && voiceEnrolled ? 'rgba(16,185,129,0.35)' : !voiceEnrolled ? 'rgba(220,38,38,0.35)' : 'rgba(245,158,11,0.40)'}`,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={voiceFilterEnabled && voiceEnrolled ? '#10b981' : !voiceEnrolled ? '#dc2626' : '#d97706'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-              <path d="M19 10v2a7 7 0 01-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
-            </svg>
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] md:text-[11px] font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
-                {!voiceEnrolled ? 'Enroll your voice to filter it out' :
-                 !voiceFilterEnabled ? 'Your voice is being transcribed' :
-                 'Filter on — only the interviewer is heard'}
-              </p>
-              <p className="text-[10px] leading-tight" style={{ color: 'var(--text-muted)' }}>
-                {!voiceEnrolled ? 'Sona will answer YOUR voice until you enroll.' :
-                 !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
-                 'Sona ignores you and replies only to the interviewer.'}
-              </p>
+        {embedded && (() => {
+          // Tone is amber when stale even if filter is on — the user
+          // should see the nudge before the next interview, not after.
+          const tone = !voiceEnrolled ? 'red' : (!voiceFilterEnabled || enrollmentStale) ? 'amber' : 'green';
+          const bg = tone === 'red' ? 'rgba(220,38,38,0.08)' : tone === 'amber' ? 'rgba(245,158,11,0.10)' : 'rgba(16,185,129,0.08)';
+          const border = tone === 'red' ? 'rgba(220,38,38,0.35)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(16,185,129,0.35)';
+          const stroke = tone === 'red' ? '#dc2626' : tone === 'amber' ? '#d97706' : '#10b981';
+          const title = !voiceEnrolled ? 'Enroll your voice to filter it out' :
+                        !voiceFilterEnabled ? 'Your voice is being transcribed' :
+                        enrollmentStale ? `Refresh your voice profile (${enrollmentAgeDays}d old)` :
+                        'Filter on — only the interviewer is heard';
+          const hint = !voiceEnrolled ? 'Sona will answer YOUR voice until you enroll.' :
+                       !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
+                       enrollmentStale ? 'Voice prints drift with mic / room changes — re-enroll to keep filtering accurate.' :
+                       'Sona ignores you and replies only to the interviewer.';
+          return (
+            <div className="w-full flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ background: bg, border: `1px solid ${border}` }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+                <path d="M19 10v2a7 7 0 01-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] md:text-[11px] font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{title}</p>
+                <p className="text-[10px] leading-tight" style={{ color: 'var(--text-muted)' }}>{hint}</p>
+              </div>
+              <VoiceEnrollment disabled={false} variant="light" />
             </div>
-            <VoiceEnrollment disabled={false} variant="light" />
-          </div>
-        )}
+          );
+        })()}
         {/* Mic + AUTO toggle — single source of truth for capture.
             Click AUTO before the interview to keep Sona listening
             continuously (auto-restarts, persists across reloads).

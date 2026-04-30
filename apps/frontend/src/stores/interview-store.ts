@@ -52,6 +52,7 @@ interface InterviewState {
   // Voice enrollment
   voiceMode: 'filter-candidate' | 'record-interviewer';
   voiceEnrolled: boolean;
+  voiceEnrolledAt: number | null; // ms epoch — used to nudge re-enroll after ~7d
   voiceFilterEnabled: boolean;
   isEnrolling: boolean;
   autoEnrollPending: boolean; // true when record-interviewer is waiting for first audio chunk
@@ -104,6 +105,7 @@ interface InterviewState {
   setUseSearch: (useSearch: boolean) => void;
   setVoiceMode: (mode: 'filter-candidate' | 'record-interviewer') => void;
   setVoiceEnrolled: (enrolled: boolean) => void;
+  ensureVoiceEnrolledAt: () => void;
   setVoiceFilterEnabled: (enabled: boolean) => void;
   setModelOverride: (surface: 'coding' | 'behavioral' | 'design' | 'prep', modelId: string) => void;
   setIsEnrolling: (enrolling: boolean) => void;
@@ -137,6 +139,7 @@ const initialState = {
   useSearch: false,
   voiceMode: 'filter-candidate' as const,
   voiceEnrolled: false,
+  voiceEnrolledAt: null as number | null,
   // Default OFF — turning the filter on without enrollment makes
   // AudioCapture fail closed (it can't filter what it hasn't sampled).
   // The auto-enroll flow flips this to true on a successful first chunk.
@@ -233,7 +236,25 @@ export const useInterviewStore = create<InterviewState>()(
 
   setVoiceMode: (mode) => set({ voiceMode: mode }),
 
-  setVoiceEnrolled: (enrolled) => set({ voiceEnrolled: enrolled }),
+  setVoiceEnrolled: (enrolled) =>
+    set((state) => ({
+      voiceEnrolled: enrolled,
+      // Stamp the time on enroll so we can surface a "refresh enrollment"
+      // nudge after ~7d (Resemblyzer embeddings drift with mic / room
+      // changes — re-enrollment fixes the leak symptom). Clear when the
+      // user explicitly unenrolls so a fresh enroll starts a fresh clock.
+      voiceEnrolledAt: enrolled ? Date.now() : null,
+    })),
+
+  // Backfill for users who enrolled before the timestamp existed —
+  // start their 7d clock from "first time we noticed", not from a
+  // bogus epoch-zero that would mark every legacy user as stale.
+  ensureVoiceEnrolledAt: () =>
+    set((state) =>
+      state.voiceEnrolled && !state.voiceEnrolledAt
+        ? { voiceEnrolledAt: Date.now() }
+        : {},
+    ),
 
   setVoiceFilterEnabled: (enabled) => set({ voiceFilterEnabled: enabled }),
   setModelOverride: (surface, modelId) =>
@@ -258,6 +279,7 @@ export const useInterviewStore = create<InterviewState>()(
         history: state.history,
         voiceMode: state.voiceMode,
         voiceEnrolled: state.voiceEnrolled,
+        voiceEnrolledAt: state.voiceEnrolledAt,
         modelOverrides: state.modelOverrides,
       }),
       migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
