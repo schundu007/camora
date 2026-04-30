@@ -6,6 +6,7 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogConfirm } from '@/components/shared/Dialog';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
+import { useInterviewStore } from '@/stores/interview-store';
 
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
 const C = {
@@ -128,6 +129,12 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
   const activeAssistant = useMemo(() => getActiveAssistant(), []);
   const systemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
+
+  // Pull the global Lumora history store. Behavioral Q&A pairs are
+  // pushed here so they show up in /lumora/sessions alongside Coding
+  // and Design entries — without this, the Sessions tab only saw the
+  // InterviewPage history and Behavioral chats vanished on tab close.
+  const addHistoryEntry = useInterviewStore(s => s.addHistoryEntry);
 
   // Persist Behavioral messages per-assistant in sessionStorage so refresh doesn't
   // wipe an in-progress interview. Cleared when the user explicitly clears chat.
@@ -393,6 +400,24 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           setMessages(prev => [...prev, { role: 'ai', text: cleanTags(answerText), time: new Date() }]);
           setStreamText('');
           setStreaming(false);
+          // Persist this Q&A to the Lumora session history so it shows
+          // up in /lumora/sessions with timestamp + view button. Backend
+          // already saves to lumora_conversations + lumora_messages on
+          // every /api/v1/stream POST — we capture conversation_id and
+          // message_id here so a future "open this session" can replay
+          // the durable record from the DB rather than relying solely
+          // on the local Zustand cache.
+          try {
+            addHistoryEntry({
+              question: trimmed,
+              blocks: Array.isArray(data?.parsed) ? data.parsed : [],
+              timestamp: new Date(),
+              messageId: data?.message_id,
+              conversationId: data?.conversation_id,
+            });
+          } catch (e) {
+            console.warn('[Sona] addHistoryEntry failed', e);
+          }
         },
         onError: (data: any) => {
           // Backend SSE error frames vary in field name (msg/message/detail/error).
@@ -413,7 +438,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       setStreamText('');
       setStreaming(false);
     }
-  }, [token, streaming, answerMode, systemContext]);
+  }, [token, streaming, answerMode, systemContext, addHistoryEntry]);
 
   const handleSubmit = useCallback(() => {
     if (input.trim()) { ask(input); setInput(''); }
