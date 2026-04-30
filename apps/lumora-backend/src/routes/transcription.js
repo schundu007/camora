@@ -150,6 +150,13 @@ router.post(
         req.body.filter_user_voice === 'true' || req.body.filter_user_voice === true;
 
       // ── Speaker diarization / verification (optional) ─────────────────
+      // If the diarizer slices the audio to interviewer-only WAV bytes,
+      // we send THAT to Whisper instead of the original upload. Without
+      // this, a chunk containing both the candidate and the interviewer
+      // gets fully transcribed and the candidate's words leak to Sona.
+      let audioForWhisper = file.buffer;
+      let filenameForWhisper = file.originalname || 'audio.webm';
+
       if (filterUserVoice) {
         console.log(`[VoiceFilter] user=${req.user.id} audio=${file.buffer.length}B`);
         const diarization = await diarizeSpeaker(
@@ -157,7 +164,10 @@ router.post(
           file.buffer,
           file.originalname || 'audio.webm',
         );
-        console.log(`[VoiceFilter] Result:`, JSON.stringify(diarization));
+        // Don't log audio_b64 — it's the entire WAV in base64 and
+        // floods the logs.
+        const { audio_b64, ...diarLog } = diarization;
+        console.log(`[VoiceFilter] Result:`, JSON.stringify(diarLog), audio_b64 ? `(sliced=${audio_b64.length}B b64)` : '(no slice)');
 
         if (!diarization.should_transcribe) {
           const ratio = diarization.interviewer_ratio ?? diarization.similarity ?? 0;
@@ -176,6 +186,20 @@ router.post(
           });
         }
 
+        // Mixed chunk — swap in the interviewer-only slice. Single-
+        // speaker chunks have no audio_b64 and we send the original.
+        if (diarization.audio_b64) {
+          try {
+            audioForWhisper = Buffer.from(diarization.audio_b64, 'base64');
+            filenameForWhisper = 'audio.wav';
+            console.info(
+              `[VoiceFilter] Using sliced audio for Whisper: ${audioForWhisper.length}B (was ${file.buffer.length}B)`,
+            );
+          } catch (e) {
+            console.warn(`[VoiceFilter] Failed to decode sliced audio, falling back to original: ${e.message}`);
+          }
+        }
+
         // Log diarization results for debugging
         if (diarization.segments) {
           const speakers = diarization.segments.map(s => s.speaker);
@@ -184,7 +208,7 @@ router.post(
       }
 
       // ── Transcribe ───────────────────────────────────────────────────
-      const rawText = await transcribe(file.buffer, file.originalname || 'audio.webm');
+      const rawText = await transcribe(audioForWhisper, filenameForWhisper);
       const latencyMs = Math.round(performance.now() - start);
 
       // Filter Whisper hallucinations (phantom text on silence/low audio).

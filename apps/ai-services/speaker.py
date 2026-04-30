@@ -4,9 +4,12 @@ Handles voice enrollment, status checks, profile deletion, and
 speaker verification using resemblyzer voice embeddings.
 """
 
+import base64
+import io
 import os
 import subprocess
 import tempfile
+import wave
 from pathlib import Path
 
 import numpy as np
@@ -231,14 +234,16 @@ async def speaker_diarize(
         sample_rate = 16000
         window_size = int(1.6 * sample_rate)   # 1.6 second windows
         hop_size = int(0.8 * sample_rate)       # 0.8 second hop (50% overlap)
-        # 0.70 was too strict for the mic-only fallback path: a
-        # candidate with a cold or a slightly different mic position
-        # would drop below the threshold and get misclassified as the
-        # interviewer (or worse, the interviewer would misclassify as
-        # the candidate and we'd skip transcription). 0.62 keeps the
-        # false-positive rate manageable while massively reducing
-        # false negatives.
-        threshold = 0.62
+        # Lowered 0.62 → 0.55 so a candidate whose voice has drifted
+        # slightly (different mic angle, room noise, mild cold, codec
+        # compression artifacts) still classifies as candidate and gets
+        # filtered out. The user-reported failure mode is "filter is on
+        # but Sona answered MY voice" — that means similarity dropped
+        # below threshold and the user was mislabeled as interviewer.
+        # We bias toward false-filtering interviewer (recoverable: user
+        # repeats the question) over false-leaking candidate (mortifying
+        # during a live interview).
+        threshold = 0.55
 
         segments = []
         total_windows = 0
@@ -282,19 +287,50 @@ async def speaker_diarize(
                 })
 
         interviewer_ratio = interviewer_windows / max(total_windows, 1)
-        # Always transcribe if any interviewer voice is present. The
-        # previous 15%-floor dropped short questions ("Tell me about
-        # yourself.") and any clip where the candidate happened to
-        # speak first. The downstream caller (transcription.js) decides
-        # what to surface based on the per-segment labels we return.
-        should_transcribe = interviewer_windows > 0
+        # Skip the chunk entirely if the candidate dominated (>50% of
+        # speech). Previously any single interviewer-classified window
+        # caused the WHOLE chunk to be sent to Whisper — including the
+        # candidate's words — which is exactly the leak the user hit.
+        # Mixed chunks where the interviewer is the majority still get
+        # through; the audio is sliced to interviewer-only segments
+        # below so Whisper never sees the candidate's voice.
+        should_transcribe = interviewer_ratio >= 0.5
 
-        print(f"[Diarize] {len(merged)} segments, interviewer={interviewer_ratio:.0%}, transcribe={should_transcribe}")
+        # Slice the WAV to interviewer-only segments and return as base64
+        # WAV bytes. lumora-backend uses this audio (when present) for
+        # the Whisper call instead of the raw upload, so the candidate's
+        # interleaved speech never reaches the transcriber. Single-speaker
+        # clips skip slicing — the original audio is already correct.
+        audio_b64 = None
+        if should_transcribe and interviewer_ratio < 1.0:
+            interviewer_segments = [s for s in merged if s["speaker"] == "interviewer"]
+            if interviewer_segments:
+                pieces = []
+                for seg in interviewer_segments:
+                    s_idx = max(0, int(seg["start"] * sample_rate))
+                    e_idx = min(len(wav), int(seg["end"] * sample_rate))
+                    if e_idx > s_idx:
+                        pieces.append(wav[s_idx:e_idx])
+                if pieces:
+                    interviewer_wav = np.concatenate(pieces).astype(np.float32)
+                    # Clip to [-1, 1] then convert to int16 PCM
+                    pcm = np.clip(interviewer_wav, -1.0, 1.0)
+                    pcm_i16 = (pcm * 32767.0).astype(np.int16)
+                    buf = io.BytesIO()
+                    with wave.open(buf, "wb") as wf:
+                        wf.setnchannels(1)
+                        wf.setsampwidth(2)
+                        wf.setframerate(sample_rate)
+                        wf.writeframes(pcm_i16.tobytes())
+                    audio_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+
+        print(f"[Diarize] {len(merged)} segments, interviewer={interviewer_ratio:.0%}, transcribe={should_transcribe}, sliced={audio_b64 is not None}")
         return {
             "should_transcribe": should_transcribe,
             "segments": merged,
             "interviewer_ratio": round(interviewer_ratio, 4),
             "total_duration": round(len(wav) / sample_rate, 2),
+            "audio_b64": audio_b64,
         }
 
     except HTTPException:
