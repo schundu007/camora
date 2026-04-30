@@ -50,13 +50,28 @@ export function InterviewerAudioProvider({
 
   const handleAudioData = useCallback(
     async (blob: Blob) => {
-      if (!token || blob.size < 200) return;
+      if (!token) {
+        console.warn('[InterviewerAudio] no token, skipping transcribe');
+        return;
+      }
+      if (blob.size < 200) {
+        console.log('[InterviewerAudio] blob too small, skipping', { bytes: blob.size });
+        return;
+      }
       try {
+        console.log('[InterviewerAudio] transcribing', { bytes: blob.size });
         const result = await transcriptionAPI.transcribe(token, blob, 'interviewer.webm', false);
         const text = result.text?.trim();
-        if (text && !result.skipped) {
-          onTranscriptionRef.current?.(text);
+        if (result.skipped) {
+          console.warn('[InterviewerAudio] backend skipped', { reason: result.reason, text });
+          return;
         }
+        if (!text) {
+          console.warn('[InterviewerAudio] empty transcription', { result });
+          return;
+        }
+        console.log('[InterviewerAudio] → forwarding to Sona:', text.slice(0, 120));
+        onTranscriptionRef.current?.(text);
       } catch (err) {
         console.error('[InterviewerAudio] transcription failed', err);
       }

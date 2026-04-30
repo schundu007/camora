@@ -498,17 +498,25 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   }, [streaming]);
 
   // Stable handler for continuous-mic transcriptions (no deps → never rebuilds).
-  const handleAutoTranscription = useCallback((text: string) => {
-    // Type-guard: AudioCapture's onTranscription is typed as (string)
-    // but the runtime contract has been violated in the past (the
-    // QUESTIONS panel was showing `[object Object]`). Drop anything
-    // that isn't a non-empty string.
+  // `opts.manual === true` means the user explicitly pressed the mic button.
+  // In that case we MUST bypass isQuestion() — the user's intent is direct,
+  // and the heuristic was silently dropping perfectly valid manual presses
+  // (e.g. utterances starting with "I" or "we", or short phrases).
+  const handleAutoTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
     if (typeof text !== 'string' || !text.trim()) {
       console.warn('[Sona] handleAutoTranscription received non-string:', text);
       return;
     }
-    // Gate on isQuestion so monologues / acknowledgments don't fire Sona.
-    if (!isQuestion(text)) return;
+    if (opts?.manual) {
+      console.log('[Sona] manual press → firing ask() (isQuestion bypassed):', text.slice(0, 120));
+      askRef.current?.(text);
+      return;
+    }
+    // Auto path: gate on isQuestion so monologues / acknowledgments don't fire Sona.
+    if (!isQuestion(text)) {
+      console.log('[Sona] auto transcript dropped by isQuestion:', text.slice(0, 120));
+      return;
+    }
     askRef.current?.(text);
   }, []);
 

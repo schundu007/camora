@@ -74,7 +74,10 @@ function isLikelyRealSpeech(raw: string): boolean {
 }
 
 interface AudioCaptureProps {
-  onTranscription?: (text: string) => void;
+  // `manual: true` means the user explicitly pressed the mic button — the
+  // intent is unambiguous, so downstream `isQuestion()` filters MUST be
+  // bypassed. Manual press = direct user action; auto = system guess.
+  onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
   autoStart?: boolean;
 }
 
@@ -298,12 +301,15 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           }
         }
         if (result.text) {
-          onTranscription?.(result.text);
+          console.log('[mic] manual transcription:', result.text.slice(0, 120));
+          onTranscription?.(result.text, { manual: true });
           setStatus('ready', 'Transcription complete');
         } else {
+          console.warn('[mic] manual transcription returned empty', result);
           setStatus('ready', "Didn't catch that - try again");
         }
       } catch (error: any) {
+        console.error('[mic] manual transcribe failed:', error?.message, error);
         const status = error?.status;
         if (status === 500 || status === 506) {
           setStatus('warn', 'Service unavailable - retrying');
