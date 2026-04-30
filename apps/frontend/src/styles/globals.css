@@ -1367,3 +1367,36 @@ img { max-width: 100%; height: auto; }
 }
 /* Spacing between flowed leaf items (paragraphs, bullets, STAR cards). */
 .answer-flow > * + * { margin-top: 6px; }
+
+/* ── Input row padding for AICompanionPanel ──
+   Embedded (Behavioral fullscreen) on mobile must clear the LumoraShell
+   bottom-nav (fixed, 56px + safe-area). md+ has no bottom-nav, drop to
+   a tighter 12px. Floating (data-embedded="false") always uses 12px. */
+.lumora-companion-input-row { padding-bottom: 12px; }
+.lumora-companion-input-row[data-embedded="true"] {
+  padding-bottom: calc(68px + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .lumora-companion-input-row[data-embedded="true"] { padding-bottom: 12px; }
+}
+
+/* ── Mobile readability override (≤ 768px) ──
+   The RichText / StarBody renderers set inline fontSize values (10–13px)
+   tuned for desktop side-panel density. On a phone those become unreadable
+   at arm's length. Bump every text leaf inside .answer-flow with high
+   specificity so the inline styles get beaten without needing a refactor.
+   The override is scoped to .answer-flow which is only mounted inside
+   the embedded Behavioral panel — floating Sona stays untouched. */
+@media (max-width: 768px) {
+  .answer-flow,
+  .answer-flow p,
+  .answer-flow li,
+  .answer-flow span,
+  .answer-flow div { font-size: 15px !important; line-height: 1.6 !important; }
+  .answer-flow h1 { font-size: 19px !important; }
+  .answer-flow h2 { font-size: 17px !important; }
+  .answer-flow h3 { font-size: 15px !important; }
+  .answer-flow h4 { font-size: 14px !important; }
+  /* Inline code stays slightly smaller than body so it reads as a token. */
+  .answer-flow code { font-size: 13.5px !important; }
+}
