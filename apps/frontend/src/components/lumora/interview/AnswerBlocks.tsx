@@ -52,8 +52,14 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="animate-fade-up" style={wrap}>
           <GridCard title="Overview" titleColor="text-[var(--cam-gold-leaf-lt)]" collapsible={false}>
             <p
-              className="text-[15px] leading-relaxed font-medium"
-              style={{ fontFamily: "'Inter', system-ui, sans-serif", color: 'var(--text-primary)' }}
+              className="font-medium"
+              style={{
+                fontFamily: 'var(--font-answer-heading)',
+                fontSize: 'var(--fs-answer-heading)',
+                lineHeight: 'var(--lh-answer)',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.005em',
+              }}
             >
               {cleanText(block.content)}
             </p>
@@ -83,7 +89,14 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
                     >
                       {i + 1}
                     </span>
-                    <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-answer)',
+                        fontSize: 'var(--fs-answer-body)',
+                        lineHeight: 'var(--lh-answer)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
                       {label && <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{label}: </span>}
                       {text}
                     </div>
@@ -146,13 +159,28 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
                     >
                       Q{i + 1}
                     </span>
-                    <span className="text-[13px] font-semibold leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                    <span
+                      className="font-semibold"
+                      style={{
+                        fontFamily: 'var(--font-answer)',
+                        fontSize: 'var(--fs-answer-body)',
+                        lineHeight: 'var(--lh-answer)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
                       {pair.question}
                     </span>
                   </div>
                   <div
-                    className="ml-7 text-[13px] leading-relaxed rounded-lg p-3"
-                    style={{ background: 'var(--bg-app)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                    className="ml-7 rounded-lg p-3"
+                    style={{
+                      background: 'var(--bg-app)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border)',
+                      fontFamily: 'var(--font-answer)',
+                      fontSize: 'var(--fs-answer-body)',
+                      lineHeight: 'var(--lh-answer)',
+                    }}
                   >
                     {pair.answer}
                   </div>
@@ -168,7 +196,14 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
       return (
         <div className="animate-fade-up" style={wrap}>
           <GridCard title="Answer" titleColor="text-[var(--text-secondary)]" collapsible={false}>
-            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-answer)',
+                fontSize: 'var(--fs-answer-body)',
+                lineHeight: 'var(--lh-answer)',
+                color: 'var(--text-secondary)',
+              }}
+            >
               {cleanText(block.content)}
             </p>
           </GridCard>

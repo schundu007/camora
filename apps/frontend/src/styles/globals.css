@@ -92,6 +92,18 @@
     --font-display: 'Source Sans 3', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'Source Code Pro', 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
     --font-brand: 'Source Sans 3', 'Inter', sans-serif;
+    /* Answer surface — wider, more "studied" type so Sona's responses
+       read like a textbook rather than UI chrome. Source Sans 3 (body)
+       + Source Serif 4 (headings) are Adobe's open-source display
+       families; we ship them via Google Fonts to avoid an Adobe Fonts
+       kit dependency. Tuned at 16 px/1.7 line-height for Lumora's
+       answer panel which routinely renders 200-800 word responses. */
+    --font-answer: 'Source Sans 3', 'Inter', -apple-system, sans-serif;
+    --font-answer-heading: 'Source Serif 4', 'Source Sans 3', Georgia, serif;
+    --fs-answer-body: 16px;
+    --fs-answer-lead: 17px;     /* first paragraph / intro line */
+    --fs-answer-heading: 19px;  /* HEADLINE / section titles */
+    --lh-answer: 1.7;
 
     /* Shadows — soft blue glow on the navy palette */
     --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
