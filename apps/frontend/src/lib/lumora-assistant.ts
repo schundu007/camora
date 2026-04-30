@@ -18,6 +18,11 @@ export interface LumoraStory {
   impact?: string;
 }
 
+export interface LumoraStudyDoc {
+  name: string;
+  content: string;
+}
+
 export interface LumoraAssistant {
   id?: string;
   name?: string;
@@ -25,6 +30,10 @@ export interface LumoraAssistant {
   role?: string;
   resume?: string;
   jobDescription?: string;
+  // Multi-document study material loaded via Prep Kit. Sona injects these
+  // into the system context so live answers can cite uploaded references
+  // (architecture docs, internal wikis, problem sheets, etc).
+  studyDocs?: LumoraStudyDoc[];
   stories?: LumoraStory[];
   createdAt?: string;
 }
@@ -89,6 +98,11 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
         resume?: string; resumeFile?: string;
         coverLetter?: string;
         prepMaterials?: string;
+        studyDocs?: LumoraStudyDoc[];
+        // Legacy v7/v8 single-string field — promoted into studyDocs below
+        // so users who uploaded one doc on the old shape still see it.
+        studyMaterials?: string;
+        studyMaterialsFile?: string;
       }>;
     };
     const key = prep.activeCompany || prep.companies?.[0];
@@ -105,12 +119,21 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
       jdFile: doc.jdFile,
       resumeFile: doc.resumeFile,
     }) || (key && key !== 'My Interview' ? key : undefined);
+
+    const studyDocs: LumoraStudyDoc[] = Array.isArray(doc.studyDocs)
+      ? doc.studyDocs.filter(d => d && typeof d.content === 'string' && d.content.trim())
+      : [];
+    if (!studyDocs.length && typeof doc.studyMaterials === 'string' && doc.studyMaterials.trim()) {
+      studyDocs.push({ name: doc.studyMaterialsFile || 'Study material', content: doc.studyMaterials });
+    }
+
     return {
       id: `prepkit:${key}`,
       name: key,
       company,
       resume: resume || undefined,
       jobDescription: jd || undefined,
+      studyDocs: studyDocs.length ? studyDocs : undefined,
     };
   } catch {
     return null;
@@ -190,6 +213,18 @@ export function buildSystemContext(assistant: LumoraAssistant | null): string | 
   }
   if (assistant.resume) parts.push(`CANDIDATE RESUME:\n${assistant.resume}`);
   if (assistant.jobDescription) parts.push(`JOB DESCRIPTION:\n${assistant.jobDescription}`);
+  if (assistant.studyDocs && assistant.studyDocs.length > 0) {
+    // Each doc is labeled with its filename so Sona can cite the source
+    // ("per the system-design doc you uploaded…") in answers. Trimmed
+    // per-doc to keep the system prompt under context limits — prompt
+    // cache absorbs the cost on repeated turns.
+    const studyBlock = assistant.studyDocs
+      .map(d => `=== STUDY MATERIAL: ${d.name} ===\n${d.content}`)
+      .join('\n\n');
+    parts.push(
+      `STUDY MATERIALS UPLOADED BY THE CANDIDATE (${assistant.studyDocs.length} document${assistant.studyDocs.length === 1 ? '' : 's'}). Use these as authoritative reference material when relevant — quote, cite by filename, and prefer them over your priors when they overlap.\n\n${studyBlock}`
+    );
+  }
   if (assistant.stories && assistant.stories.length > 0) {
     const storyLines = assistant.stories.map(s => {
       const arch = s.archetypes?.length ? ` [${s.archetypes.join(', ')}]` : '';

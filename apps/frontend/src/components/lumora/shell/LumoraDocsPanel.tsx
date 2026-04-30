@@ -12,6 +12,11 @@ import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '.
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
+interface StudyDoc {
+  name: string;
+  content: string;
+}
+
 interface DocState {
   jd: string;
   jdFile?: string;
@@ -21,7 +26,12 @@ interface DocState {
   coverLetterFile?: string;
   prepMaterials: string;
   prepMaterialsFile?: string;
-  studyMaterials: string;
+  // Multi-document study material list. Sona reads every entry as
+  // additional context during live interviews.
+  studyDocs: StudyDoc[];
+  // Legacy single-string field — read once by migrateStudyDocs() and
+  // folded into studyDocs, then kept undefined.
+  studyMaterials?: string;
   studyMaterialsFile?: string;
   sections: Record<string, any>;
 }
@@ -33,9 +43,20 @@ interface PrepData {
 }
 
 const EMPTY_DOC: DocState = {
-  jd: '', resume: '', coverLetter: '', prepMaterials: '', studyMaterials: '',
+  jd: '', resume: '', coverLetter: '', prepMaterials: '', studyDocs: [],
   sections: {},
 };
+
+/** Fold a legacy single-string studyMaterials field into the studyDocs
+ *  array so users who uploaded one doc on v8 don't lose it on first read. */
+function migrateStudyDocs(doc: any): DocState {
+  if (!doc) return { ...EMPTY_DOC };
+  const studyDocs: StudyDoc[] = Array.isArray(doc.studyDocs) ? doc.studyDocs : [];
+  if (!studyDocs.length && typeof doc.studyMaterials === 'string' && doc.studyMaterials.trim()) {
+    studyDocs.push({ name: doc.studyMaterialsFile || 'Study material', content: doc.studyMaterials });
+  }
+  return { ...EMPTY_DOC, ...doc, studyDocs, studyMaterials: undefined, studyMaterialsFile: undefined };
+}
 
 const INITIAL_STATE: PrepData = {
   companies: [],
@@ -1639,8 +1660,10 @@ function loadPrepData(): PrepData {
     const r = localStorage.getItem(STORAGE_KEY);
     if (!r) return INITIAL_STATE;
     const data = JSON.parse(r) as PrepData;
-    // Clean up any rawContent wrappers from previously cached data
+    // Clean up any rawContent wrappers from previously cached data,
+    // and migrate legacy single-string studyMaterials into studyDocs[].
     for (const company of Object.keys(data.data || {})) {
+      data.data[company] = migrateStudyDocs(data.data[company]);
       const sections = data.data[company]?.sections;
       if (sections) {
         for (const key of Object.keys(sections)) {
@@ -1700,6 +1723,86 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste, onCli
             {onClickOverride ? 'Paste URL, text, or upload' : 'Drop or click'}
           </span>
         </>
+      )}
+    </div>
+  );
+}
+
+/** Multi-document dropzone for Study Materials. Accepts multiple files at
+ *  once (drag-drop or file picker), shows a chip per uploaded doc, and
+ *  lets the user delete individual entries. */
+function MultiUploadZone({ docs, onAdd, onRemove }: {
+  docs: StudyDoc[];
+  onAdd: (files: File[]) => void;
+  onRemove: (index: number) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (files.length) onAdd(files);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div
+        className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
+        style={{ background: 'var(--bg-elevated)', border: `1px dashed ${dragOver ? 'var(--cam-primary)' : 'var(--border)'}` }}
+        onClick={() => ref.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+      >
+        <input
+          ref={ref}
+          type="file"
+          multiple
+          accept=".pdf,.docx,.doc,.txt,.md"
+          className="hidden"
+          onChange={(e) => {
+            const files = Array.from(e.target.files || []);
+            if (files.length) onAdd(files);
+            e.target.value = '';
+          }}
+        />
+        <svg className="w-6 h-6 mb-2" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+          {docs.length ? 'Add more documents' : 'Drop files or click — multiple OK'}
+        </span>
+        <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          PDF, DOCX, TXT, MD — Sona will read every file
+        </span>
+      </div>
+      {docs.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {docs.map((d, i) => (
+            <div
+              key={`${d.name}-${i}`}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px]"
+              style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)', color: 'var(--cam-primary)' }}
+            >
+              <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="font-semibold truncate max-w-[200px]" title={d.name}>{d.name}</span>
+              <span className="text-[9px] opacity-70">{d.content.length.toLocaleString()} ch</span>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onRemove(i); }}
+                className="ml-1 opacity-60 hover:opacity-100"
+                aria-label={`Remove ${d.name}`}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -2396,7 +2499,16 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         credentials: 'include',
-        body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
+        body: JSON.stringify({
+          section,
+          jobDescription: state.jd,
+          resume: state.resume,
+          coverLetter: state.coverLetter,
+          prepMaterial: state.prepMaterials,
+          // Backend reads `documentation` as a {name,content}[] array and
+          // injects every entry into the prompt — see ascendPrep.js.
+          documentation: state.studyDocs,
+        }),
       });
 
       if (!res.ok) {
@@ -2412,7 +2524,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
       setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error generating ${label}` } } }));
     }
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token]);
 
   /** Generate ALL sections in parallel — each runs independently */
   const handleGenerate = useCallback(async () => {
@@ -2424,7 +2536,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
 
     await Promise.allSettled(GENERATE_SECTIONS.map(s => generateOneSection(s)));
     setGenerating(false);
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token, generateOneSection]);
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, generateOneSection]);
 
   /** Re-generate a single section */
   const regenerateSection = useCallback(async (section: string) => {
@@ -2715,15 +2827,32 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
 
-            {/* Study Materials */}
+            {/* Study Materials — multi-document. Sona reads every entry
+                here as additional context during the live interview. */}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Study Materials</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  {state.studyDocs.length === 0 ? 'Add as many as you want — Sona reads them all' : `${state.studyDocs.length} document${state.studyDocs.length === 1 ? '' : 's'} loaded`}
+                </span>
               </div>
-              <UploadZone label="Drop files or click" value={state.studyMaterials} fileName={state.studyMaterialsFile}
-                onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, studyMaterials: t, studyMaterialsFile: f.name })); }}
-                onPaste={(t) => setState(p => ({ ...p, studyMaterials: t }))} />
+              <MultiUploadZone
+                docs={state.studyDocs}
+                onAdd={async (files) => {
+                  const added: StudyDoc[] = [];
+                  for (const f of files) {
+                    try {
+                      const content = await extractFile(f);
+                      if (content.trim()) added.push({ name: f.name, content });
+                    } catch (err) {
+                      console.warn('[study] extract failed', f.name, err);
+                    }
+                  }
+                  if (added.length) setState(p => ({ ...p, studyDocs: [...p.studyDocs, ...added] }));
+                }}
+                onRemove={(idx) => setState(p => ({ ...p, studyDocs: p.studyDocs.filter((_, i) => i !== idx) }))}
+              />
             </div>
 
             {/* Status */}

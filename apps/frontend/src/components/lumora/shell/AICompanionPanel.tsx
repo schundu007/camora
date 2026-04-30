@@ -299,7 +299,10 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   }, [panelWidth, panelHeight, position.x, position.y]);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; mode: string } | null>(null);
+  // origX/origY snapshot the position offset at the start of a resize so
+  // east/south handles can shift the bottom-right anchor outward without
+  // accumulating drift across consecutive moves.
+  const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; origX: number; origY: number; mode: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -355,21 +358,29 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       const maxW = typeof window !== 'undefined' ? window.innerWidth - 16 : 1600;
       const maxH = typeof window !== 'undefined' ? window.innerHeight - 16 : 1200;
 
-      // Width — left handles use (startX - e.clientX), right handles use (e.clientX - startX)
+      // Width — left handles grow inward (anchor on right stays put);
+      // right handles must also nudge position.x by the same delta so the
+      // bottom-right anchor (`right: calc(24px - position.x)`) follows the
+      // cursor outward instead of letting the panel grow leftward.
       if (r.mode === 'w' || r.mode === 'wh') {
         const dX = r.startX - e.clientX;
         setPanelWidth(Math.min(Math.max(300, r.startW + dX), maxW));
       } else if (r.mode === 'e' || r.mode === 'es') {
         const dX = e.clientX - r.startX;
-        setPanelWidth(Math.min(Math.max(300, r.startW + dX), maxW));
+        const newW = Math.min(Math.max(300, r.startW + dX), maxW);
+        setPanelWidth(newW);
+        setPosition(p => ({ ...p, x: r.origX + (newW - r.startW) }));
       }
-      // Height — top handles use (startY - e.clientY), bottom handles use (e.clientY - startY)
+      // Height — same trick: south handle has to drag the bottom anchor
+      // down via position.y, otherwise the panel just grows upward.
       if (r.mode === 'h' || r.mode === 'wh') {
         const dY = r.startY - e.clientY;
         setPanelHeight(Math.min(Math.max(300, r.startH + dY), maxH));
       } else if (r.mode === 's' || r.mode === 'es') {
         const dY = e.clientY - r.startY;
-        setPanelHeight(Math.min(Math.max(300, r.startH + dY), maxH));
+        const newH = Math.min(Math.max(300, r.startH + dY), maxH);
+        setPanelHeight(newH);
+        setPosition(p => ({ ...p, y: r.origY + (newH - r.startH) }));
       }
     };
     const handleUp = () => { setIsResizing(false); resizeRef.current = null; };
@@ -554,13 +565,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       {!maximized && (
         <>
           {/* Edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('w'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'w' }; }} />
-          <div className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('e'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'e' }; }} />
-          <div className="absolute left-0 top-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('h'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'h' }; }} />
-          <div className="absolute left-0 bottom-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('s'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 's' }; }} />
+          <div className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('w'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, origX: position.x, origY: position.y, mode: 'w' }; }} />
+          <div className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('e'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, origX: position.x, origY: position.y, mode: 'e' }; }} />
+          <div className="absolute left-0 top-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('h'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, origX: position.x, origY: position.y, mode: 'h' }; }} />
+          <div className="absolute left-0 bottom-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('s'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, origX: position.x, origY: position.y, mode: 's' }; }} />
           {/* Corners */}
-          <div className="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('wh'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'wh' }; }} />
-          <div className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('es'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'es' }; }} />
+          <div className="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('wh'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, origX: position.x, origY: position.y, mode: 'wh' }; }} />
+          <div className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('es'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, origX: position.x, origY: position.y, mode: 'es' }; }} />
         </>
       )}
 
