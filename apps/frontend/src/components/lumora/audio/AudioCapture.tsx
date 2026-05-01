@@ -734,16 +734,21 @@ function UnifiedMicButton({
           onClick={handleToggle}
           className="relative flex items-center justify-center rounded-full transition-all select-none w-9 h-9"
           style={{
-            background: isLive || isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-            border: `1px solid ${isLive || isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
-            color: isLive || isRec ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.90)',
-            boxShadow: isLive ? '0 0 0 3px rgba(201,162,39,0.35)' : 'none',
+            // Only light the MIC button gold for MANUAL recording.
+            // When AUTO is on, the AUTO pill carries the active state —
+            // double-lighting the mic confused users into thinking
+            // manual was active alongside AUTO. The mic stays in a
+            // calm outlined state during AUTO; the visible cue that
+            // Sona is listening is the pulsing AUTO pill + audio meter.
+            background: isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+            border: `1px solid ${isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
+            color: isRec ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.90)',
             cursor: 'pointer',
           }}
-          aria-pressed={isRec || isLive}
+          aria-pressed={isRec}
           title={
             isLive
-              ? 'Sona is listening — click or press ` to pause. Auto stays on; click again to resume.'
+              ? 'AUTO is listening — click to pause Sona (AUTO stays on; click again to resume).'
               : isRec
                 ? 'Recording — click or press ` to stop'
                 : continuousMode
@@ -751,23 +756,14 @@ function UnifiedMicButton({
                   : 'Click or press ` to record one answer'
           }
         >
-          {isLive ? (
-            // Live: filled sound-wave / auto glyph
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="2" y="10" width="2" height="4" rx="1" />
-              <rect x="6" y="6" width="2" height="12" rx="1" />
-              <rect x="10" y="2" width="2" height="20" rx="1" />
-              <rect x="14" y="6" width="2" height="12" rx="1" />
-              <rect x="18" y="10" width="2" height="4" rx="1" />
-            </svg>
-          ) : isRec ? (
-            // Recording: filled pause bars
+          {isRec ? (
+            // Manual recording: filled pause bars
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16" rx="1" />
               <rect x="14" y="4" width="4" height="16" rx="1" />
             </svg>
           ) : (
-            // Idle: outlined mic
+            // Idle / AUTO-on / AUTO-paused: outlined mic
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
               <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -775,10 +771,10 @@ function UnifiedMicButton({
             </svg>
           )}
 
-          {/* Pulsing halo when actively recording — gold-leaf to match
-              the active mic-button fill and overall LeetCode active
-              affordance. */}
-          {(isLive || isRec) && (
+          {/* Pulsing halo only during MANUAL recording — AUTO has its
+              own pulse on the AUTO pill so the two states stay
+              visually exclusive. */}
+          {isRec && (
             <span
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
@@ -792,13 +788,15 @@ function UnifiedMicButton({
       </div>
 
       {/* AUTO toggle — gold-on-navy when active, white-on-navy
-          inactive. Same active grammar as the SHORT/DETAILED toggle
-          and the top tabs so the user reads "active = gold-leaf"
-          consistently across the whole shell. */}
+          inactive. The active state pulses (halo) so users at a
+          glance know AUTO — not the manual mic — is the one
+          listening. The two indicators are mutually exclusive:
+          gold mic = manual recording, pulsing AUTO = continuous
+          listening. */}
       <button
         type="button"
         onClick={handleModeToggle}
-        className="text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors"
+        className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors"
         style={{
           color: isLive ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
           background: isLive ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
@@ -806,11 +804,22 @@ function UnifiedMicButton({
           fontFamily: 'var(--font-mono)',
         }}
         title={isLive
-          ? 'Auto is ON — Sona is listening continuously. Click or press ⌘⇧A to stop. (Setting persists across reloads — set it BEFORE the interview so you don\'t click during the call.)'
-          : 'Turn on Auto — Sona will listen continuously and answer each question. Click or press ⌘⇧A. Setting persists across reloads so you only click once before the interview.'}
+          ? 'AUTO is ON — Sona is listening continuously and will fire on real questions. Click or press ⌘⇧A to stop.'
+          : 'Turn on AUTO — Sona will listen continuously and answer each question. Click or press ⌘⇧A.'}
         aria-pressed={isLive}
       >
         {isLive ? '● AUTO' : 'AUTO'}
+        {isLive && (
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 rounded pointer-events-none"
+            style={{
+              border: '1px solid var(--cam-gold-leaf)',
+              animation: 'mic-pulse 1.4s ease-out infinite',
+              opacity: 0.7,
+            }}
+          />
+        )}
       </button>
 
       {/* Audio-level meter — bars light up gold-leaf as the rolling
