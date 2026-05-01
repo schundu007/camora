@@ -86,13 +86,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const { token } = useAuth();
 
   const [mounted, setMounted] = useState(false);
-  // Re-entry guard for the autoStart effect. Stored as a ref (not state)
-  // because it must NOT be a useEffect dependency: setHasAutoStarted as
-  // state used to re-render mid-effect and cancel the 200 ms start timer
-  // via cleanup, leaving the mic never actually started. The 4 s
-  // heartbeat eventually recovered, which is why the symptom looked
-  // like "AUTO is laggy" instead of "AUTO is broken".
-  const hasAutoStartedRef = useRef(false);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
   // Default AUTO=on at every mount. Tab navigation (Coding/Design/Behavioral)
   // remounts AudioCapture, and the user expects the mic on the tab they
   // just landed on to be live without an extra click. The localStorage
@@ -138,16 +132,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // the mic back on. Cleared the moment the user manually resumes (or
   // turns Auto off entirely).
   const userPausedRef = useRef(false);
-
-  // True ONLY when the current recording was started by a deliberate
-  // manual mic press (continuousMode was off when the user clicked).
-  // This is the only case in which `manual: true` should be sent to
-  // onTranscription — that flag bypasses isQuestion downstream. If the
-  // user toggles AUTO off mid-recording, continuousModeRef flips to
-  // false and the in-flight chunk would otherwise route through the
-  // MANUAL branch and bypass the gate, letting Whisper hallucinations
-  // ("Now fan numbers in Python.") into the QUESTIONS panel.
-  const manualSessionRef = useRef(false);
 
   // Heartbeat plumbing — declared up here so handleAudioLevel can bump
   // the timestamp on every analyser tick. See the heartbeat useEffect
@@ -317,16 +301,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           }
         }
         if (result.text) {
-          // Only mark `manual: true` (which bypasses isQuestion downstream)
-          // when the recording was actually started by a deliberate mic
-          // press. If continuousModeRef flipped to false because the user
-          // toggled AUTO off mid-recording, the in-flight chunk is still
-          // a captured AUTO utterance — route it through the normal gated
-          // path so Whisper hallucinations don't leak to the answer panel.
-          const wasManualPress = manualSessionRef.current;
-          manualSessionRef.current = false;
-          console.log('[mic] manual-branch transcription:', result.text.slice(0, 120), { wasManualPress });
-          onTranscription?.(result.text, wasManualPress ? { manual: true } : undefined);
+          console.log('[mic] manual transcription:', result.text.slice(0, 120));
+          onTranscription?.(result.text, { manual: true });
           setStatus('ready', 'Transcription complete');
         } else {
           console.warn('[mic] manual transcription returned empty', result);
@@ -458,8 +434,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   // Auto-start recording on mount when token is available
   useEffect(() => {
-    if (autoStart && token && !hasAutoStartedRef.current && startRecordingRef.current && !storeIsRecording && continuousMode) {
-      hasAutoStartedRef.current = true;
+    if (autoStart && token && !hasAutoStarted && startRecordingRef.current && !storeIsRecording && continuousMode) {
+      setHasAutoStarted(true);
       // Delay to ensure everything is ready
       const timer = setTimeout(() => {
         startRecordingRef.current?.();
@@ -470,7 +446,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [autoStart, token, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus]);
+  }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus]);
 
   // Heartbeat: detect when Auto is on but the recorder has actually
   // stopped (encoder error swallowed, MediaRecorder internal failure,
@@ -567,12 +543,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
     } else {
       userPausedRef.current = false;
-      // Mark this as a true manual session ONLY when AUTO is off — that's
-      // the case where the candidate explicitly clicked the mic for a
-      // one-shot answer and the isQuestion gate would silently swallow
-      // valid utterances. AUTO-paused → resume isn't a manual session;
-      // its chunks should still go through the gate.
-      manualSessionRef.current = !continuousMode;
       startRecording();
       setIsRecording(true);
       startListenTimer();
@@ -586,10 +556,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const handleModeToggle = useCallback(() => {
     const newMode = !continuousMode;
     setContinuousMode(newMode);
-    // Mode flip clears any manual-session intent — an AUTO chunk caught
-    // mid-flight by toggling AUTO off must NOT be treated as a manual
-    // press downstream (that bypass let Whisper hallucinations leak in).
-    manualSessionRef.current = false;
     if (newMode && !storeIsRecording) {
       startRecording();
       setIsRecording(true);
