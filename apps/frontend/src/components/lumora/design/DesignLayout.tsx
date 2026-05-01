@@ -22,6 +22,69 @@ import { SectionIcon, tierColors, layerAccents, SectionCopyBtn } from './section
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
+/* Some responses (especially cached ones from earlier prompt
+   versions) glue the entire structured response — REQUIREMENTS,
+   SCALEMATH, DEEPDESIGN, EDGECASES, TRADEOFFS, FOLLOWUP — into
+   sd.overview as one wall of text with raw `[TAG]` / `[/TAG]`
+   markers showing through. The dedicated section cards below
+   already render those blocks, so the Overview should only
+   surface the lead paragraph. This trims the string at the
+   first known block tag and strips any stray markers from the
+   remainder. */
+const OVERVIEW_CUT_MARKERS = [
+  '[REQUIREMENTS]',
+  '[SCALEMATH]',
+  '[SCALECALC]',
+  '[DIAGRAM]',
+  '[DEEPDESIGN]',
+  '[EDGECASES]',
+  '[TRADEOFFS]',
+  '[FOLLOWUP]',
+  '[CONSTRAINTS]',
+  '[ASSUMPTIONS]',
+];
+
+function cleanOverviewText(raw: string | undefined | null): string {
+  if (!raw) return '';
+  let text = raw.trim();
+  let cutAt = -1;
+  for (const marker of OVERVIEW_CUT_MARKERS) {
+    const idx = text.indexOf(marker);
+    if (idx > 0 && (cutAt === -1 || idx < cutAt)) cutAt = idx;
+  }
+  if (cutAt > 0) text = text.slice(0, cutAt).trim();
+  // Strip any stray bracket tags that snuck through
+  text = text.replace(/\[\/?[A-Z][A-Z_/-]*\]/g, '').trim();
+  // Collapse runs of whitespace inside paragraphs but keep \n\n breaks
+  text = text.split(/\n{2,}/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n\n');
+  return text;
+}
+
+/* The same parser glitch leaks the entire structured response into
+   the requirements arrays — so a list typed as "Non-Functional"
+   ends up holding every subsequent block (SCALEMATH, DEEPDESIGN's
+   numbered headers, EDGECASES, TRADEOFFS, FOLLOWUP, etc.) as
+   additional bullets. We cut the array at the first item that
+   looks like a bracket tag (`[X]`/`[/X]`) or a numbered section
+   header (e.g. `1. CLIENT / EDGE LAYER`) — both of which signal
+   we've left the requirements list. Strip any inline tags from
+   surviving items as a final defense. */
+function cleanRequirementList(items: string[] | undefined | null): string[] {
+  if (!items || !items.length) return [];
+  const out: string[] = [];
+  for (const raw of items) {
+    if (!raw) continue;
+    const item = raw.trim();
+    if (!item) continue;
+    if (/^\s*\[\/?[A-Z][A-Z_/-]*\]\s*$/.test(item)) break; // pure tag line
+    if (/^\[\/?[A-Z][A-Z_/-]*\]/.test(item)) break; // tag at line start
+    if (/^\d+\.\s+[A-Z]/.test(item)) break; // numbered DEEPDESIGN section
+    if (/^[A-Z][A-Z\s/&-]{3,}$/.test(item)) break; // ALL-CAPS header line
+    out.push(item.replace(/\[\/?[A-Z][A-Z_/-]*\]/g, '').trim());
+  }
+  return out.filter(Boolean);
+}
+
 interface DesignLayoutProps {
   onBack: () => void;
   initialProblem?: string;
@@ -901,7 +964,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="ml-auto"><SectionCopyBtn getText={() => sd.overview!} title="Copy overview" /></div>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-sm leading-relaxed" style={{ color: t.text }}>{sd.overview}</p>
+                    {(() => {
+                      const cleaned = cleanOverviewText(sd.overview);
+                      if (!cleaned) return null;
+                      const paragraphs = cleaned.split(/\n{2,}/).filter(Boolean);
+                      return (
+                        <div className="flex flex-col gap-2">
+                          {paragraphs.map((p, i) => (
+                            <p key={i} className="text-sm leading-relaxed" style={{ color: t.text }}>{p}</p>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </section>
               )}
@@ -921,46 +995,53 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               )}
 
               {/* ── REQUIREMENTS: Functional + Non-Functional ── */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
-                {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
-                  <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
-                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))` }} />
-                      <h2 className="text-sm font-bold text-white">Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.functional.length}</span>
-                      <SectionCopyBtn getText={() => (sd.requirements?.functional || []).map((r, i) => `${i + 1}. ${r}`).join('\n')} title="Copy functional requirements" />
-                    </div>
-                    <div className="px-4 py-3">
-                      <div className="grid grid-cols-1 gap-y-1">
-                        {sd.requirements.functional.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-sm leading-snug py-0.5" style={{ color: t.text }}>
-                            <span className="font-bold shrink-0" style={{ color: t.headerText }}>{i + 1}.</span>{r}
+              {(() => {
+                const functionalClean = cleanRequirementList(sd.requirements?.functional);
+                const nonFunctionalClean = cleanRequirementList(sd.requirements?.nonFunctional);
+                if (!functionalClean.length && !nonFunctionalClean.length) return null;
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
+                    {functionalClean.length > 0 && (
+                      <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                        <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                          <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))` }} />
+                          <h2 className="text-sm font-bold text-white">Functional</h2>
+                          <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{functionalClean.length}</span>
+                          <SectionCopyBtn getText={() => functionalClean.map((r, i) => `${i + 1}. ${r}`).join('\n')} title="Copy functional requirements" />
+                        </div>
+                        <div className="px-4 py-3">
+                          <div className="grid grid-cols-1 gap-y-1">
+                            {functionalClean.map((r, i) => (
+                              <div key={i} className="flex items-start gap-2 text-sm leading-snug py-0.5" style={{ color: t.text }}>
+                                <span className="font-bold shrink-0" style={{ color: t.headerText }}>{i + 1}.</span>{r}
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-                )}
-                {sd.requirements?.nonFunctional && sd.requirements.nonFunctional.length > 0 && (
-                  <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
-                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))` }} />
-                      <h2 className="text-sm font-bold text-white">Non-Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.nonFunctional.length}</span>
-                      <SectionCopyBtn getText={() => (sd.requirements?.nonFunctional || []).join('\n')} title="Copy non-functional requirements" />
-                    </div>
-                    <div className="px-4 py-3">
-                      <div className="grid grid-cols-1 gap-y-1">
-                        {sd.requirements.nonFunctional.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-sm leading-snug py-0.5" style={{ color: t.text }}>
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: t.dotColor }} />{r}
+                        </div>
+                      </section>
+                    )}
+                    {nonFunctionalClean.length > 0 && (
+                      <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                        <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                          <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))` }} />
+                          <h2 className="text-sm font-bold text-white">Non-Functional</h2>
+                          <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{nonFunctionalClean.length}</span>
+                          <SectionCopyBtn getText={() => nonFunctionalClean.join('\n')} title="Copy non-functional requirements" />
+                        </div>
+                        <div className="px-4 py-3">
+                          <div className="grid grid-cols-1 gap-y-1">
+                            {nonFunctionalClean.map((r, i) => (
+                              <div key={i} className="flex items-start gap-2 text-sm leading-snug py-0.5" style={{ color: t.text }}>
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: t.dotColor }} />{r}
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-                )}
-              </div>
+                        </div>
+                      </section>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* ── SCALE ESTIMATES ── */}
               {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
