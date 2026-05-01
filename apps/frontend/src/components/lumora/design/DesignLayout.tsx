@@ -629,7 +629,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ url: urlInput.trim() }),
                       });
-                      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to fetch');
+                      if (!resp.ok) {
+                        const body = await resp.json().catch(() => ({}));
+                        throw new Error(body.error || body.detail || `Failed to fetch (${resp.status})`);
+                      }
                       const data = await resp.json();
                       if (data.problem) { setProblemText(data.problem); setInputTab('text'); }
                     } catch (err: any) {

@@ -1114,18 +1114,80 @@ Respond with ONLY the translated code inside a single \`\`\`${target} code block
 /**
  * POST /fetch-problem
  * Fetch a coding problem from a URL (LeetCode, HackerRank, etc.)
+ *
+ * LeetCode is a React SPA — a raw HTTP fetch returns a near-empty
+ * shell with no problem text in the HTML. We special-case it here and
+ * pull the question content from LeetCode's public GraphQL endpoint.
+ * Other sites still use the regex HTML-strip + Haiku-clean fallback,
+ * which works for static / server-rendered pages.
  */
+async function fetchLeetcodeProblem(url) {
+  // Accept any leetcode.com or leetcode.cn host; tolerate trailing
+  // /description, /submissions, /discussion, query params, etc.
+  const m = url.match(/leetcode\.(?:com|cn)\/problems\/([^/?#]+)/i);
+  if (!m) return null;
+  const titleSlug = m[1];
+
+  const gqlBody = {
+    operationName: 'questionContent',
+    variables: { titleSlug },
+    query: 'query questionContent($titleSlug: String!) { question(titleSlug: $titleSlug) { title difficulty content exampleTestcases } }',
+  };
+  const gqlResp = await fetch('https://leetcode.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+      'Referer': `https://leetcode.com/problems/${titleSlug}/`,
+    },
+    body: JSON.stringify(gqlBody),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!gqlResp.ok) throw new Error(`LeetCode GraphQL returned ${gqlResp.status}`);
+  const json = await gqlResp.json();
+  const q = json?.data?.question;
+  if (!q || !q.content) throw new Error('LeetCode did not return problem content (premium-only or removed problem?)');
+
+  const text = q.content
+    .replace(/<sup>/gi, '^').replace(/<\/sup>/gi, '')
+    .replace(/<sub>/gi, '_').replace(/<\/sub>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<li>/gi, '• ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const header = `${q.title}${q.difficulty ? ` (${q.difficulty})` : ''}\n\n`;
+  return header + text;
+}
+
 router.post('/fetch-problem', authenticate, async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
+
+    // LeetCode SPAs need the GraphQL path — raw fetch returns no content.
+    const lcProblem = await fetchLeetcodeProblem(url).catch((e) => {
+      throw new Error(`LeetCode fetch failed: ${e.message}`);
+    });
+    if (lcProblem) {
+      return res.json({ problem: lcProblem, source: url });
+    }
 
     const response = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Camora/1.0)' },
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
+    if (!response.ok) throw new Error(`Upstream returned ${response.status}`);
 
     const html = await response.text();
 
@@ -1139,7 +1201,7 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
       .slice(0, 5000); // Limit to 5000 chars
 
     if (!textContent || textContent.length < 20) {
-      throw new Error('Could not extract problem text from URL');
+      throw new Error('Page is JavaScript-rendered or empty — try Capture (screenshot) instead.');
     }
 
     // Use Claude to clean and extract just the problem description
