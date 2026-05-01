@@ -230,7 +230,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache, setVoiceRoute } = useInterviewStore();
+  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
 
   // Regenerate — re-submit the same problem with bypass_cache=true so
@@ -284,9 +284,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     clearStreamChunks();
     setParsedBlocks([]);
     setLastFromCache(null);
-    setVoiceRoute('problem');
     useInterviewStore.getState().setLiveSolveContext(null);
-  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, setVoiceRoute, language]);
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -729,22 +728,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
   const handleGenerateSolution = () => {
     if (!problemText.trim()) { setError('Please enter a problem first'); return; }
-
-    // After a solve, this button asks Sona instead of re-running the
-    // solver. The textarea is repurposed as a follow-up question
-    // input ("what's the time complexity of the optimal approach?")
-    // whose answer streams into the Sona panel. New Problem / Reset
-    // returns voiceRoute to 'problem' for the next fresh solve.
-    if (useInterviewStore.getState().voiceRoute === 'followup') {
-      const q = problemText.trim();
-      // Lazy import to avoid coupling the layout file to the registry
-      // when the followup branch is the rare path.
-      import('@/lib/sona-registry').then(m => m.sonaRegistry.ask(q, { manual: true }));
-      setProblemText('');
-      return;
-    }
-
-    // First solve — wipe previous solution state, fire the solver.
+    // Wipe previous solution state, fire the solver. No Sona on this
+    // tab — every click runs the solver on the current problem text.
     setError(null);
     setStreamError(null);
     setTestResults([]);
@@ -777,15 +762,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   useEffect(() => {
     if (!onVoiceProblemRef) return;
     onVoiceProblemRef.current = (text: string) => {
-      // If we're already in follow-up mode, the dispatcher should
-      // have routed straight to Sona — but defend here too in case
-      // the route flipped between dispatch and this handler firing.
-      // We never want voice on coding tab to overwrite an existing
-      // solution and re-solve once a problem has been answered.
-      if (useInterviewStore.getState().voiceRoute === 'followup') {
-        import('@/lib/sona-registry').then(m => m.sonaRegistry.ask(text, { manual: true }));
-        return;
-      }
+      // Voice on the coding tab always fills the problem and runs the
+      // solver. Sona is not co-resident here — follow-ups happen on
+      // the Behavioral tab or via the typed input on Home.
       setProblemText(text);
       setProblemTab('solution');
       setTestCases([]);
@@ -1185,9 +1164,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           onChange={(e) => setProblemText(e.target.value)}
                           onDrop={handleDrop}
                           onDragOver={(e) => e.preventDefault()}
-                          placeholder={useInterviewStore.getState().voiceRoute === 'followup'
-                            ? "Ask Sona a follow-up about this solution...\n\nExamples: What's the time complexity?  Why hash map over sorting?  Can we do it in O(1) space?"
-                            : "Paste your coding problem here...\n\nExample: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."}
+                          placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
                           className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                           style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                         />
@@ -1241,24 +1218,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     <div className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>{error}</div>
                   )}
 
-                  {/* Generate / Ask-Sona Button — same input box, two
-                      modes: solve a fresh problem OR send a follow-up
-                      question to Sona about the current solution. */}
-                  {(() => {
-                    const isFollowup = useInterviewStore((s) => s.voiceRoute) === 'followup';
-                    return (
-                      <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                        className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
-                        {isLoading ? (
-                          <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
-                        ) : isFollowup ? (
-                          <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>Ask Sona</>
-                        ) : (
-                          <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
-                        )}
-                      </button>
-                    );
-                  })()}
+                  {/* Generate Button */}
+                  <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
+                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
+                    {isLoading ? (
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+                    ) : (
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
