@@ -73,7 +73,11 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
     return (
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
-          <AudioCapture onTranscription={onTranscription} />
+          {/* Key by activeTab so navigating coding ↔ design tears down the
+              old mic (cleanup → stream stops) and the new tab mounts a
+              fresh one — gives the visible "coding mic off / design mic
+              on" handoff per the user's mental model. */}
+          <AudioCapture key={activeTab} onTranscription={onTranscription} />
           {canCapture && onCapturedProblem && (
             <>
               <div className="w-px h-5 mx-1" style={{ background: C.border }} />
@@ -111,7 +115,11 @@ export function LumoraTopBar({ activeTab, onTranscription, onCapturedProblem, in
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
           }}
         >
-          <AudioCapture onTranscription={onTranscription} />
+          {/* Key by activeTab so navigating coding ↔ design tears down the
+              old mic (cleanup → stream stops) and the new tab mounts a
+              fresh one — gives the visible "coding mic off / design mic
+              on" handoff per the user's mental model. */}
+          <AudioCapture key={activeTab} onTranscription={onTranscription} />
           {canCapture && onCapturedProblem && (
             <>
               <div className="w-px h-5" style={{ background: 'rgba(201,162,39,0.35)' }} />
