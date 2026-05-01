@@ -762,36 +762,42 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // toggles AUTO off while a manual capture is in flight, the manual
   // capture continues; we just won't restart auto when it finishes.
   const handleModeToggle = useCallback(() => {
-    const newMode = !continuousMode;
-    setContinuousMode(newMode);
-
-    if (newMode) {
-      userPausedRef.current = false;
-      // Only seize the recorder if nothing else owns it.
-      if (recordingModeRef.current === 'idle') {
-        setRecordingMode('auto');
-        startRecording();
-        setIsRecording(true);
-        startListenTimer();
-        setStatus('listen', 'Live - listening...');
+    // Functional setState reads the LATEST continuousMode at execution
+    // time. The previous closure-based read snapshotted the value at
+    // the time handleModeToggle was created — when the keyboard
+    // listener fires faster than React commits the next render (Cmd+
+    // Shift+A pressed in rapid succession), the listener saw stale
+    // continuousMode and the recording state desynced from the UI
+    // (orange mic dot in OS menu bar without the AUTO pill lighting
+    // up gold). Using `prev` keeps state in sync regardless of timing.
+    setContinuousMode(prev => {
+      const newMode = !prev;
+      if (newMode) {
+        userPausedRef.current = false;
+        if (recordingModeRef.current === 'idle') {
+          setRecordingMode('auto');
+          startRecording();
+          setIsRecording(true);
+          startListenTimer();
+          setStatus('listen', 'Live - listening...');
+        } else {
+          // Manual recording in flight — don't disturb it. AUTO
+          // resumes when manual completes.
+          setStatus('listen', 'Auto on — resumes after manual');
+        }
       } else {
-        // Manual recording is in flight — don't disturb it. AUTO will
-        // pick up automatically when manual completes.
-        setStatus('listen', 'Auto on — resumes after manual');
+        // Turning AUTO off — only the AUTO recorder owner stops.
+        if (recordingModeRef.current === 'auto') {
+          stopRecording();
+          setRecordingMode('idle');
+          setIsRecording(false);
+          stopListenTimer();
+          setStatus('ready', 'Auto off');
+        }
       }
-      return;
-    }
-
-    // Turning AUTO off
-    if (recordingModeRef.current === 'auto') {
-      stopRecording();
-      setRecordingMode('idle');
-      setIsRecording(false);
-      stopListenTimer();
-      setStatus('ready', 'Auto off');
-    }
-    // If a manual recording is in flight, leave it alone.
-  }, [continuousMode, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
+      return newMode;
+    });
+  }, [startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
 
   // Keyboard shortcuts — Backquote toggles AUTO, Escape stops AUTO.
   // The manual one-shot mic was removed per user request, so Cmd+M
