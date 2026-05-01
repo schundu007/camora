@@ -175,6 +175,14 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const text = overrideText || problemText;
     if (!text.trim() || !token || isLoading) return;
 
+    // Voice router auto-flip: solver firing means follow-ups belong to
+    // Sona, not the design textarea. Length gate avoids flipping on
+    // tiny utterances that shouldn't be a real solve in the first
+    // place. Reset back to 'problem' is owned by handleReset.
+    if (text.trim().length >= 40) {
+      useInterviewStore.getState().setVoiceRoute('followup');
+    }
+
     setIsLoading(true);
     setResult(null);
     setStreamingText('');
@@ -394,6 +402,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setExpandedFollowup(null);
     setInputCollapsed(false);
     useInterviewStore.getState().setLastFromCache(null);
+    useInterviewStore.getState().setVoiceRoute('problem');
   }, []);
 
   // Regenerate — re-runs the same design problem with bypass_cache=true

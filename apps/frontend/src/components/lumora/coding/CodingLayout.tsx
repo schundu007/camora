@@ -230,7 +230,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
+  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache, setVoiceRoute } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
 
   // Regenerate — re-submit the same problem with bypass_cache=true so
@@ -284,7 +284,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     clearStreamChunks();
     setParsedBlocks([]);
     setLastFromCache(null);
-  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language]);
+    setVoiceRoute('problem');
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, setVoiceRoute, language]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 

@@ -166,12 +166,18 @@ export function LumoraShellPage() {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
-  // voiceRoute now follows Sona's open/minimized state directly via
-  // AICompanionPanel — no auto-flip on solve here. Kept the wrapper so
-  // the prop signature stays compatible with CodingLayout's onSubmit.
+  // Voice router auto-flip: when the solver actually fires for a
+  // real coding problem, flip voiceRoute to 'followup' so subsequent
+  // utterances ask Sona instead of overwriting the textarea and
+  // re-solving. Length gate (40 chars) avoids flipping on tiny
+  // "ok" / "next one" utterances. Reset back to 'problem' is owned
+  // by CodingLayout's "New Problem" button and the equivalent
+  // Reset on DesignLayout.
+  const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
   const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean }) => {
+    if (problem && problem.trim().length >= 40) setVoiceRoute('followup');
     return handleCodingSubmit(problem, language as any, options);
-  }, [handleCodingSubmit]);
+  }, [handleCodingSubmit, setVoiceRoute]);
 
   const handleTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
     const trimmed = text.trim();
