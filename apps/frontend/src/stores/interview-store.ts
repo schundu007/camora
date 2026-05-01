@@ -98,6 +98,23 @@ interface InterviewState {
   // answer yet this session (or the user just clicked New Problem).
   lastFromCache: boolean | null;
 
+  // Live solve context — the coding/design problem the user just
+  // solved on the active surface, plus enough of the solution for
+  // Sona to ground follow-up Q&A in the same code path. CodingLayout
+  // / DesignLayout write here when a solution lands; New Problem /
+  // Reset clear it. AICompanionPanel reads it when sending a
+  // question to Sona so the model knows "the user just solved THIS,
+  // and is now asking about it" instead of starting from scratch.
+  liveSolveContext: {
+    surface: 'coding' | 'design';
+    problem: string;
+    approach: string;
+    complexity: string;
+    code: string;
+    language: string;
+    solvedAt: number;
+  } | null;
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -131,6 +148,7 @@ interface InterviewState {
   setInterviewerAudio: (patch: Partial<InterviewState['interviewerAudio']>) => void;
   setVoiceRoute: (route: 'problem' | 'followup') => void;
   setLastFromCache: (fromCache: boolean | null) => void;
+  setLiveSolveContext: (ctx: InterviewState['liveSolveContext']) => void;
   reset: () => void;
 }
 
@@ -176,6 +194,7 @@ const initialState = {
   },
   voiceRoute: 'problem' as const,
   lastFromCache: null as boolean | null,
+  liveSolveContext: null as InterviewState['liveSolveContext'],
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -291,6 +310,7 @@ export const useInterviewStore = create<InterviewState>()(
 
   setVoiceRoute: (route) => set({ voiceRoute: route }),
   setLastFromCache: (fromCache) => set({ lastFromCache: fromCache }),
+  setLiveSolveContext: (ctx) => set({ liveSolveContext: ctx }),
 
   reset: () => set(initialState),
     }),

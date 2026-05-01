@@ -285,6 +285,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setParsedBlocks([]);
     setLastFromCache(null);
     setVoiceRoute('problem');
+    useInterviewStore.getState().setLiveSolveContext(null);
   }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, setVoiceRoute, language]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
@@ -584,6 +585,32 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       setCode(extracted);
     }
   }, [jsonSolution, activeSolutionIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Publish the active solution to the store as live-solve context so
+  // Sona's follow-up Q&A is grounded in this exact problem + code.
+  // Without this, asking Sona "what's the time complexity?" yields a
+  // generic answer because Sona has no idea which problem was solved.
+  // Re-runs whenever the user flips between Solutions 1/2/3 so the
+  // context tracks the currently-displayed approach.
+  useEffect(() => {
+    if (!jsonSolution || !problemText.trim()) return;
+    const idx = activeSolutionIdx || 0;
+    const sol = jsonSolution.solutions?.[idx] || jsonSolution.solutions?.[0];
+    if (!sol) return;
+    let solCode = sol.code || sol.implementation || sol.solution || '';
+    if (!solCode && sol.explanations?.length) {
+      solCode = sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n');
+    }
+    useInterviewStore.getState().setLiveSolveContext({
+      surface: 'coding',
+      problem: problemText.trim().slice(0, 4000),
+      approach: (sol.approach || sol.name || '').slice(0, 800),
+      complexity: `TIME=${sol.complexity?.time || 'n/a'}, SPACE=${sol.complexity?.space || 'n/a'}`,
+      code: (solCode || '').slice(0, 4000),
+      language,
+      solvedAt: Date.now(),
+    });
+  }, [jsonSolution, activeSolutionIdx, problemText, language]);
 
   // JSON repair from stream
   useEffect(() => {
