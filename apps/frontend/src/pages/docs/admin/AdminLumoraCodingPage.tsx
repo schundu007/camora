@@ -88,14 +88,14 @@ export default function AdminLumoraCodingPage() {
         </p>
         <DocsDiagram
           src="/diagrams/docs/lumora-coding/solver-flow.png"
-          alt="Lumora Coding solver flow with three input modes (paste, URL fetch via /api/v1/coding/fetch-problem, screenshot OCR via /api/v1/coding/capture using Anthropic vision), quota check against coding_usage with tier-aware daily limits, model selection, buildCodingSystemPrompt, the 3-pass reliability machinery, Anthropic call with MAX_TOKENS_CODING 16000, four-strategy extractJsonFromText, the SSE answer event, three-solution card render, and writes to lumora_messages, coding_usage, ai_hours_usage."
+          alt="Lumora Coding solver flow with three input modes (paste, URL fetch via /api/v1/coding/fetch-problem, image upload via /api/v1/coding/extract-from-image using Anthropic vision), quota check against coding_usage with tier-aware daily limits, model selection, buildCodingSystemPrompt, the 3-pass reliability machinery, Anthropic call with MAX_TOKENS_CODING 16000, four-strategy extractJsonFromText, the SSE answer event, three-solution card render, and writes to lumora_messages, coding_usage, ai_hours_usage."
           label="Figure 1 — Coding solver pipeline"
           caption="Each input mode lands on the same /api/v1/coding/solve endpoint. The 3-pass reliability layer is what guarantees a parseable structured response — see Figure 3 for the state machine."
         />
 
         <h3 id="hld-routes" className={sectionH3}>Endpoint surface</h3>
         <p className={bodyP} style={bodyColor}>
-          Lumora-backend exposes seven coding routes. All require auth and are mounted under{' '}
+          Lumora-backend exposes six coding routes. All require auth and are mounted under{' '}
           <code style={inlineCode}>/api/v1/coding</code> with the{' '}
           <code style={inlineCode}>aiLimiter</code> rate-limit tier (20 / minute / IP).
         </p>
@@ -111,8 +111,7 @@ export default function AdminLumoraCodingPage() {
             { route: '/api/v1/coding/execute', method: 'POST', purpose: 'Run a code string against test cases. Used by the Run button.' },
             { route: '/api/v1/coding/fix', method: 'POST', purpose: 'Auto-repair code that failed the candidate\'s tests.' },
             { route: '/api/v1/coding/translate', method: 'POST', purpose: 'Translate the current solution to another language without re-solving.' },
-            { route: '/api/v1/coding/fetch-problem', method: 'POST', purpose: 'Fetch a URL, strip HTML, ask Haiku to extract the problem text.' },
-            { route: '/api/v1/coding/capture', method: 'POST', purpose: 'Anthropic vision call on a base64 screenshot to extract the problem.' },
+            { route: '/api/v1/coding/fetch-problem', method: 'POST', purpose: 'Fetch a URL (LeetCode via GraphQL, others via raw HTML strip + Haiku extraction).' },
           ]}
         />
       </section>
@@ -134,9 +133,9 @@ export default function AdminLumoraCodingPage() {
             { key: 'notes', header: 'Notes' },
           ]}
           rows={[
-            { mode: 'Paste', how: 'Direct <textarea> binding. Drag-and-drop of an image file in the textarea routes through the screenshot OCR path.', notes: 'Fastest path — no backend round-trip before solving.' },
-            { mode: 'URL', how: 'POST /api/v1/coding/fetch-problem. The backend does a raw fetch(), strips HTML tags via regex, then asks Claude Haiku to extract the problem statement from the first 5,000 characters.', notes: 'No headless browser. JS-rendered pages may yield empty or partial text — fall back to screenshot OCR for those.' },
-            { mode: 'Image / Screenshot', how: 'POST /api/v1/coding/capture with a base64 data URL. The backend invokes the Anthropic vision API directly with { type: "image", source: { type: "base64", media_type, data } } and a prompt that preserves example formatting.', notes: 'Returns 422 NO_PROBLEM_FOUND if vision can\'t identify a problem in the image.' },
+            { mode: 'Paste', how: 'Direct <textarea> binding.', notes: 'Fastest path — no backend round-trip before solving.' },
+            { mode: 'URL', how: 'POST /api/v1/coding/fetch-problem. LeetCode URLs are pulled from their public GraphQL questionContent endpoint; other hosts fall back to a raw fetch + HTML strip + Haiku extraction of the first 5,000 chars.', notes: 'No headless browser for non-LeetCode hosts — JS-rendered pages may still yield empty or partial text.' },
+            { mode: 'Image upload', how: 'POST /api/v1/coding/extract-from-image with a multipart upload. The backend invokes the Anthropic vision API and returns the transcribed problem statement.', notes: 'Returns 422 NO_PROBLEM_FOUND if vision can\'t identify a problem in the image.' },
           ]}
         />
 

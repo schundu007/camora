@@ -1220,93 +1220,9 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
   }
 });
 
-/* ── POST /capture — extract a coding/design problem from a screenshot ──
-   Body: { image: "data:image/jpeg;base64,..." | base64-string, kind?: 'coding' | 'design' }
-   Returns: { problem: string, kind: 'coding' | 'design' }
-
-   Used by the browser "Capture problem" button which calls
-   getDisplayMedia() → grabs one frame → POSTs the JPEG here. Claude Vision
-   OCRs + normalizes it into a clean problem statement we can feed into
-   the Coding / Design solver directly. */
-router.post('/capture', authenticate, async (req, res) => {
-  try {
-    const { image, kind } = req.body || {};
-    if (!image || typeof image !== 'string') {
-      return res.status(400).json({ error: 'image is required (base64 data URL or raw base64)' });
-    }
-
-    // Accept either "data:image/jpeg;base64,XXXX" or raw base64
-    let mediaType = 'image/jpeg';
-    let data = image;
-    const dataUrlMatch = image.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
-    if (dataUrlMatch) {
-      mediaType = dataUrlMatch[1] === 'image/jpg' ? 'image/jpeg' : dataUrlMatch[1];
-      data = dataUrlMatch[2];
-    }
-
-    // Guard against absurdly large payloads (express.json is already 10mb, this is belt+suspenders)
-    if (data.length > 8 * 1024 * 1024) {
-      return res.status(413).json({ error: 'screenshot too large — try a smaller capture region' });
-    }
-
-    // Auto-downscale if the screenshot exceeds Anthropic's 5 MB base64 cap.
-    ({ mediaType, data } = await ensureImageWithinAnthropicLimit(data, mediaType));
-
-    const isDesign = kind === 'design';
-    const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
-    const prompt = `You are an OCR engine. Output ONE OF EXACTLY TWO things and nothing else:
-
-  1. The literal text of the ${subject} as it appears in the screenshot. Preserve formatting: code blocks, examples, constraints, math notation, line breaks. Do NOT solve it. Do NOT add headers like "Problem:" or "Here is...". Do NOT translate or paraphrase. Just transcribe.
-  2. The exact token NO_PROBLEM_FOUND (no other characters) if the screenshot does not contain readable problem text.
-
-CRITICAL RULES — violations break the product:
-  • NEVER describe what's in the image ("I can see a coding interface...", "The screenshot shows..." → ALWAYS return NO_PROBLEM_FOUND instead).
-  • NEVER apologize, explain limitations, or comment on image quality.
-  • NEVER summarize. Transcribe verbatim.
-  • If you can read even a partial problem (just the title + a few lines, e.g. a LeetCode header that says "Two Sum" with the description scrolled below), transcribe what's there.
-  • If the image is dark / blurry / cropped to a code editor / terminal / unrelated app (Slack, Mail, browser homepage, Camora itself) → NO_PROBLEM_FOUND.
-
-Begin output now. No preamble.`;
-
-    const client = anthropicClient;
-    const msg = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
-          { type: 'text', text: prompt },
-        ],
-      }],
-    });
-
-    let problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
-    // Guard against description-leaks. We only treat short, refusal-shaped
-    // replies as NO_PROBLEM_FOUND — long replies that just happen to start
-    // with "I'd..." or "The..." are real extractions and must pass through.
-    // Real LeetCode/HackerRank extractions are always >300 chars.
-    const looksLikeRefusal = problem.length < 300
-      && /^(i (cannot|can'?t|am unable|am not able|don'?t see)|i'?m (unable|sorry)|sorry|unfortunately|the (screenshot|image|window) (does not|doesn'?t|appears (?:to be )?(?:blank|empty|dark|minimi[sz]ed)))/i.test(problem);
-    if (looksLikeRefusal) {
-      problem = 'NO_PROBLEM_FOUND';
-    }
-
-    if (!problem || problem === 'NO_PROBLEM_FOUND') {
-      return res.status(422).json({ error: "Couldn't read a problem in that screenshot. Make sure the LeetCode/HackerRank/CodeSignal tab is visible and the problem statement is on screen — not minimized, not behind another window — then try CAPTURE again." });
-    }
-
-    res.json({ problem, kind: isDesign ? 'design' : 'coding' });
-  } catch (err) {
-    console.error('capture error:', err?.message || err);
-    res.status(500).json({ error: err?.message || 'Capture failed' });
-  }
-});
-
 /* ── POST /extract-from-image — OCR a problem from an uploaded image ──
    Frontend IMAGE tab (Coding + Design) uploads a file via multipart
-   FormData. Same OCR pipeline as /capture above; just accepts a
-   multipart upload instead of a base64 dataURL JSON body so the user
+   FormData. Same OCR pipeline; accepts a multipart upload so the user
    can drag-drop a file or paste from clipboard.
 
    Body: multipart, field "image" = the image file (jpeg/png/webp).
