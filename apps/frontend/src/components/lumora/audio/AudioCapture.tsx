@@ -139,6 +139,15 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // handleRecordingStop and let the toggle handler stay in control.
   const stopReasonRef = useRef<'mode-switch' | null>(null);
 
+  // Counts consecutive chunks the backend filter dropped as
+  // "user-voice match" without any chunk getting through. When this
+  // climbs past a threshold while filter is on, the filter is almost
+  // certainly mis-classifying the interviewer as the candidate (too
+  // similar voice / mic / accent) — we surface a one-click escape
+  // hatch via the status bar. Reset on every accepted chunk.
+  const consecutiveFilteredRef = useRef(0);
+  const STUCK_FILTER_THRESHOLD = 5;
+
   // Get store values first (must be before any useEffect that uses them)
   const {
     threshold,
@@ -275,17 +284,18 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       // Also transcribe this first chunk (no filtering yet)
     }
 
-    // FAIL-CLOSED: if the user has the voice filter ON but never enrolled,
-    // we cannot actually filter their voice. Previously we silently sent
-    // filter_user_voice=false and transcribed everything (including the
-    // user's own speech) — the toggle showed ON but did nothing. That
-    // produced "filter is on but Sona still answers my voice."
-    // Now: skip transcription entirely and surface a clear status that
-    // points the user to the enrollment flow. Better to drop a real
-    // question than to feed user-voice noise to Sona.
+    // Filter ON without enrollment is a stuck state — the toggle says
+    // ON but there's no voice profile to compare against, so nothing
+    // can be classified. We previously fail-closed (drop the audio
+    // entirely) which produced "no voice recorded when filter is on"
+    // because it looked like the mic was broken. Now: auto-disable
+    // the filter, surface a clear warning, and let audio pass through
+    // unfiltered so transcription still works. The user can re-enroll
+    // if they want filtering back.
     if (voiceFilterEnabled && !voiceEnrolled && !(autoEnrollPending && voiceMode === 'record-interviewer')) {
-      setStatus('warn', 'Voice filter is ON — enroll your voice in Audio Check first.');
-      return;
+      setVoiceFilterEnabled(false);
+      setStatus('warn', 'Filter auto-disabled — no voice enrolled. Audio is being transcribed unfiltered.');
+      // fall through to non-filtered transcription
     }
 
     const shouldFilterVoice = voiceEnrolled && voiceFilterEnabled;
@@ -306,16 +316,27 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
             setStatus('listen', 'Listening...');
             dlog('chunk_skipped', { reason: 'hallucination' });
           } else {
+            consecutiveFilteredRef.current += 1;
             const ratio = result.interviewer_ratio;
-            const msg = ratio !== undefined
-              ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
-              : 'Your voice detected - filtering...';
-            setStatus('listen', msg);
-            dlog('chunk_skipped', { reason: 'voice_match', ratio });
+            // After N consecutive drops, the filter is stuck. Auto-
+            // disable so the user isn't left wondering why no voice
+            // is recorded. They can re-enable from VoiceEnrollment.
+            if (consecutiveFilteredRef.current >= STUCK_FILTER_THRESHOLD && shouldFilterVoice) {
+              setVoiceFilterEnabled(false);
+              consecutiveFilteredRef.current = 0;
+              setStatus('warn', `Filter dropped ${STUCK_FILTER_THRESHOLD}+ chunks in a row — auto-disabled. Re-enroll if your voice profile is stale.`);
+            } else {
+              const msg = ratio !== undefined
+                ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering... (${consecutiveFilteredRef.current})`
+                : `Your voice detected - filtering... (${consecutiveFilteredRef.current})`;
+              setStatus('listen', msg);
+            }
+            dlog('chunk_skipped', { reason: 'voice_match', ratio, streak: consecutiveFilteredRef.current });
           }
           return;
         }
         if (result.text && isLikelyRealSpeech(result.text)) {
+          consecutiveFilteredRef.current = 0;
           accumulatedTextRef.current += ' ' + result.text;
           lastChunkTimeRef.current = Date.now();
           setStatus('listen', `Heard: "${accumulatedTextRef.current.trim().slice(-60)}..."`);
