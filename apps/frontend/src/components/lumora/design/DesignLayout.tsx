@@ -5,7 +5,6 @@ import { streamResponse } from '@/lib/sse-client';
 import { isQuestion } from '@/lib/questionDetector';
 import { getSystemContext } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
-import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { StreamingAnswer } from '@/components/lumora/interview/StreamingAnswer';
 import { transcriptionAPI } from '@/lib/api-client';
 import {
@@ -61,7 +60,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
-  const pendingVoiceSubmit = useRef(false);
 
   // Timer state (matching coding page)
   const [timerDuration, setTimerDuration] = useState(0);
@@ -347,12 +345,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
   }, [initialProblem, token, isLoading, problemText, handleSubmit]);
 
-  // Register voice problem handler for parent shell
+  // Register voice problem handler for parent shell. Always populate the
+  // problem field so the candidate sees what Sona heard; only auto-fire
+  // the LLM when the utterance actually looks like an interview question
+  // (project rule: isQuestion() gates every auto-submit).
   useEffect(() => {
     if (onVoiceProblemRef) {
       onVoiceProblemRef.current = (text: string) => {
-        setProblemText(text);
-        handleSubmit(text);
+        const trimmed = text.trim();
+        if (!trimmed) return;
+        setProblemText(trimmed);
+        if (!isQuestion(trimmed)) return;
+        handleSubmit(trimmed);
       };
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
@@ -367,14 +371,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
     return () => { if (onCapturedProblemRef) onCapturedProblemRef.current = null; };
   }, [onCapturedProblemRef]);
-
-  // Auto-submit after voice input sets problemText
-  useEffect(() => {
-    if (pendingVoiceSubmit.current && problemText.trim() && token && !isLoading) {
-      pendingVoiceSubmit.current = false;
-      handleSubmit();
-    }
-  }, [problemText, token, isLoading, handleSubmit]);
 
   const handleReset = useCallback(() => {
     setProblemText('');
@@ -526,23 +522,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             </svg>
           </button>
 
-          {/* Voice Input — no more hacky getElementById */}
-          <AudioCapture
-            onTranscription={(text) => {
-              const trimmed = text.trim();
-              if (!trimmed) return;
-              // Always show the transcript in the input so the candidate
-              // can see what Sona heard. Only auto-submit when the
-              // utterance actually looks like an interview question —
-              // skip the interviewer's introductions, experience
-              // narrative, and small talk.
-              setProblemText(trimmed);
-              if (isQuestion(trimmed)) {
-                pendingVoiceSubmit.current = true;
-              }
-            }}
-            autoStart={false}
-          />
         </div>
       </header>
       )}
