@@ -826,28 +826,26 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [continuousMode, handleModeToggle, storeIsRecording]);
 
-  // Silent Auto toggle: Cmd/Ctrl+Shift+A works from anywhere on the Lumora
-  // page, including while Auto is ON. A keystroke is inaudible to the
-  // interviewer where a mouse click isn't, so the user can flip Sona on/off
-  // mid-call without raising suspicion. Never fires inside editable fields.
+  // Silent Auto toggle: Cmd/Ctrl+Shift+A works from anywhere on the
+  // Lumora page, including textareas, Monaco, or any other editable
+  // surface. The whole point of this shortcut is being usable
+  // mid-interview without raising suspicion — gating it on the focus
+  // target broke that promise (it stopped working whenever the user
+  // had clicked into the problem textarea, which is most of the
+  // time). Cmd+Shift+A is reserved by the OS and not used by typing,
+  // so there's no editing conflict to defend against. Listening at
+  // the document level in capture phase so the editor can't swallow
+  // the event before we see it.
   useEffect(() => {
     const handleAutoShortcut = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return;
-      if (e.key !== 'A' && e.key !== 'a') return;
-      const el = e.target as HTMLElement;
-      if (
-        el instanceof HTMLInputElement ||
-        el instanceof HTMLTextAreaElement ||
-        el instanceof HTMLSelectElement ||
-        el.isContentEditable ||
-        el.closest?.('.monaco-editor') ||
-        el.getAttribute?.('role') === 'textbox'
-      ) return;
+      if (e.key !== 'A' && e.key !== 'a' && e.code !== 'KeyA') return;
       e.preventDefault();
+      e.stopPropagation();
       handleModeToggle();
     };
-    window.addEventListener('keydown', handleAutoShortcut);
-    return () => window.removeEventListener('keydown', handleAutoShortcut);
+    document.addEventListener('keydown', handleAutoShortcut, true);
+    return () => document.removeEventListener('keydown', handleAutoShortcut, true);
   }, [handleModeToggle]);
 
   // Hydration: set mounted after all hooks
@@ -921,7 +919,7 @@ function UnifiedMicButton({
           listening, since there's no separate "live" indicator. */}
       <button
         type="button"
-        onClick={handleModeToggle}
+        onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
         className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
         style={{
           color: isAutoOn ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
