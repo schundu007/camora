@@ -510,15 +510,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     });
   }, []);
 
-  // Auto-route voice based on Sona's open / minimized state. The user
-  // explicitly asked to drop the manual CODING/SONA switch from the
-  // bottom bar, with the rule "Sona open → voice goes to Sona, Sona
-  // minimized → voice fills the problem field." Embedded mode (i.e.
-  // the fullscreen behavioral panel) is always treated as open.
+  // Auto-route voice based on Sona's open / minimized state. Writes
+  // both the zustand voiceRoute (for any UI listening on it) AND the
+  // sonaRegistry singleton that the dispatcher reads directly. The
+  // singleton path is the load-bearing one — it bypasses React effect
+  // timing so the dispatcher never sees a stale value when a
+  // transcript arrives mid-render. Embedded mode (fullscreen
+  // behavioral) always counts as open.
   const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
   useEffect(() => {
     const sonaOpen = embedded || !minimized;
+    sonaRegistry.setOpen(sonaOpen);
     setVoiceRoute(sonaOpen ? 'followup' : 'problem');
+    return () => { sonaRegistry.setOpen(false); };
   }, [embedded, minimized, setVoiceRoute]);
 
   // Drain the queued question when the current answer finishes streaming.

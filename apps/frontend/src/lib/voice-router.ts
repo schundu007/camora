@@ -1,28 +1,23 @@
 /* ── Voice router ─────────────────────────────────────────────────────────
    Single dispatch point for every transcript produced by the page-level
-   AudioCapture. Decides whether the next utterance fills the Coding/Design
-   problem textarea and fires the solver, or routes to Sona as a follow-up
-   question.
+   AudioCapture. Routes by Sona's open/minimized state — not a stored
+   voiceRoute — because the user's mental model is "Sona panel open ⇒
+   talking to Sona, panel minimized ⇒ filling the problem field." That
+   reads off `sonaRegistry.isOpen()`, a module-level singleton updated
+   synchronously by AICompanionPanel on every minimize/restore. No
+   zustand subscription, no effect timing race.
 
-   State machine (per-tab):
-       Coding / Design tab:
-         voiceRoute === 'problem'   → fill problemRef, then flip to 'followup'
-         voiceRoute === 'followup'  → ask Sona
+   On Coding / Design tabs:
+     · sonaRegistry.isOpen() === true   → ask Sona
+     · sonaRegistry.isOpen() === false  → fill problemRef
+     · No problemRef wired              → fall through to Sona
 
-       Behavioral / Interview tab:
-         always → ask Sona (no problem-input concept here)
+   On Behavioral / Interview tabs:
+     · Sona always handles voice — there is no problem-input concept.
 
-   Manual mic press (opts.manual === true) ALWAYS goes to Sona regardless
-   of the current route — explicit user intent beats heuristic. The auto
-   loop respects route; the manual button respects user intent.
+   Manual mic press (opts.manual === true) ALWAYS goes to Sona — explicit
+   user intent beats heuristic. */
 
-   Auto-flip: the flip from 'problem' → 'followup' happens when the solver
-   actually fires (LumoraShellPage's solve handlers wrap it). Doing it
-   inside this dispatch would flip too early — VAD chunks the problem
-   into multiple utterances and the second chunk would land in 'followup'
-   before the first finished filling the textarea. */
-
-import { useInterviewStore } from '@/stores/interview-store';
 import { sonaRegistry } from './sona-registry';
 
 type ProblemRef = React.MutableRefObject<((text: string) => void) | null>;
@@ -35,6 +30,9 @@ interface DispatchArgs {
   designProblemRef?: ProblemRef | null;
 }
 
+const DEBUG = typeof localStorage !== 'undefined' && localStorage.getItem('lumora_route_debug') === 'on';
+const log = (...args: unknown[]) => { if (DEBUG) console.log('[voice-router]', ...args); };
+
 export function dispatchTranscript({
   text,
   opts,
@@ -45,30 +43,31 @@ export function dispatchTranscript({
   const trimmed = (text || '').trim();
   if (!trimmed) return;
 
-  // Manual press = explicit "ask Sona this question". Bypass routing
-  // so the user can interject a follow-up while the route still says
-  // 'problem' (e.g. before the solver finishes).
   if (opts?.manual) {
+    log('manual → sona', trimmed.slice(0, 60));
     sonaRegistry.ask(trimmed, opts);
     return;
   }
 
   if (activeTab === 'coding' || activeTab === 'design') {
-    const route = useInterviewStore.getState().voiceRoute;
-    if (route === 'problem') {
-      const ref = activeTab === 'coding' ? codingProblemRef : designProblemRef;
-      const setter = ref?.current;
-      if (setter) {
-        setter(trimmed);
-        return;
-      }
-      // No problem setter wired (shouldn't happen on those tabs) —
-      // fall through to Sona so the utterance isn't lost.
+    const sonaOpen = sonaRegistry.isOpen();
+    if (sonaOpen) {
+      log('sona open → sona', trimmed.slice(0, 60));
+      sonaRegistry.ask(trimmed, opts);
+      return;
     }
+    const ref = activeTab === 'coding' ? codingProblemRef : designProblemRef;
+    const setter = ref?.current;
+    if (setter) {
+      log(`sona minimized → ${activeTab} problem field`, trimmed.slice(0, 60));
+      setter(trimmed);
+      return;
+    }
+    log('no problem ref → sona fallback', trimmed.slice(0, 60));
     sonaRegistry.ask(trimmed, opts);
     return;
   }
 
-  // Behavioral / Interview / unknown — Sona owns audio.
+  log('non-coding/design → sona', trimmed.slice(0, 60));
   sonaRegistry.ask(trimmed, opts);
 }
