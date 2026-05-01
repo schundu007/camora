@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { isQuestion } from '@/lib/questionDetector';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
@@ -666,17 +667,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     onSubmit(problemText.trim(), language);
   };
 
-  // Register voice problem handler for parent shell. Always populate the
-  // problem field so the candidate sees what Sona heard; only auto-fire
-  // the LLM when the utterance actually looks like an interview question
-  // (project rule: isQuestion() gates every auto-submit).
+  // Register voice problem handler for parent shell
   useEffect(() => {
     if (onVoiceProblemRef) {
       onVoiceProblemRef.current = (text: string) => {
-        const trimmed = text.trim();
-        if (!trimmed) return;
-        setProblemText(trimmed);
-        if (!isQuestion(trimmed)) return;
+        setProblemText(text);
         setProblemTab('solution');
         setTestCases([]);
         setTestResults([]);
@@ -686,7 +681,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         setParsedBlocks([]);
         setJsonSolution(null);
         setCode(getDefaultCode(language));
-        onSubmit(trimmed, language);
+        onSubmit(text.trim(), language);
       };
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
@@ -928,6 +923,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             </div>
           )}
 
+          <AudioCapture
+            onTranscription={(text) => {
+              const trimmed = text.trim();
+              if (!trimmed) return;
+              // Populate the problem field either way, but only fire the
+              // LLM when this looks like an interview question — not
+              // the interviewer's intro, experience, or small talk.
+              setProblemText(trimmed);
+              if (isQuestion(trimmed)) {
+                setTimeout(() => onSubmit(trimmed, language), 500);
+              }
+            }}
+            autoStart={false}
+          />
         </div>
       </header>
       )}

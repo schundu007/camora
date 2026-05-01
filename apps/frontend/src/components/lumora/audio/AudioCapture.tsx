@@ -87,12 +87,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   const [mounted, setMounted] = useState(false);
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
-  // Default AUTO=on at every mount. Tab navigation (Coding/Design/Behavioral)
-  // remounts AudioCapture, and the user expects the mic on the tab they
-  // just landed on to be live without an extra click. The localStorage
-  // write below is preserved so a manual mid-session pause is still
-  // remembered for status text — but it never gates the next mount.
-  const [continuousMode, setContinuousMode] = useState<boolean>(true);
+  // Persist so the user sets Auto ON/OFF once before the interview and
+  // never has to click (audible!) during the call. Stored under a
+  // dedicated key; read synchronously at mount so there is no flicker.
+  const [continuousMode, setContinuousMode] = useState<boolean>(() => {
+    try { return localStorage.getItem('lumora_sona_auto') === 'on'; } catch { return false; }
+  });
   const startRecordingRef = useRef<(() => void) | null>(null);
   const continuousModeRef = useRef(continuousMode);
   useEffect(() => {
