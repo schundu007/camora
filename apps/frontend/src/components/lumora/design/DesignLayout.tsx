@@ -257,26 +257,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const text = overrideText || problemText;
     if (!text.trim() || !token || isLoading) return;
 
-    // After the first design lands, the same Design button + textarea
-    // turn into "ask Sona" instead of re-running the design solver.
-    // Hitting Design again with a follow-up question (e.g. "what are
-    // the edge cases?") used to overwrite the textarea and produce a
-    // brand-new design — confusing because the user's intent was a
-    // follow-up. Now we route to Sona, leave the existing design on
-    // screen, and clear the typed text. Reset returns to 'problem'.
-    if (useInterviewStore.getState().voiceRoute === 'followup' && !options?.bypassCache) {
-      const q = text.trim();
-      const { sonaRegistry } = await import('@/lib/sona-registry');
-      sonaRegistry.ask(q, { manual: true });
-      setProblemText('');
-      return;
-    }
-
-    // First solve — flip the route so subsequent submits go to Sona.
-    if (text.trim().length > 0) {
-      useInterviewStore.getState().setVoiceRoute('followup');
-    }
-
+    // Single mode on this tab — every submit runs the design solver
+    // on the current text. Sona is not co-resident on Design.
     setIsLoading(true);
     setResult(null);
     setStreamingText('');
@@ -496,7 +478,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setExpandedFollowup(null);
     setInputCollapsed(false);
     useInterviewStore.getState().setLastFromCache(null);
-    useInterviewStore.getState().setVoiceRoute('problem');
     useInterviewStore.getState().setLiveSolveContext(null);
   }, []);
 
@@ -759,9 +740,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 ref={textareaRef}
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
-                placeholder={useInterviewStore.getState().voiceRoute === 'followup'
-                  ? "Ask Sona a follow-up about this design...\n\nExamples: What are the edge cases?  Why Redis over DynamoDB?  How does it scale to 1B users?"
-                  : "Describe your system design problem...\n\nExample: Design a URL shortener like bit.ly that handles 100M links/month"}
+                placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
                 className="w-full h-[80px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
                 style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
               />
@@ -846,24 +825,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 <span>{errorMsg}</span>
               </div>
             )}
-            {(() => {
-              const isFollowup = useInterviewStore((s) => s.voiceRoute) === 'followup';
-              return (
-                <button
-                  onClick={() => handleSubmit()}
-                  disabled={!problemText.trim() || isLoading}
-                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
-                >
-                  {isLoading ? (
-                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
-                  ) : isFollowup ? (
-                    <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>Ask Sona</>
-                  ) : (
-                    <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
-                  )}
-                </button>
-              );
-            })()}
+            <button
+              onClick={() => handleSubmit()}
+              disabled={!problemText.trim() || isLoading}
+              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
+            >
+              {isLoading ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+              ) : (
+                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
+              )}
+            </button>
           </div>
 
           {/* Architecture Diagram - in left panel below input.

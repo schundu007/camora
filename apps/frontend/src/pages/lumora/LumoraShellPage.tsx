@@ -166,21 +166,9 @@ export function LumoraShellPage() {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
-  // Voice router auto-flip: any successful solve means the next
-  // voice utterance is a follow-up question for Sona, not a new
-  // problem. Previous code had a 40-char length gate to skip "ok"
-  // / "next one" utterances, but real-world dictations like "two
-  // sum" or "Add two numbers using Python" are well under 40 chars
-  // and never tripped the flip — so every follow-up question was
-  // overwriting the textarea and re-solving. Drop the gate; any
-  // non-empty problem that reaches the solver is a real solve.
-  // Reset back to 'problem' is owned by CodingLayout's "New
-  // Problem" button and the equivalent Reset on DesignLayout.
-  const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
   const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean }) => {
-    if (problem && problem.trim().length > 0) setVoiceRoute('followup');
     return handleCodingSubmit(problem, language as any, options);
-  }, [handleCodingSubmit, setVoiceRoute]);
+  }, [handleCodingSubmit]);
 
   const handleTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
     const trimmed = text.trim();
@@ -691,8 +679,11 @@ export function LumoraShellPage() {
         </div>
       </div>
 
-      {/* AI Copilot — floating popup, hidden when fullscreen behavioral is open */}
-      {!copilotFullscreen && (
+      {/* AI Copilot — floating popup. Hidden on Coding / Design tabs
+          per user request: those surfaces have their own solver and
+          don't benefit from a co-resident Sona panel. Sona stays
+          available on the Home (interview) and Behavioral tabs. */}
+      {!copilotFullscreen && activeTab !== 'coding' && activeTab !== 'design' && (
         <AICompanionPanel
           isOpen={true}
           onClose={() => {}}
