@@ -374,94 +374,85 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
 }
 
 /* Toggle button rendered by LumoraShellPage on Coding/Design tabs.
-   Edge-mounted at the right side of the viewport. When a solve is on
-   screen the button activates with a brighter gold-tinted gradient
-   and a soft pulsing halo so the user can tell at a glance that
-   Sona has live context to answer about. Inactive state is a
-   subtler lapis pill so it doesn't distract from solver work. */
+   Visually mirrors the AICompanionPanel minimized icon on Home —
+   same circular FAB, same lapis+gold radial gradient, same pulsing
+   halo — so Sona's affordance reads identically across every tab.
+   When a solve is on screen we add a small gold "context ready"
+   dot at the top-right corner. */
 export function CodingSonaSidebarToggle({ open, onToggle, hasSolve }: { open: boolean; onToggle: () => void; hasSolve: boolean }) {
   if (open) return null;
   return (
     <button
       type="button"
       onClick={onToggle}
-      className="fixed z-30 flex items-center gap-2 pl-2.5 pr-3 py-2.5 rounded-l-2xl transition-all duration-200 select-none group"
+      className="fixed z-30 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 select-none"
       style={{
-        right: 0,
+        right: 24,
         bottom: 80,
-        background: hasSolve
-          // Active: lapis core with a warm gold-tinted leading edge
-          // — reads as "ready, click me."
-          ? 'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 45%, #C9A227 110%)'
-          // Idle: cool lapis-only gradient.
-          : 'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 100%)',
-        color: '#FFFFFF',
-        border: '1px solid var(--cam-primary-dk)',
-        borderRight: 'none',
-        // Layered shadow:
-        //   · outer soft halo in lapis (always)
-        //   · second halo in gold (only when hasSolve) for the
-        //     "live context" cue
-        //   · inset top highlight for that ceramic-button feel
-        boxShadow: hasSolve
-          ? '0 8px 24px -6px rgba(38,97,156,0.55), 0 0 32px 4px rgba(201,162,39,0.35), inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(0,0,0,0.18)'
-          : '0 6px 18px -6px rgba(38,97,156,0.45), inset 0 1px 0 rgba(255,255,255,0.20), inset 0 -1px 0 rgba(0,0,0,0.18)',
-        textShadow: '0 1px 1px rgba(0,0,0,0.30)',
+        background:
+          'radial-gradient(circle at 30% 25%, rgba(217,181,67,0.35) 0%, transparent 55%),' +
+          'radial-gradient(circle at 70% 80%, rgba(38,97,156,0.55) 0%, transparent 70%),' +
+          'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, #03132E 100%)',
+        border: '1px solid var(--cam-gold-leaf)',
+        boxShadow:
+          '0 12px 28px -6px rgba(38,97,156,0.55),' +
+          '0 0 24px 2px rgba(201,162,39,0.30),' +
+          'inset 0 1px 0 rgba(255,255,255,0.20),' +
+          'inset 0 -2px 6px rgba(0,0,0,0.30)',
+        cursor: 'pointer',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateX(-2px) scale(1.04)'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateX(0) scale(1)'; }}
       title={hasSolve ? 'Sona has live context — ask a follow-up about your solution' : 'Open Sona Q&A sidebar'}
       aria-label="Open Sona Q&A sidebar"
     >
-      {/* Pulsing halo overlay when liveSolveContext is ready —
-          rendered behind the chip so it doesn't fight the icon /
-          label for attention. Pure CSS, single keyframes block. */}
-      {hasSolve && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-l-2xl"
-          style={{
-            background: 'radial-gradient(ellipse at 90% 50%, rgba(217,181,67,0.35) 0%, transparent 65%)',
-            animation: 'sona-toggle-glow 2.4s ease-in-out infinite',
-          }}
-        />
-      )}
-
-      {/* Chat-bubble icon in a soft circle — gold ring when active,
-          translucent white when idle. Adds visual weight without
-          looking like a generic outline icon. */}
+      {/* Pulsing gold halo — same animation as the Home Sona icon
+          so the affordance feels identical across tabs. */}
       <span
-        className="relative inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-full"
         style={{
-          background: hasSolve ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.10)',
-          border: hasSolve ? '1px solid var(--cam-gold-leaf-lt)' : '1px solid rgba(255,255,255,0.20)',
-          boxShadow: hasSolve ? 'inset 0 0 8px rgba(255,255,255,0.18)' : 'none',
+          background: 'radial-gradient(circle, rgba(217,181,67,0.18) 0%, transparent 70%)',
+          animation: 'sona-toggle-fab-glow 3s ease-in-out infinite',
         }}
+      />
+
+      {/* Chat-bubble icon, white on the navy/gold field. */}
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="relative"
+        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))' }}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-        </svg>
-      </span>
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+      </svg>
 
-      <span className="relative text-[10.5px] font-bold uppercase tracking-[0.18em]" style={{ fontFamily: 'var(--font-mono)' }}>
-        Ask Sona
-      </span>
-
+      {/* Live-context indicator dot — gold pill in the corner with a
+          blurred aura so the user knows Sona is loaded with the
+          on-screen solve. */}
       {hasSolve && (
         <span
-          className="relative inline-flex items-center justify-center"
+          className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
           aria-label="Live context ready"
           title="Live context ready"
+          style={{
+            background: 'var(--cam-gold-leaf)',
+            border: '1.5px solid var(--cam-primary-dk)',
+            boxShadow: '0 0 8px rgba(217,181,67,0.65), 0 1px 3px rgba(0,0,0,0.35)',
+          }}
         >
-          <span className="absolute inset-0 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)', filter: 'blur(3px)', opacity: 0.7 }} />
-          <span className="relative w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)', boxShadow: '0 0 6px var(--cam-gold-leaf-lt)' }} />
+          <span className="w-1 h-1 rounded-full" style={{ background: 'var(--cam-primary-dk)' }} />
         </span>
       )}
 
       <style>{`
-        @keyframes sona-toggle-glow {
-          0%, 100% { opacity: 0.55; }
-          50%      { opacity: 1; }
+        @keyframes sona-toggle-fab-glow {
+          0%, 100% { opacity: 0.55; transform: scale(1); }
+          50%      { opacity: 1;    transform: scale(1.08); }
         }
       `}</style>
     </button>
