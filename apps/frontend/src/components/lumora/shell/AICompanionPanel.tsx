@@ -660,21 +660,62 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           window.addEventListener('mousemove', handleMove);
           window.addEventListener('mouseup', handleUp);
         }}
-        className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110 select-none"
+        className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 select-none group"
         style={{
           right: `calc(24px - ${position.x}px)`,
           bottom: `calc(24px - ${position.y}px)`,
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--cam-primary)',
-          boxShadow: '0 10px 26px -6px rgba(38,97,156,0.45), 0 2px 6px rgba(38,97,156,0.18)',
+          // Layered fill: deep navy core for Sona's identity, with a
+          // soft gold radial highlight in the upper-left so the
+          // avatar reads as illuminated rather than flat.
+          background:
+            'radial-gradient(circle at 30% 25%, rgba(217,181,67,0.35) 0%, transparent 55%),' +
+            'radial-gradient(circle at 70% 80%, rgba(38,97,156,0.55) 0%, transparent 70%),' +
+            'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, #03132E 100%)',
+          border: '1px solid var(--cam-gold-leaf)',
+          // Multi-stop shadow: outer lapis halo + outer gold halo +
+          // inset top highlight + bottom inner shadow for depth.
+          boxShadow:
+            '0 12px 28px -6px rgba(38,97,156,0.55),' +
+            '0 0 24px 2px rgba(201,162,39,0.30),' +
+            'inset 0 1px 0 rgba(255,255,255,0.20),' +
+            'inset 0 -2px 6px rgba(0,0,0,0.30)',
           cursor: 'grab',
         }}
         title="Drag to reposition · click to open Sona"
       >
-        <SonaAvatar size={44} />
+        {/* Pulsing gold halo behind the button — subtle "alive"
+            indicator without pulling focus from the avatar. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(217,181,67,0.18) 0%, transparent 70%)',
+            animation: 'sona-icon-glow 3s ease-in-out infinite',
+          }}
+        />
+        <span className="relative">
+          <SonaAvatar size={44} active />
+        </span>
         {messages.length > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">{messages.filter(m => m.role === 'user').length}</span>
+          <span
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center"
+            style={{
+              background: 'var(--cam-gold-leaf)',
+              color: 'var(--cam-primary-dk)',
+              border: '1.5px solid var(--cam-primary-dk)',
+              boxShadow: '0 0 8px rgba(217,181,67,0.55), 0 1px 3px rgba(0,0,0,0.35)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            {messages.filter(m => m.role === 'user').length}
+          </span>
         )}
+        <style>{`
+          @keyframes sona-icon-glow {
+            0%, 100% { opacity: 0.55; transform: scale(1); }
+            50%      { opacity: 1;    transform: scale(1.08); }
+          }
+        `}</style>
       </button>
     );
   }
