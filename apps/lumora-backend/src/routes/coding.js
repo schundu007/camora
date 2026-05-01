@@ -181,24 +181,45 @@ function fallbackModelFor(primaryModel) {
 }
 
 /**
- * Languages Claude can generate solutions for. All listed here are valid
- * for /solve. The in-app "Run" button only works for the subset whose
+ * Languages Claude can generate solutions for. Must stay in sync with
+ * frontend `LANGUAGES` (apps/frontend/src/data/languages.ts) — every
+ * `id` rendered in the language picker must appear here or /solve
+ * returns 400 with no UI surface, looking to the user like "code
+ * doesn't generate for that language."
+ *
+ * The in-app "Run" button only works for the subset whose
  * interpreters/compilers are baked into the Docker image — see
- * codeRunner.js for the runnable list. Languages dropped from the runtime
- * image (csharp, swift, kotlin, scala, r, haskell, elixir, erlang,
- * clojure, ocaml, fsharp, dart, julia, groovy, objective-c, matlab,
- * powershell, vb) still generate; only their Run button is disabled and
+ * codeRunner.js for the runnable list. Languages dropped from the
+ * runtime image still generate; only their Run button is disabled and
  * surfaces a clear "execution not supported" message.
  */
 const SUPPORTED_LANGUAGES = [
-  'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp',
+  // Core
+  'python', 'python2', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp',
   'go', 'rust', 'swift', 'kotlin', 'scala', 'ruby', 'php', 'perl',
   'r', 'lua', 'haskell', 'elixir', 'erlang', 'clojure', 'ocaml',
-  'fsharp', 'dart', 'julia', 'groovy', 'objective-c', 'matlab',
-  'bash', 'powershell', 'sql', 'plsql', 'mongodb', 'graphql',
-  'html', 'css', 'sass', 'react', 'vue', 'angular', 'svelte',
-  'nextjs', 'nodejs', 'django', 'rails', 'spring', 'terraform',
-  'kubernetes', 'docker', 'solidity', 'assembly',
+  'fsharp', 'dart', 'julia', 'groovy', 'matlab',
+  // Objective-C — accept both forms; the picker emits 'objectivec' (no
+  // hyphen) but published examples and the model usually use the
+  // hyphenated form. Both pass validation; the prompt simply echoes
+  // whichever the caller sent.
+  'objectivec', 'objective-c',
+  // Niche / older
+  'coffeescript', 'vb', 'tcl', 'assembly', 'solidity',
+  // Shells / data
+  'bash', 'powershell', 'sql', 'plsql', 'mysql', 'postgresql', 'mongodb', 'graphql',
+  // Markup / styling
+  'html', 'css', 'sass',
+  // Frameworks (the model treats these as the underlying language with
+  // framework-specific idioms — React → TS+JSX, Spring → Java+Spring,
+  // Rails → Ruby+Rails, etc.)
+  'react', 'vue', 'angular', 'svelte', 'nextjs', 'nodejs',
+  'django', 'rails', 'spring',
+  // DevOps
+  'terraform', 'kubernetes', 'docker',
+  // ML / data libraries (the model produces Python with the right
+  // imports / patterns when these are selected)
+  'pyspark', 'pytorch', 'tensorflow', 'scipy', 'numpy', 'pandas',
 ];
 
 // ---------------------------------------------------------------------------
