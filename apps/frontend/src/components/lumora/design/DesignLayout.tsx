@@ -175,15 +175,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const text = overrideText || problemText;
     if (!text.trim() || !token || isLoading) return;
 
-    // Voice router: a real design problem just kicked off — flip the
-    // route so subsequent utterances go to Sona instead of overwriting
-    // the design problem and re-solving. Length gate avoids flipping
-    // on tiny utterances ("ok", "go") that shouldn't fire a solve in
-    // the first place.
-    if (text.trim().length >= 80) {
-      useInterviewStore.getState().setVoiceRoute('followup');
-    }
-
     setIsLoading(true);
     setResult(null);
     setStreamingText('');
@@ -402,7 +393,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setErrorMsg(null);
     setExpandedFollowup(null);
     setInputCollapsed(false);
-    useInterviewStore.getState().setVoiceRoute('problem');
     useInterviewStore.getState().setLastFromCache(null);
   }, []);
 

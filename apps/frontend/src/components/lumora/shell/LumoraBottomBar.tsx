@@ -6,13 +6,12 @@
    Layout (single row on ≥sm, three-row stack on phones):
      LEFT   — voice-filter status (mic icon + title + hint)
      CENTER — MIC + AUTO + audio-level meter (the AudioCapture pill)
-     RIGHT  — route badge ( → PROBLEM / → SONA ) + voice-enrollment buttons
+     RIGHT  — voice-enrollment buttons
 
-   The route badge is the "where does my next utterance land?" indicator
-   that pairs with the voice-router state machine. Clicking it manually
-   flips the route — useful when the auto-flip on solve fires too early
-   or when the user wants to dictate a brand-new problem mid-followup.
-   See lib/voice-router.ts for routing logic. */
+   Voice routing is automatic — Sona open ⇒ Sona, Sona minimized ⇒
+   problem field. AICompanionPanel keeps the store's voiceRoute in
+   sync with its own minimize state, so this bar no longer needs a
+   manual route badge. */
 
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
@@ -23,16 +22,15 @@ interface LumoraBottomBarProps {
   /** Forwarded to AudioCapture — receives `(text, { manual })`. The
       LumoraShellPage routes through dispatchTranscript. */
   onTranscription: (text: string, opts?: { manual?: boolean }) => void;
-  /** 'coding' or 'design' — the route badge only shows on these tabs. */
-  surface: 'coding' | 'design';
+  /** 'coding' or 'design' — kept for parity with future surface-aware
+      hints, even though routing no longer reads it. */
+  surface?: 'coding' | 'design';
 }
 
-export function LumoraBottomBar({ onTranscription, surface }: LumoraBottomBarProps) {
+export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
   const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
   const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
   const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
-  const voiceRoute = useInterviewStore(s => s.voiceRoute);
-  const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
 
   // Stale enrollment — Resemblyzer embeddings drift with mic / room
   // changes; nudge after ~7 d so the filter stays accurate.
@@ -54,15 +52,6 @@ export function LumoraBottomBar({ onTranscription, surface }: LumoraBottomBarPro
                !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
                enrollmentStale ? 'Voice prints drift over time — re-enroll to keep filtering accurate.' :
                'Sona ignores you and replies only to the interviewer.';
-
-  // Route badge — shows where the next transcript lands. The auto loop
-  // flips this on solve; click flips it manually.
-  const isProblem = voiceRoute === 'problem';
-  const routeLabel = isProblem ? `→ ${surface === 'coding' ? 'CODING' : 'DESIGN'}` : '→ SONA';
-  const routeTooltip = isProblem
-    ? `AUTO transcripts will fill the ${surface} problem and run the solver. After solve fires, this auto-flips to → SONA. Click to flip manually.`
-    : `AUTO transcripts will be asked of Sona as follow-up questions. Click "New Problem" in the ${surface} window (or this badge) to start a fresh problem.`;
-  const flipRoute = () => setVoiceRoute(isProblem ? 'followup' : 'problem');
 
   return (
     <div
@@ -93,24 +82,9 @@ export function LumoraBottomBar({ onTranscription, surface }: LumoraBottomBarPro
         <AudioCapture onTranscription={onTranscription} />
       </div>
 
-      {/* RIGHT — route badge + enrollment buttons */}
+      {/* RIGHT — enrollment buttons. Manual route switch removed; voice
+          routing is now driven by Sona's open / minimized state. */}
       <div className="flex items-center gap-2 justify-end justify-self-end">
-        <button
-          type="button"
-          onClick={flipRoute}
-          title={routeTooltip}
-          className="text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1.5 rounded-lg transition-colors"
-          style={{
-            background: isProblem ? 'var(--cam-gold-leaf)' : 'var(--cam-primary)',
-            color: isProblem ? 'var(--cam-primary-dk)' : '#FFFFFF',
-            border: `1px solid ${isProblem ? 'var(--cam-gold-leaf)' : 'var(--cam-primary)'}`,
-            fontFamily: 'var(--font-mono)',
-            whiteSpace: 'nowrap',
-          }}
-          aria-label={isProblem ? 'Voice routes to problem input — click to flip to Sona' : 'Voice routes to Sona — click to flip back to problem input'}
-        >
-          {routeLabel}
-        </button>
         <VoiceEnrollment disabled={false} variant="light" />
       </div>
     </div>

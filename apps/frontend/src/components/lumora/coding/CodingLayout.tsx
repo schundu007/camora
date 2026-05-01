@@ -230,7 +230,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setVoiceRoute, setLastFromCache } = useInterviewStore();
+  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
 
   // Regenerate — re-submit the same problem with bypass_cache=true so
@@ -283,9 +283,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setCode(getDefaultCode(language));
     clearStreamChunks();
     setParsedBlocks([]);
-    setVoiceRoute('problem');
     setLastFromCache(null);
-  }, [clearStreamChunks, setParsedBlocks, setStreamError, setVoiceRoute, setLastFromCache, language]);
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -1044,21 +1043,22 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             </div>
             {/* New Problem — wipes every solution-side state so the user
                 can dictate / paste / fetch a fresh problem in the same
-                session without refreshing the page. Also flips the
-                voice router back to 'problem' so the next utterance
-                fills this textarea instead of going to Sona. */}
+                session without refreshing the page. Always clickable —
+                the shared isStreaming flag is set by Sona's stream too,
+                and disabling on it would lock the user out whenever
+                Sona was answering. handleNewProblem aborts any active
+                stream as part of the reset. */}
             <button
               onClick={handleNewProblem}
-              disabled={isStreaming || isLoading}
-              className="ml-auto flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="ml-auto flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors"
               style={{
                 color: 'rgba(255,255,255,0.92)',
                 background: 'rgba(255,255,255,0.10)',
                 border: '1px solid rgba(255,255,255,0.22)',
                 fontFamily: 'var(--font-mono)',
               }}
-              onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
-              onMouseLeave={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
               title="Reset everything so you can ask a fresh problem in this same window — no refresh needed."
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -1101,7 +1101,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
                             : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
                         }
-                      >{mode === 'paste' ? 'Paste' : mode === 'url' ? 'URL' : 'Image'}</button>
+                      >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
                     ))}
                   </div>
                   <button
