@@ -3,7 +3,6 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
-import { isQuestion } from '@/lib/questionDetector';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
@@ -927,13 +926,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             onTranscription={(text) => {
               const trimmed = text.trim();
               if (!trimmed) return;
-              // Populate the problem field either way, but only fire the
-              // LLM when this looks like an interview question — not
-              // the interviewer's intro, experience, or small talk.
+              // On the Coding tab any spoken utterance is treated as a
+              // problem statement — the candidate doesn't need to phrase
+              // it like a question. Always fill the box AND auto-fire
+              // the LLM so they don't have to click "Coding" after every
+              // dictation.
               setProblemText(trimmed);
-              if (isQuestion(trimmed)) {
-                setTimeout(() => onSubmit(trimmed, language), 500);
-              }
+              setTimeout(() => onSubmit(trimmed, language), 500);
             }}
             autoStart={false}
           />
@@ -1113,7 +1112,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     {isLoading ? (
                       <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                     ) : (
-                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Generate Solution</>
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
                     )}
                   </button>
                 </div>

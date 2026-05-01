@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
-import { isQuestion } from '@/lib/questionDetector';
 import { getSystemContext } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -531,15 +530,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             onTranscription={(text) => {
               const trimmed = text.trim();
               if (!trimmed) return;
-              // Always show the transcript in the input so the candidate
-              // can see what Sona heard. Only auto-submit when the
-              // utterance actually looks like an interview question —
-              // skip the interviewer's introductions, experience
-              // narrative, and small talk.
+              // On the Design tab any spoken utterance is treated as a
+              // problem statement — the candidate doesn't need to phrase
+              // it like a question. Always fill the box AND auto-fire
+              // the LLM so they don't have to click "Design" after every
+              // dictation.
               setProblemText(trimmed);
-              if (isQuestion(trimmed)) {
-                pendingVoiceSubmit.current = true;
-              }
+              pendingVoiceSubmit.current = true;
             }}
             autoStart={false}
           />
@@ -697,7 +694,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {isLoading ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
               ) : (
-                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design System</>
+                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
               )}
             </button>
           </div>
