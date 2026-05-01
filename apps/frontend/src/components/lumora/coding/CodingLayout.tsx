@@ -710,7 +710,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ url: problemUrl }),
       });
-      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to fetch');
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body.error || body.detail || `Failed to fetch (${resp.status})`);
+      }
       const data = await resp.json();
       const text = String(data.problem || '').trim();
       setProblemText(text);
