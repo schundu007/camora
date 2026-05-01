@@ -99,6 +99,35 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     try { localStorage.setItem('lumora_sona_auto', continuousMode ? 'on' : 'off'); } catch {}
   }, [continuousMode]);
 
+  // Recording mode is the SOLE source of truth for who owns the
+  // MediaRecorder. AUTO and MIC each have their own intent and their
+  // own blob-handling path; without this flag they share state and
+  // step on each other (clicking MIC while AUTO is on used to "pause
+  // Sona" instead of recording a manual question).
+  //
+  //   'idle'   — recorder is not running
+  //   'auto'   — AUTO loop owns the recorder; blob feeds the live
+  //              accumulator + question detector
+  //   'manual' — MIC button owns the recorder; blob is sent as a
+  //              one-shot transcription with { manual: true }
+  //
+  // Always set this BEFORE calling startRecording/stopRecording so
+  // every async callback (onstop → handleAudioData, handleRecordingStop)
+  // sees the correct mode.
+  const recordingModeRef = useRef<'idle' | 'auto' | 'manual'>('idle');
+  const [recordingModeUI, setRecordingModeUI] = useState<'idle' | 'auto' | 'manual'>('idle');
+  const setRecordingMode = useCallback((m: 'idle' | 'auto' | 'manual') => {
+    recordingModeRef.current = m;
+    setRecordingModeUI(m);
+  }, []);
+
+  // When MIC interrupts AUTO mid-chunk, the AUTO recorder's onstop
+  // still fires async with whatever audio it captured. Without this
+  // flag, that orphan blob would be sent to the transcription API and
+  // injected into the question accumulator a second after the user
+  // already started a manual recording.
+  const discardNextBlobRef = useRef(false);
+
   // Get store values first (must be before any useEffect that uses them)
   const {
     threshold,
@@ -221,6 +250,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const handleAudioData = useCallback(async (blob: Blob) => {
     if (!token) { setError('Not authenticated'); return; }
 
+    // Drop blobs that belong to a recording we already abandoned
+    // (e.g., AUTO chunk interrupted because the user clicked MIC).
+    if (discardNextBlobRef.current) {
+      discardNextBlobRef.current = false;
+      dlog('blob_discarded_for_mode_switch');
+      return;
+    }
+
     // Record Interviewer: auto-enroll user's voice from first chunk
     if (autoEnrollPending && !voiceEnrolled && voiceMode === 'record-interviewer') {
       handleAutoEnroll(blob);
@@ -241,7 +278,10 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }
 
     const shouldFilterVoice = voiceEnrolled && voiceFilterEnabled;
-    const isLiveMode = continuousModeRef.current;
+    // Routing now keys off the RECORDER OWNER, not the AUTO toggle. A
+    // user who clicks MIC while AUTO is on still gets a one-shot
+    // manual transcription — the blob is theirs, not the loop's.
+    const isLiveMode = recordingModeRef.current === 'auto';
 
     if (isLiveMode) {
       // LIVE MODE: accumulate chunks, detect question completion
@@ -338,29 +378,61 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     // mid-utterance via cleanup(). One owner = one deterministic loop.
     setIsRecording(false);
     stopListenTimer();
-    setStatus('transcribe', 'Processing...');
-    dlog('recorder_stopped', { continuous: continuousModeRef.current, paused: userPausedRef.current });
 
-    if (continuousModeRef.current && !userPausedRef.current) {
+    const stoppedMode = recordingModeRef.current;
+    setRecordingMode('idle');
+    setStatus('transcribe', 'Processing...');
+    dlog('recorder_stopped', { stoppedMode, continuous: continuousModeRef.current, paused: userPausedRef.current });
+
+    if (stoppedMode === 'manual') {
+      // Manual one-shot just finished. If AUTO is configured ON,
+      // resume the continuous loop from where it left off — but only
+      // after a beat so the manual blob's transcription request has
+      // a clean shot at the network without a sibling AUTO chunk
+      // racing it.
+      if (continuousModeRef.current && !userPausedRef.current) {
+        setTimeout(() => {
+          if (!continuousModeRef.current || userPausedRef.current) return;
+          if (recordingModeRef.current !== 'idle') return;
+          setRecordingMode('auto');
+          startRecordingRef.current?.();
+          setIsRecording(true);
+          startListenTimer();
+          setStatus('listen', 'Live - listening...');
+          dlog('auto_resumed_after_manual');
+        }, 400);
+      } else {
+        setStatus('ready', 'Ready');
+      }
+      return;
+    }
+
+    if (stoppedMode === 'auto' && continuousModeRef.current && !userPausedRef.current) {
       // 250 ms gives the browser time to finalize the previous blob
       // dispatch (onstop → ondataavailable) before we tear down audio
       // resources for the next recording.
       setTimeout(() => {
         // Re-check inside the timeout: the user may have flipped Auto
-        // off or paused during the 250 ms window. Without this gate,
-        // the mic would re-arm against the user's intent.
+        // off, paused, or pressed MIC (mode→manual) during the 250 ms
+        // window. Without this gate, AUTO would re-arm and steal the
+        // recorder back from a manual recording in flight.
         if (!continuousModeRef.current || userPausedRef.current) {
           dlog('restart_aborted', { continuous: continuousModeRef.current, paused: userPausedRef.current });
           return;
         }
+        if (recordingModeRef.current !== 'idle') {
+          dlog('restart_aborted_mode_changed', { mode: recordingModeRef.current });
+          return;
+        }
         dlog('restart_after_chunk');
+        setRecordingMode('auto');
         startRecordingRef.current?.();
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
       }, 250);
     }
-  }, [setIsRecording, stopListenTimer, startListenTimer, setStatus]);
+  }, [setIsRecording, stopListenTimer, startListenTimer, setStatus, setRecordingMode]);
 
   const {
     isSupported,
@@ -417,6 +489,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       setHasAutoStarted(true);
       // Delay to ensure everything is ready
       const timer = setTimeout(() => {
+        if (recordingModeRef.current !== 'idle') return;
+        setRecordingMode('auto');
         startRecordingRef.current?.();
         setIsRecording(true);
         startListenTimer();
@@ -425,7 +499,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus]);
+  }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus, setRecordingMode]);
 
   // Heartbeat: detect when Auto is on but the recorder has actually
   // stopped (encoder error swallowed, MediaRecorder internal failure,
@@ -456,9 +530,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
       const stalledMs = Date.now() - lastHealthyAtRef.current;
       if (stalledMs > 4000 && !isStartingRef.current) {
+        // Only the AUTO loop is self-healing. A stalled MANUAL
+        // recording belongs to the user — they pressed the button,
+        // they decide when to retry.
+        if (recordingModeRef.current === 'manual') return;
         isStartingRef.current = true;
         dlog('heartbeat_recover', { stalledMs });
         try {
+          setRecordingMode('auto');
           startRecordingRef.current?.();
           setIsRecording(true);
           startListenTimer();
@@ -472,7 +551,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
     }, 1500);
     return () => clearInterval(interval);
-  }, [setIsRecording, startListenTimer, setStatus]);
+  }, [setIsRecording, startListenTimer, setStatus, setRecordingMode]);
 
   // Tab visibility: Chrome auto-suspends AudioContext when the tab is
   // backgrounded. While suspended, the analyser produces all-zero
@@ -484,6 +563,9 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     const onVis = () => {
       if (document.visibilityState !== 'visible') return;
       if (!continuousModeRef.current || userPausedRef.current) return;
+      // Don't yank the recorder away from a manual recording in
+      // progress just because the tab regained focus.
+      if (recordingModeRef.current === 'manual') return;
       const state = useInterviewStore.getState();
       if (state.isRecording) {
         // Even if the store says "recording", the AudioContext likely
@@ -495,6 +577,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       if (isStartingRef.current) return;
       isStartingRef.current = true;
       try {
+        setRecordingMode('auto');
         startRecordingRef.current?.();
         setIsRecording(true);
         startListenTimer();
@@ -506,47 +589,90 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [setIsRecording, startListenTimer, setStatus]);
+  }, [setIsRecording, startListenTimer, setStatus, setRecordingMode]);
 
+  // MIC button — ALWAYS does a one-shot manual recording, regardless
+  // of AUTO state. Click once to start, click again to stop+send. If
+  // AUTO is on and currently recording when the user clicks MIC, the
+  // in-flight AUTO chunk is discarded (its blob would otherwise race
+  // the manual transcription) and a fresh manual recording begins.
+  // After manual completes, handleRecordingStop resumes the AUTO loop
+  // if the user still has it on.
   const handleToggle = useCallback(() => {
-    if (storeIsRecording) {
+    if (recordingModeRef.current === 'manual') {
+      // Stop manual; the recorded blob will be sent as a manual
+      // transcription via onstop → handleAudioData.
       stopRecording();
       setIsRecording(false);
       stopListenTimer();
-      // If Auto is on, this is a "pause Sona" rather than a one-shot stop
-      if (continuousMode) {
-        userPausedRef.current = true;
-        setStatus('ready', 'Sona paused — click mic or ⌘M to resume');
-      } else {
-        setStatus('ready', 'Paused - press ` or Cmd+M to resume');
-      }
-    } else {
-      userPausedRef.current = false;
-      startRecording();
-      setIsRecording(true);
-      startListenTimer();
-      setStatus('listen', continuousMode ? 'Live - listening...' : 'Listening...');
+      setStatus('transcribe', 'Sending...');
+      return;
     }
-  }, [storeIsRecording, continuousMode, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
 
-  // Toggle continuous mode (Auto on/off). Defined before the keydown
-  // listener so the backtick-key branch can reference it without hitting
-  // a temporal-dead-zone error on render.
+    if (recordingModeRef.current === 'auto') {
+      // Interrupt AUTO: discard its in-flight blob, switch the
+      // recorder over to MANUAL ownership, then start fresh.
+      discardNextBlobRef.current = true;
+      stopRecording();
+      // useAudioCapture's stopRecording schedules a 500 ms cleanup,
+      // and startRecording itself runs a synchronous cleanup on the
+      // current recorder. We need a beat between the two so the
+      // browser can finalize the AUTO recorder's onstop (which fires
+      // async) before we ask for a new MediaStream.
+      setRecordingMode('manual');
+      setTimeout(() => {
+        if (recordingModeRef.current !== 'manual') return;
+        startRecording();
+        setIsRecording(true);
+        startListenTimer();
+        setStatus('listen', 'Recording your question...');
+      }, 300);
+      return;
+    }
+
+    // recordingModeRef.current === 'idle'
+    setRecordingMode('manual');
+    startRecording();
+    setIsRecording(true);
+    startListenTimer();
+    setStatus('listen', 'Recording your question...');
+  }, [stopRecording, startRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
+
+  // AUTO toggle — controls the continuous-listen loop ONLY. Does not
+  // touch a manual recording; MIC owns its own state. If the user
+  // toggles AUTO off while a manual capture is in flight, the manual
+  // capture continues; we just won't restart auto when it finishes.
   const handleModeToggle = useCallback(() => {
     const newMode = !continuousMode;
     setContinuousMode(newMode);
-    if (newMode && !storeIsRecording) {
-      startRecording();
-      setIsRecording(true);
-      startListenTimer();
-      setStatus('listen', 'Live - listening...');
-    } else if (!newMode && storeIsRecording) {
+
+    if (newMode) {
+      userPausedRef.current = false;
+      // Only seize the recorder if nothing else owns it.
+      if (recordingModeRef.current === 'idle') {
+        setRecordingMode('auto');
+        startRecording();
+        setIsRecording(true);
+        startListenTimer();
+        setStatus('listen', 'Live - listening...');
+      } else {
+        // Manual recording is in flight — don't disturb it. AUTO will
+        // pick up automatically when manual completes.
+        setStatus('listen', 'Auto on — resumes after manual');
+      }
+      return;
+    }
+
+    // Turning AUTO off
+    if (recordingModeRef.current === 'auto') {
       stopRecording();
+      setRecordingMode('idle');
       setIsRecording(false);
       stopListenTimer();
       setStatus('ready', 'Auto off');
     }
-  }, [continuousMode, storeIsRecording, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus]);
+    // If a manual recording is in flight, leave it alone.
+  }, [continuousMode, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
 
   // Keyboard shortcuts — Cmd+M (toggle) + Escape (stop) work regardless
   // of Auto state. The user needs silent, instant mute mid-interview;
@@ -585,13 +711,16 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         return;
       }
 
-      // Escape: Stop mic
+      // Escape: Stop mic. Routes through the same handlers so AUTO
+      // and MANUAL stay isolated — a manual capture stops as a
+      // manual capture, and an AUTO loop turns off cleanly.
       if (SHORTCUTS.STOP_MIC.includes(e.key) && storeIsRecording) {
         e.preventDefault();
-        stopRecording();
-        setIsRecording(false);
-        stopListenTimer();
-        setStatus('ready', 'Paused - press ` or Cmd+M to resume');
+        if (recordingModeRef.current === 'manual') {
+          handleToggle();
+        } else if (recordingModeRef.current === 'auto') {
+          handleModeToggle();
+        }
       }
     };
 
@@ -643,7 +772,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   return <UnifiedMicButton
     continuousMode={continuousMode}
-    storeIsRecording={storeIsRecording}
+    recordingMode={recordingModeUI}
     audioLevel={audioLevel}
     handleToggle={handleToggle}
     handleModeToggle={handleModeToggle}
@@ -661,17 +790,21 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
  * No long-press, no hold-to-activate — every action is a single click
  * so it works reliably across mice, trackpads, and touch. */
 function UnifiedMicButton({
-  continuousMode, storeIsRecording, audioLevel,
+  continuousMode, recordingMode, audioLevel,
   handleToggle, handleModeToggle,
 }: {
   continuousMode: boolean;
-  storeIsRecording: boolean;
+  recordingMode: 'idle' | 'auto' | 'manual';
   audioLevel: number;
   handleToggle: () => void;
   handleModeToggle: () => void;
 }) {
-  const isLive = continuousMode;
-  const isRec = !continuousMode && storeIsRecording;
+  // AUTO indicator lights up purely on the AUTO toggle state — even
+  // when MIC has temporarily seized the recorder for a manual capture,
+  // AUTO stays "on" because the user wants it back when manual finishes.
+  const isAutoOn = continuousMode;
+  // MIC indicator lights up only when MANUAL owns the recorder.
+  const isManualRec = recordingMode === 'manual';
 
   return (
     // LeetCode pillbox groups MIC + AUTO + meter into one tool-window
@@ -713,37 +846,23 @@ function UnifiedMicButton({
           onClick={handleToggle}
           className="relative flex items-center justify-center rounded-full transition-all select-none w-9 h-9"
           style={{
-            background: isLive || isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-            border: `1px solid ${isLive || isRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
-            color: isLive || isRec ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.90)',
-            boxShadow: isLive ? '0 0 0 3px rgba(201,162,39,0.35)' : 'none',
+            background: isManualRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+            border: `1px solid ${isManualRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
+            color: isManualRec ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.90)',
+            boxShadow: isManualRec ? '0 0 0 3px rgba(201,162,39,0.35)' : 'none',
             cursor: 'pointer',
           }}
-          aria-pressed={isRec || isLive}
+          aria-pressed={isManualRec}
           title={
-            isLive
-              ? 'Sona is listening — click or press ` to pause. Auto stays on; click again to resume.'
-              : isRec
-                ? 'Recording — click or press ` to stop'
-                : continuousMode
-                  ? 'Sona is paused — click or press ` to resume listening.'
-                  : 'Click or press ` to record one answer'
+            isManualRec
+              ? 'Recording your question — click or press ` to stop and send to Sona.'
+              : 'Click or press ` to record a one-shot question (works whether AUTO is on or off).'
           }
         >
-          {isLive ? (
-            // Live: filled sound-wave / auto glyph
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="2" y="10" width="2" height="4" rx="1" />
-              <rect x="6" y="6" width="2" height="12" rx="1" />
-              <rect x="10" y="2" width="2" height="20" rx="1" />
-              <rect x="14" y="6" width="2" height="12" rx="1" />
-              <rect x="18" y="10" width="2" height="4" rx="1" />
-            </svg>
-          ) : isRec ? (
-            // Recording: filled pause bars
+          {isManualRec ? (
+            // Manual recording: filled stop square
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
+              <rect x="5" y="5" width="14" height="14" rx="2" />
             </svg>
           ) : (
             // Idle: outlined mic
@@ -754,10 +873,11 @@ function UnifiedMicButton({
             </svg>
           )}
 
-          {/* Pulsing halo when actively recording — gold-leaf to match
-              the active mic-button fill and overall LeetCode active
-              affordance. */}
-          {(isLive || isRec) && (
+          {/* Pulsing halo when MANUAL is recording. AUTO has its own
+              indicator on the AUTO pill — they no longer share this
+              halo, so the user can see at a glance which mode is
+              currently capturing audio. */}
+          {isManualRec && (
             <span
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
@@ -770,26 +890,26 @@ function UnifiedMicButton({
         </button>
       </div>
 
-      {/* AUTO toggle — gold-on-navy when active, white-on-navy
-          inactive. Same active grammar as the SHORT/DETAILED toggle
-          and the top tabs so the user reads "active = gold-leaf"
-          consistently across the whole shell. */}
+      {/* AUTO toggle — independent of the MIC button. Lights up based
+          on whether continuous-listen is enabled, regardless of which
+          mode currently owns the recorder. */}
       <button
         type="button"
         onClick={handleModeToggle}
-        className="text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors"
+        className="text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors relative"
         style={{
-          color: isLive ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
-          background: isLive ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-          border: `1px solid ${isLive ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
+          color: isAutoOn ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
+          background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+          border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
           fontFamily: 'var(--font-mono)',
+          boxShadow: isAutoOn && recordingMode === 'auto' ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
         }}
-        title={isLive
-          ? 'Auto is ON — Sona is listening continuously. Click or press ⌘⇧A to stop. (Setting persists across reloads — set it BEFORE the interview so you don\'t click during the call.)'
-          : 'Turn on Auto — Sona will listen continuously and answer each question. Click or press ⌘⇧A. Setting persists across reloads so you only click once before the interview.'}
-        aria-pressed={isLive}
+        title={isAutoOn
+          ? 'Auto is ON — Sona listens continuously. Click or press ⌘⇧A to stop.'
+          : 'Turn on Auto — Sona listens continuously and answers each question. Click or press ⌘⇧A.'}
+        aria-pressed={isAutoOn}
       >
-        {isLive ? '● AUTO' : 'AUTO'}
+        {isAutoOn ? '● AUTO' : 'AUTO'}
       </button>
 
       {/* Audio-level meter — bars light up gold-leaf as the rolling
@@ -823,41 +943,5 @@ function UnifiedMicButton({
         }
       `}</style>
     </div>
-  );
-}
-
-
-function MicIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg
-      className={`w-3.5 h-3.5 ${isActive ? 'animate-pulse' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
-    </svg>
-  );
-}
-
-function LiveIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg
-      className={`w-3.5 h-3.5 ${isActive ? 'text-red-500' : ''}`}
-      fill={isActive ? 'currentColor' : 'none'}
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <circle cx="12" cy="12" r="3" className={isActive ? 'animate-pulse' : ''} />
-      {isActive && (
-        <>
-          <circle cx="12" cy="12" r="6" fill="none" strokeOpacity="0.5" />
-          <circle cx="12" cy="12" r="9" fill="none" strokeOpacity="0.3" />
-        </>
-      )}
-    </svg>
   );
 }

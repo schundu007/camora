@@ -1089,6 +1089,22 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             </div>
           );
         })()}
+        {/* Floating-popup Sona mic — when the panel is the floating
+            popup (Coding / Design tabs), the embedded voice-filter
+            banner above isn't rendered, so without this row Sona has
+            no mic at all on those tabs. The user can still type in
+            the input below, but voice is the primary interaction —
+            they need a one-shot mic AND the AUTO toggle to ask Sona
+            questions while solving a coding/design problem. */}
+        {!embedded && (
+          <div
+            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+            aria-label="Sona voice controls"
+          >
+            <AudioCapture onTranscription={handleAutoTranscription} />
+          </div>
+        )}
         {/* Text input row — taller + larger text on mobile so the iOS
             keyboard shows up at a comfortable size and the placeholder
             doesn't trigger Safari's text-zoom (it kicks in below 16px). */}
