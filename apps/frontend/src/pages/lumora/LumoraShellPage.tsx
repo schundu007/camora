@@ -166,16 +166,19 @@ export function LumoraShellPage() {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
-  // Voice router auto-flip: when the solver actually fires for a
-  // real coding problem, flip voiceRoute to 'followup' so subsequent
-  // utterances ask Sona instead of overwriting the textarea and
-  // re-solving. Length gate (40 chars) avoids flipping on tiny
-  // "ok" / "next one" utterances. Reset back to 'problem' is owned
-  // by CodingLayout's "New Problem" button and the equivalent
-  // Reset on DesignLayout.
+  // Voice router auto-flip: any successful solve means the next
+  // voice utterance is a follow-up question for Sona, not a new
+  // problem. Previous code had a 40-char length gate to skip "ok"
+  // / "next one" utterances, but real-world dictations like "two
+  // sum" or "Add two numbers using Python" are well under 40 chars
+  // and never tripped the flip — so every follow-up question was
+  // overwriting the textarea and re-solving. Drop the gate; any
+  // non-empty problem that reaches the solver is a real solve.
+  // Reset back to 'problem' is owned by CodingLayout's "New
+  // Problem" button and the equivalent Reset on DesignLayout.
   const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
   const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean }) => {
-    if (problem && problem.trim().length >= 40) setVoiceRoute('followup');
+    if (problem && problem.trim().length > 0) setVoiceRoute('followup');
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit, setVoiceRoute]);
 
