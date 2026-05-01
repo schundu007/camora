@@ -363,16 +363,24 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
   }, [initialProblem, token, isLoading, problemText, handleSubmit]);
 
-  // Register voice problem handler for parent shell
+  // Register voice problem handler for parent shell. Uses a stable
+  // internal ref for `handleSubmit` so the registration runs only ONCE
+  // on mount — without this, every store update churned handleSubmit's
+  // identity and the ref was repeatedly nulled, causing transcripts
+  // arriving during the gap to fall through to Sona. See the matching
+  // comment in CodingLayout for the full rationale.
+  const handleSubmitRef = useRef(handleSubmit);
+  useEffect(() => { handleSubmitRef.current = handleSubmit; }, [handleSubmit]);
+
   useEffect(() => {
-    if (onVoiceProblemRef) {
-      onVoiceProblemRef.current = (text: string) => {
-        setProblemText(text);
-        handleSubmit(text);
-      };
-    }
+    if (!onVoiceProblemRef) return;
+    onVoiceProblemRef.current = (text: string) => {
+      setProblemText(text);
+      handleSubmitRef.current(text);
+    };
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
-  }, [onVoiceProblemRef, token, isLoading, handleSubmit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onVoiceProblemRef]);
 
   // Auto-submit after voice input sets problemText
   useEffect(() => {

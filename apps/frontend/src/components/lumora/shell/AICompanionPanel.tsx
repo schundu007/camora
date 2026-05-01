@@ -568,14 +568,47 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const [mobileRailOpen, setMobileRailOpen] = useState(false);
   useEffect(() => { if (!embedded) setMobileRailOpen(false); }, [embedded]);
 
-  // Minimized = floating icon button
+  // Minimized = floating icon button. Draggable: shares the same
+  // `position` state as the open panel so wherever the user parks it
+  // stays consistent across minimize/restore. We treat a real drag
+  // (>4 px movement) as different from a click — clicks open the
+  // panel, drags reposition the icon. Without this distinction every
+  // click would also reposition by a few pixels and feel jittery.
   if (minimized && !embedded) {
     return (
       <button
-        onClick={() => setMinimized(false)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', boxShadow: '0 10px 26px -6px rgba(38,97,156,0.45), 0 2px 6px rgba(38,97,156,0.18)' }}
-        title="Open Sona"
+        onMouseDown={(e) => {
+          if (e.button !== 0) return;
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const origX = position.x;
+          const origY = position.y;
+          let moved = false;
+          const handleMove = (ev: MouseEvent) => {
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            if (!moved && Math.hypot(dx, dy) > 4) moved = true;
+            if (moved) setPosition({ x: origX + dx, y: origY + dy });
+          };
+          const handleUp = () => {
+            window.removeEventListener('mousemove', handleMove);
+            window.removeEventListener('mouseup', handleUp);
+            // Click (no real movement) → open the panel.
+            if (!moved) setMinimized(false);
+          };
+          window.addEventListener('mousemove', handleMove);
+          window.addEventListener('mouseup', handleUp);
+        }}
+        className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110 select-none"
+        style={{
+          right: `calc(24px - ${position.x}px)`,
+          bottom: `calc(24px - ${position.y}px)`,
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--cam-primary)',
+          boxShadow: '0 10px 26px -6px rgba(38,97,156,0.45), 0 2px 6px rgba(38,97,156,0.18)',
+          cursor: 'grab',
+        }}
+        title="Drag to reposition · click to open Sona"
       >
         <SonaAvatar size={44} />
         {messages.length > 0 && (
