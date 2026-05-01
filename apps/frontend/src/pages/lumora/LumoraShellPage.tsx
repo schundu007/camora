@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
 import { LumoraBottomBar } from '../../components/lumora/shell/LumoraBottomBar';
+import { CodingSonaSidebar, CodingSonaSidebarToggle } from '../../components/lumora/shell/CodingSonaSidebar';
 import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
 import { dispatchTranscript } from '../../lib/voice-router';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
@@ -50,6 +51,16 @@ export function LumoraShellPage() {
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, removeHistoryEntry, vadThreshold } = useInterviewStore();
   const [settingsDismissed, setSettingsDismissed] = useState(false);
+
+  // Sona sidebar (Coding / Design tabs only). Persisted per-surface
+  // so the user's preference survives reloads. Default closed so we
+  // don't shrink the solver area unless the user wants Sona.
+  const [sonaSidebarOpen, setSonaSidebarOpen] = useState<boolean>(() => {
+    try { return localStorage.getItem('lumora_sona_sidebar_open') === 'on'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('lumora_sona_sidebar_open', sonaSidebarOpen ? 'on' : 'off'); } catch {}
+  }, [sonaSidebarOpen]);
 
   // Track which tabs have been activated (for lazy mounting)
   const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['interview']));
@@ -391,18 +402,28 @@ export function LumoraShellPage() {
             <div style={{ display: activeTab === 'coding' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Coding" />}>
-                  <div className="flex-1 min-h-0 flex flex-col">
-                    <CodingLayout
-                      embedded
-                      onSubmit={handleCodingSubmitRouted}
-                      isLoading={isStreaming}
-                      onBack={() => navigate('/lumora')}
-                      initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
-                      onVoiceProblemRef={codingProblemRef}
+                  <div className="flex-1 min-h-0 flex">
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <CodingLayout
+                        embedded
+                        onSubmit={handleCodingSubmitRouted}
+                        isLoading={isStreaming}
+                        onBack={() => navigate('/lumora')}
+                        initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                        onVoiceProblemRef={codingProblemRef}
+                      />
+                    </div>
+                    {/* Sona Q&A sidebar — independent state, follow-up
+                        questions only. Single source of truth: types
+                        in, asks Sona with live solve context, renders
+                        answers. Doesn't share voice routing. */}
+                    <CodingSonaSidebar
+                      surface="coding"
+                      open={sonaSidebarOpen}
+                      onClose={() => setSonaSidebarOpen(false)}
                     />
                   </div>
-                  {/* Bottom audio bar — single mic surface, mirrors the
-                      behavioral panel's bottom voice-filter banner. */}
+                  {/* Bottom audio bar — single mic surface, problem-only. */}
                   <div
                     className="shrink-0 px-3 py-2"
                     style={{ background: 'var(--bg-app)', borderTop: '1px solid var(--border)' }}
@@ -419,12 +440,19 @@ export function LumoraShellPage() {
             <div style={{ display: activeTab === 'design' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Design" />}>
-                  <div className="flex-1 min-h-0 flex flex-col">
-                    <DesignLayout
-                      embedded
-                      onBack={() => navigate('/lumora')}
-                      initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
-                      onVoiceProblemRef={designProblemRef}
+                  <div className="flex-1 min-h-0 flex">
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <DesignLayout
+                        embedded
+                        onBack={() => navigate('/lumora')}
+                        initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                        onVoiceProblemRef={designProblemRef}
+                      />
+                    </div>
+                    <CodingSonaSidebar
+                      surface="design"
+                      open={sonaSidebarOpen}
+                      onClose={() => setSonaSidebarOpen(false)}
                     />
                   </div>
                   <div
@@ -687,6 +715,18 @@ export function LumoraShellPage() {
         <AICompanionPanel
           isOpen={true}
           onClose={() => {}}
+        />
+      )}
+
+      {/* Sidebar toggle FAB — only on coding/design when sidebar is
+          closed. Uses the live solve context as a "context ready"
+          indicator so the user knows asking Sona right now will hit
+          a grounded prompt. */}
+      {(activeTab === 'coding' || activeTab === 'design') && (
+        <CodingSonaSidebarToggle
+          open={sonaSidebarOpen}
+          onToggle={() => setSonaSidebarOpen(true)}
+          hasSolve={!!useInterviewStore.getState().liveSolveContext}
         />
       )}
 
