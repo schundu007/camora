@@ -128,6 +128,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // already started a manual recording.
   const discardNextBlobRef = useRef(false);
 
+  // Tracks WHY stopRecording was called so the async onstop →
+  // handleRecordingStop can choose whether to reset state. Without
+  // this flag, an AUTO→manual handoff stop (toggle handler stops the
+  // AUTO recorder, sets mode='manual', schedules manual start in
+  // 300ms) races with onstop firing first and resetting mode to
+  // 'idle' — the 300ms timer then sees the wrong mode and aborts
+  // the manual start. Net effect: click does nothing, mic looks
+  // stuck. With this flag, mode-switch stops short-circuit
+  // handleRecordingStop and let the toggle handler stay in control.
+  const stopReasonRef = useRef<'mode-switch' | null>(null);
+
   // Get store values first (must be before any useEffect that uses them)
   const {
     threshold,
@@ -379,6 +390,16 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     setIsRecording(false);
     stopListenTimer();
 
+    // Mode-switch stops are owned by the toggle handler — it has
+    // already set the next mode and will start the new recorder. If
+    // we touched mode here, we'd race with the toggle handler and
+    // freeze the mic on a stale state. See stopReasonRef comment.
+    if (stopReasonRef.current === 'mode-switch') {
+      stopReasonRef.current = null;
+      dlog('recorder_stopped_mode_switch');
+      return;
+    }
+
     const stoppedMode = recordingModeRef.current;
     setRecordingMode('idle');
     setStatus('transcribe', 'Processing...');
@@ -606,22 +627,39 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       setIsRecording(false);
       stopListenTimer();
       setStatus('transcribe', 'Sending...');
+      // Defensive reset: if the recorder was already 'inactive' when
+      // stopRecording was called (rare race during cleanup), onstop
+      // never fires and handleRecordingStop never runs to flip mode
+      // back to 'idle'. The button would stay on the stop icon
+      // forever and clicking it would just hit this branch again.
+      // 700 ms is past the 500 ms cleanup delay in useAudioCapture so
+      // a normal stop has already cleared mode by then; this only
+      // fires in the orphan-state case.
+      window.setTimeout(() => {
+        if (recordingModeRef.current === 'manual') {
+          dlog('manual_stop_force_idle');
+          setRecordingMode('idle');
+          setStatus('ready', 'Ready');
+        }
+      }, 700);
       return;
     }
 
     if (recordingModeRef.current === 'auto') {
       // Interrupt AUTO: discard its in-flight blob, switch the
-      // recorder over to MANUAL ownership, then start fresh.
+      // recorder over to MANUAL ownership, then start fresh. The
+      // mode-switch flag tells handleRecordingStop to stay out of
+      // our way — without it, onstop racing ahead of our 300 ms
+      // timer would reset mode to 'idle' and the timer would abort
+      // (button stuck on stop icon, click does nothing).
+      stopReasonRef.current = 'mode-switch';
       discardNextBlobRef.current = true;
       stopRecording();
-      // useAudioCapture's stopRecording schedules a 500 ms cleanup,
-      // and startRecording itself runs a synchronous cleanup on the
-      // current recorder. We need a beat between the two so the
-      // browser can finalize the AUTO recorder's onstop (which fires
-      // async) before we ask for a new MediaStream.
       setRecordingMode('manual');
-      setTimeout(() => {
-        if (recordingModeRef.current !== 'manual') return;
+      window.setTimeout(() => {
+        // Re-assert manual in case anything cleared it during the
+        // 300 ms gap; idempotent if already 'manual'.
+        setRecordingMode('manual');
         startRecording();
         setIsRecording(true);
         startListenTimer();

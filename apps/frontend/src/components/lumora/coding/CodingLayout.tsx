@@ -148,7 +148,7 @@ interface TestResult {
 }
 
 interface CodingLayoutProps {
-  onSubmit: (problem: string, language: string) => void;
+  onSubmit: (problem: string, language: string, options?: { bypassCache?: boolean }) => void;
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
@@ -230,7 +230,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setVoiceRoute } = useInterviewStore();
+  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setVoiceRoute, setLastFromCache } = useInterviewStore();
+  const lastFromCache = useInterviewStore(s => s.lastFromCache);
+
+  // Regenerate — re-submit the same problem with bypass_cache=true so
+  // the backend skips the answer cache lookup and produces a fresh
+  // solution. The fresh result still writes to the cache so the next
+  // plain solve hits. Only enabled when we have a problem and aren't
+  // already streaming.
+  const handleRegenerate = useCallback(() => {
+    const text = problemText.trim();
+    if (!text || isLoading || isStreaming) return;
+    onSubmit(text, language, { bypassCache: true });
+  }, [problemText, language, isLoading, isStreaming, onSubmit]);
 
   // Wipe every piece of solution state so the user can ask a brand-new
   // problem without refreshing the page. Also flips the voice route
@@ -261,7 +273,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     clearStreamChunks();
     setParsedBlocks([]);
     setVoiceRoute('problem');
-  }, [clearStreamChunks, setParsedBlocks, setStreamError, setVoiceRoute, language]);
+    setLastFromCache(null);
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setVoiceRoute, setLastFromCache, language]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -1167,6 +1180,66 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             {/* ═══ SOLUTION TAB — AI-Inspired Modern Display ═══ */}
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
+                {/* Cache status row — surfaces whether the current
+                    solution came from the answer cache (Redis) and
+                    offers a one-click Regenerate that bypasses the
+                    cache. Without this, repeat solves looked
+                    identical to fresh solves and users couldn't tell
+                    when caching was actually working. Only renders
+                    when a solution exists; hidden during streaming
+                    and when there's nothing to cache yet. */}
+                {sd && !isStreaming && lastFromCache !== null && (
+                  <div
+                    className="mb-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
+                    style={{
+                      background: lastFromCache ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+                      border: `1px solid ${lastFromCache ? 'var(--cam-primary)' : 'var(--border)'}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                        {lastFromCache ? (
+                          <>
+                            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <polyline points="9 12 12 15 16 9" />
+                          </>
+                        ) : (
+                          <>
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </>
+                        )}
+                      </svg>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        {lastFromCache ? 'Loaded from cache' : 'Fresh solve'}
+                      </span>
+                      <span className="hidden md:inline text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                        {lastFromCache
+                          ? '· Identical problem — served instantly from Redis. Click Regenerate for a fresh take.'
+                          : '· Now cached — repeat solves on this exact problem hit the cache.'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleRegenerate}
+                      disabled={isStreaming || isLoading}
+                      className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'var(--cam-primary)',
+                        color: '#FFFFFF',
+                        border: '1px solid var(--cam-primary-dk)',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                      title="Force a fresh solve, ignoring the cache. The new result is cached too — useful when the cached answer was wrong or you want a different approach."
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="23 4 23 10 17 10" />
+                        <polyline points="1 20 1 14 7 14" />
+                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                      </svg>
+                      Regenerate
+                    </button>
+                  </div>
+                )}
                 {/* Stream/parse error — visible retry card instead of blank state.
                     Backend emits `error` events for 529/overloaded, parse failures,
                     and empty responses. We surface those here with a retry button. */}

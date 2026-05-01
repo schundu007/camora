@@ -513,7 +513,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res, n
 });
 
 router.post('/solve', authenticate, checkUsage('questions'), async (req, res) => {
-  const { problem, language, conversationHistory, system_context: systemContext } = req.body;
+  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
   if (!problem || typeof problem !== 'string') {
@@ -607,14 +607,22 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     language: lang,
     model: getModelForUser(req),
   });
-  const cachedAnswer = await cacheGet(cacheKey);
-  if (cachedAnswer) {
-    logCacheEvent('HIT', cacheKey, { route: 'solve', plan: planType, lang });
-    sendEvent('answer', { ...cachedAnswer, fromCache: true });
-    sendEvent('done', { ok: true, fromCache: true });
-    return res.end();
+  // bypass_cache=true skips the lookup but the fresh answer still gets
+  // written, so the next vanilla /solve hits. Used by the frontend
+  // "Regenerate" button when the user wants a fresh take on the same
+  // problem (e.g. different approach, or the cached answer was wrong).
+  if (bypassCache) {
+    logCacheEvent('BYPASS', cacheKey, { route: 'solve', plan: planType, lang });
+  } else {
+    const cachedAnswer = await cacheGet(cacheKey);
+    if (cachedAnswer) {
+      logCacheEvent('HIT', cacheKey, { route: 'solve', plan: planType, lang });
+      sendEvent('answer', { ...cachedAnswer, fromCache: true });
+      sendEvent('done', { ok: true, fromCache: true });
+      return res.end();
+    }
+    logCacheEvent('MISS', cacheKey, { route: 'solve', plan: planType, lang });
   }
-  logCacheEvent('MISS', cacheKey, { route: 'solve', plan: planType, lang });
 
   sendEvent('status', { state: 'write', msg: `Generating ${lang} solution...` });
 

@@ -39,6 +39,7 @@ export function useStreamingInterview() {
     startAnswerTimer,
     stopAnswerTimer,
     isStreaming,
+    setLastFromCache,
   } = useInterviewStore();
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export function useStreamingInterview() {
     abortControllerRef.current = null;
     clearStreamChunks();
     setParsedBlocks([]);
+    setLastFromCache(null);
     setError(null);
   }, [clearStreamChunks, setParsedBlocks, setError]);
 
@@ -107,13 +109,14 @@ export function useStreamingInterview() {
           setIsDesignQuestion(data.isDesign ?? data.is_design ?? false);
           setIsCodingQuestion(data.isCoding ?? data.is_coding ?? false);
           setParsedBlocks(data.parsed || []);
+          setLastFromCache(Boolean(data.fromCache));
           addHistoryEntry({
             question: data.question || trimmedQuestion,
             blocks: data.parsed || [],
             timestamp: new Date(),
           });
           stopAnswerTimer();
-          setStatus('ready', 'Ready');
+          setStatus('ready', data.fromCache ? 'Loaded from cache' : 'Ready');
         },
         onStatus: (data) => {
           if (data.state && data.msg) setStatus(data.state, data.msg);
@@ -141,7 +144,7 @@ export function useStreamingInterview() {
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
       stopAnswerTimer, setError]);
 
-  const handleCodingSubmit = useCallback(async (problem: string, language: string) => {
+  const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean }) => {
     const validation = validateInput(problem);
     if (!validation.valid) {
       setError(validation.error || 'Invalid input');
@@ -177,6 +180,7 @@ export function useStreamingInterview() {
         language,
         token,
         systemContext: getSystemContext(),
+        bypassCache: options?.bypassCache,
         signal: controller.signal,
         onStreamStart: (data: any) => {
           setIsCodingQuestion(true);
@@ -191,6 +195,7 @@ export function useStreamingInterview() {
           setIsCodingQuestion(true);
           setIsDesignQuestion(false);
           setParsedBlocks(data.parsed || []);
+          setLastFromCache(Boolean(data.fromCache));
           // Coding backend returns parsed as { json: {...}, format: 'ascend_json' } —
           // not a ParsedBlock[]. Flatten the JSON into a real block array so the
           // history viewer can render it later without hitting "No answer saved".
@@ -215,7 +220,7 @@ export function useStreamingInterview() {
             timestamp: new Date(),
           });
           stopAnswerTimer();
-          setStatus('ready', 'Solution ready');
+          setStatus('ready', data.fromCache ? 'Solution loaded from cache' : 'Solution ready');
         },
         onStatus: (data) => {
           if (data.state && data.msg) setStatus(data.state, data.msg);
