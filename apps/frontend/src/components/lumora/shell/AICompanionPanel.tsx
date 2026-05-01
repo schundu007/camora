@@ -9,6 +9,7 @@ import { isQuestion } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { useInterviewStore } from '@/stores/interview-store';
+import { sonaRegistry } from '@/lib/sona-registry';
 
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
 const C = {
@@ -485,6 +486,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const askRef = useRef(ask);
   useEffect(() => { askRef.current = ask; }, [ask]);
 
+  // Register with the Sona ask-callback registry so the page-level
+  // voice router (LumoraBottomBar's mic + dispatchTranscript) can
+  // forward routed transcripts here without a React-tree dependency.
+  // Routed through handleAutoTranscription (declared below) so the
+  // isQuestion gating + manual-bypass policy lives in one place.
+  // Use a ref to avoid re-registering on every render.
+  const autoTranscriptionRef = useRef<((text: string, opts?: { manual?: boolean }) => void) | null>(null);
+  useEffect(() => {
+    return sonaRegistry.register((text, opts) => {
+      autoTranscriptionRef.current?.(text, opts);
+    });
+  }, []);
+
   // Drain the queued question when the current answer finishes streaming.
   // Auto-mic can capture follow-ups while Sona is mid-stream — we hold only
   // the latest in `pendingQuestionRef` and fire it here.
@@ -519,6 +533,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     }
     askRef.current?.(text);
   }, []);
+
+  // Keep the registry-bound ref in sync with the latest handler.
+  // handleAutoTranscription has [] deps so it never rebuilds, but
+  // wiring through a ref keeps the registration stable regardless.
+  useEffect(() => { autoTranscriptionRef.current = handleAutoTranscription; }, [handleAutoTranscription]);
 
   // When embedded in /lumora/behavioral, listen for interviewer-audio
   // transcriptions forwarded from LumoraShellPage. The shell's
@@ -1089,22 +1108,6 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             </div>
           );
         })()}
-        {/* Floating-popup Sona mic — when the panel is the floating
-            popup (Coding / Design tabs), the embedded voice-filter
-            banner above isn't rendered, so without this row Sona has
-            no mic at all on those tabs. The user can still type in
-            the input below, but voice is the primary interaction —
-            they need a one-shot mic AND the AUTO toggle to ask Sona
-            questions while solving a coding/design problem. */}
-        {!embedded && (
-          <div
-            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-            aria-label="Sona voice controls"
-          >
-            <AudioCapture onTranscription={handleAutoTranscription} />
-          </div>
-        )}
         {/* Text input row — taller + larger text on mobile so the iOS
             keyboard shows up at a comfortable size and the placeholder
             doesn't trigger Safari's text-zoom (it kicks in below 16px). */}

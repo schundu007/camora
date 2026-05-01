@@ -80,6 +80,17 @@ interface InterviewState {
     everConnected: boolean; // true after first successful connect this session
   };
 
+  // Voice routing state for Coding/Design tabs. The same mic feeds two
+  // sinks during an interview:
+  //   'problem'  — the next utterance is treated as the problem statement
+  //                (fills the textarea + auto-fires the solver)
+  //   'followup' — the next utterance is a follow-up question for Sona
+  //                (routed to the AI companion's ask())
+  // Auto-flips: 'problem' → 'followup' when the solver fires.
+  // 'followup' → 'problem' when the user clicks New Problem / Reset.
+  // Behavioral and Interview tabs ignore this — Sona owns audio there.
+  voiceRoute: 'problem' | 'followup';
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -111,6 +122,7 @@ interface InterviewState {
   setIsEnrolling: (enrolling: boolean) => void;
   setAutoEnrollPending: (pending: boolean) => void;
   setInterviewerAudio: (patch: Partial<InterviewState['interviewerAudio']>) => void;
+  setVoiceRoute: (route: 'problem' | 'followup') => void;
   reset: () => void;
 }
 
@@ -154,6 +166,7 @@ const initialState = {
     error: null as string | null,
     everConnected: false,
   },
+  voiceRoute: 'problem' as const,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -266,6 +279,8 @@ export const useInterviewStore = create<InterviewState>()(
 
   setInterviewerAudio: (patch) =>
     set((state) => ({ interviewerAudio: { ...state.interviewerAudio, ...patch } })),
+
+  setVoiceRoute: (route) => set({ voiceRoute: route }),
 
   reset: () => set(initialState),
     }),
