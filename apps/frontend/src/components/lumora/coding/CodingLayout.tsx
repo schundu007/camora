@@ -719,25 +719,37 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     onSubmit(problemText.trim(), language);
   };
 
-  // Register voice problem handler for parent shell
+  // Register voice problem handler for parent shell. Uses stable internal
+  // refs for `onSubmit` and `language` so the registration only runs ONCE
+  // on mount. Previously this effect's deps included `onSubmit`, which
+  // (via the parent's destructured store hook) churned identity on every
+  // store update — so the ref was momentarily nulled out tens of times
+  // a second whenever Sona was streaming, and any transcript arriving
+  // during a null window fell through to Sona instead of filling the
+  // problem field. Anchoring to refs eliminates the race entirely.
+  const onSubmitRef = useRef(onSubmit);
+  const languageRef = useRef(language);
+  useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
+  useEffect(() => { languageRef.current = language; }, [language]);
+
   useEffect(() => {
-    if (onVoiceProblemRef) {
-      onVoiceProblemRef.current = (text: string) => {
-        setProblemText(text);
-        setProblemTab('solution');
-        setTestCases([]);
-        setTestResults([]);
-        setOutput('');
-        setIsOutputCollapsed(true);
-        clearStreamChunks();
-        setParsedBlocks([]);
-        setJsonSolution(null);
-        setCode(getDefaultCode(language));
-        onSubmit(text.trim(), language);
-      };
-    }
+    if (!onVoiceProblemRef) return;
+    onVoiceProblemRef.current = (text: string) => {
+      setProblemText(text);
+      setProblemTab('solution');
+      setTestCases([]);
+      setTestResults([]);
+      setOutput('');
+      setIsOutputCollapsed(true);
+      clearStreamChunks();
+      setParsedBlocks([]);
+      setJsonSolution(null);
+      setCode(getDefaultCode(languageRef.current));
+      onSubmitRef.current(text.trim(), languageRef.current);
+    };
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
-  }, [onVoiceProblemRef, language, onSubmit, clearStreamChunks, setParsedBlocks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onVoiceProblemRef]);
 
   const handleFetchFromUrl = async () => {
     if (!problemUrl.trim()) { setError('Please enter a URL'); return; }
