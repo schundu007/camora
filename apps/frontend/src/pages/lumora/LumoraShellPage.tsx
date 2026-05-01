@@ -172,9 +172,9 @@ export function LumoraShellPage() {
   // tiny "ok" / "next one" utterances that happen to slip past VAD.
   // DesignLayout owns its own solve internally — it flips directly.
   const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
-  const handleCodingSubmitRouted = useCallback((problem: string, language?: string) => {
+  const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean }) => {
     if (problem && problem.trim().length >= 80) setVoiceRoute('followup');
-    return handleCodingSubmit(problem, language as any);
+    return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit, setVoiceRoute]);
 
   const handleTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
@@ -264,17 +264,18 @@ export function LumoraShellPage() {
             <CamoraLogo size={26} />
           </Link>
 
-          {/* LEFT — Lumora-specific tab pills. The Camora wordmark used
-              to render here too, but the LumoraIconRail already shows
-              the brand logo in the corner; rendering it twice on the
-              same screen was duplicate brand chrome (per user feedback). */}
-          {/* Tab pills — LeetCode treatment: navy hero-strip background
-              for the container so the bar pops off the white top
-              chrome (the previous bg-elevated tint blended into the
-              page), with a thin gold-leaf underline. Active tab
-              flips to gold-leaf with dark navy text — same active
-              affordance as the SHORT/DETAILED toggle so the
-              navigation grammar is consistent across the app. */}
+          {/* LEFT spacer — pushes the tab pills toward the centre of the
+              top bar instead of letting them sit flush against the
+              logo. Paired with the matching spacer after the tab cluster
+              so the cluster stays visually centred regardless of how much
+              chrome lives on the right. */}
+          <div className="hidden md:block flex-1" />
+
+          {/* CENTRE — Lumora-specific tab pills. LeetCode treatment:
+              navy hero-strip background, gold-leaf underline, active
+              tab flips to gold-leaf with dark navy text — same active
+              affordance as the SHORT/DETAILED toggle for consistency
+              across the app. */}
           <div
             className="hidden md:flex items-center gap-1 p-1 rounded-lg shrink-0"
             style={{
@@ -307,11 +308,10 @@ export function LumoraShellPage() {
             })}
           </div>
 
-          {/* MIDDLE — empty spacer. Audio controls moved to a dedicated
-              LumoraBottomBar at the foot of the Coding / Design windows
-              so they read consistently with the behavioral panel's
-              bottom voice-filter banner. */}
-          <div className="flex-1 flex items-center min-w-0 justify-center" />
+          {/* RIGHT spacer — symmetric with the left flex-1 above so the
+              tab cluster stays centred. The right-hand chrome still
+              renders at the very edge thanks to its own shrink-0. */}
+          <div className="hidden md:block flex-1" />
 
 
           {/* RIGHT — Go Invisible always; theme toggle only when the

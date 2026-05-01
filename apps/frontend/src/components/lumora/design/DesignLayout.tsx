@@ -40,6 +40,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const t = useTheme(globalTheme === 'dark');
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
+  const lastFromCache = useInterviewStore(s => s.lastFromCache);
 
   const [problemText, setProblemText] = useState(initialProblem || '');
   const autoSubmittedRef = useRef(false);
@@ -170,7 +171,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const handleSubmit = useCallback(async (overrideText?: string) => {
+  const handleSubmit = useCallback(async (overrideText?: string, options?: { bypassCache?: boolean }) => {
     const text = overrideText || problemText;
     if (!text.trim() || !token || isLoading) return;
 
@@ -190,6 +191,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setProblemText(text.trim());
     setQuestion(text.trim());
     setStatus('write', 'Generating design...');
+    // Reset cache indicator before each solve; onAnswer overwrites it.
+    useInterviewStore.getState().setLastFromCache(null);
 
     const chunks: string[] = [];
 
@@ -200,6 +203,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         systemContext: getSystemContext(),
         detailLevel,
         token,
+        bypassCache: options?.bypassCache,
         onToken: (data) => {
           if (data.t) {
             chunks.push(data.t);
@@ -254,6 +258,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           }
         },
         onAnswer: (data: any) => {
+          // Surface cache hits in the UI so users can see when the
+          // backend is replaying a cached design instead of running
+          // the model. Cleared on every fresh /stream call (see
+          // store's lastFromCache reset in handleReset / before
+          // streamResponse below).
+          useInterviewStore.getState().setLastFromCache(Boolean(data.fromCache));
           const parsed = data.parsed;
           const raw = data.raw || '';
 
@@ -385,7 +395,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setExpandedFollowup(null);
     setInputCollapsed(false);
     useInterviewStore.getState().setVoiceRoute('problem');
+    useInterviewStore.getState().setLastFromCache(null);
   }, []);
+
+  // Regenerate — re-runs the same design problem with bypass_cache=true
+  // so the backend produces a fresh response instead of replaying a
+  // cached one. The new response is also cached so subsequent solves
+  // hit until invalidation.
+  const handleRegenerate = useCallback(() => {
+    if (!problemText.trim() || isLoading) return;
+    handleSubmit(problemText, { bypassCache: true });
+  }, [problemText, isLoading, handleSubmit]);
 
   // Keyboard shortcut: Cmd+Enter to submit
   useEffect(() => {
@@ -780,6 +800,58 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
           {sd && (
             <div className="flex flex-col gap-2.5 p-3 md:p-5 design-result-appear" style={{ maxWidth: '1600px', margin: '0 auto' }}>
+              {/* Cache status row — shows whether this design came
+                  from the answer cache and offers a one-click
+                  Regenerate that bypasses the cache. Identical
+                  pattern to the Coding tab so the affordance reads
+                  the same across surfaces. */}
+              {!isLoading && lastFromCache !== null && (
+                <div
+                  className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
+                  style={{
+                    background: lastFromCache ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+                    border: `1px solid ${lastFromCache ? 'var(--cam-primary)' : 'var(--border)'}`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                      {lastFromCache ? (
+                        <>
+                          <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <polyline points="9 12 12 15 16 9" />
+                        </>
+                      ) : (
+                        <>
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </>
+                      )}
+                    </svg>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      {lastFromCache ? 'Loaded from cache' : 'Fresh design'}
+                    </span>
+                    <span className="hidden md:inline text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                      {lastFromCache
+                        ? '· Identical problem — served instantly. Click Regenerate for a fresh take.'
+                        : '· Now cached — repeat solves on this exact problem hit the cache.'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleRegenerate}
+                    disabled={isLoading}
+                    className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ background: 'var(--cam-primary)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}
+                    title="Force a fresh design, ignoring the cache."
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 4 23 10 17 10" />
+                      <polyline points="1 20 1 14 7 14" />
+                      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                    </svg>
+                    Regenerate
+                  </button>
+                </div>
+              )}
 
               {/* ── OVERVIEW ── */}
               {sd.overview && (

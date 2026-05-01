@@ -54,6 +54,11 @@ export interface StreamOptions {
   detailLevel?: 'basic' | 'full';
   /** Anthropic model ID. Empty/undefined → backend uses its env/default. */
   model?: string;
+  /** When true, the backend skips the answer cache lookup and always
+      generates a fresh response. The fresh result still WRITES to the
+      cache so the next plain stream hits. Used by Sona/Design's
+      "Regenerate" affordance. */
+  bypassCache?: boolean;
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
@@ -76,6 +81,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     systemContext,
     detailLevel,
     model,
+    bypassCache,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -111,6 +117,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         ...(systemContext ? { system_context: systemContext } : {}),
         ...(detailLevel ? { detail_level: detailLevel } : {}),
         ...(model ? { model } : {}),
+        ...(bypassCache ? { bypass_cache: true } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,
@@ -238,6 +245,11 @@ export interface CodingStreamOptions {
   systemContext?: string;
   /** Anthropic model ID. Empty/undefined → backend uses its env/default. */
   model?: string;
+  /** When true, the backend skips the answer cache lookup and always
+      generates a fresh solution. The fresh result still WRITES to the
+      cache so the next plain solve hits. Used by the "Regenerate"
+      button on the solution card. */
+  bypassCache?: boolean;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
   onToken?: (data: TokenEvent) => void;
@@ -258,6 +270,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     token,
     systemContext,
     model,
+    bypassCache,
     signal: externalSignal,
     onStreamStart,
     onToken,
@@ -285,6 +298,8 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
         problem,
         language,
         ...(systemContext ? { system_context: systemContext } : {}),
+        ...(model ? { model } : {}),
+        ...(bypassCache ? { bypass_cache: true } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

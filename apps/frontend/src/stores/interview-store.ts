@@ -91,6 +91,13 @@ interface InterviewState {
   // Behavioral and Interview tabs ignore this — Sona owns audio there.
   voiceRoute: 'problem' | 'followup';
 
+  // Whether the most recent answer event arrived as a cache hit. Surfaces
+  // a "Loaded from cache" badge in Coding / Design / Sona answer
+  // headers, paired with a "Regenerate" button that re-runs the
+  // request with bypass_cache=true. null means we haven't seen an
+  // answer yet this session (or the user just clicked New Problem).
+  lastFromCache: boolean | null;
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -123,6 +130,7 @@ interface InterviewState {
   setAutoEnrollPending: (pending: boolean) => void;
   setInterviewerAudio: (patch: Partial<InterviewState['interviewerAudio']>) => void;
   setVoiceRoute: (route: 'problem' | 'followup') => void;
+  setLastFromCache: (fromCache: boolean | null) => void;
   reset: () => void;
 }
 
@@ -167,6 +175,7 @@ const initialState = {
     everConnected: false,
   },
   voiceRoute: 'problem' as const,
+  lastFromCache: null as boolean | null,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -281,6 +290,7 @@ export const useInterviewStore = create<InterviewState>()(
     set((state) => ({ interviewerAudio: { ...state.interviewerAudio, ...patch } })),
 
   setVoiceRoute: (route) => set({ voiceRoute: route }),
+  setLastFromCache: (fromCache) => set({ lastFromCache: fromCache }),
 
   reset: () => set(initialState),
     }),

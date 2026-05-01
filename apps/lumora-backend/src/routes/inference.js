@@ -220,7 +220,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, bypass_cache: bypassCache } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -277,7 +277,10 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       plan: userPlan,
       route: 'stream',
     });
-    const cached = await cacheGet(cacheKey);
+    const cached = bypassCache ? null : await cacheGet(cacheKey);
+    if (bypassCache) {
+      logCacheEvent('BYPASS', cacheKey, { route: 'stream', plan: userPlan });
+    }
     if (cached) {
       logCacheEvent('HIT', cacheKey, { route: 'stream', plan: userPlan });
       // Replay the cached answer SSE-style. Emit stream_start so the
