@@ -244,6 +244,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     onSubmit(text, language, { bypassCache: true });
   }, [problemText, language, isLoading, isStreaming, onSubmit]);
 
+  // Auto-switch to the Solution tab when a stream error fires. The
+  // error card lives in the Solution tab — without this, a user who
+  // clicked Coding from the Description tab sees nothing happen
+  // because the rejection (e.g. "Unsupported language: tcl") only
+  // surfaces on a tab they aren't looking at.
+  useEffect(() => {
+    if (streamError && !isStreaming) {
+      setProblemTab('solution');
+    }
+  }, [streamError, isStreaming]);
+
   // Wipe every piece of solution state so the user can ask a brand-new
   // problem without refreshing the page. Also flips the voice route
   // back to 'problem' so the next dictated utterance fills the textarea
