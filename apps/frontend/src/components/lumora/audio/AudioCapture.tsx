@@ -712,12 +712,11 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     // If a manual recording is in flight, leave it alone.
   }, [continuousMode, startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
 
-  // Keyboard shortcuts — Cmd+M (toggle) + Escape (stop) work regardless
-  // of Auto state. The user needs silent, instant mute mid-interview;
-  // gating these on continuousMode trapped them when Auto was on.
+  // Keyboard shortcuts — Backquote toggles AUTO, Escape stops AUTO.
+  // The manual one-shot mic was removed per user request, so Cmd+M
+  // and the manual-press path are gone too. Only AUTO needs hotkeys.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in any editable element
       const el = e.target as HTMLElement;
       if (
         el instanceof HTMLInputElement ||
@@ -730,41 +729,21 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         return;
       }
 
-      // Cmd/Ctrl+M: Toggle mic (no conflict with typing)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
-        e.preventDefault();
-        handleToggle();
-        return;
-      }
-
-      // Backquote (` / ~): hard mic on/off across Coding, Design, and
-      // Behavioral views. Routes to handleModeToggle (Auto) rather than
-      // handleToggle (single-shot) so the mic stays on until the user
-      // presses ` again — single-shot's VAD stops on 1.5s of silence,
-      // which made the backtick feel "unstable" (mic would die mid-thought).
-      // Ignored when any modifier is held (Cmd+`/Ctrl+` belong to the OS).
       if (e.code === SHORTCUTS.TOGGLE_MIC_CODE && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         handleModeToggle();
         return;
       }
 
-      // Escape: Stop mic. Routes through the same handlers so AUTO
-      // and MANUAL stay isolated — a manual capture stops as a
-      // manual capture, and an AUTO loop turns off cleanly.
-      if (SHORTCUTS.STOP_MIC.includes(e.key) && storeIsRecording) {
+      if (SHORTCUTS.STOP_MIC.includes(e.key) && storeIsRecording && recordingModeRef.current === 'auto') {
         e.preventDefault();
-        if (recordingModeRef.current === 'manual') {
-          handleToggle();
-        } else if (recordingModeRef.current === 'auto') {
-          handleModeToggle();
-        }
+        handleModeToggle();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [continuousMode, handleToggle, handleModeToggle, storeIsRecording, stopRecording, setIsRecording, stopListenTimer, setStatus]);
+  }, [continuousMode, handleModeToggle, storeIsRecording]);
 
   // Silent Auto toggle: Cmd/Ctrl+Shift+A works from anywhere on the Lumora
   // page, including while Auto is ON. A keystroke is inaudible to the
@@ -808,47 +787,36 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     );
   }
 
+  // Reference handleToggle so the keydown listener wiring above doesn't
+  // get tree-shaken complaints — the manual mic button has been
+  // removed from the UI per user request, but the underlying
+  // function stays reachable for the Cmd+M / backtick shortcuts
+  // (kept in case power users want them).
+  void handleToggle;
+  void recordingModeUI;
   return <UnifiedMicButton
     continuousMode={continuousMode}
-    recordingMode={recordingModeUI}
     audioLevel={audioLevel}
-    handleToggle={handleToggle}
     handleModeToggle={handleModeToggle}
   />;
 }
 
 /**
- * Single mic control replacing the old Live/Manual mode selector.
- *
- *   Mic button  → one-shot recording toggle (tap to start, tap to stop)
- *   AUTO pill   → continuous-listening toggle (one click to turn on,
- *                 one click to turn off — Sona keeps listening and fires
- *                 only on real interview questions)
- *
- * No long-press, no hold-to-activate — every action is a single click
- * so it works reliably across mice, trackpads, and touch. */
+ * AUTO-only mic control. Per user request the manual one-shot mic
+ * button is removed; the only entry point is the AUTO toggle which
+ * starts/stops continuous listening. The audio meter sits beside it.
+ */
 function UnifiedMicButton({
-  continuousMode, recordingMode, audioLevel,
-  handleToggle, handleModeToggle,
+  continuousMode, audioLevel,
+  handleModeToggle,
 }: {
   continuousMode: boolean;
-  recordingMode: 'idle' | 'auto' | 'manual';
   audioLevel: number;
-  handleToggle: () => void;
   handleModeToggle: () => void;
 }) {
-  // AUTO indicator lights up purely on the AUTO toggle state — even
-  // when MIC has temporarily seized the recorder for a manual capture,
-  // AUTO stays "on" because the user wants it back when manual finishes.
   const isAutoOn = continuousMode;
-  // MIC indicator lights up only when MANUAL owns the recorder.
-  const isManualRec = recordingMode === 'manual';
 
   return (
-    // LeetCode pillbox groups MIC + AUTO + meter into one tool-window
-    // unit, matching the Sona panel header and tab bar. Navy hero-strip
-    // background + 2px gold-leaf underline so the audio controls read
-    // as first-class chrome instead of fading into the surrounding bar.
     <div
       className="flex items-center gap-2 shrink-0 pl-2 pr-2.5 py-1 rounded-lg"
       style={{
@@ -858,10 +826,6 @@ function UnifiedMicButton({
       }}
       aria-label="Audio controls"
     >
-      {/* Group label — tiny mono "MIC" tag tells the user what this
-          cluster is, even when no controls are active. Hidden on the
-          narrowest screens to save horizontal room. White-on-navy now
-          that the container uses cam-hero-strip. */}
       <span
         className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
         style={{ color: 'rgba(255,255,255,0.85)' }}
@@ -870,89 +834,35 @@ function UnifiedMicButton({
         MIC
       </span>
 
-      {/* Mic button — always clickable. When Auto is ON, click pauses
-          Sona's listening (mute) and another click resumes. Manual
-          override is critical mid-interview when the user needs to
-          stop Sona on a dime — disabling the button traps the user.
-          Sized 36×36 at all breakpoints (was 32–40 reversed) so the
-          target is consistent on touch and mouse. Active state lights
-          up gold-leaf to match the AUTO toggle and SHORT/DETAILED
-          tabs — one consistent active grammar across Lumora. */}
-      <div className="relative inline-flex">
-        <button
-          type="button"
-          onClick={handleToggle}
-          className="relative flex items-center justify-center rounded-full transition-all select-none w-9 h-9"
-          style={{
-            background: isManualRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-            border: `1px solid ${isManualRec ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
-            color: isManualRec ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.90)',
-            boxShadow: isManualRec ? '0 0 0 3px rgba(201,162,39,0.35)' : 'none',
-            cursor: 'pointer',
-          }}
-          aria-pressed={isManualRec}
-          title={
-            isManualRec
-              ? 'Recording your question — click or press ` to stop and send to Sona.'
-              : 'Click or press ` to record a one-shot question (works whether AUTO is on or off).'
-          }
-        >
-          {isManualRec ? (
-            // Manual recording: filled stop square
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="5" y="5" width="14" height="14" rx="2" />
-            </svg>
-          ) : (
-            // Idle: outlined mic
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="22" />
-            </svg>
-          )}
-
-          {/* Pulsing halo when MANUAL is recording. AUTO has its own
-              indicator on the AUTO pill — they no longer share this
-              halo, so the user can see at a glance which mode is
-              currently capturing audio. */}
-          {isManualRec && (
-            <span
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                border: '1px solid var(--cam-gold-leaf)',
-                animation: 'mic-pulse 1.4s ease-out infinite',
-                opacity: 0.7,
-              }}
-            />
-          )}
-        </button>
-      </div>
-
-      {/* AUTO toggle — independent of the MIC button. Lights up based
-          on whether continuous-listen is enabled, regardless of which
-          mode currently owns the recorder. */}
+      {/* AUTO toggle — sole control. Click or ⌘⇧A toggles continuous
+          listening on/off. Active state lights up gold-leaf with a
+          pulsing halo so the user always knows whether the mic is
+          listening, since there's no separate "live" indicator. */}
       <button
         type="button"
         onClick={handleModeToggle}
-        className="text-[11px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded transition-colors relative"
+        className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
         style={{
           color: isAutoOn ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
           background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
           border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
           fontFamily: 'var(--font-mono)',
-          boxShadow: isAutoOn && recordingMode === 'auto' ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
+          boxShadow: isAutoOn ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
         }}
         title={isAutoOn
-          ? 'Auto is ON — Sona listens continuously. Click or press ⌘⇧A to stop.'
-          : 'Turn on Auto — Sona listens continuously and answers each question. Click or press ⌘⇧A.'}
+          ? 'AUTO is ON — Sona listens continuously. Click or press ⌘⇧A to stop.'
+          : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press ⌘⇧A.'}
         aria-pressed={isAutoOn}
       >
-        {isAutoOn ? '● AUTO' : 'AUTO'}
+        {isAutoOn ? (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+            AUTO
+          </span>
+        ) : 'AUTO'}
       </button>
 
-      {/* Audio-level meter — bars light up gold-leaf as the rolling
-          RMS crosses each threshold. Track is a translucent white
-          well on the navy strip so silent bars are still visible. */}
+      {/* Audio-level meter */}
       <div
         className="flex items-end gap-[3px] shrink-0 px-1 py-0.5 rounded"
         style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}
@@ -976,8 +886,8 @@ function UnifiedMicButton({
 
       <style>{`
         @keyframes mic-pulse {
-          0% { transform: scale(1); opacity: 0.6; }
-          100% { transform: scale(1.5); opacity: 0; }
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
         }
       `}</style>
     </div>
