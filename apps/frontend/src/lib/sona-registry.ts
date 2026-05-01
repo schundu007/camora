@@ -1,18 +1,20 @@
 /* ── Sona ask-callback registry ───────────────────────────────────────────
-   The voice router needs a way to call Sona's `ask(text)` from outside the
-   AICompanionPanel React tree. Storing the callback on a module-level
-   singleton (instead of zustand state) keeps it out of React's reactive
-   graph: registering doesn't trigger re-renders, and the router can
-   dispatch synchronously without subscribing.
+   The voice router needs to know two things about Sona without
+   subscribing to React state:
+     1. Sona's `ask(text)` callback so we can forward transcripts.
+     2. Whether Sona's panel is currently open or minimized — that
+        single bit decides routing on the Coding/Design tabs.
 
-   AICompanionPanel registers on mount, unregisters on unmount, and the
-   router calls `sonaRegistry.ask(text, opts)` whenever a transcript is
-   destined for Sona. If no panel is mounted (shouldn't happen — Lumora
-   always mounts one), the dispatch silently no-ops. */
+   Module-level singletons keep this out of React's reactive graph, so
+   the dispatcher reads the *latest* values synchronously without
+   waiting for a render commit / effect flush. AICompanionPanel
+   updates these on mount and on every minimize toggle; routing
+   becomes deterministic instead of racing the next paint. */
 
 type AskFn = (text: string, opts?: { manual?: boolean }) => void;
 
 let active: AskFn | null = null;
+let panelOpen = false;
 
 export const sonaRegistry = {
   /** AICompanionPanel calls this on mount with its own `ask`. The
@@ -27,6 +29,17 @@ export const sonaRegistry = {
   /** Voice router calls this to forward a transcript to Sona. */
   ask(text: string, opts?: { manual?: boolean }): void {
     active?.(text, opts);
+  },
+
+  /** AICompanionPanel calls this whenever its open / minimized state
+      flips. Dispatcher reads this synchronously to decide whether
+      voice should fill the problem field or ask Sona. */
+  setOpen(open: boolean): void {
+    panelOpen = open;
+  },
+
+  isOpen(): boolean {
+    return panelOpen;
   },
 
   /** Test/diagnostic helper — true if a panel has registered itself. */
