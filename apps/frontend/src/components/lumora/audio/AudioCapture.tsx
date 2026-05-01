@@ -205,6 +205,19 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const lastHealthyAtRef = useRef(Date.now());
   const isStartingRef = useRef(false);
 
+  // Wall-clock timestamp of when the *current* accumulation started.
+  // Without this, scheduleQuestionCheck's per-chunk timer reset means
+  // continuous speech (chunks arriving faster than `wait`) holds the
+  // accumulator forever and Sona never fires until the user stops
+  // AUTO. With this we force-flush after a hard ceiling so Q&A
+  // streams continuously even when the user keeps speaking.
+  const accumulationStartedAtRef = useRef<number>(0);
+  // Hard cap on how long we'll hold an accumulation. 3.5 s keeps the
+  // user's perceived latency low (one VAD silence + brief grace
+  // window) while still allowing a short mid-thought pause to glue
+  // two chunks into one question.
+  const MAX_ACCUM_MS = 3500;
+
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();
     if (text.length > 5) {
@@ -213,6 +226,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       setStatus('ready', 'Question sent');
     }
     accumulatedTextRef.current = '';
+    accumulationStartedAtRef.current = 0;
     if (questionCheckTimerRef.current) {
       clearTimeout(questionCheckTimerRef.current);
       questionCheckTimerRef.current = null;
@@ -220,41 +234,59 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   }, [onTranscription, setStatus]);
 
   const scheduleQuestionCheck = useCallback(() => {
-    // After receiving a chunk, wait for "no new chunks" before flushing
-    // the accumulated transcript. We balance two failure modes:
+    // After receiving a chunk, wait briefly for "no new chunks" before
+    // flushing. Two failure modes to balance:
     //   (a) flush too early → one question becomes 2-3 fragments
-    //   (b) flush too late  → users wait 2-3 extra seconds for Sona
+    //   (b) flush too late  → user keeps talking, timer keeps
+    //                         resetting, Sona never fires
     //
-    // Heuristic: punctuation + question-shape + length signals.
+    // The hard ceiling below (MAX_ACCUM_MS) bounds (b) absolutely so
+    // continuous speech still produces continuous Q&A. These per-
+    // chunk waits are only the "natural pause" detector for short
+    // questions.
     //
-    //   ends with `?` or `!`              →  500 ms   (decisive)
-    //   ends with `.`  AND looks-question →  700 ms   (sentence boundary on
-    //                                                  a question stem)
-    //   ends with `.`                     →  1100 ms  (might continue)
-    //   long (>140 chars) + looks-question →  900 ms  (Whisper-no-punct)
-    //   looks-question                    →  1300 ms  (interview verbs)
-    //   no signals                        →  2000 ms  (mid-sentence pause)
-    //
-    // Whisper rarely emits `?`, so we lean on isQuestion() to decide
-    // whether the stem is the WHOLE question (length > 140 chars in a
-    // questionable shape ≈ a complete utterance).
+    //   ends with `?` or `!`              →  400 ms (decisive)
+    //   ends with `.`  AND looks-question →  500 ms
+    //   ends with `.`                     →  800 ms
+    //   long (>140 chars) + looks-question →  600 ms
+    //   looks-question                    →  900 ms
+    //   no signals                        → 1200 ms
     if (questionCheckTimerRef.current) clearTimeout(questionCheckTimerRef.current);
+
+    // Hard ceiling: if we've been accumulating longer than MAX_ACCUM_MS
+    // total, flush right now instead of rescheduling. This is the
+    // primary defense against "user keeps talking, timer never fires."
+    const heldFor = accumulationStartedAtRef.current
+      ? Date.now() - accumulationStartedAtRef.current
+      : 0;
+    if (heldFor >= MAX_ACCUM_MS && accumulatedTextRef.current.trim().length > 5) {
+      flushAccumulatedText();
+      return;
+    }
+
     const accumulated = accumulatedTextRef.current.trim();
     const lastChar = accumulated.slice(-1);
     const looksQuestion = isQuestion(accumulated);
     const longEnough = accumulated.length > 140;
     const wait =
-      lastChar === '?' || lastChar === '!' ? 500 :
-      lastChar === '.' && looksQuestion ? 700 :
-      lastChar === '.' ? 1100 :
-      longEnough && looksQuestion ? 900 :
-      looksQuestion ? 1300 :
-      2000;
+      lastChar === '?' || lastChar === '!' ? 400 :
+      lastChar === '.' && looksQuestion ? 500 :
+      lastChar === '.' ? 800 :
+      longEnough && looksQuestion ? 600 :
+      looksQuestion ? 900 :
+      1200;
+
+    // Backstop timer in case heldFor catches up to MAX_ACCUM_MS in
+    // the gap between chunks: cap the per-chunk wait so even if no
+    // more chunks come, the soft timer fires before the ceiling.
+    const remainingToCeiling = Math.max(200, MAX_ACCUM_MS - heldFor);
+    const effectiveWait = Math.min(wait, remainingToCeiling);
+
     questionCheckTimerRef.current = window.setTimeout(() => {
       if (accumulatedTextRef.current.trim().length > 5) {
         flushAccumulatedText();
       }
-    }, wait);
+    }, effectiveWait);
   }, [flushAccumulatedText]);
 
   // Auto-enroll user's voice from first audio chunk in record-interviewer mode
@@ -356,6 +388,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         }
         if (result.text && isLikelyRealSpeech(result.text)) {
           consecutiveFilteredRef.current = 0;
+          // Stamp accumulation start on the first chunk so the
+          // ceiling-based force-flush in scheduleQuestionCheck has a
+          // clock to count from.
+          if (!accumulatedTextRef.current.trim()) {
+            accumulationStartedAtRef.current = Date.now();
+          }
           accumulatedTextRef.current += ' ' + result.text;
           lastChunkTimeRef.current = Date.now();
           setStatus('listen', `Heard: "${accumulatedTextRef.current.trim().slice(-60)}..."`);
