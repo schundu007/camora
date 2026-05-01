@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
+import { LumoraBottomBar } from '../../components/lumora/shell/LumoraBottomBar';
 import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
+import { dispatchTranscript } from '../../lib/voice-router';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
 import { SessionSidebar } from '../../components/lumora/interview/SessionSidebar';
 import { LumoraDocsPanel } from '../../components/lumora/shell/LumoraDocsPanel';
@@ -164,24 +166,44 @@ export function LumoraShellPage() {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
-  const handleTranscription = useCallback((text: string) => {
+  // Voice router auto-flip: when the solver fires for Coding, flip the
+  // route to 'followup' so subsequent utterances go to Sona instead of
+  // re-filling the problem. Length gate (80 chars) avoids flipping on
+  // tiny "ok" / "next one" utterances that happen to slip past VAD.
+  // DesignLayout owns its own solve internally — it flips directly.
+  const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
+  const handleCodingSubmitRouted = useCallback((problem: string, language?: string) => {
+    if (problem && problem.trim().length >= 80) setVoiceRoute('followup');
+    return handleCodingSubmit(problem, language as any);
+  }, [handleCodingSubmit, setVoiceRoute]);
+
+  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (activeTab === 'coding' && codingProblemRef.current) {
-      codingProblemRef.current(text);
-    } else if (activeTab === 'design' && designProblemRef.current) {
-      designProblemRef.current(text);
-    } else if (activeTab === 'behavioral') {
+    if (activeTab === 'coding' || activeTab === 'design') {
+      // Routed: voice-router decides between the problem setter and Sona
+      // based on voiceRoute state. Manual presses always go to Sona.
+      dispatchTranscript({
+        text: trimmed,
+        opts,
+        activeTab,
+        codingProblemRef,
+        designProblemRef,
+      });
+      return;
+    }
+    if (activeTab === 'behavioral') {
       // Behavioral fullscreen renders the embedded AICompanionPanel — the
       // InterviewPage UI is hidden, so routing through useStreamingInterview
       // would stream the answer to a surface no one can see. Forward the
       // interviewer's question to the panel via a custom event instead.
-      // Gate on isQuestion() so background chatter doesn't fire Sona.
-      if (!isQuestion(trimmed)) return;
+      // Gate on isQuestion() so background chatter doesn't fire Sona,
+      // unless the press was manual (intent overrides heuristic).
+      if (!opts?.manual && !isQuestion(trimmed)) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
-    } else {
-      handleSubmit(text);
+      return;
     }
+    handleSubmit(text);
   }, [handleSubmit, activeTab]);
 
   return (
@@ -285,14 +307,12 @@ export function LumoraShellPage() {
             })}
           </div>
 
-          {/* MIDDLE — page-specific audio controls (only on coding/design).
-              Takes the flex grow so it absorbs available space without
-              shoving the right-hand controls. */}
-          <div className="flex-1 flex items-center min-w-0 justify-center">
-            {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
-              <LumoraTopBar onTranscription={handleTranscription} inline />
-            )}
-          </div>
+          {/* MIDDLE — empty spacer. Audio controls moved to a dedicated
+              LumoraBottomBar at the foot of the Coding / Design windows
+              so they read consistently with the behavioral panel's
+              bottom voice-filter banner. */}
+          <div className="flex-1 flex items-center min-w-0 justify-center" />
+
 
           {/* RIGHT — Go Invisible always; theme toggle only when the
               inline LumoraTopBar isn't shown (which already has its
@@ -378,14 +398,24 @@ export function LumoraShellPage() {
             <div style={{ display: activeTab === 'coding' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Coding" />}>
-                  <CodingLayout
-                    embedded
-                    onSubmit={handleCodingSubmit}
-                    isLoading={isStreaming}
-                    onBack={() => navigate('/lumora')}
-                    initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
-                    onVoiceProblemRef={codingProblemRef}
-                  />
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <CodingLayout
+                      embedded
+                      onSubmit={handleCodingSubmitRouted}
+                      isLoading={isStreaming}
+                      onBack={() => navigate('/lumora')}
+                      initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                      onVoiceProblemRef={codingProblemRef}
+                    />
+                  </div>
+                  {/* Bottom audio bar — single mic surface, mirrors the
+                      behavioral panel's bottom voice-filter banner. */}
+                  <div
+                    className="shrink-0 px-3 py-2"
+                    style={{ background: 'var(--bg-app)', borderTop: '1px solid var(--border)' }}
+                  >
+                    <LumoraBottomBar surface="coding" onTranscription={handleTranscription} />
+                  </div>
                 </Suspense>
               </ErrorBoundary>
             </div>
@@ -396,12 +426,20 @@ export function LumoraShellPage() {
             <div style={{ display: activeTab === 'design' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Design" />}>
-                  <DesignLayout
-                    embedded
-                    onBack={() => navigate('/lumora')}
-                    initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
-                    onVoiceProblemRef={designProblemRef}
-                  />
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <DesignLayout
+                      embedded
+                      onBack={() => navigate('/lumora')}
+                      initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                      onVoiceProblemRef={designProblemRef}
+                    />
+                  </div>
+                  <div
+                    className="shrink-0 px-3 py-2"
+                    style={{ background: 'var(--bg-app)', borderTop: '1px solid var(--border)' }}
+                  >
+                    <LumoraBottomBar surface="design" onTranscription={handleTranscription} />
+                  </div>
                 </Suspense>
               </ErrorBoundary>
             </div>

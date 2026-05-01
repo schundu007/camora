@@ -230,7 +230,38 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError } = useInterviewStore();
+  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setVoiceRoute } = useInterviewStore();
+
+  // Wipe every piece of solution state so the user can ask a brand-new
+  // problem without refreshing the page. Also flips the voice route
+  // back to 'problem' so the next dictated utterance fills the textarea
+  // and fires a fresh solve. Called from the "New Problem" toolbar
+  // button — and from the parent if it ever needs to reset us via ref.
+  const handleNewProblem = useCallback(() => {
+    setProblemText('');
+    setProblemUrl('');
+    setProblemTab('description');
+    setInputMode('paste');
+    setOutput('');
+    setIsRunning(false);
+    setJsonSolution(null);
+    setImageFile(null);
+    setImagePreview(null);
+    setIsProcessing(false);
+    setError(null);
+    setStreamError(null);
+    setTestCases([{ input: '', expected: '' }]);
+    setTestResults([]);
+    setShowFixPrompt(false);
+    setFixError('');
+    setIsOutputCollapsed(true);
+    setActiveSolutionIdx(0);
+    setCollapsedCards(new Set());
+    setCode(getDefaultCode(language));
+    clearStreamChunks();
+    setParsedBlocks([]);
+    setVoiceRoute('problem');
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setVoiceRoute, language]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -975,6 +1006,31 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {isStreaming && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: problemTab === 'solution' ? '#020617' : 'var(--cam-gold-leaf-lt)' }} />}
               </button>
             </div>
+            {/* New Problem — wipes every solution-side state so the user
+                can dictate / paste / fetch a fresh problem in the same
+                session without refreshing the page. Also flips the
+                voice router back to 'problem' so the next utterance
+                fills this textarea instead of going to Sona. */}
+            <button
+              onClick={handleNewProblem}
+              disabled={isStreaming || isLoading}
+              className="ml-auto flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                color: 'rgba(255,255,255,0.92)',
+                background: 'rgba(255,255,255,0.10)',
+                border: '1px solid rgba(255,255,255,0.22)',
+                fontFamily: 'var(--font-mono)',
+              }}
+              onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
+              onMouseLeave={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
+              title="Reset everything so you can ask a fresh problem in this same window — no refresh needed."
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="1 4 1 10 7 10" />
+                <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+              </svg>
+              New Problem
+            </button>
           </div>
 
           {/* Tab Content */}

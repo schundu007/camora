@@ -174,6 +174,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const text = overrideText || problemText;
     if (!text.trim() || !token || isLoading) return;
 
+    // Voice router: a real design problem just kicked off — flip the
+    // route so subsequent utterances go to Sona instead of overwriting
+    // the design problem and re-solving. Length gate avoids flipping
+    // on tiny utterances ("ok", "go") that shouldn't fire a solve in
+    // the first place.
+    if (text.trim().length >= 80) {
+      useInterviewStore.getState().setVoiceRoute('followup');
+    }
+
     setIsLoading(true);
     setResult(null);
     setStreamingText('');
@@ -363,6 +372,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
   }, [problemText, token, isLoading, handleSubmit]);
 
+  // Reset / "New Problem" — wipes every solution state so the user can
+  // dictate or paste a fresh design problem in the same window. Also
+  // flips the voice route back to 'problem' so the next utterance
+  // fills this textarea instead of being asked of Sona.
   const handleReset = useCallback(() => {
     setProblemText('');
     setResult(null);
@@ -371,6 +384,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setErrorMsg(null);
     setExpandedFollowup(null);
     setInputCollapsed(false);
+    useInterviewStore.getState().setVoiceRoute('problem');
   }, []);
 
   // Keyboard shortcut: Cmd+Enter to submit
