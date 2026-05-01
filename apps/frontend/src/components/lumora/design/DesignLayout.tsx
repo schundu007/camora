@@ -61,14 +61,14 @@ function cleanOverviewText(raw: string | undefined | null): string {
 }
 
 /* The same parser glitch leaks the entire structured response into
-   the requirements arrays — so a list typed as "Non-Functional"
-   ends up holding every subsequent block (SCALEMATH, DEEPDESIGN's
-   numbered headers, EDGECASES, TRADEOFFS, FOLLOWUP, etc.) as
-   additional bullets. We cut the array at the first item that
-   looks like a bracket tag (`[X]`/`[/X]`) or a numbered section
-   header (e.g. `1. CLIENT / EDGE LAYER`) — both of which signal
-   we've left the requirements list. Strip any inline tags from
-   surviving items as a final defense. */
+   any list field — Functional, Non-Functional, Tradeoffs, Edge
+   Cases, etc. — so each card ends up holding every subsequent
+   block (SCALEMATH, DEEPDESIGN's numbered headers, EDGECASES,
+   TRADEOFFS, FOLLOWUP, etc.) as additional bullets. We cut the
+   array at the first item that looks like a bracket tag
+   (`[X]`/`[/X]`) or a numbered section header (e.g. `1. CLIENT /
+   EDGE LAYER`) — both of which signal we've left this list.
+   Strip any inline tags from surviving items as a final defense. */
 function cleanRequirementList(items: string[] | undefined | null): string[] {
   if (!items || !items.length) return [];
   const out: string[] = [];
@@ -83,6 +83,25 @@ function cleanRequirementList(items: string[] | undefined | null): string[] {
     out.push(item.replace(/\[\/?[A-Z][A-Z_/-]*\]/g, '').trim());
   }
   return out.filter(Boolean);
+}
+
+/* Follow-up Q&A items are objects, not strings. Same leak risk
+   though — a stray `[FOLLOWUP]` / `[/FOLLOWUP]` can ride into
+   either field. Strip inline tags from both sides; drop any item
+   whose question or answer is empty / pure-tag noise after
+   cleaning. */
+function cleanFollowupList<T extends { question: string; answer: string }>(items: T[] | undefined | null): T[] {
+  if (!items || !items.length) return [];
+  const stripTags = (s: string) => (s || '').replace(/\[\/?[A-Z][A-Z_/-]*\]/g, '').trim();
+  const out: T[] = [];
+  for (const raw of items) {
+    const q = stripTags(raw.question);
+    const a = stripTags(raw.answer);
+    if (!q || !a) continue;
+    if (/^\s*\[/.test(q) || /^\s*\[/.test(a)) continue;
+    out.push({ ...raw, question: q, answer: a });
+  }
+  return out;
 }
 
 interface DesignLayoutProps {
@@ -1128,19 +1147,23 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               )}
 
               {/* ── TRADEOFFS + EDGE CASES ── */}
-              {((sd.tradeoffs && sd.tradeoffs.length > 0) || (sd.edgeCases && sd.edgeCases.length > 0)) && (
+              {(() => {
+                const tradeoffsClean = cleanRequirementList(sd.tradeoffs);
+                const edgeCasesClean = cleanRequirementList(sd.edgeCases);
+                if (!tradeoffsClean.length && !edgeCasesClean.length) return null;
+                return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                  {sd.tradeoffs && sd.tradeoffs.length > 0 && (
+                  {tradeoffsClean.length > 0 && (
                     <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                         <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--cam-primary))` }} />
                         <h2 className="text-sm font-bold text-white">Tradeoffs</h2>
-                        <div className="ml-auto"><SectionCopyBtn getText={() => (sd.tradeoffs || []).map((tr, i) => `${i + 1}. ${tr}`).join('\n')} title="Copy tradeoffs" /></div>
+                        <div className="ml-auto"><SectionCopyBtn getText={() => tradeoffsClean.map((tr, i) => `${i + 1}. ${tr}`).join('\n')} title="Copy tradeoffs" /></div>
                       </div>
                       <div className="px-4 py-3">
                         <p className="text-[10px] mb-2" style={{ color: t.textMuted }}>Click a tradeoff to re-stream the design using the alternative choice.</p>
                         <div className="grid grid-cols-1 gap-2">
-                          {sd.tradeoffs.map((tr, i) => (
+                          {tradeoffsClean.map((tr, i) => (
                             <button
                               key={i}
                               onClick={() => {
@@ -1172,16 +1195,16 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       </div>
                     </section>
                   )}
-                  {sd.edgeCases && sd.edgeCases.length > 0 && (
+                  {edgeCasesClean.length > 0 && (
                     <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                         <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--warning))` }} />
                         <h2 className="text-sm font-bold text-white">Edge Cases</h2>
-                        <div className="ml-auto"><SectionCopyBtn getText={() => (sd.edgeCases || []).map((e, i) => `${i + 1}. ${e}`).join('\n')} title="Copy edge cases" /></div>
+                        <div className="ml-auto"><SectionCopyBtn getText={() => edgeCasesClean.map((e, i) => `${i + 1}. ${e}`).join('\n')} title="Copy edge cases" /></div>
                       </div>
                       <div className="px-4 py-3">
                         <div className="grid grid-cols-1 gap-2">
-                          {sd.edgeCases.map((e, i) => (
+                          {edgeCasesClean.map((e, i) => (
                             <div key={i} className="rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                               <div className="flex items-start gap-2 text-sm leading-snug" style={{ color: t.text }}>
                                 <span className="font-bold shrink-0 mt-0.5" style={{ color: t.dotColor }}>
@@ -1196,20 +1219,24 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     </section>
                   )}
                 </div>
-              )}
+                );
+              })()}
 
               {/* ── FOLLOW-UP Q&A ── */}
-              {sd.followups && sd.followups.length > 0 && (
+              {(() => {
+                const followupsClean = cleanFollowupList(sd.followups);
+                if (!followupsClean.length) return null;
+                return (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--warning))` }} />
                     <h2 className="text-sm font-bold text-white">Follow-up Q&A</h2>
-                    <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.followups.length}</span>
-                    <SectionCopyBtn getText={() => (sd.followups || []).map((f, i) => `Q${i + 1}: ${f.question}\nA: ${f.answer}`).join('\n\n')} title="Copy follow-up Q&A" />
+                    <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{followupsClean.length}</span>
+                    <SectionCopyBtn getText={() => followupsClean.map((f, i) => `Q${i + 1}: ${f.question}\nA: ${f.answer}`).join('\n\n')} title="Copy follow-up Q&A" />
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {sd.followups.map((f, i) => (
+                      {followupsClean.map((f, i) => (
                         <button
                           key={i}
                           onClick={() => handleSubmit(f.question)}
@@ -1232,7 +1259,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     </div>
                   </div>
                 </section>
-              )}
+                );
+              })()}
 
             </div>
           )}
