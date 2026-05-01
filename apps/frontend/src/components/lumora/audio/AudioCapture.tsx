@@ -406,27 +406,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     startRecordingRef.current = startRecording;
   }, [startRecording]);
 
-  // Reset the shared `isRecording` store flag on every fresh mount and
-  // on unmount. The flag is global (useInterviewStore), so when this
-  // component remounts on tab change (LumoraTopBar keys AudioCapture by
-  // activeTab) the prior instance leaves `isRecording=true` behind even
-  // though its stream was already torn down by useAudioCapture cleanup.
-  // The new instance then short-circuits its autoStart guard
-  // (`!storeIsRecording`) and the mic silently never starts — users see
-  // both Auto and manual mic doing nothing. Resetting on mount restores
-  // the guard, and on unmount keeps the store honest for whoever
-  // subscribes next (status pill, copilot panel, etc.).
-  useEffect(() => {
-    setIsRecording(false);
-    stopListenTimer();
-    return () => {
-      setIsRecording(false);
-      stopListenTimer();
-    };
-    // Intentionally empty deps — fire only on mount/unmount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Keep continuousMode ref in sync
   useEffect(() => {
     continuousModeRef.current = continuousMode;
