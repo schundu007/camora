@@ -1,23 +1,31 @@
 /* ── Voice router ─────────────────────────────────────────────────────────
    Single dispatch point for every transcript produced by the page-level
-   AudioCapture. Routes by Sona's open/minimized state — not a stored
-   voiceRoute — because the user's mental model is "Sona panel open ⇒
-   talking to Sona, panel minimized ⇒ filling the problem field." That
-   reads off `sonaRegistry.isOpen()`, a module-level singleton updated
-   synchronously by AICompanionPanel on every minimize/restore. No
-   zustand subscription, no effect timing race.
+   AudioCapture. Routes by tab + the persistent voiceRoute state, NOT
+   by Sona's panel visibility — Sona open/minimized is purely a UI
+   choice and shouldn't reroute the mic.
 
-   On Coding / Design tabs:
-     · sonaRegistry.isOpen() === true   → ask Sona
-     · sonaRegistry.isOpen() === false  → fill problemRef
-     · No problemRef wired              → fall through to Sona
+   Routing rules:
 
-   On Behavioral / Interview tabs:
-     · Sona always handles voice — there is no problem-input concept.
+     Coding / Design tab + voiceRoute === 'problem'
+        → fill the corresponding problem field, which fires the solver
+           and auto-flips voiceRoute to 'followup' for next time.
+        → If problemRef isn't wired (shouldn't happen) we fall through
+           to Sona so the utterance is never lost.
 
-   Manual mic press (opts.manual === true) ALWAYS goes to Sona — explicit
-   user intent beats heuristic. */
+     Coding / Design tab + voiceRoute === 'followup'
+        → ask Sona (the user already kicked off a solve and is now
+           asking follow-up questions about it).
 
+     Behavioral / Interview tab
+        → always ask Sona (no problem-input concept on those tabs).
+
+   `opts.manual === true` does NOT change routing — pressing the mic
+   button on the coding tab still fills the coding problem the same as
+   AUTO would. Manual just disables isQuestion() gating on Sona's end
+   so a short imperative utterance ("compare these approaches") still
+   fires Sona instead of being filtered out. */
+
+import { useInterviewStore } from '@/stores/interview-store';
 import { sonaRegistry } from './sona-registry';
 
 type ProblemRef = React.MutableRefObject<((text: string) => void) | null>;
@@ -43,31 +51,25 @@ export function dispatchTranscript({
   const trimmed = (text || '').trim();
   if (!trimmed) return;
 
-  if (opts?.manual) {
-    log('manual → sona', trimmed.slice(0, 60));
-    sonaRegistry.ask(trimmed, opts);
-    return;
-  }
-
   if (activeTab === 'coding' || activeTab === 'design') {
-    const sonaOpen = sonaRegistry.isOpen();
-    if (sonaOpen) {
-      log('sona open → sona', trimmed.slice(0, 60));
+    const route = useInterviewStore.getState().voiceRoute;
+    if (route === 'problem') {
+      const ref = activeTab === 'coding' ? codingProblemRef : designProblemRef;
+      const setter = ref?.current;
+      if (setter) {
+        log(`route=problem → ${activeTab} problem field${opts?.manual ? ' (manual)' : ''}`, trimmed.slice(0, 60));
+        setter(trimmed);
+        return;
+      }
+      log('route=problem but no ref → sona fallback', trimmed.slice(0, 60));
       sonaRegistry.ask(trimmed, opts);
       return;
     }
-    const ref = activeTab === 'coding' ? codingProblemRef : designProblemRef;
-    const setter = ref?.current;
-    if (setter) {
-      log(`sona minimized → ${activeTab} problem field`, trimmed.slice(0, 60));
-      setter(trimmed);
-      return;
-    }
-    log('no problem ref → sona fallback', trimmed.slice(0, 60));
+    log(`route=followup → sona${opts?.manual ? ' (manual)' : ''}`, trimmed.slice(0, 60));
     sonaRegistry.ask(trimmed, opts);
     return;
   }
 
-  log('non-coding/design → sona', trimmed.slice(0, 60));
+  log(`non-coding/design → sona${opts?.manual ? ' (manual)' : ''}`, trimmed.slice(0, 60));
   sonaRegistry.ask(trimmed, opts);
 }
