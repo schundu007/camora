@@ -119,6 +119,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const setRecordingMode = useCallback((m: 'idle' | 'auto' | 'manual') => {
     recordingModeRef.current = m;
     setRecordingModeUI(m);
+    // Update the chunk-mode snapshot only on non-idle modes, so the
+    // value sticks across the eventual flip back to 'idle' that
+    // happens when handleRecordingStop fires. handleAudioData reads
+    // this in its async microtask AFTER mode is already 'idle' — so
+    // it needs the last *active* mode, not the live one.
+    if (m !== 'idle') chunkModeRef.current = m;
   }, []);
 
   // When MIC interrupts AUTO mid-chunk, the AUTO recorder's onstop
@@ -147,6 +153,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // hatch via the status bar. Reset on every accepted chunk.
   const consecutiveFilteredRef = useRef(0);
   const STUCK_FILTER_THRESHOLD = 5;
+
+  // Snapshots which recording-mode each blob belongs to. Set
+  // synchronously inside handleRecordingStop BEFORE we flip mode to
+  // 'idle'; read by handleAudioData when the async onstop later
+  // delivers the blob. Without this snapshot, handleAudioData would
+  // always read mode='idle' (because handleRecordingStop has already
+  // flipped it by the time the microtask fires) and every AUTO chunk
+  // would silently fall through to the MANUAL branch — no
+  // accumulation, no question detection, fragments fired to Sona one
+  // chunk at a time.
+  const chunkModeRef = useRef<'idle' | 'auto' | 'manual'>('idle');
 
   // Get store values first (must be before any useEffect that uses them)
   const {
@@ -299,10 +316,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }
 
     const shouldFilterVoice = voiceEnrolled && voiceFilterEnabled;
-    // Routing now keys off the RECORDER OWNER, not the AUTO toggle. A
-    // user who clicks MIC while AUTO is on still gets a one-shot
-    // manual transcription — the blob is theirs, not the loop's.
-    const isLiveMode = recordingModeRef.current === 'auto';
+    // Read the mode the BLOB was recorded under, not the live mode.
+    // handleRecordingStop runs synchronously before this microtask
+    // and has already flipped recordingModeRef to 'idle', so reading
+    // it directly always misroutes AUTO chunks to the MANUAL branch.
+    // chunkModeRef is the snapshot taken before that flip.
+    const isLiveMode = chunkModeRef.current === 'auto';
 
     if (isLiveMode) {
       // LIVE MODE: accumulate chunks, detect question completion
@@ -422,6 +441,9 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }
 
     const stoppedMode = recordingModeRef.current;
+    // chunkModeRef was already snapshotted by setRecordingMode the
+    // last time the mode flipped to a non-idle value, so we don't
+    // need to write it here.
     setRecordingMode('idle');
     setStatus('transcribe', 'Processing...');
     dlog('recorder_stopped', { stoppedMode, continuous: continuousModeRef.current, paused: userPausedRef.current });
