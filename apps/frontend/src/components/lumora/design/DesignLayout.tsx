@@ -29,12 +29,10 @@ interface DesignLayoutProps {
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
-  /** Ref to drop captured/screenshot problem text in WITHOUT auto-submitting — review first */
-  onCapturedProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
 }
 
 
-export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onCapturedProblemRef }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef }: DesignLayoutProps) {
   // Bind the local Lumora design theme to the global light/dark choice.
   // Always follow the user's global theme — embedded panes inherit light/dark
   // from the rest of the app instead of forcing dark.
@@ -356,16 +354,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
   }, [onVoiceProblemRef, token, isLoading, handleSubmit]);
-
-  // Register screenshot-captured problem handler — review-first, no auto-submit
-  useEffect(() => {
-    if (onCapturedProblemRef) {
-      onCapturedProblemRef.current = (text: string) => {
-        setProblemText(text);
-      };
-    }
-    return () => { if (onCapturedProblemRef) onCapturedProblemRef.current = null; };
-  }, [onCapturedProblemRef]);
 
   // Auto-submit after voice input sets problemText
   useEffect(() => {

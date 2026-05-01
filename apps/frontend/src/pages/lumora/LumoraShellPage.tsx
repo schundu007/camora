@@ -163,9 +163,6 @@ export function LumoraShellPage() {
   // Refs for coding/design problem setters — set by child layouts
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
-  // Separate refs for screenshot captures (review-first, no auto-submit)
-  const codingCaptureRef = useRef<((text: string) => void) | null>(null);
-  const designCaptureRef = useRef<((text: string) => void) | null>(null);
 
   const handleTranscription = useCallback((text: string) => {
     const trimmed = text.trim();
@@ -186,15 +183,6 @@ export function LumoraShellPage() {
       handleSubmit(text);
     }
   }, [handleSubmit, activeTab]);
-
-  const handleCapturedProblem = useCallback((text: string) => {
-    if (!text.trim()) return;
-    if (activeTab === 'coding' && codingCaptureRef.current) {
-      codingCaptureRef.current(text);
-    } else if (activeTab === 'design' && designCaptureRef.current) {
-      designCaptureRef.current(text);
-    }
-  }, [activeTab]);
 
   return (
     <InterviewerAudioProvider onTranscription={handleTranscription}>
@@ -302,7 +290,7 @@ export function LumoraShellPage() {
               shoving the right-hand controls. */}
           <div className="flex-1 flex items-center min-w-0 justify-center">
             {(activeTab === 'coding' || activeTab === 'design') && !copilotFullscreen && (
-              <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} onCapturedProblem={handleCapturedProblem} inline />
+              <LumoraTopBar onTranscription={handleTranscription} inline />
             )}
           </div>
 
@@ -397,7 +385,6 @@ export function LumoraShellPage() {
                     onBack={() => navigate('/lumora')}
                     initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
                     onVoiceProblemRef={codingProblemRef}
-                    onCapturedProblemRef={codingCaptureRef}
                   />
                 </Suspense>
               </ErrorBoundary>
@@ -414,7 +401,6 @@ export function LumoraShellPage() {
                     onBack={() => navigate('/lumora')}
                     initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
                     onVoiceProblemRef={designProblemRef}
-                    onCapturedProblemRef={designCaptureRef}
                   />
                 </Suspense>
               </ErrorBoundary>
