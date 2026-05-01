@@ -403,6 +403,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setInputCollapsed(false);
     useInterviewStore.getState().setLastFromCache(null);
     useInterviewStore.getState().setVoiceRoute('problem');
+    useInterviewStore.getState().setLiveSolveContext(null);
   }, []);
 
   // Regenerate — re-runs the same design problem with bypass_cache=true
@@ -433,6 +434,37 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   }, [handleSubmit]);
 
   const sd = result?.systemDesign;
+
+  // Publish the active design solution to the store as live-solve
+  // context so Sona's follow-up Q&A is grounded in this design. The
+  // Design output isn't a single code block — it's a structured
+  // architecture. We condense the most-quoted parts (overview, tech
+  // choices, tradeoffs) into a flat "code" slot so Sona can reason
+  // about it without us redesigning the systemContext format.
+  useEffect(() => {
+    if (!sd || !problemText.trim()) return;
+    const overview = (sd as any).overview || '';
+    const tradeoffs = Array.isArray((sd as any).tradeoffs)
+      ? (sd as any).tradeoffs.slice(0, 3).map((t: any) => `- ${t.choice || t.title || ''}: ${t.why || t.reason || t.detail || ''}`).join('\n')
+      : '';
+    const techChoices = Array.isArray((sd as any).techJustifications)
+      ? (sd as any).techJustifications.slice(0, 6).map((tj: any) => `- ${tj.tech}: ${(tj.details && tj.details[0]) || tj.why || ''}`).join('\n')
+      : '';
+    const condensed = [
+      overview && `OVERVIEW:\n${overview}`,
+      techChoices && `TECH CHOICES:\n${techChoices}`,
+      tradeoffs && `TRADEOFFS:\n${tradeoffs}`,
+    ].filter(Boolean).join('\n\n').slice(0, 4000);
+    useInterviewStore.getState().setLiveSolveContext({
+      surface: 'design',
+      problem: problemText.trim().slice(0, 4000),
+      approach: (sd as any).overview?.slice(0, 800) || '',
+      complexity: '',
+      code: condensed,
+      language: 'system-design',
+      solvedAt: Date.now(),
+    });
+  }, [sd, problemText]);
 
   return (
     <div

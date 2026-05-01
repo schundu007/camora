@@ -131,7 +131,41 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
   // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
   const activeAssistant = useMemo(() => getActiveAssistant(), []);
-  const systemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
+  const baseSystemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
+
+  // Live solve context — when the user just solved a coding/design
+  // problem on a sibling tab, append the problem + chosen solution
+  // to Sona's system context so follow-up Q&A is grounded in the
+  // exact code on screen. Without this, "what's the time
+  // complexity?" gets a generic / deflective answer because Sona
+  // has no idea which problem was solved. Cleared on New Problem /
+  // Reset, so once the user moves on, Sona stops answering against
+  // stale context.
+  const liveSolveContext = useInterviewStore(s => s.liveSolveContext);
+  const systemContext = useMemo(() => {
+    if (!liveSolveContext) return baseSystemContext;
+    const surface = liveSolveContext.surface === 'design' ? 'system-design' : 'coding';
+    const lang = liveSolveContext.language || 'python';
+    const fence = liveSolveContext.surface === 'design' ? '' : `\`\`\`${lang}\n${liveSolveContext.code}\n\`\`\``;
+    const liveBlock = [
+      '',
+      '##############################################################################',
+      `# CURRENT ${surface.toUpperCase()} SESSION (live, on-screen right now)`,
+      '##############################################################################',
+      'The candidate just solved this problem on the sibling tab and is now',
+      'asking a follow-up about it. Treat their next message as a follow-up',
+      'to THIS specific solution unless they clearly switch topics.',
+      '',
+      `PROBLEM:`,
+      liveSolveContext.problem,
+      '',
+      liveSolveContext.approach ? `APPROACH:\n${liveSolveContext.approach}\n` : '',
+      liveSolveContext.complexity ? `COMPLEXITY: ${liveSolveContext.complexity}\n` : '',
+      liveSolveContext.surface === 'coding' ? `CODE (${lang}):\n${fence}` : `DESIGN:\n${liveSolveContext.code}`,
+      '',
+    ].filter(Boolean).join('\n');
+    return (baseSystemContext || '') + liveBlock;
+  }, [baseSystemContext, liveSolveContext]);
 
   // Pull the global Lumora history store. Behavioral Q&A pairs are
   // pushed here so they show up in /lumora/sessions alongside Coding
