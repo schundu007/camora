@@ -510,6 +510,17 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     });
   }, []);
 
+  // Auto-route voice based on Sona's open / minimized state. The user
+  // explicitly asked to drop the manual CODING/SONA switch from the
+  // bottom bar, with the rule "Sona open → voice goes to Sona, Sona
+  // minimized → voice fills the problem field." Embedded mode (i.e.
+  // the fullscreen behavioral panel) is always treated as open.
+  const setVoiceRoute = useInterviewStore(s => s.setVoiceRoute);
+  useEffect(() => {
+    const sonaOpen = embedded || !minimized;
+    setVoiceRoute(sonaOpen ? 'followup' : 'problem');
+  }, [embedded, minimized, setVoiceRoute]);
+
   // Drain the queued question when the current answer finishes streaming.
   // Auto-mic can capture follow-ups while Sona is mid-stream — we hold only
   // the latest in `pendingQuestionRef` and fire it here.
