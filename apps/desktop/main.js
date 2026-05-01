@@ -183,6 +183,14 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 // pattern: recreate if destroyed, restore if minimized, show + focus
 // in every case so the window comes forward on the FIRST click.
 app.on('activate', () => {
+  // macOS can dispatch `activate` (Dock click, Finder launch, OS auto-
+  // relaunch on login) BEFORE `whenReady` resolves. Calling
+  // `new BrowserWindow(...)` while the app is not ready throws
+  // "Cannot create BrowserWindow before app is ready" and the app
+  // crashes silently from the user's perspective. The whenReady
+  // handler below will create the window itself once it's safe — we
+  // just no-op here and let activate fire again post-ready (it does).
+  if (!app.isReady()) return;
   if (!mainWindow || mainWindow.isDestroyed()) {
     createWindow();
     return;
@@ -195,6 +203,10 @@ app.on('before-quit', () => { isQuitting = true; });
 app.on('will-quit', () => globalShortcut.unregisterAll());
 
 app.on('second-instance', () => {
+  // Same not-ready guard as `activate`: a second-launch attempt can race
+  // ahead of whenReady on cold start. The whenReady handler will create
+  // the window when it's safe.
+  if (!app.isReady()) return;
   if (!mainWindow || mainWindow.isDestroyed()) {
     createWindow();
     return;
