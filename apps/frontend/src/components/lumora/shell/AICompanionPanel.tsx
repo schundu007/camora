@@ -276,8 +276,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     return typeof window === 'undefined' ? 400 : Math.min(400, Math.max(280, window.innerWidth - 48));
   });
   const [panelHeight, setPanelHeight] = useState(() => {
+    // Cap at viewport - 96 px so the panel never reaches up into the
+    // 56 px LumoraShell topbar (HOME / CODING / DESIGN / BEHAVIORAL
+    // tabs) plus a 24 px breathing margin below it. Without this, a
+    // saved height from a taller window earlier covered the tabs and
+    // looked like the panel was eating the top chrome.
     if (savedPrefs?.h && typeof window !== 'undefined') {
-      return Math.min(savedPrefs.h, window.innerHeight - 16);
+      return Math.min(savedPrefs.h, window.innerHeight - 96);
     }
     return typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96));
   });
@@ -325,21 +330,27 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     if (!initialQuestion) initialQuestionSent.current = false;
   }, [initialQuestion]);
 
-  // Drag handlers for floating window
+  // Drag handlers for floating window. Clamp Y so the panel can't be
+  // dragged up into the LumoraShell topbar (56 px) — the panel's drag
+  // header would otherwise hide behind the page tabs and the user
+  // couldn't grab it to drag it back. With panel anchored bottom-right
+  // (bottom: 24 - y), the lowest valid y is `80 + height - viewport`
+  // which puts the panel's top edge exactly at 56 px (topbar bottom).
   useEffect(() => {
     if (!isDragging) return;
     const handleMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
-      setPosition({
-        x: dragRef.current.origX + (e.clientX - dragRef.current.startX),
-        y: dragRef.current.origY + (e.clientY - dragRef.current.startY),
-      });
+      const nextX = dragRef.current.origX + (e.clientX - dragRef.current.startX);
+      const rawY = dragRef.current.origY + (e.clientY - dragRef.current.startY);
+      const minY = 80 + panelHeight - window.innerHeight;
+      const nextY = Math.max(minY, rawY);
+      setPosition({ x: nextX, y: nextY });
     };
     const handleUp = () => { setIsDragging(false); dragRef.current = null; };
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
     return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
-  }, [isDragging]);
+  }, [isDragging, panelHeight]);
 
   const startDrag = (e: React.MouseEvent) => {
     if (maximized) return;
@@ -625,11 +636,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         // On mobile the LumoraIconRail is hidden, so maximized must start at left:0
         // and span the full viewport width. md+ keeps the 80px rail offset.
         width: maximized ? `calc(100vw - var(--lumora-rail-offset, 0px))` : panelWidth,
-        height: maximized ? '100dvh' : panelHeight,
+        // Maximized: start 56 px below the viewport top (LumoraShell topbar
+        // height) so the HOME/CODING/DESIGN/BEHAVIORAL tabs stay visible
+        // — without this top:0 covered them. Height drops to
+        // 100dvh - 56px to match.
+        // Non-maximized: cap maxHeight to viewport - 80 (56 topbar + 24
+        // breathing room) so a tall resize / restored save can't push
+        // the top edge into the topbar.
+        height: maximized ? 'calc(100dvh - 56px)' : panelHeight,
+        maxHeight: maximized ? undefined : 'calc(100dvh - 80px)',
         right: maximized ? 0 : `calc(24px - ${position.x}px)`,
         bottom: maximized ? 0 : `calc(24px - ${position.y}px)`,
         left: maximized ? 'var(--lumora-rail-offset, 0px)' : undefined,
-        top: maximized ? 0 : undefined,
+        top: maximized ? 56 : undefined,
         borderRadius: maximized ? 0 : '16px',
         background: 'var(--bg-surface)',
         backdropFilter: 'blur(24px)',
