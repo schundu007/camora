@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomBytes } from 'node:crypto';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 import * as creditService from '../services/creditService.js';
@@ -14,7 +15,9 @@ router.get('/code', jwtAuth, async (req, res) => {
     let code = result.rows[0]?.referral_code;
 
     if (!code) {
-      code = Math.random().toString(36).substring(2, 10);
+      // Crypto-random — predictable codes are an abuse vector since holders
+      // earn free credits. base64url avoids ambiguous chars (0/O, 1/l).
+      code = randomBytes(6).toString('base64url').slice(0, 8);
       await query('UPDATE users SET referral_code = $1 WHERE id = $2', [code, userId]);
     }
 
