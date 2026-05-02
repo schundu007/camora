@@ -1,10 +1,6 @@
 import { query } from '../lib/shared-db.js';
+import { PAID_PLAN_TYPES } from '@camora/shared-db/plans';
 import { logger } from './requestLogger.js';
-
-// Pricing v3.2 paid plans. topup_1h purchases credit hours but don't grant
-// paid-plan access on their own — top-up itself is gated to active
-// subscribers in the /checkout route.
-const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team']);
 
 /**
  * Subscription Required Middleware

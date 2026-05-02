@@ -8,9 +8,7 @@ import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { SOLO_INCLUDED_HOURS } from '../services/teamService.js';
 import { logger } from '../middleware/requestLogger.js';
 
-// Valid paid plan_type values — source of truth for v3.2 pricing.
-// 'team' is the dynamic seat-priced team plan (5..50).
-const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team']);
+import { PAID_PLAN_TYPES } from '@camora/shared-db/plans';
 
 // Dynamic team pricing — single Stripe Product, ad-hoc Price per checkout.
 // Avoids creating a SKU for every (5..50) seat count. Formula matches

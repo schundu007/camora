@@ -18,8 +18,7 @@
  * Runs after `authenticate`, so req.user is always present.
  */
 import { query } from '../lib/shared-db.js';
-
-const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team']);
+import { PAID_PLAN_TYPES } from '@camora/shared-db/plans';
 
 const OWNER_EMAILS = new Set(
   (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
