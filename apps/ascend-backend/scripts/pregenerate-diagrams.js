@@ -1,31 +1,58 @@
 #!/usr/bin/env node
 /**
- * Batch pre-generate architecture diagrams for all system design topics.
+ * Batch pre-generate architecture diagrams for the Camora system-design catalog.
  *
- * Calls the /api/diagram/generate endpoint which uses Python diagrams
- * library (mingrammer) for proper AWS/Azure/GCP architecture diagrams.
- * Falls back to Mermaid only if Python fails.
+ * Hits POST /api/diagram/generate (Python diagrams library, falls back to
+ * Mermaid if Python fails) for every problem in the catalog so users hit
+ * the cache instead of triggering fresh generation.
  *
- * Generates all 4 variants per topic: LR/TB x overview/detailed.
- * Runs in sequential batches with delays to avoid overloading the server.
+ * IMPORTANT: /api/diagram/generate is now admin-only. You MUST set
+ * API_TOKEN to a JWT minted for an OWNER_EMAILS account (default:
+ * chundubabu@gmail.com or babuchundu@gmail.com). Non-admin tokens get
+ * 403 ADMIN_ONLY on every call and the script will report failure.
+ *
+ * Topic source defaults to the catalog data files
+ * (apps/frontend/src/data/capra/topics/systemDesignProblems[Extra].js).
+ * Use --source=legacy for the historical hardcoded list (49 topics) or
+ * --source=both to merge.
+ *
+ * Generates LR/TB × overview/detailed (4 variants per topic) by default.
  *
  * Usage:
- *   node scripts/pregenerate-diagrams.js [--batch-size=3] [--delay=5000] [--dry-run]
+ *   API_TOKEN=<admin-jwt> node scripts/pregenerate-diagrams.js \
+ *     [--batch-size=3] [--delay=5000] [--dry-run] \
+ *     [--source=catalog|legacy|both] [--phrasing=title|title-subtitle] \
+ *     [--limit=N] [--directions=LR,TB] [--details=overview,detailed] \
+ *     [--providers=auto]
  *
  * Environment:
- *   API_URL    — ascend backend URL (default: http://localhost:3009)
- *   API_TOKEN  — JWT auth token (required for auth'd endpoints)
+ *   API_URL    — ascend backend URL (default: https://caprab.cariara.com)
+ *   API_TOKEN  — admin JWT (REQUIRED — see above)
  */
 
+import { fileURLToPath } from 'url';
+import path from 'path';
+
 const args = process.argv.slice(2);
-const BATCH_SIZE = parseInt(args.find(a => a.startsWith('--batch-size='))?.split('=')[1] || '3');
-const DELAY_MS = parseInt(args.find(a => a.startsWith('--delay='))?.split('=')[1] || '5000');
+function flag(name, fallback) {
+  const hit = args.find((a) => a.startsWith(`--${name}=`));
+  return hit ? hit.split('=').slice(1).join('=') : fallback;
+}
+
+const BATCH_SIZE = parseInt(flag('batch-size', '3'), 10);
+const DELAY_MS = parseInt(flag('delay', '5000'), 10);
 const DRY_RUN = args.includes('--dry-run');
+const LIMIT = parseInt(flag('limit', '0'), 10) || Infinity;
+const SOURCE = flag('source', 'catalog'); // catalog | legacy | both
+const PHRASING = flag('phrasing', 'title'); // title | title-subtitle
+const DIRECTIONS = flag('directions', 'LR,TB').split(',').map((s) => s.trim()).filter(Boolean);
+const DETAILS = flag('details', 'overview,detailed').split(',').map((s) => s.trim()).filter(Boolean);
+const PROVIDERS = flag('providers', 'auto').split(',').map((s) => s.trim()).filter(Boolean);
 const API_URL = process.env.API_URL || 'https://caprab.cariara.com';
 const API_TOKEN = process.env.API_TOKEN;
 
-// ── All system design topics ──
-const TOPICS = [
+// ── Legacy hardcoded list (kept for --source=legacy backward compat) ──
+const LEGACY_TOPICS = [
   'Design a URL Shortener like TinyURL',
   'Design Twitter / X Social Media Feed',
   'Design Uber / Lyft Ride-Sharing Service',
@@ -78,16 +105,74 @@ const TOPICS = [
   'Design a Content Moderation System',
 ];
 
-const DIRECTIONS = ['LR', 'TB'];
-const DETAIL_LEVELS = ['overview', 'detailed'];
+// Path to the frontend topic data files. Resolved relative to this script
+// so the script works whether you `cd apps/ascend-backend` or run it from
+// the repo root.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = path.resolve(__dirname, '../../frontend/src/data/capra/topics');
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+async function loadCatalogTopics() {
+  const collected = [];
+  // Use file:// URLs because dynamic import of an absolute path needs them.
+  const sources = [
+    { url: new URL(`file://${path.join(DATA_DIR, 'systemDesignProblems.js')}`).href, exportName: 'systemDesigns' },
+    { url: new URL(`file://${path.join(DATA_DIR, 'systemDesignProblemsExtra.js')}`).href, exportName: 'extraSystemDesigns' },
+  ];
+  for (const { url, exportName } of sources) {
+    try {
+      const mod = await import(url);
+      const list = mod[exportName];
+      if (!Array.isArray(list)) {
+        console.warn(`[pregen] ${exportName} not found or not an array in ${url}`);
+        continue;
+      }
+      for (const p of list) {
+        if (!p?.title) continue;
+        collected.push({ id: p.id, title: p.title, subtitle: p.subtitle || '' });
+      }
+    } catch (err) {
+      console.warn(`[pregen] Failed to import ${url}: ${err.message}`);
+    }
+  }
+  return collected;
 }
 
-async function generateOne(topic, direction, detailLevel) {
+function phraseProblem(p) {
+  // "Design <title>" is the most common user phrasing. The optional
+  // -subtitle variant gives a slightly richer prompt that produces a
+  // marginally better diagram for ambiguous titles like "Pastebin".
+  if (PHRASING === 'title-subtitle' && p.subtitle) {
+    return `Design ${p.title} (${p.subtitle})`;
+  }
+  return `Design ${p.title}`;
+}
+
+async function buildTopics() {
+  let topics = [];
+  if (SOURCE === 'legacy') {
+    topics = LEGACY_TOPICS.slice();
+  } else if (SOURCE === 'both') {
+    const cat = await loadCatalogTopics();
+    topics = [...new Set([...LEGACY_TOPICS, ...cat.map(phraseProblem)])];
+  } else {
+    const cat = await loadCatalogTopics();
+    topics = cat.map(phraseProblem);
+  }
+  if (topics.length === 0) {
+    console.error('[pregen] No topics loaded. Check --source and data files.');
+    process.exit(1);
+  }
+  if (LIMIT < topics.length) topics = topics.slice(0, LIMIT);
+  return topics;
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function generateOne(topic, provider, direction, detailLevel) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120000); // 2min timeout
+  const timeout = setTimeout(() => controller.abort(), 120000);
 
   try {
     const res = await fetch(`${API_URL}/api/diagram/generate`, {
@@ -98,20 +183,22 @@ async function generateOne(topic, direction, detailLevel) {
       },
       body: JSON.stringify({
         question: topic,
-        cloudProvider: 'auto',
+        cloudProvider: provider,
         detailLevel,
         direction,
       }),
       signal: controller.signal,
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     clearTimeout(timeout);
 
+    if (res.status === 403 && data.code === 'ADMIN_ONLY') {
+      return { ok: false, error: 'ADMIN_ONLY (set API_TOKEN to an owner JWT)', fatal: true };
+    }
     if (data.success) {
-      const type = data.mermaid_code ? 'mermaid' : data.image_url ? 'python-png' : 'unknown';
-      const cached = data.cached ? ' (cached)' : '';
-      return { ok: true, type, cached };
+      const type = data.mermaid_code ? 'mermaid' : data.image_url ? 'png' : 'unknown';
+      return { ok: true, type, cached: !!data.cached };
     }
     return { ok: false, error: data.error || `HTTP ${res.status}` };
   } catch (err) {
@@ -121,29 +208,42 @@ async function generateOne(topic, direction, detailLevel) {
 }
 
 async function main() {
-  // Build task list
+  const TOPICS = await buildTopics();
+
   const tasks = [];
   for (const topic of TOPICS) {
-    for (const dir of DIRECTIONS) {
-      for (const detail of DETAIL_LEVELS) {
-        tasks.push({ topic, direction: dir, detailLevel: detail });
+    for (const provider of PROVIDERS) {
+      for (const dir of DIRECTIONS) {
+        for (const detail of DETAILS) {
+          tasks.push({ topic, provider, direction: dir, detailLevel: detail });
+        }
       }
     }
   }
 
   console.log(`\n=== Architecture Diagram Pre-Generation ===`);
-  console.log(`Endpoint: ${API_URL}/api/diagram/generate`);
-  console.log(`Topics: ${TOPICS.length}`);
-  console.log(`Variants: ${DIRECTIONS.length} directions x ${DETAIL_LEVELS.length} detail levels = ${DIRECTIONS.length * DETAIL_LEVELS.length}`);
-  console.log(`Total: ${tasks.length} diagrams`);
-  console.log(`Batch: ${BATCH_SIZE} concurrent, ${DELAY_MS}ms delay`);
-  console.log(`Auth: ${API_TOKEN ? 'Yes' : 'No token (may fail on auth endpoints)'}`);
-  console.log(`Dry run: ${DRY_RUN}\n`);
+  console.log(`Endpoint:  ${API_URL}/api/diagram/generate`);
+  console.log(`Source:    ${SOURCE} (${TOPICS.length} topics)`);
+  console.log(`Phrasing:  ${PHRASING}`);
+  console.log(`Variants:  ${PROVIDERS.length}P × ${DIRECTIONS.length}D × ${DETAILS.length}L = ${PROVIDERS.length * DIRECTIONS.length * DETAILS.length} per topic`);
+  console.log(`Total:     ${tasks.length} diagrams`);
+  console.log(`Batch:     ${BATCH_SIZE} concurrent, ${DELAY_MS}ms delay between batches`);
+  console.log(`Auth:      ${API_TOKEN ? 'admin token set' : 'NO TOKEN — every call will 403'}`);
+  console.log(`Dry run:   ${DRY_RUN}\n`);
+
+  if (DRY_RUN) {
+    for (const t of tasks.slice(0, 10)) {
+      console.log(`  DRY  ${t.topic.slice(0, 50).padEnd(50)} [${t.provider}/${t.direction}/${t.detailLevel}]`);
+    }
+    if (tasks.length > 10) console.log(`  ... and ${tasks.length - 10} more`);
+    process.exit(0);
+  }
 
   let generated = 0, cached = 0, failed = 0;
   const startTime = Date.now();
+  let aborted = false;
 
-  for (let i = 0; i < tasks.length; i += BATCH_SIZE) {
+  for (let i = 0; i < tasks.length && !aborted; i += BATCH_SIZE) {
     const batch = tasks.slice(i, i + BATCH_SIZE);
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
     const totalBatches = Math.ceil(tasks.length / BATCH_SIZE);
@@ -152,51 +252,45 @@ async function main() {
     console.log(`── Batch ${batchNum}/${totalBatches} [${elapsed}s elapsed] ──`);
 
     const results = await Promise.all(batch.map(async (task) => {
-      const label = `${task.topic.slice(0, 45).padEnd(45)} [${task.direction}/${task.detailLevel}]`;
-
-      if (DRY_RUN) {
-        console.log(`  DRY   ${label}`);
-        return 'dry';
-      }
-
-      const result = await generateOne(task.topic, task.direction, task.detailLevel);
+      const label = `${task.topic.slice(0, 40).padEnd(40)} [${task.provider}/${task.direction}/${task.detailLevel}]`;
+      const result = await generateOne(task.topic, task.provider, task.direction, task.detailLevel);
 
       if (result.ok) {
-        if (result.cached) {
-          console.log(`  CACHE ${label} → ${result.type}${result.cached}`);
-          return 'cached';
-        }
-        console.log(`  OK    ${label} → ${result.type}`);
-        return 'generated';
+        const tag = result.cached ? 'CACHE' : 'OK   ';
+        console.log(`  ${tag} ${label} → ${result.type}${result.cached ? ' (cached)' : ''}`);
+        return result.cached ? 'cached' : 'generated';
       }
       console.error(`  FAIL  ${label} → ${result.error}`);
+      if (result.fatal) {
+        aborted = true;
+        return 'fatal';
+      }
       return 'failed';
     }));
 
     for (const r of results) {
       if (r === 'generated') generated++;
       else if (r === 'cached') cached++;
-      else if (r === 'failed') failed++;
+      else if (r === 'failed' || r === 'fatal') failed++;
     }
 
-    // Rate limit between batches
-    if (i + BATCH_SIZE < tasks.length) {
+    if (i + BATCH_SIZE < tasks.length && !aborted) {
       await sleep(DELAY_MS);
     }
   }
 
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-
   console.log(`\n=== Complete (${totalTime}s) ===`);
   console.log(`Generated: ${generated} (new)`);
   console.log(`Cached:    ${cached} (already existed)`);
   console.log(`Failed:    ${failed}`);
   console.log(`Total:     ${generated + cached + failed}/${tasks.length}`);
+  if (aborted) console.log(`ABORTED — fatal auth error. Set API_TOKEN to an owner JWT.`);
 
   process.exit(failed > 0 ? 1 : 0);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Fatal:', err);
   process.exit(1);
 });
