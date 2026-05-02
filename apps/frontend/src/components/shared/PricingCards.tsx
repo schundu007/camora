@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { dialogAlert } from './Dialog';
@@ -127,12 +127,25 @@ export function usePlanPrices() {
  * Two shapes:
  *   (a) Fixed SKU:  checkout(priceId, name, { quantity? })  — solo + topup
  *   (b) Team:       checkout('', name, { team: { seats } }) — dynamic price_data
+ *
+ * AuthContext hydration race: when a user lands on /pricing and clicks a
+ * plan card before AuthContext finishes loading the SSO cookie, `token`
+ * is briefly null and the old code redirected straight to /login — even
+ * though the user was logged in. We now poll a ref of the current token
+ * for up to 2 seconds before deciding we're truly unauthed.
  */
 export function useCheckout() {
-  const { token } = useAuth();
+  const { token, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState('');
+
+  // Mirror token + auth-loading into refs so the async checkout function
+  // reads the latest value (closure would capture the value at click time).
+  const tokenRef = useRef(token);
+  const authLoadingRef = useRef(authLoading);
+  useEffect(() => { tokenRef.current = token; }, [token]);
+  useEffect(() => { authLoadingRef.current = authLoading; }, [authLoading]);
 
   const checkout = async (
     priceId: string,
@@ -141,8 +154,25 @@ export function useCheckout() {
   ) => {
     const isTeam = !!opts?.team;
     if (!isTeam && !priceId) { navigate('/pricing'); return; }
-    if (!token) { navigate('/login'); return; }
+
     setLoading(planName);
+
+    // If AuthContext is still hydrating (cookie → /me → token roundtrip),
+    // give it up to 2s to resolve before redirecting to login. Otherwise
+    // a fast click on /pricing → "Start Monthly" lands the user on /login
+    // even though their cookie is valid.
+    let waited = 0;
+    while (!tokenRef.current && authLoadingRef.current && waited < 2000) {
+      await new Promise(r => setTimeout(r, 100));
+      waited += 100;
+    }
+    const currentToken = tokenRef.current;
+    if (!currentToken) {
+      setLoading('');
+      navigate('/login?redirect=/pricing');
+      return;
+    }
+
     const raw = searchParams.get('returnTo');
     const returnTo = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/lumora';
     const sep = returnTo.includes('?') ? '&' : '?';
@@ -151,7 +181,7 @@ export function useCheckout() {
       const resp = await fetch(`${BILLING_API}/api/v1/billing/checkout`, {
         credentials: 'include',
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentToken}` },
         body: JSON.stringify({
           success_url: successUrl,
           cancel_url: window.location.href,
