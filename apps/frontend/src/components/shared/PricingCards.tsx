@@ -53,9 +53,9 @@ export const SOLO_PLANS: PlanCard[] = [
     description: '2 AI hours included. Buy more at $15/hr, never expire.',
     features: [
       '2 AI hours included every month',
-      'Lumora live answers + coding solver',
+      'Live interview AI co-pilot + coding solver',
       'System design generator + voice filter',
-      'All Capra prep · 800+ topics (unlimited browsing)',
+      'Interview prep · 800+ topics (unlimited browsing)',
       'Top-ups at $15/hr if you need more',
     ],
     cta: 'Start Monthly',
