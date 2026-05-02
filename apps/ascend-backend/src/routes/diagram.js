@@ -387,6 +387,41 @@ router.post('/lookup', async (req, res) => {
 });
 
 /**
+ * DELETE /api/diagram/cache
+ * Admin-only — purge cache rows by provider/direction/detail filters so they
+ * regenerate on the next /generate call. Used after a code fix that changes
+ * generated content (e.g. provider lock, alias map) to invalidate stale rows
+ * without nuking the entire cache.
+ *
+ * Body filters (all optional, AND-combined). At least one MUST be set so we
+ * don't accidentally truncate the table:
+ *   { provider: 'aws'|'gcp'|'azure'|'auto', direction: 'LR'|'TB',
+ *     detailLevel: 'overview'|'detailed', match: '<substring of question>' }
+ *
+ * Returns: { deleted: <row count> }
+ */
+router.delete('/cache', adminOnlyForGeneration, async (req, res) => {
+  try {
+    const { provider, direction, detailLevel, match } = req.body || {};
+    const conds = [];
+    const args = [];
+    if (provider) { conds.push(`cloud_provider = $${conds.length + 1}`); args.push(provider); }
+    if (direction) { conds.push(`direction = $${conds.length + 1}`); args.push(direction); }
+    if (detailLevel) { conds.push(`detail_level = $${conds.length + 1}`); args.push(detailLevel); }
+    if (match) { conds.push(`description ILIKE $${conds.length + 1}`); args.push(`%${match}%`); }
+    if (conds.length === 0) {
+      return res.status(400).json({ error: 'At least one filter required (provider/direction/detailLevel/match)', code: 'NO_FILTER' });
+    }
+    const sql = `DELETE FROM ascend_diagram_cache WHERE ${conds.join(' AND ')}`;
+    const r = await query(sql, args);
+    res.json({ deleted: r.rowCount, sql, args });
+  } catch (err) {
+    console.error('[DiagramCacheDelete] error:', err);
+    res.status(500).json({ error: 'Cache delete failed', detail: err.message });
+  }
+});
+
+/**
  * GET /api/diagram/cache-stats
  * Debug: show what's in the diagram cache
  */
