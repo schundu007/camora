@@ -1,126 +1,91 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../hooks/useTheme';
 import { dialogAlert } from './Dialog';
 
 const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-/* ── Pricing v2 — 3 plans with monthly|yearly toggle ──────────────────────
- * Free / Pro / Pro Max. PAYG ceiling $10/hr; Pro Max gets 10% loyalty
- * discount on hours ($9/hr); yearly billing saves 17% over monthly × 12.
- * Top-ups (1h / 5h / 25h) all flat $10/hr. Desktop Lifetime sold separately.
+/* ── Pricing v3 — three flat options ──────────────────────────────────────
+ * Per user request: remove the multi-tier ladder, top-up packs, business
+ * starter, desktop add-ons, free tier — just three options the user can
+ * pick between in seconds.
+ *
+ *   1. Monthly        — $19 / month   (full access)
+ *   2. Yearly         — $99 / year    (full access, save vs monthly)
+ *   3. AI Hourly      — $15 / hour    (pay-as-you-go top-up)
+ *
+ * Backend price keys retained from v2 so we don't churn the billing
+ * routes / Stripe webhook handlers / subscription middleware:
+ *   - pro_monthly  → $19/mo subscription
+ *   - pro_yearly   → $99/yr subscription
+ *   - topup_1h     → $15 one-time, 1 AI hour
+ * Operator updates the matching Stripe Dashboard price to the new
+ * dollar amount; no code change needed elsewhere.
  */
 
 export interface PlanCard {
+  id: 'monthly' | 'yearly' | 'hourly';
   name: string;
-  monthlyPrice: string;
-  yearlyPrice: string;
-  monthlyEquiv?: string;
-  monthlyHours: string;
-  yearlyHours: string;
-  monthlyPriceKey: string | null;
-  yearlyPriceKey: string | null;
+  price: string;
+  period: string;
+  priceKey: string | null;
   description: string;
   features: string[];
   cta: string;
-  popular?: boolean;
-  best?: boolean;
+  highlight?: 'popular' | 'best';
 }
 
-export const FREE_PLAN: PlanCard = {
-  name: 'Free',
-  monthlyPrice: '$0',
-  yearlyPrice: '$0',
-  monthlyHours: '30 min lifetime',
-  yearlyHours: '30 min lifetime',
-  monthlyPriceKey: null,
-  yearlyPriceKey: null,
-  description: 'Try the platform — no card needed',
+export const MONTHLY_PLAN: PlanCard = {
+  id: 'monthly',
+  name: 'Monthly',
+  price: '$19',
+  period: '/month',
+  priceKey: 'pro_monthly',
+  description: 'Full access, billed monthly. Cancel any time.',
   features: [
-    'Browse 800+ prep topics',
-    '1 topic per category',
-    '30 min AI hours (lifetime)',
+    'Unlimited Lumora live interview sessions',
+    'All Capra prep topics (800+)',
+    'Coding solver, system design, behavioral STAR',
+    'Voice filtering and architecture diagrams',
   ],
-  cta: 'Try Free',
+  cta: 'Start Monthly',
+  highlight: 'popular',
 };
 
-export const PRO_PLAN: PlanCard = {
-  name: 'Pro',
-  monthlyPrice: '$29',
-  yearlyPrice: '$290',
-  monthlyEquiv: '$24.17/mo',
-  monthlyHours: '2 AI hours / mo',
-  yearlyHours: '24 AI hours / yr',
-  monthlyPriceKey: 'pro_monthly',
-  yearlyPriceKey: 'pro_yearly',
-  description: 'For active job seekers',
-  features: [
-    'All 800+ prep topics',
-    '2 AI hours / month',
-    'Architecture diagrams',
-    '$10/hr overage',
-  ],
-  cta: 'Upgrade to Pro',
-  popular: true,
-};
-
-export const PRO_MAX_PLAN: PlanCard = {
-  name: 'Pro Max',
-  monthlyPrice: '$79',
-  yearlyPrice: '$790',
-  monthlyEquiv: '$65.83/mo',
-  monthlyHours: '8 AI hours / mo',
-  yearlyHours: '96 AI hours / yr',
-  monthlyPriceKey: 'pro_max_monthly',
-  yearlyPriceKey: 'pro_max_yearly',
-  description: 'For heavy interviewers',
-  features: [
-    'Everything in Pro',
-    '8 AI hours / month',
-    '$9/hr overage (save 10%)',
-    'Share with up to 5 mates · pooled hours',
-    'Desktop app + voice filtering',
-    'Priority support',
-  ],
-  cta: 'Get Pro Max',
-  best: true,
-};
-
-export const PLANS: PlanCard[] = [FREE_PLAN, PRO_PLAN, PRO_MAX_PLAN];
-
-export const DESKTOP_LIFETIME = {
-  name: 'Desktop Lifetime',
+export const YEARLY_PLAN: PlanCard = {
+  id: 'yearly',
+  name: 'Yearly',
   price: '$99',
-  description: 'Lumora Desktop only — bring your own AI keys',
-  priceKey: 'desktop_lifetime',
-};
-
-export const TOPUPS = [
-  { name: '1 AI hour',   price: '$10',  desc: 'Small · 90-day expiry',   priceKey: 'topup_1h' },
-  { name: '5 AI hours',  price: '$50',  desc: 'Medium · 90-day expiry',  priceKey: 'topup_5h' },
-  { name: '25 AI hours', price: '$250', desc: 'Large · 90-day expiry',   priceKey: 'topup_25h' },
-];
-
-// Camora for Business — one-time starter pack for cohorts, bootcamps, and
-// recruiting teams. 75 AI hours + 10 seats for $499 (effective $6.65/hr —
-// 33% under consumer Pro Max). PAYG continues at $8/hr after the pack
-// (20% under consumer PAYG) once auto-topup ships in Phase 2.
-export const BUSINESS_STARTER = {
-  name: 'Business Starter',
-  price: '$499',
-  hours: 75,
-  seats: 10,
-  paygRate: 800, // cents/hr after pack — 20% off consumer PAYG
-  priceKey: 'business_starter',
+  period: '/year',
+  priceKey: 'pro_yearly',
+  description: 'Same access, ~57% off vs monthly × 12.',
   features: [
-    '75 AI hours included',
-    'Up to 10 team seats',
-    'Centralized billing (one invoice)',
-    'Per-member usage breakdown',
-    'PAYG at $8/hr after pack (save 20%)',
+    'Everything in Monthly',
+    'Equivalent to $8.25/month',
+    'One annual charge — set and forget',
+    'Best for active interview cycles',
   ],
+  cta: 'Start Yearly',
+  highlight: 'best',
 };
+
+export const HOURLY_PLAN: PlanCard = {
+  id: 'hourly',
+  name: 'AI Hourly',
+  price: '$15',
+  period: '/hour',
+  priceKey: 'topup_1h',
+  description: 'Pay only for the AI hours you use. No subscription.',
+  features: [
+    '1 AI hour added on each purchase',
+    '90-day expiry per hour pack',
+    'Stacks on top of any active subscription',
+    'No recurring charge',
+  ],
+  cta: 'Buy 1 hour',
+};
+
+export const PLANS: PlanCard[] = [MONTHLY_PLAN, YEARLY_PLAN, HOURLY_PLAN];
 
 /* ── Shared price fetching hook ── */
 export function usePlanPrices() {
@@ -198,279 +163,84 @@ export function useCheckout() {
   return { checkout, loading };
 }
 
-/* ── Pricing Cards — Free / Pro / Pro Max with billing toggle ──
- *
- * `variant`: passthrough for legacy callers (JobPrepPage upsell modal,
- * TopicDetail inline upgrade). Today both render the standard layout —
- * the cards are already compact enough for in-modal use; if a tighter
- * layout is needed later we can branch on `variant === 'compact'`.
- */
+/* ── Pricing Cards — 3 flat options ── */
 export default function PricingCards({
-  showFree = true,
+  showFree: _showFree,
   variant: _variant,
 }: {
+  /** Legacy prop — ignored. Free tier is no longer part of the
+      simplified pricing model. Kept on the type so existing callers
+      don't break. */
   showFree?: boolean;
   variant?: 'compact' | 'default';
-}) {
+} = {}) {
   const prices = usePlanPrices();
   const { checkout, loading } = useCheckout();
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
-
-  const isDark = theme === 'dark';
-  const highlightBg = isDark ? 'var(--cam-primary-dk)' : '#0F172A';
-  const highlightFg = '#FFFFFF';
-  const highlightFgMuted = 'rgba(255,255,255,0.72)';
-  const highlightBorder = 'rgba(255,255,255,0.18)';
-
-  const visiblePlans = showFree ? PLANS : PLANS.filter((p) => p.monthlyPriceKey !== null);
 
   return (
-    <div className="space-y-8">
-      {/* ── Billing cycle toggle ────────────────────────────────────── */}
-      <div className="flex items-center justify-center">
-        <div className="inline-flex rounded-full p-0.5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          {(['monthly', 'yearly'] as const).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setBilling(opt)}
-              className="px-4 py-2 text-[12px] font-bold uppercase tracking-wider rounded-full transition-all cursor-pointer"
-              style={{
-                background: billing === opt ? 'var(--accent)' : 'transparent',
-                color: billing === opt ? '#FFFFFF' : 'var(--text-secondary)',
-              }}
-            >
-              {opt === 'yearly' ? 'Yearly · save 17%' : 'Monthly'}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+      {PLANS.map((plan) => {
+        const priceId = plan.priceKey ? (prices?.[plan.priceKey]?.priceId || '') : '';
+        const highlighted = plan.highlight === 'popular' || plan.highlight === 'best';
+        const highlightBg = 'var(--cam-primary-dk)';
+        const highlightFg = '#FFFFFF';
+        const highlightFgMuted = 'rgba(255,255,255,0.72)';
+        const highlightBorder = 'rgba(255,255,255,0.20)';
 
-      {/* ── 3-plan grid ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {visiblePlans.map((plan) => {
-          const isFree = plan.monthlyPriceKey === null;
-          const priceKey = billing === 'yearly' ? plan.yearlyPriceKey : plan.monthlyPriceKey;
-          const priceId = priceKey ? (prices?.[priceKey]?.priceId || '') : '';
-          const highlighted = plan.popular || plan.best;
-
-          const displayPrice = isFree ? plan.monthlyPrice : (billing === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice);
-          const displayPeriod = isFree ? '' : (billing === 'yearly' ? '/yr' : '/mo');
-          const displayHours = billing === 'yearly' ? plan.yearlyHours : plan.monthlyHours;
-
-          return (
-            <div
-              key={plan.name}
-              className="group flex flex-col rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-              style={{
-                background: highlighted ? highlightBg : 'var(--bg-surface)',
-                border: highlighted ? `2px solid ${highlightBg}` : '1px solid var(--border)',
-              }}
-            >
-              <div className="p-6 flex flex-col flex-1">
-                {/* Badge */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[14px] font-bold" style={{ color: highlighted ? highlightFgMuted : 'var(--text-primary)' }}>{plan.name}</h3>
-                  {plan.popular && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: '#FFFFFF', color: highlightBg }}>POPULAR</span>}
-                  {plan.best && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: '#FFFFFF', color: highlightBg }}>BEST VALUE</span>}
-                </div>
-
-                {/* Price */}
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-extrabold" style={{ color: highlighted ? highlightFg : 'var(--text-primary)' }}>{displayPrice}</span>
-                  {displayPeriod && <span className="text-[12px]" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>{displayPeriod}</span>}
-                </div>
-                {!isFree && billing === 'yearly' && plan.monthlyEquiv && (
-                  <p className="text-[11px] mb-1 font-medium" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>{plan.monthlyEquiv} · save 17%</p>
-                )}
-                <p className="text-[12px] mb-4" style={{ color: highlighted ? highlightFgMuted : 'var(--text-secondary)' }}>{plan.description}</p>
-
-                {/* Hours callout */}
-                <div className="rounded-lg px-3 py-2 mb-4" style={{ background: highlighted ? 'rgba(255,255,255,0.1)' : 'var(--bg-elevated)' }}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>AI hours</p>
-                  <p className="text-[14px] font-bold" style={{ color: highlighted ? highlightFg : 'var(--text-primary)' }}>{displayHours}</p>
-                </div>
-
-                {/* Features */}
-                <ul className="space-y-2 flex-1 mb-4">
-                  {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[12px] leading-snug">
-                      <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke={highlighted ? highlightFg : 'var(--accent)'} strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      <span style={{ color: highlighted ? highlightFg : 'var(--text-secondary)' }}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
+        return (
+          <div
+            key={plan.id}
+            className="group flex flex-col rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+            style={{
+              background: highlighted ? highlightBg : 'var(--bg-surface)',
+              border: highlighted ? `2px solid ${highlightBg}` : '1px solid var(--border)',
+            }}
+          >
+            <div className="p-6 flex flex-col flex-1">
+              {/* Badge */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[14px] font-bold" style={{ color: highlighted ? highlightFgMuted : 'var(--text-primary)' }}>{plan.name}</h3>
+                {plan.highlight === 'popular' && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: '#FFFFFF', color: highlightBg }}>POPULAR</span>}
+                {plan.highlight === 'best' && <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: highlightBg }}>BEST VALUE</span>}
               </div>
 
-              {/* CTA */}
-              <div className="px-6 pb-6">
-                <button
-                  onClick={() => isFree ? navigate('/capra/prepare') : checkout(priceId, plan.name)}
-                  disabled={loading === plan.name}
-                  className="w-full py-2.5 text-[12px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50"
-                  style={{
-                    background: highlighted ? '#FFFFFF' : 'var(--bg-elevated)',
-                    color: highlighted ? highlightBg : 'var(--text-primary)',
-                    border: highlighted ? `1px solid ${highlightBorder}` : '1px solid var(--border)',
-                  }}
-                >
-                  {loading === plan.name ? 'Processing…' : plan.cta}
-                </button>
+              {/* Price */}
+              <div className="flex items-baseline gap-1 mb-3">
+                <span className="text-4xl font-extrabold" style={{ color: highlighted ? highlightFg : 'var(--text-primary)' }}>{plan.price}</span>
+                <span className="text-[13px]" style={{ color: highlighted ? highlightFgMuted : 'var(--text-muted)' }}>{plan.period}</span>
               </div>
+              <p className="text-[12px] mb-4 leading-relaxed" style={{ color: highlighted ? highlightFgMuted : 'var(--text-secondary)' }}>{plan.description}</p>
+
+              {/* Features */}
+              <ul className="space-y-2 flex-1 mb-4">
+                {plan.features.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-[12px] leading-snug">
+                    <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke={highlighted ? highlightFg : 'var(--accent)'} strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <span style={{ color: highlighted ? highlightFg : 'var(--text-secondary)' }}>{f}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          );
-        })}
-      </div>
 
-      {/* ── Hour top-up packs (3) ───────────────────────────────────── */}
-      <div>
-        <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
-          Need more hours? Top-up packs (flat $10/hr)
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {TOPUPS.map((pack) => {
-            const pid = prices?.[pack.priceKey]?.priceId || '';
-            return (
-              <div key={pack.priceKey} className="rounded-xl p-4 flex flex-col" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>{pack.price}</span>
-                </div>
-                <span className="text-[12px] font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
-                <p className="text-[10px] mb-3" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
-                <button
-                  onClick={() => pid ? checkout(pid, pack.name) : navigate('/pricing')}
-                  disabled={loading === pack.name}
-                  className="mt-auto w-full px-3 py-2 text-white text-[11px] font-semibold rounded-md cursor-pointer disabled:opacity-50" style={{ background: 'var(--accent)' }}
-                >
-                  {loading === pack.name ? '…' : 'Buy pack'}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Camora for Business — one-time starter pack ─────────────── */}
-      <div className="rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5"
-        style={{ background: 'linear-gradient(135deg, var(--cam-primary-dk) 0%, #0F172A 100%)', border: '1px solid var(--cam-primary-dk)' }}>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider" style={{ background: 'rgba(255,255,255,0.15)', color: '#FFFFFF' }}>FOR BUSINESS</span>
-            <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>One-time pack</span>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-extrabold mb-1" style={{ color: '#FFFFFF' }}>Camora for Business</h3>
-          <p className="text-[12px] sm:text-[13px] mb-3" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            For bootcamps, recruiting teams, and cohorts. Single invoice, shared hour pool,
-            usage analytics for every seat.
-          </p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
-            {BUSINESS_STARTER.features.map((f, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[12px] leading-snug">
-                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span style={{ color: '#FFFFFF' }}>{f}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold" style={{ color: '#FFFFFF' }}>{BUSINESS_STARTER.price}</span>
-            <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.7)' }}>one-time</span>
-          </div>
-          <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Effective <strong style={{ color: '#FFFFFF' }}>$6.65/hr</strong> · save 33%
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-1">
-            <button
-              onClick={() => {
-                const pid = prices?.business_starter?.priceId || '';
-                if (pid) checkout(pid, BUSINESS_STARTER.name);
-                else navigate('/pricing');
-              }}
-              disabled={loading === BUSINESS_STARTER.name}
-              className="px-4 py-2 text-[12px] font-bold rounded-lg cursor-pointer disabled:opacity-50"
-              style={{ background: '#FFFFFF', color: 'var(--cam-primary-dk)' }}
-            >
-              {loading === BUSINESS_STARTER.name ? 'Processing…' : 'Buy starter pack'}
-            </button>
-            <a
-              href="mailto:business@cariara.com?subject=Camora%20for%20Business"
-              className="px-4 py-2 text-[12px] font-bold rounded-lg text-center"
-              style={{ background: 'transparent', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.4)' }}
-            >
-              Talk to us
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Desktop add-on — Individual ($99/1 user) and Business ($999/10 seats) ── */}
-      <div>
-        <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Desktop app · BYOK · one-time purchase</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Individual */}
-          <div className="rounded-xl p-4 flex flex-col" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(38,97,156,0.1)', color: 'var(--accent)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-              </div>
-              <div>
-                <p className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Individual</p>
-                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>1 user · stealth mode</p>
-              </div>
+            {/* CTA */}
+            <div className="px-6 pb-6">
+              <button
+                onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
+                disabled={loading === plan.name}
+                className="w-full py-2.5 text-[12px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50"
+                style={{
+                  background: highlighted ? '#FFFFFF' : 'var(--bg-elevated)',
+                  color: highlighted ? highlightBg : 'var(--text-primary)',
+                  border: highlighted ? `1px solid ${highlightBorder}` : '1px solid var(--border)',
+                }}
+              >
+                {loading === plan.name ? 'Processing…' : plan.cta}
+              </button>
             </div>
-            <div className="flex items-baseline gap-1 mb-3">
-              <span className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$99</span>
-              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
-            </div>
-            <button
-              onClick={() => {
-                const pid = prices?.desktop_lifetime?.priceId || '';
-                if (pid) checkout(pid, 'Desktop Lifetime');
-                else navigate('/pricing');
-              }}
-              disabled={loading === 'Desktop Lifetime'}
-              className="mt-auto w-full px-3 py-2 text-white text-[11px] font-semibold rounded-md cursor-pointer disabled:opacity-50" style={{ background: 'var(--accent)' }}
-            >
-              {loading === 'Desktop Lifetime' ? '…' : 'Buy individual'}
-            </button>
           </div>
-
-          {/* Business — 10 seats */}
-          <div className="rounded-xl p-4 flex flex-col" style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary-dk)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(15, 23, 42, 0.1)', color: 'var(--cam-primary-dk)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" /></svg>
-              </div>
-              <div>
-                <p className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Business · 10 seats</p>
-                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>For teams &amp; cohorts</p>
-              </div>
-            </div>
-            <div className="flex items-baseline gap-1 mb-3">
-              <span className="text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$999</span>
-              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time · $99.90/seat</span>
-            </div>
-            <button
-              onClick={() => {
-                const pid = prices?.business_desktop_lifetime?.priceId || '';
-                if (pid) checkout(pid, 'Business Desktop Lifetime');
-                else navigate('/pricing');
-              }}
-              disabled={loading === 'Business Desktop Lifetime'}
-              className="mt-auto w-full px-3 py-2 text-white text-[11px] font-semibold rounded-md cursor-pointer disabled:opacity-50" style={{ background: 'var(--cam-primary-dk)' }}
-            >
-              {loading === 'Business Desktop Lifetime' ? '…' : 'Buy 10-seat license'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <p className="text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
-        AI hours apply to Lumora live interview, coding helper, and prep generation.
-        Free tier includes 30 min lifetime. PAYG is $10/hr — Pro Max subscribers pay $9/hr.
-      </p>
+        );
+      })}
     </div>
   );
 }
