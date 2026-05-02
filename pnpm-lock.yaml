@@ -27,6 +27,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.1
         version: 0.91.1
+      '@camora/shared-db':
+        specifier: workspace:*
+        version: link:../../packages/shared-db
       bcryptjs:
         specifier: ^3.0.0
         version: 3.0.3
@@ -219,6 +222,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.1
         version: 0.91.1
+      '@camora/shared-db':
+        specifier: workspace:*
+        version: link:../../packages/shared-db
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -264,9 +270,6 @@ importers:
       sharp:
         specifier: ^0.33
         version: 0.33.5
-      stripe:
-        specifier: ^22.0.0
-        version: 22.1.0(@types/node@25.5.0)
       uuid:
         specifier: ^13.0.0
         version: 13.0.0

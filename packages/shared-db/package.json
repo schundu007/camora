@@ -6,7 +6,8 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./users": "./src/users-repo.js"
+    "./users": "./src/users-repo.js",
+    "./plans": "./src/plans.js"
   },
   "scripts": {
     "build": "echo 'No build step needed'"
