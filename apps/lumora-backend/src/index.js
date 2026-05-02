@@ -371,8 +371,9 @@ const shutdown = async (signal) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled rejection:', reason);
-});
+// Note: unhandledRejection / uncaughtException are registered earlier in the
+// file with structured logging via Pino. The duplicate console.error handler
+// that lived here was removed — it bypassed structured logs and made Railway
+// log streaming miss the event.
 
 export default app;

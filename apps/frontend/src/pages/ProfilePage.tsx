@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getAuthHeaders } from '../utils/authHeaders';
@@ -28,8 +28,14 @@ function ActivityHeatmap() {
   const days = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  // Generate placeholder data (will connect to real API later)
-  const cells = Array.from({ length: weeks * 7 }, () => Math.random() > 0.85 ? Math.ceil(Math.random() * 4) : 0);
+  // Placeholder data — stabilize per-mount with useMemo so the heatmap doesn't
+  // re-randomize on every render (any nearby state change would otherwise
+  // shuffle the entire year). Once the real `/activity` API lands this swaps
+  // to a fetch + state, but the memo dep list stays the same shape.
+  const cells = useMemo(
+    () => Array.from({ length: weeks * 7 }, () => (Math.random() > 0.85 ? Math.ceil(Math.random() * 4) : 0)),
+    [weeks],
+  );
   const streakCurrent = cells.filter((_, i) => i > cells.length - 14).filter(v => v > 0).length;
 
   const getColor = (v: number) => {

@@ -124,6 +124,13 @@ export async function tryAutoTopup({ userId, teamId = null }) {
   }
 
   // Credit the hours. Paid top-ups (manual + auto) never expire.
+  // Critical: if the INSERT fails after the Stripe charge succeeded, we have
+  // a money-taken-but-hours-not-credited state. Previously this was logged
+  // and we returned `{ ok: true }` anyway — the user got their AI call but
+  // had no record of the charge, and the next call wouldn't see the
+  // refilled pool because the pool still showed empty. Now we surface the
+  // failure to the caller so the gate can fail loudly (429) and ops can
+  // reconcile by inspecting Stripe charges with no matching topup row.
   try {
     await query(
       `INSERT INTO ai_hour_topups
@@ -133,9 +140,16 @@ export async function tryAutoTopup({ userId, teamId = null }) {
       [billingUserId, teamId, hours, amount_cents, pi.id],
     );
   } catch (err) {
-    logger.error({ err: err.message, pi: pi.id }, '[autoTopup] insert failed after charge succeeded');
-    // Money was taken; return ok so the user gets their hours. The insert
-    // failure is logged for ops to reconcile.
+    logger.error({
+      err: err.message, pi: pi.id, billingUserId, teamId, amount_cents,
+    }, '[autoTopup] CRITICAL: insert failed after charge succeeded — manual reconcile required');
+    return {
+      ok: false,
+      reason: 'CREDIT_INSERT_FAILED',
+      payment_intent: pi.id,
+      amount_cents,
+      message: 'Charge succeeded but credit insert failed; ops will reconcile.',
+    };
   }
 
   logger.info({

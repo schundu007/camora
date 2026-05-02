@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { App } from './App';
+import { ErrorBoundary } from './components/shared/ui/ErrorBoundary';
 import './styles/globals.css';
 // highlight.js theme for code blocks. Atom One Dark pairs with the
 // VSCode-style code surfaces in the docs panel and the live answer view.
@@ -29,10 +30,20 @@ if (typeof window !== 'undefined') {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </HelmetProvider>
+    <ErrorBoundary
+      onError={(err, info) => {
+        // Surface in console for now; wire to Sentry/etc later. Without this
+        // top-level boundary, any render exception below produced React's
+        // default white-screen-with-stack-in-DevTools, indistinguishable
+        // from a network outage to most users.
+        console.error('[root] uncaught render error:', err, info);
+      }}
+    >
+      <HelmetProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </HelmetProvider>
+    </ErrorBoundary>
   </StrictMode>
 );

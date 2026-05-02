@@ -1,5 +1,6 @@
 import { checkTeamHourBudget, checkPersonalHourBudget } from '../services/teamService.js';
 import { tryAutoTopup } from '../services/autoTopupService.js';
+import { query } from '../lib/shared-db.js';
 
 const GATE_DEADLINE_MS = 3000;
 const AUTO_TOPUP_DEADLINE_MS = 4000;
@@ -54,6 +55,30 @@ export async function hourBudgetGate(req, res, next) {
   if (isOwnerEmail(req.user?.email)) {
     res.setHeader('X-Hour-Budget-Bypass', 'owner');
     return next();
+  }
+
+  // Block past_due / unpaid / canceled subscribers BEFORE checking the
+  // hour pool. Otherwise a user whose card was declined could still consume
+  // remaining topup hours indefinitely while their dunning state lingers.
+  // Free-tier users (no row, plan_type='free') fall through to the pool
+  // check which gives them their trial allowance.
+  try {
+    const r = await query(
+      'SELECT plan_type, status FROM ascend_subscriptions WHERE user_id = $1',
+      [userId],
+    );
+    const sub = r.rows[0];
+    if (sub && sub.plan_type !== 'free' && sub.status && sub.status !== 'active') {
+      return res.status(402).json({
+        error: 'Your subscription is not active. Update payment to resume AI access.',
+        code: 'SUBSCRIPTION_NOT_ACTIVE',
+        plan_type: sub.plan_type,
+        status: sub.status,
+      });
+    }
+  } catch {
+    // DB hiccup — fall through to the deadline-bounded gate below rather
+    // than blocking the user on a transient error.
   }
 
   // Wrap the whole gate in a deadline. If any branch hangs, this resolves
