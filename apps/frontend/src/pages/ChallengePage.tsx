@@ -9,7 +9,6 @@ import ReferralDashboard from '../components/capra/features/ReferralDashboard';
 import CountUp from '../components/shared/animation/CountUp';
 import { HexBadge, type HexColor } from '../components/shared/HexBadge';
 import { DiagonalDivider } from '../components/shared/DiagonalDivider';
-import { MadeWithLove } from '../components/shared/MadeWithLove';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -737,10 +736,6 @@ export default function ChallengePage() {
             </a>
           </div>
         </div>
-      </section>
-
-      <section className="border-t" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-        <MadeWithLove city="San Jose" />
       </section>
 
       <SiteFooter variant="light" />

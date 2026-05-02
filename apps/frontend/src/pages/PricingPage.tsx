@@ -5,7 +5,6 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import SharedPricingCards from '../components/shared/PricingCards';
 import { DiagonalDivider } from '../components/shared/DiagonalDivider';
-import { MadeWithLove } from '../components/shared/MadeWithLove';
 
 const accent = 'var(--cam-primary)';
 const F = {
@@ -112,11 +111,6 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* ═══════════ MADE WITH ❤ IN SAN JOSE ═══════════ */}
-      <section className="bg-[var(--bg-surface)] border-t" style={{ borderColor: 'var(--border)' }}>
-        <MadeWithLove city="San Jose" />
       </section>
 
       <SiteFooter variant="light" />
