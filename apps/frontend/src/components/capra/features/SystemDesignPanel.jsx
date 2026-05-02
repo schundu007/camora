@@ -594,32 +594,30 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
         {/* Full System Design Mode - Optimized Grid Layout */}
         {!systemDesign.focusedAnswer && (
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 auto-rows-min">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 auto-rows-min">
 
             {/* Row 1: Explanation */}
             {systemDesign.overview && (
-              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Explanation</h4>
-                <p className="text-xs text-[var(--text-primary)] leading-snug">{systemDesign.overview}</p>
+              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                <h4 className="text-sm font-semibold mb-2 text-[var(--text-primary)]">Overview</h4>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{systemDesign.overview}</p>
               </div>
             )}
             {hasScalability && (
-              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <div className="flex items-start gap-3">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] whitespace-nowrap pt-0.5 flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                <div className="flex items-start gap-4 flex-wrap">
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)] whitespace-nowrap flex items-center gap-2">
+                    <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                     Scalability
                   </h4>
-                  <div className="flex-1 columns-2 sm:columns-3 gap-x-3 gap-y-0.5">
+                  <div className="flex-1 flex flex-wrap gap-1.5">
                     {systemDesign.scalability.map((item, i) => (
-                      <div key={i} className="break-inside-avoid mb-0.5">
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-brand-400/10 text-brand-400 text-xs rounded border border-brand-400/30" title={item}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
-                          {item}
-                        </span>
-                      </div>
+                      <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)]" title={item}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                        {item}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -630,43 +628,50 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {(hasRequirements || hasTradeoffs || hasEdgeCases) && (
               <>
                 {systemDesign.requirements?.functional?.length > 0 && (
-                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Functional</h4>
-                    <ul className="space-y-0.5">
+                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
+                      <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
+                      Functional
+                    </h4>
+                    <ul className="space-y-1.5">
                       {systemDesign.requirements.functional.map((req, i) => (
-                        <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1.5">
-                          <span className="text-brand-400 mt-0.5 flex-shrink-0 text-xs">●</span>
-                          {req}
+                        <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
+                          <span className="text-[var(--accent)] mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
+                          <span>{req}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {systemDesign.requirements?.nonFunctional?.length > 0 && (
-                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Non-Functional</h4>
-                    <ul className="space-y-0.5">
+                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
+                      <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
+                      Non-Functional
+                    </h4>
+                    <ul className="space-y-1.5">
                       {systemDesign.requirements.nonFunctional.map((req, i) => (
-                        <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1.5">
-                          <span className="text-brand-400 mt-0.5 flex-shrink-0 text-xs">●</span>
-                          {req}
+                        <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
+                          <span className="text-[var(--accent)] mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
+                          <span>{req}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {hasTradeoffs && (
-                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-warning-500/10 border border-warning-500/30">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 flex items-center gap-1 text-warning-400">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
+                      <span className="w-1 h-4 rounded-full bg-amber-500" />
+                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                       </svg>
                       Tradeoffs
                     </h4>
-                    <ul className="space-y-0.5">
-                      {systemDesign.tradeoffs.slice(0, 4).map((tradeoff, i) => (
-                        <li key={i} className="text-xs text-warning-200 flex items-start gap-1.5">
-                          <span className="text-warning-400 mt-0.5 flex-shrink-0">⚖</span>
+                    <ul className="space-y-1.5">
+                      {systemDesign.tradeoffs.slice(0, 5).map((tradeoff, i) => (
+                        <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
+                          <span className="text-amber-500 mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
                           <span>{typeof tradeoff === 'string' ? tradeoff.replace(/^Tradeoff \d+:\s*/i, '') : tradeoff}</span>
                         </li>
                       ))}
@@ -674,17 +679,18 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </div>
                 )}
                 {hasEdgeCases && (
-                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-error-500/10 border border-error-500/30">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 flex items-center gap-1 text-error-400">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
+                      <span className="w-1 h-4 rounded-full bg-rose-500" />
+                      <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                       Edge Cases
                     </h4>
-                    <ul className="space-y-0.5">
-                      {systemDesign.edgeCases.slice(0, 4).map((edge, i) => (
-                        <li key={i} className="text-xs text-error-200 flex items-start gap-1.5">
-                          <span className="text-error-400 mt-0.5 flex-shrink-0">⚠</span>
+                    <ul className="space-y-1.5">
+                      {systemDesign.edgeCases.slice(0, 5).map((edge, i) => (
+                        <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
+                          <span className="text-rose-500 mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
                           <span>{typeof edge === 'string' ? edge.replace(/^Edge case \d+:\s*/i, '') : edge}</span>
                         </li>
                       ))}
@@ -811,14 +817,15 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 without new information. */}
 
             {/* Row 4: ASCII Diagram - Full Width */}
-            <div className="col-span-full rounded-lg p-4 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">Architecture Flow</h4>
+            <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                  <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
+                  Architecture Flow
+                </h4>
                 <button
                   onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded border transition-all ${
-                    diagramDetailLevel === 'detailed' ? 'bg-info-500/10 text-info-400 border-info-500/30' : 'bg-brand-400/10 text-brand-400 border-brand-400/30'
-                  }`}
+                  className="px-3 py-1.5 text-xs font-medium rounded-md border bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border)] hover:border-[var(--accent)] transition-colors"
                 >
                   {diagramDetailLevel === 'detailed' ? 'Detailed' : 'Overview'}
                 </button>
@@ -828,20 +835,21 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 5: Tech Justifications (compact grid) */}
             {hasTechJustifications && (
-              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-[var(--text-muted)]">
+              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-[var(--text-primary)]">
+                  <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
                   Technologies
-                  <span className="px-1 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs">{systemDesign.techJustifications.length}</span>
+                  <span className="ml-1 px-2 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)] rounded-md text-xs font-medium">{systemDesign.techJustifications.length}</span>
                 </h4>
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {systemDesign.techJustifications.map((item, i) => (
-                    <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded p-1.5 hover:border-brand-400/30 transition-colors">
-                      <div className="flex flex-wrap items-center gap-1 mb-1">
-                        <span className="px-1 py-0.5 bg-brand-500 text-[var(--text-primary)] text-xs font-semibold rounded">{item.tech}</span>
-                        {item.category && <span className="px-1 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-xs font-medium rounded">{item.category}</span>}
+                    <div key={i} className="rounded-lg p-3 bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                        <span className="px-2 py-0.5 bg-[var(--accent)] text-white text-xs font-semibold rounded-md">{item.tech}</span>
+                        {item.category && <span className="px-2 py-0.5 bg-[var(--bg-surface)] text-[var(--text-secondary)] text-xs font-medium rounded-md border border-[var(--border)]">{item.category}</span>}
                       </div>
-                      <p className="text-xs text-[var(--text-primary)] leading-snug line-clamp-2">{item.why}</p>
-                      {item.alternatives && <p className="text-xs text-brand-400 mt-0.5 truncate"><span className="font-semibold">Alt:</span> {item.alternatives}</p>}
+                      <p className="text-sm text-[var(--text-primary)] leading-snug line-clamp-3">{item.why}</p>
+                      {item.alternatives && <p className="text-xs text-[var(--text-muted)] mt-1.5 truncate"><span className="font-semibold text-[var(--text-secondary)]">Alt:</span> {item.alternatives}</p>}
                     </div>
                   ))}
                 </div>
@@ -932,32 +940,27 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 Q&A" panel was an audio-capture surface that had no place
                 on the prep page (no live interviewer here). */}
             {Array.isArray(systemDesign.followUpQuestions) && systemDesign.followUpQuestions.length > 0 && (
-              <div className="col-span-full rounded p-2 bg-info-400/5 border border-info-400/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded flex items-center justify-center bg-info-400/20">
-                    <svg className="w-3 h-3 text-info-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-info-400">
-                    Follow-up Questions
-                  </span>
-                  <span className="px-1 py-0.5 bg-info-400/10 text-info-400 border border-info-400/30 rounded text-xs">
+              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
+                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-[var(--text-primary)]">
+                  <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
+                  <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Follow-up Questions
+                  <span className="ml-1 px-2 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)] rounded-md text-xs font-medium">
                     {systemDesign.followUpQuestions.length}
                   </span>
-                </div>
-                <div className="space-y-1.5">
+                </h4>
+                <ol className="space-y-2.5">
                   {systemDesign.followUpQuestions.map((q, i) => (
-                    <div key={i} className="p-1.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)]/30">
-                      <div className="flex items-start gap-1.5">
-                        <span className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold bg-info-900/30 text-info-400">{i + 1}</span>
-                        <p className="text-xs text-[var(--text-primary)] leading-snug">
-                          {typeof q === 'string' ? q : (q.question || q.q || '')}
-                        </p>
-                      </div>
-                    </div>
+                    <li key={i} className="rounded-lg p-3 bg-[var(--bg-elevated)] border border-[var(--border)] flex items-start gap-3">
+                      <span className="w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center text-xs font-semibold bg-[var(--accent)] text-white">{i + 1}</span>
+                      <p className="text-sm text-[var(--text-primary)] leading-relaxed pt-0.5">
+                        {typeof q === 'string' ? q : (q.question || q.q || '')}
+                      </p>
+                    </li>
                   ))}
-                </div>
+                </ol>
               </div>
             )}
           </div>
