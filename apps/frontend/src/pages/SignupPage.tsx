@@ -1,14 +1,21 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SignupPage() {
+  const { isAuthenticated, isLoading } = useAuth();
   useEffect(() => {
     document.title = 'Sign Up | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
+
+  // Already signed in? Skip the signup form — they have an account already.
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to="/lumora" replace />;
+  }
 
   return (
     <div className="min-h-screen relative" style={{ background: 'var(--cam-hero-bg)' }}>
