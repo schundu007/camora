@@ -421,16 +421,52 @@ Return ONLY the Python code (imports + indented body). No explanation. No markdo
 
 
 def extract_code(text):
-    """Extract code, strip markdown fences."""
-    match = re.search(r"```(?:python)?\s*\n(.*?)```", text, re.DOTALL)
-    if match:
-        return match.group(1).strip()
+    """Extract code, strip markdown fences. Handles multiple code blocks.
+
+    Some prompts cause Claude to split its response into multiple fenced
+    blocks (e.g. a 'here are the imports' block followed by a 'here is the
+    body' block, often with prose in between). The previous regex grabbed
+    only the FIRST block — when that was just the imports section, the
+    body never reached assemble_code, body_lines stayed empty, and the
+    rendered Python file was a `with Diagram(...):` with no body →
+    IndentationError on every attempt. Now we concatenate all fenced
+    blocks so imports + body both survive.
+    """
+    blocks = re.findall(r"```(?:python)?\s*\n(.*?)```", text, re.DOTALL)
+    if blocks:
+        return "\n\n".join(b.strip() for b in blocks if b.strip())
     text = text.strip()
     if text.startswith("```"):
         text = "\n".join(text.split("\n")[1:])
     if text.endswith("```"):
         text = text[:-3].strip()
     return text
+
+
+def has_meaningful_body(body_block):
+    """Reject assembled code where the body is empty or stub-only.
+
+    A "real" architecture diagram body has at least a few non-blank lines
+    and at least one connection (>>) or cluster. If Claude returned only
+    `users = Users("Clients")` (or nothing), the with-block is effectively
+    empty — executing it just produces an IndentationError. Treat that as
+    a soft failure so generate_diagram retries with a stronger prompt
+    instead of crashing.
+    """
+    lines = [l.strip() for l in body_block.split("\n") if l.strip()]
+    if len(lines) < 2:
+        return False
+    return any(">>" in l or "Cluster(" in l for l in lines)
+
+
+def _extract_body_from_assembled(code):
+    """Pull the {{BODY}}-replaced section out of an assembled file.
+
+    The template structure ends with "with Diagram(\\n...args...\\n):\\n{{BODY}}",
+    so splitting on "\\n):\\n" cleanly separates header from body.
+    """
+    parts = code.split("\n):\n", 1)
+    return parts[1] if len(parts) > 1 else ""
 
 
 def _build_class_to_import(provider):
@@ -715,9 +751,17 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
     # We treat this as a soft failure (don't execute) so attempt 2 can rebuild
     # cleanly with a stronger prompt instead of producing a wrong-provider PNG.
     foreign_imports = find_foreign_provider_imports(full_code, provider)
+    empty_body = not has_meaningful_body(_extract_body_from_assembled(full_code))
     if foreign_imports:
         sys.stderr.write(f"[DiagramEngine] Foreign-provider imports detected (provider={provider}): {foreign_imports}\n")
         result = {"ok": False, "stderr": f"Wrong cloud provider — used {len(foreign_imports)} non-{provider} imports: {foreign_imports[:3]}"}
+    elif empty_body:
+        # Claude returned only imports / a stub — likely split its response into
+        # multiple code blocks. extract_code now concatenates blocks so this is
+        # rarer, but if it still happens, retrying with a stronger prompt is
+        # cheaper than executing an IndentationError-guaranteed file.
+        sys.stderr.write(f"[DiagramEngine] Empty/trivial body — soft fail to retry\n")
+        result = {"ok": False, "stderr": "Generated body is empty or trivial — only imports/stub returned. Diagram needs at least one Cluster() and one >> connection."}
     else:
         result = execute_code(full_code, output_path, output_dir)
 
@@ -761,7 +805,11 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
 
         diagram_id = uuid.uuid4().hex[:8]
         output_path = os.path.join(output_dir, f"diagram-{diagram_id}")
-        result = execute_code(full_code, output_path, output_dir)
+        if not has_meaningful_body(_extract_body_from_assembled(full_code)):
+            sys.stderr.write(f"[DiagramEngine] Attempt 2 produced empty body — falling through to attempt 3\n")
+            result = {"ok": False, "stderr": "Generated body is empty or trivial — only imports/stub returned"}
+        else:
+            result = execute_code(full_code, output_path, output_dir)
 
     # Attempt 3 — last resort with minimal safe imports
     if not result["ok"]:
@@ -778,8 +826,10 @@ Use ONLY these verified imports:
 
 Return imports + indented body (4 spaces). Keep it simple: 6-10 nodes, 2-3 clusters.
 Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or Diagram() call.
+The body MUST contain at least 2 Cluster() blocks and at least 4 connections using >>.
 EVERY connection must use Edge(label="...", color="...", penwidth="2.0").
-Start body with: users = Users("Clients")"""},
+Start body with: users = Users("Clients")
+Return ONLY ONE Python code block (everything wrapped in a single ```python ... ``` fence). No prose, no multiple blocks, no explanation."""},
             ],
         )
         body = extract_code(fallback_resp.content[0].text)
