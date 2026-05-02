@@ -2,13 +2,10 @@ import { stripe, STRIPE_PRICES } from '../config/stripe.js';
 import { query } from '../lib/shared-db.js';
 import { logger } from '../middleware/requestLogger.js';
 
-// Pack metadata — mirrors the /api/v1/billing/prices output. Single source
-// of truth for what each topup_* SKU buys, so the gate doesn't have to
-// re-discover it from Stripe each time.
+// Pack metadata — mirrors the /api/v1/billing/prices output. v3 has a
+// single 1-hour topup priced at $15.
 const TOPUP_PACKS = {
-  topup_1h: { hours: 1, amount_cents: 1000, price_id_key: 'TOPUP_1H' },
-  topup_5h: { hours: 5, amount_cents: 5000, price_id_key: 'TOPUP_5H' },
-  topup_25h: { hours: 25, amount_cents: 25000, price_id_key: 'TOPUP_25H' },
+  topup_1h: { hours: 1, amount_cents: 1500, price_id_key: 'TOPUP_1H' },
 };
 
 /**

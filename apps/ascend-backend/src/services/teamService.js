@@ -5,35 +5,20 @@ import { logger } from '../middleware/requestLogger.js';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
-// Seat limits per plan_type. Pro Max plans get 5 seats (owner + 4 mates).
-// Business Starter pack and Business Desktop Lifetime both get 10 seats.
-// Pro tier, individual Desktop Lifetime, and free are solo.
+// Seat limits per plan_type. v3 catalog is solo-only — no team plans.
+// Kept as an object so any service still importing this constant gets
+// a defined SEAT_LIMITS for backwards compatibility, but no plan grants
+// >1 seat under v3.
 export const SEAT_LIMITS = {
   pro_monthly: 1,
   pro_yearly: 1,
-  pro_max_monthly: 5,
-  pro_max_yearly: 5,
-  business_starter: 10,
-  business_desktop_lifetime: 10,
 };
 
-// Hours pool defaults (used at team creation; updated when subscription renews).
-// business_desktop_lifetime intentionally has 0 hours — it's a desktop-license
-// pool only, not an AI-hour pool.
-const HOURS_POOL_BY_PLAN = {
-  pro_max_monthly: 8,
-  pro_max_yearly: 96,
-  business_starter: 75,
-  business_desktop_lifetime: 0,
-};
-
-// PAYG rate after pool exhaustion, in cents per hour.
-const PAYG_RATES_BY_PLAN = {
-  pro_max_monthly: 900,    // $9/hr (10% loyalty discount)
-  pro_max_yearly: 900,     // $9/hr
-  business_starter: 800,   // $8/hr (business discount)
-  business_desktop_lifetime: null, // desktop license, no AI hours
-};
+// v3 plans don't include team hour pools or PAYG discounts — these
+// stay empty so any caller that looks up a non-existent plan gets
+// undefined and falls back to the per-user budget.
+const HOURS_POOL_BY_PLAN = {};
+const PAYG_RATES_BY_PLAN = {};
 
 const TEAM_LOOKUP_CACHE_TTL_SEC = 300;   // 5 min
 const TEAM_LOOKUP_PREFIX = 'team:user:v1:';

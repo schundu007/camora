@@ -244,10 +244,14 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
     </nav>
   );
 
-  // Set CSS variable for nav height so sticky elements can reference it
-  if (typeof document !== 'undefined') {
+  // Sync the --nav-h CSS variable so sticky elements can reference
+  // the live nav height. Runs after mount so the value is set before
+  // any subsequent paint where it matters. Default is in globals.css
+  // (--nav-h: 84px), so even before this effect fires the fallback
+  // is sane. Updates live when the ticker visibility flips.
+  useEffect(() => {
     document.documentElement.style.setProperty('--nav-h', `${navHeight}px`);
-  }
+  }, [navHeight]);
 
   return (
     <>
