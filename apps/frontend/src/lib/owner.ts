@@ -14,7 +14,9 @@
  * on every API call.
  */
 
-const OWNER_FALLBACK = ['chundubabu@gmail.com'];
+// Mirrors the ascend-backend default in hourBudgetGate.js / diagram.js so
+// the UI's owner-only buttons match what the API actually allows.
+const OWNER_FALLBACK = ['chundubabu@gmail.com', 'babuchundu@gmail.com'];
 
 const OWNER_EMAILS: string[] = (() => {
   const raw = import.meta.env.VITE_OWNER_EMAILS;
