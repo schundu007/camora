@@ -7,13 +7,10 @@ import { addCredits } from '../services/creditService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { logger } from '../middleware/requestLogger.js';
 
-// Valid paid plan_type values — source of truth; add any new Stripe SKU here
-// so subscription-verify recognises it.
+// Valid paid plan_type values — source of truth for v3 pricing.
 const PAID_PLAN_TYPES = new Set([
   'pro_monthly',
   'pro_yearly',
-  'pro_max_monthly',
-  'pro_max_yearly',
 ]);
 
 // Admin emails get full plan access without a Stripe subscription record.
@@ -62,111 +59,28 @@ router.get('/prices', (req, res) => {
   }
 
   res.json({
-    // ── 3-plan structure ($10/hr ceiling, Pro Max gets 10% loyalty discount,
-    //    yearly saves 17% vs monthly × 12) ──
+    // ── Pricing v3 — three flat options ──────────────────────────
     pro_monthly: {
       priceId: STRIPE_PRICES.PRO_MONTHLY,
-      amount: 2900,
+      amount: 1900,
       currency: 'usd',
       interval: 'month',
-      ai_hours_included: 2,
-      overage_per_hour: 1000,
-      hour_discount_pct: 0,
       popular: true,
     },
     pro_yearly: {
       priceId: STRIPE_PRICES.PRO_YEARLY,
-      amount: 29000,
-      currency: 'usd',
-      interval: 'year',
-      ai_hours_included: 24,
-      overage_per_hour: 1000,
-      hour_discount_pct: 0,
-      yearly_savings_pct: 17,
-    },
-    pro_max_monthly: {
-      priceId: STRIPE_PRICES.PRO_MAX_MONTHLY,
-      amount: 7900,
-      currency: 'usd',
-      interval: 'month',
-      ai_hours_included: 8,
-      overage_per_hour: 900,
-      hour_discount_pct: 10,
-      includes_desktop: true,
-      voice_filtering: true,
-    },
-    pro_max_yearly: {
-      priceId: STRIPE_PRICES.PRO_MAX_YEARLY,
-      amount: 79000,
-      currency: 'usd',
-      interval: 'year',
-      ai_hours_included: 96,
-      overage_per_hour: 900,
-      hour_discount_pct: 10,
-      includes_desktop: true,
-      voice_filtering: true,
-      yearly_savings_pct: 17,
-      best_value: true,
-    },
-    desktop_lifetime: {
-      priceId: STRIPE_PRICES.DESKTOP_LIFETIME,
       amount: 9900,
       currency: 'usd',
-      interval: null,
-      seat_limit: 1,
-      desktop_only: true,
-      web_content: false,
+      interval: 'year',
+      best_value: true,
     },
-    business_desktop_lifetime: {
-      priceId: STRIPE_PRICES.BUSINESS_DESKTOP_LIFETIME,
-      amount: 99900,
-      currency: 'usd',
-      interval: null,
-      seat_limit: 10,
-      desktop_only: true,
-      web_content: false,
-      business: true,
-    },
-
-    // ── Camora for Business — one-time starter pack ──────────
-    // $499 buys 75 AI hours + 10 team seats. PAYG kicks in at $8/hr
-    // after the pack (20% off the consumer $10/hr ceiling) once the
-    // auto-topup flow lands in Phase 2; today, business teams that
-    // exhaust the pack buy another pack or fall back to top-ups.
-    business_starter: {
-      priceId: STRIPE_PRICES.BUSINESS_STARTER,
-      amount: 49900,
-      currency: 'usd',
-      interval: null,
-      ai_hours: 75,
-      seat_limit: 10,
-      payg_rate_per_hour: 800,
-      best_value: false,
-    },
-
-    // ── Top-up hour packs (small/medium/large, flat $10/hr) ──
     topup_1h: {
       priceId: STRIPE_PRICES.TOPUP_1H,
-      amount: 1000,
+      amount: 1500,
       currency: 'usd',
       interval: null,
       ai_hours: 1,
     },
-    topup_5h: {
-      priceId: STRIPE_PRICES.TOPUP_5H,
-      amount: 5000,
-      currency: 'usd',
-      interval: null,
-      ai_hours: 5,
-    },
-    topup_25h: {
-      priceId: STRIPE_PRICES.TOPUP_25H,
-      amount: 25000,
-      currency: 'usd',
-      interval: null,
-      ai_hours: 25,
-    },
-
   });
 });
 
@@ -193,18 +107,11 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid redirect URL domain' });
     }
 
-    // Validate price ID against the active SKU list.
+    // Validate price ID against the active SKU list (v3: three options).
     const validPrices = [
       STRIPE_PRICES.PRO_MONTHLY,
       STRIPE_PRICES.PRO_YEARLY,
-      STRIPE_PRICES.PRO_MAX_MONTHLY,
-      STRIPE_PRICES.PRO_MAX_YEARLY,
-      STRIPE_PRICES.DESKTOP_LIFETIME,
-      STRIPE_PRICES.BUSINESS_DESKTOP_LIFETIME,
       STRIPE_PRICES.TOPUP_1H,
-      STRIPE_PRICES.TOPUP_5H,
-      STRIPE_PRICES.TOPUP_25H,
-      STRIPE_PRICES.BUSINESS_STARTER,
     ].filter(Boolean);
 
     if (!validPrices.includes(priceId)) {
@@ -240,24 +147,12 @@ router.post('/checkout', jwtAuth, async (req, res) => {
 
     // Determine purchase type for metadata.
     let purchaseType = 'subscription';
-    if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) purchaseType = 'desktop_lifetime';
-    else if (priceId === STRIPE_PRICES.BUSINESS_DESKTOP_LIFETIME) purchaseType = 'business_desktop_lifetime';
-    else if (priceId === STRIPE_PRICES.PRO_MONTHLY) purchaseType = 'pro_monthly';
+    if (priceId === STRIPE_PRICES.PRO_MONTHLY) purchaseType = 'pro_monthly';
     else if (priceId === STRIPE_PRICES.PRO_YEARLY) purchaseType = 'pro_yearly';
-    else if (priceId === STRIPE_PRICES.PRO_MAX_MONTHLY) purchaseType = 'pro_max_monthly';
-    else if (priceId === STRIPE_PRICES.PRO_MAX_YEARLY) purchaseType = 'pro_max_yearly';
     else if (priceId === STRIPE_PRICES.TOPUP_1H) purchaseType = 'topup_1h';
-    else if (priceId === STRIPE_PRICES.TOPUP_5H) purchaseType = 'topup_5h';
-    else if (priceId === STRIPE_PRICES.TOPUP_25H) purchaseType = 'topup_25h';
-    else if (priceId === STRIPE_PRICES.BUSINESS_STARTER) purchaseType = 'business_starter';
 
     // One-time purchases (Stripe `mode: 'payment'` instead of subscription).
-    const isOneTime = purchaseType === 'desktop_lifetime'
-      || purchaseType === 'business_desktop_lifetime'
-      || purchaseType === 'topup_1h'
-      || purchaseType === 'topup_5h'
-      || purchaseType === 'topup_25h'
-      || purchaseType === 'business_starter';
+    const isOneTime = purchaseType === 'topup_1h';
 
     // For subscriptions, don't allow if already subscribed
     if (!isOneTime) {

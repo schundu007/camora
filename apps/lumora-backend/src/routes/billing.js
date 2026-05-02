@@ -58,76 +58,27 @@ router.get('/prices', (_req, res) => {
   // frontend's /api/v1/billing/prices reader works whether the request lands
   // on this service or ascend's mirror. SKUs identical to ascend.
   res.json({
+    // Pricing v3 — three flat options. Mirrors ascend-backend/src/routes/billing.js.
     pro_monthly: {
       priceId: process.env.STRIPE_PRICE_PRO_MONTHLY,
-      amount: 2900,
+      amount: 1900,
       currency: 'usd',
       interval: 'month',
-      ai_hours_included: 2,
-      overage_per_hour: 1000,
-      hour_discount_pct: 0,
       popular: true,
     },
     pro_yearly: {
       priceId: process.env.STRIPE_PRICE_PRO_YEARLY,
-      amount: 29000,
-      currency: 'usd',
-      interval: 'year',
-      ai_hours_included: 24,
-      overage_per_hour: 1000,
-      yearly_savings_pct: 17,
-    },
-    pro_max_monthly: {
-      priceId: process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,
-      amount: 7900,
-      currency: 'usd',
-      interval: 'month',
-      ai_hours_included: 8,
-      overage_per_hour: 900,
-      hour_discount_pct: 10,
-      includes_desktop: true,
-      voice_filtering: true,
-    },
-    pro_max_yearly: {
-      priceId: process.env.STRIPE_PRICE_PRO_MAX_YEARLY,
-      amount: 79000,
-      currency: 'usd',
-      interval: 'year',
-      ai_hours_included: 96,
-      overage_per_hour: 900,
-      includes_desktop: true,
-      yearly_savings_pct: 17,
-      best_value: true,
-    },
-    desktop_lifetime: {
-      priceId: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT,
       amount: 9900,
       currency: 'usd',
-      interval: null,
-      seat_limit: 1,
-      desktop_only: true,
+      interval: 'year',
+      best_value: true,
     },
-    business_desktop_lifetime: {
-      priceId: process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME,
-      amount: 99900,
-      currency: 'usd',
+    topup_1h: {
+      priceId: process.env.STRIPE_PRICE_TOPUP_1H,
+      amount: 1500,
+      ai_hours: 1,
       interval: null,
-      seat_limit: 10,
-      desktop_only: true,
-      business: true,
     },
-    business_starter: {
-      priceId: process.env.STRIPE_PRICE_BUSINESS_STARTER,
-      amount: 49900,
-      currency: 'usd',
-      interval: null,
-      ai_hours: 75,
-      seat_limit: 10,
-      payg_rate_per_hour: 800,
-    },
-    topup_1h: { priceId: process.env.STRIPE_PRICE_TOPUP_1H, amount: 1000, ai_hours: 1, interval: null },
-    topup_5h: { priceId: process.env.STRIPE_PRICE_TOPUP_5H, amount: 5000, ai_hours: 5, interval: null },
-    topup_25h: { priceId: process.env.STRIPE_PRICE_TOPUP_25H, amount: 25000, ai_hours: 25, interval: null },
   });
 });
 
@@ -151,18 +102,11 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
-  // Pricing v2 SKU list — kept in sync with ascend-backend/src/config/stripe.js.
+  // Pricing v3 — three flat SKUs. Mirrors ascend-backend/src/routes/billing.js.
   const validPrices = [
     process.env.STRIPE_PRICE_PRO_MONTHLY,
     process.env.STRIPE_PRICE_PRO_YEARLY,
-    process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,
-    process.env.STRIPE_PRICE_PRO_MAX_YEARLY,
-    process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT,
-    process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME,
-    process.env.STRIPE_PRICE_BUSINESS_STARTER,
     process.env.STRIPE_PRICE_TOPUP_1H,
-    process.env.STRIPE_PRICE_TOPUP_5H,
-    process.env.STRIPE_PRICE_TOPUP_25H,
   ].filter(Boolean);
   if (!validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
@@ -201,30 +145,15 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
-    // Determine payment mode and plan type. v2 SKUs:
-    const desktopLifetimeId = process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT;
-    const businessDesktopId = process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME;
-    const businessStarterId = process.env.STRIPE_PRICE_BUSINESS_STARTER;
-    const topupIds = [
-      process.env.STRIPE_PRICE_TOPUP_1H,
-      process.env.STRIPE_PRICE_TOPUP_5H,
-      process.env.STRIPE_PRICE_TOPUP_25H,
-    ].filter(Boolean);
-    const oneTimeIds = [desktopLifetimeId, businessDesktopId, businessStarterId, ...topupIds].filter(Boolean);
-    const isOneTime = oneTimeIds.includes(price_id);
+    // v3 SKUs — only topup_1h is one-time; the two subscriptions go
+    // through Stripe `mode: 'subscription'`.
+    const isOneTime = price_id === process.env.STRIPE_PRICE_TOPUP_1H;
 
-    // Map price_id to v2 plan_type for webhook metadata.
+    // Map price_id to plan_type for webhook metadata.
     let planType = 'pro_monthly';
     if (price_id === process.env.STRIPE_PRICE_PRO_MONTHLY) planType = 'pro_monthly';
     else if (price_id === process.env.STRIPE_PRICE_PRO_YEARLY) planType = 'pro_yearly';
-    else if (price_id === process.env.STRIPE_PRICE_PRO_MAX_MONTHLY) planType = 'pro_max_monthly';
-    else if (price_id === process.env.STRIPE_PRICE_PRO_MAX_YEARLY) planType = 'pro_max_yearly';
-    else if (price_id === desktopLifetimeId) planType = 'desktop_lifetime';
-    else if (price_id === businessDesktopId) planType = 'business_desktop_lifetime';
-    else if (price_id === businessStarterId) planType = 'business_starter';
     else if (price_id === process.env.STRIPE_PRICE_TOPUP_1H) planType = 'topup_1h';
-    else if (price_id === process.env.STRIPE_PRICE_TOPUP_5H) planType = 'topup_5h';
-    else if (price_id === process.env.STRIPE_PRICE_TOPUP_25H) planType = 'topup_25h';
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

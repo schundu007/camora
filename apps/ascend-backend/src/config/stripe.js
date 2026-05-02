@@ -15,26 +15,18 @@ export const stripe = stripeSecretKey
     })
   : null;
 
-// Pricing v2 — 3 plans (Free / Pro / Pro Max) with monthly + yearly billing.
-// Yearly is ~17% cheaper than 12× monthly; Pro Max gets a 10% subscriber
-// discount on hours ($9/hr vs $10/hr standard).
+// Pricing v3 — three flat options. No tiers, no add-ons.
 //
 // Set each STRIPE_PRICE_* env var to the matching Stripe Dashboard price ID.
+//   STRIPE_PRICE_PRO_MONTHLY  → $19/mo subscription
+//   STRIPE_PRICE_PRO_YEARLY   → $99/yr subscription
+//   STRIPE_PRICE_TOPUP_1H     → $15 one-time, 1 AI hour
+//
+// Env-var names retained from v2 so existing tooling / scripts don't churn.
 export const STRIPE_PRICES = {
-  PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,                 // $29/mo  — 2 AI hrs
-  PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,                   // $290/yr — 24 AI hrs
-  PRO_MAX_MONTHLY: process.env.STRIPE_PRICE_PRO_MAX_MONTHLY,         // $79/mo  — 8 AI hrs (10% off)
-  PRO_MAX_YEARLY: process.env.STRIPE_PRICE_PRO_MAX_YEARLY,           // $790/yr — 96 AI hrs (10% off)
-  DESKTOP_LIFETIME: process.env.STRIPE_PRICE_DESKTOP_LIFETIME || process.env.STRIPR_PRICE_DTOPLT, // $99 one-time, single user
-  BUSINESS_DESKTOP_LIFETIME: process.env.STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME, // $999 one-time, 10 seats
-
-  // Hour top-up packs (one-time, 90-day expiry, flat $10/hr)
+  PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
+  PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,
   TOPUP_1H: process.env.STRIPE_PRICE_TOPUP_1H,
-  TOPUP_5H: process.env.STRIPE_PRICE_TOPUP_5H,
-  TOPUP_25H: process.env.STRIPE_PRICE_TOPUP_25H,
-
-  // Business starter pack — one-time $499, 75 AI hours + 10 seats, PAYG @ $8/hr after.
-  BUSINESS_STARTER: process.env.STRIPE_PRICE_BUSINESS_STARTER,
 };
 
 /**
@@ -42,12 +34,7 @@ export const STRIPE_PRICES = {
  * so the operator can populate them in Stripe Dashboard.
  */
 export function warnMissingPriceIds() {
-  const required = [
-    'PRO_MONTHLY',
-    'PRO_YEARLY',
-    'PRO_MAX_MONTHLY',
-    'PRO_MAX_YEARLY',
-  ];
+  const required = ['PRO_MONTHLY', 'PRO_YEARLY', 'TOPUP_1H'];
   const missing = required.filter((k) => !STRIPE_PRICES[k]);
   if (missing.length) {
     console.warn(
@@ -59,7 +46,7 @@ export function warnMissingPriceIds() {
 
 export function isStripeConfigured() {
   if (!stripeSecretKey) return false;
-  return !!(STRIPE_PRICES.PRO_MONTHLY || STRIPE_PRICES.PRO_MAX_MONTHLY);
+  return !!STRIPE_PRICES.PRO_MONTHLY;
 }
 
 export default stripe;
