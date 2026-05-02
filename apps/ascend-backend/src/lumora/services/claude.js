@@ -185,7 +185,8 @@ skip
 [/EDGECASES]
 
 [TRADEOFFS]
-- 3-5 bullet points, format "Chose X over Y: reason"
+- EXACTLY 4-5 bullet points (no more), format "Chose X over Y: reason"
+- Pick the MOST IMPORTANT architectural decisions only — skip minor ones
 [/TRADEOFFS]
 
 [FOLLOWUP]
