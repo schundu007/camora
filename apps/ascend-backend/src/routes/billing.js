@@ -8,7 +8,7 @@ import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { SOLO_INCLUDED_HOURS } from '../services/teamService.js';
 import { logger } from '../middleware/requestLogger.js';
 
-import { PAID_PLAN_TYPES } from '@camora/shared-db/plans';
+import { PAID_PLAN_TYPES } from '../lib/plans.js';
 
 // Dynamic team pricing — single Stripe Product, ad-hoc Price per checkout.
 // Avoids creating a SKU for every (5..50) seat count. Formula matches

@@ -1,5 +1,5 @@
 import { query } from '../lib/shared-db.js';
-import { PAID_PLAN_TYPES } from '@camora/shared-db/plans';
+import { PAID_PLAN_TYPES } from '../lib/plans.js';
 import { logger } from './requestLogger.js';
 
 /**
