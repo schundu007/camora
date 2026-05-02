@@ -129,10 +129,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check URL hash for OAuth callback tokens (after Google login redirect).
-      // Note: the ascend backend already sets the cariara_sso cookie (httpOnly)
-      // on its OAuth callback before redirecting, so we DO NOT write the cookie
-      // from JS here — that would override httpOnly and re-expose the token.
+      // Strip the `?login=success` flag the OAuth callback adds to the URL.
+      // Cosmetic — the actual auth comes from the cariara_sso cookie + the
+      // /me call below. We don't want the flag lingering in browser history.
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        if (sp.has('login')) {
+          sp.delete('login');
+          const qs = sp.toString();
+          window.history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+        }
+      } catch { /* ignore — URL APIs unavailable in old browsers */ }
+
+      // LEGACY PATH (will be removed in a future PR): older OAuth callbacks
+      // delivered the JWT in the URL hash (#access_token=…). The current
+      // callback strips the token and relies on the cookie + /me round-trip
+      // below. This block stays during the migration so a stale tab opened
+      // by a user who logged in pre-migration still completes auth.
       const hash = window.location.hash;
       if (hash && hash.includes('access_token=')) {
         const params: Record<string, string> = {};
