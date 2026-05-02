@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
@@ -71,25 +71,6 @@ const FAQS = [
   { q: 'What platforms are supported?', a: 'Zoom, Google Meet, Microsoft Teams, HackerRank, CoderPad, Codility, and any browser-based interview platform.' },
 ];
 
-/* ── Recommendation calculator ─────────────────────────────────────────── */
-function recommend(hoursPerMonth: number) {
-  // Monthly: 2 hrs included + $15/extra. Yearly: 5/12 ≈ 0.42 hrs/mo, $99/12 ≈ $8.25/mo
-  const monthlyCost = 19 + Math.max(0, hoursPerMonth - 2) * 15;
-  const yearlyCost = 99 / 12 + Math.max(0, hoursPerMonth - (5 / 12)) * 15;
-  if (monthlyCost <= yearlyCost) {
-    return {
-      pick: 'Monthly',
-      detail: `~$${monthlyCost.toFixed(0)}/mo all-in`,
-      reason: hoursPerMonth <= 2 ? 'Your usage fits inside the included 2 hrs/cycle' : 'Monthly + a few top-up hours is your sweet spot',
-    };
-  }
-  return {
-    pick: 'Yearly',
-    detail: `~$${yearlyCost.toFixed(0)}/mo all-in`,
-    reason: 'Annual cadence + top-ups beats monthly at this volume',
-  };
-}
-
 /* ── Inline icon set (custom, not stock SVG) ───────────────────────────── */
 function CheckMark({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
@@ -108,8 +89,6 @@ function DashMark({ size = 16, color = 'currentColor' }: { size?: number; color?
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [hours, setHours] = useState(4);
-  const reco = useMemo(() => recommend(hours), [hours]);
 
   useEffect(() => {
     document.title = 'Pricing | Camora';
@@ -234,13 +213,24 @@ export default function PricingPage() {
             }}
           >
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" style={{ tableLayout: 'fixed', minWidth: 760 }}>
+              <table
+                className="w-full text-sm pricing-compare-table"
+                style={{ tableLayout: 'fixed', minWidth: 760, borderCollapse: 'collapse' }}
+              >
+                {/* Team column tint applied per-cell via CSS below — using
+                    colgroup background here leaves a sub-pixel gap at the
+                    rounded card edge in some browsers. */}
+                <style>{`
+                  .pricing-compare-table tr > *:nth-child(5) {
+                    background: var(--accent-subtle);
+                  }
+                `}</style>
                 <colgroup>
                   <col style={{ width: '30%' }} />
                   <col style={{ width: '15%' }} />
                   <col style={{ width: '16%' }} />
                   <col style={{ width: '16%' }} />
-                  <col style={{ width: '23%', background: 'var(--accent-subtle)' }} />
+                  <col style={{ width: '23%' }} />
                 </colgroup>
                 <thead>
                   {/* Eyebrow row — bucket labels */}
@@ -314,74 +304,6 @@ export default function PricingPage() {
             <div className="px-6 py-3.5 text-[11.5px] text-center border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
               Every plan ships with the macOS desktop app, dark mode, and unlimited Capra prep.
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ ROI / RECOMMENDER ═══════════ */}
-      <section className="px-6 py-20" style={{ background: 'var(--bg-elevated)' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <span className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>RECOMMENDER</span>
-            <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ fontFamily: F.display }}>
-              How many <span style={{ color: accent }}>AI hours</span> a month?
-            </h2>
-            <p className="mt-2 text-[14px]" style={{ color: 'var(--text-muted)' }}>
-              Slide to your interview prep volume — we'll pick the cheapest path.
-            </p>
-          </div>
-
-          <div className="rounded-2xl p-6 md:p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <div className="flex items-baseline justify-between mb-2">
-              <span className="text-[11px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>YOUR VOLUME</span>
-              <span className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>{hours} hrs / month</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={20}
-              step={1}
-              value={hours}
-              onChange={(e) => setHours(parseInt(e.target.value, 10))}
-              className="w-full"
-              style={{ accentColor: 'var(--cam-primary)' }}
-              aria-label="Hours per month"
-            />
-            <div className="flex items-center justify-between text-[10px] mt-1.5" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
-              <span>0 (just trial)</span>
-              <span>10 (active prep)</span>
-              <span>20 (heavy)</span>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-5 p-5 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf-50)', color: 'var(--cam-gold-leaf-text)' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <path d="M12 2 L2 22 L12 18 L22 22 Z" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Best fit</div>
-                  <div className="text-[18px] font-bold leading-tight">{reco.pick}</div>
-                </div>
-              </div>
-              <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{reco.detail}</span>
-                <span className="block mt-0.5" style={{ color: 'var(--text-muted)' }}>{reco.reason}</span>
-              </p>
-              <Link
-                to="/signup"
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.06em] rounded-full transition-transform hover:scale-[1.02] justify-self-start md:justify-self-end"
-                style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}
-              >
-                Start with {reco.pick}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
-              </Link>
-            </div>
-
-            <p className="text-[11px] mt-4 text-center" style={{ color: 'var(--text-muted)' }}>
-              Heavy team usage? Switch to a <Link to="#plans" className="underline" style={{ color: 'var(--cam-primary)' }}>Team plan</Link> for pooled hours and one invoice.
-            </p>
           </div>
         </div>
       </section>
