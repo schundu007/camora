@@ -449,7 +449,7 @@ router.get('/subscription', jwtAuth, async (req, res) => {
 
     // Admin override: grant full plan access regardless of Stripe state.
     if (isAdmin && !PAID_PLAN_TYPES.has(sub.plan_type)) {
-      sub.plan_type = 'pro_max_yearly';
+      sub.plan_type = 'pro_yearly';
       sub.status = 'active';
     }
 
@@ -527,7 +527,7 @@ router.get('/download-access', jwtAuth, async (req, res) => {
 /**
  * Verify subscription status (for cross-service verification).
  * Used by jobs.cariara.com to check if a user holds any active paid plan
- * (pricing v2: pro_monthly / pro_yearly / pro_max_monthly / pro_max_yearly).
+ * (pricing v3: pro_monthly / pro_yearly).
  * GET /api/billing/verify-subscription/:userId
  */
 router.get('/verify-subscription/:userId', async (req, res) => {
@@ -736,84 +736,34 @@ async function handleCheckoutComplete(session) {
 
   logger.info({ userId, priceId, type }, 'Processing checkout completion');
 
-  // Top-up packs (Phase 3B): record an ai_hour_topups row that extends
-  // either the user's personal budget OR their team pool (if they're in
-  // one) for the next 90 days. The hourBudgetGate sums unexpired topups
-  // into the pool when checking exhaustion.
-  const TOPUP_HOURS = { topup_1h: 1, topup_5h: 5, topup_25h: 25 };
-  if (TOPUP_HOURS[type]) {
-    const hours = TOPUP_HOURS[type];
-    const amount = invoice ? null : (session.amount_total || hours * 1000);
+  // Hour top-up (v3): one-time $15 purchase credits 1 AI hour to the
+  // user's personal budget for the next 90 days. The hourBudgetGate
+  // sums unexpired topups when checking exhaustion. ON CONFLICT
+  // guards against duplicate processing if the same checkout session
+  // is delivered twice.
+  if (type === 'topup_1h') {
+    const hours = 1;
+    const amount = invoice ? null : (session.amount_total || 1500);
     const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
-    let teamIdForTopup = null;
-    try {
-      const r = await query('SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1', [userId]);
-      teamIdForTopup = r.rows[0]?.team_id || null;
-    } catch { /* swallow */ }
-    // ON CONFLICT guards against duplicate processing if the same checkout
-    // session is delivered twice. The unique partial index on
-    // stripe_session_id makes this a no-op on retry.
     await query(
       `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       VALUES ($1, NULL, $2, $3, $4, $5)
        ON CONFLICT (stripe_session_id) WHERE stripe_session_id IS NOT NULL DO NOTHING`,
-      [userId, teamIdForTopup, hours, amount || hours * 1000, session.id, expiresAt],
+      [userId, hours, amount || 1500, session.id, expiresAt],
     );
-    logger.info({ userId, hours, teamId: teamIdForTopup, sessionId: session.id }, 'Top-up credited');
+    logger.info({ userId, hours, sessionId: session.id }, 'Top-up credited');
     return; // top-ups don't change subscription state
   }
 
-  if (type === 'desktop_lifetime') {
-    await query(
-      `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)
-       VALUES ($1, $2, 0, $3)`,
-      [userId, type, 'Desktop Lifetime ($99 one-time)']
-    );
-    logger.info({ userId, type, sessionId: session.id }, 'Desktop lifetime activated');
-  } else if (type === 'business_desktop_lifetime') {
-    // 10-seat desktop license. Auto-create the team so the buyer can
-    // immediately invite up to 9 mates without a separate API call.
-    await query(
-      `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)
-       VALUES ($1, $2, 0, $3)`,
-      [userId, type, 'Business Desktop Lifetime ($999, 10 seats)']
-    );
-    await ensureTeamForBusinessPurchase(userId, 'business_desktop_lifetime');
-    logger.info({ userId, type, sessionId: session.id }, 'Business desktop lifetime activated + team ready');
-  } else if (type === 'business_starter') {
-    // One-time pack: 75 hrs + 10 seats. Auto-create team so the buyer can
-    // start inviting members without a manual POST /api/v1/teams call.
-    await query(
-      `UPDATE ascend_subscriptions SET plan_type = 'business_starter', status = 'active' WHERE user_id = $1`,
-      [userId]
-    );
-    await ensureTeamForBusinessPurchase(userId, 'business_starter');
-    logger.info({ userId, sessionId: session.id }, 'Business starter pack activated + team ready');
-  } else {
-    // Subscription plan — activate with the type as plan_type
-    const planType = type || 'pro_monthly';
-    await query(
-      `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
-      [planType, userId]
-    );
-    // Pro Max tiers are team-eligible too — auto-create the team so the
-    // buyer can invite mates from the upgrade success screen.
-    if (planType === 'pro_max_monthly' || planType === 'pro_max_yearly') {
-      await ensureTeamForBusinessPurchase(userId, planType);
-    }
-    logger.info({ userId, planType, sessionId: session.id }, 'Plan activated on checkout');
-  }
-}
-
-// Helper: idempotently create a team for a user after a team-eligible purchase.
-// Failures are logged but never block the rest of webhook processing.
-async function ensureTeamForBusinessPurchase(userId, planType) {
-  try {
-    const { createTeamForUser } = await import('../services/teamService.js');
-    await createTeamForUser({ userId, planType });
-  } catch (err) {
-    logger.warn({ err: err.message, userId, planType }, '[teams] auto-create skipped on purchase');
-  }
+  // Subscription plan — activate with the type as plan_type. v3
+  // catalog only emits pro_monthly / pro_yearly here; anything else
+  // is treated as pro_monthly defensively.
+  const planType = (type === 'pro_yearly') ? 'pro_yearly' : 'pro_monthly';
+  await query(
+    `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
+    [planType, userId]
+  );
+  logger.info({ userId, planType, sessionId: session.id }, 'Plan activated on checkout');
 }
 
 /**
@@ -870,21 +820,6 @@ async function handleInvoicePaid(invoice) {
     );
   }
 
-  // Phase 2B: roll over the team's hour pool so the next period starts fresh.
-  // Only Pro Max teams have a recurring pool; one-time SKUs (Business Starter,
-  // Business Desktop) intentionally don't reset.
-  if (planType === 'pro_max_monthly' || planType === 'pro_max_yearly') {
-    try {
-      const { rollOverTeamPoolForUser } = await import('../services/teamService.js');
-      const rolled = await rollOverTeamPoolForUser(subscription.user_id);
-      if (rolled) {
-        logger.info({ userId: subscription.user_id, teamId: rolled.id, planType }, 'Team pool rolled over');
-      }
-    } catch (err) {
-      logger.warn({ err: err.message, userId: subscription.user_id }, '[teams] rollover skipped on invoice.paid');
-    }
-  }
-
   // Phase 7: clear personal pool-low reminder flags so the user gets fresh
   // warnings in the new period. Cheap update; runs for every paid plan.
   try {
@@ -907,8 +842,6 @@ async function handleSubscriptionUpdated(subscription) {
 
   if (priceId === STRIPE_PRICES.PRO_MONTHLY) planType = 'pro_monthly';
   else if (priceId === STRIPE_PRICES.PRO_YEARLY) planType = 'pro_yearly';
-  else if (priceId === STRIPE_PRICES.PRO_MAX_MONTHLY) planType = 'pro_max_monthly';
-  else if (priceId === STRIPE_PRICES.PRO_MAX_YEARLY) planType = 'pro_max_yearly';
 
   // Map Stripe status to our status
   let status = subscription.status;

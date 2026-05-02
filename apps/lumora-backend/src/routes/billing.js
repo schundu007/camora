@@ -233,13 +233,13 @@ router.get('/subscription', authenticate, async (req, res) => {
     let status = row?.plan_status || 'active';
     // Admin override: authenticate middleware sets req.user.is_admin from ADMIN_EMAILS.
     if (req.user?.is_admin && (plan === 'free' || !plan)) {
-      plan = 'pro_max_yearly';
+      plan = 'pro_yearly';
       status = 'active';
     }
     return res.json({ plan, status });
   } catch (_err) {
     if (req.user?.is_admin) {
-      return res.json({ plan: 'pro_max_yearly', status: 'active' });
+      return res.json({ plan: 'pro_yearly', status: 'active' });
     }
     return res.json({ plan: 'free', status: 'active' });
   }

@@ -119,6 +119,12 @@
     --toc-width: 200px;
     --content-max: 720px;
     --page-max: 1280px;
+    /* SiteNav height — 56 nav + 28 challenge ticker. SiteNav.tsx
+       overrides this at runtime when the ticker is hidden. Default
+       matches the with-ticker case so sticky elements (Jobs page
+       category pills) don't read a stale 56 fallback before
+       SiteNav's setProperty lands. */
+    --nav-h: 84px;
 
     /* Legacy compat (used by block components) */
     --bg: var(--bg-base);

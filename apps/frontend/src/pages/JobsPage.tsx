@@ -980,11 +980,17 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* ── Category Pills (Etched-inspired) ── */}
+        {/* ── Category Pills (Etched-inspired) ──
+            Sticky just below the SiteNav. z-40 sits above the cards
+            (default z) but below the SiteNav (z-50) so the bar covers
+            scrolling cards but is itself covered by the nav. Top
+            offset is -1px so the pills bar's top edge sits flush
+            against the SiteNav's bottom border with no scroll-revealed
+            seam. */}
         <div
-          className="sticky z-30"
+          className="sticky z-40"
           style={{
-            top: 'var(--nav-h, 56px)',
+            top: 'calc(var(--nav-h, 84px) - 1px)',
             background: 'var(--bg-app)',
             borderBottom: '1px solid var(--border)',
             boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
