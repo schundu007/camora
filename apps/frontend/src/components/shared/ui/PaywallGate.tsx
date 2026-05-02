@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { isOwner } from '@/lib/owner';
 import { useState, useEffect, useCallback } from 'react';
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+// Billing/subscription state read from ascend-backend (single source of truth).
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface PaywallGateProps {
   children: React.ReactNode;

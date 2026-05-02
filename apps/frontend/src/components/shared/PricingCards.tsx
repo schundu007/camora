@@ -3,7 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { dialogAlert } from './Dialog';
 
-const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+// Billing routes through ascend-backend (caprab) — single source of truth
+// for subscriptions, checkout, and webhooks. Lumora-backend billing routes
+// were retired to eliminate dual-truth state divergence.
+const BILLING_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 /* ── Pricing v3.2 — solo + dynamic team + per-hour topup ─────────────────
  *
