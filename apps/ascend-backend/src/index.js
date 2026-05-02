@@ -808,7 +808,7 @@ app.get('/api/visitors/pageview-stats', authenticate, async (req, res) => {
 });
 
 // Admin: list all users (protected, admin-only)
-app.get('/api/admin/users', authenticate, async (req, res) => {
+app.get('/api/admin/users', apiLimiter, authenticate, async (req, res) => {
   try {
     const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
@@ -830,7 +830,7 @@ app.get('/api/admin/users', authenticate, async (req, res) => {
 });
 
 // Admin: list sent emails from Resend
-app.get('/api/admin/emails', authenticate, async (req, res) => {
+app.get('/api/admin/emails', apiLimiter, authenticate, async (req, res) => {
   try {
     const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
@@ -853,7 +853,7 @@ app.get('/api/admin/emails', authenticate, async (req, res) => {
 });
 
 // Admin: grant free trial to a user
-app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
+app.post('/api/admin/grant-trial', apiLimiter, authenticate, async (req, res) => {
   try {
     const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
@@ -886,7 +886,7 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
 });
 
 // Admin: delete a user and all associated data
-app.delete('/api/admin/delete-user/:userId', authenticate, async (req, res) => {
+app.delete('/api/admin/delete-user/:userId', apiLimiter, authenticate, async (req, res) => {
   try {
     const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
