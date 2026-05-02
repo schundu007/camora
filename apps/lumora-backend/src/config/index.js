@@ -15,8 +15,6 @@ export const config = {
   // Stripe
   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-  stripePriceMonthly: process.env.STRIPE_PRICE_MONTHLY,
-  stripePriceLifetime: process.env.STRIPE_PRICE_LIFETIME,
 
   // AI Services
   aiServicesUrl: process.env.AI_SERVICES_URL || 'http://localhost:8001',

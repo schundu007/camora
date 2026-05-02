@@ -255,9 +255,8 @@ function LockIcon({ size = 16 }: { size?: number }) {
 export default function DownloadPage() {
   const navigate = useNavigate();
   const [detectedOS, setDetectedOS] = useState<OSType>('mac-arm');
-  const [addonLoading, setAddonLoading] = useState(false);
   const [appVersion, setAppVersion] = useState('1.0.0');
-  const { subscription, subscriptionLoading, isAuthenticated, token } = useAuth();
+  const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
 
   // Fetch latest version from GitHub releases
   useEffect(() => {
@@ -271,71 +270,10 @@ export default function DownloadPage() {
   const PLATFORMS = getPlatforms(appVersion);
 
   const plan = subscription?.plan || 'free';
-  const hasDesktopAccess = subscription?.hasDesktopAccess ?? false;
-  const isAnnualWithoutAddon = plan === 'annual' && !hasDesktopAccess;
-  const isPaid = hasDesktopAccess; // Only Pro or Annual+addon get downloads
+  // Desktop app is bundled with every paid plan (v3.2). Free users go to /pricing.
+  const isPaid = plan !== 'free';
 
-  const LUMORA_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-
-  const [proLoading, setProLoading] = useState(false);
-
-  const handleStripeCheckout = async (priceId: string, setLoadingFn: (v: boolean) => void) => {
-    if (!token) { navigate('/login?redirect=/download'); return; }
-    setLoadingFn(true);
-    try {
-      const res = await fetch(`${LUMORA_API}/api/v1/billing/checkout`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          price_id: priceId,
-          success_url: `${window.location.origin}/download?checkout=success`,
-          cancel_url: `${window.location.origin}/download`,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-      }
-    } catch { /* checkout failed */ }
-    setLoadingFn(false);
-  };
-
-  const [annualLoading, setAnnualLoading] = useState(false);
-
-  const [prices, setPrices] = useState<Record<string, { priceId: string }> | null>(null);
-  useEffect(() => {
-    const LUMORA = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-    fetch(`${LUMORA}/api/v1/billing/prices`).then(r => r.json()).then(data => {
-      const mapped: Record<string, { priceId: string }> = {};
-      // Pricing v2: /prices returns a flat object keyed by SKU id (pro_monthly,
-      // pro_max_monthly, pro_max_yearly, desktop_lifetime, …). Extract the IDs
-      // we need: Pro Max for the in-app desktop upsell, Desktop Lifetime for BYOK.
-      const flat: Record<string, { priceId?: string; stripe_price_id?: string }> = {};
-      if (Array.isArray(data?.plans)) for (const p of data.plans) flat[p.id] = p;
-      else if (data && typeof data === 'object') for (const k of Object.keys(data)) {
-        if (data[k] && typeof data[k] === 'object') flat[k] = data[k];
-      }
-      for (const id of Object.keys(flat)) {
-        const v = flat[id];
-        const pid = v.priceId || v.stripe_price_id || '';
-        if (pid) mapped[id] = { priceId: pid };
-      }
-      setPrices(mapped);
-    }).catch(() => {});
-  }, []);
-
-  // Pro Max monthly upgrade — desktop app is included in this tier.
-  const handleProCheckout = () =>
-    handleStripeCheckout(prices?.pro_max_monthly?.priceId || '', setProLoading);
-
-  // Pro Max yearly — desktop app + 17% savings.
-  const handleAnnualAddon = () =>
-    handleStripeCheckout(prices?.pro_max_yearly?.priceId || '', setAnnualLoading);
-
-  // BYOK Desktop Lifetime — one-time purchase, no subscription.
-  const handleMonthlyAddon = () =>
-    handleStripeCheckout(prices?.desktop_lifetime?.priceId || '', setAddonLoading);
+  const goToPricing = () => navigate('/pricing?returnTo=/download');
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';
@@ -465,48 +403,6 @@ export default function DownloadPage() {
                     v{appVersion} &middot; {primary.fileType} &middot; {primary.size}
                   </span>
                 </>
-              ) : isAnnualWithoutAddon ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleMonthlyAddon}
-                      disabled={addonLoading}
-                      className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
-                        color: '#ffffff',
-                        boxShadow: 'none',
-                      }}
-                    >
-                      {addonLoading ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <DownloadIcon size={20} />
-                      )}
-                      $29/mo
-                    </button>
-                    <button
-                      onClick={handleAnnualAddon}
-                      disabled={annualLoading}
-                      className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
-                        color: '#ffffff',
-                        boxShadow: '0 4px 24px rgba(38,97,156,0.35)',
-                      }}
-                    >
-                      {annualLoading ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <DownloadIcon size={20} />
-                      )}
-                      $99/year
-                    </button>
-                  </div>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    Desktop App add-on &middot; Cancel anytime
-                  </span>
-                </>
               ) : !isAuthenticated ? (
                 <>
                   <Link
@@ -530,20 +426,19 @@ export default function DownloadPage() {
                     Sign In to Download
                   </Link>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    Included with Pro plan &middot; Annual users can add for $29/mo
+                    Included with every paid plan
                   </span>
                 </>
               ) : (
                 <>
                   <button
-                    onClick={handleProCheckout}
-                    disabled={proLoading}
-                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
+                    onClick={goToPricing}
+                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
                     style={{
                       background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)',
                       color: '#ffffff',
                       border: '1px solid var(--border)',
-                      cursor: proLoading ? 'wait' : 'pointer',
+                      cursor: 'pointer',
                       boxShadow: '0 4px 24px rgba(38,97,156,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
                     onMouseEnter={e => {
@@ -556,10 +451,10 @@ export default function DownloadPage() {
                     }}
                   >
                     <LockIcon size={20} />
-                    {proLoading ? 'Redirecting...' : 'Upgrade to Pro — $49/mo'}
+                    Subscribe to download
                   </button>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    Included with Pro plan &middot; Annual users can add for $29/mo
+                    Included with every paid plan
                   </span>
                 </>
               )}
@@ -678,19 +573,6 @@ export default function DownloadPage() {
                         <DownloadIcon size={16} />
                         Download
                       </a>
-                    ) : isAnnualWithoutAddon ? (
-                      <div className="flex items-center gap-2">
-                        <button onClick={handleMonthlyAddon} disabled={addonLoading}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                          style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff' }}>
-                          <DownloadIcon size={12} />$29/mo
-                        </button>
-                        <button onClick={handleAnnualAddon} disabled={annualLoading}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                          style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff' }}>
-                          <DownloadIcon size={12} />$99/yr
-                        </button>
-                      </div>
                     ) : !isAuthenticated ? (
                       <Link
                         to="/login?redirect=/download"
@@ -714,14 +596,13 @@ export default function DownloadPage() {
                       </Link>
                     ) : (
                       <button
-                        onClick={handleProCheckout}
-                        disabled={proLoading}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-60"
+                        onClick={goToPricing}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                         style={{
                           background: 'rgba(255,255,255,0.06)',
                           color: 'rgba(255,255,255,0.5)',
                           border: '1px solid rgba(255,255,255,0.1)',
-                          cursor: proLoading ? 'wait' : 'pointer',
+                          cursor: 'pointer',
                         }}
                         onMouseEnter={e => {
                           (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
@@ -733,7 +614,7 @@ export default function DownloadPage() {
                         }}
                       >
                         <LockIcon size={14} />
-                        {proLoading ? 'Redirecting...' : 'Upgrade to Pro'}
+                        Subscribe
                       </button>
                     )}
                   </div>

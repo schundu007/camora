@@ -7,24 +7,9 @@ import { addCredits } from '../services/creditService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { logger } from '../middleware/requestLogger.js';
 
-// Valid paid plan_type values — source of truth for v3 pricing.
-// 'team' is the dynamic seat-priced team plan (5..50). Legacy team_5/10/15
-// kept so existing customers stay accessible until backfill.
-const PAID_PLAN_TYPES = new Set([
-  'pro_monthly',
-  'pro_yearly',
-  'team',
-  'team_5',
-  'team_10',
-  'team_15',
-]);
-
-// Map legacy team plan_type → seat count.
-const TEAM_SEATS = {
-  team_5: 5,
-  team_10: 10,
-  team_15: 15,
-};
+// Valid paid plan_type values — source of truth for v3.2 pricing.
+// 'team' is the dynamic seat-priced team plan (5..50).
+const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team']);
 
 // Dynamic team pricing — single Stripe Product, ad-hoc Price per checkout.
 // Avoids creating a SKU for every (5..50) seat count. Formula matches
@@ -601,63 +586,6 @@ router.get('/subscription', jwtAuth, async (req, res) => {
 });
 
 /**
- * Check desktop app download access
- * GET /api/billing/download-access
- */
-router.get('/download-access', jwtAuth, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Check if user has purchased any desktop plan
-    const result = await query(
-      `SELECT created_at FROM ascend_credit_transactions
-       WHERE user_id = $1 AND type IN ('desktop_lifetime', 'desktop_annual', 'desktop_monthly')
-       ORDER BY created_at DESC LIMIT 1`,
-      [userId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.json({ hasAccess: false });
-    }
-
-    // Get download links from environment or use defaults
-    const version = process.env.DESKTOP_VERSION || '1.0.0';
-    const baseUrl = process.env.DESKTOP_DOWNLOAD_URL ||
-      'https://github.com/schundu007/camora/releases/download';
-
-    res.json({
-      hasAccess: true,
-      purchaseDate: result.rows[0].created_at,
-      version,
-      downloads: {
-        mac: {
-          arm64: {
-            url: `${baseUrl}/v${version}/Camora-${version}-arm64.dmg`,
-            label: 'Mac (Apple Silicon)',
-            size: '~102 MB'
-          },
-          x64: {
-            url: `${baseUrl}/v${version}/Camora-${version}-x64.dmg`,
-            label: 'Mac (Intel)',
-            size: '~107 MB'
-          }
-        },
-        windows: {
-          x64: {
-            url: `${baseUrl}/v${version}/Camora-${version}-Setup.exe`,
-            label: 'Windows (64-bit)',
-            size: '~83 MB'
-          }
-        }
-      }
-    });
-  } catch (error) {
-    logger.error({ error: error.message }, 'Failed to check download access');
-    res.status(500).json({ error: 'Failed to check download access' });
-  }
-});
-
-/**
  * Verify subscription status (for cross-service verification).
  * Used by jobs.cariara.com to check if a user holds any active paid plan
  * (pricing v3: pro_monthly / pro_yearly).
@@ -889,23 +817,19 @@ async function handleCheckoutComplete(session) {
   }
 
   // Subscription plan — activate with the type as plan_type.
-  const validTypes = ['pro_monthly', 'pro_yearly', 'team', 'team_5', 'team_10', 'team_15'];
+  const validTypes = ['pro_monthly', 'pro_yearly', 'team'];
   const planType = validTypes.includes(type) ? type : 'pro_monthly';
   await query(
     `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
     [planType, userId]
   );
 
-  // Team plan: auto-create the team. For dynamic 'team' plan, seats come
-  // from session metadata. For legacy team_5/10/15, seats come from the
-  // SEAT_LIMITS map. Failures are logged but don't block plan activation.
-  const isTeam = planType === 'team' || TEAM_SEATS[planType];
-  if (isTeam) {
+  // Team plan: auto-create the team using seats from session metadata.
+  // Failures are logged but don't block plan activation.
+  if (planType === 'team') {
     try {
       const { createTeamForUser } = await import('../services/teamService.js');
-      const seats = planType === 'team'
-        ? parseInt(session.metadata?.seats || '0', 10)
-        : TEAM_SEATS[planType];
+      const seats = parseInt(session.metadata?.seats || '0', 10);
       const team = await createTeamForUser({ userId, planType, seats });
       // Set the team's hours pool from the per-cycle included hours so the
       // gate has something to check against.
@@ -1001,11 +925,7 @@ async function handleSubscriptionUpdated(subscription) {
 
   if (priceId === STRIPE_PRICES.PRO_MONTHLY) planType = 'pro_monthly';
   else if (priceId === STRIPE_PRICES.PRO_YEARLY) planType = 'pro_yearly';
-  else if (priceId === STRIPE_PRICES.TEAM_5_MONTHLY) planType = 'team_5';
-  else if (priceId === STRIPE_PRICES.TEAM_10_MONTHLY) planType = 'team_10';
-  else if (priceId === STRIPE_PRICES.TEAM_15_MONTHLY) planType = 'team_15';
-  // Dynamic team: ad-hoc price_data with our team product. Detect by product
-  // ID and reverse-engineer seat count from unit_amount (price = seats*20-1 dollars).
+  // Dynamic team: ad-hoc price_data, detected by product ID.
   else if (
     process.env.STRIPE_PRODUCT_TEAM &&
     subscription.items.data[0]?.price?.product === process.env.STRIPE_PRODUCT_TEAM
