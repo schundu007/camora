@@ -5,9 +5,11 @@ import { logger } from './requestLogger.js';
  * Subscription Required Middleware
  * Checks if user has an active paid subscription before allowing access
  *
- * Valid plans (pricing v3): pro_monthly, pro_yearly. (One-time topup_1h
- * purchases credit AI hours but don't grant paid-plan access on their own.)
- * Free / unsubscribed users are blocked with SUBSCRIPTION_REQUIRED.
+ * Valid plans (pricing v3.1): pro_monthly, pro_yearly, team_5, team_10,
+ * team_15. (One-time topup_1h purchases credit AI hours but don't grant
+ * paid-plan access on their own — and topup is itself gated to active
+ * paid subscribers in the /checkout route.) Free / unsubscribed users
+ * are blocked with SUBSCRIPTION_REQUIRED.
  */
 export async function subscriptionRequired(req, res, next) {
   // User must be authenticated first
@@ -28,7 +30,10 @@ export async function subscriptionRequired(req, res, next) {
 
     // Check if user has active paid subscription OR active trial
     const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
-                       subscription?.plan_type === 'pro_yearly';
+                       subscription?.plan_type === 'pro_yearly' ||
+                       subscription?.plan_type === 'team_5' ||
+                       subscription?.plan_type === 'team_10' ||
+                       subscription?.plan_type === 'team_15';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
@@ -77,7 +82,10 @@ export async function checkSubscription(req, res, next) {
 
     const subscription = result.rows[0];
     const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
-                       subscription?.plan_type === 'pro_yearly';
+                       subscription?.plan_type === 'pro_yearly' ||
+                       subscription?.plan_type === 'team_5' ||
+                       subscription?.plan_type === 'team_10' ||
+                       subscription?.plan_type === 'team_15';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 

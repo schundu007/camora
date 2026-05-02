@@ -58,12 +58,14 @@ router.get('/prices', (_req, res) => {
   // frontend's /api/v1/billing/prices reader works whether the request lands
   // on this service or ascend's mirror. SKUs identical to ascend.
   res.json({
-    // Pricing v3 — three flat options. Mirrors ascend-backend/src/routes/billing.js.
+    // Pricing v3.1 — solo + team plans + per-hour topup. Mirrors
+    // ascend-backend/src/routes/billing.js.
     pro_monthly: {
       priceId: process.env.STRIPE_PRICE_PRO_MONTHLY,
       amount: 1900,
       currency: 'usd',
       interval: 'month',
+      seats: 1,
       popular: true,
     },
     pro_yearly: {
@@ -71,13 +73,40 @@ router.get('/prices', (_req, res) => {
       amount: 9900,
       currency: 'usd',
       interval: 'year',
+      seats: 1,
       best_value: true,
+    },
+    team_5: {
+      priceId: process.env.STRIPE_PRICE_TEAM_5_MONTHLY,
+      amount: 9900,
+      currency: 'usd',
+      interval: 'month',
+      seats: 5,
+      team: true,
+    },
+    team_10: {
+      priceId: process.env.STRIPE_PRICE_TEAM_10_MONTHLY,
+      amount: 19900,
+      currency: 'usd',
+      interval: 'month',
+      seats: 10,
+      team: true,
+    },
+    team_15: {
+      priceId: process.env.STRIPE_PRICE_TEAM_15_MONTHLY,
+      amount: 29900,
+      currency: 'usd',
+      interval: 'month',
+      seats: 15,
+      team: true,
     },
     topup_1h: {
       priceId: process.env.STRIPE_PRICE_TOPUP_1H,
       amount: 1500,
-      ai_hours: 1,
+      currency: 'usd',
       interval: null,
+      ai_hours: 1,
+      supports_quantity: true,
     },
   });
 });
@@ -92,7 +121,7 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(503).json({ error: 'Billing not configured. STRIPE_SECRET_KEY missing.' });
   }
 
-  const { price_id, success_url, cancel_url } = req.body;
+  const { price_id, success_url, cancel_url, quantity: rawQuantity } = req.body;
   if (!price_id || !success_url || !cancel_url) {
     return res.status(400).json({ error: 'price_id, success_url, and cancel_url are required' });
   }
@@ -102,10 +131,13 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
-  // Pricing v3 — three flat SKUs. Mirrors ascend-backend/src/routes/billing.js.
+  // Pricing v3.1 — solo + team + topup. Mirrors ascend-backend/src/routes/billing.js.
   const validPrices = [
     process.env.STRIPE_PRICE_PRO_MONTHLY,
     process.env.STRIPE_PRICE_PRO_YEARLY,
+    process.env.STRIPE_PRICE_TEAM_5_MONTHLY,
+    process.env.STRIPE_PRICE_TEAM_10_MONTHLY,
+    process.env.STRIPE_PRICE_TEAM_15_MONTHLY,
     process.env.STRIPE_PRICE_TOPUP_1H,
   ].filter(Boolean);
   if (!validPrices.includes(price_id)) {
@@ -145,20 +177,54 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
-    // v3 SKUs — only topup_1h is one-time; the two subscriptions go
-    // through Stripe `mode: 'subscription'`.
+    // Only the hour topup is one-time; subscriptions go through
+    // Stripe `mode: 'subscription'`.
     const isOneTime = price_id === process.env.STRIPE_PRICE_TOPUP_1H;
+
+    // Quantity is only honored for hour top-ups (1..50). Non-topup
+    // line items always quantity:1.
+    let quantity = 1;
+    if (isOneTime) {
+      const q = Number(rawQuantity);
+      if (Number.isFinite(q) && q >= 1 && q <= 50) quantity = Math.floor(q);
+    }
 
     // Map price_id to plan_type for webhook metadata.
     let planType = 'pro_monthly';
     if (price_id === process.env.STRIPE_PRICE_PRO_MONTHLY) planType = 'pro_monthly';
     else if (price_id === process.env.STRIPE_PRICE_PRO_YEARLY) planType = 'pro_yearly';
+    else if (price_id === process.env.STRIPE_PRICE_TEAM_5_MONTHLY) planType = 'team_5';
+    else if (price_id === process.env.STRIPE_PRICE_TEAM_10_MONTHLY) planType = 'team_10';
+    else if (price_id === process.env.STRIPE_PRICE_TEAM_15_MONTHLY) planType = 'team_15';
     else if (price_id === process.env.STRIPE_PRICE_TOPUP_1H) planType = 'topup_1h';
+
+    // Hour top-up gated to active paid subscribers — free users
+    // need a Monthly/Yearly/Team subscription first.
+    if (planType === 'topup_1h') {
+      try {
+        const r = await query('SELECT plan_type, plan_status FROM users WHERE id = $1', [userId]);
+        const userPlan = r.rows[0];
+        const PAID = new Set(['pro_monthly', 'pro_yearly', 'team_5', 'team_10', 'team_15']);
+        const isActive = userPlan?.plan_status === 'active' && PAID.has(userPlan.plan_type);
+        if (!isActive) {
+          return res.status(403).json({
+            error: 'Hour top-ups require an active subscription. Subscribe to Monthly, Yearly, or a Team plan first.',
+            code: 'SUBSCRIPTION_REQUIRED_FOR_TOPUP',
+            upgradeUrl: '/pricing',
+          });
+        }
+      } catch (_err) {
+        return res.status(403).json({
+          error: 'Cannot verify subscription. Please refresh and try again.',
+          code: 'SUBSCRIPTION_CHECK_FAILED',
+        });
+      }
+    }
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
-      line_items: [{ price: price_id, quantity: 1 }],
+      line_items: [{ price: price_id, quantity }],
       mode: isOneTime ? 'payment' : 'subscription',
       success_url,
       cancel_url,
@@ -166,6 +232,9 @@ router.post('/checkout', authenticate, async (req, res) => {
         user_id: String(userId),
         plan: planType,
         price_id,
+        // Carry quantity to webhook so it can credit the right number
+        // of hours without re-fetching line items.
+        quantity: String(quantity),
       },
     });
 
