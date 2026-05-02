@@ -30,8 +30,8 @@ const COMPARE_SECTIONS: CompareSection[] = [
     title: 'Core',
     rows: [
       { label: 'AI hours included',           free: 'muted:1 hr · 7-day trial', monthly: '2 hrs / month',          yearly: '5 hrs / year',            team: 'Pooled across team' },
-      { label: 'Lumora live answers',         free: '✓',                         monthly: '✓',                       yearly: '✓',                        team: '✓' },
-      { label: 'Capra prep · 800+ topics',    free: 'muted:1 / category',        monthly: 'All',                     yearly: 'All',                      team: 'All' },
+      { label: 'Live interview AI co-pilot',  free: '✓',                         monthly: '✓',                       yearly: '✓',                        team: '✓' },
+      { label: 'Interview prep · 800+ topics', free: 'muted:1 / category',       monthly: 'All',                     yearly: 'All',                      team: 'All' },
       { label: 'Coding solver + system design', free: 'muted:Limited',           monthly: '✓',                       yearly: '✓',                        team: '✓' },
       { label: 'Voice filter + architecture diagrams', free: '—',                monthly: '✓',                       yearly: '✓',                        team: '✓' },
     ],
@@ -196,7 +196,7 @@ export default function PricingPage() {
 
       {/* ═══════════ COMPARISON ═══════════ */}
       <section className="px-6 py-20" style={{ background: 'var(--bg-surface)' }}>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <span className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>COMPARE</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -230,11 +230,11 @@ export default function PricingPage() {
                   }
                 `}</style>
                 <colgroup>
-                  <col style={{ width: '30%' }} />
+                  <col style={{ width: '34%' }} />
                   <col style={{ width: '15%' }} />
-                  <col style={{ width: '16%' }} />
-                  <col style={{ width: '16%' }} />
-                  <col style={{ width: '23%' }} />
+                  <col style={{ width: '17%' }} />
+                  <col style={{ width: '17%' }} />
+                  <col style={{ width: '17%' }} />
                 </colgroup>
                 <thead>
                   {/* Eyebrow row — bucket labels */}
@@ -307,7 +307,7 @@ export default function PricingPage() {
             </div>
             {/* Bottom microcopy */}
             <div className="px-6 py-3.5 text-[11.5px] text-center border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
-              Capra topic browsing is unlimited. AI features (Lumora, coding solver, system design) draw from your monthly AI hours. Top up at $15/hr — hours never expire.
+              Browsing prep topics is unlimited. AI features (live co-pilot, coding solver, system design) draw from your monthly AI hours. Top up at $15/hr — hours never expire.
             </div>
           </div>
         </div>
