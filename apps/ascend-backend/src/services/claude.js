@@ -536,9 +536,14 @@ CRITICAL: For EVERY technology/service you include (databases, caches, queues, e
 IMPORTANT: Do NOT generate code. Focus entirely on system design.
 
 IMPORTANT: Generate fields in this EXACT ORDER to minimize interview latency:
-1. First: All explanatory content (pitch, overview, requirements, architecture, techJustifications, scalability, tradeoffs, edgeCases)
+1. First: All explanatory content (pitch, overview, requirements, architecture, techJustifications, scalability, tradeoffs, edgeCases, followUpQuestions)
 2. Second: The diagram (ASCII/Mermaid format)
 3. Last: API design and data model details
+
+REQUIRED: followUpQuestions — emit a "followUpQuestions" array of 3-5 plain
+strings. These are the canonical follow-ups a senior interviewer would ask
+RIGHT AFTER your design. Drill into scale, failure modes, migrations, and
+tradeoffs the candidate didn't address yet. Each question 1 sentence.
 
 ##############################################################################
 # DIAGRAM RULES - ABSOLUTE REQUIREMENTS
@@ -580,6 +585,11 @@ For TYPE B (full system design) ONLY, respond with valid JSON in exactly this fo
       "Edge case 1: Database connection pool exhaustion under load spikes",
       "Edge case 2: Cache stampede when popular items expire simultaneously",
       "Edge case 3: Network partition between app servers and database"
+    ],
+    "followUpQuestions": [
+      "How would you scale this to 10x more users?",
+      "What happens if the primary database fails?",
+      "How would you migrate from SQL to NoSQL without downtime?"
     ],
     "diagram": "flowchart LR\\n  A[Client] --> B[Load Balancer]\\n  B --> C[Web Server]\\n  C --> D[(Database)]\\n  C --> E[(Cache)]",
     "apiDesign": [
@@ -670,9 +680,14 @@ CRITICAL: For EVERY technology/service you include, you MUST explain:
 IMPORTANT: Do NOT generate code. Focus entirely on system design.
 
 IMPORTANT: Generate fields in this EXACT ORDER to minimize interview latency:
-1. First: All explanatory content (pitch, overview, requirements, architecture, techJustifications, scalability, tradeoffs, edgeCases)
+1. First: All explanatory content (pitch, overview, requirements, architecture, techJustifications, scalability, tradeoffs, edgeCases, followUpQuestions)
 2. Second: The diagram (ASCII/Mermaid format)
 3. Last: API design and data model details
+
+REQUIRED: followUpQuestions — emit a "followUpQuestions" array of 3-5 plain
+strings. These are the canonical follow-ups a senior interviewer would ask
+RIGHT AFTER your design. Drill into scale, failure modes, migrations, and
+tradeoffs the candidate didn't address yet. Each question 1 sentence.
 
 ##############################################################################
 # DIAGRAM RULES - ABSOLUTE REQUIREMENTS
@@ -722,6 +737,13 @@ For TYPE B (full system design) ONLY, respond with valid JSON in exactly this fo
       "Edge case 3: Cache stampede during cold start or mass expiration",
       "Edge case 4: Message queue lag during traffic spikes - backpressure handling",
       "Edge case 5: Split-brain scenario in distributed cache cluster"
+    ],
+    "followUpQuestions": [
+      "How would you handle a region-wide outage?",
+      "What's your strategy for hot-shard rebalancing without downtime?",
+      "How do you guarantee exactly-once message delivery across regions?",
+      "How would you migrate from eventual to strong consistency for a critical subset of data?",
+      "What's the playbook when the message queue starts lagging by hours?"
     ],
     "diagram": "flowchart LR\\n  CDN[CDN] --> LB1[LB Region1]\\n  CDN --> LB2[LB Region2]\\n  subgraph Region1[Region 1]\\n    LB1 --> WS1[Web Servers]\\n    WS1 --> Cache1[(Redis)]\\n    WS1 --> DB1[(Primary DB)]\\n  end\\n  subgraph Region2[Region 2]\\n    LB2 --> WS2[Web Servers]\\n    WS2 --> Cache2[(Redis)]\\n    WS2 --> DB2[(Replica)]\\n  end\\n  DB1 -.-> DB2",
     "apiDesign": [

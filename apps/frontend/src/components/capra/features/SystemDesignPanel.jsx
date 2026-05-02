@@ -800,15 +800,15 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               </div>
             )}
 
-            {/* Row 3d: Mermaid Diagram */}
-            {hasDiagram && (
-              <div className="col-span-full rounded-lg p-3 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-[var(--text-muted)]">System Flow Diagram</h4>
-                {systemDesign.diagram && (
-                  <MermaidDiagram content={systemDesign.diagram.replace(/\\n/g, '\n')} />
-                )}
-              </div>
-            )}
+            {/* Row 3d: System Flow Diagram — REMOVED.
+                Was rendering MermaidDiagram from `systemDesign.diagram`,
+                which violated the project's no-Mermaid rule and stuck on
+                "Rendering diagram…" in production. The page already has
+                two authoritative diagram views: Cloud Architecture (Python
+                Graphviz PNG, served from cache) on the structural side,
+                and the Architecture Flow ASCII below this row for a
+                text-based traversal. A third Mermaid view added confusion
+                without new information. */}
 
             {/* Row 4: ASCII Diagram - Full Width */}
             <div className="col-span-full rounded-lg p-4 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
@@ -926,53 +926,38 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               </div>
             )}
 
-            {/* Row 7: Interviewer Q&A Section */}
-            {onFollowUpQuestion && (
+            {/* Row 7: Follow-up Questions — canonical questions an
+                interviewer would ask after this design. Driven by the
+                LLM's `followUpQuestions` field; the previous "Interviewer
+                Q&A" panel was an audio-capture surface that had no place
+                on the prep page (no live interviewer here). */}
+            {Array.isArray(systemDesign.followUpQuestions) && systemDesign.followUpQuestions.length > 0 && (
               <div className="col-span-full rounded p-2 bg-info-400/5 border border-info-400/20">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-5 h-5 rounded flex items-center justify-center bg-info-400/20">
                     <svg className="w-3 h-3 text-info-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <span className="text-xs font-semibold uppercase tracking-wide text-info-400">
-                    Interviewer Q&A
+                    Follow-up Questions
                   </span>
-                  {qaHistory.length > 0 && (
-                    <span className="px-1 py-0.5 bg-info-400/10 text-info-400 border border-info-400/30 rounded text-xs">
-                      {qaHistory.length}
-                    </span>
-                  )}
+                  <span className="px-1 py-0.5 bg-info-400/10 text-info-400 border border-info-400/30 rounded text-xs">
+                    {systemDesign.followUpQuestions.length}
+                  </span>
                 </div>
-
-                {/* Q&A History - compact view */}
-                {qaHistory.length > 0 ? (
-                  <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
-                    {[...qaHistory].reverse().map((qa, i) => (
-                      <div key={i} className="p-1.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)]/30">
-                        <div className="flex items-start gap-1.5 mb-1">
-                          <span className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold bg-info-900/30 text-info-400">Q</span>
-                          <p className="text-xs text-[var(--text-primary)] font-medium line-clamp-2">{qa.question}</p>
-                        </div>
-                        <div className="flex items-start gap-1.5">
-                          <span className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold bg-brand-900/30 text-brand-400">A</span>
-                          {qa.pending ? (
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-2.5 h-2.5 border-2 rounded-full animate-spin border-brand-400 border-t-transparent" />
-                              <p className="text-xs text-[var(--text-muted)] italic">Generating...</p>
-                            </div>
-                          ) : (
-                            <p className="text-xs text-[var(--text-primary)] line-clamp-3">{qa.answer}</p>
-                          )}
-                        </div>
+                <div className="space-y-1.5">
+                  {systemDesign.followUpQuestions.map((q, i) => (
+                    <div key={i} className="p-1.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)]/30">
+                      <div className="flex items-start gap-1.5">
+                        <span className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold bg-info-900/30 text-info-400">{i + 1}</span>
+                        <p className="text-xs text-[var(--text-primary)] leading-snug">
+                          {typeof q === 'string' ? q : (q.question || q.q || '')}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-[var(--text-muted)] text-center py-2">
-                    Questions will appear here when auto-listen captures interviewer questions
-                  </p>
-                )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
