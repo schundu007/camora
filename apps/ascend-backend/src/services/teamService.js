@@ -5,18 +5,20 @@ import { logger } from '../middleware/requestLogger.js';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
-// Seat limits per plan_type. v3 catalog is solo-only — no team plans.
-// Kept as an object so any service still importing this constant gets
-// a defined SEAT_LIMITS for backwards compatibility, but no plan grants
-// >1 seat under v3.
+// Seat limits per plan_type. Solo plans (Monthly / Yearly) are
+// 1-seat. Team plans grant 5/10/15 seats per the dollar tier.
 export const SEAT_LIMITS = {
   pro_monthly: 1,
   pro_yearly: 1,
+  team_5: 5,
+  team_10: 10,
+  team_15: 15,
 };
 
-// v3 plans don't include team hour pools or PAYG discounts — these
-// stay empty so any caller that looks up a non-existent plan gets
-// undefined and falls back to the per-user budget.
+// Team plans don't currently bundle a recurring hour pool — members
+// share the team's purchased top-up hours via ai_hour_topups
+// (team_id column). Auto-topup config lives on the team row. PAYG
+// rate is the standard $15/hr (one price ID, multiplied by quantity).
 const HOURS_POOL_BY_PLAN = {};
 const PAYG_RATES_BY_PLAN = {};
 

@@ -981,19 +981,18 @@ export default function JobsPage() {
         </div>
 
         {/* ── Category Pills (Etched-inspired) ──
-            Sticky just below the SiteNav. z-40 sits above the cards
-            (default z) but below the SiteNav (z-50) so the bar covers
-            scrolling cards but is itself covered by the nav. Top
-            offset is -1px so the pills bar's top edge sits flush
-            against the SiteNav's bottom border with no scroll-revealed
-            seam. */}
+            Plain inline bar (NOT sticky). Sticky positioning kept
+            running into z-index / overlap issues against the SiteNav
+            and the Filters bar — the bar would sit on top of card
+            content during scroll or overlap the SiteNav when --nav-h
+            wasn't synced yet. The bar still scrolls into view at the
+            top of the listing area; the SiteNav above is fixed so
+            users always have nav access. Reachable by scrolling
+            back up to the category area. */}
         <div
-          className="sticky z-40"
           style={{
-            top: 'calc(var(--nav-h, 84px) - 1px)',
             background: 'var(--bg-app)',
             borderBottom: '1px solid var(--border)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
           }}
         >
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
