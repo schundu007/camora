@@ -400,14 +400,34 @@ router.post('/checkout', jwtAuth, async (req, res) => {
         }
       : { price: priceId, quantity };
 
-    // Create checkout session
+    // Create checkout session.
+    //
+    // International billing notes:
+    // - payment_method_types omitted → Stripe auto-shows the right methods per
+    //   buyer country (UPI for India, BACS for UK, SEPA for EU, etc.) based on
+    //   what's enabled in Settings → Payments.
+    // - billing_address_collection always 'required' so we know the buyer's
+    //   country for invoice / future tax calculation, even before Stripe Tax
+    //   is turned on.
+    // - tax_id_collection lets EU/UK/India businesses enter VAT/GSTIN for
+    //   reverse-charge invoices.
+    // - automatic_tax is opt-in via STRIPE_AUTOMATIC_TAX=1 because turning
+    //   it on requires every Price to have tax_behavior set in the Dashboard;
+    //   leaving it off keeps checkout working until that's done.
     const sessionConfig = {
       customer: customerId,
-      payment_method_types: ['card'],
       line_items: [lineItem],
       mode: isOneTime ? 'payment' : 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      billing_address_collection: 'required',
+      tax_id_collection: { enabled: true },
+      ...(process.env.STRIPE_AUTOMATIC_TAX === '1' ? { automatic_tax: { enabled: true } } : {}),
+      ...(isOneTime ? {} : {
+        subscription_data: {
+          metadata: { user_id: userId.toString(), type: purchaseType },
+        },
+      }),
       metadata: {
         user_id: userId.toString(),
         type: purchaseType,
