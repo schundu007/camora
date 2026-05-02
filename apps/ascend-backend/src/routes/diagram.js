@@ -7,7 +7,7 @@ import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
-import { recordTokens } from '../services/aiHoursMeter.js';
+import { recordUsage } from '../services/aiHoursMeter.js';
 import { hourBudgetGate } from '../middleware/hourBudgetGate.js';
 
 const router = Router();
@@ -178,7 +178,11 @@ router.post('/generate', hourBudgetGate, async (req, res, next) => {
       throw new AppError('Diagram generation not configured — ANTHROPIC_API_KEY is not set', ErrorCode.EXTERNAL_API_ERROR);
     }
 
-    // 4. Try Python diagrams first, fall back to Mermaid code generation
+    // 4. Try Python diagrams first, fall back to Mermaid code generation.
+    // Wall-clock starts here so the AI-hours meter reflects real generation
+    // time (Python + retries + Mermaid fallback if it fires) instead of a
+    // hardcoded 30s approximation.
+    const genStartedAt = new Date();
     let pythonResult = null;
     let pythonError = null;
     try {
@@ -223,12 +227,17 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
             );
           } catch { /* ignore cache error */ }
           if (req.user?.id) {
-            recordTokens({
+            // Mermaid path — wall-clock covers the failed Python attempt(s)
+            // plus the Mermaid retry. tokens kept for analytics, seconds is
+            // the source of truth for the meter.
+            recordUsage({
               userId: req.user.id,
               surface: 'capra_diagram',
+              seconds: (Date.now() - genStartedAt.getTime()) / 1000,
               tokensIn: Math.ceil(mermaidPrompt.length / 4),
               tokensOut: Math.ceil(mermaidCode.length / 4),
               model: 'claude-sonnet-4-6',
+              startedAt: genStartedAt,
             });
           }
           return res.json({ success: true, type: 'mermaid', mermaid_code: mermaidCode.trim(), cloud_provider: provider, cached: false });
@@ -265,14 +274,19 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
     }
 
     if (req.user?.id) {
-      // Diagram generation is dominated by Python+Anthropic time, not raw tokens.
-      // Approximate as 30s per generation to keep the meter populated.
-      recordTokens({
+      // Diagram generation is dominated by Python+Anthropic wall time, not
+      // output tokens. Charge the meter the actual elapsed seconds — a
+      // clean attempt-1 run charges ~15s, a retry cascade charges ~45s.
+      // This makes today's alias-map and provider-lock cost wins visible
+      // on the meter instead of being flattened to a hardcoded 30s.
+      recordUsage({
         userId: req.user.id,
         surface: 'capra_diagram',
+        seconds: (Date.now() - genStartedAt.getTime()) / 1000,
         tokensIn: Math.ceil((question || '').length / 4),
-        tokensOut: 1500,
+        tokensOut: 0,
         model: 'claude-sonnet-4-6',
+        startedAt: genStartedAt,
       });
     }
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
