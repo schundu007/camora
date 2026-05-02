@@ -157,8 +157,11 @@ router.get('/google/callback', async (req, res) => {
       );
       userId = insertResult.rows[0].id;
 
-      // Generate referral code for new user
-      const refCode = Math.random().toString(36).substring(2, 10);
+      // Generate referral code for new user. Crypto-random because referral
+      // codes grant the holder real value (free credits) — Math.random()
+      // would have been predictable enough for an attacker who collects a
+      // few codes to start guessing future ones.
+      const refCode = randomBytes(6).toString('base64url').slice(0, 8);
       await query('UPDATE users SET referral_code = $1 WHERE id = $2', [refCode, userId]);
     } else {
       userId = userResult.rows[0].id;

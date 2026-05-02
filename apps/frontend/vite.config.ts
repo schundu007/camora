@@ -9,6 +9,36 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // Modern evergreen browsers only — interview platform users are on
+    // up-to-date browsers. Saves ~kb per chunk vs the default es2015
+    // transpilation + drops some Babel-style helpers.
+    target: 'es2020',
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Topic data files — large static datasets that DocsPage pulls in
+          // and inflates the route chunk to 4MB+. Splitting each into its
+          // own chunk lets the browser cache them independently and avoid
+          // re-downloading the whole catalog on a single-topic edit.
+          if (id.includes('/data/capra/topics/')) {
+            const m = id.match(/\/topics\/([^/]+?)(?:\.\w+)?$/);
+            if (m) return `topic-data-${m[1]}`;
+          }
+          if (id.includes('/data/capra/companies/')) return 'company-data';
+          // Heavy vendors that aren't on the critical path
+          if (id.includes('node_modules/cytoscape')) return 'vendor-cytoscape';
+          if (id.includes('node_modules/katex')) return 'vendor-katex';
+          if (id.includes('node_modules/jspdf')) return 'vendor-jspdf';
+          if (id.includes('node_modules/pdfmake')) return 'vendor-pdfmake';
+          if (id.includes('node_modules/highlight.js')) return 'vendor-highlight';
+          if (id.includes('node_modules/framer-motion')) return 'vendor-framer';
+          // React core stays in the entry chunk — wanted on first paint.
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     proxy: {

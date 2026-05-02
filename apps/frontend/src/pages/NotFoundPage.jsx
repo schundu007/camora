@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import SiteNav from '../components/shared/SiteNav';
 
 export default function NotFoundPage() {
   return (
     <div className="min-h-screen relative" style={{ background: 'var(--cam-hero-bg)', color: '#FFFFFF' }}>
+      <Helmet>
+        <title>Page not found — Camora</title>
+        <meta name="robots" content="noindex, nofollow" />
+        {/* No canonical for 404s — they're not authoritative pages. */}
+      </Helmet>
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
       <SiteNav variant="light" />
 
