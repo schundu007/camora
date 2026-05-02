@@ -224,6 +224,8 @@ router.post('/checkout', authenticate, async (req, res) => {
     }
 
     // Build the line item — fixed price for solo/topup, ad-hoc price_data for team.
+    // tax_behavior is required on price_data when automatic_tax is on; static
+    // prices carry it from Dashboard, dynamic price_data must include it inline.
     const teamPriceCents = isTeamCheckout ? (teamSeats * 20 - 1) * 100 : 0;
     const lineItem = isTeamCheckout
       ? {
@@ -232,6 +234,7 @@ router.post('/checkout', authenticate, async (req, res) => {
             product: process.env.STRIPE_PRODUCT_TEAM,
             unit_amount: teamPriceCents,
             recurring: { interval: 'month' },
+            tax_behavior: 'exclusive',
           },
           quantity: 1,
         }

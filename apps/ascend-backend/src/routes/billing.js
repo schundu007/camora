@@ -5,6 +5,7 @@ import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
+import { SOLO_INCLUDED_HOURS } from '../services/teamService.js';
 import { logger } from '../middleware/requestLogger.js';
 
 // Valid paid plan_type values — source of truth for v3.2 pricing.
@@ -388,6 +389,9 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     }
 
     // Build the line item — fixed price for solo/topup, ad-hoc price_data for team.
+    // tax_behavior MUST be set on price_data when STRIPE_AUTOMATIC_TAX=1, otherwise
+    // Stripe rejects checkout with "price_data must include tax_behavior". The
+    // static prices have it set in Dashboard; dynamic price_data needs it inline.
     const lineItem = isTeamCheckout
       ? {
           price_data: {
@@ -395,6 +399,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
             product: process.env.STRIPE_PRODUCT_TEAM,
             unit_amount: computeTeamPriceCents(teamSeats),
             recurring: { interval: 'month' },
+            tax_behavior: 'exclusive',
           },
           quantity: 1,
         }
@@ -980,7 +985,19 @@ async function handleCheckoutComplete(session) {
 }
 
 /**
- * Handle paid invoice (subscription renewal)
+ * Handle paid invoice — both initial activation and recurring renewals.
+ *
+ * Critical: every renewal must re-grant the plan's included AI hours
+ * (2 for Monthly, 5 for Yearly, ⌈seats × 0.7⌉ for Team). Without this,
+ * paying users hit 429 the moment the new period starts.
+ *
+ * Idempotency: ai_hour_topups.stripe_invoice_id has a UNIQUE partial
+ * index, so re-deliveries of the same invoice never double-credit.
+ *
+ * Initial-invoice skip: handleCheckoutComplete already grants the first
+ * period's hours. Stripe sets `billing_reason='subscription_create'` for
+ * the activation invoice — we skip granting on that one to avoid
+ * double-counting period 1.
  */
 async function handleInvoicePaid(invoice) {
   const customerId = invoice.customer;
@@ -997,25 +1014,15 @@ async function handleInvoicePaid(invoice) {
     return;
   }
 
-  // Plans are now feature-based (credit system deprecated)
-  // Still update subscription period below for plan renewal tracking
   const planType = subscription.plan_type;
-  const credits = 0; // Credit system deprecated — plans are feature-based
+  const isInitialInvoice = invoice.billing_reason === 'subscription_create';
 
-  if (credits > 0) {
-    await addCredits(
-      subscription.user_id,
-      credits,
-      'subscription',
-      `${planType} subscription renewal`,
-      invoice.id
-    );
-  }
-
-  // Update subscription period
+  // Update subscription period first (read once, use for grant expiry too).
+  let periodEnd = null;
   const subscriptionId = invoice.subscription;
   if (subscriptionId) {
     const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+    periodEnd = new Date(stripeSubscription.current_period_end * 1000);
 
     await query(
       `UPDATE ascend_subscriptions SET
@@ -1026,23 +1033,49 @@ async function handleInvoicePaid(invoice) {
        WHERE stripe_customer_id = $4`,
       [
         new Date(stripeSubscription.current_period_start * 1000),
-        new Date(stripeSubscription.current_period_end * 1000),
+        periodEnd,
         stripeSubscription.cancel_at_period_end,
         customerId,
       ]
     );
   }
 
+  // Grant included AI hours for renewals (skip initial — already granted at checkout).
+  // Solo plans: insert into ai_hour_topups with source='subscription' and the
+  // invoice id as idempotency key. Team plans: refilled via rollOverTeamPoolForUser
+  // below (it recomputes hours_pool_total from current seat_limit).
+  if (!isInitialInvoice) {
+    const includedHours = SOLO_INCLUDED_HOURS[planType];
+    if (includedHours && planType !== 'team') {
+      try {
+        await query(
+          `INSERT INTO ai_hour_topups
+            (user_id, team_id, hours, amount_cents, stripe_invoice_id, expires_at, source)
+           VALUES ($1, NULL, $2, 0, $3, $4, 'subscription')
+           ON CONFLICT (stripe_invoice_id) WHERE stripe_invoice_id IS NOT NULL DO NOTHING`,
+          [subscription.user_id, includedHours, invoice.id, periodEnd],
+        );
+        logger.info(
+          { userId: subscription.user_id, planType, includedHours, invoiceId: invoice.id },
+          'Renewal hours granted',
+        );
+      } catch (err) {
+        logger.error({ err: err.message, userId: subscription.user_id, invoiceId: invoice.id },
+          'Renewal hours grant failed');
+      }
+    }
+  }
+
   // Phase 7: clear personal pool-low reminder flags so the user gets fresh
   // warnings in the new period. Cheap update; runs for every paid plan.
-  // Also roll over the team pool period_start so the pool resets each cycle.
+  // Also roll over the team pool — refills hours_pool_total from current seats.
   try {
     const { rollOverPersonalRemindersForUser, rollOverTeamPoolForUser } = await import('../services/teamService.js');
     await rollOverPersonalRemindersForUser(subscription.user_id);
     await rollOverTeamPoolForUser(subscription.user_id);
   } catch { /* swallow */ }
 
-  logger.info({ userId: subscription.user_id, planType }, 'Invoice paid — subscription renewed');
+  logger.info({ userId: subscription.user_id, planType, isInitialInvoice }, 'Invoice paid');
 }
 
 /**
