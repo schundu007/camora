@@ -27,6 +27,144 @@ except ImportError:
     import anthropic
 
 
+# ── Class-name aliases ─────────────────────────────────────────────────────
+# Claude regularly emits CamelCase variants that don't match the actual
+# `diagrams` library class names (e.g. "DynamoDB" → real class is "Dynamodb",
+# "CloudRun" → "Run", "Functions" for Azure → "FunctionApps"). Without this
+# normalization, validate_imports flags the bad import, fix_bad_imports drops
+# it, and the body still references the alias → NameError → triggers a full
+# Claude retry. Each retry cascade burns ~2–3× the tokens of a clean run.
+#
+# The substitution runs against both the import lines AND the body call sites
+# in assemble_code(), before validate_imports executes.
+ALIAS_MAP = {
+    "aws": {
+        "DynamoDB": "Dynamodb",
+        "Dynamo": "Dynamodb",
+        "Cloudfront": "CloudFront",
+        "CloudFRONT": "CloudFront",
+        "ApiGateway": "APIGateway",
+        "APIgateway": "APIGateway",
+        "API_Gateway": "APIGateway",
+        "ApiGW": "APIGateway",
+        "Route_53": "Route53",
+        "Route53DNS": "Route53",
+        "ElasticCache": "ElastiCache",
+        "Elasticache": "ElastiCache",
+        "AutoScale": "AutoScaling",
+        "AutoScalingGroup": "AutoScaling",
+        "ASG": "AutoScaling",
+        "Cloudwatch": "Cloudwatch",  # canonical (some prompts say CloudWatch)
+        "CloudWatch": "Cloudwatch",
+        "ElasticSearch": "Elasticsearch",
+        "ES": "Elasticsearch",
+        "AuroraDB": "Aurora",
+        "AuroraDb": "Aurora",
+        "S3Storage": "S3",
+        "SimpleStorage": "S3",
+        "LambdaFunction": "Lambda",
+    },
+    "gcp": {
+        "CloudRun": "Run",
+        "GoogleCloudRun": "Run",
+        "CloudFunctions": "Functions",
+        "GoogleCloudFunctions": "Functions",
+        "GCF": "Functions",
+        "Pubsub": "PubSub",
+        "PUBSUB": "PubSub",
+        "Pub_Sub": "PubSub",
+        "Bigquery": "BigQuery",
+        "BigQueryDB": "BigQuery",
+        "BQ": "BigQuery",
+        "CloudSQL": "SQL",
+        "CloudSql": "SQL",
+        "GoogleSQL": "SQL",
+        "Memstore": "Memorystore",
+        "MemoryStore": "Memorystore",
+        "CloudCDN": "CDN",
+        "CloudDNS": "DNS",
+        "CloudArmor": "Armor",
+        "CloudStorage": "GCS",
+        "GoogleCloudStorage": "GCS",
+        "Bigtable": "Bigtable",  # canonical
+        "BigTable": "Bigtable",
+        "CloudSpanner": "Spanner",
+        "Kubernetes": "GKE",
+        "K8s": "GKE",
+        "ComputeEngine": "GCE",
+    },
+    "azure": {
+        "Functions": "FunctionApps",
+        "AzureFunctions": "FunctionApps",
+        "FunctionApp": "FunctionApps",
+        "AzFunctions": "FunctionApps",
+        "CosmosDB": "CosmosDb",
+        "Cosmos": "CosmosDb",
+        "CosmosDatabase": "CosmosDb",
+        "SQLDatabase": "SQLDatabases",
+        "SqlDatabase": "SQLDatabases",
+        "SqlDatabases": "SQLDatabases",
+        "AzureSQL": "SQLDatabases",
+        "Redis": "CacheForRedis",  # only when in azure context (handled below)
+        "AzureRedis": "CacheForRedis",
+        "ServiceBus": "ServiceBus",  # canonical
+        "Service_Bus": "ServiceBus",
+        "Servicebus": "ServiceBus",
+        "EventGrid": "EventGridDomains",
+        "EventGridTopic": "EventGridDomains",
+        "EventGridDomain": "EventGridDomains",
+        "Blob": "BlobStorage",
+        "BlobStore": "BlobStorage",
+        "AzureBlob": "BlobStorage",
+        "FrontDoor": "FrontDoors",
+        "AzureFrontDoor": "FrontDoors",
+        "LoadBalancer": "LoadBalancers",
+        "AppGateway": "ApplicationGateway",
+        "AppGW": "ApplicationGateway",
+        "CDN": "CDNProfiles",
+        "CdnProfile": "CDNProfiles",
+        "DNSZone": "DNSZones",
+        "DnsZone": "DNSZones",
+        "KeyVault": "KeyVaults",
+        "AzKeyVault": "KeyVaults",
+        "AppService": "AppServices",
+        "WebApp": "AppServices",
+    },
+}
+
+
+def normalize_aliases(code, provider):
+    """Substitute common Claude class-name aliases with canonical diagrams-lib names.
+
+    Runs whole-word substitutions on both import lines and call sites. Skips
+    occurrences inside string literals so node labels containing service names
+    (e.g. "DynamoDB Users Table") aren't rewritten.
+    """
+    aliases = ALIAS_MAP.get(provider, {})
+    if not aliases:
+        return code
+
+    # Mask string literals so labels aren't touched
+    literals = []
+    def _mask(m):
+        literals.append(m.group(0))
+        return f"\x00LIT{len(literals)-1}\x00"
+    masked = _STRING_LITERAL_RE.sub(_mask, code)
+
+    # Order by length desc so longer aliases (CloudFunctions) match before
+    # shorter overlaps (Functions). Apply word-boundary substitution.
+    for alias in sorted(aliases.keys(), key=len, reverse=True):
+        canonical = aliases[alias]
+        if alias == canonical:
+            continue
+        masked = re.sub(rf'\b{re.escape(alias)}\b', canonical, masked)
+
+    # Restore literals
+    def _restore(m):
+        return literals[int(m.group(1))]
+    return re.sub(r'\x00LIT(\d+)\x00', _restore, masked)
+
+
 # ── Verified imports per provider ──────────────────────────────────────────
 
 PROVIDER_IMPORTS = {
@@ -351,6 +489,11 @@ def _build_class_to_import(provider):
 
 def assemble_code(raw_output, provider, direction):
     """Split Claude's output into imports + body, wrap in template."""
+    # Normalize common class-name aliases (e.g. DynamoDB → Dynamodb,
+    # CloudRun → Run) before parsing so import dedup and class-detection
+    # operate on canonical names.
+    raw_output = normalize_aliases(raw_output, provider)
+
     lines = raw_output.split("\n")
     imports = []
     body_lines = []
