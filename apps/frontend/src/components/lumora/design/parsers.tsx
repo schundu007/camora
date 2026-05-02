@@ -67,13 +67,71 @@ export function parseTagsToDesign(byType: Record<string, string>): DesignResult 
     });
   }
 
-  // Scale math
+  // Scale math. The LLM occasionally dumps tradeoff bullets ("- Chose X
+  // over Y: …") and follow-up Q&A ("Q1: …" / "A1: …") into the
+  // [SCALEMATH] block instead of the dedicated [TRADEOFFS] / [FOLLOWUP]
+  // blocks. The previous parser treated every line with a ':' as a metric
+  // and the design panel rendered tradeoff/Q&A text in the Scale Estimates
+  // table. Now we route mis-bucketed lines into their proper destinations
+  // (and accept multi-line answers) instead of letting them leak.
   if (byType.SCALEMATH) {
-    byType.SCALEMATH.split('\n').filter(l => l.includes(':')).forEach(line => {
-      const [key, ...rest] = line.split(':');
-      const value = rest.join(':').trim();
-      if (key?.trim() && value && sd.scaleEstimates) sd.scaleEstimates[key.trim()] = value;
-    });
+    let pendingFollowup: { question: string; answer: string } | null = null;
+    const flushFollowup = () => {
+      if (pendingFollowup && pendingFollowup.question) {
+        sd.followups!.push({
+          question: pendingFollowup.question,
+          answer: pendingFollowup.answer.trim(),
+        });
+      }
+      pendingFollowup = null;
+    };
+    for (const rawLine of byType.SCALEMATH.split('\n')) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // Q1: … starts a new follow-up. A1: … sets its answer. Lines after
+      // the answer that don't match any other pattern continue the answer.
+      const qMatch = line.match(/^Q\d+[:.)\s]+(.*)/i);
+      const aMatch = line.match(/^A\d+[:.)\s]+(.*)/i);
+      if (qMatch) {
+        flushFollowup();
+        pendingFollowup = { question: qMatch[1].trim(), answer: '' };
+        continue;
+      }
+      if (aMatch && pendingFollowup) {
+        pendingFollowup.answer = aMatch[1].trim();
+        continue;
+      }
+
+      // Tradeoff bullet — "- Chose X over Y: rationale". Split into label
+      // and rationale so the Tradeoffs section shows both halves cleanly.
+      if (line.startsWith('-')) {
+        flushFollowup();
+        const stripped = line.replace(/^[-\s]+/, '').trim();
+        if (stripped) sd.tradeoffs!.push(stripped);
+        continue;
+      }
+
+      // Real metric line — "DAU: 1M active API consumers"
+      const colonIdx = line.indexOf(':');
+      if (colonIdx > 0) {
+        flushFollowup();
+        const key = line.slice(0, colonIdx).trim();
+        const value = line.slice(colonIdx + 1).trim();
+        // Reject keys that look like tradeoff/Q&A leftovers as a final
+        // safety net (e.g. parser saw "Q1" without a number).
+        if (key && value && !/^[QA]\d*$/i.test(key) && sd.scaleEstimates) {
+          sd.scaleEstimates[key] = value;
+        }
+        continue;
+      }
+
+      // Continuation of a multi-line answer.
+      if (pendingFollowup && pendingFollowup.answer) {
+        pendingFollowup.answer += ' ' + line;
+      }
+    }
+    flushFollowup();
   }
 
   // Scale calculator baseline inputs (DAU=1000000, RequestsPerUser=10, ...)

@@ -1083,7 +1083,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                                 {col.map(([key, val]) => (
                                   <tr key={key} style={{ borderBottom: `1px solid var(--border)` }}>
                                     <td className="text-[11px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: t.text }}>{key}</td>
-                                    <td className="text-[11px] py-1.5" style={{ color: t.textMuted }}>{val}</td>
+                                    <td className="text-[11px] py-1.5" style={{ color: t.text }}>{val}</td>
                                   </tr>
                                 ))}
                               </tbody>
