@@ -123,15 +123,14 @@ export async function tryAutoTopup({ userId, teamId = null }) {
     return { ok: false, reason: 'CHARGE_FAILED', payment_status: pi.status };
   }
 
-  // Credit the hours. 90-day expiry like manual top-ups.
-  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  // Credit the hours. Paid top-ups (manual + auto) never expire.
   try {
     await query(
       `INSERT INTO ai_hour_topups
-         (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at, auto_charged)
-       VALUES ($1, $2, $3, $4, $5, $6, true)
+         (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at, auto_charged, source)
+       VALUES ($1, $2, $3, $4, $5, NULL, true, 'auto_topup')
        ON CONFLICT (stripe_session_id) WHERE stripe_session_id IS NOT NULL DO NOTHING`,
-      [billingUserId, teamId, hours, amount_cents, pi.id, expiresAt],
+      [billingUserId, teamId, hours, amount_cents, pi.id],
     );
   } catch (err) {
     logger.error({ err: err.message, pi: pi.id }, '[autoTopup] insert failed after charge succeeded');

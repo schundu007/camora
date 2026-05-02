@@ -30,11 +30,11 @@ export default function TopupsDocsPage() {
           Your pool is whatever your plan provides for the current period:
         </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><strong>Free</strong>: 30 min lifetime</li>
-          <li><strong>Pro</strong>: 2 hrs/mo (or 24/yr on annual)</li>
-          <li><strong>Pro Max</strong>: 8 hrs/mo (or 96/yr)</li>
-          <li><strong>Business Starter</strong>: 75 hrs one-time</li>
-          <li><strong>Top-ups</strong>: extend whichever pool you're on, expire 90 days from purchase</li>
+          <li><strong>Free trial</strong>: 1 hr, expires 7 days from signup</li>
+          <li><strong>Monthly ($19/mo)</strong>: 2 hrs/cycle, refreshed each month</li>
+          <li><strong>Yearly ($99/yr)</strong>: 5 hrs/cycle, refreshed each year</li>
+          <li><strong>Team</strong>: ⌈seats × 0.7⌉ hrs/cycle pooled across the team (e.g. 10 seats → 7 hrs)</li>
+          <li><strong>Top-ups ($15/hr)</strong>: stack on any plan and <strong>never expire</strong></li>
         </ul>
       </section>
 
@@ -63,26 +63,32 @@ export default function TopupsDocsPage() {
 
       <section id="pack-sizes" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Pack sizes &amp; expiry</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          One flat per-hour rate, pick any quantity 1–50. Stripe charges $15 × quantity at checkout.
+          Hours never expire — they sit on your account until used.
+        </p>
         <div className="rounded-lg overflow-hidden mb-3" style={{ border: '1px solid var(--border)' }}>
           <table className="w-full text-sm">
             <thead style={{ background: 'var(--bg-elevated)' }}>
               <tr>
-                <th className="text-left px-4 py-2.5 font-semibold">Pack</th>
-                <th className="text-left px-4 py-2.5 font-semibold">Price</th>
+                <th className="text-left px-4 py-2.5 font-semibold">Quantity</th>
+                <th className="text-left px-4 py-2.5 font-semibold">Total</th>
                 <th className="text-left px-4 py-2.5 font-semibold">Per-hour</th>
                 <th className="text-left px-4 py-2.5 font-semibold">Expiry</th>
               </tr>
             </thead>
             <tbody>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">1 hour</td><td className="px-4 py-2.5">$10</td><td className="px-4 py-2.5">$10</td><td className="px-4 py-2.5">90 days</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">5 hours</td><td className="px-4 py-2.5">$50</td><td className="px-4 py-2.5">$10</td><td className="px-4 py-2.5">90 days</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">25 hours</td><td className="px-4 py-2.5">$250</td><td className="px-4 py-2.5">$10</td><td className="px-4 py-2.5">90 days</td></tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">1 hour</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">5 hours</td><td className="px-4 py-2.5">$75</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">10 hours</td><td className="px-4 py-2.5">$150</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">N hours (1–50)</td><td className="px-4 py-2.5">$15 × N</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
             </tbody>
           </table>
         </div>
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           Top-ups stack on top of your subscription pool. Buy from the
           <Link to="/pricing" className="text-[var(--accent)] underline ml-1">pricing page</Link> or whenever the gate prompts.
+          Top-ups are gated to active subscribers — start with Monthly or Yearly first.
         </p>
       </section>
 

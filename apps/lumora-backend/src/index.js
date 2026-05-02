@@ -197,10 +197,20 @@ async function runMigrations() {
         hours REAL NOT NULL,
         amount_cents INTEGER NOT NULL,
         stripe_session_id VARCHAR(255),
-        expires_at TIMESTAMPTZ NOT NULL,
+        expires_at TIMESTAMPTZ,
         auto_charged BOOLEAN NOT NULL DEFAULT false,
+        source VARCHAR(20) NOT NULL DEFAULT 'topup',
+        stripe_invoice_id VARCHAR(255),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`,
+      // Idempotent migrations for older deployments
+      "ALTER TABLE ai_hour_topups ALTER COLUMN expires_at DROP NOT NULL",
+      "ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS source VARCHAR(20) NOT NULL DEFAULT 'topup'",
+      "ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS stripe_invoice_id VARCHAR(255)",
+      'CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_invoice ON ai_hour_topups(stripe_invoice_id) WHERE stripe_invoice_id IS NOT NULL',
+      "CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_trial_per_user ON ai_hour_topups(user_id) WHERE source = 'trial'",
+      'DROP INDEX IF EXISTS idx_topups_user',
+      'DROP INDEX IF EXISTS idx_topups_team',
       // Indexes
       'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',
@@ -216,8 +226,8 @@ async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id)',
       'CREATE INDEX IF NOT EXISTS idx_team_invites_team ON team_invites(team_id)',
       'CREATE INDEX IF NOT EXISTS idx_team_invites_email_pending ON team_invites(email) WHERE accepted_at IS NULL',
-      'CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND expires_at > NOW()',
-      'CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND expires_at > NOW()',
+      'CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND (expires_at IS NULL OR expires_at > NOW())',
+      'CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND (expires_at IS NULL OR expires_at > NOW())',
       'CREATE INDEX IF NOT EXISTS idx_topups_auto ON ai_hour_topups(user_id, created_at DESC) WHERE auto_charged = true',
       'CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_session ON ai_hour_topups(stripe_session_id) WHERE stripe_session_id IS NOT NULL',
     ];

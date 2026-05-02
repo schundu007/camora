@@ -332,9 +332,10 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_ai_hours_team_created ON ai_hours_usage(team_id, created_at DESC) WHERE team_id IS NOT NULL');
     console.log('[Migrations] team tables + ai_hours_usage.team_id ensured');
 
-    // Top-up credits — purchased one-time hour packs that extend either a
-    // personal budget (team_id NULL) or a team's pool. 90-day expiry from
-    // purchase. Budget calc sums unexpired topup hours into the pool.
+    // Top-up + grant credits — extends a personal budget (team_id NULL) or a
+    // team's pool. `source` distinguishes paid top-ups (never expire) from
+    // free-trial grants (7-day) and subscription-cycle grants (paid → never
+    // expire). NULL expires_at = never expires.
     await query(`CREATE TABLE IF NOT EXISTS ai_hour_topups (
       id BIGSERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -342,15 +343,28 @@ async function runMigrations() {
       hours REAL NOT NULL,
       amount_cents INTEGER NOT NULL,
       stripe_session_id VARCHAR(255),
-      expires_at TIMESTAMPTZ NOT NULL,
+      expires_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
-    await query('CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND expires_at > NOW()');
-    await query('CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND expires_at > NOW()');
+    // Existing rows: relax NOT NULL on expires_at so paid top-ups can be NULL.
+    await query("ALTER TABLE ai_hour_topups ALTER COLUMN expires_at DROP NOT NULL");
+    // Source tag: 'topup' (paid à la carte), 'subscription' (cycle grant),
+    // 'trial' (7-day free hour), 'auto_topup' (auto-charged top-up).
+    await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS source VARCHAR(20) NOT NULL DEFAULT 'topup'");
+    // Stripe invoice tag for subscription-cycle grant idempotency.
+    await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS stripe_invoice_id VARCHAR(255)");
+    await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_invoice ON ai_hour_topups(stripe_invoice_id) WHERE stripe_invoice_id IS NOT NULL');
+    // Drop and recreate the partial indexes so NULL expires_at counts as active.
+    await query('DROP INDEX IF EXISTS idx_topups_user');
+    await query('DROP INDEX IF EXISTS idx_topups_team');
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND (expires_at IS NULL OR expires_at > NOW())');
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND (expires_at IS NULL OR expires_at > NOW())');
     // Belt-and-suspenders idempotency: even if the webhook event-dedup
     // (ascend_stripe_events) is bypassed somehow (manual replay), the same
     // checkout session can't credit twice.
     await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_session ON ai_hour_topups(stripe_session_id) WHERE stripe_session_id IS NOT NULL');
+    // One trial grant per user — idempotent grant on first auth.
+    await query("CREATE UNIQUE INDEX IF NOT EXISTS uq_topups_trial_per_user ON ai_hour_topups(user_id) WHERE source = 'trial'");
     // Auto-charge tracking — distinguishes auto-topups from manual checkout
     // top-ups so the monthly cap is enforced correctly.
     await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS auto_charged BOOLEAN NOT NULL DEFAULT false");
