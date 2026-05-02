@@ -1141,7 +1141,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
               {/* ── TRADEOFFS + EDGE CASES ── */}
               {(() => {
-                const tradeoffsClean = cleanRequirementList(sd.tradeoffs);
+                // Cap at 5. Anything more is noise — interview-grade designs
+                // hinge on a handful of important choices, not a long list.
+                // Backend prompt also asks for 3-5; this is the safety net.
+                const tradeoffsClean = cleanRequirementList(sd.tradeoffs).slice(0, 5);
                 const edgeCasesClean = cleanRequirementList(sd.edgeCases);
                 if (!tradeoffsClean.length && !edgeCasesClean.length) return null;
                 return (
@@ -1154,35 +1157,19 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                         <div className="ml-auto"><SectionCopyBtn getText={() => tradeoffsClean.map((tr, i) => `${i + 1}. ${tr}`).join('\n')} title="Copy tradeoffs" /></div>
                       </div>
                       <div className="px-4 py-3">
-                        <p className="text-[10px] mb-2" style={{ color: t.textMuted }}>Click a tradeoff to re-stream the design using the alternative choice.</p>
                         <div className="grid grid-cols-1 gap-2">
                           {tradeoffsClean.map((tr, i) => (
-                            <button
+                            <div
                               key={i}
-                              onClick={() => {
-                                if (isLoading || !problemText.trim()) return;
-                                const swap = `For this system: "${problemText.trim()}", instead of the tradeoff "${tr}", re-narrate the design if we had chosen the OPPOSITE side of that tradeoff. Only change the affected component(s); keep everything else consistent. Explicitly call out what's now better and what's now worse.`;
-                                handleSubmit(swap);
-                              }}
-                              disabled={isLoading}
-                              title="Swap this tradeoff and re-stream"
-                              className="rounded-lg px-3 py-2 text-left transition-all hover:shadow-sm disabled:opacity-60"
-                              style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}`, cursor: isLoading ? 'not-allowed' : 'pointer' }}
-                              onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cam-primary)'; }}
-                              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.cardBorder; }}>
+                              className="rounded-lg px-3 py-2"
+                              style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                               <div className="flex items-start gap-2 text-sm leading-snug" style={{ color: t.text }}>
                                 <span className="font-bold shrink-0 mt-0.5" style={{ color: t.dotColor }}>
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                                 </span>
                                 <span className="flex-1">{tr}</span>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-1" style={{ color: 'var(--cam-primary)' }}>
-                                  <path d="M17 1l4 4-4 4" />
-                                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                                  <path d="M7 23l-4-4 4-4" />
-                                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                                </svg>
                               </div>
-                            </button>
+                            </div>
                           ))}
                         </div>
                       </div>
