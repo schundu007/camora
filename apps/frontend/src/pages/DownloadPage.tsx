@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import SiteNav from '../components/shared/SiteNav';
 
 /* ══════════════════════════════════════════════════════════════
    CONSTANTS
@@ -291,6 +292,7 @@ export default function DownloadPage() {
         fontFamily: "'Inter', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
+      <SiteNav variant="dark" />
       {/* ── Background mesh ────────────────────────────── */}
       <div
         style={{

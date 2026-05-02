@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { dialogConfirm, dialogAlert } from '../components/shared/Dialog';
+import SiteNav from '../components/shared/SiteNav';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const EXCLUDE = 'chundubabu@gmail.com,babuchundu@gmail.com';
@@ -259,6 +260,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
+      <SiteNav variant="dark" />
       {/* LeetCode hero band */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
