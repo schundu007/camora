@@ -221,7 +221,11 @@ export default function PricingPage() {
                     colgroup background here leaves a sub-pixel gap at the
                     rounded card edge in some browsers. */}
                 <style>{`
-                  .pricing-compare-table tr > *:nth-child(5) {
+                  /* Team column tint — applied to:
+                     (a) the 5th cell of any normal 5-cell row
+                     (b) the .team-tint-keep cell of a section-heading row */
+                  .pricing-compare-table tr > *:nth-child(5),
+                  .pricing-compare-table .team-tint-keep {
                     background: var(--accent-subtle);
                   }
                 `}</style>
@@ -270,15 +274,16 @@ export default function PricingPage() {
                 <tbody>
                   {COMPARE_SECTIONS.map((section, si) => (
                     <Fragment key={si}>
-                      {/* Section heading */}
+                      {/* Section heading — split so Team column (col 5) keeps its tint */}
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={4}
                           className="px-5 pt-5 pb-2 text-[10px] font-bold uppercase tracking-[0.22em]"
-                          style={{ color: 'var(--text-muted)', fontFamily: F.mono, background: 'var(--bg-surface)' }}
+                          style={{ color: 'var(--text-muted)', fontFamily: F.mono }}
                         >
                           {section.title}
                         </td>
+                        <td className="team-tint-keep" aria-hidden="true" />
                       </tr>
                       {section.rows.map((row, ri) => (
                         <tr
@@ -302,7 +307,7 @@ export default function PricingPage() {
             </div>
             {/* Bottom microcopy */}
             <div className="px-6 py-3.5 text-[11.5px] text-center border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
-              Every plan ships with the macOS desktop app, dark mode, and unlimited Capra prep.
+              Capra topic browsing is unlimited. AI features (Lumora, coding solver, system design) draw from your monthly AI hours. Top up at $15/hr — hours never expire.
             </div>
           </div>
         </div>
