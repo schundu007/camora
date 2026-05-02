@@ -8,7 +8,6 @@ import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
 import SharedPricingCards from '../components/shared/PricingCards';
 import { DiagonalDivider } from '../components/shared/DiagonalDivider';
-import { MadeWithLove } from '../components/shared/MadeWithLove';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -1104,9 +1103,6 @@ export default function JobPrepPage() {
           </div>
         </div>
       )}
-      <div style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
-        <MadeWithLove city="San Jose" />
-      </div>
       <SiteFooter variant="light" />
     </div>
   );
