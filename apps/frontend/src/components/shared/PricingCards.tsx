@@ -320,7 +320,13 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   );
 }
 
-/* ── Hour top-up card with quantity selector ── */
+/* ── Hour top-up card — Team-style split layout with formula ─
+ * Left: identity + features + mono formula. Right: live total panel,
+ * presets, slider, big total, CTA.
+ */
+const TOPUP_QTY_MIN = 1;
+const TOPUP_QTY_MAX = 50;
+
 function HourTopupCard({ prices, checkout, loading }: {
   prices: Record<string, { priceId: string }> | null;
   checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
@@ -330,68 +336,130 @@ function HourTopupCard({ prices, checkout, loading }: {
   const [qty, setQty] = useState(1);
   const priceId = prices?.['topup_1h']?.priceId || '';
   const total = HOUR_RATE_USD * qty;
-
-  const presets = [1, 5, 10];
+  const presets = [1, 5, 10, 25, 50];
+  const planName = `${qty}h Top-up`;
 
   return (
     <div
-      className="rounded-2xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5"
+      className="rounded-2xl overflow-hidden"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)' }}>PAY-AS-YOU-GO</span>
+      <div className="p-7 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-7">
+        {/* Left: identity + formula + features */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>HOURS</span>
+            <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>pay-as-you-go · subscribers</span>
+          </div>
+          <h3 className="text-2xl md:text-[26px] font-extrabold mb-2 leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
+            Stack hours that never expire.
+          </h3>
+          <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
+            {HOUR_RATE_DISPLAY} per hour, charged once. Sit on your shelf until your next interview season — six months later, six years later.
+          </p>
+
+          {/* Mono formula strip */}
+          <div className="rounded-lg px-4 py-3 mb-4 inline-block" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold mr-3" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>FORMULA</span>
+            <span className="text-[18px] font-extrabold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary-dk)' }}>
+              {HOUR_RATE_DISPLAY} × Q
+            </span>
+          </div>
+
+          <ul className="space-y-2 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>
+            {[
+              'Hours never expire — use any time',
+              'Stack on top of monthly / yearly / team',
+              'Pick 1 to 50 hours per purchase',
+              'One-time charge, no auto-renew',
+            ].map((f, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <h3 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)' }}>AI Hours</h3>
-        <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
-          {HOUR_RATE_DISPLAY}/hour. Pick how many — Stripe charges {HOUR_RATE_DISPLAY} × quantity.
-          Hours never expire. Subscribers only.
-        </p>
-        <div className="flex items-center gap-2">
-          {presets.map((n) => (
-            <button
-              key={n}
-              onClick={() => setQty(n)}
-              className="text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md transition-colors"
-              style={{
-                background: qty === n ? 'var(--cam-primary)' : 'var(--bg-elevated)',
-                color: qty === n ? '#FFFFFF' : 'var(--text-primary)',
-                border: `1px solid ${qty === n ? 'var(--cam-primary)' : 'var(--border)'}`,
-                fontFamily: 'var(--font-mono)',
+
+        {/* Right: quantity selector + live total */}
+        <div className="rounded-xl p-5 md:p-6 flex flex-col" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PURCHASE</span>
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{HOUR_RATE_DISPLAY}/hr</span>
+          </div>
+          <div className="flex items-baseline gap-1.5 mb-1">
+            <span className="text-5xl md:text-6xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
+              ${total}
+            </span>
+            <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>one-time</span>
+          </div>
+          <div className="text-[11.5px] mb-5" style={{ color: 'var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}>
+            {qty} {qty === 1 ? 'hour' : 'hours'} · ~{(qty * 60).toLocaleString()} min of AI
+          </div>
+
+          {/* Slider */}
+          <div className="mb-3">
+            <input
+              type="range"
+              min={TOPUP_QTY_MIN}
+              max={TOPUP_QTY_MAX}
+              step={1}
+              value={qty}
+              onChange={(e) => setQty(parseInt(e.target.value, 10))}
+              className="w-full"
+              style={{ accentColor: 'var(--cam-primary-dk)' }}
+              aria-label="Hours quantity"
+            />
+            <div className="flex items-center justify-between text-[10px] mt-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              <span>{TOPUP_QTY_MIN}</span>
+              <span>{TOPUP_QTY_MAX}</span>
+            </div>
+          </div>
+
+          {/* Presets + numeric input */}
+          <div className="flex items-center gap-2 flex-wrap mb-5">
+            {presets.map((n) => (
+              <button
+                key={n}
+                onClick={() => setQty(n)}
+                className="text-[11px] font-bold tracking-wider px-3 py-1.5 rounded-md transition-colors"
+                style={{
+                  background: qty === n ? 'var(--cam-primary-dk)' : 'var(--bg-surface)',
+                  color: qty === n ? '#FFFFFF' : 'var(--text-primary)',
+                  border: `1px solid ${qty === n ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                {n}h
+              </button>
+            ))}
+            <input
+              type="number"
+              min={TOPUP_QTY_MIN}
+              max={TOPUP_QTY_MAX}
+              value={qty}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (Number.isFinite(v)) setQty(Math.max(TOPUP_QTY_MIN, Math.min(TOPUP_QTY_MAX, v)));
               }}
-            >
-              {n}h
-            </button>
-          ))}
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>or</span>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            value={qty}
-            onChange={(e) => {
-              const v = parseInt(e.target.value, 10);
-              if (Number.isFinite(v)) setQty(Math.max(1, Math.min(50, v)));
-            }}
-            className="w-16 px-2 py-1.5 text-[11px] font-mono rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/30"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            aria-label="AI hours quantity"
-          />
+              className="w-16 px-2 py-1.5 text-[11px] rounded-md focus:outline-none focus:ring-1"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
+              aria-label="Hours numeric input"
+            />
+          </div>
+
+          <button
+            onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
+            disabled={loading === planName}
+            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+            style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
+          >
+            {loading === planName ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'hour' : 'hours'} — $${total}`}
+          </button>
+          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
+            Subscribers only · Hours never expire
+          </p>
         </div>
-      </div>
-      <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
-        <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-extrabold" style={{ color: 'var(--text-primary)' }}>${total}</span>
-          <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>for {qty} {qty === 1 ? 'hour' : 'hours'}</span>
-        </div>
-        <button
-          onClick={() => priceId ? checkout(priceId, `${qty}h Top-up`, { quantity: qty }) : navigate('/pricing')}
-          disabled={loading === `${qty}h Top-up`}
-          className="px-4 py-2 text-[12px] font-bold rounded-lg cursor-pointer disabled:opacity-50"
-          style={{ background: 'var(--cam-primary)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
-        >
-          {loading === `${qty}h Top-up` ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'hour' : 'hours'}`}
-        </button>
       </div>
     </div>
   );
