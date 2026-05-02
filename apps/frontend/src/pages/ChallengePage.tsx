@@ -296,19 +296,19 @@ export default function ChallengePage() {
           <h1 className="ch-hero-title">
             THE CAMORA <span className="ch-hero-gradient-text">CHALLENGE</span>
           </h1>
-          <p className="mt-5 text-lg" style={{ color: 'var(--text-secondary)' }}>
+          <p className="mt-5 text-lg" style={{ color: 'rgba(255,255,255,0.78)' }}>
             Find bugs. Build features. Win $21,812 in prizes. Join the founding team.
           </p>
 
           {/* Countdown */}
           <div className="mt-10 flex items-center gap-4">
             {challengeEnded ? (
-              <p className="text-base font-semibold text-[var(--text-muted)]">Challenge ended. Winners announced October 22.</p>
+              <p className="text-base font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>Challenge ended. Winners announced October 22.</p>
             ) : challengeActive ? (
-              <p className="text-base font-bold text-[var(--cam-primary)]">Challenge is LIVE. Submit findings now.</p>
+              <p className="text-base font-bold" style={{ color: 'var(--cam-gold-leaf-lt)' }}>Challenge is LIVE. Submit findings now.</p>
             ) : (
               <>
-                <span className="text-base font-bold text-[var(--text-muted)] uppercase tracking-[0.15em] mr-3">Starts in</span>
+                <span className="text-base font-bold uppercase tracking-[0.15em] mr-3" style={{ color: 'rgba(255,255,255,0.78)' }}>Starts in</span>
                 {[
                   { val: countdown.days, label: 'DAYS' },
                   { val: countdown.hours, label: 'HRS' },

@@ -240,9 +240,15 @@ router.get('/google/callback', async (req, res) => {
     // Set SSO cookie for cross-subdomain auth (Lumora reads this)
     setSSOCookie(res, accessToken);
 
-    // Redirect to frontend with token in URL hash
-    // IMPORTANT: param names must match what AuthContext.parseAuthFromHash() expects
-    res.redirect(`${FRONTEND_URL}${returnTo}#access_token=${accessToken}&user_id=${userId}&user_email=${encodeURIComponent(gUser.email)}&user_name=${encodeURIComponent(gUser.name || '')}&user_avatar=${encodeURIComponent(gUser.picture || '')}&user_role=user&onboarding_completed=${onboardingCompleted}`);
+    // Redirect to frontend with a `?login=success` flag — NO token in the URL.
+    // Previously the 30-day JWT was placed in the URL hash, which left it in
+    // browser history, autocomplete, and any referrer headers from the
+    // first-page nav. The cookie above carries auth; the frontend's
+    // AuthContext already calls /api/v1/auth/me with credentials:'include',
+    // and /me returns a fresh access_token in its response body for the
+    // Authorization header use case. So the URL hash is no longer needed.
+    const sep = returnTo.includes('?') ? '&' : '?';
+    res.redirect(`${FRONTEND_URL}${returnTo}${sep}login=success`);
   } catch (err) {
     logger.error({ error: err.message }, 'Google OAuth failed');
     res.redirect(`${FRONTEND_URL}/#error=oauth_failed`);
