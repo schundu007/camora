@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import SiteNav from '../components/shared/SiteNav';
+import SiteFooter from '../components/shared/SiteFooter';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -5750,6 +5752,7 @@ export default function Blind75PracticePage() {
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
+      <SiteNav variant="dark" />
       {/* Breadcrumb Bar — LeetCode navy + 2px gold underline (matches /lumora/coding tabs) */}
       <div style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -5983,6 +5986,7 @@ export default function Blind75PracticePage() {
           </div>
         </div>
       )}
+      <SiteFooter variant="dark" />
     </div>
   );
 }

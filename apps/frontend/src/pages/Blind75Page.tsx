@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
 import { SOLUTIONS } from './Blind75PracticePage';
 import SEO from '../components/shared/SEO';
+import SiteNav from '../components/shared/SiteNav';
+import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -484,6 +486,7 @@ export default function Blind75Page() {
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
+      <SiteNav variant="dark" />
 
       {/* ═══════════════════════ Header Section — LeetCode navy band ═══════════════════════ */}
       <section style={{ position: 'relative', overflow: 'hidden', background: 'var(--cam-hero-bg)' }}>
@@ -1843,6 +1846,7 @@ export default function Blind75Page() {
           }
         }
       `}</style>
+      <SiteFooter variant="dark" />
     </div>
   );
 }
