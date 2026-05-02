@@ -11,8 +11,7 @@ export default function AdminStripePage() {
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Stripe' }]}
       onThisPage={[
         { id: 'price-ids', label: 'Price IDs' },
-        { id: 'recurring', label: 'Recurring SKUs', depth: 1 },
-        { id: 'one-time', label: 'One-time SKUs', depth: 1 },
+        { id: 'live-mappings', label: 'Live mappings', depth: 1 },
         { id: 'webhook', label: 'Webhook configuration' },
         { id: 'test-mode', label: 'Test mode walkthrough' },
       ]}
@@ -20,46 +19,65 @@ export default function AdminStripePage() {
       <section id="price-ids" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Price IDs</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Create the products + prices in your Stripe Dashboard, then set the matching env vars on the
+          Pricing v3 collapses the catalog to three flat options. Set the matching env vars on the
           ascend-backend Railway service. Without these, <code>/api/v1/billing/prices</code> returns null
-          for the missing SKUs and checkout 400s with INVALID_PRICE.
+          for the missing SKUs and checkout 400s with <code>INVALID_PRICE</code>.
         </p>
 
-        <h3 id="recurring" className="text-xl font-bold mt-6 mb-3 scroll-mt-24">Recurring SKUs</h3>
+        <h3 id="live-mappings" className="text-xl font-bold mt-6 mb-3 scroll-mt-24">Live mappings</h3>
         <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border)' }}>
           <table className="w-full text-sm">
             <thead style={{ background: 'var(--bg-elevated)' }}>
               <tr>
                 <th className="text-left px-4 py-2.5 font-semibold">Env var</th>
+                <th className="text-left px-4 py-2.5 font-semibold">Stripe price ID</th>
                 <th className="text-left px-4 py-2.5 font-semibold">Amount</th>
-                <th className="text-left px-4 py-2.5 font-semibold">Interval</th>
+                <th className="text-left px-4 py-2.5 font-semibold">What it buys</th>
               </tr>
             </thead>
             <tbody>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_PRO_MONTHLY</td><td className="px-4 py-2.5">$29</td><td className="px-4 py-2.5">month</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_PRO_YEARLY</td><td className="px-4 py-2.5">$290</td><td className="px-4 py-2.5">year</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_PRO_MAX_MONTHLY</td><td className="px-4 py-2.5">$79</td><td className="px-4 py-2.5">month</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_PRO_MAX_YEARLY</td><td className="px-4 py-2.5">$790</td><td className="px-4 py-2.5">year</td></tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5"><code>STRIPE_PRICE_PRO_MONTHLY</code></td>
+                <td className="px-4 py-2.5"><code>price_1TSWQmITUCNxtMxlMbwkDtLD</code></td>
+                <td className="px-4 py-2.5">$19</td>
+                <td className="px-4 py-2.5">Camora Monthly · full access</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5"><code>STRIPE_PRICE_PRO_YEARLY</code></td>
+                <td className="px-4 py-2.5"><code>price_1TSWOtITUCNxtMxlyIxVzRIi</code></td>
+                <td className="px-4 py-2.5">$99</td>
+                <td className="px-4 py-2.5">Camora Yearly · full access, ~57% off vs monthly × 12</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5"><code>STRIPE_PRICE_TOPUP_1H</code></td>
+                <td className="px-4 py-2.5"><code>price_1THiagITUCNxtMxlG8idH0Cz</code></td>
+                <td className="px-4 py-2.5">$15</td>
+                <td className="px-4 py-2.5">Camora Hr Rate · 1 AI hour, 90-day expiry, no subscription</td>
+              </tr>
             </tbody>
           </table>
         </div>
 
-        <h3 id="one-time" className="text-xl font-bold mt-6 mb-3 scroll-mt-24">One-time SKUs</h3>
-        <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border)' }}>
-          <table className="w-full text-sm">
-            <thead style={{ background: 'var(--bg-elevated)' }}>
-              <tr><th className="text-left px-4 py-2.5 font-semibold">Env var</th><th className="text-left px-4 py-2.5 font-semibold">Amount</th><th className="text-left px-4 py-2.5 font-semibold">What it buys</th></tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_DESKTOP_LIFETIME</td><td className="px-4 py-2.5">$99</td><td className="px-4 py-2.5">Desktop · 1 user · BYOK</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME</td><td className="px-4 py-2.5">$999</td><td className="px-4 py-2.5">Desktop · 10 seats</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_BUSINESS_STARTER</td><td className="px-4 py-2.5">$499</td><td className="px-4 py-2.5">75 hrs + 10 team seats</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_TOPUP_1H</td><td className="px-4 py-2.5">$10</td><td className="px-4 py-2.5">1 AI hour, 90-day expiry</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_TOPUP_5H</td><td className="px-4 py-2.5">$50</td><td className="px-4 py-2.5">5 AI hours, 90-day expiry</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">STRIPE_PRICE_TOPUP_25H</td><td className="px-4 py-2.5">$250</td><td className="px-4 py-2.5">25 AI hours, 90-day expiry</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <DocsCallout variant="info">
+          The frontend keeps the legacy <code>pro_monthly</code> / <code>pro_yearly</code> /{' '}
+          <code>topup_1h</code> price keys so the billing routes, Stripe webhook handler, and
+          subscription middleware don't churn when the catalog changes shape. The price keys are
+          stable IDs for plan tiers; the Stripe Dashboard prices behind them can be re-pointed at
+          any time without a code deploy.
+        </DocsCallout>
+
+        <h3 className="text-xl font-bold mt-6 mb-3">Deprecated SKUs (pricing v2)</h3>
+        <p className="text-[14px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
+          The following env vars and Stripe products are no longer surfaced in the UI but the env-var
+          names remain readable by the backend so existing subscribers stay billable. Don't recreate
+          new prices for them; let active subs finish on the v2 prices and migrate at renewal.
+        </p>
+        <ul className="list-disc pl-6 space-y-1 text-[14px]" style={{ color: 'var(--text-muted)' }}>
+          <li><code>STRIPE_PRICE_PRO_MAX_MONTHLY</code>, <code>STRIPE_PRICE_PRO_MAX_YEARLY</code> (Pro Max tier)</li>
+          <li><code>STRIPE_PRICE_TOPUP_5H</code>, <code>STRIPE_PRICE_TOPUP_25H</code> (multi-hour packs)</li>
+          <li><code>STRIPE_PRICE_DESKTOP_LIFETIME</code>, <code>STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME</code></li>
+          <li><code>STRIPE_PRICE_BUSINESS_STARTER</code> (75 h + 10 seats one-time)</li>
+        </ul>
       </section>
 
       <section id="webhook" className="mb-10 scroll-mt-24">
