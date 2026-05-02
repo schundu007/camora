@@ -67,11 +67,11 @@ export const SOLO_PLANS: PlanCard[] = [
     price: '$99',
     period: '/year',
     priceKey: 'pro_yearly',
-    description: 'Same access, ~57% off vs monthly × 12.',
+    description: 'Same access. Pay once, save $129.',
     features: [
       '5 AI hours included every year',
       'Everything in Monthly',
-      'Equivalent to $8.25/month',
+      'Works out to $8.25 / month',
       'One annual charge — set and forget',
     ],
     cta: 'Start Yearly',
@@ -202,10 +202,10 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   const priceId = prices?.[plan.priceKey]?.priceId || '';
   const isYearly = plan.id === 'yearly';
 
-  // Per-plan stat callouts (mono formulas, like Team's seat math)
+  // Per-plan stat callouts
   const stats = isYearly
-    ? { included: '5 AI hrs / yr', equiv: '≈ $8.25 / mo', save: 'Save $129 vs monthly × 12' }
-    : { included: '2 AI hrs / mo', equiv: '$15 / hr top-ups', save: 'Cancel any time' };
+    ? { included: '5 AI hours included', equiv: '$8.25 / month', save: 'Save $129 a year' }
+    : { included: '2 AI hours included', equiv: 'Add more at $15/hr', save: 'Cancel any time' };
 
   if (isYearly) {
     // Yearly = navy card, gold accents (mirrors Team identity)
@@ -320,9 +320,10 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   );
 }
 
-/* ── Hour top-up card — Team-style split layout with formula ─
- * Left: identity + features + mono formula. Right: live total panel,
- * presets, slider, big total, CTA.
+/* ── Hour top-up card — Team-style split layout
+ * Two states:
+ *   1. Subscribed → shows live buy form on the right
+ *   2. Not subscribed → shows clear "subscribe first" message in place of form
  */
 const TOPUP_QTY_MIN = 1;
 const TOPUP_QTY_MAX = 50;
@@ -333,11 +334,17 @@ function HourTopupCard({ prices, checkout, loading }: {
   loading: string;
 }) {
   const navigate = useNavigate();
+  const { subscription } = useAuth();
   const [qty, setQty] = useState(1);
   const priceId = prices?.['topup_1h']?.priceId || '';
   const total = HOUR_RATE_USD * qty;
   const presets = [1, 5, 10, 25, 50];
   const planName = `${qty}h Top-up`;
+  const isSubscribed = !!(subscription?.plan && subscription.plan !== 'free');
+  const planLabel = subscription?.plan === 'pro_monthly' ? 'Monthly'
+    : subscription?.plan === 'pro_yearly' ? 'Yearly'
+    : subscription?.plan === 'team' ? 'Team'
+    : 'your plan';
 
   return (
     <div
@@ -345,32 +352,24 @@ function HourTopupCard({ prices, checkout, loading }: {
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
       <div className="p-7 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-7">
-        {/* Left: identity + formula + features */}
+        {/* Left: identity + plain-language pitch */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>HOURS</span>
-            <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>pay-as-you-go · subscribers</span>
+            <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>add-on for subscribers</span>
           </div>
           <h3 className="text-2xl md:text-[26px] font-extrabold mb-2 leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-            Stack hours that never expire.
+            Need more AI hours? Add them.
           </h3>
           <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-            {HOUR_RATE_DISPLAY} per hour, charged once. Sit on your shelf until your next interview season — six months later, six years later.
+            $15 per hour, one-time charge. Hours stack on top of your monthly, yearly, or team plan and never expire.
           </p>
-
-          {/* Mono formula strip */}
-          <div className="rounded-lg px-4 py-3 mb-4 inline-block" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <span className="text-[11px] uppercase tracking-[0.18em] font-bold mr-3" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>FORMULA</span>
-            <span className="text-[18px] font-extrabold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary-dk)' }}>
-              {HOUR_RATE_DISPLAY} × Q
-            </span>
-          </div>
 
           <ul className="space-y-2 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>
             {[
-              'Hours never expire — use any time',
-              'Stack on top of monthly / yearly / team',
-              'Pick 1 to 50 hours per purchase',
+              'Buy 1–50 hours at a time',
+              'Hours never expire',
+              'Stack on top of any subscription',
               'One-time charge, no auto-renew',
             ].map((f, i) => (
               <li key={i} className="flex items-start gap-2">
@@ -381,85 +380,118 @@ function HourTopupCard({ prices, checkout, loading }: {
           </ul>
         </div>
 
-        {/* Right: quantity selector + live total */}
-        <div className="rounded-xl p-5 md:p-6 flex flex-col" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PURCHASE</span>
-            <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{HOUR_RATE_DISPLAY}/hr</span>
-          </div>
-          <div className="flex items-baseline gap-1.5 mb-1">
-            <span className="text-5xl md:text-6xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-              ${total}
-            </span>
-            <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>one-time</span>
-          </div>
-          <div className="text-[11.5px] mb-5" style={{ color: 'var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}>
-            {qty} {qty === 1 ? 'hour' : 'hours'} · ~{(qty * 60).toLocaleString()} min of AI
-          </div>
-
-          {/* Slider */}
-          <div className="mb-3">
-            <input
-              type="range"
-              min={TOPUP_QTY_MIN}
-              max={TOPUP_QTY_MAX}
-              step={1}
-              value={qty}
-              onChange={(e) => setQty(parseInt(e.target.value, 10))}
-              className="w-full"
-              style={{ accentColor: 'var(--cam-primary-dk)' }}
-              aria-label="Hours quantity"
-            />
-            <div className="flex items-center justify-between text-[10px] mt-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              <span>{TOPUP_QTY_MIN}</span>
-              <span>{TOPUP_QTY_MAX}</span>
+        {/* Right: subscriber → buy form, non-subscriber → subscribe-first prompt */}
+        {isSubscribed ? (
+          <div className="rounded-xl p-5 md:p-6 flex flex-col" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PURCHASE</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{HOUR_RATE_DISPLAY}/hr</span>
             </div>
-          </div>
+            <div className="flex items-baseline gap-1.5 mb-1">
+              <span className="text-5xl md:text-6xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
+                ${total}
+              </span>
+              <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>one-time</span>
+            </div>
+            <div className="text-[11.5px] mb-5" style={{ color: 'var(--cam-primary-dk)' }}>
+              {qty} {qty === 1 ? 'hour' : 'hours'} added to your <strong>{planLabel}</strong> plan
+            </div>
 
-          {/* Presets + numeric input */}
-          <div className="flex items-center gap-2 flex-wrap mb-5">
-            {presets.map((n) => (
-              <button
-                key={n}
-                onClick={() => setQty(n)}
-                className="text-[11px] font-bold tracking-wider px-3 py-1.5 rounded-md transition-colors"
-                style={{
-                  background: qty === n ? 'var(--cam-primary-dk)' : 'var(--bg-surface)',
-                  color: qty === n ? '#FFFFFF' : 'var(--text-primary)',
-                  border: `1px solid ${qty === n ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
-                  fontFamily: 'var(--font-mono)',
+            {/* Slider */}
+            <div className="mb-3">
+              <input
+                type="range"
+                min={TOPUP_QTY_MIN}
+                max={TOPUP_QTY_MAX}
+                step={1}
+                value={qty}
+                onChange={(e) => setQty(parseInt(e.target.value, 10))}
+                className="w-full"
+                style={{ accentColor: 'var(--cam-primary-dk)' }}
+                aria-label="Hours quantity"
+              />
+              <div className="flex items-center justify-between text-[10px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
+                <span>{TOPUP_QTY_MIN} hour</span>
+                <span>{TOPUP_QTY_MAX} hours</span>
+              </div>
+            </div>
+
+            {/* Presets + numeric input */}
+            <div className="flex items-center gap-2 flex-wrap mb-5">
+              {presets.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setQty(n)}
+                  className="text-[11px] font-bold tracking-wider px-3 py-1.5 rounded-md transition-colors"
+                  style={{
+                    background: qty === n ? 'var(--cam-primary-dk)' : 'var(--bg-surface)',
+                    color: qty === n ? '#FFFFFF' : 'var(--text-primary)',
+                    border: `1px solid ${qty === n ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
+                  }}
+                >
+                  {n}h
+                </button>
+              ))}
+              <input
+                type="number"
+                min={TOPUP_QTY_MIN}
+                max={TOPUP_QTY_MAX}
+                value={qty}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (Number.isFinite(v)) setQty(Math.max(TOPUP_QTY_MIN, Math.min(TOPUP_QTY_MAX, v)));
                 }}
-              >
-                {n}h
-              </button>
-            ))}
-            <input
-              type="number"
-              min={TOPUP_QTY_MIN}
-              max={TOPUP_QTY_MAX}
-              value={qty}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                if (Number.isFinite(v)) setQty(Math.max(TOPUP_QTY_MIN, Math.min(TOPUP_QTY_MAX, v)));
-              }}
-              className="w-16 px-2 py-1.5 text-[11px] rounded-md focus:outline-none focus:ring-1"
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-              aria-label="Hours numeric input"
-            />
-          </div>
+                className="w-16 px-2 py-1.5 text-[11px] rounded-md focus:outline-none focus:ring-1"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                aria-label="Hours numeric input"
+              />
+            </div>
 
-          <button
-            onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
-            disabled={loading === planName}
-            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
-            style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
-          >
-            {loading === planName ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'hour' : 'hours'} — $${total}`}
-          </button>
-          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
-            Subscribers only · Hours never expire
-          </p>
-        </div>
+            <button
+              onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
+              disabled={loading === planName}
+              className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+              style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
+            >
+              {loading === planName ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'hour' : 'hours'} — $${total}`}
+            </button>
+            <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
+              Charged once · Hours never expire
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl p-5 md:p-6 flex flex-col justify-center" style={{ background: 'var(--bg-elevated)', border: '1px dashed var(--border)' }}>
+            <div className="text-[10px] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>HOW TO BUY HOURS</div>
+            <ol className="space-y-3 text-[13px] mb-5" style={{ color: 'var(--text-primary)' }}>
+              <li className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>1</span>
+                <span>Pick <strong>Monthly</strong>, <strong>Yearly</strong>, or <strong>Team</strong> above.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>2</span>
+                <span>After checkout, return to this page.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>3</span>
+                <span>The buy-hours form unlocks here. Pick 1–50 hours.</span>
+              </li>
+            </ol>
+            <button
+              onClick={() => {
+                const el = document.getElementById('plans');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                else navigate('/pricing#plans');
+              }}
+              className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all hover:scale-[1.01]"
+              style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
+            >
+              Pick a plan above
+            </button>
+            <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
+              Hours are an add-on — they don't replace a subscription.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -640,7 +672,7 @@ export default function PricingCards({
       <div>
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>HOURS</h2>
-          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stack on top of your subscription · never expire</span>
+          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Add-on for subscribers · hours never expire</span>
         </div>
         <HourTopupCard prices={prices} checkout={checkout} loading={loading} />
       </div>

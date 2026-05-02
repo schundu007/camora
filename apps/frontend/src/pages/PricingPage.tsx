@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
@@ -13,17 +13,44 @@ const F = {
   mono: "'Source Code Pro', monospace",
 };
 
-/* ── Comparison matrix data ─────────────────────────────────────────────── */
-const COMPARE_ROWS: Array<{ label: string; free: string; monthly: string; yearly: string; team: string; }> = [
-  { label: 'AI hours included', free: '1 hr (7-day trial)',  monthly: '2 hrs / month', yearly: '5 hrs / year',   team: '⌈seats × 0.7⌉ / month' },
-  { label: 'Lumora live answers', free: '✓', monthly: '✓', yearly: '✓', team: '✓' },
-  { label: 'Capra prep (800+ topics)', free: '1 / category', monthly: 'All', yearly: 'All', team: 'All' },
-  { label: 'Coding solver + system design', free: 'Limited', monthly: '✓', yearly: '✓', team: '✓' },
-  { label: 'Voice filter + diagrams', free: '—', monthly: '✓', yearly: '✓', team: '✓' },
-  { label: '$15/hr top-ups (never expire)', free: '—', monthly: '✓', yearly: '✓', team: 'Pooled, ✓' },
-  { label: 'Centralized billing + per-seat usage', free: '—', monthly: '—', yearly: '—', team: '✓' },
-  { label: 'Auto top-up with monthly cap', free: '—', monthly: '✓', yearly: '✓', team: '✓' },
-  { label: 'Cancel anytime', free: '—', monthly: '✓', yearly: '✓', team: '✓' },
+/* ── Comparison matrix data ───────────────────────────────────────────────
+ * Cell value tokens:
+ *   '✓'                — green checkmark
+ *   '—'                — dash (not included)
+ *   'pill:<label>'     — checkmark + small pill (e.g. "Pooled")
+ *   'mono:<text>'      — render in mono font + accent color (formula)
+ *   'muted:<text>'     — render in muted body color
+ *   anything else      — plain text
+ */
+type CompareRow = { label: string; free: string; monthly: string; yearly: string; team: string };
+type CompareSection = { title: string; rows: CompareRow[] };
+
+const COMPARE_SECTIONS: CompareSection[] = [
+  {
+    title: 'Core',
+    rows: [
+      { label: 'AI hours included',           free: 'muted:1 hr · 7-day trial', monthly: '2 hrs / month',          yearly: '5 hrs / year',            team: 'Pooled across team' },
+      { label: 'Lumora live answers',         free: '✓',                         monthly: '✓',                       yearly: '✓',                        team: '✓' },
+      { label: 'Capra prep · 800+ topics',    free: 'muted:1 / category',        monthly: 'All',                     yearly: 'All',                      team: 'All' },
+      { label: 'Coding solver + system design', free: 'muted:Limited',           monthly: '✓',                       yearly: '✓',                        team: '✓' },
+      { label: 'Voice filter + architecture diagrams', free: '—',                monthly: '✓',                       yearly: '✓',                        team: '✓' },
+    ],
+  },
+  {
+    title: 'Hours economy',
+    rows: [
+      { label: '$15/hr top-ups · never expire', free: '—',                       monthly: '✓',                       yearly: '✓',                        team: 'pill:Pooled' },
+      { label: 'Auto top-up with monthly cap',  free: '—',                       monthly: '✓',                       yearly: '✓',                        team: '✓' },
+    ],
+  },
+  {
+    title: 'Team',
+    rows: [
+      { label: 'Centralized billing · one invoice', free: '—',                   monthly: '—',                       yearly: '—',                        team: '✓' },
+      { label: 'Per-seat usage breakdown',          free: '—',                   monthly: '—',                       yearly: '—',                        team: '✓' },
+      { label: 'Cancel anytime',                    free: '—',                   monthly: '✓',                       yearly: '✓',                        team: '✓' },
+    ],
+  },
 ];
 
 const TRUST_POINTS = [
@@ -35,11 +62,11 @@ const TRUST_POINTS = [
 
 const FAQS = [
   { q: 'Do I get a free trial?', a: 'Yes — 1 free AI hour the moment you sign up. The trial hour expires 7 days from signup. After that, pick a plan to keep using AI surfaces.' },
-  { q: 'How many AI hours come with my plan?', a: 'Monthly $19 includes 2 AI hrs each cycle. Yearly $99 includes 5 AI hrs each cycle. Team plans include ⌈seats × 0.7⌉ pooled hrs each month (e.g. 10 seats → 7 hrs, 25 seats → 18 hrs). Hours refresh every billing cycle.' },
-  { q: 'How does the $15/hour top-up work?', a: 'Top-ups are paid à la carte at $15/hr — pick any quantity 1 to 50, Stripe charges $15 × quantity. Top-up hours never expire and stack on top of your plan. Available to active subscribers only.' },
-  { q: 'How is Team pricing calculated?', a: 'Pick anywhere from 5 to 50 seats. Price = (seats × $20 − $1) per month. So 5 seats = $99, 10 = $199, 15 = $299, 25 = $499, 50 = $999. Included AI hours = ⌈seats × 0.7⌉ pooled across the team each cycle.' },
+  { q: 'How many AI hours come with my plan?', a: 'Monthly $19 gives you 2 AI hours per month. Yearly $99 gives you 5 AI hours per year. Team plans include pooled hours that scale with your seat count — for example, 10 seats gets 7 hours/month, 25 seats gets 18 hours/month. Hours refresh every billing cycle.' },
+  { q: 'How do I buy more AI hours?', a: 'Already on Monthly, Yearly, or Team? Scroll to the Hours section on this page — pick how many hours you want (1 to 50), and you\'ll be charged $15 per hour, one-time. The hours stack on top of your plan and never expire. If you\'re not subscribed yet, pick a plan first and the buy-hours form unlocks automatically.' },
+  { q: 'How is Team pricing calculated?', a: 'Pick anywhere from 5 to 50 seats. Examples: 5 seats = $99/month, 10 = $199, 15 = $299, 25 = $499, 50 = $999. Each Team plan also gets pooled AI hours that grow with your team — roughly 0.7 hours per seat each month.' },
   { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no cancellation fees. Access continues through the end of your billing period.' },
-  { q: 'What\'s the difference between Monthly and Yearly?', a: 'Same product, different cadence. Yearly costs $99 — about 57% off vs paying $19 monthly twelve times. Yearly also includes 5 hrs vs 2 hrs/month on monthly.' },
+  { q: 'What\'s the difference between Monthly and Yearly?', a: 'Same product, different cadence. Yearly costs $99 a year — about $8.25 a month, or roughly $129 less than paying $19 every month. Yearly also includes 5 hours vs 2 hours/month on monthly.' },
   { q: 'Is it detectable during screen share?', a: 'Camora runs in a separate browser tab or desktop window. Use Cmd+B to instantly blank the screen. Desktop app has stealth mode built in.' },
   { q: 'What platforms are supported?', a: 'Zoom, Google Meet, Microsoft Teams, HackerRank, CoderPad, Codility, and any browser-based interview platform.' },
 ];
@@ -198,37 +225,94 @@ export default function PricingPage() {
             </h2>
           </div>
 
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div
+            className="rounded-2xl overflow-hidden relative"
+            style={{
+              border: '1px solid var(--border)',
+              boxShadow: '0 12px 36px -16px rgba(15, 27, 45, 0.18)',
+              background: 'var(--bg-surface)',
+            }}
+          >
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+              <table className="w-full text-sm" style={{ tableLayout: 'fixed', minWidth: 760 }}>
                 <colgroup>
-                  <col style={{ width: '32%' }} />
+                  <col style={{ width: '30%' }} />
                   <col style={{ width: '15%' }} />
-                  <col style={{ width: '17%' }} />
                   <col style={{ width: '16%' }} />
-                  <col style={{ width: '20%' }} />
+                  <col style={{ width: '16%' }} />
+                  <col style={{ width: '23%', background: 'var(--accent-subtle)' }} />
                 </colgroup>
                 <thead>
-                  <tr style={{ background: 'var(--bg-elevated)' }}>
-                    <th className="text-left px-5 py-4 text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Feature</th>
-                    <th className="text-left px-5 py-4 text-[12px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Free</th>
-                    <th className="text-left px-5 py-4 text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Monthly · $19</th>
-                    <th className="text-left px-5 py-4 text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Yearly · $99</th>
-                    <th className="text-left px-5 py-4 text-[12px] font-semibold" style={{ color: 'var(--cam-primary-dk)' }}>Team · 5–50 seats</th>
+                  {/* Eyebrow row — bucket labels */}
+                  <tr style={{ background: 'linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%)' }}>
+                    <th className="text-left px-5 pt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Feature</th>
+                    <th className="text-left px-5 pt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Free</th>
+                    <th className="text-left px-5 pt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Solo</th>
+                    <th className="text-left px-5 pt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Solo</th>
+                    <th className="text-left px-5 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--cam-primary-dk)', fontFamily: F.mono }}>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
+                        <span className="w-1 h-1 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
+                        TEAM · RECOMMENDED
+                      </span>
+                    </th>
+                  </tr>
+                  {/* Plan-name + price row */}
+                  <tr style={{ background: 'var(--bg-surface)', borderBottom: '2px solid var(--border)' }}>
+                    <th className="text-left px-5 pb-4 pt-1"></th>
+                    <th className="text-left px-5 pb-4 pt-1">
+                      <div className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: F.display }}>Trial</div>
+                      <div className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>$0 · 7 days</div>
+                    </th>
+                    <th className="text-left px-5 pb-4 pt-1">
+                      <div className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: F.display }}>Monthly</div>
+                      <div className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>$19 / mo</div>
+                    </th>
+                    <th className="text-left px-5 pb-4 pt-1">
+                      <div className="text-[14px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: F.display }}>Yearly</div>
+                      <div className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>$99 / yr</div>
+                    </th>
+                    <th className="text-left px-5 pb-4 pt-1">
+                      <div className="text-[14px] font-bold" style={{ color: 'var(--cam-primary-dk)', fontFamily: F.display }}>Team</div>
+                      <div className="text-[11px]" style={{ color: 'var(--cam-primary-dk)', fontFamily: F.mono, opacity: 0.78 }}>5–50 seats · monthly</div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {COMPARE_ROWS.map((row, i) => (
-                    <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
-                      <td className="px-5 py-3.5 text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>{row.label}</td>
-                      <CompareCell value={row.free} />
-                      <CompareCell value={row.monthly} />
-                      <CompareCell value={row.yearly} />
-                      <CompareCell value={row.team} accent />
-                    </tr>
+                  {COMPARE_SECTIONS.map((section, si) => (
+                    <Fragment key={si}>
+                      {/* Section heading */}
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-5 pt-5 pb-2 text-[10px] font-bold uppercase tracking-[0.22em]"
+                          style={{ color: 'var(--text-muted)', fontFamily: F.mono, background: 'var(--bg-surface)' }}
+                        >
+                          {section.title}
+                        </td>
+                      </tr>
+                      {section.rows.map((row, ri) => (
+                        <tr
+                          key={`${si}-${ri}`}
+                          style={{
+                            borderTop: '1px solid var(--border)',
+                            background: ri % 2 === 0 ? 'transparent' : 'rgba(15, 27, 45, 0.02)',
+                          }}
+                        >
+                          <td className="px-5 py-3.5 text-[13.5px]" style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{row.label}</td>
+                          <CompareCell value={row.free} />
+                          <CompareCell value={row.monthly} />
+                          <CompareCell value={row.yearly} />
+                          <CompareCell value={row.team} accent />
+                        </tr>
+                      ))}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* Bottom microcopy */}
+            <div className="px-6 py-3.5 text-[11.5px] text-center border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+              Every plan ships with the macOS desktop app, dark mode, and unlimited Capra prep.
             </div>
           </div>
         </div>
@@ -386,25 +470,75 @@ export default function PricingPage() {
   );
 }
 
-/* ── Comparison row cell ── */
+/* ── Comparison row cell ──
+ * Token grammar:
+ *   '✓'              — checkmark
+ *   '—'              — dash
+ *   'pill:<label>'   — pill chip + checkmark
+ *   'mono:<text>'    — monospaced + accent (for formulas)
+ *   'muted:<text>'   — muted body text (for limits / qualifiers)
+ *   anything else    — plain text
+ */
 function CompareCell({ value, accent: isAccent = false }: { value: string; accent?: boolean }) {
+  const cellPad = 'px-5 py-3.5';
+
   if (value === '✓') {
     return (
-      <td className="px-5 py-3.5">
-        <CheckMark size={16} color={isAccent ? 'var(--cam-primary)' : 'var(--accent, #10b981)'} />
+      <td className={cellPad}>
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: isAccent ? 'var(--cam-primary-dk)' : 'rgba(16,185,129,0.12)' }}>
+          <CheckMark size={11} color={isAccent ? '#FFFFFF' : '#10b981'} />
+        </span>
       </td>
     );
   }
   if (value === '—') {
     return (
-      <td className="px-5 py-3.5">
-        <DashMark size={16} color="var(--text-muted)" />
+      <td className={cellPad}>
+        <DashMark size={14} color="var(--text-muted)" />
+      </td>
+    );
+  }
+  if (value.startsWith('pill:')) {
+    const label = value.slice(5);
+    return (
+      <td className={cellPad}>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: 'var(--cam-primary-dk)' }}>
+            <CheckMark size={11} color="#FFFFFF" />
+          </span>
+          <span
+            className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}
+          >
+            {label}
+          </span>
+        </span>
+      </td>
+    );
+  }
+  if (value.startsWith('mono:')) {
+    return (
+      <td className={cellPad}>
+        <span className="text-[12.5px] font-bold" style={{ color: 'var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}>
+          {value.slice(5)}
+        </span>
+      </td>
+    );
+  }
+  if (value.startsWith('muted:')) {
+    return (
+      <td className={cellPad}>
+        <span className="text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
+          {value.slice(6)}
+        </span>
       </td>
     );
   }
   return (
-    <td className="px-5 py-3.5 text-[13px]" style={{ color: isAccent ? 'var(--cam-primary-dk)' : 'var(--text-secondary)' }}>
-      {value}
+    <td className={cellPad}>
+      <span className="text-[13px] font-medium" style={{ color: isAccent ? 'var(--cam-primary-dk)' : 'var(--text-secondary)' }}>
+        {value}
+      </span>
     </td>
   );
 }
