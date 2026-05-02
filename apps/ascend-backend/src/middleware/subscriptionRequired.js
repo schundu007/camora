@@ -5,8 +5,9 @@ import { logger } from './requestLogger.js';
  * Subscription Required Middleware
  * Checks if user has an active paid subscription before allowing access
  *
- * Valid plans (pricing v2): pro_monthly, pro_yearly, pro_max_monthly, pro_max_yearly.
- * Free / Capra-content-only / unsubscribed users are blocked with SUBSCRIPTION_REQUIRED.
+ * Valid plans (pricing v3): pro_monthly, pro_yearly. (One-time topup_1h
+ * purchases credit AI hours but don't grant paid-plan access on their own.)
+ * Free / unsubscribed users are blocked with SUBSCRIPTION_REQUIRED.
  */
 export async function subscriptionRequired(req, res, next) {
   // User must be authenticated first
@@ -27,9 +28,7 @@ export async function subscriptionRequired(req, res, next) {
 
     // Check if user has active paid subscription OR active trial
     const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
-                       subscription?.plan_type === 'pro_yearly' ||
-                       subscription?.plan_type === 'pro_max_monthly' ||
-                       subscription?.plan_type === 'pro_max_yearly';
+                       subscription?.plan_type === 'pro_yearly';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
@@ -78,9 +77,7 @@ export async function checkSubscription(req, res, next) {
 
     const subscription = result.rows[0];
     const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
-                       subscription?.plan_type === 'pro_yearly' ||
-                       subscription?.plan_type === 'pro_max_monthly' ||
-                       subscription?.plan_type === 'pro_max_yearly';
+                       subscription?.plan_type === 'pro_yearly';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 

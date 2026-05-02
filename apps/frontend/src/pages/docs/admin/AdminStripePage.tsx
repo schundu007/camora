@@ -59,25 +59,10 @@ export default function AdminStripePage() {
         </div>
 
         <DocsCallout variant="info">
-          The frontend keeps the legacy <code>pro_monthly</code> / <code>pro_yearly</code> /{' '}
-          <code>topup_1h</code> price keys so the billing routes, Stripe webhook handler, and
-          subscription middleware don't churn when the catalog changes shape. The price keys are
-          stable IDs for plan tiers; the Stripe Dashboard prices behind them can be re-pointed at
-          any time without a code deploy.
+          The frontend uses the price keys <code>pro_monthly</code> / <code>pro_yearly</code> /{' '}
+          <code>topup_1h</code> as stable internal IDs. The Stripe Dashboard prices behind them
+          can be re-pointed at any time by changing the env vars — no code deploy needed.
         </DocsCallout>
-
-        <h3 className="text-xl font-bold mt-6 mb-3">Deprecated SKUs (pricing v2)</h3>
-        <p className="text-[14px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
-          The following env vars and Stripe products are no longer surfaced in the UI but the env-var
-          names remain readable by the backend so existing subscribers stay billable. Don't recreate
-          new prices for them; let active subs finish on the v2 prices and migrate at renewal.
-        </p>
-        <ul className="list-disc pl-6 space-y-1 text-[14px]" style={{ color: 'var(--text-muted)' }}>
-          <li><code>STRIPE_PRICE_PRO_MAX_MONTHLY</code>, <code>STRIPE_PRICE_PRO_MAX_YEARLY</code> (Pro Max tier)</li>
-          <li><code>STRIPE_PRICE_TOPUP_5H</code>, <code>STRIPE_PRICE_TOPUP_25H</code> (multi-hour packs)</li>
-          <li><code>STRIPE_PRICE_DESKTOP_LIFETIME</code>, <code>STRIPE_PRICE_BUSINESS_DESKTOP_LIFETIME</code></li>
-          <li><code>STRIPE_PRICE_BUSINESS_STARTER</code> (75 h + 10 seats one-time)</li>
-        </ul>
       </section>
 
       <section id="webhook" className="mb-10 scroll-mt-24">
