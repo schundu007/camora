@@ -600,6 +600,34 @@ def validate_imports(code):
     return bad
 
 
+def find_foreign_provider_imports(code, provider):
+    """Return import lines that pull from a different cloud provider.
+
+    Claude is biased toward AWS and frequently emits `from diagrams.aws.*`
+    even when the prompt says "use Azure ONLY". Those imports are valid at
+    runtime so validate_imports doesn't catch them — the resulting diagram
+    has AWS icons under an Azure label. This scan flags them so we can
+    retry with a stronger prompt or fail visibly instead of silently
+    serving the wrong provider.
+
+    `diagrams.onprem.*`, `diagrams.k8s.*`, `diagrams.programming.*`, and
+    `diagrams.generic.*` are provider-neutral and always allowed.
+    """
+    foreign = []
+    other_providers = {p for p in PROVIDER_IMPORTS.keys() if p != provider}
+    for line in code.split("\n"):
+        stripped = line.strip()
+        if not stripped.startswith("from diagrams."):
+            continue
+        m = re.match(r'from\s+diagrams\.([a-z0-9_]+)\.', stripped)
+        if not m:
+            continue
+        ns = m.group(1)
+        if ns in other_providers:
+            foreign.append(stripped)
+    return foreign
+
+
 def fix_bad_imports(code, bad_imports, provider):
     """Remove bad import lines and replace with onprem equivalents where possible."""
     class_map = _build_class_to_import(provider)
@@ -683,7 +711,15 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
         sys.stderr.write(f"[DiagramEngine] Fixing {len(bad_imports)} bad imports: {bad_imports}\n")
         full_code = fix_bad_imports(full_code, bad_imports, provider)
 
-    result = execute_code(full_code, output_path, output_dir)
+    # Provider lock — reject and retry if Claude emitted wrong-provider imports.
+    # We treat this as a soft failure (don't execute) so attempt 2 can rebuild
+    # cleanly with a stronger prompt instead of producing a wrong-provider PNG.
+    foreign_imports = find_foreign_provider_imports(full_code, provider)
+    if foreign_imports:
+        sys.stderr.write(f"[DiagramEngine] Foreign-provider imports detected (provider={provider}): {foreign_imports}\n")
+        result = {"ok": False, "stderr": f"Wrong cloud provider — used {len(foreign_imports)} non-{provider} imports: {foreign_imports[:3]}"}
+    else:
+        result = execute_code(full_code, output_path, output_dir)
 
     # Attempt 2 — fix with full context
     if not result["ok"]:
@@ -696,6 +732,17 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
         if import_err:
             bad_class, bad_module = import_err.group(1), import_err.group(2)
             import_hint = f"\nThe class '{bad_class}' does NOT exist in '{bad_module}'. Remove it and use a diagrams.onprem equivalent instead (e.g. from diagrams.onprem.database, diagrams.onprem.inmemory, diagrams.onprem.queue, etc)."
+
+        # Surface foreign-provider violations explicitly so the retry actually
+        # uses the right provider instead of falling back to AWS bias.
+        if foreign_imports:
+            wrong_lines = "\n".join(f"  - {imp}" for imp in foreign_imports[:5])
+            import_hint += (
+                f"\n\nCRITICAL: Your previous output used the WRONG cloud provider. "
+                f"You imported from non-{provider} namespaces:\n{wrong_lines}\n"
+                f"REWRITE the diagram using ONLY `from diagrams.{provider}.*` imports. "
+                f"NEVER import from diagrams.aws/azure/gcp other than {provider}."
+            )
 
         fix_resp = client.messages.create(
             model="claude-sonnet-4-6", max_tokens=4096,
