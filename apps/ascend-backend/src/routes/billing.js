@@ -128,6 +128,118 @@ router.get('/prices', (req, res) => {
 });
 
 /**
+ * Stripe configuration health check (owner-only).
+ * GET /api/v1/billing/_health
+ *
+ * Probes each Stripe ID required by v3.2 pricing and reports green/red so
+ * the operator doesn't have to grep Railway logs for "[stripe] Missing IDs".
+ * Each price/product is round-tripped to Stripe so we catch ID typos and
+ * ID-from-wrong-mode (test vs live) issues, not just env-var presence.
+ */
+router.get('/_health', jwtAuth, async (req, res) => {
+  // Owner-only — exposes which Stripe IDs are missing/wrong, useful for
+  // an attacker enumerating mode (test/live) so we lock it down.
+  const ownerEmails = new Set(
+    (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || 'chundubabu@gmail.com')
+      .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+  );
+  if (!ownerEmails.has(String(req.user?.email || '').toLowerCase())) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const checks = [];
+  const addCheck = (name, ok, detail) => checks.push({ name, ok, ...detail });
+
+  // Env presence first (cheap)
+  const requireEnv = (name, expected) => addCheck(name, !!expected, expected ? {} : { error: 'Missing on Railway' });
+  requireEnv('STRIPE_SECRET_KEY', !!process.env.STRIPE_SECRET_KEY);
+  requireEnv('STRIPE_WEBHOOK_SECRET', !!process.env.STRIPE_WEBHOOK_SECRET);
+  requireEnv('STRIPE_PRICE_PRO_MONTHLY', STRIPE_PRICES.PRO_MONTHLY);
+  requireEnv('STRIPE_PRICE_PRO_YEARLY', STRIPE_PRICES.PRO_YEARLY);
+  requireEnv('STRIPE_PRICE_TOPUP_1H', STRIPE_PRICES.TOPUP_1H);
+  requireEnv('STRIPE_PRODUCT_TEAM', process.env.STRIPE_PRODUCT_TEAM);
+
+  // Round-trip each Stripe ID — catches typos and test/live mode mismatch
+  if (stripe) {
+    const probePrice = async (label, id, expected) => {
+      if (!id) return; // already flagged by env check above
+      try {
+        const price = await stripe.prices.retrieve(id);
+        const issues = [];
+        if (!price.active) issues.push('price is archived');
+        if (expected.unit_amount && price.unit_amount !== expected.unit_amount) {
+          issues.push(`unit_amount=${price.unit_amount} expected ${expected.unit_amount}`);
+        }
+        if (expected.recurring === false && price.recurring) issues.push('expected one-time, got recurring');
+        if (expected.recurring && !price.recurring) issues.push('expected recurring, got one-time');
+        if (expected.interval && price.recurring?.interval !== expected.interval) {
+          issues.push(`interval=${price.recurring?.interval} expected ${expected.interval}`);
+        }
+        addCheck(label, issues.length === 0, issues.length ? { warnings: issues, id } : { id });
+      } catch (err) {
+        addCheck(label, false, { error: err.message, id });
+      }
+    };
+
+    await probePrice('price.pro_monthly', STRIPE_PRICES.PRO_MONTHLY, { unit_amount: 1900, recurring: true, interval: 'month' });
+    await probePrice('price.pro_yearly', STRIPE_PRICES.PRO_YEARLY, { unit_amount: 9900, recurring: true, interval: 'year' });
+    await probePrice('price.topup_1h', STRIPE_PRICES.TOPUP_1H, { unit_amount: 1500, recurring: false });
+
+    // Team product — must exist as a product, must NOT have a fixed price
+    if (process.env.STRIPE_PRODUCT_TEAM) {
+      try {
+        const product = await stripe.products.retrieve(process.env.STRIPE_PRODUCT_TEAM);
+        const issues = [];
+        if (!product.active) issues.push('product is archived');
+        // Warn if a default price is set — team uses dynamic price_data per checkout
+        if (product.default_price) issues.push('has default_price; team uses ad-hoc price_data, this should be cleared');
+        addCheck('product.team', issues.length === 0, issues.length ? { warnings: issues, id: product.id } : { id: product.id });
+      } catch (err) {
+        addCheck('product.team', false, { error: err.message, id: process.env.STRIPE_PRODUCT_TEAM });
+      }
+    }
+
+    // Webhook endpoint — verify one exists pointing at our route
+    try {
+      const endpoints = await stripe.webhookEndpoints.list({ limit: 100 });
+      const expectedSuffix = '/api/billing/webhook';
+      const matching = endpoints.data.filter((ep) => ep.url?.endsWith(expectedSuffix));
+      const required = [
+        'checkout.session.completed', 'invoice.paid', 'invoice.payment_failed',
+        'customer.subscription.updated', 'customer.subscription.deleted', 'payment_intent.payment_failed',
+      ];
+      if (matching.length === 0) {
+        addCheck('webhook.endpoint', false, { error: `No endpoint registered ending in ${expectedSuffix}` });
+      } else {
+        const ep = matching[0];
+        const enabled = new Set(ep.enabled_events || []);
+        const missingEvents = ep.enabled_events?.includes('*') ? [] : required.filter((e) => !enabled.has(e));
+        addCheck(
+          'webhook.endpoint',
+          ep.status === 'enabled' && missingEvents.length === 0,
+          {
+            url: ep.url,
+            status: ep.status,
+            ...(missingEvents.length ? { missing_events: missingEvents } : {}),
+            ...(matching.length > 1 ? { warning: `${matching.length} endpoints match — leaves duplicates` } : {}),
+          },
+        );
+      }
+    } catch (err) {
+      addCheck('webhook.endpoint', false, { error: err.message });
+    }
+  }
+
+  const ok = checks.every((c) => c.ok);
+  const summary = {
+    ok,
+    mode: stripe ? (process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') ? 'live' : 'test') : 'not configured',
+    checks,
+  };
+  res.status(ok ? 200 : 503).json(summary);
+});
+
+/**
  * Create checkout session for subscription
  * POST /api/billing/checkout
  */
