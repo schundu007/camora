@@ -5,6 +5,7 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import SharedPricingCards from '../components/shared/PricingCards';
 import { DiagonalDivider } from '../components/shared/DiagonalDivider';
+import { useAuth } from '../contexts/AuthContext';
 
 const accent = 'var(--cam-primary)';
 const F = {
@@ -89,6 +90,12 @@ function DashMark({ size = 16, color = 'currentColor' }: { size?: number; color?
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { isAuthenticated } = useAuth();
+  // Logged-in users skip /signup — they already have an account and the free
+  // hour was provisioned at first auth. Send them to Lumora to start using it.
+  const ctaHref = isAuthenticated ? '/lumora' : '/signup';
+  const heroCtaLabel = isAuthenticated ? 'Start your free hour' : 'Start free — 1 hr, no card';
+  const finalCtaLabel = isAuthenticated ? 'Open Lumora' : 'Create account';
 
   useEffect(() => {
     document.title = 'Pricing | Camora';
@@ -154,11 +161,11 @@ export default function PricingPage() {
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              to="/signup"
+              to={ctaHref}
               className="inline-flex items-center gap-2 px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.08em] rounded-full transition-transform hover:scale-[1.02]"
               style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 8px 22px rgba(0,0,0,0.25)' }}
             >
-              Start free — 1 hr, no card
+              {heroCtaLabel}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
             </Link>
             <a
@@ -373,11 +380,11 @@ export default function PricingPage() {
             </div>
             <div className="relative flex items-center gap-3">
               <Link
-                to="/signup"
+                to={ctaHref}
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-[13px] font-bold uppercase tracking-[0.08em] rounded-full transition-transform hover:scale-[1.02]"
                 style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 8px 22px rgba(0,0,0,0.3)' }}
               >
-                Create account
+                {finalCtaLabel}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
               </Link>
               <a
