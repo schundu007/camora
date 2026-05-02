@@ -6,16 +6,11 @@ import { logger } from '../middleware/requestLogger.js';
 // ── Configuration ──────────────────────────────────────────────────────────
 
 // Seat limits per plan_type. Solo plans (Monthly / Yearly) are 1-seat.
-// `team` is the dynamic plan — seat count is stored on teams.seat_limit and
-// can be 5..50. Legacy team_5/10/15 are kept for backward compat with rows
-// from the previous fixed-tier model; new sales use 'team'.
+// `team` is the dynamic plan — seat count lives on teams.seat_limit (5..50).
 export const SEAT_LIMITS = {
   pro_monthly: 1,
   pro_yearly: 1,
   team: null, // dynamic — read from teams.seat_limit
-  team_5: 5,
-  team_10: 10,
-  team_15: 15,
 };
 
 const TEAM_LOOKUP_CACHE_TTL_SEC = 300;   // 5 min
@@ -52,9 +47,7 @@ export function getSeatLimitForPlan(planType) {
 }
 
 export function planSupportsTeam(planType) {
-  if (planType === 'team') return true;
-  const fixed = SEAT_LIMITS[planType];
-  return typeof fixed === 'number' && fixed > 1;
+  return planType === 'team';
 }
 
 // ── Read paths (cached) ────────────────────────────────────────────────────
@@ -264,22 +257,9 @@ const PERSONAL_HOUR_BUDGETS = {
   // ai_hour_topups row by initUser(). After the trial expires, free users
   // can't use AI hours until they subscribe.
   free: { hours: 0, period: 'lifetime' },
-  // v3 solo plans — included hours refresh each billing cycle.
+  // v3.2 solo plans — included hours refresh each billing cycle.
   pro_monthly: { hours: 2, period: 'monthly' },
   pro_yearly: { hours: 5, period: 'yearly' },
-  pro_max_monthly: { hours: 8, period: 'monthly' },
-  pro_max_yearly: { hours: 96, period: 'yearly' },
-  // Legacy SKUs grandfathered to the closest v2 equivalent so existing
-  // DB rows aren't silently treated as free.
-  monthly: { hours: 2, period: 'monthly' },              // legacy → Pro monthly
-  monthly_starter: { hours: 2, period: 'monthly' },
-  monthly_pro: { hours: 8, period: 'monthly' },          // legacy unlimited → Pro Max
-  quarterly_pro: { hours: 8, period: 'monthly' },
-  annual: { hours: 24, period: 'yearly' },               // legacy → Pro yearly
-  annual_desktop: { hours: 96, period: 'yearly' },       // legacy → Pro Max yearly
-  // Capra Content variants — content-only, no AI hours.
-  capra_content_monthly: { hours: 0, period: 'monthly' },
-  capra_content_yearly: { hours: 0, period: 'yearly' },
 };
 
 /**
@@ -448,8 +428,9 @@ export async function checkTeamHourBudget(userId) {
     const poolHours = planPoolHours + topupHours;
 
     if (poolHours <= 0) {
-      // business_desktop_lifetime has no AI pool — let calls through (the
-      // owner is expected to top up via packs or a Business Starter sub).
+      // No pool configured yet (e.g. team row not initialized) — pass
+      // through; the meter still records and downstream auto-topup
+      // can kick in.
       return { has_team: true, ok: true, pool_hours: 0, used_hours: 0, remaining_hours: Infinity };
     }
     const usedHours = Number(t.used_seconds || 0) / 3600;
@@ -492,8 +473,6 @@ export async function checkTeamHourBudget(userId) {
 /**
  * Reset a team's hours_pool_period_start to NOW() so usage rolls forward.
  * Called from the Stripe invoice.paid webhook on subscription renewal.
- * One-time SKUs (business_starter, business_desktop_lifetime) are explicitly
- * not rolled over — those packs are spent until the owner buys another.
  */
 export async function rollOverTeamPoolForUser(userId) {
   try {
@@ -504,7 +483,7 @@ export async function rollOverTeamPoolForUser(userId) {
               pool_reminder_95_sent_at = NULL,
               updated_at = NOW()
         WHERE owner_user_id = $1
-          AND plan_type IN ('team', 'team_5', 'team_10', 'team_15', 'pro_max_monthly', 'pro_max_yearly')
+          AND plan_type = 'team'
         RETURNING id, plan_type`,
       [userId],
     );
@@ -542,8 +521,7 @@ export async function rollOverPersonalRemindersForUser(userId) {
  * a team, returns it unchanged. Auto-adds the owner as a team_members row so
  * all rollups treat them like any other member.
  *
- * For dynamic 'team' plan, pass the explicit `seats` arg (5..50). For legacy
- * team_5/10/15 plans, seats is derived from the SEAT_LIMITS map.
+ * `seats` is required (5..50) — the team plan is dynamic.
  */
 export async function createTeamForUser({ userId, planType, name, seats = null }) {
   if (!planSupportsTeam(planType)) {
@@ -559,17 +537,11 @@ export async function createTeamForUser({ userId, planType, name, seats = null }
     return getTeamWithMembers(existing.rows[0].id);
   }
 
-  // Resolve seat count: 'team' = explicit arg, legacy = fixed map.
-  let seatLimit;
-  if (planType === 'team') {
-    const n = Math.floor(Number(seats) || 0);
-    if (n < TEAM_SEATS_MIN || n > TEAM_SEATS_MAX) {
-      throw Object.assign(new Error(`Team seats must be ${TEAM_SEATS_MIN}..${TEAM_SEATS_MAX}`), { code: 'INVALID_SEATS' });
-    }
-    seatLimit = n;
-  } else {
-    seatLimit = getSeatLimitForPlan(planType);
+  const n = Math.floor(Number(seats) || 0);
+  if (n < TEAM_SEATS_MIN || n > TEAM_SEATS_MAX) {
+    throw Object.assign(new Error(`Team seats must be ${TEAM_SEATS_MIN}..${TEAM_SEATS_MAX}`), { code: 'INVALID_SEATS' });
   }
+  const seatLimit = n;
 
   const created = await query(
     `INSERT INTO teams (owner_user_id, name, plan_type, seat_limit, hours_pool_total, payg_rate_cents)

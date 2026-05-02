@@ -351,10 +351,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, user?.id, fetchTeam]);
 
   // A user has team-grade access if their personal sub is paid OR they
-  // belong to a team whose plan_type unlocks paid features. Capra Content
-  // is intentionally excluded here — it grants content browsing but not
-  // hour-gated features. PaywallGate reads this flag.
-  const teamGrantsAccess = !!team && team.plan_type !== 'capra_content_monthly' && team.plan_type !== 'capra_content_yearly';
+  // belong to a team. PaywallGate reads this flag.
+  const teamGrantsAccess = !!team && team.plan_type === 'team';
   const hasTeamAccess = (subscription?.plan && subscription.plan !== 'free') || teamGrantsAccess;
 
   const logout = useCallback(() => {

@@ -15,23 +15,18 @@ export const stripe = stripeSecretKey
     })
   : null;
 
-// Pricing v3.1 — five subscription tiers + a single per-hour topup.
+// Pricing v3.2 — three pricing primitives:
 //
-//   STRIPE_PRICE_PRO_MONTHLY        → $19/mo solo
-//   STRIPE_PRICE_PRO_YEARLY         → $99/yr solo
-//   STRIPE_PRICE_TEAM_5_MONTHLY     → $99/mo  · 5 team seats
-//   STRIPE_PRICE_TEAM_10_MONTHLY    → $199/mo · 10 team seats
-//   STRIPE_PRICE_TEAM_15_MONTHLY    → $299/mo · 15 team seats
-//   STRIPE_PRICE_TOPUP_1H           → $15 one-time, 1 AI hour. Frontend
-//                                     passes quantity:N to checkout
-//                                     for multi-hour purchases — no
-//                                     separate price IDs needed.
+//   STRIPE_PRICE_PRO_MONTHLY  → $19/mo solo
+//   STRIPE_PRICE_PRO_YEARLY   → $99/yr solo
+//   STRIPE_PRICE_TOPUP_1H     → $15 one-time, 1 AI hour. Quantity:N at
+//                                checkout for multi-hour buys.
+//   STRIPE_PRODUCT_TEAM       → Single Stripe Product for the dynamic
+//                                team plan. Price computed per checkout
+//                                via price_data: $(seats × 20 − 1)/mo.
 export const STRIPE_PRICES = {
   PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
   PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,
-  TEAM_5_MONTHLY: process.env.STRIPE_PRICE_TEAM_5_MONTHLY,
-  TEAM_10_MONTHLY: process.env.STRIPE_PRICE_TEAM_10_MONTHLY,
-  TEAM_15_MONTHLY: process.env.STRIPE_PRICE_TEAM_15_MONTHLY,
   TOPUP_1H: process.env.STRIPE_PRICE_TOPUP_1H,
 };
 
@@ -40,12 +35,13 @@ export const STRIPE_PRICES = {
  * operator can populate them in Stripe Dashboard.
  */
 export function warnMissingPriceIds() {
-  const required = ['PRO_MONTHLY', 'PRO_YEARLY', 'TEAM_5_MONTHLY', 'TEAM_10_MONTHLY', 'TEAM_15_MONTHLY', 'TOPUP_1H'];
+  const required = ['PRO_MONTHLY', 'PRO_YEARLY', 'TOPUP_1H'];
   const missing = required.filter((k) => !STRIPE_PRICES[k]);
+  if (!process.env.STRIPE_PRODUCT_TEAM) missing.push('PRODUCT_TEAM');
   if (missing.length) {
     console.warn(
-      `[stripe] Missing price IDs for SKUs: ${missing.join(', ')}. `
-      + `Set the matching STRIPE_PRICE_* env vars from the Stripe Dashboard.`,
+      `[stripe] Missing IDs: ${missing.join(', ')}. `
+      + `Set STRIPE_PRICE_* / STRIPE_PRODUCT_TEAM env vars from the Stripe Dashboard.`,
     );
   }
 }

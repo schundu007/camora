@@ -111,9 +111,7 @@ export async function getSubscriptionStatus(userId) {
     const subscription = result.rows[0];
     const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
                        subscription?.plan_type === 'pro_yearly' ||
-                       subscription?.plan_type === 'team_5' ||
-                       subscription?.plan_type === 'team_10' ||
-                       subscription?.plan_type === 'team_15';
+                       subscription?.plan_type === 'team';
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 

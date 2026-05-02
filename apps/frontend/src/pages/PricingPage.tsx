@@ -188,72 +188,9 @@ export default function PricingPage() {
         <SharedPricingCards />
       </section>
 
-      {/* ═══════════ FORMULA STRIP — Stanford-style proof ═══════════ */}
-      <section className="px-6 py-14" style={{ background: 'var(--bg-elevated)' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-8">
-            <span className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>THE MATH</span>
-            <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: F.display }}>
-              Pricing as <span style={{ color: accent }}>three formulas.</span>
-            </h2>
-            <p className="mt-2 text-[14px] max-w-xl mx-auto" style={{ color: 'var(--text-muted)' }}>
-              No hidden tiers, no surprise SKUs. Same equation runs on the frontend slider and the Stripe checkout server-side.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                tag: 'SOLO',
-                title: 'Monthly',
-                eq: '$19/mo · 2 hrs',
-                line: 'Top-ups at $15/hr stack on top, never expire.',
-              },
-              {
-                tag: 'TEAM',
-                title: 'Dynamic seats',
-                eq: '(N × $20 − $1)/mo',
-                line: '⌈N × 0.7⌉ pooled hours each cycle. 5 ≤ N ≤ 50.',
-                highlighted: true,
-              },
-              {
-                tag: 'HOURS',
-                title: 'Top-up',
-                eq: '$15 × Q',
-                line: 'Pick 1–50. Hours never expire — sit until used.',
-              },
-            ].map((card, i) => (
-              <div
-                key={i}
-                className="rounded-2xl p-6 transition-transform hover:-translate-y-0.5"
-                style={{
-                  background: card.highlighted ? 'var(--cam-primary-dk)' : 'var(--bg-surface)',
-                  border: card.highlighted ? '2px solid var(--cam-primary-dk)' : '1px solid var(--border)',
-                  color: card.highlighted ? '#FFFFFF' : 'var(--text-primary)',
-                }}
-              >
-                <div className="text-[10px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: card.highlighted ? 'var(--cam-gold-leaf-lt)' : 'var(--text-muted)', fontFamily: F.mono }}>
-                  {card.tag}
-                </div>
-                <div className="text-[15px] font-semibold mb-1" style={{ opacity: card.highlighted ? 0.85 : 1 }}>{card.title}</div>
-                <div
-                  className="text-[26px] md:text-[28px] font-extrabold mb-2 leading-tight"
-                  style={{ fontFamily: F.mono, color: card.highlighted ? 'var(--cam-gold-leaf-lt)' : 'var(--cam-primary-dk)' }}
-                >
-                  {card.eq}
-                </div>
-                <p className="text-[12.5px] leading-relaxed" style={{ color: card.highlighted ? 'rgba(255,255,255,0.72)' : 'var(--text-secondary)' }}>
-                  {card.line}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ═══════════ COMPARISON ═══════════ */}
       <section className="px-6 py-20" style={{ background: 'var(--bg-surface)' }}>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <span className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>COMPARE</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -263,7 +200,14 @@ export default function PricingPage() {
 
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '32%' }} />
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '17%' }} />
+                  <col style={{ width: '16%' }} />
+                  <col style={{ width: '20%' }} />
+                </colgroup>
                 <thead>
                   <tr style={{ background: 'var(--bg-elevated)' }}>
                     <th className="text-left px-5 py-4 text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>Feature</th>

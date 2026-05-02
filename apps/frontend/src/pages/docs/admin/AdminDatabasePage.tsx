@@ -23,7 +23,7 @@ export default function AdminDatabasePage() {
         </p>
         <h3 className="text-base font-bold mt-4 mb-2">User &amp; auth</h3>
         <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><code>users</code> — id, email, name, plan_type (free/pro_monthly/pro_max_yearly/etc), provider (google), avatar.</li>
+          <li><code>users</code> — id, email, name, plan_type (free / pro_monthly / pro_yearly / team), provider (google), avatar.</li>
           <li><code>ascend_subscriptions</code> — Stripe customer/sub IDs, period boundaries, cancel_at_period_end, auto_topup_pack, auto_topup_monthly_cap_cents.</li>
         </ul>
         <h3 className="text-base font-bold mt-4 mb-2">Hour metering</h3>

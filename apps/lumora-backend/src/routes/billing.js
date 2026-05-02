@@ -1,19 +1,18 @@
 /**
  * Billing routes — Stripe checkout, portal, subscription status, webhook.
  *
- * Ported from Python: lumora/backend/app/api/v1/billing.py
- *
- * Environment variables:
- *   STRIPE_SECRET_KEY       — Stripe API secret key
- *   STRIPE_WEBHOOK_SECRET   — Webhook endpoint signing secret
- *   STRIPE_PRICE_MONTHLY    — Price ID for the monthly Pro subscription
- *   STRIPE_PRICE_LIFETIME   — Price ID for the 8-Pack (one-time)
+ * Pricing v3.2. Required env vars:
+ *   STRIPE_SECRET_KEY        — Stripe API secret key
+ *   STRIPE_WEBHOOK_SECRET    — Webhook endpoint signing secret
+ *   STRIPE_PRICE_PRO_MONTHLY — $19/mo solo
+ *   STRIPE_PRICE_PRO_YEARLY  — $99/yr solo
+ *   STRIPE_PRICE_TOPUP_1H    — $15/hr top-up (quantity:N at checkout)
+ *   STRIPE_PRODUCT_TEAM      — Single Product for dynamic team plan
  */
 import { Router } from 'express';
 import { query } from '../lib/shared-db.js';
 import { getStripe } from '../config/stripe.js';
 import { authenticate } from '../middleware/authenticate.js';
-import { addTopup } from '../services/usage.js';
 
 const router = Router();
 
@@ -41,13 +40,6 @@ function isAllowedRedirectUrl(url) {
     return false;
   }
 }
-
-// ---------------------------------------------------------------------------
-// Stripe initialisation (lazy — returns null when key is absent)
-// ---------------------------------------------------------------------------
-
-const PRICE_MONTHLY  = () => process.env.STRIPE_PRICE_MONTHLY;
-const PRICE_LIFETIME = () => process.env.STRIPE_PRICE_LIFETIME;
 
 // ---------------------------------------------------------------------------
 // GET /prices — available plans (public)
@@ -214,7 +206,7 @@ router.post('/checkout', authenticate, async (req, res) => {
       try {
         const r = await query('SELECT plan_type, plan_status FROM users WHERE id = $1', [userId]);
         const userPlan = r.rows[0];
-        const PAID = new Set(['pro_monthly', 'pro_yearly', 'team', 'team_5', 'team_10', 'team_15']);
+        const PAID = new Set(['pro_monthly', 'pro_yearly', 'team']);
         const isActive = userPlan?.plan_status === 'active' && PAID.has(userPlan.plan_type);
         if (!isActive) {
           return res.status(403).json({
@@ -396,28 +388,7 @@ router.post(
           const userId = data.metadata?.user_id;
           const plan = data.metadata?.plan;
 
-          // --- Legacy topup packs (questions/sessions) ----------------------
-          if (data.metadata?.topup_type && userId) {
-            const topupType = data.metadata.topup_type;
-            const topupAmount = parseInt(data.metadata.topup_amount, 10);
-            if (topupType && topupAmount > 0) {
-              await addTopup(parseInt(userId, 10), topupType, topupAmount);
-              console.log(`Added legacy topup: ${topupAmount} ${topupType} for user ${userId}`);
-              if (data.metadata.topup_extras) {
-                try {
-                  const extras = JSON.parse(data.metadata.topup_extras);
-                  for (const [extraType, extraAmount] of Object.entries(extras)) {
-                    await addTopup(parseInt(userId, 10), extraType, extraAmount);
-                  }
-                } catch (parseErr) {
-                  console.error('Failed to parse topup_extras:', parseErr);
-                }
-              }
-            }
-            break;
-          }
-
-          // --- v3 hour top-up: never expires, written to ai_hour_topups ----
+          // --- v3.2 hour top-up: never expires, written to ai_hour_topups --
           if (plan === 'topup_1h' && userId) {
             const metaQty = parseInt(data.metadata?.quantity || '1', 10);
             const hours = Number.isFinite(metaQty) && metaQty >= 1 ? metaQty : 1;
@@ -437,7 +408,7 @@ router.post(
           }
 
           // --- Subscription plan activation --------------------------------
-          // plan: 'pro_monthly' | 'pro_yearly' | 'team' | 'team_5/10/15' (legacy)
+          // plan: 'pro_monthly' | 'pro_yearly' | 'team'
           if (plan && userId) {
             await query(
               "UPDATE users SET plan_type = $1, plan_status = 'active' WHERE id = $2",

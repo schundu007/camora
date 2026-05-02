@@ -102,10 +102,7 @@ function planLabel(planType: string) {
   return ({
     pro_monthly: 'Pro · monthly',
     pro_yearly: 'Pro · yearly',
-    pro_max_monthly: 'Pro Max · monthly',
-    pro_max_yearly: 'Pro Max · yearly',
-    business_starter: 'Business Starter',
-    business_desktop_lifetime: 'Business Desktop · 10 seats',
+    team: 'Team',
   } as Record<string, string>)[planType] || planType;
 }
 
@@ -256,7 +253,7 @@ export default function TeamSettingsPage() {
   }
 
   const planType = subscription?.plan || 'free';
-  const teamEligiblePlan = ['pro_max_monthly', 'pro_max_yearly', 'business_starter', 'business_desktop_lifetime'].includes(planType);
+  const teamEligiblePlan = planType === 'team';
 
   // ── Create team (only if user holds an eligible sub but no team yet) ──
   async function handleCreateTeam() {
@@ -609,7 +606,7 @@ export default function TeamSettingsPage() {
             {/* Subscription state — cancel / resume affordance for owners on
                 a recurring sub. Hidden for one-time SKUs (Business Starter,
                 Business Desktop) since there's nothing to cancel. */}
-            {isOwner && subDetails && ['pro_monthly', 'pro_yearly', 'pro_max_monthly', 'pro_max_yearly'].includes(subDetails.plan_type) && (
+            {isOwner && subDetails && ['pro_monthly', 'pro_yearly', 'team'].includes(subDetails.plan_type) && (
               <section className="rounded-xl p-5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
