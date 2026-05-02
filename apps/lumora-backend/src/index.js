@@ -32,8 +32,9 @@ app.use(cors({
 app.use(requestId);
 app.use(requestLogger);
 
-// Body parsing — raw for Stripe webhooks, JSON for everything else
-app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
+// Body parsing — raw Stripe webhook handler retired (PR-2): all Stripe events
+// now flow exclusively to ascend-backend's /api/billing/webhook to eliminate
+// dual-truth state divergence between users.plan_type and ascend_subscriptions.
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
@@ -249,7 +250,6 @@ async function runMigrations() {
 import authRouter from './routes/auth.js';
 import inferenceRouter from './routes/inference.js';
 import codingRouter from './routes/coding.js';
-import billingRouter from './routes/billing.js';
 import conversationsRouter from './routes/conversations.js';
 import documentsRouter from './routes/documents.js';
 import transcriptionRouter from './routes/transcription.js';
@@ -266,23 +266,41 @@ import audioPrefsRouter from './routes/audioPreferences.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
-import { authLimiter, apiLimiter, aiLimiter, paymentLimiter } from './middleware/rateLimiter.js';
+import { authLimiter, apiLimiter, aiLimiter } from './middleware/rateLimiter.js';
+import { authenticate } from './middleware/authenticate.js';
+import { requirePaidSubscription } from './middleware/requirePaidSubscription.js';
+
+// Billing routes retired (PR-2). Frontend now hits ascend-backend's
+// /api/v1/billing/* directly. This stub returns 410 Gone for any stale
+// callers still pointed here so failures are loud, not silent.
+app.use('/api/v1/billing', (req, res) => {
+  res.status(410).json({
+    error: 'Billing has moved. Use ascend-backend at caprab.cariara.com/api/v1/billing/*.',
+    code: 'BILLING_MOVED_TO_ASCEND',
+  });
+});
 
 // Register routes — limiter tiers mirror the ascend contract.
 app.use('/api/v1/auth', authLimiter, authRouter);
-app.use('/api/v1/inference', aiLimiter, inferenceRouter);
+
+// AI routes — must be paywalled. Without these gates, anyone with a free
+// account could call live-interview AI / transcription / coding solver
+// for free, which is the bug PR-2 fixes.
+app.use('/api/v1/inference', aiLimiter, authenticate, requirePaidSubscription, inferenceRouter);
 // Backwards compat: /api/v1/stream → forward to inference router's /stream handler
-app.post('/api/v1/stream', aiLimiter, (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
-app.use('/api/v1/coding', aiLimiter, codingRouter);
-app.use('/api/v1/billing', paymentLimiter, billingRouter);
+app.post('/api/v1/stream', aiLimiter, authenticate, requirePaidSubscription,
+  (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
+app.use('/api/v1/coding', aiLimiter, authenticate, requirePaidSubscription, codingRouter);
+app.use('/api/v1/transcribe', aiLimiter, authenticate, requirePaidSubscription, transcriptionRouter);
+app.use('/api/v1/speaker', aiLimiter, authenticate, requirePaidSubscription, speakerRouter);
+app.use('/api/v1/diagram', aiLimiter, authenticate, requirePaidSubscription, diagramRouter);
+
+// Non-AI routes — open to authenticated users.
 app.use('/api/v1/conversations', apiLimiter, conversationsRouter);
 app.use('/api/v1/documents', apiLimiter, documentsRouter);
 app.use('/api/v1/prep', apiLimiter, prepRouter);
 app.use('/api/v1/company-context', apiLimiter, companyContextRouter);
 app.use('/api/v1/audio-prefs', apiLimiter, audioPrefsRouter);
-app.use('/api/v1/transcribe', aiLimiter, transcriptionRouter);
-app.use('/api/v1/speaker', aiLimiter, speakerRouter);
-app.use('/api/v1/diagram', aiLimiter, diagramRouter);
 app.use('/api/v1/reactions', apiLimiter, reactionsRouter);
 app.use('/api/v1/analytics', apiLimiter, analyticsRouter);
 app.use('/api/v1/usage', apiLimiter, usageRouter);

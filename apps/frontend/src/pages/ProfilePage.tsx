@@ -9,7 +9,9 @@ import GamificationWidget from '../components/capra/features/GamificationWidget'
 import BadgeGrid from '../components/capra/features/BadgeGrid';
 import Leaderboard from '../components/capra/features/Leaderboard';
 
-const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+// Billing reads/writes go to ascend-backend (single source of truth);
+// CAPRA_API kept as separate constant for any non-billing capra endpoints.
+const BILLING_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const TABS = [

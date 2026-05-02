@@ -12,9 +12,9 @@ export const config = {
   maxTokensQuick: parseInt(process.env.MAX_TOKENS_QUICK || '2000'),
   maxTokensDesign: parseInt(process.env.MAX_TOKENS_DESIGN || '8192'),
 
-  // Stripe
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+  // Stripe configuration retired in PR-2 — billing now lives exclusively
+  // on ascend-backend. Lumora-backend authenticates against the shared DB
+  // (ascend_subscriptions) for paywall enforcement; it does not call Stripe.
 
   // AI Services
   aiServicesUrl: process.env.AI_SERVICES_URL || 'http://localhost:8001',

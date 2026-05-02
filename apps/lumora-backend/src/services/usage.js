@@ -8,12 +8,24 @@ import { query } from '../lib/shared-db.js';
 // Plan definitions
 // ---------------------------------------------------------------------------
 
+// Per-plan question/session/diagram caps. v3.2 plan caps are effectively
+// uncapped here because the real budgeting now lives on the ascend-backend
+// hourBudgetGate (charged in AI-hours, not question count). This middleware
+// is kept as a defense-in-depth counter for v3.2 paid users — set high
+// enough that legitimate use never trips it; abuse will hit the hour budget
+// gate first.
+const HIGH_LIMIT = 10000;
 const PLANS = {
+  // Legacy plans — unchanged
   free:    { sessions: 3,  questions: 5,   diagrams: 1,  devices: 1, isLifetime: true },
   starter: { sessions: 10, questions: 50,  diagrams: 5,  devices: 1 },
   pro:     { sessions: 20, questions: 150, diagrams: 15, devices: 2 },
   annual:  { sessions: 15, questions: 100, diagrams: 10, devices: 1 },
   challenger: { sessions: 10, questions: 100, diagrams: 10, devices: 1, isLifetime: true },
+  // v3.2 plans — gated upstream by requirePaidSubscription + hourBudgetGate
+  pro_monthly: { sessions: HIGH_LIMIT, questions: HIGH_LIMIT, diagrams: HIGH_LIMIT, devices: 3 },
+  pro_yearly:  { sessions: HIGH_LIMIT, questions: HIGH_LIMIT, diagrams: HIGH_LIMIT, devices: 3 },
+  team:        { sessions: HIGH_LIMIT, questions: HIGH_LIMIT, diagrams: HIGH_LIMIT, devices: 5 },
 };
 
 // ---------------------------------------------------------------------------
@@ -90,32 +102,33 @@ async function getOrCreateRow(userId, period) {
 /**
  * Returns the plan name for a user (falls back to 'free').
  *
- * Checks plan_type (used by billing webhook) and subscription_plan as a
- * fallback column name.
+ * Reads from ascend_subscriptions (the canonical billing table after PR-2)
+ * with users.plan_type as a legacy fallback for any rows that haven't been
+ * migrated yet. Active status is required — past_due/canceled subscribers
+ * are downgraded to free here so they hit the legacy 5-question cap.
  */
 export async function getUserPlan(userId) {
   try {
     const result = await query(
-      'SELECT plan_type, subscription_plan FROM users WHERE id = $1',
+      `SELECT s.plan_type, s.status, u.plan_type AS legacy_plan_type
+         FROM users u
+    LEFT JOIN ascend_subscriptions s ON s.user_id = u.id
+        WHERE u.id = $1`,
       [userId],
     );
     const row = result.rows[0];
     if (!row) return 'free';
-    const plan = row.plan_type || row.subscription_plan || 'free';
-    return PLANS[plan] ? plan : 'free';
-  } catch {
-    // If subscription_plan column doesn't exist, retry without it
-    try {
-      const result = await query(
-        'SELECT plan_type FROM users WHERE id = $1',
-        [userId],
-      );
-      const row = result.rows[0];
-      const plan = row?.plan_type || 'free';
-      return PLANS[plan] ? plan : 'free';
-    } catch {
-      return 'free';
+    // Active paid plan from canonical table wins
+    if (row.plan_type && row.status === 'active' && PLANS[row.plan_type]) {
+      return row.plan_type;
     }
+    // Legacy fallback (pre-PR-2 rows that wrote to users.plan_type)
+    if (row.legacy_plan_type && PLANS[row.legacy_plan_type]) {
+      return row.legacy_plan_type;
+    }
+    return 'free';
+  } catch {
+    return 'free';
   }
 }
 
