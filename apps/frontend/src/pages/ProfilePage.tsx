@@ -135,7 +135,7 @@ function SubscriptionCard() {
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
         <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Subscription</h3>
-        {endDate && sub?.status === 'active' && (
+        {endDate && sub?.status === 'active' && sub?.cancel_at_period_end && (
           <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--warning-text)', background: 'var(--bg-elevated)', border: '1px solid var(--warning)' }}>
             Your access to premium content will end on {endDate}
           </span>

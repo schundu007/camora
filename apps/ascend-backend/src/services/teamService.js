@@ -471,22 +471,37 @@ export async function checkTeamHourBudget(userId) {
 // ── Period rollover (Phase 2B) ─────────────────────────────────────────────
 
 /**
- * Reset a team's hours_pool_period_start to NOW() so usage rolls forward.
+ * Refill a team's hours pool on subscription renewal:
+ *   - Recompute hours_pool_total from the current seat_limit (so seat
+ *     changes via portal flow into the new period's pool).
+ *   - Reset hours_pool_period_start to NOW() so usage rolls forward.
+ *   - Clear pool-low reminder flags.
+ *
  * Called from the Stripe invoice.paid webhook on subscription renewal.
+ * Without recomputing hours_pool_total, the pool stays stuck at whatever
+ * was set on initial activation — turning the team plan into a one-time
+ * purchase.
  */
 export async function rollOverTeamPoolForUser(userId) {
   try {
     const r = await query(
       `UPDATE teams
-          SET hours_pool_period_start = NOW(),
+          SET hours_pool_total = CEIL(seat_limit * 0.7),
+              hours_pool_period_start = NOW(),
               pool_reminder_80_sent_at = NULL,
               pool_reminder_95_sent_at = NULL,
               updated_at = NOW()
         WHERE owner_user_id = $1
           AND plan_type = 'team'
-        RETURNING id, plan_type`,
+        RETURNING id, plan_type, seat_limit, hours_pool_total`,
       [userId],
     );
+    if (r.rows[0]) {
+      logger.info(
+        { userId, teamId: r.rows[0].id, seats: r.rows[0].seat_limit, pool: r.rows[0].hours_pool_total },
+        '[teamService] team pool refilled',
+      );
+    }
     return r.rows[0] || null;
   } catch (err) {
     logger.warn({ err: err.message, userId }, '[teamService] rollover failed');
