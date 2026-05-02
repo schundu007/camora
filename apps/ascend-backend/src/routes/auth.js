@@ -231,9 +231,21 @@ router.get('/google/callback', async (req, res) => {
       }
     })();
 
+    // Read user's current token generation so the JWT can be revoked later
+    // by bumping the generation column (logout-all-sessions flow).
+    const genResult = await query('SELECT token_generation FROM users WHERE id = $1', [userId]);
+    const tokenGeneration = genResult.rows[0]?.token_generation || 1;
+
     // Issue JWT via shared-auth
     const accessToken = createToken(
-      { sub: userId, email: gUser.email, name: gUser.name || '', picture: gUser.picture || '', type: 'access' },
+      {
+        sub: userId,
+        email: gUser.email,
+        name: gUser.name || '',
+        picture: gUser.picture || '',
+        type: 'access',
+        gen: tokenGeneration,
+      },
       '30d'
     );
 
@@ -338,26 +350,42 @@ router.post('/logout', (req, res) => {
  * GET /api/auth/me
  */
 router.get('/me', authenticate, async (req, res) => {
-  // Mint a fresh short-lived bearer so the SPA can keep calling APIs after a
-  // hard refresh without a second /refresh roundtrip. The cookie is httpOnly
-  // so JS can't read it; we hand the token back in the body.
-  const accessToken = createToken(
-    {
-      sub: String(req.user.id),
-      email: req.user.email,
-      name: req.user.name || '',
-      picture: req.user.picture || '',
-      type: 'access',
-    },
-    '30d'
-  );
-
   try {
+    // Validate JWT generation against current DB value. If the user has
+    // revoked all sessions (token_generation incremented), the inbound
+    // token's `gen` claim will be stale and we reject. Tokens issued before
+    // gen tracking was added will have no `gen` claim — those still pass
+    // (one-time backwards-compat — gone after the next round of issuances).
     const result = await query(
-      'SELECT onboarding_completed, job_roles FROM users WHERE id = $1',
-      [req.user.id]
+      'SELECT onboarding_completed, job_roles, token_generation FROM users WHERE id = $1',
+      [req.user.id],
     );
     const dbUser = result.rows[0] || {};
+    const tokenGen = req.user.gen;
+    const dbGen = dbUser.token_generation || 1;
+    if (tokenGen !== undefined && tokenGen !== dbGen) {
+      logger.info({ userId: req.user.id, tokenGen, dbGen }, '[auth] token generation stale — revoked');
+      return res.status(401).json({
+        error: 'Session revoked. Please sign in again.',
+        code: 'TOKEN_GENERATION_STALE',
+      });
+    }
+
+    // Mint a fresh short-lived bearer so the SPA can keep calling APIs after
+    // a hard refresh without a second /refresh roundtrip. The cookie is
+    // httpOnly so JS can't read it; we hand the token back in the body.
+    const accessToken = createToken(
+      {
+        sub: String(req.user.id),
+        email: req.user.email,
+        name: req.user.name || '',
+        picture: req.user.picture || '',
+        type: 'access',
+        gen: dbGen,
+      },
+      '30d',
+    );
+
     res.json({
       authenticated: true,
       access_token: accessToken,
@@ -367,12 +395,48 @@ router.get('/me', authenticate, async (req, res) => {
         job_roles: dbUser.job_roles || [],
       },
     });
-  } catch (error) {
+  } catch {
+    // DB error — issue a token without re-validating gen; better to keep the
+    // user logged in than to break their session on a transient DB hiccup.
+    const accessToken = createToken(
+      {
+        sub: String(req.user.id),
+        email: req.user.email,
+        name: req.user.name || '',
+        picture: req.user.picture || '',
+        type: 'access',
+      },
+      '30d',
+    );
     res.json({
       authenticated: true,
       access_token: accessToken,
       user: req.user,
     });
+  }
+});
+
+/**
+ * Revoke all outstanding sessions for the calling user.
+ * POST /api/auth/revoke-all-sessions
+ *
+ * Increments users.token_generation, which invalidates every JWT carrying
+ * the old `gen` claim. The user's current session is also invalidated
+ * (their next /me call will return 401 TOKEN_GENERATION_STALE), so the SPA
+ * should immediately redirect to /login. Useful for: stolen-token recovery,
+ * "log out all devices" UI, password-change-style flows.
+ */
+router.post('/revoke-all-sessions', authenticate, async (req, res) => {
+  try {
+    await query(
+      'UPDATE users SET token_generation = token_generation + 1 WHERE id = $1',
+      [req.user.id],
+    );
+    logger.info({ userId: req.user.id }, '[auth] all sessions revoked');
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err: err.message, userId: req.user.id }, '[auth] revoke-all-sessions failed');
+    return res.status(500).json({ error: 'Could not revoke sessions' });
   }
 });
 

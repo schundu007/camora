@@ -25,6 +25,10 @@ async function tryJwtAuth(token) {
           name: payload.name || null,
           picture: payload.picture || null,
           role: payload.role || 'user',
+          // gen is the JWT generation counter — /me checks it against the
+          // DB column to detect revoked sessions. Undefined for legacy
+          // tokens minted before generation tracking shipped.
+          gen: payload.gen,
           source: 'jwt',
         };
       }
