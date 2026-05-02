@@ -8,22 +8,37 @@ import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { logger } from '../middleware/requestLogger.js';
 
 // Valid paid plan_type values — source of truth for v3 pricing.
+// 'team' is the dynamic seat-priced team plan (5..50). Legacy team_5/10/15
+// kept so existing customers stay accessible until backfill.
 const PAID_PLAN_TYPES = new Set([
   'pro_monthly',
   'pro_yearly',
+  'team',
   'team_5',
   'team_10',
   'team_15',
 ]);
 
-// Map team plan_type → seat count. Used both at checkout (line item
-// quantity is always 1 — Stripe price encodes the dollar amount; seats
-// are a Camora concept) and at webhook completion (team creation).
+// Map legacy team plan_type → seat count.
 const TEAM_SEATS = {
   team_5: 5,
   team_10: 10,
   team_15: 15,
 };
+
+// Dynamic team pricing — single Stripe Product, ad-hoc Price per checkout.
+// Avoids creating a SKU for every (5..50) seat count. Formula matches
+// frontend: price = (seats × $20 − $1) / month.
+const TEAM_SEATS_MIN = 5;
+const TEAM_SEATS_MAX = 50;
+function computeTeamPriceCents(seats) {
+  const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
+  return (n * 20 - 1) * 100;
+}
+function computeTeamIncludedHours(seats) {
+  const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
+  return Math.ceil(n * 0.7);
+}
 
 // Admin emails get full plan access without a Stripe subscription record.
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
@@ -78,6 +93,7 @@ router.get('/prices', (req, res) => {
       currency: 'usd',
       interval: 'month',
       seats: 1,
+      included_hours: 2,
       popular: true,
     },
     pro_yearly: {
@@ -86,36 +102,29 @@ router.get('/prices', (req, res) => {
       currency: 'usd',
       interval: 'year',
       seats: 1,
+      included_hours: 5,
       best_value: true,
     },
-    // ── Team plans (monthly only) ────────────────────────────────
-    team_5: {
-      priceId: STRIPE_PRICES.TEAM_5_MONTHLY,
-      amount: 9900,
+    // ── Team plan (dynamic, 5..50 seats) ─────────────────────────
+    // Single Stripe Product; price computed per checkout via price_data.
+    // Frontend POSTs { seats: N } to /checkout (no priceId for team).
+    team: {
+      dynamic: true,
       currency: 'usd',
       interval: 'month',
-      seats: 5,
-      team: true,
-    },
-    team_10: {
-      priceId: STRIPE_PRICES.TEAM_10_MONTHLY,
-      amount: 19900,
-      currency: 'usd',
-      interval: 'month',
-      seats: 10,
-      team: true,
-    },
-    team_15: {
-      priceId: STRIPE_PRICES.TEAM_15_MONTHLY,
-      amount: 29900,
-      currency: 'usd',
-      interval: 'month',
-      seats: 15,
+      seats_min: TEAM_SEATS_MIN,
+      seats_max: TEAM_SEATS_MAX,
+      price_per_seat_cents: 2000,
+      flat_discount_cents: 100,
+      // Helper formula: amount_cents = seats * 2000 - 100
+      // Helper formula: included_hours = ceil(seats * 0.7)
+      productId: process.env.STRIPE_PRODUCT_TEAM || null,
       team: true,
     },
     // ── Hour top-up ──────────────────────────────────────────────
     // Frontend passes quantity:N to checkout for multi-hour buys.
     // Stripe charges $15 × quantity; webhook credits N hours.
+    // Hours never expire (paid).
     topup_1h: {
       priceId: STRIPE_PRICES.TOPUP_1H,
       amount: 1500,
@@ -123,6 +132,12 @@ router.get('/prices', (req, res) => {
       interval: null,
       ai_hours: 1,
       supports_quantity: true,
+      never_expires: true,
+    },
+    // ── Free trial ───────────────────────────────────────────────
+    trial: {
+      ai_hours: 1,
+      expires_days: 7,
     },
   });
 });
@@ -137,12 +152,26 @@ router.post('/checkout', jwtAuth, async (req, res) => {
   }
 
   try {
-    const { priceId, successUrl, cancelUrl, quantity: rawQuantity } = req.body;
+    // Two checkout shapes:
+    //   (a) Fixed-SKU: { priceId, successUrl, cancelUrl, quantity? }  — solo plans + topup
+    //   (b) Dynamic team: { plan: 'team', seats, successUrl, cancelUrl } — single Stripe product, price_data computed live
+    // Snake-case aliases (price_id / success_url / cancel_url) accepted for compat.
+    const body = req.body || {};
+    const priceId = body.priceId || body.price_id;
+    const successUrl = body.successUrl || body.success_url;
+    const cancelUrl = body.cancelUrl || body.cancel_url;
+    const rawQuantity = body.quantity;
+    const planParam = body.plan;
+    const rawSeats = body.seats;
     const userId = req.user.id;
     const email = req.user.email;
+    const isTeamCheckout = planParam === 'team';
 
-    if (!priceId || !successUrl || !cancelUrl) {
+    if (!successUrl || !cancelUrl) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (!isTeamCheckout && !priceId) {
+      return res.status(400).json({ error: 'Missing priceId' });
     }
 
     // SECURITY: Validate redirect URLs against allowed domains
@@ -150,18 +179,29 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid redirect URL domain' });
     }
 
-    // Validate price ID against the active SKU list.
-    const validPrices = [
-      STRIPE_PRICES.PRO_MONTHLY,
-      STRIPE_PRICES.PRO_YEARLY,
-      STRIPE_PRICES.TEAM_5_MONTHLY,
-      STRIPE_PRICES.TEAM_10_MONTHLY,
-      STRIPE_PRICES.TEAM_15_MONTHLY,
-      STRIPE_PRICES.TOPUP_1H,
-    ].filter(Boolean);
+    // Validate fixed-SKU price IDs against the active list.
+    if (!isTeamCheckout) {
+      const validPrices = [
+        STRIPE_PRICES.PRO_MONTHLY,
+        STRIPE_PRICES.PRO_YEARLY,
+        STRIPE_PRICES.TOPUP_1H,
+      ].filter(Boolean);
+      if (!validPrices.includes(priceId)) {
+        return res.status(400).json({ error: 'Invalid price ID' });
+      }
+    }
 
-    if (!validPrices.includes(priceId)) {
-      return res.status(400).json({ error: 'Invalid price ID' });
+    // Team checkout: validate seats and require STRIPE_PRODUCT_TEAM env var.
+    let teamSeats = 0;
+    if (isTeamCheckout) {
+      const n = Math.floor(Number(rawSeats) || 0);
+      if (n < TEAM_SEATS_MIN || n > TEAM_SEATS_MAX) {
+        return res.status(400).json({ error: `Seats must be ${TEAM_SEATS_MIN}..${TEAM_SEATS_MAX}` });
+      }
+      teamSeats = n;
+      if (!process.env.STRIPE_PRODUCT_TEAM) {
+        return res.status(503).json({ error: 'Team checkout not configured (STRIPE_PRODUCT_TEAM missing)' });
+      }
     }
 
     // Quantity is only honored for the hour top-up (single price ID,
@@ -205,11 +245,9 @@ router.post('/checkout', jwtAuth, async (req, res) => {
 
     // Determine purchase type for metadata.
     let purchaseType = 'subscription';
-    if (priceId === STRIPE_PRICES.PRO_MONTHLY) purchaseType = 'pro_monthly';
+    if (isTeamCheckout) purchaseType = 'team';
+    else if (priceId === STRIPE_PRICES.PRO_MONTHLY) purchaseType = 'pro_monthly';
     else if (priceId === STRIPE_PRICES.PRO_YEARLY) purchaseType = 'pro_yearly';
-    else if (priceId === STRIPE_PRICES.TEAM_5_MONTHLY) purchaseType = 'team_5';
-    else if (priceId === STRIPE_PRICES.TEAM_10_MONTHLY) purchaseType = 'team_10';
-    else if (priceId === STRIPE_PRICES.TEAM_15_MONTHLY) purchaseType = 'team_15';
     else if (priceId === STRIPE_PRICES.TOPUP_1H) purchaseType = 'topup_1h';
 
     // Hour top-ups are gated to active paid subscribers — free users
@@ -252,32 +290,36 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       }
     }
 
+    // Build the line item — fixed price for solo/topup, ad-hoc price_data for team.
+    const lineItem = isTeamCheckout
+      ? {
+          price_data: {
+            currency: 'usd',
+            product: process.env.STRIPE_PRODUCT_TEAM,
+            unit_amount: computeTeamPriceCents(teamSeats),
+            recurring: { interval: 'month' },
+          },
+          quantity: 1,
+        }
+      : { price: priceId, quantity };
+
     // Create checkout session
     const sessionConfig = {
       customer: customerId,
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          // For hour top-ups, quantity carries the # of hours the
-          // user wants (validated above to 1..50). For everything
-          // else, always 1 — Stripe's price encodes the dollar
-          // amount; team seats are a Camora concept tracked in our
-          // own DB on the team plan_type.
-          quantity,
-        },
-      ],
+      line_items: [lineItem],
       mode: isOneTime ? 'payment' : 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
         user_id: userId.toString(),
-        price_id: priceId,
         type: purchaseType,
         // Carry quantity through metadata so the webhook can credit
         // the right number of hours without re-fetching line items.
         // Always set; default 1 for non-topup paths.
         quantity: String(quantity),
+        // Team checkout carries seat count instead of a price_id.
+        ...(isTeamCheckout ? { seats: String(teamSeats) } : { price_id: priceId }),
       },
     };
 
@@ -500,8 +542,8 @@ router.get('/topups', jwtAuth, async (req, res) => {
   try {
     const r = await query(
       `SELECT t.id, t.hours, t.amount_cents, t.expires_at, t.auto_charged,
-              t.refunded_at, t.created_at,
-              (t.refunded_at IS NULL AND t.expires_at > NOW()) AS active,
+              t.refunded_at, t.created_at, t.source,
+              (t.refunded_at IS NULL AND (t.expires_at IS NULL OR t.expires_at > NOW())) AS active,
               rr.status AS refund_status,
               rr.requested_at AS refund_requested_at,
               rr.processed_note AS refund_note
@@ -830,39 +872,49 @@ async function handleCheckoutComplete(session) {
   // Hour top-up: $15 × quantity from Stripe checkout. Quantity was
   // stored in session metadata at checkout creation (Stripe doesn't
   // expand line_items on checkout.session.completed by default).
-  // Each hour gets a 90-day expiry. ON CONFLICT guards against
-  // duplicate processing.
+  // Paid top-ups never expire (NULL expires_at). ON CONFLICT guards
+  // against duplicate processing.
   if (type === 'topup_1h') {
     const metaQty = parseInt(session.metadata?.quantity || '1', 10);
     const hours = Number.isFinite(metaQty) && metaQty >= 1 ? metaQty : 1;
-    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
     const amountTotal = session.amount_total || (1500 * hours);
     await query(
-      `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at)
-       VALUES ($1, NULL, $2, $3, $4, $5)
+      `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at, source)
+       VALUES ($1, NULL, $2, $3, $4, NULL, 'topup')
        ON CONFLICT (stripe_session_id) WHERE stripe_session_id IS NOT NULL DO NOTHING`,
-      [userId, hours, amountTotal, session.id, expiresAt],
+      [userId, hours, amountTotal, session.id],
     );
-    logger.info({ userId, hours, sessionId: session.id }, 'Top-up credited');
+    logger.info({ userId, hours, sessionId: session.id }, 'Top-up credited (no expiry)');
     return; // top-ups don't change subscription state
   }
 
   // Subscription plan — activate with the type as plan_type.
-  const validTypes = ['pro_monthly', 'pro_yearly', 'team_5', 'team_10', 'team_15'];
+  const validTypes = ['pro_monthly', 'pro_yearly', 'team', 'team_5', 'team_10', 'team_15'];
   const planType = validTypes.includes(type) ? type : 'pro_monthly';
   await query(
     `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
     [planType, userId]
   );
 
-  // Team plans: auto-create the team so the buyer can immediately
-  // invite members from the success screen — no separate API call
-  // needed. Failures are logged but don't block plan activation.
-  if (TEAM_SEATS[planType]) {
+  // Team plan: auto-create the team. For dynamic 'team' plan, seats come
+  // from session metadata. For legacy team_5/10/15, seats come from the
+  // SEAT_LIMITS map. Failures are logged but don't block plan activation.
+  const isTeam = planType === 'team' || TEAM_SEATS[planType];
+  if (isTeam) {
     try {
       const { createTeamForUser } = await import('../services/teamService.js');
-      await createTeamForUser({ userId, planType });
-      logger.info({ userId, planType, seats: TEAM_SEATS[planType] }, 'Team auto-created on checkout');
+      const seats = planType === 'team'
+        ? parseInt(session.metadata?.seats || '0', 10)
+        : TEAM_SEATS[planType];
+      const team = await createTeamForUser({ userId, planType, seats });
+      // Set the team's hours pool from the per-cycle included hours so the
+      // gate has something to check against.
+      const includedHours = computeTeamIncludedHours(seats);
+      await query(
+        `UPDATE teams SET hours_pool_total = $1, hours_pool_period_start = NOW() WHERE id = $2`,
+        [includedHours, team.id],
+      );
+      logger.info({ userId, planType, seats, includedHours }, 'Team auto-created + pool set');
     } catch (err) {
       logger.warn({ err: err.message, userId, planType }, '[teams] auto-create skipped');
     }
@@ -927,9 +979,11 @@ async function handleInvoicePaid(invoice) {
 
   // Phase 7: clear personal pool-low reminder flags so the user gets fresh
   // warnings in the new period. Cheap update; runs for every paid plan.
+  // Also roll over the team pool period_start so the pool resets each cycle.
   try {
-    const { rollOverPersonalRemindersForUser } = await import('../services/teamService.js');
+    const { rollOverPersonalRemindersForUser, rollOverTeamPoolForUser } = await import('../services/teamService.js');
     await rollOverPersonalRemindersForUser(subscription.user_id);
+    await rollOverTeamPoolForUser(subscription.user_id);
   } catch { /* swallow */ }
 
   logger.info({ userId: subscription.user_id, planType }, 'Invoice paid — subscription renewed');
@@ -950,6 +1004,14 @@ async function handleSubscriptionUpdated(subscription) {
   else if (priceId === STRIPE_PRICES.TEAM_5_MONTHLY) planType = 'team_5';
   else if (priceId === STRIPE_PRICES.TEAM_10_MONTHLY) planType = 'team_10';
   else if (priceId === STRIPE_PRICES.TEAM_15_MONTHLY) planType = 'team_15';
+  // Dynamic team: ad-hoc price_data with our team product. Detect by product
+  // ID and reverse-engineer seat count from unit_amount (price = seats*20-1 dollars).
+  else if (
+    process.env.STRIPE_PRODUCT_TEAM &&
+    subscription.items.data[0]?.price?.product === process.env.STRIPE_PRODUCT_TEAM
+  ) {
+    planType = 'team';
+  }
 
   // Map Stripe status to our status
   let status = subscription.status;

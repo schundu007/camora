@@ -5,35 +5,56 @@ import { logger } from '../middleware/requestLogger.js';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
-// Seat limits per plan_type. Solo plans (Monthly / Yearly) are
-// 1-seat. Team plans grant 5/10/15 seats per the dollar tier.
+// Seat limits per plan_type. Solo plans (Monthly / Yearly) are 1-seat.
+// `team` is the dynamic plan — seat count is stored on teams.seat_limit and
+// can be 5..50. Legacy team_5/10/15 are kept for backward compat with rows
+// from the previous fixed-tier model; new sales use 'team'.
 export const SEAT_LIMITS = {
   pro_monthly: 1,
   pro_yearly: 1,
+  team: null, // dynamic — read from teams.seat_limit
   team_5: 5,
   team_10: 10,
   team_15: 15,
 };
 
-// Team plans don't currently bundle a recurring hour pool — members
-// share the team's purchased top-up hours via ai_hour_topups
-// (team_id column). Auto-topup config lives on the team row. PAYG
-// rate is the standard $15/hr (one price ID, multiplied by quantity).
-const HOURS_POOL_BY_PLAN = {};
-const PAYG_RATES_BY_PLAN = {};
-
 const TEAM_LOOKUP_CACHE_TTL_SEC = 300;   // 5 min
 const TEAM_LOOKUP_PREFIX = 'team:user:v1:';
 const INVITE_TTL_DAYS = 14;
 
+// Dynamic team pricing: $(seats × 20 − 1)/mo. Bounded 5..50 seats.
+export const TEAM_SEATS_MIN = 5;
+export const TEAM_SEATS_MAX = 50;
+export function teamPriceCents(seats) {
+  const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
+  return (n * 20 - 1) * 100;
+}
+export function teamIncludedHours(seats) {
+  const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
+  return Math.ceil(n * 0.7);
+}
+
+// Subscription-cycle included hours per plan (granted on activation +
+// each renewal). Solo monthly/yearly are flat; team is computed from seats.
+export const SOLO_INCLUDED_HOURS = {
+  pro_monthly: 2,
+  pro_yearly: 5,
+  // Legacy aliases
+  monthly: 2,
+  annual: 5,
+};
+
 // ── Plan-eligibility helpers ───────────────────────────────────────────────
 
 export function getSeatLimitForPlan(planType) {
+  if (planType === 'team') return null; // caller must read teams.seat_limit
   return SEAT_LIMITS[planType] || 1;
 }
 
 export function planSupportsTeam(planType) {
-  return getSeatLimitForPlan(planType) > 1;
+  if (planType === 'team') return true;
+  const fixed = SEAT_LIMITS[planType];
+  return typeof fixed === 'number' && fixed > 1;
 }
 
 // ── Read paths (cached) ────────────────────────────────────────────────────
@@ -239,10 +260,13 @@ export async function maybeSendPoolReminder({ scope, scopeId, ownerEmail, ownerN
 // users would silently fall through to FREE (30 min lifetime) and hit a 429 at
 // 30 minutes. Map them to the equivalent v2 budget instead.
 const PERSONAL_HOUR_BUDGETS = {
-  free: { hours: 0.5, period: 'lifetime' },
-  // v2 SKUs
+  // Free users get 0 baseline; the 1-hour trial is granted as a 7-day
+  // ai_hour_topups row by initUser(). After the trial expires, free users
+  // can't use AI hours until they subscribe.
+  free: { hours: 0, period: 'lifetime' },
+  // v3 solo plans — included hours refresh each billing cycle.
   pro_monthly: { hours: 2, period: 'monthly' },
-  pro_yearly: { hours: 24, period: 'yearly' },
+  pro_yearly: { hours: 5, period: 'yearly' },
   pro_max_monthly: { hours: 8, period: 'monthly' },
   pro_max_yearly: { hours: 96, period: 'yearly' },
   // Legacy SKUs grandfathered to the closest v2 equivalent so existing
@@ -264,11 +288,15 @@ const PERSONAL_HOUR_BUDGETS = {
  * efficient lookup.
  */
 async function sumUnexpiredTopups({ userId = null, teamId = null }) {
+  // NULL expires_at = never expires (paid top-ups + subscription cycle grants).
+  // Trial grants get a 7-day expires_at; once past that they're filtered out.
   try {
     if (teamId) {
       const r = await query(
         `SELECT COALESCE(SUM(hours), 0) AS h FROM ai_hour_topups
-          WHERE team_id = $1 AND expires_at > NOW() AND refunded_at IS NULL`,
+          WHERE team_id = $1
+            AND (expires_at IS NULL OR expires_at > NOW())
+            AND refunded_at IS NULL`,
         [teamId],
       );
       return Number(r.rows[0]?.h || 0);
@@ -276,7 +304,10 @@ async function sumUnexpiredTopups({ userId = null, teamId = null }) {
     if (userId) {
       const r = await query(
         `SELECT COALESCE(SUM(hours), 0) AS h FROM ai_hour_topups
-          WHERE user_id = $1 AND team_id IS NULL AND expires_at > NOW() AND refunded_at IS NULL`,
+          WHERE user_id = $1
+            AND team_id IS NULL
+            AND (expires_at IS NULL OR expires_at > NOW())
+            AND refunded_at IS NULL`,
         [userId],
       );
       return Number(r.rows[0]?.h || 0);
@@ -473,7 +504,7 @@ export async function rollOverTeamPoolForUser(userId) {
               pool_reminder_95_sent_at = NULL,
               updated_at = NOW()
         WHERE owner_user_id = $1
-          AND plan_type IN ('pro_max_monthly', 'pro_max_yearly')
+          AND plan_type IN ('team', 'team_5', 'team_10', 'team_15', 'pro_max_monthly', 'pro_max_yearly')
         RETURNING id, plan_type`,
       [userId],
     );
@@ -507,11 +538,14 @@ export async function rollOverPersonalRemindersForUser(userId) {
 // ── Team CRUD ──────────────────────────────────────────────────────────────
 
 /**
- * Create a new team owned by `userId` based on their `planType`. Idempotent:
- * if the user already owns a team, returns it unchanged. Auto-adds the owner
- * as a team_members row so all rollups treat them like any other member.
+ * Create a new team owned by `userId`. Idempotent: if the user already owns
+ * a team, returns it unchanged. Auto-adds the owner as a team_members row so
+ * all rollups treat them like any other member.
+ *
+ * For dynamic 'team' plan, pass the explicit `seats` arg (5..50). For legacy
+ * team_5/10/15 plans, seats is derived from the SEAT_LIMITS map.
  */
-export async function createTeamForUser({ userId, planType, name }) {
+export async function createTeamForUser({ userId, planType, name, seats = null }) {
   if (!planSupportsTeam(planType)) {
     throw Object.assign(new Error('Plan does not support team sharing'), { code: 'PLAN_NOT_TEAM_ELIGIBLE' });
   }
@@ -525,14 +559,22 @@ export async function createTeamForUser({ userId, planType, name }) {
     return getTeamWithMembers(existing.rows[0].id);
   }
 
-  const seatLimit = getSeatLimitForPlan(planType);
-  const hoursPool = HOURS_POOL_BY_PLAN[planType] || null;
-  const paygRate = PAYG_RATES_BY_PLAN[planType] || null;
+  // Resolve seat count: 'team' = explicit arg, legacy = fixed map.
+  let seatLimit;
+  if (planType === 'team') {
+    const n = Math.floor(Number(seats) || 0);
+    if (n < TEAM_SEATS_MIN || n > TEAM_SEATS_MAX) {
+      throw Object.assign(new Error(`Team seats must be ${TEAM_SEATS_MIN}..${TEAM_SEATS_MAX}`), { code: 'INVALID_SEATS' });
+    }
+    seatLimit = n;
+  } else {
+    seatLimit = getSeatLimitForPlan(planType);
+  }
 
   const created = await query(
     `INSERT INTO teams (owner_user_id, name, plan_type, seat_limit, hours_pool_total, payg_rate_cents)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-    [userId, name || 'My team', planType, seatLimit, hoursPool, paygRate],
+     VALUES ($1, $2, $3, $4, NULL, NULL) RETURNING id`,
+    [userId, name || 'My team', planType, seatLimit],
   );
   const teamId = created.rows[0].id;
 

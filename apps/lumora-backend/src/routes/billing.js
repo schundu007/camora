@@ -54,18 +54,17 @@ const PRICE_LIFETIME = () => process.env.STRIPE_PRICE_LIFETIME;
 // ---------------------------------------------------------------------------
 
 router.get('/prices', (_req, res) => {
-  // Pricing v2 — keeps the same shape ascend-backend's /prices uses so the
-  // frontend's /api/v1/billing/prices reader works whether the request lands
-  // on this service or ascend's mirror. SKUs identical to ascend.
+  // Pricing v3.2 — solo + dynamic team + per-hour topup. Mirrors
+  // ascend-backend/src/routes/billing.js so the frontend's /prices reader
+  // works against either service.
   res.json({
-    // Pricing v3.1 — solo + team plans + per-hour topup. Mirrors
-    // ascend-backend/src/routes/billing.js.
     pro_monthly: {
       priceId: process.env.STRIPE_PRICE_PRO_MONTHLY,
       amount: 1900,
       currency: 'usd',
       interval: 'month',
       seats: 1,
+      included_hours: 2,
       popular: true,
     },
     pro_yearly: {
@@ -74,30 +73,19 @@ router.get('/prices', (_req, res) => {
       currency: 'usd',
       interval: 'year',
       seats: 1,
+      included_hours: 5,
       best_value: true,
     },
-    team_5: {
-      priceId: process.env.STRIPE_PRICE_TEAM_5_MONTHLY,
-      amount: 9900,
+    // Dynamic team — single Stripe Product, price computed per checkout.
+    team: {
+      dynamic: true,
       currency: 'usd',
       interval: 'month',
-      seats: 5,
-      team: true,
-    },
-    team_10: {
-      priceId: process.env.STRIPE_PRICE_TEAM_10_MONTHLY,
-      amount: 19900,
-      currency: 'usd',
-      interval: 'month',
-      seats: 10,
-      team: true,
-    },
-    team_15: {
-      priceId: process.env.STRIPE_PRICE_TEAM_15_MONTHLY,
-      amount: 29900,
-      currency: 'usd',
-      interval: 'month',
-      seats: 15,
+      seats_min: 5,
+      seats_max: 50,
+      price_per_seat_cents: 2000,
+      flat_discount_cents: 100,
+      productId: process.env.STRIPE_PRODUCT_TEAM || null,
       team: true,
     },
     topup_1h: {
@@ -107,7 +95,9 @@ router.get('/prices', (_req, res) => {
       interval: null,
       ai_hours: 1,
       supports_quantity: true,
+      never_expires: true,
     },
+    trial: { ai_hours: 1, expires_days: 7 },
   });
 });
 
@@ -121,9 +111,17 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(503).json({ error: 'Billing not configured. STRIPE_SECRET_KEY missing.' });
   }
 
-  const { price_id, success_url, cancel_url, quantity: rawQuantity } = req.body;
-  if (!price_id || !success_url || !cancel_url) {
-    return res.status(400).json({ error: 'price_id, success_url, and cancel_url are required' });
+  // Two checkout shapes:
+  //   (a) Fixed-SKU: { price_id, success_url, cancel_url, quantity? }
+  //   (b) Dynamic team: { plan: 'team', seats, success_url, cancel_url }
+  const { price_id, success_url, cancel_url, quantity: rawQuantity, plan, seats: rawSeats } = req.body;
+  const isTeamCheckout = plan === 'team';
+
+  if (!success_url || !cancel_url) {
+    return res.status(400).json({ error: 'success_url and cancel_url are required' });
+  }
+  if (!isTeamCheckout && !price_id) {
+    return res.status(400).json({ error: 'price_id is required' });
   }
 
   // SECURITY: Validate redirect URLs to prevent open redirects
@@ -131,17 +129,31 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
-  // Pricing v3.1 — solo + team + topup. Mirrors ascend-backend/src/routes/billing.js.
-  const validPrices = [
-    process.env.STRIPE_PRICE_PRO_MONTHLY,
-    process.env.STRIPE_PRICE_PRO_YEARLY,
-    process.env.STRIPE_PRICE_TEAM_5_MONTHLY,
-    process.env.STRIPE_PRICE_TEAM_10_MONTHLY,
-    process.env.STRIPE_PRICE_TEAM_15_MONTHLY,
-    process.env.STRIPE_PRICE_TOPUP_1H,
-  ].filter(Boolean);
-  if (!validPrices.includes(price_id)) {
-    return res.status(400).json({ error: 'Invalid price ID' });
+  // Pricing v3.2 — solo + dynamic team + topup. Mirrors ascend-backend.
+  if (!isTeamCheckout) {
+    const validPrices = [
+      process.env.STRIPE_PRICE_PRO_MONTHLY,
+      process.env.STRIPE_PRICE_PRO_YEARLY,
+      process.env.STRIPE_PRICE_TOPUP_1H,
+    ].filter(Boolean);
+    if (!validPrices.includes(price_id)) {
+      return res.status(400).json({ error: 'Invalid price ID' });
+    }
+  }
+
+  // Validate dynamic team params.
+  const TEAM_SEATS_MIN = 5;
+  const TEAM_SEATS_MAX = 50;
+  let teamSeats = 0;
+  if (isTeamCheckout) {
+    const n = Math.floor(Number(rawSeats) || 0);
+    if (n < TEAM_SEATS_MIN || n > TEAM_SEATS_MAX) {
+      return res.status(400).json({ error: `Seats must be ${TEAM_SEATS_MIN}..${TEAM_SEATS_MAX}` });
+    }
+    teamSeats = n;
+    if (!process.env.STRIPE_PRODUCT_TEAM) {
+      return res.status(503).json({ error: 'Team checkout not configured (STRIPE_PRODUCT_TEAM missing)' });
+    }
   }
 
   try {
@@ -177,9 +189,9 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
-    // Only the hour topup is one-time; subscriptions go through
-    // Stripe `mode: 'subscription'`.
-    const isOneTime = price_id === process.env.STRIPE_PRICE_TOPUP_1H;
+    // Only the hour topup is one-time; subscriptions (solo + team) go
+    // through Stripe `mode: 'subscription'`.
+    const isOneTime = !isTeamCheckout && price_id === process.env.STRIPE_PRICE_TOPUP_1H;
 
     // Quantity is only honored for hour top-ups (1..50). Non-topup
     // line items always quantity:1.
@@ -191,11 +203,9 @@ router.post('/checkout', authenticate, async (req, res) => {
 
     // Map price_id to plan_type for webhook metadata.
     let planType = 'pro_monthly';
-    if (price_id === process.env.STRIPE_PRICE_PRO_MONTHLY) planType = 'pro_monthly';
+    if (isTeamCheckout) planType = 'team';
+    else if (price_id === process.env.STRIPE_PRICE_PRO_MONTHLY) planType = 'pro_monthly';
     else if (price_id === process.env.STRIPE_PRICE_PRO_YEARLY) planType = 'pro_yearly';
-    else if (price_id === process.env.STRIPE_PRICE_TEAM_5_MONTHLY) planType = 'team_5';
-    else if (price_id === process.env.STRIPE_PRICE_TEAM_10_MONTHLY) planType = 'team_10';
-    else if (price_id === process.env.STRIPE_PRICE_TEAM_15_MONTHLY) planType = 'team_15';
     else if (price_id === process.env.STRIPE_PRICE_TOPUP_1H) planType = 'topup_1h';
 
     // Hour top-up gated to active paid subscribers — free users
@@ -204,7 +214,7 @@ router.post('/checkout', authenticate, async (req, res) => {
       try {
         const r = await query('SELECT plan_type, plan_status FROM users WHERE id = $1', [userId]);
         const userPlan = r.rows[0];
-        const PAID = new Set(['pro_monthly', 'pro_yearly', 'team_5', 'team_10', 'team_15']);
+        const PAID = new Set(['pro_monthly', 'pro_yearly', 'team', 'team_5', 'team_10', 'team_15']);
         const isActive = userPlan?.plan_status === 'active' && PAID.has(userPlan.plan_type);
         if (!isActive) {
           return res.status(403).json({
@@ -221,20 +231,34 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
+    // Build the line item — fixed price for solo/topup, ad-hoc price_data for team.
+    const teamPriceCents = isTeamCheckout ? (teamSeats * 20 - 1) * 100 : 0;
+    const lineItem = isTeamCheckout
+      ? {
+          price_data: {
+            currency: 'usd',
+            product: process.env.STRIPE_PRODUCT_TEAM,
+            unit_amount: teamPriceCents,
+            recurring: { interval: 'month' },
+          },
+          quantity: 1,
+        }
+      : { price: price_id, quantity };
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
-      line_items: [{ price: price_id, quantity }],
+      line_items: [lineItem],
       mode: isOneTime ? 'payment' : 'subscription',
       success_url,
       cancel_url,
       metadata: {
         user_id: String(userId),
         plan: planType,
-        price_id,
         // Carry quantity to webhook so it can credit the right number
         // of hours without re-fetching line items.
         quantity: String(quantity),
+        ...(isTeamCheckout ? { seats: String(teamSeats) } : { price_id }),
       },
     });
 
@@ -370,22 +394,20 @@ router.post(
         // ---- Checkout completed (activate plan or apply topup) -----------
         case 'checkout.session.completed': {
           const userId = data.metadata?.user_id;
+          const plan = data.metadata?.plan;
 
-          // --- Topup payment -------------------------------------------------
+          // --- Legacy topup packs (questions/sessions) ----------------------
           if (data.metadata?.topup_type && userId) {
             const topupType = data.metadata.topup_type;
             const topupAmount = parseInt(data.metadata.topup_amount, 10);
             if (topupType && topupAmount > 0) {
               await addTopup(parseInt(userId, 10), topupType, topupAmount);
-              console.log(`Added topup: ${topupAmount} ${topupType} for user ${userId}`);
-
-              // Apply extras (e.g. bonus diagrams bundled with question packs)
+              console.log(`Added legacy topup: ${topupAmount} ${topupType} for user ${userId}`);
               if (data.metadata.topup_extras) {
                 try {
                   const extras = JSON.parse(data.metadata.topup_extras);
                   for (const [extraType, extraAmount] of Object.entries(extras)) {
                     await addTopup(parseInt(userId, 10), extraType, extraAmount);
-                    console.log(`Added topup extra: ${extraAmount} ${extraType} for user ${userId}`);
                   }
                 } catch (parseErr) {
                   console.error('Failed to parse topup_extras:', parseErr);
@@ -395,9 +417,28 @@ router.post(
             break;
           }
 
-          // --- Plan activation -----------------------------------------------
-          const plan = data.metadata?.plan || 'pro';
-          if (userId) {
+          // --- v3 hour top-up: never expires, written to ai_hour_topups ----
+          if (plan === 'topup_1h' && userId) {
+            const metaQty = parseInt(data.metadata?.quantity || '1', 10);
+            const hours = Number.isFinite(metaQty) && metaQty >= 1 ? metaQty : 1;
+            const amountTotal = data.amount_total || (1500 * hours);
+            try {
+              await query(
+                `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, stripe_session_id, expires_at, source)
+                 VALUES ($1, NULL, $2, $3, $4, NULL, 'topup')
+                 ON CONFLICT (stripe_session_id) WHERE stripe_session_id IS NOT NULL DO NOTHING`,
+                [parseInt(userId, 10), hours, amountTotal, data.id],
+              );
+              console.log(`Top-up credited: ${hours}h for user ${userId} (no expiry)`);
+            } catch (e) {
+              console.error('Top-up insert failed:', e.message);
+            }
+            break;
+          }
+
+          // --- Subscription plan activation --------------------------------
+          // plan: 'pro_monthly' | 'pro_yearly' | 'team' | 'team_5/10/15' (legacy)
+          if (plan && userId) {
             await query(
               "UPDATE users SET plan_type = $1, plan_status = 'active' WHERE id = $2",
               [plan, userId],
@@ -411,13 +452,13 @@ router.post(
         case 'customer.subscription.updated': {
           const customerId = data.customer;
           const status = data.status; // active | past_due | canceled | unpaid
-          // Derive plan_type from the subscription's price
-          const subPriceId = data.items?.data?.[0]?.price?.id;
-          const PRICE_M = process.env.STRIPE_PRICE_MONTHLY;
-          const PRICE_L = process.env.STRIPE_PRICE_LIFETIME;
+          const item = data.items?.data?.[0];
+          const subPriceId = item?.price?.id;
+          const subProductId = item?.price?.product;
           let planType = null;
-          if (subPriceId === PRICE_M) planType = 'monthly';
-          else if (subPriceId === PRICE_L) planType = 'lifetime';
+          if (subPriceId === process.env.STRIPE_PRICE_PRO_MONTHLY) planType = 'pro_monthly';
+          else if (subPriceId === process.env.STRIPE_PRICE_PRO_YEARLY) planType = 'pro_yearly';
+          else if (process.env.STRIPE_PRODUCT_TEAM && subProductId === process.env.STRIPE_PRODUCT_TEAM) planType = 'team';
           if (customerId) {
             if (planType) {
               await query(

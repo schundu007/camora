@@ -5,31 +5,33 @@ import { dialogAlert } from './Dialog';
 
 const BILLING_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-/* ── Pricing v3.1 — solo + team + per-hour topup ─────────────────────────
+/* ── Pricing v3.2 — solo + dynamic team + per-hour topup ─────────────────
  *
  * Three buckets:
  *
  *   Solo
- *     · Monthly         — $19/month (popular)
- *     · Yearly          — $99/year (best value, ~57% off vs monthly × 12)
+ *     · Monthly         — $19/month, 2 included AI hrs/cycle (popular)
+ *     · Yearly          — $99/year, 5 included AI hrs/cycle (best value)
  *
- *   Team (monthly only)
- *     · Team 5          — $99/month, 5 seats
- *     · Team 10         — $199/month, 10 seats
- *     · Team 15         — $299/month, 15 seats
+ *   Team (5..50 seats, billed monthly)
+ *     · Single dynamic SKU. Price = (seats × $20 − $1) / month.
+ *       Included AI hrs = ⌈seats × 0.7⌉ / cycle.
+ *       Examples: 5→$99/4h, 10→$199/7h, 15→$299/11h, 50→$999/35h.
+ *     · No fixed Stripe SKU per seat — single product + price_data per checkout.
  *
  *   AI Hours (top-up, paid users only)
- *     · 1 hour at $15. Quantity selector at checkout — Stripe charges
- *       $15 × N via the line-item quantity field. No need for separate
- *       price IDs per N. Free users see a "subscribe first" prompt
- *       (the backend also enforces this with a 403).
+ *     · 1 hour at $15. Quantity selector — Stripe charges $15 × N.
+ *       Hours never expire. Free users get a "subscribe first" prompt.
+ *
+ *   Free trial
+ *     · 1 hour, expires 7 days from signup.
  *
  * Backend price keys (kept in stripe.js / billing.js):
- *   pro_monthly, pro_yearly, team_5, team_10, team_15, topup_1h.
+ *   pro_monthly, pro_yearly, team (dynamic), topup_1h.
  */
 
 export interface PlanCard {
-  id: 'monthly' | 'yearly' | 'team_5' | 'team_10' | 'team_15';
+  id: 'monthly' | 'yearly';
   name: string;
   price: string;
   period: string;
@@ -38,7 +40,7 @@ export interface PlanCard {
   features: string[];
   cta: string;
   highlight?: 'popular' | 'best';
-  bucket: 'solo' | 'team';
+  bucket: 'solo';
 }
 
 export const SOLO_PLANS: PlanCard[] = [
@@ -50,10 +52,10 @@ export const SOLO_PLANS: PlanCard[] = [
     priceKey: 'pro_monthly',
     description: 'Full access, billed monthly. Cancel any time.',
     features: [
+      '2 AI hours included every month',
       'Unlimited Lumora live interview sessions',
       'All Capra prep topics (800+)',
       'Coding solver, system design, behavioral STAR',
-      'Voice filtering and architecture diagrams',
     ],
     cta: 'Start Monthly',
     highlight: 'popular',
@@ -67,10 +69,10 @@ export const SOLO_PLANS: PlanCard[] = [
     priceKey: 'pro_yearly',
     description: 'Same access, ~57% off vs monthly × 12.',
     features: [
+      '5 AI hours included every year',
       'Everything in Monthly',
       'Equivalent to $8.25/month',
       'One annual charge — set and forget',
-      'Best for active interview cycles',
     ],
     cta: 'Start Yearly',
     highlight: 'best',
@@ -78,64 +80,17 @@ export const SOLO_PLANS: PlanCard[] = [
   },
 ];
 
-export const TEAM_PLANS: PlanCard[] = [
-  {
-    id: 'team_5',
-    name: 'Team 5',
-    price: '$99',
-    period: '/month',
-    priceKey: 'team_5',
-    description: 'Up to 5 seats. Single invoice.',
-    features: [
-      'Everything in Monthly',
-      '5 team seats',
-      'Centralized billing (one invoice)',
-      'Per-member usage breakdown',
-      'Pooled hour top-ups',
-    ],
-    cta: 'Start Team 5',
-    bucket: 'team',
-  },
-  {
-    id: 'team_10',
-    name: 'Team 10',
-    price: '$199',
-    period: '/month',
-    priceKey: 'team_10',
-    description: 'Up to 10 seats. For small teams.',
-    features: [
-      'Everything in Team 5',
-      '10 team seats',
-      'Pooled hour top-ups',
-      'Bootcamp / cohort friendly',
-    ],
-    cta: 'Start Team 10',
-    highlight: 'popular',
-    bucket: 'team',
-  },
-  {
-    id: 'team_15',
-    name: 'Team 15',
-    price: '$299',
-    period: '/month',
-    priceKey: 'team_15',
-    description: 'Up to 15 seats. Best per-seat rate.',
-    features: [
-      'Everything in Team 10',
-      '15 team seats',
-      'Effective $19.93/seat',
-      'For larger cohorts and recruiting teams',
-    ],
-    cta: 'Start Team 15',
-    highlight: 'best',
-    bucket: 'team',
-  },
-];
-
-export const PLANS: PlanCard[] = [...SOLO_PLANS, ...TEAM_PLANS];
+export const PLANS: PlanCard[] = [...SOLO_PLANS];
 
 const HOUR_RATE_USD = 15;
 const HOUR_RATE_DISPLAY = `$${HOUR_RATE_USD}`;
+
+// Dynamic team formulas — must match backend (computeTeamPriceCents /
+// computeTeamIncludedHours in routes/billing.js).
+const TEAM_SEATS_MIN = 5;
+const TEAM_SEATS_MAX = 50;
+const teamMonthlyPrice = (seats: number) => seats * 20 - 1;
+const teamIncludedHours = (seats: number) => Math.ceil(seats * 0.7);
 
 /* ── Shared price fetching hook ── */
 export function usePlanPrices() {
@@ -167,15 +122,24 @@ export function usePlanPrices() {
   return prices;
 }
 
-/* ── Shared checkout handler ── */
+/* ── Shared checkout handler ──
+ * Two shapes:
+ *   (a) Fixed SKU:  checkout(priceId, name, { quantity? })  — solo + topup
+ *   (b) Team:       checkout('', name, { team: { seats } }) — dynamic price_data
+ */
 export function useCheckout() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState('');
 
-  const checkout = async (priceId: string, planName: string, opts?: { quantity?: number }) => {
-    if (!priceId) { navigate('/pricing'); return; }
+  const checkout = async (
+    priceId: string,
+    planName: string,
+    opts?: { quantity?: number; team?: { seats: number } },
+  ) => {
+    const isTeam = !!opts?.team;
+    if (!isTeam && !priceId) { navigate('/pricing'); return; }
     if (!token) { navigate('/login'); return; }
     setLoading(planName);
     const raw = searchParams.get('returnTo');
@@ -188,10 +152,11 @@ export function useCheckout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          price_id: priceId,
           success_url: successUrl,
           cancel_url: window.location.href,
-          ...(opts?.quantity ? { quantity: opts.quantity } : {}),
+          ...(isTeam
+            ? { plan: 'team', seats: opts!.team!.seats }
+            : { price_id: priceId, ...(opts?.quantity ? { quantity: opts.quantity } : {}) }),
         }),
       });
       if (!resp.ok) {
@@ -227,7 +192,7 @@ export function useCheckout() {
 function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   plan: PlanCard;
   prices: Record<string, { priceId: string }> | null;
-  checkout: (priceId: string, planName: string) => void;
+  checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
   loading: string;
   navigate: ReturnType<typeof useNavigate>;
 }) {
@@ -290,7 +255,7 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
 /* ── Hour top-up card with quantity selector ── */
 function HourTopupCard({ prices, checkout, loading }: {
   prices: Record<string, { priceId: string }> | null;
-  checkout: (priceId: string, planName: string, opts?: { quantity?: number }) => void;
+  checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
   loading: string;
 }) {
   const navigate = useNavigate();
@@ -312,7 +277,7 @@ function HourTopupCard({ prices, checkout, loading }: {
         <h3 className="text-xl font-extrabold mb-1" style={{ color: 'var(--text-primary)' }}>AI Hours</h3>
         <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
           {HOUR_RATE_DISPLAY}/hour. Pick how many — Stripe charges {HOUR_RATE_DISPLAY} × quantity.
-          90-day expiry per hour. Subscribers only.
+          Hours never expire. Subscribers only.
         </p>
         <div className="flex items-center gap-2">
           {presets.map((n) => (
@@ -364,7 +329,142 @@ function HourTopupCard({ prices, checkout, loading }: {
   );
 }
 
-/* ── Pricing Cards — solo + team + topup ── */
+/* ── Team plan card with dynamic seat slider ──
+ * One Stripe Product, ad-hoc price_data per checkout. Live math:
+ *   monthly = seats × $20 − $1
+ *   included = ⌈seats × 0.7⌉ AI hrs/cycle
+ */
+function TeamPlanCard({ checkout, loading }: {
+  checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
+  loading: string;
+}) {
+  const [seats, setSeats] = useState(10);
+  const monthly = teamMonthlyPrice(seats);
+  const hours = teamIncludedHours(seats);
+  const perSeat = (monthly / seats).toFixed(2);
+  const presets = [5, 10, 15, 25, 50];
+  const planName = `Team (${seats} seats)`;
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ background: 'var(--cam-primary-dk)', border: '2px solid var(--cam-primary-dk)' }}
+    >
+      <div className="p-7 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-7">
+        {/* Left: identity + features */}
+        <div className="text-white">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>TEAM</span>
+            <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>5–50 seats · billed monthly</span>
+          </div>
+          <h3 className="text-2xl md:text-[26px] font-extrabold mb-2 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            One subscription. Your whole cohort.
+          </h3>
+          <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.78)' }}>
+            Pool AI hours across the team. Single invoice. Per-member usage breakdown for owners.
+            Designed for bootcamps, recruiters, and study groups.
+          </p>
+          <ul className="space-y-2 text-[12.5px]" style={{ color: 'rgba(255,255,255,0.92)' }}>
+            {[
+              `${hours} pooled AI hours every month (${(hours / seats).toFixed(2)} hrs/seat)`,
+              'Centralized billing — one invoice, multiple seats',
+              'Per-member usage breakdown + caps',
+              'Pooled top-ups (never expire)',
+              'Auto top-up with monthly cap',
+            ].map((f, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right: seat slider + live price */}
+        <div className="rounded-xl p-5 md:p-6 flex flex-col" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)' }}>YOUR TEAM</span>
+            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>${perSeat}/seat</span>
+          </div>
+          <div className="flex items-baseline gap-1.5 mb-1">
+            <span className="text-5xl md:text-6xl font-extrabold leading-none text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              ${monthly}
+            </span>
+            <span className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>/month</span>
+          </div>
+          <div className="text-[11.5px] mb-5" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
+            {seats} seats · {hours} pooled hrs/mo
+          </div>
+
+          {/* Slider */}
+          <div className="mb-3">
+            <input
+              type="range"
+              min={TEAM_SEATS_MIN}
+              max={TEAM_SEATS_MAX}
+              step={1}
+              value={seats}
+              onChange={(e) => setSeats(parseInt(e.target.value, 10))}
+              className="w-full accent-[var(--cam-gold-leaf)]"
+              style={{ accentColor: 'var(--cam-gold-leaf)' }}
+              aria-label="Team seats"
+            />
+            <div className="flex items-center justify-between text-[10px] mt-1.5" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>
+              <span>{TEAM_SEATS_MIN}</span>
+              <span>{TEAM_SEATS_MAX}</span>
+            </div>
+          </div>
+
+          {/* Presets + numeric input */}
+          <div className="flex items-center gap-2 flex-wrap mb-5">
+            {presets.map((n) => (
+              <button
+                key={n}
+                onClick={() => setSeats(n)}
+                className="text-[11px] font-bold tracking-wider px-3 py-1.5 rounded-md transition-colors"
+                style={{
+                  background: seats === n ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+                  color: seats === n ? 'var(--cam-primary-dk)' : '#FFFFFF',
+                  border: `1px solid ${seats === n ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.14)'}`,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                {n}
+              </button>
+            ))}
+            <input
+              type="number"
+              min={TEAM_SEATS_MIN}
+              max={TEAM_SEATS_MAX}
+              value={seats}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (Number.isFinite(v)) setSeats(Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, v)));
+              }}
+              className="w-16 px-2 py-1.5 text-[11px] rounded-md focus:outline-none focus:ring-1"
+              style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.14)', color: '#FFFFFF', fontFamily: 'var(--font-mono)' }}
+              aria-label="Team seats numeric input"
+            />
+          </div>
+
+          <button
+            onClick={() => checkout('', planName, { team: { seats } })}
+            disabled={loading === planName}
+            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+            style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }}
+          >
+            {loading === planName ? 'Processing…' : `Start Team — $${monthly}/month`}
+          </button>
+          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Cancel any time · Invite team after checkout
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Pricing Cards — solo + dynamic team + topup ── */
 export default function PricingCards({
   showFree: _showFree,
   variant: _variant,
@@ -391,24 +491,20 @@ export default function PricingCards({
         </div>
       </div>
 
-      {/* ── Team plans ── */}
+      {/* ── Team plan (dynamic) ── */}
       <div>
         <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>TEAMS</h2>
+          <h2 className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>TEAM</h2>
           <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Bootcamps, cohorts, recruiting teams</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {TEAM_PLANS.map((plan) => (
-            <PlanCardView key={plan.id} plan={plan} prices={prices} checkout={checkout} loading={loading} navigate={navigate} />
-          ))}
-        </div>
+        <TeamPlanCard checkout={checkout} loading={loading} />
       </div>
 
       {/* ── Hour top-up (paid users only) ── */}
       <div>
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>HOURS</h2>
-          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stack on top of your subscription</span>
+          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stack on top of your subscription · never expire</span>
         </div>
         <HourTopupCard prices={prices} checkout={checkout} loading={loading} />
       </div>
