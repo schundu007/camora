@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import UserDropdown from '../shared/UserDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from '../shared/CamoraLogo';
-import CommandPalette from './CommandPalette';
+// Lazy: CommandPalette pulls in 4MB of topic data (codingTopics,
+// systemDesignTopics, behavioralTopics). It's only opened on Cmd+K, so
+// loading those eagerly inflates every page that mounts TopBar.
+const CommandPalette = lazy(() => import('./CommandPalette'));
 import { NAV_LINKS } from '../../lib/constants';
 
 interface TopBarProps {
@@ -309,8 +312,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
         </>
       )}
 
-      {/* Command palette modal */}
-      <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
+      {/* Command palette modal — only mount the lazy chunk once user opens it */}
+      {cmdOpen && (
+        <Suspense fallback={null}>
+          <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

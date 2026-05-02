@@ -129,81 +129,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Strip the `?login=success` flag the OAuth callback adds to the URL.
-      // Cosmetic — the actual auth comes from the cariara_sso cookie + the
-      // /me call below. We don't want the flag lingering in browser history.
+      // Detect a fresh OAuth-callback hydrate. The backend redirects to
+      // /?login=success after a successful Google login (no token in URL —
+      // the cariara_sso cookie carries auth). We strip the flag from the
+      // URL bar and remember it so post-auth side-effects (referral
+      // application) can run once below.
+      let wasFreshLogin = false;
       try {
         const sp = new URLSearchParams(window.location.search);
         if (sp.has('login')) {
+          wasFreshLogin = sp.get('login') === 'success';
           sp.delete('login');
           const qs = sp.toString();
-          window.history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+          window.history.replaceState(
+            null, '',
+            window.location.pathname + (qs ? '?' + qs : '') + window.location.hash,
+          );
         }
-      } catch { /* ignore — URL APIs unavailable in old browsers */ }
-
-      // LEGACY PATH (will be removed in a future PR): older OAuth callbacks
-      // delivered the JWT in the URL hash (#access_token=…). The current
-      // callback strips the token and relies on the cookie + /me round-trip
-      // below. This block stays during the migration so a stale tab opened
-      // by a user who logged in pre-migration still completes auth.
-      const hash = window.location.hash;
-      if (hash && hash.includes('access_token=')) {
-        const params: Record<string, string> = {};
-        for (const part of hash.substring(1).split('&')) {
-          const eqIdx = part.indexOf('=');
-          if (eqIdx === -1) continue;
-          params[part.substring(0, eqIdx)] = decodeURIComponent(part.substring(eqIdx + 1));
-        }
-        const hashToken = params['access_token'];
-        if (hashToken) {
-          // Clear hash from URL
-          window.history.replaceState(null, '', window.location.pathname);
-          // Validate with backend
-          try {
-            const res = await fetch(`${AUTH_API_URL}/api/v1/auth/me`, {
-              headers: { Authorization: `Bearer ${hashToken}` },
-              credentials: 'include',
-            });
-            if (res.ok) {
-              const data = await res.json();
-              // Prefer the freshly minted short-lived token from /me if present.
-              setToken(data.access_token || hashToken);
-              // Backend /me responses come in two shapes:
-              //   (a) flat:    { id, email, name, picture, ..., access_token }   — lumora-backend
-              //   (b) nested:  { authenticated: true, user: { id, email, name, ... } }  — ascend-backend
-              // `lumorab.cariara.com` runs ascend-backend, so we unwrap data.user
-              // when present; otherwise we strip the access_token from the flat body.
-              const { access_token: _at, ...flat } = data;
-              setUser(normalizeUser(data.user ?? flat));
-            }
-          } catch { /* network error */ }
-          // Check onboarding
-          try {
-            const onbRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
-              credentials: 'include',
-              headers: { Authorization: `Bearer ${hashToken}` },
-            });
-            if (onbRes.ok) {
-              const data = await onbRes.json();
-              setOnboardingCompleted(data.onboarding_completed);
-            }
-          } catch { /* capra backend may not be available */ }
-
-          // Apply referral code if present (runs once after OAuth callback)
-          const referralCode = localStorage.getItem('camora_referral_code');
-          if (referralCode && hashToken) {
-            fetch(`${CAPRA_API_URL}/api/referral/apply`, {
-              credentials: 'include',
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${hashToken}` },
-              body: JSON.stringify({ code: referralCode }),
-            }).then(() => localStorage.removeItem('camora_referral_code')).catch(() => {});
-          }
-
-          setIsLoading(false);
-          return;
-        }
-      }
+      } catch { /* URL APIs unavailable */ }
 
       // Production: the cariara_sso cookie is now httpOnly, so we can't read it
       // from document.cookie. Instead, call /auth/me with credentials:'include'
@@ -263,6 +206,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setOnboardingCompleted(o.onboarding_completed);
               }
             } catch { /* capra backend may not be available */ }
+
+            // Fresh-login side-effect: apply any referral code stashed in
+            // localStorage during the OAuth round-trip. Only runs when the
+            // ?login=success flag was present, so a normal page-load hydrate
+            // doesn't keep retrying. The endpoint is idempotent server-side
+            // but the localStorage clear-on-success is the canonical signal.
+            if (wasFreshLogin) {
+              const referralCode = localStorage.getItem('camora_referral_code');
+              if (referralCode) {
+                fetch(`${CAPRA_API_URL}/api/referral/apply`, {
+                  credentials: 'include',
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bearerToken}` },
+                  body: JSON.stringify({ code: referralCode }),
+                }).then(() => localStorage.removeItem('camora_referral_code')).catch(() => {});
+              }
+            }
           }
         }
       } catch { /* not logged in or network error */ }

@@ -84,6 +84,12 @@ async function runMigrations() {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(255)');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ');
     await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ');
+    // JWT generation counter — every issued token carries this value as `gen`.
+    // Incrementing this column invalidates every outstanding token for the
+    // user (logout-all-sessions / suspicious-activity revocation). Default 1
+    // so existing rows + any backwards-issued tokens with no `gen` claim still
+    // match (we only enforce the check when `gen` is present in the token).
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_generation INTEGER NOT NULL DEFAULT 1');
     console.log('[Migrations] Onboarding columns ensured');
 
     // Diagram cache table — store generated diagrams to avoid re-generating
