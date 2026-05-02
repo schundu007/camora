@@ -596,9 +596,21 @@ const corsOptions = {
     if (!origin) {
       return callback(null, true);
     }
-    // Allow chrome/firefox extensions
+    // Allow specific browser-extension origins. Was a blanket allow for any
+    // chrome-extension:// or moz-extension:// origin — that meant any
+    // installed extension could make credentialed requests with the SSO
+    // cookie, including silently calling checkout/admin routes. Now only
+    // extensions whose ID is in ALLOWED_EXTENSION_IDS env get through.
     if (origin.startsWith('chrome-extension://') || origin.startsWith('moz-extension://')) {
-      return callback(null, true);
+      const allowedIds = (process.env.ALLOWED_EXTENSION_IDS || '')
+        .split(',').map((s) => s.trim()).filter(Boolean);
+      const id = origin.split('://')[1] || '';
+      if (allowedIds.includes(id)) return callback(null, true);
+      // Not in allowlist — block in prod, warn in dev so devs can find the gap
+      if (process.env.NODE_ENV === 'production') {
+        return callback(new Error('Extension not allowed by CORS'));
+      }
+      console.warn(`CORS extension origin blocked: ${origin} (set ALLOWED_EXTENSION_IDS to allow)`);
     }
     // Check against whitelist (exact match)
     if (ALLOWED_ORIGINS.includes(origin)) {
@@ -712,13 +724,18 @@ app.post('/api/visitors/pageview', apiLimiter, express.text({ type: 'text/plain'
     if (typeof body === 'string') {
       try { body = JSON.parse(body || '{}'); } catch { body = {}; }
     }
-    const { path, email, referrer } = body || {};
+    const { path, referrer } = body || {};
     if (!path) return res.status(400).json({ error: 'path required' });
+    // Note: client-supplied `email` field is intentionally ignored here.
+    // Anyone could POST an arbitrary email and poison the analytics
+    // (impersonation, competitor smear, conversion-funnel skew). For
+    // authenticated traffic, derive identity server-side via the SSO cookie
+    // if/when needed. Until then, the email column stays NULL.
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
     const userAgent = req.headers['user-agent'] || null;
     await query(
-      'INSERT INTO page_views (path, email, ip, user_agent, referrer) VALUES ($1, $2, $3, $4, $5)',
-      [path, email || null, ip, userAgent, referrer || null]
+      'INSERT INTO page_views (path, email, ip, user_agent, referrer) VALUES ($1, NULL, $2, $3, $4)',
+      [path, ip, userAgent, referrer || null]
     );
     res.json({ ok: true });
   } catch (err) {

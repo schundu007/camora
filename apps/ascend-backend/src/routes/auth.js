@@ -1,11 +1,25 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { query } from '../lib/shared-db.js';
 import { createToken, setSSOCookie, clearSSOCookie } from '../lib/shared-auth.js';
 import { logger } from '../middleware/requestLogger.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import { authenticate, requireAdmin } from '../middleware/authenticate.js';
 import { initUser } from '../config/database.js';
+
+// CSRF nonce cookie for OAuth state — short TTL, signed-cookie-free
+// (we just compare values), httpOnly so JS can't exfiltrate, sameSite=lax
+// so it survives the Google round-trip back to our callback.
+const OAUTH_STATE_COOKIE = 'cariara_oauth_state';
+const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 min — covers slow user
+
+function safeEq(a, b) {
+  const ab = Buffer.from(String(a || ''));
+  const bb = Buffer.from(String(b || ''));
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
 
 const router = Router();
 
@@ -22,14 +36,33 @@ const FRONTEND_URL = process.env.FRONTEND_URL
 
 /**
  * GET /api/auth/google/login — Redirect to Google OAuth
+ *
+ * CSRF protection: generate a random nonce, set it as an httpOnly cookie,
+ * include it in the state param (`<nonce>:<returnTo>`). On callback we
+ * verify the cookie value matches the nonce in state — without this, an
+ * attacker could craft a login URL that returns control to our callback
+ * with their own Google identity (login CSRF).
  */
 router.get('/google/login', (req, res) => {
   if (!GOOGLE_CLIENT_ID) {
     return res.status(503).json({ error: 'Google OAuth not configured' });
   }
 
-  // Preserve the redirect URL through OAuth flow via state param
-  const returnTo = req.query.redirect || '/';
+  // Cap and sanitize returnTo — only relative paths starting with /
+  let returnTo = String(req.query.redirect || '/').slice(0, 200);
+  if (!returnTo.startsWith('/') || returnTo.startsWith('//')) returnTo = '/';
+
+  // Generate CSRF nonce + bind to cookie
+  const nonce = randomBytes(24).toString('base64url');
+  res.cookie(OAUTH_STATE_COOKIE, nonce, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: OAUTH_STATE_MAX_AGE_MS,
+    path: '/',
+  });
+
+  const state = `${nonce}:${returnTo}`;
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: GOOGLE_REDIRECT_URI,
@@ -37,7 +70,7 @@ router.get('/google/login', (req, res) => {
     scope: 'openid email profile',
     access_type: 'offline',
     prompt: 'consent',
-    state: returnTo,
+    state,
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
@@ -47,9 +80,34 @@ router.get('/google/login', (req, res) => {
  */
 router.get('/google/callback', async (req, res) => {
   const { code, state } = req.query;
-  let returnTo = (typeof state === 'string' && state.startsWith('/')) ? state : '/';
+
+  // CSRF check — state must be `<nonce>:<returnTo>` and nonce must match
+  // the value we set in the cookie at /login. Backwards-compatible: legacy
+  // logins where state was just the returnTo path (no colon) get a 400 so
+  // they re-enter the login flow with the new nonce.
+  let nonce = '';
+  let returnToFromState = '/';
+  if (typeof state === 'string' && state.includes(':')) {
+    const idx = state.indexOf(':');
+    nonce = state.slice(0, idx);
+    returnToFromState = state.slice(idx + 1);
+  } else if (typeof state === 'string' && state.startsWith('/')) {
+    // Legacy flow — fail closed.
+    res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
+    return res.redirect(`${FRONTEND_URL}?error=oauth_state_legacy`);
+  }
+  const cookieNonce = req.cookies?.[OAUTH_STATE_COOKIE];
+  if (!nonce || !cookieNonce || !safeEq(nonce, cookieNonce)) {
+    res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
+    logger.warn({ ip: req.ip }, '[oauth] state nonce mismatch — possible CSRF attempt');
+    return res.redirect(`${FRONTEND_URL}?error=oauth_state_invalid`);
+  }
+  // One-time use: clear cookie now that we've validated it
+  res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
+
+  let returnTo = returnToFromState;
   // Prevent open redirect (e.g., //../evil.com or //evil.com)
-  if (returnTo.includes('://') || returnTo.startsWith('//') || returnTo.includes('\\')) returnTo = '/';
+  if (!returnTo.startsWith('/') || returnTo.includes('://') || returnTo.startsWith('//') || returnTo.includes('\\')) returnTo = '/';
   if (!code) return res.redirect(`${FRONTEND_URL}?error=no_code`);
 
   // SECURITY: Validate code parameter
@@ -223,16 +281,30 @@ router.post('/refresh', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Verify user still exists and is active before issuing new token
-    const userCheck = await query('SELECT id, is_active FROM users WHERE id = $1', [parseInt(payload.sub, 10)]);
-    if (!userCheck.rows[0] || userCheck.rows[0].is_active === false) {
+    // Re-query identity on every refresh so the new token carries CURRENT
+    // email/name/picture from the DB, not the values frozen in the expired
+    // token. Critical for accounts that updated their Google profile or had
+    // an admin email change — without this, stale claims could persist
+    // indefinitely across renewals.
+    const userCheck = await query(
+      'SELECT id, email, name, picture, is_active FROM users WHERE id = $1',
+      [parseInt(payload.sub, 10)],
+    );
+    const user = userCheck.rows[0];
+    if (!user || user.is_active === false) {
       return res.status(401).json({ error: 'Account not found or inactive' });
     }
 
-    // Issue fresh token via shared-auth
+    // Issue fresh token with re-queried claims
     const newToken = createToken(
-      { sub: payload.sub, email: payload.email, name: payload.name || '', picture: payload.picture || '', type: 'access' },
-      '30d'
+      {
+        sub: String(user.id),
+        email: user.email,
+        name: user.name || '',
+        picture: user.picture || '',
+        type: 'access',
+      },
+      '30d',
     );
 
     setSSOCookie(res, newToken);

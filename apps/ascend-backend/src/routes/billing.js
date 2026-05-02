@@ -27,8 +27,14 @@ function computeTeamIncludedHours(seats) {
 }
 
 // Admin emails get full plan access without a Stripe subscription record.
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+// Read from env only — no in-source fallback. If ADMIN_EMAILS is unset,
+// the list is empty and nobody gets the bypass (fail closed). Operator
+// must explicitly opt in by setting OWNER_EMAILS / ADMIN_EMAILS on Railway.
+const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
   .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+if (ADMIN_EMAILS.length === 0) {
+  logger.warn('[billing] OWNER_EMAILS/ADMIN_EMAILS unset — no admin bypass active');
+}
 
 function safeCompareApiKey(provided, expected) {
   if (!provided || !expected) return false;

@@ -42,6 +42,14 @@ export async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
+    // Reject non-access tokens (e.g., a future refresh-type token must NOT
+    // pass the access-route gate). Ascend's jwtAuth enforces this — lumora
+    // wasn't, so a parallel token-type with a valid signature would have
+    // been accepted here.
+    if (payload?.type && payload.type !== 'access') {
+      return res.status(401).json({ error: 'Wrong token type' });
+    }
+
     const email = payload.email;
     if (!email) {
       return res.status(401).json({ error: 'Token missing email claim' });
@@ -76,9 +84,11 @@ export async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'User account inactive' });
     }
 
-    // Set admin flag for usage bypass
-    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-    user.is_admin = ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    // Set admin flag for usage bypass — env-only, no in-source fallback.
+    // If OWNER_EMAILS / ADMIN_EMAILS is unset, nobody gets is_admin (fail closed).
+    const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
+      .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    user.is_admin = !!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
 
     req.user = user;
     next();

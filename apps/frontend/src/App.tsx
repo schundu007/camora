@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import SiteNav from './components/shared/SiteNav';
 import RootShell from './components/layout/RootShell';
 import { PaywallGate } from './components/shared/ui/PaywallGate';
+import { isOwner } from './lib/owner';
 import { usePageTracker } from './hooks/usePageTracker';
 import { DialogProvider } from './components/shared/Dialog';
 import { CelebrationProvider } from './components/shared/Celebration';
@@ -209,6 +210,25 @@ function PaidRoute({ children, feature = 'Lumora Live Interview' }: { children: 
   );
 }
 
+/**
+ * OwnerRoute — staff-only route guard. Protects internal admin docs
+ * (/docs/admin/*) and similar surfaces that expose Stripe IDs, env
+ * names, deployment topology, refund procedures. Was an unauth public
+ * surface before PR-3.
+ */
+function OwnerRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) {
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+  }
+  if (!isOwner(user?.email)) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
 function PaidShellRoute({ children, feature = 'this feature' }: { children: React.ReactNode; feature?: string }) {
   return (
     <ProtectedRoute>
@@ -293,17 +313,20 @@ export function App() {
           <Route path="/docs/desktop" element={<DesktopDocsPage />} />
           <Route path="/docs/voice-filtering" element={<VoiceFilteringDocsPage />} />
           <Route path="/docs/audio-setup" element={<AudioSetupDocsPage />} />
-          <Route path="/docs/admin" element={<AdminOverviewPage />} />
-          <Route path="/docs/admin/stripe" element={<AdminStripePage />} />
-          <Route path="/docs/admin/env-vars" element={<AdminEnvVarsPage />} />
-          <Route path="/docs/admin/deployment" element={<AdminDeploymentPage />} />
-          <Route path="/docs/admin/database" element={<AdminDatabasePage />} />
-          <Route path="/docs/admin/refunds" element={<AdminRefundsPage />} />
-          <Route path="/docs/admin/incidents" element={<AdminIncidentsPage />} />
-          <Route path="/docs/admin/lumora-live" element={<AdminLumoraLivePage />} />
-          <Route path="/docs/admin/lumora-coding" element={<AdminLumoraCodingPage />} />
-          <Route path="/docs/admin/lumora-design" element={<AdminLumoraDesignPage />} />
-          <Route path="/admin/teams" element={<ProtectedRoute><AdminTeamsPage /></ProtectedRoute>} />
+          {/* Internal staff docs — gate behind owner-email check. Previously
+              these were unauth public, exposing Stripe IDs / env names /
+              deployment topology / refund procedures to anyone with a URL. */}
+          <Route path="/docs/admin" element={<OwnerRoute><AdminOverviewPage /></OwnerRoute>} />
+          <Route path="/docs/admin/stripe" element={<OwnerRoute><AdminStripePage /></OwnerRoute>} />
+          <Route path="/docs/admin/env-vars" element={<OwnerRoute><AdminEnvVarsPage /></OwnerRoute>} />
+          <Route path="/docs/admin/deployment" element={<OwnerRoute><AdminDeploymentPage /></OwnerRoute>} />
+          <Route path="/docs/admin/database" element={<OwnerRoute><AdminDatabasePage /></OwnerRoute>} />
+          <Route path="/docs/admin/refunds" element={<OwnerRoute><AdminRefundsPage /></OwnerRoute>} />
+          <Route path="/docs/admin/incidents" element={<OwnerRoute><AdminIncidentsPage /></OwnerRoute>} />
+          <Route path="/docs/admin/lumora-live" element={<OwnerRoute><AdminLumoraLivePage /></OwnerRoute>} />
+          <Route path="/docs/admin/lumora-coding" element={<OwnerRoute><AdminLumoraCodingPage /></OwnerRoute>} />
+          <Route path="/docs/admin/lumora-design" element={<OwnerRoute><AdminLumoraDesignPage /></OwnerRoute>} />
+          <Route path="/admin/teams" element={<OwnerRoute><AdminTeamsPage /></OwnerRoute>} />
           <Route path="/flyer" element={<FlyerPage />} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}
