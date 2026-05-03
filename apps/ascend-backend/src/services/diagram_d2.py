@@ -56,50 +56,105 @@ def _rsvg_path() -> str | None:
     return shutil.which("rsvg-convert")
 
 
-# ── Provider hints for the prompt ──────────────────────────────────────────
-# D2 doesn't enforce strict service names — the model writes free-form
-# labels — but we do want canonical naming so an Azure diagram says
-# "Cosmos DB" not "DynamoDB". This list is the authoritative palette per
-# provider; the prompt asks Claude to draw from it.
-PROVIDER_PALETTE = {
-    "aws": [
-        "API Gateway", "ALB", "NLB", "CloudFront", "Route53", "WAF",
-        "EC2", "Lambda", "ECS", "EKS", "Fargate", "Auto Scaling Group",
-        "S3", "EBS", "EFS",
-        "RDS", "Aurora", "DynamoDB", "ElastiCache (Redis)", "DocumentDB",
-        "Redshift", "Athena", "Glue",
-        "SQS", "SNS", "Kinesis", "EventBridge", "MSK (Kafka)",
-        "Cognito", "IAM", "KMS", "Secrets Manager",
-        "CloudWatch", "X-Ray", "CloudTrail",
-    ],
-    "gcp": [
-        "API Gateway", "Cloud Load Balancing", "Cloud CDN", "Cloud DNS",
-        "Compute Engine", "Cloud Functions", "Cloud Run", "GKE",
-        "Cloud Storage", "Persistent Disk", "Filestore",
-        "Cloud SQL", "Cloud Spanner", "Firestore", "Bigtable", "Memorystore",
-        "BigQuery", "Dataproc", "Dataflow",
-        "Pub/Sub", "Eventarc",
-        "Identity Platform", "Cloud IAM", "Cloud KMS", "Secret Manager",
-        "Cloud Monitoring", "Cloud Trace", "Cloud Audit Logs",
-    ],
-    "azure": [
-        "API Management", "Azure Front Door", "Application Gateway",
-        "Azure Load Balancer", "Azure CDN", "Azure DNS",
-        "Azure VMs", "Azure Functions", "Container Instances",
-        "Container Apps", "AKS", "App Service",
-        "Azure Blob Storage", "Managed Disks", "Azure Files",
-        "Azure SQL Database", "Cosmos DB", "Azure Cache for Redis",
-        "Synapse Analytics", "Data Factory",
-        "Service Bus", "Event Grid", "Event Hubs",
-        "Azure AD / Entra", "Key Vault",
-        "Azure Monitor", "Application Insights",
-    ],
+# ── Provider icon palette ──────────────────────────────────────────────────
+# Maps canonical service name → icons.terrastruct.com SVG URL. The prompt
+# embeds this whole map for the chosen provider so the LLM can pick from a
+# CLOSED set of icons. URL hallucination is the failure mode this guards
+# against — if a service isn't in the palette, the LLM falls back to a
+# labeled rectangle (which still renders cleanly in D2).
+#
+# To grow: add an entry. The URL pattern is:
+#   https://icons.terrastruct.com/<vendor>%2F<category>%2F<file>.svg
+# (the %2F is a URL-encoded slash). Verify a URL in a browser before
+# adding so we don't pollute the palette with 404s.
+# NOTE: AWS uses hyphens in filenames, Azure uses spaces. GCP uses hyphens.
+# All paths verified against icons.terrastruct.com index. To verify a new
+# entry: `curl -sI <url>` should return 200, not 403. URL-encode spaces as
+# %20 and `&` as %26 (and `+` as %2B in the Azure Management category).
+PROVIDER_ICONS = {
+    "aws": {
+        "CloudFront": "https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FAmazon-CloudFront.svg",
+        "Route53": "https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FAmazon-Route-53.svg",
+        "API Gateway": "https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FAmazon-API-Gateway.svg",
+        "ALB": "https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FElastic-Load-Balancing.svg",
+        "NLB": "https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FElastic-Load-Balancing.svg",
+        "WAF": "https://icons.terrastruct.com/aws%2FSecurity%2C%20Identity%2C%20%26%20Compliance%2FAWS-WAF.svg",
+        "EC2": "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-EC2.svg",
+        "Lambda": "https://icons.terrastruct.com/aws%2FCompute%2FAWS-Lambda.svg",
+        "ECS": "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Container-Service.svg",
+        "EKS": "https://icons.terrastruct.com/aws%2FCompute%2FAmazon-Elastic-Kubernetes-Service.svg",
+        "Fargate": "https://icons.terrastruct.com/aws%2FCompute%2FAWS-Fargate.svg",
+        "S3": "https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3.svg",
+        "RDS": "https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-RDS.svg",
+        "Aurora": "https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-Aurora.svg",
+        "DynamoDB": "https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-DynamoDB.svg",
+        "ElastiCache": "https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-ElastiCache.svg",
+        "Redshift": "https://icons.terrastruct.com/aws%2FAnalytics%2FAmazon-Redshift.svg",
+        "Athena": "https://icons.terrastruct.com/aws%2FAnalytics%2FAmazon-Athena.svg",
+        "Glue": "https://icons.terrastruct.com/aws%2FAnalytics%2FAWS-Glue.svg",
+        "Kinesis": "https://icons.terrastruct.com/aws%2FAnalytics%2FAmazon-Kinesis.svg",
+        "SQS": "https://icons.terrastruct.com/aws%2FApplication%20Integration%2FAmazon-Simple-Queue-Service-SQS.svg",
+        "SNS": "https://icons.terrastruct.com/aws%2FApplication%20Integration%2FAmazon-Simple-Notification-Service-SNS.svg",
+        "EventBridge": "https://icons.terrastruct.com/aws%2FApplication%20Integration%2FAmazon-EventBridge.svg",
+        "Cognito": "https://icons.terrastruct.com/aws%2FSecurity%2C%20Identity%2C%20%26%20Compliance%2FAmazon-Cognito.svg",
+        "KMS": "https://icons.terrastruct.com/aws%2FSecurity%2C%20Identity%2C%20%26%20Compliance%2FAWS-Key-Management-Service.svg",
+        "CloudWatch": "https://icons.terrastruct.com/aws%2FManagement%20%26%20Governance%2FAmazon-CloudWatch.svg",
+        "X-Ray": "https://icons.terrastruct.com/aws%2FDeveloper%20Tools%2FAWS-X-Ray.svg",
+    },
+    "gcp": {
+        "Cloud Load Balancing": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FNetworking%2FCloud%20Load%20Balancing.svg",
+        "Cloud CDN": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FNetworking%2FCloud%20CDN.svg",
+        "Cloud DNS": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FNetworking%2FCloud%20DNS.svg",
+        "Compute Engine": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FCompute%2FCompute%20Engine.svg",
+        "Cloud Functions": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FCompute%2FCloud%20Functions.svg",
+        "Cloud Run": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FCompute%2FCloud%20Run.svg",
+        "GKE": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FCompute%2FKubetnetes%20Engine.svg",
+        "Cloud Storage": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FStorage%2FCloud%20Storage.svg",
+        "Cloud SQL": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FDatabases%2FCloud%20SQL.svg",
+        "Cloud Spanner": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FDatabases%2FCloud%20Spanner.svg",
+        "Firestore": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FDatabases%2FCloud%20Firestore.svg",
+        "Bigtable": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FDatabases%2FCloud%20Bigtable.svg",
+        "Memorystore": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FDatabases%2FCloud%20Memorystore.svg",
+        "BigQuery": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FData%20Analytics%2FBigQuery.svg",
+        "Pub/Sub": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FData%20Analytics%2FCloud%20PubSub.svg",
+        "Cloud IAM": "https://icons.terrastruct.com/gcp%2FProducts%20and%20services%2FSecurity%2FCloud%20IAM.svg",
+    },
+    "azure": {
+        "Azure Front Door": "https://icons.terrastruct.com/azure%2FNetworking%20Service%20Color%2FFront%20Doors.svg",
+        "Application Gateway": "https://icons.terrastruct.com/azure%2FNetworking%20Service%20Color%2FApplication%20Gateway.svg",
+        "API Management": "https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FAPI%20Management%20Services.svg",
+        "Azure Load Balancer": "https://icons.terrastruct.com/azure%2FNetworking%20Service%20Color%2FLoad%20Balancers.svg",
+        "Azure CDN": "https://icons.terrastruct.com/azure%2FNetworking%20Service%20Color%2FCDN%20Profiles.svg",
+        "Azure DNS": "https://icons.terrastruct.com/azure%2FNetworking%20Service%20Color%2FDNS%20Zones.svg",
+        "Azure Functions": "https://icons.terrastruct.com/azure%2FCompute%20Service%20Color%2FFunction%20Apps.svg",
+        "AKS": "https://icons.terrastruct.com/azure%2FContainer%20Service%20Color%2FKubernetes%20Services.svg",
+        "App Service": "https://icons.terrastruct.com/azure%2FWeb%20Service%20Color%2FApp%20Services.svg",
+        "Azure Blob Storage": "https://icons.terrastruct.com/azure%2FStorage%20Service%20Color%2FBlob%20Storage.svg",
+        "Azure SQL Database": "https://icons.terrastruct.com/azure%2FDatabases%20Service%20Color%2FSQL%20Databases.svg",
+        "Cosmos DB": "https://icons.terrastruct.com/azure%2FDatabases%20Service%20Color%2FAzure%20Cosmos%20DB.svg",
+        "Azure Cache for Redis": "https://icons.terrastruct.com/azure%2FDatabases%20Service%20Color%2FAzure%20Cache%20for%20Redis.svg",
+        "Service Bus": "https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FAzure%20Service%20Bus.svg",
+        "Event Grid": "https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FEvent%20Grid%20Topics.svg",
+        "Event Hubs": "https://icons.terrastruct.com/azure%2FAnalytics%20Service%20Color%2FEvent%20Hubs.svg",
+        "Azure AD / Entra": "https://icons.terrastruct.com/azure%2FIdentity%20Service%20Color%2FActive%20Directory.svg",
+        "Key Vault": "https://icons.terrastruct.com/azure%2FSecurity%20Service%20Color%2FKey%20Vaults.svg",
+        "Azure Monitor": "https://icons.terrastruct.com/azure%2FManagement%20and%20Governance%20Service%20Color%2FMonitor.svg",
+        "Application Insights": "https://icons.terrastruct.com/azure%2FDevOps%20Service%20Color%2FApplication%20Insights.svg",
+    },
 }
+
+
+def _palette_block(provider: str) -> str:
+    """Render the icon palette for the prompt — one service per line."""
+    icons = PROVIDER_ICONS.get(provider, PROVIDER_ICONS["aws"])
+    lines = [f'  "{name}" -> icon: {url}' for name, url in icons.items()]
+    return "\n".join(lines)
 
 
 # ── Prompt construction ────────────────────────────────────────────────────
 def get_prompt(question: str, provider: str, detail_level: str, direction: str) -> str:
-    palette = ", ".join(PROVIDER_PALETTE.get(provider, PROVIDER_PALETTE["aws"]))
+    icons_palette = _palette_block(provider)
+    service_names = ", ".join(PROVIDER_ICONS.get(provider, PROVIDER_ICONS["aws"]).keys())
 
     if detail_level == "overview":
         scope = (
@@ -129,7 +184,7 @@ SYSTEM: {question}
 
 CLOUD PROVIDER: {provider.upper()}. Use service names from this palette
 ONLY — do not invent names or borrow from another cloud:
-{palette}
+{service_names}
 
 {scope}
 
@@ -137,7 +192,17 @@ LAYOUT DIRECTION: {direction.upper()} ({direction_word}-flowing).
 The first line of the body MUST be:
   direction: {direction_word}
 
-OUTPUT — D2 SOURCE ONLY. No prose, no markdown fences. Use this shape:
+ICON PALETTE — for any node whose label matches a service in this list,
+add the matching `icon` directive verbatim (do not modify the URL,
+do not invent new URLs):
+
+{icons_palette}
+
+If a service is NOT in the palette, omit the icon directive — D2 will
+render a labeled rectangle, which is fine. NEVER fabricate an
+icons.terrastruct.com URL.
+
+OUTPUT — D2 SOURCE ONLY. No prose, no markdown fences. Example shape:
 
   direction: right
 
@@ -147,20 +212,35 @@ OUTPUT — D2 SOURCE ONLY. No prose, no markdown fences. Use this shape:
 
   edge: Edge & CDN {{
     style.fill: "#dbeafe"
-    cdn: CloudFront
-    dns: Route53
+    style.stroke: "#2563eb"
+    cdn: CloudFront {{
+      icon: https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FAmazon-CloudFront.svg
+    }}
+    dns: Route53 {{
+      icon: https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FAmazon-Route-53.svg
+    }}
   }}
 
   app: Application {{
     style.fill: "#dcfce7"
-    api: API Gateway
-    svc: Lambda
+    style.stroke: "#16a34a"
+    api: API Gateway {{
+      icon: https://icons.terrastruct.com/aws%2FNetworking%20%26%20Content%20Delivery%2FAmazon-API-Gateway.svg
+    }}
+    svc: Lambda {{
+      icon: https://icons.terrastruct.com/aws%2FCompute%2FAWS-Lambda.svg
+    }}
   }}
 
   data: Data Stores {{
     style.fill: "#fef3c7"
-    cache: ElastiCache (Redis)
-    db: DynamoDB
+    style.stroke: "#d97706"
+    cache: ElastiCache {{
+      icon: https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-ElastiCache.svg
+    }}
+    db: DynamoDB {{
+      icon: https://icons.terrastruct.com/aws%2FDatabase%2FAmazon-DynamoDB.svg
+    }}
   }}
 
   users -> edge.dns: HTTPS {{ style.stroke: "#2563eb" }}
@@ -175,7 +255,7 @@ EDGE COLORS — apply consistently:
   write/insert:  #16a34a (green)
   async/event:   #ea580c (orange)
   auth/security: #7c3aed (purple)
-  monitoring:    #9ca3af (gray, dotted)
+  monitoring:    #9ca3af (gray, dotted via style.stroke-dash: 3)
 
 GROUP COLORS (style.fill on container):
   Edge/CDN:       #dbeafe
