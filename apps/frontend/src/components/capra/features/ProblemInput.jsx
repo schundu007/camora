@@ -214,10 +214,15 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                   className={`
                     landing-body flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all duration-200 min-h-[36px] touch:min-h-[40px]
                     ${activeTab === tab.id
-                      ? 'bg-[var(--accent)] text-white shadow-sm'
+                      ? 'shadow-sm'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                     }
                   `}
+                  style={
+                    activeTab === tab.id
+                      ? { background: 'var(--cam-gold-leaf)', color: '#020617' }
+                      : undefined
+                  }
                 >
                   <Icon className="w-3.5 h-3.5" />
                   {tab.label}
