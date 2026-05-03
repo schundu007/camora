@@ -40,7 +40,13 @@ type AnswerMode = 'short' | 'detailed';
      active — a thin outer ring pulses while Sona is streaming */
 let SONA_AVATAR_SEED = 0;
 function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boolean }) {
-  const id = useMemo(() => `sona-${++SONA_AVATAR_SEED}`, []);
+  // Stable per-mount id for the SVG <defs>. useRef survives across
+  // re-renders and React's allowed memo discards; useMemo would
+  // re-compute and increment the counter, orphaning gradient
+  // references and showing the avatar as a black rectangle.
+  const idRef = useRef<string | null>(null);
+  if (idRef.current === null) idRef.current = `sona-${++SONA_AVATAR_SEED}`;
+  const id = idRef.current;
   const g = {
     field: `${id}-field`,
     glyph: `${id}-glyph`,

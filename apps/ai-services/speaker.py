@@ -33,9 +33,25 @@ def _get_encoder() -> VoiceEncoder:
     return _encoder
 
 
+_USER_ID_RE = __import__("re").compile(r"^[A-Za-z0-9_-]{1,128}$")
+
+
 def _embedding_path(user_id: str) -> Path:
-    """Return the path to a user's stored embedding."""
-    return EMBEDDINGS_DIR / f"{user_id}.npy"
+    """Return the path to a user's stored embedding.
+
+    user_id arrives as raw form data — without validation, a value
+    containing path-traversal segments (`../etc/passwd`) would resolve
+    outside EMBEDDINGS_DIR. We constrain it to a safe character set and
+    confirm the resolved path stays inside the embeddings directory.
+    """
+    if not user_id or not _USER_ID_RE.match(user_id):
+        raise ValueError("invalid user_id")
+    candidate = (EMBEDDINGS_DIR / f"{user_id}.npy").resolve()
+    base = EMBEDDINGS_DIR.resolve()
+    # `is_relative_to` is 3.9+; this codebase pins 3.11 (Dockerfile).
+    if not candidate.is_relative_to(base):
+        raise ValueError("user_id resolves outside embeddings dir")
+    return candidate
 
 
 def _convert_to_wav(input_bytes: bytes, suffix: str = ".webm") -> str:

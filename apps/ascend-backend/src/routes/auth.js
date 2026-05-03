@@ -334,7 +334,7 @@ router.post('/refresh', authLimiter, async (req, res) => {
     // an admin email change — without this, stale claims could persist
     // indefinitely across renewals.
     const userCheck = await query(
-      'SELECT id, email, name, picture, is_active FROM users WHERE id = $1',
+      'SELECT id, email, name, picture, is_active, token_generation FROM users WHERE id = $1',
       [parseInt(payload.sub, 10)],
     );
     const user = userCheck.rows[0];
@@ -342,7 +342,18 @@ router.post('/refresh', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Account not found or inactive' });
     }
 
-    // Issue fresh token with re-queried claims
+    // Reject the refresh outright if the token's generation predates
+    // the user's current generation — i.e. the user already revoked all
+    // sessions. Without this, an attacker holding a stolen expired
+    // token can refresh into a new live one indefinitely.
+    const dbGen = Number(user.token_generation || 0);
+    const tokenGen = Number(payload.gen || 0);
+    if (dbGen > 0 && tokenGen !== dbGen) {
+      return res.status(401).json({ error: 'Session revoked' });
+    }
+
+    // Issue fresh token with re-queried claims AND the current gen so
+    // the next /me check enforces revocation.
     const newToken = createToken(
       {
         sub: String(user.id),
@@ -350,6 +361,7 @@ router.post('/refresh', authLimiter, async (req, res) => {
         name: user.name || '',
         picture: user.picture || '',
         type: 'access',
+        gen: dbGen,
       },
       '30d',
     );
