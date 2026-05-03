@@ -32,7 +32,7 @@ export default function CategoryHeader({
       className={`px-4 py-2 flex items-center gap-2.5 ${className}`}
       style={{
         background: 'var(--cam-hero-strip)',
-        borderBottom: '2px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
       {icon && (

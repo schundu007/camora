@@ -560,7 +560,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           className="flex items-center justify-between px-3 py-2 flex-shrink-0"
           style={{
             background: 'var(--cam-hero-strip)',
-            borderBottom: '2px solid var(--cam-gold-leaf)',
+            borderBottom: '1px solid var(--cam-gold-leaf)',
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
@@ -721,7 +721,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
         className="flex-shrink-0 flex items-center justify-between px-3 py-2"
         style={{
           background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
         <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white">System Design</span>

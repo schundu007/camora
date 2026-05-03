@@ -207,7 +207,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
         className="flex items-center justify-between gap-3 mb-3 flex-shrink-0 px-3 py-2 -mx-4"
         style={{
           background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
           marginTop: '-16px',
         }}
       >

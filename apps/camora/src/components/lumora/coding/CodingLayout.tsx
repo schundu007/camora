@@ -923,7 +923,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       `}</style>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1019,7 +1019,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             className="flex items-center px-3 py-2"
             style={{
               background: 'var(--cam-hero-strip)',
-              borderBottom: '2px solid var(--cam-gold-leaf)',
+              borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
             <div
@@ -1093,7 +1093,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   className="flex items-center justify-between px-3 py-2"
                   style={{
                     background: 'var(--cam-hero-strip)',
-                    borderBottom: '2px solid var(--cam-gold-leaf)',
+                    borderBottom: '1px solid var(--cam-gold-leaf)',
                   }}
                 >
                   <div

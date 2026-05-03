@@ -871,7 +871,7 @@ export default function DocsPage({ onBack }) {
                           className="flex items-center gap-2 px-3 py-2 mb-5"
                           style={{
                             background: 'var(--cam-hero-strip)',
-                            borderBottom: '2px solid var(--cam-gold-leaf)',
+                            borderBottom: '1px solid var(--cam-gold-leaf)',
                             borderRadius: '12px 12px 0 0',
                           }}
                         >
@@ -964,7 +964,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Learning Path */}
                       <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Path</span>
                         </div>
@@ -999,7 +999,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Resources */}
                       <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Interview Resources</span>
                         </div>
@@ -1042,7 +1042,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Cheatsheet — Before / During / After */}
                       <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Survival Guide</span>
                         </div>
@@ -1095,7 +1095,7 @@ export default function DocsPage({ onBack }) {
                         if (recentItems.length === 0) return null;
                         return (
                           <div className="mb-8">
-                            <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                            <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                               <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Continue Where You Left Off</span>
                             </div>
@@ -1240,7 +1240,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* Category Introduction Heroes */}
                   {activePage === 'coding' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1264,7 +1264,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'system-design' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1288,7 +1288,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'behavioral' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1312,7 +1312,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'low-level' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1336,7 +1336,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'microservices' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1360,7 +1360,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'databases' && !selectedTopic && !sqlPlaygroundOpen && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1384,7 +1384,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'projects' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1408,7 +1408,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'roadmaps' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1432,7 +1432,7 @@ export default function DocsPage({ onBack }) {
                   )}
 
                   {activePage === 'eng-blogs' && !selectedTopic && (
-                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                       <div className="relative rounded-[15px] p-6">
                         <div className="flex items-start gap-5">
@@ -1717,7 +1717,7 @@ export default function DocsPage({ onBack }) {
                             className="px-4 py-2 flex items-center gap-2.5"
                             style={{
                               background: 'var(--cam-hero-strip)',
-                              borderBottom: '2px solid var(--cam-gold-leaf)',
+                              borderBottom: '1px solid var(--cam-gold-leaf)',
                             }}
                           >
                             <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)' }}>

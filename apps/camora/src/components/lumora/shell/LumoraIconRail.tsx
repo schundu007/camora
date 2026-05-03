@@ -76,7 +76,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         // of the sidebar inherits the neutral surface so it doesn't read
         // as a lapis column next to the charcoal app shell.
         background: 'var(--bg-surface)',
-        borderRight: '2px solid var(--cam-gold-leaf)',
+        borderRight: '1px solid var(--cam-gold-leaf)',
         boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.04), 4px 0 24px rgba(0,0,0,0.18)',
         paddingTop: 0,
         paddingBottom: 12,
@@ -103,7 +103,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         className={`h-12 flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
         style={{
           background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
         title="Camora home"
       >
@@ -204,7 +204,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         className={`h-12 flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
         style={{
           background: 'var(--cam-hero-strip)',
-          borderTop: '2px solid var(--cam-gold-leaf)',
+          borderTop: '1px solid var(--cam-gold-leaf)',
         }}
       >
         <UserDropdown variant="dark" showName={expanded} compact={!expanded} position="above-left" />

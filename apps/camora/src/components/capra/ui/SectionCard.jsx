@@ -34,7 +34,7 @@ export default function SectionCard({
         className="flex items-center justify-between px-3 py-2"
         style={{
           background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
         <div className="flex items-center gap-2 min-w-0">

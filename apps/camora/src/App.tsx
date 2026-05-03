@@ -102,7 +102,7 @@ function LoginPage() {
 
       {/* ── Centered card ─────────────────────────────── */}
       <div className="relative flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
-        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 12px 40px rgba(0,0,0,0.35)', borderTop: '3px solid var(--cam-gold-leaf)' }}>
+        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 12px 40px rgba(0,0,0,0.35)', borderTop: '1px solid var(--cam-gold-leaf)' }}>
 
           {/* Header */}
           <h1 className="text-center text-xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Welcome back</h1>

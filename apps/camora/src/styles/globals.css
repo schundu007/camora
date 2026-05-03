@@ -1286,7 +1286,7 @@ img { max-width: 100%; height: auto; }
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border-bottom: 2px solid var(--cam-gold-leaf);
+  border-bottom: 1px solid var(--cam-gold-leaf);
   padding-bottom: 4px;
 }
 .answer-flow h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
