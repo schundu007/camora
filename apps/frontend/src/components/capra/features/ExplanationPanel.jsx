@@ -493,7 +493,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin p-3 space-y-3">
         {/* Solution Pitch - Structured format for easy verbal delivery */}
         {pitch && (
-          <SectionCard title="How to Explain" className="animate-fadeIn">
+          <SectionCard title="How to Explain" className="animate-fadeIn" accent="var(--cam-gold-leaf)">
 
             {/* Handle structured pitch object */}
             {typeof pitch === 'object' && pitch.opener ? (
@@ -768,7 +768,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
 
         {/* Line-by-line Explanations */}
         {explanations && explanations.length > 0 && (
-          <SectionCard title="Line Breakdown" className="animate-fadeIn">
+          <SectionCard title="Line Breakdown" className="animate-fadeIn" accent="var(--cam-gold-leaf)">
             <div className="space-y-2">
               {explanations.map((item, index) => {
                 const isHighlighted = highlightedLine === item.line;
