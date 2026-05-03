@@ -8,6 +8,7 @@
  *
  * Components:
  *   - SectionCard    — card with navy-strip header + gold-leaf border
+ *   - SectionHero    — mid-page section divider (eyebrow + h2 + subtitle)
  *   - HeroBand       — page-level hero band with eyebrow + title + actions
  *   - HeroAccent     — gold-leaf accented word inside HeroBand title
  *   - PillToggleGroup / PillToggle — segmented control inside glassy capsule
@@ -15,5 +16,6 @@
  */
 
 export { default as SectionCard } from './SectionCard.jsx';
+export { default as SectionHero } from './SectionHero.jsx';
 export { default as HeroBand, HeroAccent } from './HeroBand.jsx';
 export { PillToggleGroup, PillToggle, GlassPill } from './PillToggle.jsx';
