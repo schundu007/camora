@@ -8,6 +8,7 @@ import { DatabricksThumb } from '../../components/shared/DatabricksThumb';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
+import { SectionCard } from '../../components/capra/ui';
 import { InterviewTimer } from '../../components/shared/timer/InterviewTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
 
@@ -729,12 +730,8 @@ export default function PracticePage() {
               </div>
 
               {/* Challenge Configuration */}
-              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'none', marginBottom: 24 }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
-                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Start a Challenge</h2>
-                </div>
-
-                <div style={{ padding: '20px 24px' }}>
+              <div style={{ marginBottom: 24 }}>
+                <SectionCard title="Start a Challenge" bodyClassName="p-6">
                   {/* Mode cards */}
                   <div style={{ marginBottom: 22 }}>
                     <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
@@ -799,15 +796,15 @@ export default function PracticePage() {
                       ))}
                     </div>
                   </div>
-                </div>
 
                 {/* CTA Footer */}
-                <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
                   <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', color: '#FFFFFF', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#FFFFFF' }} />
                     Start Challenge
                   </button>
                 </div>
+                </SectionCard>
               </div>
 
               {/* Challenge History */}
