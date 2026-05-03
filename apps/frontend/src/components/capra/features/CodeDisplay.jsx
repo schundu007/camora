@@ -66,41 +66,22 @@ const LANGUAGE_MAP = {
 
 const RUNNABLE = ['python', 'python2', 'python3', 'bash', 'javascript', 'typescript', 'sql', 'mysql', 'postgresql', 'c', 'cpp', 'java', 'go', 'rust', 'ruby', 'php', 'swift', 'kotlin', 'scala', 'r', 'perl', 'lua', 'haskell', 'clojure', 'elixir', 'erlang', 'fsharp', 'ocaml', 'dart', 'julia', 'csharp'];
 
-// All available languages for the selector
-// Language labels for display in button
+// Language labels for display in button. Matches the LANGUAGES array
+// in LanguageSelectorModal.jsx — only languages the backend can
+// actually execute appear here. Frameworks/topics (React, Terraform
+// etc.) keep their entries since the editor still highlights them
+// even when no runtime is needed.
 const LANGUAGE_LABELS = {
   auto: 'Auto',
   python3: 'Python 3',
-  python2: 'Python 2',
   javascript: 'JavaScript',
   typescript: 'TypeScript',
   java: 'Java',
   c: 'C',
   cpp: 'C++',
-  csharp: 'C#',
   go: 'Go',
   rust: 'Rust',
-  ruby: 'Ruby',
-  php: 'PHP',
-  swift: 'Swift 5',
-  kotlin: 'Kotlin',
-  scala: 'Scala',
   bash: 'Bash',
-  perl: 'Perl',
-  lua: 'Lua',
-  r: 'R',
-  tcl: 'Tcl',
-  haskell: 'Haskell',
-  clojure: 'Clojure',
-  elixir: 'Elixir',
-  erlang: 'Erlang',
-  fsharp: 'F#',
-  ocaml: 'OCaml',
-  dart: 'Dart',
-  julia: 'Julia',
-  objectivec: 'Objective-C',
-  coffeescript: 'CoffeeScript',
-  vb: 'Visual Basic',
   sql: 'SQL',
   mysql: 'MySQL',
   postgresql: 'PostgreSQL',

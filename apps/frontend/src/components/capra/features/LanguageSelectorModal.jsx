@@ -1,39 +1,30 @@
 import { useState, useEffect } from 'react';
 
-// Language data with icons - categories is an array to support multiple categories
+// Language data — pruned to ONLY languages the backend Dockerfile
+// installs a runtime for, so every choice can actually compile/run.
+// Frameworks (React, Django, Terraform etc.) below are study topics,
+// not language entries — the solve pipeline doesn't try to execute
+// them as scripts so they're not affected by runtime availability.
+//
+// Backend runtimes (apps/ascend-backend/Dockerfile):
+//   node:20 (JS) · typescript (npm) · python3 · gcc (C/C++) ·
+//   golang · rustc/cargo · openjdk-17 (Java) · bash
+// Removed because they have no installed compiler/runtime:
+//   python2, csharp, ruby, php, swift, kotlin, scala, perl, lua, r,
+//   haskell, clojure, elixir, erlang, fsharp, ocaml, dart, julia,
+//   objectivec, coffeescript, vb, tcl. If any of these come back,
+//   add the toolchain to the Dockerfile FIRST.
 const LANGUAGES = [
-  // Core Languages
+  // Core Languages — every entry has a runtime on the backend
   { value: 'python3', label: 'Python 3', icon: '🐍', categories: ['all', 'data'] },
-  { value: 'python2', label: 'Python 2', icon: '🐍', categories: ['all'] },
   { value: 'javascript', label: 'JavaScript', icon: 'JS', categories: ['all', 'frontend', 'backend'] },
   { value: 'typescript', label: 'TypeScript', icon: 'TS', categories: ['all', 'frontend', 'backend'] },
   { value: 'java', label: 'Java', icon: '☕', categories: ['all', 'backend', 'mobile'] },
   { value: 'c', label: 'C', icon: 'C', categories: ['all'] },
   { value: 'cpp', label: 'C++', icon: 'C+', categories: ['all'] },
-  { value: 'csharp', label: 'C#', icon: 'C#', categories: ['all', 'backend'] },
   { value: 'go', label: 'Go', icon: 'Go', categories: ['all', 'backend', 'devops'] },
   { value: 'rust', label: 'Rust', icon: '🦀', categories: ['all'] },
-  { value: 'ruby', label: 'Ruby', icon: '💎', categories: ['all', 'backend'] },
-  { value: 'php', label: 'PHP', icon: '🐘', categories: ['all', 'backend'] },
-  { value: 'swift', label: 'Swift 5', icon: '🕊️', categories: ['all', 'mobile'] },
-  { value: 'kotlin', label: 'Kotlin', icon: 'K', categories: ['all', 'mobile'] },
-  { value: 'scala', label: 'Scala', icon: 'S', categories: ['all', 'backend'] },
   { value: 'bash', label: 'Bash', icon: '$>', categories: ['all', 'devops'] },
-  { value: 'perl', label: 'Perl', icon: '🐪', categories: ['all'] },
-  { value: 'lua', label: 'Lua', icon: '🌙', categories: ['all'] },
-  { value: 'r', label: 'R', icon: 'R', categories: ['all', 'data'] },
-  { value: 'haskell', label: 'Haskell', icon: 'λ', categories: ['all'] },
-  { value: 'clojure', label: 'Clojure', icon: '()', categories: ['all'] },
-  { value: 'elixir', label: 'Elixir', icon: '💧', categories: ['all', 'backend'] },
-  { value: 'erlang', label: 'Erlang', icon: 'E', categories: ['all'] },
-  { value: 'fsharp', label: 'F#', icon: 'F#', categories: ['all'] },
-  { value: 'ocaml', label: 'OCaml', icon: '🐫', categories: ['all'] },
-  { value: 'dart', label: 'Dart', icon: '🎯', categories: ['all', 'mobile'] },
-  { value: 'julia', label: 'Julia', icon: 'Ju', categories: ['all', 'data'] },
-  { value: 'objectivec', label: 'Objective-C', icon: 'OC', categories: ['all', 'mobile'] },
-  { value: 'coffeescript', label: 'CoffeeScript', icon: '☕', categories: ['all'] },
-  { value: 'vb', label: 'Visual Basic', icon: 'VB', categories: ['all'] },
-  { value: 'tcl', label: 'Tcl', icon: 'Tc', categories: ['all'] },
   // Database / SQL
   { value: 'sql', label: 'SQL', icon: '🗃️', categories: ['all', 'sql'] },
   { value: 'mysql', label: 'MySQL', icon: '🐬', categories: ['all', 'sql'] },
