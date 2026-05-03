@@ -65,27 +65,18 @@
     --danger:  #EF4444;
     --info:    #26619C;
 
-    /* Difficulty — rank by weight in the chip, not by hue. Values below
-       are back-compat shims for any code that reads them directly. */
+    /* Difficulty — rank by weight in the chip, not by hue. */
     --easy: #64748B;
     --easy-bg: rgba(100,116,139,0.10);
-    --easy-border: rgba(100,116,139,0.25);
     --medium: #0F172A;
     --medium-bg: rgba(15,23,42,0.06);
-    --medium-border: rgba(15,23,42,0.15);
     --hard: #26619C;
     --hard-bg: rgba(38,97,156,0.10);
-    --hard-border: rgba(38,97,156,0.25);
 
-    /* Category — single accent plus two neutral slate shades. Pages
-       with multiple categories side-by-side distinguish via typography
-       and icons rather than color. */
+    /* Category — single accent. Pages with multiple categories distinguish
+       via typography and icons rather than color. */
     --cat-primary: #26619C;
     --cat-primary-bg: rgba(38,97,156,0.10);
-    --cat-secondary: #334155;
-    --cat-secondary-bg: rgba(51,65,85,0.06);
-    --cat-tertiary: #64748B;
-    --cat-tertiary-bg: rgba(100,116,139,0.08);
 
     /* Fonts — Adobe Source family (display + mono) + Inter (body/UI) */
     --font-sans: 'Inter', 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -126,23 +117,12 @@
        SiteNav's setProperty lands. */
     --nav-h: 84px;
 
-    /* Legacy compat (used by block components) */
-    --bg: var(--bg-base);
-    --bg2: var(--bg-surface);
-    --primary: var(--accent);
-    --primary-light: var(--accent);
-    --text: var(--text-primary);
-    --text-subtle: var(--text-secondary);
-    --text-dim: var(--text-muted);
-    --text-muted-legacy: var(--text-dimmed);
-    --border2: var(--border-hover);
-    --surface: var(--bg-surface);
-    --surface2: var(--bg-elevated);
-    --nav-bg: var(--bg-surface);
+    /* Legacy compat — only the aliases that still have external readers. */
+    --text-dim: var(--text-muted);          /* read by 21 files */
+    --nav-bg: var(--bg-surface);            /* read by AscendPrepModal */
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
-    --nav-text-secondary: var(--text-secondary);
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
@@ -176,41 +156,11 @@
     --cam-gold-leaf-dk: #A88817;
     --cam-gold-leaf-50: #FBF6E3;
     --cam-gold-leaf-text:#7A5C0A;
-    --cam-copper:       var(--cam-gold-leaf);
-    --cam-copper-lt:    var(--cam-gold-leaf-lt);
-    --cam-copper-dk:    var(--cam-gold-leaf-dk);
-    --cam-copper-50:    var(--cam-gold-leaf-50);
-    --cam-teal:         var(--cam-gold-leaf);
-    --cam-teal-lt:      var(--cam-gold-leaf-lt);
-    --cam-teal-dk:      var(--cam-gold-leaf-dk);
-    --cam-teal-50:      var(--cam-gold-leaf-50);
 
-    /* TERTIARY accent — amber (warm sibling to gold leaf) */
-    --cam-amber:        #AB6400;
-    --cam-amber-lt:     #C07A00;
-    --cam-amber-dk:     #864E00;
-    --cam-amber-50:     #FAF0E0;
-
-    /* SUBSTRATE — cream paper, not white */
-    --cam-cream:        #FAF7F0;
-    --cam-cream-lt:     #FDFCF7;
-
-    /* TEXT — warm near-black ink for cream surfaces */
-    --cam-warm-ink:     #1C1917;
-    --cam-warm-ink-mid: #44403C;
-    --cam-warm-ink-lt:  #A8A29E;
-
-    /* DARK SURFACES — deep-ocean lapis echo */
-    --cam-plum-void:    #0F1B2D;
+    /* DARK SURFACE — deep-ocean lapis echo (used by ink-tone Sections) */
     --cam-void:         #0F1B2D;
 
-    /* Neutral chrome (kept for low-contrast borders, never a fill) */
-    --cam-midnight:     #0F172A;
-    --cam-steel:        #475569;
-
-    /* Mist/surface-lt resolve to cream so hero gradients + accent
-       panels inherit the painterly substrate */
-    --cam-mist:         #FAF7F0;
+    /* Painterly off-white substrate used by accent panels in tone="muted" */
     --cam-surface-lt:   #FDFCF7;
 
     /* Single source of truth (kept in sync with --accent above) */
@@ -324,37 +274,15 @@
     /* Dark-theme gold reads safely on the dark substrate as-is */
     --cam-gold-leaf-text:#E6C75F;
 
-    --cam-amber:    #D9A84A;
-    --cam-amber-lt: #E8C76F;
-    --cam-amber-dk: #C07A00;
-    --cam-amber-50: #243450;
-
-    --cam-cream:        #1A2940;
-    --cam-cream-lt:     #243450;
-    --cam-warm-ink:     #F5F0E5;
-    --cam-warm-ink-mid: #D6CFC0;
-    --cam-warm-ink-lt:  #847C68;
-    --cam-plum-void:    #0A1320;
     --cam-void:         #0A1320;
-    --cam-mist:         #1A2940;
     --cam-surface-lt:   #243450;
 
-    /* Legacy compat aliases */
-    --bg:      var(--bg-base);
-    --bg2:     var(--bg-surface);
-    --surface: var(--bg-surface);
-    --surface2:var(--bg-elevated);
-    --primary: var(--accent);
-    --primary-light: var(--accent-hover);
-    --text:    var(--text-primary);
-    --text-subtle: var(--text-secondary);
+    /* Legacy compat — only the aliases that still have external readers. */
     --text-dim:    var(--text-muted);
-    --border2: var(--border-hover);
     --nav-bg:  rgba(15,27,45,0.92);
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
-    --nav-text-secondary: var(--text-secondary);
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
