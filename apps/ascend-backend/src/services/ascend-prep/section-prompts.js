@@ -119,6 +119,8 @@ Calculations must be real arithmetic, not handwaving.`,
 
   behavioral: `Generate behavioral prep with 6-10 STAR-format questions tailored to THIS company.
 
+The CANDIDATE RESUME section above is your source of truth for stories. It is always present — never claim the resume is missing, not provided, or not attached. If a quantified metric is genuinely absent for a story, write a qualitative result ("shipped before deadline", "unblocked the team") instead of refusing.
+
 summary: 2-3 sentences on this company's behavioral round and what they actually weight.
 companyContext: their interview format, 3-5 traits they look for, 3-6 known behavioral questions, what cultural fit means HERE.
 questions: 6-10 questions. For each, FULL STAR — none of the fields can be empty:

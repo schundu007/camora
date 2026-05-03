@@ -87,7 +87,18 @@ function buildContext(inputs, section = null) {
     context += `## COVER LETTER\n${inputs.coverLetter}\n\n`;
   }
 
-  if (inputs.prepMaterials) {
+  // Study materials (prepMaterials + documentation) are technical reference
+  // text — system-design diagrams, deep-dive audits, internal docs. They make
+  // sense for coding/system-design/techstack/custom but become noise for
+  // non-technical sections (pitch/hr/hiring-manager/behavioral) where the
+  // model needs to focus on the resume to mine STAR stories. With ~95KB of
+  // study docs in the prompt, Haiku occasionally bails on behavioral with
+  // "no resume provided" — gating fixes that.
+  const sectionUsesStudyDocs = !section || [
+    'coding', 'system-design', 'system_design', 'techstack', 'custom',
+  ].some((t) => section.toLowerCase().includes(t));
+
+  if (sectionUsesStudyDocs && inputs.prepMaterials) {
     context += `## ADDITIONAL PREP MATERIALS (IMPORTANT - USE THIS INFORMATION)\n`;
     context += `The candidate has uploaded study materials below. You MUST reference and incorporate these materials in your response:\n\n`;
     context += `${inputs.prepMaterials}\n\n`;
@@ -95,7 +106,7 @@ function buildContext(inputs, section = null) {
   }
 
   // Handle documentation array (multiple uploaded files)
-  if (inputs.documentation && Array.isArray(inputs.documentation) && inputs.documentation.length > 0) {
+  if (sectionUsesStudyDocs && inputs.documentation && Array.isArray(inputs.documentation) && inputs.documentation.length > 0) {
     context += `## DOCUMENTATION & STUDY MATERIALS (CRITICAL - YOU MUST LEARN FROM THESE)\n`;
     context += `The candidate has uploaded ${inputs.documentation.length} document(s) containing important study materials, guides, and documentation.\n`;
     context += `You MUST thoroughly review and incorporate information from ALL of these documents in your response.\n`;
@@ -131,6 +142,26 @@ function buildContext(inputs, section = null) {
   }
 
   return context;
+}
+
+/**
+ * For sections that mine the resume hard (behavioral STAR, hr, hiring-manager),
+ * re-anchor the resume immediately before the section instructions. Long
+ * contexts can otherwise cause Haiku to underweight the resume and bail
+ * with "no resume provided" — putting the resume at the tail forces it back
+ * into recency.
+ */
+function buildUserMessage(context, sectionPrompt, section, inputs) {
+  const resumeAnchored = ['behavioral', 'hr', 'hiring-manager', 'pitch'];
+  if (inputs.resume && section && resumeAnchored.includes(section)) {
+    return (
+      `${context}\n\n` +
+      `## CANDIDATE RESUME (mine this for STAR stories — never claim it's missing)\n` +
+      `${inputs.resume}\n\n` +
+      `${sectionPrompt}`
+    );
+  }
+  return `${context}\n\n${sectionPrompt}`;
 }
 
 // Perform web search for interview questions
@@ -223,7 +254,7 @@ Voice rules — follow exactly:
 
 Call the submit_prep tool exactly once with all the required fields.`;
 
-  const userMessage = `${context}\n\n${sectionPrompt}`;
+  const userMessage = buildUserMessage(context, sectionPrompt, section, enrichedInputs);
 
   const maxTokens = section.startsWith('custom')
     ? MAX_TOKENS_CUSTOM_SECTION
@@ -310,7 +341,7 @@ async function* generateSectionClaudeStreaming(section, inputs, model) {
     ? `You are an expert interview coach. Provide comprehensive, detailed preparation. Reference any prep materials provided.${companyContext}\nReturn ONLY valid JSON. Start with { and end with }. No code fences, no prose.`
     : `You are a concise interview coach. Give specific, actionable advice. Be direct.${companyContext}\nReturn ONLY valid JSON. Start with { and end with }. No code fences, no prose.`;
 
-  const userMessage = `${context}\n\n${sectionPrompt}`;
+  const userMessage = buildUserMessage(context, sectionPrompt, section, enrichedInputs);
   const maxTokens = section.startsWith('custom')
     ? MAX_TOKENS_CUSTOM_SECTION
     : model === CLAUDE_HAIKU
@@ -466,7 +497,7 @@ Return valid JSON.`
     : `You are a concise interview coach. Give specific, actionable advice based on the resume and job description. Be direct and practical.${companyContextOAI}
 Return valid JSON.`;
 
-  const userMessage = `${context}\n\n${sectionPrompt}`;
+  const userMessage = buildUserMessage(context, sectionPrompt, section, enrichedInputs);
 
   // Token budget: custom sections need more room for document extraction,
   // non-technical sections are shorter (match Haiku budget for parity)
