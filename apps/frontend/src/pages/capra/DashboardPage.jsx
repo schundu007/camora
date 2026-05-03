@@ -161,7 +161,10 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   // to /api/solve/stream so design generations name services for the
   // chosen cloud (Cosmos DB / Firestore / etc.).
   const [cloudProvider] = useCloudProvider();
-  const [designDetailLevel, setDesignDetailLevel] = useState('basic');
+  // designDetailLevel defaults to 'full' now that the Basic|Full toggle
+  // has been removed from the system-design controls. Setter is kept
+  // plumbed in case the toggle ever returns.
+  const [designDetailLevel, setDesignDetailLevel] = useState('full');
   const [codingDetailLevel, setCodingDetailLevel] = useState('basic');
   const [codingLanguage, setCodingLanguage] = useState('auto');
   const [autoGenerateEraser, setAutoGenerateEraser] = useState(false);

@@ -108,65 +108,18 @@ export default function AscendModeSelector({
     );
   }
 
-  // System Design mode controls
+  // System Design mode — controls removed per product decision:
+  //   · Basic / Full toggle: collapsed to always-Full. The Basic mode
+  //     produced shallow single-region designs that didn't reflect
+  //     real interview answers; carrying the toggle just confused users
+  //     into picking the inferior variant by default.
+  //   · Auto Pro pill: removed because Eraser fresh-generation costs
+  //     real API credits per click. The panel now reads pre-generated
+  //     Eraser diagrams from the cache (POST /api/diagram/eraser/lookup)
+  //     and falls back to free Graphviz when no Eraser cache row
+  //     exists. No surface-level toggle is needed for that path.
   if (ascendMode === 'system-design') {
-    return (
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-        {/* Design Detail Level - Pill Toggle */}
-        <div
-          className="flex items-center rounded-full p-0.5"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-        >
-          <button
-            type="button"
-            onClick={() => onDetailLevelChange('basic')}
-            className="px-3 py-1 text-xs font-semibold transition-all rounded-full"
-            style={{
-              background: designDetailLevel === 'basic' ? 'var(--cam-gold-leaf)' : 'transparent',
-              color: designDetailLevel === 'basic' ? '#020617' : 'var(--text-muted)',
-            }}
-            title="Single-region, minimal architecture"
-          >
-            Basic
-          </button>
-          <button
-            type="button"
-            onClick={() => onDetailLevelChange('full')}
-            className="px-3 py-1 text-xs font-semibold transition-all rounded-full"
-            style={{
-              background: designDetailLevel === 'full' ? 'var(--cam-gold-leaf)' : 'transparent',
-              color: designDetailLevel === 'full' ? '#020617' : 'var(--text-muted)',
-            }}
-            title="Multi-region, HA, detailed scalability"
-          >
-            Full
-          </button>
-        </div>
-
-        {/* Auto Pro Diagram Toggle - Compact Pill */}
-        <button
-          type="button"
-          onClick={() => onAutoGenerateEraserChange(!autoGenerateEraser)}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
-          style={{
-            background: autoGenerateEraser ? 'var(--accent)' : 'transparent',
-            color: autoGenerateEraser ? '#ffffff' : 'var(--accent)',
-            border: '1px solid var(--accent)',
-          }}
-          title={autoGenerateEraser ? 'Pro diagram will auto-generate (uses Eraser API credits)' : 'Pro diagram disabled - click Generate manually'}
-        >
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          Auto Pro
-          {autoGenerateEraser && (
-            <svg className="w-2.5 h-2.5 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          )}
-        </button>
-      </div>
-    );
+    return null;
   }
 
   // Other modes - no controls

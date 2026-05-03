@@ -71,6 +71,42 @@ function adminOnlyForGeneration(req, res, next) {
 }
 
 /**
+ * POST /api/diagram/eraser/lookup
+ * Cache-only lookup for Eraser diagrams — never generates, never costs
+ * Eraser API credits. Open to all authed users (not admin-only) so the
+ * panel can transparently prefer a pre-generated Eraser diagram over
+ * Graphviz on auto-load. Returns 404 when nothing cached.
+ *
+ * Mirrors POST /api/diagram/lookup (Graphviz cache-only) — kept as a
+ * separate route because Eraser cache rows have a distinct hash shape
+ * (`description::eraser::default::detailLevel`).
+ */
+router.post('/eraser/lookup', async (req, res) => {
+  try {
+    const { description, detailLevel = 'overview', cacheKey } = req.body || {};
+    if (!description) {
+      return res.status(400).json({ error: 'Description required' });
+    }
+    const problemHash = hashProblem(`${cacheKey || description}::eraser::default::${detailLevel}`);
+    const result = await query(
+      'SELECT image_url, edit_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND image_url IS NOT NULL LIMIT 1',
+      [problemHash],
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ cached: false });
+    }
+    res.json({
+      imageUrl: result.rows[0].image_url,
+      editUrl: result.rows[0].edit_url,
+      cached: true,
+    });
+  } catch (err) {
+    console.error('[EraserLookup] error:', err);
+    res.status(500).json({ error: 'Eraser lookup failed' });
+  }
+});
+
+/**
  * POST /api/diagram/eraser
  * Generate an architecture diagram using Eraser.io (with DB caching)
  */
