@@ -204,12 +204,16 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
   try {
     const { question, cloudProvider, difficulty, category, format, cacheKey } = req.body;
     const provider = cloudProvider || 'auto';
-    // Direction + detail are locked to TB/detailed: those are the only knob
-    // values the UI sends now, and pinning them server-side prevents stale
-    // clients (or curl callers) from spawning cache rows the UI can never
-    // hit. Inbound values are ignored on purpose.
-    const direction = 'TB';
-    const detailLevel = 'detailed';
+    // Direction + detail are now driven by the frontend. The earlier
+    // server-side lock to TB/detailed silently overrode the panel's
+    // LR/overview defaults, producing the dense vertical layout users
+    // complained about. Frontend defaults to overview/LR but a stale
+    // client may still send TB/detailed — both are valid combos. Cache
+    // hash includes both, so each combo gets its own row.
+    const ALLOWED_DIRECTIONS = new Set(['TB', 'LR']);
+    const ALLOWED_DETAIL_LEVELS = new Set(['overview', 'detailed']);
+    const direction = ALLOWED_DIRECTIONS.has(req.body.direction) ? req.body.direction : 'LR';
+    const detailLevel = ALLOWED_DETAIL_LEVELS.has(req.body.detailLevel) ? req.body.detailLevel : 'overview';
     // Engine is part of the cache key so flipping DIAGRAM_ENGINE doesn't
     // serve old-engine bytes under the new engine. After the d2 cutover,
     // legacy graphviz rows become orphans — harmless until cleanup.
@@ -348,11 +352,14 @@ router.post('/lookup', async (req, res) => {
     const { question, cloudProvider = 'auto' } = req.body;
     if (!question) return res.status(400).json({ error: 'Question required' });
 
-    // Direction + detail are locked to TB/detailed (matches /generate).
-    // Iterate provider only — fall back to 'auto' so a request for AWS still
-    // returns the auto-generated diagram if no cloud-specific row exists yet.
-    const direction = 'TB';
-    const detailLevel = 'detailed';
+    // Direction + detail come from the request body — must match the
+    // hash computed by /generate or the lookup will miss the row that
+    // /generate just wrote. Falls back to overview/LR if the caller
+    // didn't supply them, matching /generate's default-resolution.
+    const ALLOWED_DIRECTIONS = new Set(['TB', 'LR']);
+    const ALLOWED_DETAIL_LEVELS = new Set(['overview', 'detailed']);
+    const direction = ALLOWED_DIRECTIONS.has(req.body.direction) ? req.body.direction : 'LR';
+    const detailLevel = ALLOWED_DETAIL_LEVELS.has(req.body.detailLevel) ? req.body.detailLevel : 'overview';
     // Engine matches /generate so cache keys agree. After the d2 cutover,
     // graphviz-era rows become unreachable until reseeded by an admin.
     const engine = (process.env.DIAGRAM_ENGINE || 'd2').toLowerCase();

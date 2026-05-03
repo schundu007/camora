@@ -158,16 +158,25 @@ def get_prompt(question: str, provider: str, detail_level: str, direction: str) 
 
     if detail_level == "overview":
         scope = (
-            "OVERVIEW MODE — 8 to 12 nodes in 3 logical groups (Edge & CDN, "
-            "Application, Data Stores). Show the main request flow only."
+            "OVERVIEW MODE — 7 to 10 nodes in 3 logical groups (Edge, "
+            "Application, Data). ONE primary request flow only. "
+            "Connection discipline: each node has at most 2-3 outgoing "
+            "edges. NO crossing connections — restructure clusters or "
+            "drop the less-essential edge if any two would cross. "
+            "NO async, NO observability, NO replicas in overview. Keep "
+            "the spine: client → edge → app → data and back. Goal: 30s "
+            "scannable, not an architecture audit."
         )
     else:
         scope = (
-            "DETAILED MODE — 15 to 25 nodes in 5 to 6 logical groups "
-            "(Edge & Security, Application Tier, Data Tier, Async Processing, "
-            "Observability). Show CDN, WAF/auth, multiple app instances, "
-            "primary DB + replica, cache, message queue, workers, "
-            "monitoring."
+            "DETAILED MODE — 12 to 16 nodes in 4 to 5 logical groups "
+            "(Edge & Security, Application Tier, Data Tier, Async "
+            "Processing if relevant, Observability if relevant). "
+            "Connection discipline: each node 2-4 edges max, NO mesh / "
+            "NO fully-connected clusters. The async path reaches in "
+            "ONCE — pick the single app service that publishes and "
+            "draw one edge. Group replicas as 'DB Cluster' single node. "
+            "NO nested sub-clusters."
         )
 
     direction_word = (
