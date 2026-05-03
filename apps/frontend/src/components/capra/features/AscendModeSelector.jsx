@@ -73,9 +73,9 @@ export default function AscendModeSelector({
             onClick={() => onCodingDetailLevelChange('basic')}
             className="px-2 sm:px-3 py-1.5 text-xs font-semibold transition-all rounded-md min-h-[32px] touch:min-h-[36px]"
             style={{
-              background: codingDetailLevel === 'basic' ? 'var(--accent)' : 'transparent',
-              color: codingDetailLevel === 'basic' ? '#ffffff' : 'var(--text-muted)',
-                          }}
+              background: codingDetailLevel === 'basic' ? 'var(--cam-gold-leaf)' : 'transparent',
+              color: codingDetailLevel === 'basic' ? '#020617' : 'var(--text-muted)',
+            }}
             title="Basic solution with essential explanation"
           >
             Basic
@@ -85,9 +85,8 @@ export default function AscendModeSelector({
             onClick={() => onCodingDetailLevelChange('detailed')}
             className="px-2 sm:px-3 py-1.5 text-xs font-semibold transition-all rounded-md min-h-[32px] touch:min-h-[36px]"
             style={{
-              background: codingDetailLevel === 'detailed' ? 'var(--accent)' : 'transparent',
-              color: codingDetailLevel === 'detailed' ? '#ffffff' : 'var(--text-muted)',
-              boxShadow: codingDetailLevel === 'detailed' ? '0 2px 6px rgba(16, 185, 129, 0.4)' : 'none',
+              background: codingDetailLevel === 'detailed' ? 'var(--cam-gold-leaf)' : 'transparent',
+              color: codingDetailLevel === 'detailed' ? '#020617' : 'var(--text-muted)',
             }}
             title="Full solution with detailed explanations"
           >
@@ -123,9 +122,8 @@ export default function AscendModeSelector({
             onClick={() => onDetailLevelChange('basic')}
             className="px-3 py-1 text-xs font-semibold transition-all rounded-full"
             style={{
-              background: designDetailLevel === 'basic' ? 'var(--accent)' : 'transparent',
-              color: designDetailLevel === 'basic' ? '#ffffff' : 'var(--text-muted)',
-              boxShadow: designDetailLevel === 'basic' ? '0 1px 3px rgba(16, 185, 129, 0.3)' : 'none',
+              background: designDetailLevel === 'basic' ? 'var(--cam-gold-leaf)' : 'transparent',
+              color: designDetailLevel === 'basic' ? '#020617' : 'var(--text-muted)',
             }}
             title="Single-region, minimal architecture"
           >
@@ -136,9 +134,8 @@ export default function AscendModeSelector({
             onClick={() => onDetailLevelChange('full')}
             className="px-3 py-1 text-xs font-semibold transition-all rounded-full"
             style={{
-              background: designDetailLevel === 'full' ? 'var(--accent)' : 'transparent',
-              color: designDetailLevel === 'full' ? '#ffffff' : 'var(--text-muted)',
-              boxShadow: designDetailLevel === 'full' ? '0 1px 3px rgba(16, 185, 129, 0.3)' : 'none',
+              background: designDetailLevel === 'full' ? 'var(--cam-gold-leaf)' : 'transparent',
+              color: designDetailLevel === 'full' ? '#020617' : 'var(--text-muted)',
             }}
             title="Multi-region, HA, detailed scalability"
           >
