@@ -3122,8 +3122,8 @@ Quick quality first: 360p available in minutes, 4K later`
       staticDiagrams: [
         { id: 'youtube-problem-definition', title: 'Problem Definition', description: 'YouTube system scope, scale, and key challenges', src: '/diagrams/youtube/problem-definition.svg', type: 'overview' },
         { id: 'youtube-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for YouTube scale', src: '/diagrams/youtube/capacity-estimation.svg', type: 'estimation' },
-        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', type: 'flow' },
-        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', type: 'flow' },
+        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', src: '/diagrams/youtube/upload-pipeline.svg', type: 'flow' },
+        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', src: '/diagrams/youtube/streaming-flow.svg', type: 'flow' },
       ],
     },
     {
