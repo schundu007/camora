@@ -18,6 +18,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useCelebration } from '../../shared/Celebration';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
+import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
+import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
 import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
@@ -458,6 +460,11 @@ export default function TopicDetail({
   const isAdmin = user?.email === 'chundubabu@gmail.com';
   const [adminRegenStatus, setAdminRegenStatus] = useState('');
   const [diagramPanelOpen, setDiagramPanelOpen] = useState(false);
+  // Cloud-aware string translator. AWS service names in plain-text fields
+  // ({topicDetails.description}, {fmtCloud(entity.description)}, etc.) get swapped to
+  // the chosen cloud's equivalents at render time. FormattedContent is
+  // already wrapped, so this only matters for fields that bypass it.
+  const fmtCloud = useCloudFormatter();
 
   if (!topicDetails) return null;
 
@@ -716,6 +723,14 @@ export default function TopicDetail({
                   {topicDetails.questions} problems
                 </span>
               )}
+              {/* Cloud platform selector — visible on system-design topics
+                  so the user can switch AWS/Azure/GCP and have the prose,
+                  diagrams, and code examples adapt. Persists via
+                  useCloudProvider so the choice carries to every other
+                  diagram surface. */}
+              {isSDStyle && (
+                <CloudProviderSelector variant="compact" className="ml-1" />
+              )}
               {/* Design in App button for system design topics */}
               {isSDStyle && (
                 <Link
@@ -727,9 +742,9 @@ export default function TopicDetail({
                 </Link>
               )}
             </div>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{topicDetails.description}</p>
+            <p className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{fmtCloud(topicDetails.description)}</p>
             {topicDetails.subtitle && !topicDetails.difficulty && (
-              <p className="text-[var(--text-muted)] text-sm mt-1 landing-body">{topicDetails.subtitle}</p>
+              <p className="text-[var(--text-muted)] text-sm mt-1 landing-body">{fmtCloud(topicDetails.subtitle)}</p>
             )}
             {/* Authority strip — Databricks-style "Reviewed by · Last
                 reviewed · Source" line under the title. Truthful only:
@@ -1352,7 +1367,7 @@ export default function TopicDetail({
                   <div key={vi} className="rounded border border-[var(--border)] overflow-hidden">
                     <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
                       <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
-                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{viz.description}</p>}
+                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{fmtCloud(viz.description)}</p>}
                     </div>
                     <div className="p-3 flex justify-center items-center bg-white" dangerouslySetInnerHTML={{ __html: viz.svg }} />
                   </div>
@@ -1493,7 +1508,7 @@ export default function TopicDetail({
                       </div>
                       {activeEx.description && (
                         <div className="px-4 py-2 bg-[#252536] border-t border-[#2e2e44]">
-                          <p className="text-xs text-[var(--text-muted)] landing-body">{activeEx.description}</p>
+                          <p className="text-xs text-[var(--text-muted)] landing-body">{fmtCloud(activeEx.description)}</p>
                         </div>
                       )}
                       <div className="bg-[#1e1e2e] overflow-x-auto">
@@ -2121,7 +2136,7 @@ export default function TopicDetail({
                                 <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
                               </div>
                               {endpoint.description && (
-                                <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed" style={{ fontFamily: "var(--font-sans)" }}>{endpoint.description}</p>
+                                <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed" style={{ fontFamily: "var(--font-sans)" }}>{fmtCloud(endpoint.description)}</p>
                               )}
                               <div className="hidden">
                               </div>
@@ -2342,7 +2357,7 @@ export default function TopicDetail({
                             </span>
                             <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
                           </div>
-                          <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
+                          <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{fmtCloud(ec.impact)}</p>
                           <div className="ml-8 mt-2 pl-3 py-1 border-l-2 border-[var(--accent)]">
                             <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.14em] landing-mono">Mitigation</span>
                             <p className="text-[var(--text-secondary)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
@@ -2571,7 +2586,7 @@ export default function TopicDetail({
                     {topicDetails.coreEntities.map((entity, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded border border-[var(--border)]">
                         <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold whitespace-nowrap">{entity.name}</code>
-                        <span className="text-[var(--text-muted)] text-sm landing-body">{entity.description}</span>
+                        <span className="text-[var(--text-muted)] text-sm landing-body">{fmtCloud(entity.description)}</span>
                       </div>
                     ))}
                     </div>
@@ -2629,7 +2644,7 @@ export default function TopicDetail({
                     {topicDetails.concepts.map((concept, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded border border-[var(--border)]">
                         <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold whitespace-nowrap">{concept.name}</code>
-                        <span className="text-[var(--text-muted)] text-sm landing-body">{concept.description}</span>
+                        <span className="text-[var(--text-muted)] text-sm landing-body">{fmtCloud(concept.description)}</span>
                       </div>
                     ))}
                   </div>
@@ -2649,7 +2664,7 @@ export default function TopicDetail({
                           <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold">{prim.name}</code>
                           {prim.example && <code className="text-[var(--text-muted)] text-sm landing-mono">{prim.example}</code>}
                         </div>
-                        <span className="text-[var(--text-muted)] text-sm landing-body">{prim.description}</span>
+                        <span className="text-[var(--text-muted)] text-sm landing-body">{fmtCloud(prim.description)}</span>
                       </div>
                     ))}
                   </div>
@@ -2666,10 +2681,10 @@ export default function TopicDetail({
                     {topicDetails.problems.map((problem, i) => (
                       <div key={i} className="p-4 rounded border border-[var(--border)]">
                         <h4 className="text-[var(--text-primary)] font-semibold text-sm mb-2 landing-display">{problem.name}</h4>
-                        <p className="text-[var(--text-muted)] text-sm mb-2 landing-body">{problem.description}</p>
+                        <p className="text-[var(--text-muted)] text-sm mb-2 landing-body">{fmtCloud(problem.description)}</p>
                         <div className="flex items-start gap-2">
                           <span className="text-[var(--accent)] text-sm font-semibold landing-mono">Solution:</span>
-                          <span className="text-[var(--text-muted)] text-sm landing-body">{problem.solution}</span>
+                          <span className="text-[var(--text-muted)] text-sm landing-body">{fmtCloud(problem.solution)}</span>
                         </div>
                       </div>
                     ))}
@@ -2687,7 +2702,7 @@ export default function TopicDetail({
                     {topicDetails.structures.map((struct, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded bg-white border border-[var(--border)]">
                         <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold whitespace-nowrap">{struct.name}</code>
-                        <span className="text-[var(--text-muted)] text-sm landing-body">{struct.description}</span>
+                        <span className="text-[var(--text-muted)] text-sm landing-body">{fmtCloud(struct.description)}</span>
                       </div>
                     ))}
                   </div>
@@ -2713,9 +2728,9 @@ export default function TopicDetail({
                 {quoteMatch ? (
                   <>
                     <div className="pl-4 border-l-2 border-[var(--accent)] mb-4">
-                      <p className="text-[16px] font-medium text-[var(--text-primary)] italic landing-body leading-relaxed">"{quoteMatch[1]}"</p>
+                      <p className="text-[16px] font-medium text-[var(--text-primary)] italic landing-body leading-relaxed">"{fmtCloud(quoteMatch[1])}"</p>
                     </div>
-                    <p className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body">{quoteMatch[2].trim()}</p>
+                    <p className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body">{fmtCloud(quoteMatch[2].trim())}</p>
                   </>
                 ) : (
                   <p className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body">{topicDetails.introduction}</p>
@@ -3045,7 +3060,7 @@ export default function TopicDetail({
                   )}
                   <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{t.title}</h4>
                   {t.description && (
-                    <p className="text-[12px] leading-snug line-clamp-2" style={{ color: 'var(--text-muted)' }}>{t.description}</p>
+                    <p className="text-[12px] leading-snug line-clamp-2" style={{ color: 'var(--text-muted)' }}>{fmtCloud(t.description)}</p>
                   )}
                 </button>
               ))}

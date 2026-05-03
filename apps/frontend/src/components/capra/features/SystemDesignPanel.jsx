@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
+import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
+import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
 
 
 /**
@@ -298,6 +300,12 @@ function ASCIIDiagram({ systemDesign, detailed = false }) {
 
 export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGenerateEraser = false, onGenerateEraserDiagram, question, cloudProvider = 'auto', qaHistory = [], onFollowUpQuestion, isProcessingFollowUp = false, diagramOnly = false }) {
   const isElectron = false; // Electron removed in unified frontend
+  // Cloud-aware text translator. AWS service names embedded in the LLM
+  // response (overview, architecture descriptions, API blurbs) get
+  // swapped to the chosen cloud's equivalents at render time. This is a
+  // safety net — the LLM should already be cloud-aware via prompts —
+  // but it costs nothing and rescues older cached responses.
+  const fmtCloud = useCloudFormatter();
   const [generatingEraser, setGeneratingEraser] = useState(false);
   const [diagramModal, setDiagramModal] = useState(false);
   const [proDiagramModal, setProDiagramModal] = useState(false);
@@ -544,6 +552,10 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           <div className="w-1.5 h-1.5 rounded-full bg-brand-400" />
           <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">System Design</span>
         </div>
+        {/* Cloud-platform selector — same instance as the docs header,
+            backed by useCloudProvider so a flip here propagates to every
+            other diagram surface in the same browser. */}
+        <CloudProviderSelector variant="compact" />
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
@@ -553,7 +565,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {/* Overview for focused answer */}
             {systemDesign.overview && (
               <div className="rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <p className="text-xs text-[var(--text-primary)] leading-snug">{systemDesign.overview}</p>
+                <p className="text-xs text-[var(--text-primary)] leading-snug">{fmtCloud(systemDesign.overview)}</p>
               </div>
             )}
 
@@ -600,7 +612,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {systemDesign.overview && (
               <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
                 <h4 className="text-sm font-semibold mb-2 text-[var(--text-primary)]">Overview</h4>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{systemDesign.overview}</p>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{fmtCloud(systemDesign.overview)}</p>
               </div>
             )}
             {hasScalability && (
@@ -712,7 +724,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   ))}
                 </div>
                 {systemDesign.architecture.description && (
-                  <p className="text-xs text-[var(--text-secondary)] leading-snug">{systemDesign.architecture.description}</p>
+                  <p className="text-xs text-[var(--text-secondary)] leading-snug">{fmtCloud(systemDesign.architecture.description)}</p>
                 )}
               </div>
             )}
@@ -741,7 +753,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         }`}>{api.method}</span>
                         <code className="text-xs font-mono text-[var(--text-primary)]">{api.endpoint}</code>
                       </div>
-                      <p className="text-xs text-[var(--text-secondary)] leading-snug">{api.description}</p>
+                      <p className="text-xs text-[var(--text-secondary)] leading-snug">{fmtCloud(api.description)}</p>
                       {(api.request || api.response) && (
                         <div className="grid grid-cols-2 gap-2 mt-1.5">
                           {api.request && (
@@ -794,7 +806,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                               <tr key={fi} className="border-b border-[var(--border)] last:border-0">
                                 <td className="py-0.5 font-mono text-[var(--text-primary)]">{field.name}</td>
                                 <td className="py-0.5 text-blue-600 font-mono">{field.type}</td>
-                                <td className="py-0.5 text-[var(--text-secondary)]">{field.description}</td>
+                                <td className="py-0.5 text-[var(--text-secondary)]">{fmtCloud(field.description)}</td>
                               </tr>
                             ))}
                           </tbody>
