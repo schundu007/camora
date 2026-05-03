@@ -16,6 +16,7 @@ import secrets
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from speaker import router as speaker_router
 from diagram import router as diagram_router
@@ -42,11 +43,22 @@ class ApiKeyAuth(BaseHTTPMiddleware):
             # Fail closed: an unset env in prod must not silently
             # disable auth. Dev can opt-in via AI_SERVICES_DEV_OPEN=1.
             if os.getenv("AI_SERVICES_DEV_OPEN") != "1":
-                raise HTTPException(503, "AI_SERVICES_API_KEY not configured")
+                # Return JSONResponse directly — Starlette's
+                # BaseHTTPMiddleware swallows HTTPException raised
+                # inside dispatch and surfaces it as a 500, which
+                # makes log triage harder and fails monitoring
+                # heuristics that rely on real status codes.
+                return JSONResponse(
+                    status_code=503,
+                    content={"detail": "AI_SERVICES_API_KEY not configured"},
+                )
             return await call_next(request)
         provided = request.headers.get("x-api-key", "")
         if not secrets.compare_digest(provided.encode(), expected.encode()):
-            raise HTTPException(401, "Invalid or missing X-API-Key")
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid or missing X-API-Key"},
+            )
         return await call_next(request)
 
 
