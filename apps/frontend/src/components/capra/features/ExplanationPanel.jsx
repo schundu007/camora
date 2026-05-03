@@ -493,17 +493,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin p-3 space-y-3">
         {/* Solution Pitch - Structured format for easy verbal delivery */}
         {pitch && (
-          <div className="p-4 rounded-lg bg-brand-400/10 border border-brand-400/30 animate-fadeIn">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-brand-400/20">
-                <svg className="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-xs font-bold uppercase tracking-wide text-brand-400">
-                How to Explain
-              </span>
-            </div>
+          <SectionCard title="How to Explain" className="animate-fadeIn">
 
             {/* Handle structured pitch object */}
             {typeof pitch === 'object' && pitch.opener ? (
@@ -610,12 +600,12 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
               /* Fallback for string format */
               <FormattedText text={typeof pitch === 'string' ? pitch : String(pitch)} />
             )}
-          </div>
+          </SectionCard>
         )}
 
         {/* Interviewer Q&A Section */}
         {hasSolution && onFollowUpQuestion && (
-          <div className="p-4 rounded-lg bg-[var(--bg-elevated)]/30 border border-[var(--border)] animate-fadeIn">
+          <div className="animate-fadeIn">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-info-400/20">
@@ -778,17 +768,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
 
         {/* Line-by-line Explanations */}
         {explanations && explanations.length > 0 && (
-          <div className="p-4 rounded-lg bg-[var(--bg-elevated)]/30 border border-[var(--border)] animate-fadeIn">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--bg-elevated)]/50">
-                <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-              </div>
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">
-                Line Breakdown
-              </span>
-            </div>
+          <SectionCard title="Line Breakdown" className="animate-fadeIn">
             <div className="space-y-2">
               {explanations.map((item, index) => {
                 const isHighlighted = highlightedLine === item.line;
@@ -820,7 +800,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
                 );
               })}
             </div>
-          </div>
+          </SectionCard>
         )}
       </div>
     </div>
