@@ -41,19 +41,25 @@ function renderMarkdown(text) {
       continue;
     }
 
-    // Headers
+    // Headers — each gets a gold-leaf left rail to match the navy+gold
+    // accent pattern used across the answer surfaces (SectionCard,
+    // ExplanationPanel). Inline-styled because OutputPanel renders into
+    // markdown blocks dynamically; we can't wrap in SectionCard.
+    const railH4 = <span className="inline-block align-middle mr-2" style={{ width: 3, height: 12, borderRadius: 2, background: 'var(--cam-gold-leaf)' }} />;
+    const railH3 = <span className="inline-block align-middle mr-2" style={{ width: 3, height: 14, borderRadius: 2, background: 'var(--cam-gold-leaf)' }} />;
+    const railH2 = <span className="inline-block align-middle mr-2" style={{ width: 4, height: 16, borderRadius: 2, background: 'var(--cam-gold-leaf)' }} />;
     if (trimmed.startsWith('### ')) {
-      elements.push(<h4 key={`h4-${i}`} className="font-semibold text-sm mt-3 mb-1" style={{ color: 'var(--accent-text)' }}>{trimmed.slice(4)}</h4>);
+      elements.push(<h4 key={`h4-${i}`} className="font-semibold text-sm mt-3 mb-1 flex items-center" style={{ color: 'var(--accent-text)' }}>{railH4}{trimmed.slice(4)}</h4>);
       i++;
       continue;
     }
     if (trimmed.startsWith('## ')) {
-      elements.push(<h3 key={`h3-${i}`} className="font-semibold text-base mt-3 mb-1" style={{ color: 'var(--accent-text)' }}>{trimmed.slice(3)}</h3>);
+      elements.push(<h3 key={`h3-${i}`} className="font-semibold text-base mt-3 mb-1 flex items-center" style={{ color: 'var(--accent-text)' }}>{railH3}{trimmed.slice(3)}</h3>);
       i++;
       continue;
     }
     if (trimmed.startsWith('# ')) {
-      elements.push(<h2 key={`h2-${i}`} className="font-bold text-lg mt-3 mb-2" style={{ color: 'var(--accent-text)' }}>{trimmed.slice(2)}</h2>);
+      elements.push(<h2 key={`h2-${i}`} className="font-bold text-lg mt-3 mb-2 flex items-center" style={{ color: 'var(--accent-text)' }}>{railH2}{trimmed.slice(2)}</h2>);
       i++;
       continue;
     }
