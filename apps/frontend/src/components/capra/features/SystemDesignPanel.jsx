@@ -317,6 +317,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const [diagramCache, setDiagramCache] = useState({});
   const [diagramError, setDiagramError] = useState(null);
   const autoLoadedRef = useRef(null);
+  const wheelTargetRef = useRef(null);
   // Detail + direction were user-toggleable in the legacy toolbar but are
   // now server-pinned to detailed/TB (PR #1 cutover). Kept as state so the
   // dependent code (diagramKey, handleGenerateDiagram retry, fullscreen
@@ -400,6 +401,23 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [systemDesign?.included, question]);
+
+  // Attach wheel listener as NON-passive so e.preventDefault() works
+  // for trackpad pinch-zoom on the diagram. React 18+ binds onWheel as
+  // passive by default, which fires "Unable to preventDefault inside
+  // passive event listener" warnings 49+ times per scroll. Manual
+  // addEventListener with {passive: false} is the supported workaround.
+  useEffect(() => {
+    const el = wheelTargetRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (!diagramData) return;
+      e.preventDefault();
+      setDiagramScale((s) => Math.min(4, Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1))));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [diagramData]);
 
   const handleGenerateEraser = async () => {
     if (!onGenerateEraserDiagram) return;
@@ -614,9 +632,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             the image at native pixel size (maxWidth:'none') which produced
             multi-page scrolls for tall TB diagrams. */}
         <div
+          ref={wheelTargetRef}
           className="flex-1 min-h-0 overflow-hidden cursor-grab active:cursor-grabbing relative flex items-center justify-center"
           style={{ background: 'var(--bg-app)', maxHeight: 'calc(100vh - 220px)' }}
-          onWheel={(e) => { if (diagramData) { e.preventDefault(); setDiagramScale(s => Math.min(4, Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)))); } }}
           onMouseDown={(e) => { if (diagramData) { setIsDragging(true); setDragStart({ x: e.clientX - diagramTranslate.x, y: e.clientY - diagramTranslate.y }); } }}
           onMouseMove={(e) => { if (isDragging) { setDiagramTranslate({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y }); } }}
           onMouseUp={() => setIsDragging(false)}
