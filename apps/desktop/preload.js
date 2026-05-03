@@ -6,7 +6,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('camo', {
   isDesktop: true,
   platform: process.platform,
-  version: '2.0.0',
+  version: '2.1.0',
 
   // Permissions — both read-only status check and prompt-trigger.
   // The audio setup wizard uses these to make permission flow explicit

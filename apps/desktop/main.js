@@ -15,7 +15,7 @@
 //   • No screen-capture entitlement gating beyond what macOS TCC handles natively.
 
 const {
-  app, BrowserWindow, BrowserView, globalShortcut, systemPreferences,
+  app, BrowserWindow, globalShortcut, systemPreferences,
   session, shell, ipcMain, desktopCapturer, dialog, nativeImage,
   Menu, MenuItem, clipboard,
 } = require('electron');
