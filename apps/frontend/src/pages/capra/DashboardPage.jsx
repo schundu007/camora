@@ -1261,8 +1261,13 @@ function CodingLayout({
               <div className="flex-shrink-0 px-3 py-2 border-b border-[var(--border)]">
                 <ProblemInput {...problemInputProps} />
               </div>
-              {/* Cloud Architecture Diagram fills remaining space */}
-              <div className="flex-1 min-h-0 overflow-auto">
+              {/* Cloud Architecture Diagram fills remaining space.
+                  overflow-hidden because SystemDesignPanel handles its own
+                  pan/zoom internally — the previous overflow-auto here
+                  caused the page to grow whenever the rendered diagram
+                  was tall (TB direction with 25 nodes), forcing 3-screen
+                  scrolls instead of pan-in-place. */}
+              <div className="flex-1 min-h-0 overflow-hidden">
                 {hasSystemDesign ? (
                   <Suspense fallback={null}>
                     <SystemDesignPanel
