@@ -174,6 +174,10 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
     // hit. Inbound values are ignored on purpose.
     const direction = 'TB';
     const detailLevel = 'detailed';
+    // Engine is part of the cache key so flipping DIAGRAM_ENGINE doesn't
+    // serve old-engine bytes under the new engine. After the d2 cutover,
+    // legacy graphviz rows become orphans — harmless until cleanup.
+    const engine = (process.env.DIAGRAM_ENGINE || 'd2').toLowerCase();
 
     if (!question) {
       throw new AppError('Question is required', ErrorCode.VALIDATION_ERROR);
@@ -182,7 +186,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
     // 1. Check DB cache first — cached diagrams cost nothing to serve.
     // Only treat a row as a hit when we actually have a PNG (image_url or
     // image_data).
-    const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
+    const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}::${engine}`);
     try {
       const cached = await query(
         'SELECT image_url, image_data IS NOT NULL AS has_image_data FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL)',
@@ -313,11 +317,14 @@ router.post('/lookup', async (req, res) => {
     // returns the auto-generated diagram if no cloud-specific row exists yet.
     const direction = 'TB';
     const detailLevel = 'detailed';
+    // Engine matches /generate so cache keys agree. After the d2 cutover,
+    // graphviz-era rows become unreachable until reseeded by an admin.
+    const engine = (process.env.DIAGRAM_ENGINE || 'd2').toLowerCase();
     const providers = cloudProvider === 'auto' ? ['auto'] : [cloudProvider, 'auto'];
     const tried = new Set();
 
     for (const p of providers) {
-      const hash = hashProblem(`${question}::${p}::${direction}::${detailLevel}`);
+      const hash = hashProblem(`${question}::${p}::${direction}::${detailLevel}::${engine}`);
       if (tried.has(hash)) continue;
       tried.add(hash);
 
