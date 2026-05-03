@@ -48,6 +48,18 @@ RUN npm install --no-audit --no-fund --omit=optional
 RUN python3 -m venv /app/.venv \
  && /app/.venv/bin/pip install --no-cache-dir diagrams anthropic
 
+# D2 — modern declarative diagram engine (Terrastruct). Used by the
+# DIAGRAM_ENGINE=d2 path; Graphviz remains the default until we cut over.
+# Pinned to a known-good release so the binary is reproducible.
+ARG D2_VERSION=v0.7.1
+RUN curl -fsSL "https://github.com/terrastruct/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-$(dpkg --print-architecture).tar.gz" \
+      -o /tmp/d2.tar.gz \
+ && tar -xzf /tmp/d2.tar.gz -C /tmp \
+ && cp "/tmp/d2-${D2_VERSION}/bin/d2" /usr/local/bin/d2 \
+ && chmod +x /usr/local/bin/d2 \
+ && rm -rf /tmp/d2.tar.gz "/tmp/d2-${D2_VERSION}" \
+ && d2 --version
+
 # Rebuild the font cache so freshly-added fonts are visible to graphviz/rsvg.
 RUN fc-cache -fv || true
 

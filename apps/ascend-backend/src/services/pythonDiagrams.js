@@ -13,8 +13,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to Python script
-const DIAGRAM_ENGINE_PATH = path.join(__dirname, 'diagram_engine.py');
+// Engine selection — `DIAGRAM_ENGINE=d2` opts in to the D2 spike. Default
+// stays on the existing Graphviz/diagrams engine so prod is unchanged
+// until we cut over for real.
+const DIAGRAM_ENGINE = (process.env.DIAGRAM_ENGINE || 'graphviz').toLowerCase();
+const GRAPHVIZ_ENGINE_PATH = path.join(__dirname, 'diagram_engine.py');
+const D2_ENGINE_PATH = path.join(__dirname, 'diagram_d2.py');
+const DIAGRAM_ENGINE_PATH = DIAGRAM_ENGINE === 'd2' ? D2_ENGINE_PATH : GRAPHVIZ_ENGINE_PATH;
 
 // Output directory for diagrams
 const OUTPUT_DIR = process.env.DIAGRAM_OUTPUT_DIR || '/tmp/chundu_diagrams';
@@ -83,6 +88,7 @@ export async function generateDiagram({
 
   return new Promise((resolve, reject) => {
     console.log('[PythonDiagrams] Generating diagram...');
+    console.log('[PythonDiagrams] Engine:', DIAGRAM_ENGINE);
     console.log('[PythonDiagrams] Detail level:', detailLevel);
     console.log('[PythonDiagrams] Engine path:', DIAGRAM_ENGINE_PATH);
     console.log('[PythonDiagrams] Output dir:', OUTPUT_DIR);
