@@ -92,9 +92,11 @@ export async function authenticate(req, res, next) {
       console.warn('initUser failed in lumora authenticate:', initErr?.message || initErr);
     }
 
-    // Set admin flag for usage bypass
-    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-    user.is_admin = ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    // Set admin flag for usage bypass. Env-only — no source fallback
+    // (matches billing.js + ascendPrep.js so the bypass list stays
+    // consistent and a hardcoded address can't outlive a real change).
+    const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    user.is_admin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(user.email?.toLowerCase());
 
     req.user = user;
     next();

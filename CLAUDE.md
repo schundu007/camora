@@ -12,12 +12,15 @@ Camora is a monorepo for an AI-powered interview platform with two products:
 
 ```
 apps/
-  frontend/        # React 19 + Vite 8 + Tailwind 4 (deployed on Vercel)
+  camora/          # React 19 + Vite 8 + Tailwind 4 (deployed on Vercel)
+                   #   was apps/frontend pre-2026-05; renamed to match the product brand
   lumora-backend/  # Express 5 — live interview API (deployed on Railway)
-  ascend-backend/  # Express 5 — prep/study API (deployed on Railway)
+  ascend-backend/  # Express 5 — prep/study API + lumora mirror (deployed on Railway)
   ai-services/     # FastAPI (Python) — speaker verification, diagrams (Docker on Railway)
+                   #   non-/health routes require X-API-Key in AI_SERVICES_API_KEY env
+  desktop/         # Electron 41 shell that loads camora.cariara.com (arm64 DMG)
 packages/
-  shared-types/    # TypeScript types (User, Conversation, Subscription, etc.)
+  shared-types/    # TypeScript types (User, Conversation, Subscription, PlanType, etc.)
   shared-db/       # PostgreSQL pool (getPool, query, closePool) + migrations
   shared-auth/     # JWT auth (verifyToken, createToken, authenticate middleware, SSO cookie)
 ```
@@ -107,11 +110,13 @@ cd apps/camora && npx eslint .
 
 ### Backends
 - `DATABASE_URL` — PostgreSQL connection string
-- `JWT_SECRET` / `JWT_SECRET_KEY` — JWT signing key
+- `JWT_SECRET` — JWT signing key (canonical). `JWT_SECRET_KEY` was the prior name and is still read as a fallback for backward compat — set `JWT_SECRET` going forward.
 - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` — AI model access
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — Payments
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — OAuth
 - `AI_SERVICES_URL` (default: `http://localhost:8001`) — Python microservice
+- `AI_SERVICES_API_KEY` — shared secret. Required on both ai-services AND every backend that calls it (lumora-backend, ascend-backend). The Python service rejects all non-`/health` requests without a matching `X-API-Key` header. Generate with `openssl rand -hex 32`.
+- `OWNER_EMAILS` / `ADMIN_EMAILS` (csv) — bypass quotas + admin gates. No hardcoded fallback in source; if unset, no one is admin.
 - `REDIS_URL` — Redis (ascend-backend only)
 
 ## Conventions
@@ -138,7 +143,7 @@ cd apps/camora && npx eslint .
 - **Ascend backend** (`jwtAuth`): Strict JWT validation with token type checking (`type: 'access'`), calls `initUser()` to auto-provision subscription/credits records on first request
 - **Lumora backend** (`authenticate`): Email-based user lookup, auto-creates user with `provider='ascend_sso'` if not found in DB
 - **`optionalJwtAuth`**: Non-blocking — attaches user if token present, proceeds without auth otherwise
-- **`subscriptionRequired`**: Blocks free-tier users; valid paid plans are `monthly` and `quarterly_pro`
+- **`subscriptionRequired`**: Blocks free-tier users; valid paid plan_type values are `pro_monthly`, `pro_yearly`, `team`, `lifetime` (see `packages/shared-types/src/index.ts` `PlanType`). Owner emails (`OWNER_EMAILS` / `ADMIN_EMAILS` env) bypass the gate; nothing is hardcoded in source.
 
 ## Frontend Routing Details
 
@@ -149,7 +154,7 @@ cd apps/camora && npx eslint .
 
 ## Deployment
 
-- **Frontend**: Vercel (auto-deploys, SPA rewrite to `index.html`)
+- **Frontend**: Vercel — auto-deploy from `main` is unreliable on this project; after every push run `vercel --prod` from the repo root (the `.vercel` link is at root, not `apps/camora/`, because the project's Vercel-side Root Directory is set to `apps/camora` and the CLI would otherwise double the path)
 - **Lumora Backend**: Railway (Nixpacks — `nodejs_20` + `ffmpeg`, healthcheck at `/health`)
 - **Ascend Backend**: Railway (Nixpacks — `nodejs_20` + `python3` + `graphviz` + `go` + `rustc` + `openjdk17`, healthcheck at `/health`)
 - **AI Services**: Railway (Dockerfile, `python:3.11-slim` + `graphviz` + `ffmpeg`, healthcheck at `/health`)

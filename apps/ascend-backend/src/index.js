@@ -907,11 +907,14 @@ app.delete('/api/admin/delete-user/:userId', apiLimiter, authenticate, async (re
     const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
-    const { userId } = req.params;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    const userIdNum = parseInt(req.params.userId, 10);
+    if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
+      return res.status(400).json({ error: 'userId must be a positive integer' });
+    }
+    const userId = userIdNum;
 
     // Prevent self-deletion
-    if (parseInt(userId) === req.user.id) return res.status(400).json({ error: 'Cannot delete your own account' });
+    if (userId === req.user.id) return res.status(400).json({ error: 'Cannot delete your own account' });
 
     const user = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
     if (!user.rows[0]) return res.status(404).json({ error: 'User not found' });

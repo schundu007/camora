@@ -10653,7 +10653,7 @@ This is one of the most impactful Bloom filter optimizations in big data process
           id: 'sharding-algorithms',
           title: 'Sharding Algorithms',
           description: 'Range-based, Hash-based, Consistent Hashing, and Virtual Bucket sharding strategies',
-          src: '/diagrams/data-partitioning/sharding-algorithms.png',
+          src: '/diagrams/data-partitioning/sharding-algorithms.svg',
           type: 'architecture'
         }
       ],
@@ -12212,7 +12212,7 @@ Query "design interview" -> doc1 AND doc2 match "design", doc2 matches "intervie
           id: 'index-data-structures',
           title: 'Index Data Structures',
           description: 'B+ Tree, LSM Tree, Hash Index, and Inverted Index — how databases store and retrieve data',
-          src: '/diagrams/database-indexes/index-data-structures.png',
+          src: '/diagrams/database-indexes/index-data-structures.svg',
           type: 'architecture'
         }
       ],
@@ -16302,7 +16302,7 @@ Use single-leader: When strong consistency is non-negotiable
       ],
       staticDiagrams: [
         { id: 'eraser-replication', title: 'Replication Architecture (Eraser)', description: 'Primary with sync standby, async cross-region replicas, automatic failover', src: '/diagrams/redundancy-replication/eraser-replication.png', type: 'cloud-architecture' },
-        { id: 'disaster-recovery', title: 'Disaster Recovery Strategies', description: 'Backup & Restore, Pilot Light, Warm Standby, and Multi-Site Active-Active with RPO/RTO comparison', src: '/diagrams/redundancy-replication/disaster-recovery.png', type: 'architecture' }
+        { id: 'disaster-recovery', title: 'Disaster Recovery Strategies', description: 'Backup & Restore, Pilot Light, Warm Standby, and Multi-Site Active-Active with RPO/RTO comparison', src: '/diagrams/redundancy-replication/disaster-recovery.svg', type: 'architecture' }
       ],
 
       comparisonTables: [
@@ -24421,7 +24421,7 @@ Two clients write different values to the same key concurrently:
           id: 'quorum-formula',
           title: 'Quorum Consensus',
           description: 'W + R > N formula with Fast Writes, Balanced, and Fast Reads configurations',
-          src: '/diagrams/quorum/quorum-formula.png',
+          src: '/diagrams/quorum/quorum-formula.svg',
           type: 'architecture'
         }
       ],
@@ -25328,7 +25328,7 @@ Phase 2: ACCEPT
           id: 'replication-patterns',
           title: 'Replication Patterns',
           description: 'Single-Leader, Multi-Leader, and Leaderless replication with trade-offs',
-          src: '/diagrams/leader-follower/replication-patterns.png',
+          src: '/diagrams/leader-follower/replication-patterns.svg',
           type: 'architecture'
         }
       ],
@@ -26146,7 +26146,7 @@ Step 4: Validate with simulation
           id: 'failure-detection',
           title: 'Failure Detection Methods',
           description: 'Heartbeat, Ping/Echo, Gossip Protocol, and Phi Accrual detection strategies',
-          src: '/diagrams/heartbeat-mechanism/failure-detection.png',
+          src: '/diagrams/heartbeat-mechanism/failure-detection.svg',
           type: 'architecture'
         }
       ],
@@ -27723,7 +27723,7 @@ A client always sees the results of its own writes.
           id: 'consistency-spectrum',
           title: 'Consistency Models',
           description: 'Spectrum from Strong to Eventual consistency with database examples',
-          src: '/diagrams/strong-vs-eventual-consistency/consistency-spectrum.png',
+          src: '/diagrams/strong-vs-eventual-consistency/consistency-spectrum.svg',
           type: 'architecture'
         }
       ],
@@ -27768,7 +27768,7 @@ A client always sees the results of its own writes.
           id: 'latency-numbers',
           title: 'Latency Numbers',
           description: 'Key latency numbers from 1ns (L1 cache) to 10s (retry interval) every developer should know',
-          src: '/diagrams/latency-vs-throughput/latency-numbers.png',
+          src: '/diagrams/latency-vs-throughput/latency-numbers.svg',
           type: 'architecture'
         }
       ],
@@ -29122,7 +29122,7 @@ MVCC (Multi-Version Concurrency Control):
           id: 'acid-properties',
           title: 'ACID Properties',
           description: 'Atomicity, Consistency, Isolation, Durability — the four guarantees of database transactions',
-          src: '/diagrams/acid-vs-base/acid-properties.png',
+          src: '/diagrams/acid-vs-base/acid-properties.svg',
           type: 'architecture'
         }
       ],

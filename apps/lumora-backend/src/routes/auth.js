@@ -146,12 +146,17 @@ router.get('/me', authenticate, async (req, res) => {
     // (`payload.type === 'access'` strict check). Without it, a token minted
     // here would auth on lumora but get 401 when used to call ascend endpoints
     // like /api/onboarding/status.
+    // Carry req.user.gen forward — req.user is set by the authenticate
+    // middleware which already verified the incoming JWT, including
+    // its gen claim. Forwarding gen lets ascend's /me reject the
+    // re-issued token if revoke-all-sessions ran in between.
     const accessToken = createToken({
       sub: req.user.id,
       email: req.user.email,
       name: req.user.name,
       picture: req.user.picture,
       type: 'access',
+      ...(req.user.gen !== undefined ? { gen: req.user.gen } : {}),
     }, '24h');
     return res.json({ ...user, access_token: accessToken });
   } catch (err) {

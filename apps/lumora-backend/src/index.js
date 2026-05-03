@@ -220,17 +220,21 @@ app.use('/api/v1/transcribe', aiLimiter, authenticate, requirePaidSubscription, 
 app.use('/api/v1/speaker', aiLimiter, authenticate, requirePaidSubscription, speakerRouter);
 app.use('/api/v1/diagram', aiLimiter, authenticate, requirePaidSubscription, diagramRouter);
 
-// Non-AI routes — open to authenticated users.
-app.use('/api/v1/conversations', apiLimiter, conversationsRouter);
-app.use('/api/v1/documents', apiLimiter, documentsRouter);
-app.use('/api/v1/prep', apiLimiter, prepRouter);
-app.use('/api/v1/company-context', apiLimiter, companyContextRouter);
-app.use('/api/v1/audio-prefs', apiLimiter, audioPrefsRouter);
-app.use('/api/v1/reactions', apiLimiter, reactionsRouter);
-app.use('/api/v1/analytics', apiLimiter, analyticsRouter);
-app.use('/api/v1/usage', apiLimiter, usageRouter);
-app.use('/api/v1/jobs', apiLimiter, jobsRouter);
-app.use('/api/v1/stories', apiLimiter, storiesRouter);
+// Non-AI routes — open to authenticated users. Apply `authenticate`
+// at the mount point so an accidentally-added route inside any of
+// these routers can't ship publicly. Routers that intentionally need
+// anonymous routes can still expose them by being mounted without
+// the middleware (none currently).
+app.use('/api/v1/conversations', apiLimiter, authenticate, conversationsRouter);
+app.use('/api/v1/documents', apiLimiter, authenticate, documentsRouter);
+app.use('/api/v1/prep', apiLimiter, authenticate, prepRouter);
+app.use('/api/v1/company-context', apiLimiter, authenticate, companyContextRouter);
+app.use('/api/v1/audio-prefs', apiLimiter, authenticate, audioPrefsRouter);
+app.use('/api/v1/reactions', apiLimiter, authenticate, reactionsRouter);
+app.use('/api/v1/analytics', apiLimiter, analyticsRouter); // analytics may include public ingestion routes
+app.use('/api/v1/usage', apiLimiter, authenticate, usageRouter);
+app.use('/api/v1/jobs', apiLimiter, jobsRouter); // jobs feed is public-readable
+app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public-readable
 
 // Global error handler — generic message to client, full details to logs.
 app.use((err, req, res, next) => {

@@ -122,20 +122,39 @@ def _extract_python_code(text: str) -> str:
 
 
 def _sanitize_code(code: str) -> str:
-    """Basic sanitisation to block obviously dangerous patterns."""
+    """Block obviously dangerous patterns in LLM-generated code.
+
+    This is a defense-in-depth check ONLY. The real security
+    boundary is the X-API-Key gate on /diagram/generate plus the
+    OS-level sandbox the runner script is executed in (subprocess
+    with capped timeout, no shell, no network egress assumed). The
+    pattern list is intentionally broad to catch the obvious
+    ways LLM output could try to escape the diagrams library —
+    `__import__`, getattr-on-builtins, importlib variants, file IO
+    helpers, network syscalls, dangerous serialisers — even though
+    each is bypassable in isolation.
+    """
     blocked = [
-        "os.system",
+        # Direct module access
+        "os.system", "os.popen", "os.exec",
         "subprocess",
+        "importlib", "import_module",
         "__import__",
-        "eval(",
-        "exec(",
-        "open(",
-        "shutil.rmtree",
-        "pathlib",
-        "importlib",
+        "__builtins__", "builtins.",
+        # Dynamic execution
+        "eval(", "exec(", "compile(",
+        "getattr(", "vars(", "globals(", "locals(",
+        # File / shell IO outside the diagrams render path
+        "open(", "io.open", "shutil.", "pathlib", "Path(",
+        # Networking
+        "socket", "urllib", "requests",
+        "http.client", "httpx",
+        # Dangerous deserialisers
+        "pickle", "marshal", "shelve", "yaml.load",
     ]
+    lowered = code.lower()
     for pattern in blocked:
-        if pattern in code:
+        if pattern.lower() in lowered:
             raise ValueError(f"Generated code contains blocked pattern: {pattern}")
 
     # Ensure show=False is present
@@ -210,11 +229,23 @@ async def generate_diagram(request: DiagramRequest):
         with open(script_path, "w") as f:
             f.write(code)
 
+        # Lower timeout to 15s — a legitimate `diagrams` render is
+        # sub-second; 60s only helped attacker-controlled code reach
+        # external services. Strip env so the subprocess can't see the
+        # parent's secrets (ANTHROPIC_API_KEY, AI_SERVICES_API_KEY,
+        # DATABASE_URL, etc.); only PATH + a minimal HOME survive so
+        # graphviz's `dot` binary can still be located.
+        sandboxed_env = {
+            "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin"),
+            "HOME": tmpdir,
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
         result = subprocess.run(
-            [sys.executable, script_path],
+            [sys.executable, "-I", script_path],
             cwd=tmpdir,
             capture_output=True,
-            timeout=60,
+            timeout=15,
+            env=sandboxed_env,
         )
 
         if result.returncode != 0:

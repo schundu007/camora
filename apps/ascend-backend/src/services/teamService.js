@@ -198,6 +198,14 @@ const POOL_REMINDER_CRITICAL_THRESHOLD = 0.95; // 95% used → urgent email
  */
 export async function maybeSendPoolReminder({ scope, scopeId, ownerEmail, ownerName, poolHours, usedHours }) {
   if (!ownerEmail || poolHours <= 0) return;
+  // Whitelist scope before computing the table/idCol it maps to.
+  // The previous else-branch silently fell through to ascend_subscriptions
+  // for any unexpected scope value, which would mask programming bugs
+  // (an unknown scope sending notifications against the wrong table).
+  if (scope !== 'team' && scope !== 'personal') {
+    logger.warn({ scope }, '[teamService] unknown scope, skipping reminder');
+    return;
+  }
   const ratio = usedHours / poolHours;
   if (ratio < POOL_REMINDER_WARN_THRESHOLD) return;
 
