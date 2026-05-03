@@ -915,26 +915,34 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 text-based traversal. A third Mermaid view added confusion
                 without new information. */}
 
-            {/* Row 4: ASCII Diagram - Full Width */}
-            <SectionCard
-              title="Architecture Flow"
-              className="col-span-full"
-              actions={
-                <button
-                  onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
-                  className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
-                  style={{
-                    background: 'var(--cam-gold-leaf)',
-                    color: '#020617',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                  }}
-                >
-                  {diagramDetailLevel === 'detailed' ? 'Detailed' : 'Overview'}
-                </button>
-              }
-            >
-              <ASCIIDiagram systemDesign={systemDesign} detailed={diagramDetailLevel === 'detailed'} />
-            </SectionCard>
+            {/* Row 4: ASCII Diagram - Full Width.
+                Guarded: only render once the systemDesign has REAL
+                architecture content. Without this, the panel renders
+                a "Client" + empty "Tech:" stub during streaming —
+                appearing FIRST while every other section is still
+                empty, which made Architecture Flow look like the
+                main / loaded section before anything else arrived. */}
+            {(hasArchitecture || hasTechJustifications) && (
+              <SectionCard
+                title="Architecture Flow"
+                className="col-span-full"
+                actions={
+                  <button
+                    onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
+                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
+                    style={{
+                      background: 'var(--cam-gold-leaf)',
+                      color: '#020617',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    {diagramDetailLevel === 'detailed' ? 'Detailed' : 'Overview'}
+                  </button>
+                }
+              >
+                <ASCIIDiagram systemDesign={systemDesign} detailed={diagramDetailLevel === 'detailed'} />
+              </SectionCard>
+            )}
 
             {/* Row 5: Tech Justifications (compact grid) */}
             {hasTechJustifications && (
