@@ -1507,18 +1507,34 @@ export default function JobsPage() {
         .jobs-filter-body {
           margin-top: 10px;
         }
+        /* Filter row gets navy text + gold-leaf left rail when its
+           radio is checked — completes the navy+gold accent pattern
+           used on the cards. The :has() selector lights up the row
+           directly from the radio's checked state, no JS plumbing
+           needed. */
         .jobs-filter-radio {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 6px 0;
+          padding: 6px 8px;
+          margin: 0 -8px;
           font-size: 14px;
           color: var(--text-primary);
           cursor: pointer;
           line-height: 1.4;
+          border-radius: 6px;
+          border-left: 2px solid transparent;
+          transition: background 0.12s, border-color 0.12s, color 0.12s;
         }
         .jobs-filter-radio:hover {
           color: var(--accent);
+          background: var(--bg-elevated);
+        }
+        .jobs-filter-radio:has(input[type="radio"]:checked) {
+          color: var(--accent);
+          font-weight: 600;
+          background: var(--bg-elevated);
+          border-left-color: var(--cam-gold-leaf);
         }
         .jobs-filter-radio input[type="radio"] {
           accent-color: var(--accent);
