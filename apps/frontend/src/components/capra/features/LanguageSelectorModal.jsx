@@ -2,53 +2,53 @@ import { useState, useEffect } from 'react';
 
 // Language data — pruned to ONLY languages the backend Dockerfile
 // installs a runtime for, so every choice can actually compile/run.
-// Frameworks (React, Django, Terraform etc.) below are study topics,
-// not language entries — the solve pipeline doesn't try to execute
-// them as scripts so they're not affected by runtime availability.
 //
 // Backend runtimes (apps/ascend-backend/Dockerfile):
 //   node:20 (JS) · typescript (npm) · python3 · gcc (C/C++) ·
 //   golang · rustc/cargo · openjdk-17 (Java) · bash
-// Removed because they have no installed compiler/runtime:
-//   python2, csharp, ruby, php, swift, kotlin, scala, perl, lua, r,
-//   haskell, clojure, elixir, erlang, fsharp, ocaml, dart, julia,
-//   objectivec, coffeescript, vb, tcl. If any of these come back,
-//   add the toolchain to the Dockerfile FIRST.
+//
+// Icons use the devicon CDN (https://devicon.dev) — official,
+// brand-accurate language SVGs served via jsdelivr. The render
+// path below detects URL-style icons via .startsWith('http') and
+// emits an <img> tag; legacy emoji/text icons fall through to text.
+const DEVICON = (slug, variant = 'original') =>
+  `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-${variant}.svg`;
+
 const LANGUAGES = [
   // Core Languages — every entry has a runtime on the backend
-  { value: 'python3', label: 'Python 3', icon: '🐍', categories: ['all', 'data'] },
-  { value: 'javascript', label: 'JavaScript', icon: 'JS', categories: ['all', 'frontend', 'backend'] },
-  { value: 'typescript', label: 'TypeScript', icon: 'TS', categories: ['all', 'frontend', 'backend'] },
-  { value: 'java', label: 'Java', icon: '☕', categories: ['all', 'backend', 'mobile'] },
-  { value: 'c', label: 'C', icon: 'C', categories: ['all'] },
-  { value: 'cpp', label: 'C++', icon: 'C+', categories: ['all'] },
-  { value: 'go', label: 'Go', icon: 'Go', categories: ['all', 'backend', 'devops'] },
-  { value: 'rust', label: 'Rust', icon: '🦀', categories: ['all'] },
-  { value: 'bash', label: 'Bash', icon: '$>', categories: ['all', 'devops'] },
+  { value: 'python3', label: 'Python 3', icon: DEVICON('python'), categories: ['all', 'data'] },
+  { value: 'javascript', label: 'JavaScript', icon: DEVICON('javascript'), categories: ['all', 'frontend', 'backend'] },
+  { value: 'typescript', label: 'TypeScript', icon: DEVICON('typescript'), categories: ['all', 'frontend', 'backend'] },
+  { value: 'java', label: 'Java', icon: DEVICON('java'), categories: ['all', 'backend', 'mobile'] },
+  { value: 'c', label: 'C', icon: DEVICON('c'), categories: ['all'] },
+  { value: 'cpp', label: 'C++', icon: DEVICON('cplusplus'), categories: ['all'] },
+  { value: 'go', label: 'Go', icon: DEVICON('go', 'original-wordmark'), categories: ['all', 'backend', 'devops'] },
+  { value: 'rust', label: 'Rust', icon: DEVICON('rust', 'plain'), categories: ['all'] },
+  { value: 'bash', label: 'Bash', icon: DEVICON('bash'), categories: ['all', 'devops'] },
   // Database / SQL
   { value: 'sql', label: 'SQL', icon: '🗃️', categories: ['all', 'sql'] },
-  { value: 'mysql', label: 'MySQL', icon: '🐬', categories: ['all', 'sql'] },
-  { value: 'postgresql', label: 'PostgreSQL', icon: '🐘', categories: ['all', 'sql'] },
+  { value: 'mysql', label: 'MySQL', icon: DEVICON('mysql'), categories: ['all', 'sql'] },
+  { value: 'postgresql', label: 'PostgreSQL', icon: DEVICON('postgresql'), categories: ['all', 'sql'] },
   // Frontend Frameworks
-  { value: 'react', label: 'React', icon: '⚛️', categories: ['all', 'frontend', 'mobile'] },
-  { value: 'vue', label: 'Vue', icon: 'V', categories: ['all', 'frontend'] },
-  { value: 'angular', label: 'Angular', icon: 'A', categories: ['all', 'frontend'] },
-  { value: 'svelte', label: 'Svelte', icon: 'S', categories: ['all', 'frontend'] },
-  { value: 'nextjs', label: 'Next.js', icon: 'N', categories: ['all', 'frontend'] },
-  { value: 'html', label: 'HTML', icon: '🌐', categories: ['all', 'frontend'] },
+  { value: 'react', label: 'React', icon: DEVICON('react'), categories: ['all', 'frontend', 'mobile'] },
+  { value: 'vue', label: 'Vue', icon: DEVICON('vuejs'), categories: ['all', 'frontend'] },
+  { value: 'angular', label: 'Angular', icon: DEVICON('angularjs'), categories: ['all', 'frontend'] },
+  { value: 'svelte', label: 'Svelte', icon: DEVICON('svelte'), categories: ['all', 'frontend'] },
+  { value: 'nextjs', label: 'Next.js', icon: DEVICON('nextjs'), categories: ['all', 'frontend'] },
+  { value: 'html', label: 'HTML', icon: DEVICON('html5'), categories: ['all', 'frontend'] },
   // Backend Frameworks
-  { value: 'nodejs', label: 'NodeJS', icon: '💚', categories: ['all', 'backend'] },
-  { value: 'django', label: 'Django', icon: 'Dj', categories: ['all', 'backend'] },
-  { value: 'rails', label: 'Rails', icon: '🛤️', categories: ['all', 'backend'] },
-  { value: 'spring', label: 'Spring', icon: '🌱', categories: ['all', 'backend'] },
+  { value: 'nodejs', label: 'NodeJS', icon: DEVICON('nodejs'), categories: ['all', 'backend'] },
+  { value: 'django', label: 'Django', icon: DEVICON('django', 'plain'), categories: ['all', 'backend'] },
+  { value: 'rails', label: 'Rails', icon: DEVICON('rails', 'plain'), categories: ['all', 'backend'] },
+  { value: 'spring', label: 'Spring', icon: DEVICON('spring'), categories: ['all', 'backend'] },
   // DevOps
-  { value: 'terraform', label: 'Terraform', icon: '🏗️', categories: ['all', 'devops'] },
-  { value: 'kubernetes', label: 'Kubernetes', icon: '☸️', categories: ['all', 'devops'] },
-  { value: 'docker', label: 'Docker', icon: '🐳', categories: ['all', 'devops'] },
+  { value: 'terraform', label: 'Terraform', icon: DEVICON('terraform', 'original'), categories: ['all', 'devops'] },
+  { value: 'kubernetes', label: 'Kubernetes', icon: DEVICON('kubernetes', 'plain'), categories: ['all', 'devops'] },
+  { value: 'docker', label: 'Docker', icon: DEVICON('docker'), categories: ['all', 'devops'] },
   // Data Science / ML
-  { value: 'pyspark', label: 'PySpark', icon: '⚡', categories: ['all', 'data'] },
-  { value: 'pytorch', label: 'PyTorch', icon: '🔥', categories: ['all', 'data'] },
-  { value: 'tensorflow', label: 'TensorFlow', icon: 'TF', categories: ['all', 'data'] },
+  { value: 'pyspark', label: 'PySpark', icon: DEVICON('apachespark'), categories: ['all', 'data'] },
+  { value: 'pytorch', label: 'PyTorch', icon: DEVICON('pytorch'), categories: ['all', 'data'] },
+  { value: 'tensorflow', label: 'TensorFlow', icon: DEVICON('tensorflow'), categories: ['all', 'data'] },
   { value: 'scipy', label: 'SciPy', icon: '📊', categories: ['all', 'data'] },
   // Blockchain
   { value: 'solidity', label: 'Solidity', icon: '⟠', categories: ['all'] },
@@ -237,7 +237,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                 }}
               >
                 <span
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all group-hover:scale-105"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all group-hover:scale-105 flex-shrink-0"
                   style={{
                     background: selectedLanguage === lang.value
                       ? activeCategoryData?.color || 'var(--accent)'
@@ -245,7 +245,18 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                     color: selectedLanguage === lang.value ? '#FFFFFF' : 'var(--text-dimmed)',
                   }}
                 >
-                  {lang.icon}
+                  {typeof lang.icon === 'string' && lang.icon.startsWith('http') ? (
+                    <img
+                      src={lang.icon}
+                      alt={lang.label}
+                      width={20}
+                      height={20}
+                      style={{ objectFit: 'contain' }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    lang.icon
+                  )}
                 </span>
                 <span className="text-sm font-medium text-[var(--text-primary)] truncate flex-1">{lang.label}</span>
                 {selectedLanguage === lang.value && (
