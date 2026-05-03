@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Icon } from '../components/shared/Icons';
 
 /* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
 
@@ -1216,19 +1217,13 @@ export default function JobsPage() {
                       </span>
                       {job.location && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                          </svg>
+                          <Icon name="mapPin" size={14} />
                           {job.location.length > 60 ? job.location.slice(0, 60) + '…' : job.location}
                         </span>
                       )}
                       {workType && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                            <rect x="3" y="6" width="18" height="13" rx="2" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                          </svg>
+                          <Icon name="briefcase" size={14} />
                           {workType}
                         </span>
                       )}
@@ -1263,9 +1258,7 @@ export default function JobsPage() {
                         }}
                       >
                         Learn more
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                        </svg>
+                        <Icon name="arrowRight" size={14} />
                       </Link>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
                         <a
