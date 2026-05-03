@@ -28,8 +28,8 @@ Package manager: **pnpm 9.15** with workspaces (`apps/*`, `packages/*`).
 
 ```bash
 # Frontend
-pnpm dev:frontend          # Vite dev server (port 3000, proxies /api → localhost:8000)
-pnpm build:frontend        # Vite production build → apps/frontend/dist/
+pnpm dev:camora            # Vite dev server (port 3000, proxies /api → localhost:8000)
+pnpm build:camora          # Vite production build → apps/camora/dist/
 
 # Lumora Backend
 pnpm dev:lumora            # Express server (port 8000)
@@ -48,12 +48,12 @@ cd apps/ascend-backend && npx vitest
 cd apps/ascend-backend && npx vitest run tests/solve.test.js   # Single test
 
 # Lint
-cd apps/frontend && npx eslint .
+cd apps/camora && npx eslint .
 ```
 
 ## Architecture
 
-### Frontend (`apps/frontend`)
+### Frontend (`apps/camora`)
 
 - **Router**: React Router DOM v7 — routes defined in `src/App.tsx`
 - **Auth**: `src/contexts/AuthContext.tsx` — reads `cariara_sso` cookie or OAuth hash tokens, validates against lumora-backend `/api/v1/auth/me`
