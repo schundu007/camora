@@ -461,7 +461,11 @@ export function AudioSetupWizard({
     try {
       const audio = new Audio();
       // Tiny inline beep: 880 Hz, 0.4s, generated via WebAudio offline.
-      const ctx = new (window.OfflineAudioContext || (window as any).webkitOfflineAudioContext)(1, 44100 * 0.5, 44100);
+      // OfflineAudioContext has been unprefixed since Chrome 46. The
+      // webkit fallback was dead code that, if it had ever evaluated,
+      // would throw "undefined is not a constructor" and silently
+      // break the test-sound feature.
+      const ctx = new OfflineAudioContext(1, 44100 * 0.5, 44100);
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.frequency.value = 880;

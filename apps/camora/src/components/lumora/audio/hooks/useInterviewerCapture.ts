@@ -116,8 +116,12 @@ async function acquireStream(
     // Important: keep echoCancellation/noiseSuppression OFF — both
     // would scrub interviewer audio bleeding back through the mic.
     // We WANT the bleed; that's the entire signal.
+    // ideal (not exact) — if the saved device was unplugged or got a
+    // new id after a USB replug, the browser falls back to the system
+    // default rather than throwing OverconstrainedError mid-interview.
+    // Mirrors the candidate mic hook (useAudioCapture).
     const audioConstraints: MediaTrackConstraints = micDeviceId
-      ? { deviceId: { exact: micDeviceId } }
+      ? { deviceId: { ideal: micDeviceId } }
       : {};
     return navigator.mediaDevices.getUserMedia({
       audio: {
@@ -253,7 +257,17 @@ export function useInterviewerCapture(options: CaptureOptions) {
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      const mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm;codecs=opus' });
+      // Negotiate the recorder mime so Safari / non-Chromium contexts
+      // don't throw NotSupportedError on construction; Chromium +
+      // Electron always accept webm/opus.
+      const PREFERRED_MIMES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+      const supportedMime = PREFERRED_MIMES.find(
+        (m) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(m)
+      );
+      const mediaRecorder = new MediaRecorder(
+        audioStream,
+        supportedMime ? { mimeType: supportedMime } : undefined,
+      );
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {

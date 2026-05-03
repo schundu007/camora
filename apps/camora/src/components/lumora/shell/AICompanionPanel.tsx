@@ -380,18 +380,37 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // which puts the panel's top edge exactly at 56 px (topbar bottom).
   useEffect(() => {
     if (!isDragging) return;
+    // RAF-throttle the position state writes — without this, dragging
+    // the panel during an active stream queues 60+ setState calls per
+    // second and React's batcher fights the streamer's renders,
+    // producing visible jank. We accumulate the latest pointer
+    // position in a ref and commit at most once per frame.
+    let pendingX = 0, pendingY = 0, hasPending = false, rafId = 0;
+    const flush = () => {
+      rafId = 0;
+      if (!hasPending) return;
+      hasPending = false;
+      setPosition({ x: pendingX, y: pendingY });
+    };
     const handleMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
-      const nextX = dragRef.current.origX + (e.clientX - dragRef.current.startX);
+      pendingX = dragRef.current.origX + (e.clientX - dragRef.current.startX);
       const rawY = dragRef.current.origY + (e.clientY - dragRef.current.startY);
       const minY = 80 + panelHeight - window.innerHeight;
-      const nextY = Math.max(minY, rawY);
-      setPosition({ x: nextX, y: nextY });
+      pendingY = Math.max(minY, rawY);
+      hasPending = true;
+      if (!rafId) rafId = requestAnimationFrame(flush);
     };
     const handleUp = () => { setIsDragging(false); dragRef.current = null; };
-    window.addEventListener('mousemove', handleMove);
+    // passive:true tells the browser we won't preventDefault — keeps
+    // scroll thread non-blocked even while the listener is attached.
+    window.addEventListener('mousemove', handleMove, { passive: true });
     window.addEventListener('mouseup', handleUp);
-    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
   }, [isDragging, panelHeight]);
 
   const startDrag = (e: React.MouseEvent) => {
