@@ -27,10 +27,11 @@ codesign -d --entitlements - "$APP_PATH" 2>&1 | grep -E "audio-input|network.cli
 }
 
 echo ""
-echo "✓ Build complete: build/Camora-2.0.0-arm64.dmg"
+VERSION="$(node -p "require('./package.json').version")"
+echo "✓ Build complete: build/Camora-${VERSION}-arm64.dmg"
 echo ""
 echo "Install with:"
-echo "  hdiutil attach build/Camora-2.0.0-arm64.dmg -nobrowse -quiet"
+echo "  hdiutil attach build/Camora-${VERSION}-arm64.dmg -nobrowse -quiet"
 echo "  ditto /Volumes/Camora/Camora.app /Applications/Camora.app"
 echo "  hdiutil detach /Volumes/Camora -quiet"
 echo "  codesign --force --deep --sign - --entitlements $ENTITLEMENTS /Applications/Camora.app"
