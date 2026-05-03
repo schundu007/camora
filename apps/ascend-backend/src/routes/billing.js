@@ -957,9 +957,24 @@ async function handleCheckoutComplete(session) {
     return; // top-ups don't change subscription state
   }
 
-  // Subscription plan — activate with the type as plan_type.
-  const validTypes = ['pro_monthly', 'pro_yearly', 'team'];
-  const planType = validTypes.includes(type) ? type : 'pro_monthly';
+  // Subscription plan — derive plan_type from the actual Stripe
+  // price ID, not from session metadata alone. The metadata-only path
+  // would activate any plan if a checkout's metadata claimed the
+  // wrong type (e.g. an attacker forging a webhook replay).
+  // STRIPE_PRICES is the single source of truth, set from env.
+  const PRICE_TO_PLAN = {
+    [STRIPE_PRICES.PRO_MONTHLY]: 'pro_monthly',
+    [STRIPE_PRICES.PRO_YEARLY]: 'pro_yearly',
+    [STRIPE_PRICES.TEAM]: 'team',
+  };
+  let planType = PRICE_TO_PLAN[priceId];
+  if (!planType) {
+    // Fall back to metadata only when the price ID is unrecognised
+    // (e.g. a manually-promoted account). Logged so it's auditable.
+    const validTypes = ['pro_monthly', 'pro_yearly', 'team'];
+    planType = validTypes.includes(type) ? type : 'pro_monthly';
+    logger.warn({ userId, priceId, metadataType: type, planType }, 'Unknown price_id in checkout, falling back to metadata');
+  }
   await query(
     `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
     [planType, userId]

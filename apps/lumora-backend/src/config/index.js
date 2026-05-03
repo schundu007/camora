@@ -19,13 +19,22 @@ export const config = {
   // AI Services
   aiServicesUrl: process.env.AI_SERVICES_URL || 'http://localhost:8001',
 
-  // CORS
+  // CORS — keep the hardcoded list as a safety net AND honor the
+  // operator-set FRONTEND_URL / ALLOWED_ORIGINS env vars so Vercel
+  // preview URLs and renamed domains don't silently 4xx every request
+  // with an opaque "CORS error". Empty entries are filtered.
   corsOrigins: [
     'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
     'https://camora.cariara.com',
     'https://lumora.cariara.com',
     'https://capra.cariara.com',
-  ],
+    'https://cariara.com',
+    'https://www.cariara.com',
+    process.env.FRONTEND_URL,
+    ...(process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()),
+  ].filter(Boolean),
 
   // Quota
   dailyFreeLimit: parseInt(process.env.DAILY_FREE_LIMIT || '10'),

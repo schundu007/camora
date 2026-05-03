@@ -331,10 +331,17 @@ export default function DocsPage({ onBack }) {
     });
   };
 
+  const askAiAbortRef = useRef(null);
   const handleAskAI = async (promptOverride) => {
     const question = promptOverride || aiQuestion;
     if (!question.trim()) return;
     if (promptOverride) setAiQuestion(promptOverride);
+    // Abort any previous in-flight stream so a quick second click
+    // doesn't end up with two concurrent setAiAnswer writers and the
+    // SSE reader from the older fetch is released.
+    askAiAbortRef.current?.abort();
+    const controller = new AbortController();
+    askAiAbortRef.current = controller;
     setAiLoading(true);
     setAiAnswer('');
     setShowAskAI(true);
@@ -343,6 +350,7 @@ export default function DocsPage({ onBack }) {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        signal: controller.signal,
         body: JSON.stringify({
           question,
           problem: topicDetails ? `Topic: ${topicDetails.title}. ${topicDetails.description || ''} ${topicDetails.introduction || ''}` : question,
@@ -363,6 +371,7 @@ export default function DocsPage({ onBack }) {
         let fullText = '';
         let buf = '';
         while (true) {
+          if (controller.signal.aborted) { try { await reader.cancel(); } catch {} break; }
           const { done, value } = await reader.read();
           if (done) break;
           buf += decoder.decode(value, { stream: true });
@@ -379,18 +388,23 @@ export default function DocsPage({ onBack }) {
             }
           }
         }
-        if (!fullText) setAiAnswer('No answer available.');
+        if (!fullText && !controller.signal.aborted) setAiAnswer('No answer available.');
       } else {
         // JSON response (error or simple)
         const data = await res.json();
         setAiAnswer(data.answer || data.result || data.error || 'No answer available.');
       }
     } catch (err) {
+      if (err?.name === 'AbortError') return; // user navigated away or restarted
       setAiAnswer('Failed to get AI response. Please try again.');
     } finally {
+      if (askAiAbortRef.current === controller) askAiAbortRef.current = null;
       setAiLoading(false);
     }
   };
+  // Make sure unmount aborts any in-flight Ask AI stream so the SSE
+  // reader is released and we don't writer-set state on a dead tree.
+  useEffect(() => () => askAiAbortRef.current?.abort(), []);
 
   // Calculate progress
   const getProgress = () => {

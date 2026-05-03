@@ -150,7 +150,17 @@ function formatTime(s) {
 
 function getDailyChallenge() {
   const allProblems = [...CHALLENGES.coding, ...CHALLENGES['system-design'], ...CHALLENGES.behavioral];
-  return allProblems[Math.floor(Math.random() * allProblems.length)];
+  if (allProblems.length === 0) return null;
+  // Daily — deterministic per UTC day so the card actually says the
+  // same thing all day, instead of changing on every keystroke.
+  const dayIdx = Math.floor(Date.now() / 86_400_000);
+  // Mulberry32-style hash so consecutive days don't pick adjacent
+  // entries; keeps the rotation feeling random without an RNG.
+  let h = dayIdx ^ 0x9e3779b9;
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+  return allProblems[(h >>> 0) % allProblems.length];
 }
 
 function getDailyCategory(challenge) {

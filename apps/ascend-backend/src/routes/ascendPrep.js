@@ -5,6 +5,7 @@ import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { verifyJWT } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
+import { cacheGet, cacheSet } from '../services/redis.js';
 
 const router = Router();
 
@@ -15,21 +16,22 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com').split(
 const PREP_DAILY_LIMIT_FREE = 1;
 const PREP_DAILY_LIMIT_PAID = 3;
 
-const prepDailyUsage = new Map();
-
-function checkPrepDailyLimit(userId, isPaid, email) {
-  // Admin bypass
+// Daily counter is held in Redis (matches solve.js's pattern). The
+// previous in-memory `Map` reset on every Railway deploy — and since
+// we deploy multiple times per day, free users could effectively get
+// unlimited prep generations by retrying right after each push. Each
+// /api/ascend/prep call hits ascendPrepService which is the heaviest
+// Claude path in the codebase, so unrestricted access here was the
+// single biggest LLM-cost leak.
+async function checkPrepDailyLimit(userId, isPaid, email) {
   if (email && ADMIN_EMAILS.includes(email.toLowerCase())) return true;
-
   const today = new Date().toISOString().slice(0, 10);
   const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
-  const entry = prepDailyUsage.get(userId);
-  if (!entry || entry.date !== today) {
-    prepDailyUsage.set(userId, { count: 1, date: today });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count++;
+  const key = `prep_daily:${userId}:${today}`;
+  const count = (await cacheGet(key)) || 0;
+  if (count >= limit) return false;
+  // 24h TTL — naturally rolls over at next midnight UTC.
+  await cacheSet(key, count + 1, 86400);
   return true;
 }
 
@@ -175,7 +177,7 @@ router.post('/stream', async (req, res) => {
 
   // Check daily prep limit
   const isPaid = req.featureAccess?.hasSubscription || false;
-  if (!checkPrepDailyLimit(req.userId, isPaid, req.userEmail || req.user?.email)) {
+  if (!(await checkPrepDailyLimit(req.userId, isPaid, req.userEmail || req.user?.email))) {
     const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
     res.setHeader('Content-Type', 'text/event-stream');
     res.write(`data: ${JSON.stringify({
@@ -257,7 +259,7 @@ router.post('/section', async (req, res) => {
 
   // Check daily prep limit
   const isPaidSection = req.featureAccess?.hasSubscription || false;
-  if (!checkPrepDailyLimit(req.userId, isPaidSection, req.userEmail || req.user?.email)) {
+  if (!(await checkPrepDailyLimit(req.userId, isPaidSection, req.userEmail || req.user?.email))) {
     const limit = isPaidSection ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
     res.setHeader('Content-Type', 'text/event-stream');
     res.write(`data: ${JSON.stringify({

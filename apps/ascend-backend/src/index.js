@@ -446,8 +446,15 @@ async function runMigrations() {
       count INTEGER DEFAULT 0
     )`);
 
-    // Ensure owner accounts are admins
-    await query("UPDATE users SET is_admin = true WHERE email IN ('chundubabu@gmail.com', 'babuchundu@gmail.com')");
+    // Ensure owner accounts are admins. Pulled from OWNER_EMAILS /
+    // ADMIN_EMAILS env (csv) — hardcoding the list in source meant that
+    // changing the owner's email would require a code edit + redeploy
+    // to re-grant admin, while the *old* email kept its grant forever.
+    const _ownerEmails = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
+      .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (_ownerEmails.length > 0) {
+      await query('UPDATE users SET is_admin = true WHERE LOWER(email) = ANY($1::text[])', [_ownerEmails]);
+    }
 
     // One-time seed: migrate old site_visitors total into page_views
     const seeded = await query("SELECT COUNT(*) as c FROM page_views WHERE ip LIKE 'seed-%'");
