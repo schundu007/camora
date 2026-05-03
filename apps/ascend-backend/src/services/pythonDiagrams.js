@@ -13,16 +13,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Engine selection — D2 (Terrastruct) is the default since the cutover
-// after spike review. The legacy mingrammer/diagrams + Graphviz engine is
-// kept as an automatic fallback when D2 fails (covers icon CDN outages
-// and any unforeseen LLM emission issues), and can be forced via
-// DIAGRAM_ENGINE=graphviz if D2 needs to be disabled in a hurry.
-const DIAGRAM_ENGINE = (process.env.DIAGRAM_ENGINE || 'd2').toLowerCase();
-// When D2 fails, retry once with Graphviz before surfacing the error.
-// Set DIAGRAM_FALLBACK=0 to disable the safety net (e.g. while testing
-// D2 in isolation).
-const FALLBACK_ENABLED = process.env.DIAGRAM_FALLBACK !== '0';
+// Engine selection — Python `diagrams` + Graphviz is the primary engine.
+// The D2 (Terrastruct) cutover was reverted on user feedback (D2 output
+// quality fell short of the Graphviz + cloud-icon set). D2 stays in the
+// repo as an opt-in via DIAGRAM_ENGINE=d2 for future iteration but
+// nothing serves it by default and there is no automatic fallback to it.
+const DIAGRAM_ENGINE = (process.env.DIAGRAM_ENGINE || 'graphviz').toLowerCase();
+// Cross-engine fallback is OFF by default now that Graphviz is primary.
+// Set DIAGRAM_FALLBACK=1 explicitly to re-enable if a future operator
+// wants belt-and-suspenders coverage.
+const FALLBACK_ENABLED = process.env.DIAGRAM_FALLBACK === '1';
 const GRAPHVIZ_ENGINE_PATH = path.join(__dirname, 'diagram_engine.py');
 const D2_ENGINE_PATH = path.join(__dirname, 'diagram_d2.py');
 function resolveEnginePath(name) {
