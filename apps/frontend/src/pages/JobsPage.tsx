@@ -1163,6 +1163,21 @@ export default function JobsPage() {
                 const salary = formatSalary(job.salary_min, job.salary_max);
                 const posted = timeAgo(job.posted_date || job.date_found);
 
+                // Experience-level badge — LeetCode-difficulty analog
+                // mapped to navy/gold combinations:
+                //   Early   = light gold bg + gold text  (≈ Easy)
+                //   Mid     = gold-leaf bg + dark gold text  (≈ Medium)
+                //   Senior+ = navy bg + white text  (≈ Hard)
+                const expRaw = (job.title || '').toLowerCase();
+                const expLevel = /\b(intern|early|junior|associate)\b/.test(expRaw) ? 'Early'
+                  : /\b(senior|staff|principal|lead|director|head|vp)\b/.test(expRaw) ? 'Senior'
+                  : 'Mid';
+                const expStyle = expLevel === 'Early'
+                  ? { bg: 'var(--cam-gold-leaf-50)', color: 'var(--cam-gold-leaf-text)', border: 'var(--cam-gold-leaf-50)' }
+                  : expLevel === 'Mid'
+                    ? { bg: 'var(--cam-gold-leaf-50)', color: 'var(--cam-gold-leaf-dk)', border: 'var(--cam-gold-leaf)' }
+                    : { bg: 'var(--accent-subtle)', color: 'var(--accent)', border: 'var(--accent)' };
+
                 const renderLogo = () => {
                   const logoPath = getCompanyLogoPath(job.company_name);
                   if (logoPath) {
@@ -1190,22 +1205,47 @@ export default function JobsPage() {
                     style={{
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
-                      borderRadius: '12px',
-                      padding: '24px 28px',
-                      transition: 'border-color 0.15s, box-shadow 0.15s',
+                      borderRadius: '8px',
+                      padding: '20px 24px',
+                      transition: 'border-color 0.15s, background 0.15s',
                     } as React.CSSProperties}
                   >
-                    {/* Title — bold, larger, room for 2 lines */}
-                    <h3 style={{
-                      fontSize: '18px',
-                      fontWeight: 600,
-                      color: 'var(--text-primary)',
-                      margin: '0 0 12px',
-                      lineHeight: 1.35,
-                      letterSpacing: '-0.01em',
-                    }}>
-                      {job.title}
-                    </h3>
+                    {/* Title row — title left, share/bookmark icons right */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+                      <h3 style={{
+                        fontSize: '17px',
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        margin: 0,
+                        lineHeight: 1.35,
+                        letterSpacing: '-0.01em',
+                        flex: 1,
+                        minWidth: 0,
+                      }}>
+                        {job.title}
+                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                        <button
+                          aria-label="Share job"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigator.clipboard?.writeText(`${window.location.origin}/jobs/${job.id}/prepare`).catch(() => {});
+                          }}
+                          className="jobs-card-iconbtn"
+                          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex' }}
+                        >
+                          <Icon name="share" size={16} />
+                        </button>
+                        <button
+                          aria-label="Save job"
+                          onClick={(e) => e.preventDefault()}
+                          className="jobs-card-iconbtn"
+                          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex' }}
+                        >
+                          <Icon name="bookmark" size={16} />
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Compact metadata row — icon + value, separated by gaps.
                         Mirrors Google Careers' "Google · Sunnyvale, CA · Mid"
@@ -1233,6 +1273,21 @@ export default function JobsPage() {
                       {salary && (
                         <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{salary}</span>
                       )}
+                      {/* LeetCode-style difficulty badge — navy/gold variants */}
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '2px 9px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: expStyle.color,
+                        background: expStyle.bg,
+                        border: `1px solid ${expStyle.border}`,
+                        borderRadius: '9999px',
+                        letterSpacing: '0.02em',
+                      }}>
+                        {expLevel}
+                      </span>
                     </div>
 
                     {/* Footer CTA — outlined "Learn more" pill button +
@@ -1329,15 +1384,38 @@ export default function JobsPage() {
           display: none;
         }
 
-        /* Card hover — Google Careers-style subtle border-color shift +
-           soft shadow. Cards are now <article>; the "Learn more" Link
-           inside owns the click target for the prep page. */
+        /* Card hover — LeetCode row-style tint + navy border + a 1px
+           gold-leaf left rail. Subtle and tasteful, no drop shadow. */
         .jobs-card {
-          transition: border-color 0.15s, box-shadow 0.15s;
+          position: relative;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .jobs-card::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3px;
+          background: var(--cam-gold-leaf);
+          opacity: 0;
+          border-radius: 8px 0 0 8px;
+          transition: opacity 0.15s;
         }
         .jobs-card:hover {
           border-color: var(--accent);
-          box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+          background: var(--bg-elevated);
+        }
+        .jobs-card:hover::before {
+          opacity: 1;
+        }
+        /* Card top-right icon buttons — hover tints navy, click fills gold */
+        .jobs-card-iconbtn:hover {
+          background: var(--bg-elevated) !important;
+          color: var(--accent) !important;
+        }
+        .jobs-card-iconbtn:active {
+          color: var(--cam-gold-leaf) !important;
         }
         /* "Learn more" pill button hover */
         .jobs-card-cta:hover {
