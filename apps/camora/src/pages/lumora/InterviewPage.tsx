@@ -126,7 +126,7 @@ export function InterviewPage() {
 
   if (blanked) {
     return (
-      <div className="h-screen w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
+      <div className="h-dvh w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
         <div className="opacity-10"><CamoraLogo size={24} /></div>
       </div>
     );
@@ -135,7 +135,7 @@ export function InterviewPage() {
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-y-auto md:overflow-hidden lumora-app-bg">
+    <div className="h-dvh w-full flex flex-col overflow-y-auto md:overflow-hidden lumora-app-bg">
       <div className="lumora-grid-overlay" />
 
       {/* Header — shared component with tabs, audio, controls */}

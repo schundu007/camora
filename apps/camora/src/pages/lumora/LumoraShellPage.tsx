@@ -44,7 +44,17 @@ export function LumoraShellPage() {
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useInterviewStore();
-  const [settingsDismissed, setSettingsDismissed] = useState(false);
+  // Persist the Settings-tip dismissal so it's a true one-time hint,
+  // not a banner that re-appears on every page load and re-eats
+  // ~40 vertical px on phones. Once dismissed, never shown again on
+  // this device until the user clears localStorage.
+  const [settingsDismissed, setSettingsDismissedState] = useState<boolean>(() => {
+    try { return localStorage.getItem('lumora_settings_tip_dismissed') === '1'; } catch { return false; }
+  });
+  const setSettingsDismissed = (val: boolean) => {
+    setSettingsDismissedState(val);
+    try { localStorage.setItem('lumora_settings_tip_dismissed', val ? '1' : '0'); } catch {}
+  };
 
   // Sona sidebar (Coding / Design tabs only). Persisted per-surface
   // so the user's preference survives reloads. Default closed so we

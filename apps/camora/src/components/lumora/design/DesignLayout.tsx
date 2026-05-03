@@ -544,7 +544,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
   return (
     <div
-      className={embedded ? 'flex-1 flex flex-col min-h-0 relative' : 'h-screen w-full flex flex-col lumora-app-bg relative'}
+      className={embedded ? 'flex-1 flex flex-col min-h-0 relative' : 'h-dvh w-full flex flex-col lumora-app-bg relative'}
       style={
         embedded
           ? {
@@ -686,16 +686,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         {/* Left: Problem Input - full width on mobile */}
         <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[45dvh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
           {/* Input Tab Header — LeetCode-style sharp pill toolbar. Same
-              grammar as the Lumora top bar + the Coding tabs bar. */}
+              grammar as the Lumora top bar + the Coding tabs bar.
+              overflow-x-auto so phones can scroll the toolbar
+              horizontally rather than wrapping into two rows. */}
           <div
-            className="flex items-center justify-between px-3 py-2"
+            className="flex items-center justify-between gap-2 px-3 py-2 overflow-x-auto no-scrollbar"
             style={{
               background: 'var(--cam-hero-strip)',
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
             <div
-              className="flex items-center gap-1 px-1 py-1"
+              className="flex items-center gap-1 px-1 py-1 shrink-0"
               style={{
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.16)',
@@ -720,7 +722,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             </div>
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}
-              className="flex items-center justify-center w-7 h-7 transition-all hover:bg-white/10"
+              className="shrink-0 flex items-center justify-center w-7 h-7 transition-all hover:bg-white/10"
               style={{
                 color: '#FFFFFF',
                 border: '1px solid rgba(255,255,255,0.16)',

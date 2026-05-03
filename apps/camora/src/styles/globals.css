@@ -436,6 +436,14 @@
   .light-theme ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
   .light-theme ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 
+  /* Hide scrollbars on horizontally-scrollable mobile toolbars
+     (Coding "Description / Solution / New Problem" strip, Design
+     "Text / URL / Image" strip, Prep tab dropdown, etc.).
+     The container still scrolls — only the visible scrollbar
+     disappears, freeing ~12 px on touch devices.  */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
   /* Selection */
   ::selection { background: rgba(45,140,255,0.3); color: #ffffff; }
 
