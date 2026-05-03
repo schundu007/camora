@@ -188,6 +188,19 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
   const ensureVoiceEnrolledAt = useInterviewStore(s => s.ensureVoiceEnrolledAt);
 
+  // Voice-enroll banner dismissal — persisted in localStorage so a
+  // user who has seen and dismissed the prompt doesn't get re-nagged
+  // on every page load. The mic + filter toggle live elsewhere; this
+  // banner is purely an onboarding nudge for users who haven't
+  // enrolled yet, so it should only show once per device.
+  const [voiceBannerDismissed, setVoiceBannerDismissedState] = useState<boolean>(() => {
+    try { return localStorage.getItem('lumora_voice_banner_dismissed') === '1'; } catch { return false; }
+  });
+  const dismissVoiceBanner = () => {
+    setVoiceBannerDismissedState(true);
+    try { localStorage.setItem('lumora_voice_banner_dismissed', '1'); } catch {}
+  };
+
   // Backfill the enrollment timestamp for users who enrolled before
   // we tracked it. Without this, they'd have voiceEnrolled=true but a
   // null timestamp forever, and the stale-nudge would never fire.
@@ -1223,7 +1236,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               · Enrolled, on       → quiet green confirmation
               · Enrolled, on, ≥7d  → amber stale-nudge: refresh enrollment
             The VoiceEnrollment component handles enroll / toggle / unenroll. */}
-        {embedded && (() => {
+        {embedded && !voiceBannerDismissed && (() => {
           // Tone is amber when stale even if filter is on — the user
           // should see the nudge before the next interview, not after.
           const tone = !voiceEnrolled ? 'red' : (!voiceFilterEnabled || enrollmentStale) ? 'amber' : 'green';
@@ -1271,11 +1284,25 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 <AudioCapture onTranscription={handleAutoTranscription} />
               </div>
-              {/* RIGHT — Filter On / Remove Enrollment buttons. The
-                  VoiceEnrollment "light" variant lays them out in a
-                  row so they sit on a single line beside the mic. */}
-              <div className="flex items-center justify-end justify-self-end">
+              {/* RIGHT — Filter On / Remove Enrollment buttons + X
+                  dismiss. The VoiceEnrollment "light" variant lays the
+                  enroll buttons out in a row so they sit on a single
+                  line beside the mic. The X persists the dismissal
+                  in localStorage so the banner is a one-time nudge. */}
+              <div className="flex items-center justify-end justify-self-end gap-1">
                 <VoiceEnrollment disabled={false} variant="light" />
+                <button
+                  type="button"
+                  onClick={dismissVoiceBanner}
+                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+                  style={{ color: 'var(--text-muted)' }}
+                  aria-label="Dismiss this hint"
+                  title="Dismiss"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
               </div>
             </div>
           );
