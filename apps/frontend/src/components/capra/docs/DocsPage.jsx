@@ -68,7 +68,6 @@ export default function DocsPage({ onBack }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const contentAccess = useContentAccess();
   const routerLocation = useLocation();
-  const isElectron = false; // Electron removed in unified frontend
   // Initialize state from URL params for persistence on refresh
   const getInitialState = () => {
     const params = new URLSearchParams(routerLocation.search);
@@ -666,14 +665,6 @@ export default function DocsPage({ onBack }) {
 
   return (
     <div className="min-h-screen" style={{ color: 'var(--text-primary)' }}>
-      {/* Electron drag region */}
-      {isElectron && (
-        <div
-          className="fixed top-0 left-0 right-0 h-8 z-50"
-          style={{ WebkitAppRegion: 'drag' }}
-        />
-      )}
-
       <div className="relative min-h-screen flex">
           {/* Center Content */}
           <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[85%] ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
@@ -692,15 +683,6 @@ export default function DocsPage({ onBack }) {
               )}
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm min-w-0 flex-1">
-                {isElectron && onBack && (
-                  <button
-                    onClick={onBack}
-                    className="flex items-center gap-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mr-2 landing-body"
-                  >
-                    <Icon name="arrowLeft" size={16} />
-                    <span>Back</span>
-                  </button>
-                )}
                 <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</Link>
                 <Icon name="chevronRight" size={14} className="text-[var(--text-muted)]" />
                 {selectedTopic && topicDetails ? (
