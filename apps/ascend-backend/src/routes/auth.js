@@ -219,31 +219,19 @@ router.get('/google/callback', async (req, res) => {
           return;
         }
 
-        // Try ip-api.com first (HTTP only for free tier)
+        // ipapi.co (HTTPS) — formerly ip-api.com first, but plaintext
+        // HTTP transmits the user's real IP in cleartext on every login,
+        // which is a privacy regression and a security audit flag.
         let loc = null;
         try {
-          const r = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country`);
+          const r = await fetch(`https://ipapi.co/${ip}/json/`);
           const geo = await r.json();
-          console.log('[GeoIP] ip-api response:', JSON.stringify(geo));
-          if (geo.status === 'success' && (geo.city || geo.country)) {
-            loc = [geo.city, geo.regionName, geo.country].filter(Boolean).join(', ');
+          console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
+          if (geo.city || geo.country_name) {
+            loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
           }
         } catch (e) {
-          console.log('[GeoIP] ip-api failed:', e.message);
-        }
-
-        // Fallback to ipapi.co (HTTPS)
-        if (!loc) {
-          try {
-            const r = await fetch(`https://ipapi.co/${ip}/json/`);
-            const geo = await r.json();
-            console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
-            if (geo.city || geo.country_name) {
-              loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
-            }
-          } catch (e) {
-            console.log('[GeoIP] ipapi.co failed:', e.message);
-          }
+          console.log('[GeoIP] ipapi.co failed:', e.message);
         }
 
         if (loc) {
@@ -434,8 +422,13 @@ router.get('/me', authenticate, async (req, res) => {
       },
     });
   } catch {
-    // DB error — issue a token without re-validating gen; better to keep the
-    // user logged in than to break their session on a transient DB hiccup.
+    // DB error — issue a token but keep the gen claim from the
+    // already-verified incoming token. The previous behaviour
+    // dropped gen entirely, which silently bypassed the
+    // revoke-all-sessions mechanism for any session that touched /me
+    // during a DB hiccup. Carrying the existing gen forward keeps
+    // revocation honest: a revoked token still presents the *old*
+    // gen, and the next successful DB-backed /me will reject it.
     const accessToken = createToken(
       {
         sub: String(req.user.id),
@@ -443,6 +436,7 @@ router.get('/me', authenticate, async (req, res) => {
         name: req.user.name || '',
         picture: req.user.picture || '',
         type: 'access',
+        ...(req.user.gen !== undefined ? { gen: req.user.gen } : {}),
       },
       '30d',
     );

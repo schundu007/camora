@@ -1,7 +1,7 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { isOwner } from '@/lib/owner';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Billing/subscription state read from ascend-backend (single source of truth).
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -38,9 +38,16 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
   const personalAccess = plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
   const hasAccess = isOwner(user) || personalAccess || hasTeamAccess;
 
-  // After checkout success, poll for subscription activation (webhook may take a few seconds)
+  // After checkout success, poll for subscription activation (webhook
+  // may take a few seconds). hasAccessRef holds the latest hasAccess
+  // value so a poll callback that already fired its setInterval tick
+  // doesn't re-fire the billing fetch right after refreshSubscription
+  // flips the plan but BEFORE the effect's cleanup runs and the next
+  // render lands.
+  const hasAccessRef = useRef(hasAccess);
+  useEffect(() => { hasAccessRef.current = hasAccess; }, [hasAccess]);
   const pollSubscription = useCallback(async () => {
-    if (!token || !isCheckoutReturn || hasAccess || pollCount > 15) return;
+    if (!token || !isCheckoutReturn || hasAccessRef.current || pollCount > 15) return;
     setPolling(true);
     try {
       const resp = await fetch(`${API_URL}/api/v1/billing/subscription`, {
@@ -52,6 +59,7 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
         const newPlan = data.plan || 'free';
         if (newPlan !== 'free') {
           // Subscription activated — refresh auth context and stop polling
+          hasAccessRef.current = true;
           refreshSubscription?.();
           setPolling(false);
           return;
@@ -59,7 +67,7 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
       }
     } catch { /* retry */ }
     setPollCount(c => c + 1);
-  }, [token, isCheckoutReturn, hasAccess, pollCount, refreshSubscription]);
+  }, [token, isCheckoutReturn, pollCount, refreshSubscription]);
 
   useEffect(() => {
     if (!isCheckoutReturn || hasAccess) return;
