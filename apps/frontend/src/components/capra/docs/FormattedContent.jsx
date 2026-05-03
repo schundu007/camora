@@ -1,7 +1,18 @@
 import DocsCallout from '../../shared/docs/DocsCallout';
+import { useCloudFormatter } from '../../../hooks/useCloudFormatter';
 
 export default function FormattedContent({ content }) {
-  if (!content) return null;
+  // Translate AWS service names to Azure/GCP equivalents for the chosen
+  // cloud BEFORE parsing into blocks. The formatter skips fenced code so
+  // SDK calls (`s3.putObject(...)`) stay intact; only prose ("use S3 for
+  // blob storage") gets translated. AWS users see content unchanged.
+  const formatCloud = useCloudFormatter();
+  const translated = formatCloud(content);
+  if (!translated) return null;
+  // Bind the translated text into the existing parser without renaming
+  // the variable — keeps the rest of the function unchanged.
+  // eslint-disable-next-line no-param-reassign
+  content = translated;
 
   const isDiagramLine = (line) => {
     if (/[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬▶▼◀▲→←↑↓►◄]/.test(line)) return true;
