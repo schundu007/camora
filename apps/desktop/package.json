@@ -36,7 +36,13 @@
       "gatekeeperAssess": false,
       "identity": null,
       "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist"
+      "entitlementsInherit": "entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Camora needs microphone access to transcribe your voice during interview sessions.",
+        "NSCameraUsageDescription": "Camora may use your camera for video interview practice.",
+        "NSScreenCaptureUsageDescription": "Camora records the interviewer's audio from your meeting window so it can be transcribed and answered.",
+        "NSAudioCaptureUsageDescription": "Camora captures system audio output so the interviewer's voice can be transcribed during live sessions."
+      }
     },
     "dmg": {
       "title": "Camora",

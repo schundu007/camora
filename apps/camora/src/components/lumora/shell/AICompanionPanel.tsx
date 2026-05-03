@@ -353,8 +353,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     if (initialQuestion && !initialQuestionSent.current) {
       initialQuestionSent.current = true;
       setMinimized(false);
-      // Small delay to let panel render before sending
-      setTimeout(() => ask(initialQuestion), 300);
+      // Small delay to let panel render before sending. Use askRef
+      // (kept in sync with the latest ask via the effect below) so the
+      // initial behavioral question gets the freshest systemContext —
+      // the closure'd `ask` would stale-fire with empty resume / JD.
+      setTimeout(() => askRef.current?.(initialQuestion), 300);
     }
   }, [initialQuestion]);
 

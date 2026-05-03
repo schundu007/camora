@@ -75,9 +75,11 @@ router.post('/enroll', upload.any(), async (req, res) => {
     const body = Buffer.concat(parts);
     console.log(`[Speaker] Sending ${body.length} bytes to ${url}`);
 
+    const enrollHeaders = { 'Content-Type': `multipart/form-data; boundary=${boundary}` };
+    if (process.env.AI_SERVICES_API_KEY) enrollHeaders['X-API-Key'] = process.env.AI_SERVICES_API_KEY;
     const upstream = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      headers: enrollHeaders,
       body,
     });
     const data = await upstream.json();

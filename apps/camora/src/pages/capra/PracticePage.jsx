@@ -479,10 +479,16 @@ export default function PracticePage() {
       setQuestionStartTime(Date.now());
       if (textareaRef.current) textareaRef.current.focus();
     } else {
-      // scores state is already updated by submitAnswer's setScores before user can click
-      endChallenge([...scores]);
+      // Read the latest scores via the functional setter — the closure'd
+      // `scores` is stale on the last question because submitAnswer's
+      // setScores hasn't flushed when moveToNext fires immediately
+      // after, and we'd save the final score as 0 in history.
+      setScores((latest) => {
+        endChallenge([...latest]);
+        return latest;
+      });
     }
-  }, [currentIdx, questions, scores]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentIdx, questions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const skipQuestion = useCallback(() => {
     setScores(prev => [...prev, 0]);

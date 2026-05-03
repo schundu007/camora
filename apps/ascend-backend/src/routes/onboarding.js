@@ -40,6 +40,11 @@ router.post('/upload-resume', authenticate, upload.single('resume'), async (req,
       filename: originalname,
       size: req.file.size,
       extracted_length: text.length,
+      // Frontend (OnboardingPage.jsx) reads `text` to populate the
+      // textarea that feeds POST /api/onboarding/complete. Without
+      // this, resume_text is sent empty on submit and every downstream
+      // AI prep call gets generic, role-blind output.
+      text,
     });
   } catch (error) {
     console.error('Resume upload error:', error);

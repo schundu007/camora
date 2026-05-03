@@ -7,6 +7,11 @@
  */
 
 const AI_SERVICES_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
+// Shared secret injected into every ai-services request via X-API-Key.
+// ai-services rejects calls without it (see apps/ai-services/main.py
+// ApiKeyAuth middleware) so an open Railway URL can't be hit directly
+// to trigger LLM cost or voice-biometric overwrites.
+const AI_SERVICES_API_KEY = process.env.AI_SERVICES_API_KEY || '';
 
 // Defaults chosen for resemblyzer / diagrams calls — speaker enroll takes a
 // few seconds, diagram generation can take 10–20s. Override per-call via opts.
@@ -55,13 +60,17 @@ export async function proxyToAIService(path, options = {}) {
     throw err;
   }
 
-  const { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAULT_RETRIES, ...fetchOpts } = options;
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAULT_RETRIES, headers: extraHeaders, ...fetchOpts } = options;
   const url = `${AI_SERVICES_URL}${path}`;
+  const headers = { ...(extraHeaders || {}) };
+  if (AI_SERVICES_API_KEY && !headers['X-API-Key'] && !headers['x-api-key']) {
+    headers['X-API-Key'] = AI_SERVICES_API_KEY;
+  }
 
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(url, { ...fetchOpts, signal: AbortSignal.timeout(timeoutMs) });
+      const response = await fetch(url, { ...fetchOpts, headers, signal: AbortSignal.timeout(timeoutMs) });
       // Retry only on 5xx; 4xx is a real answer we should surface to the caller.
       if (response.status >= 500 && attempt < retries) {
         lastErr = new Error(`ai-services ${response.status}`);

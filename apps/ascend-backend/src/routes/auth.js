@@ -152,7 +152,7 @@ router.get('/google/callback', async (req, res) => {
     if (userResult.rows.length === 0) {
       // Create new user in shared users table
       const insertResult = await query(
-        'INSERT INTO users (email, name, avatar, provider, is_active) VALUES ($1, $2, $3, $4, true) RETURNING id',
+        'INSERT INTO users (email, name, image, provider, is_active) VALUES ($1, $2, $3, $4, true) RETURNING id',
         [gUser.email, gUser.name || gUser.email, gUser.picture || null, 'google']
       );
       userId = insertResult.rows[0].id;
@@ -662,6 +662,35 @@ router.delete('/all', authenticate, (req, res) => {
 
   logger.info({ cleared }, 'Platform auth cleared for user');
   res.json({ success: true, cleared });
+});
+
+/**
+ * DELETE /account — user-initiated account deletion.
+ *
+ * Removes the caller's row from the shared `users` table. ON DELETE
+ * CASCADE on the FKs in ascend_subscriptions / ascend_credits /
+ * ascend_free_usage / etc. takes care of dependent rows. The caller's
+ * SSO cookie is cleared so the next page load logs them out cleanly.
+ *
+ * Frontend caller: apps/camora/src/pages/ProfilePage.tsx — was hitting
+ * a route that didn't exist, so the "Delete account" button silently
+ * failed (the response error was swallowed).
+ */
+router.delete('/account', authenticate, async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    await query('DELETE FROM users WHERE id = $1', [userId]);
+    res.clearCookie('cariara_sso', {
+      domain: process.env.COOKIE_DOMAIN || '.cariara.com',
+      path: '/',
+    });
+    logger.info({ userId }, 'User account deleted');
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err, userId }, 'Account delete failed');
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
 });
 
 export default router;

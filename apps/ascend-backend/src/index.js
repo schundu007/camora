@@ -823,7 +823,7 @@ app.get('/api/admin/users', apiLimiter, authenticate, async (req, res) => {
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
     const result = await query(`
-      SELECT u.id, u.email, u.name, u.avatar, u.provider, u.is_active,
+      SELECT u.id, u.email, u.name, u.image, u.provider, u.is_active,
              u.onboarding_completed, u.plan_type, u.plan_status, u.created_at,
              u.username, u.referral_code, u.target_company, u.target_role, u.interview_date,
              u.location, u.last_login_at, s.plan_type as sub_plan, s.is_challenger, s.trial_ends_at
