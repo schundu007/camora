@@ -13,13 +13,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Engine selection — `DIAGRAM_ENGINE=d2` opts in to the D2 spike. Default
-// stays on the existing Graphviz/diagrams engine so prod is unchanged
-// until we cut over for real.
-const DIAGRAM_ENGINE = (process.env.DIAGRAM_ENGINE || 'graphviz').toLowerCase();
+// Engine selection — D2 (Terrastruct) is the default since the cutover
+// after spike review. The legacy mingrammer/diagrams + Graphviz engine is
+// kept as an automatic fallback when D2 fails (covers icon CDN outages
+// and any unforeseen LLM emission issues), and can be forced via
+// DIAGRAM_ENGINE=graphviz if D2 needs to be disabled in a hurry.
+const DIAGRAM_ENGINE = (process.env.DIAGRAM_ENGINE || 'd2').toLowerCase();
+// When D2 fails, retry once with Graphviz before surfacing the error.
+// Set DIAGRAM_FALLBACK=0 to disable the safety net (e.g. while testing
+// D2 in isolation).
+const FALLBACK_ENABLED = process.env.DIAGRAM_FALLBACK !== '0';
 const GRAPHVIZ_ENGINE_PATH = path.join(__dirname, 'diagram_engine.py');
 const D2_ENGINE_PATH = path.join(__dirname, 'diagram_d2.py');
-const DIAGRAM_ENGINE_PATH = DIAGRAM_ENGINE === 'd2' ? D2_ENGINE_PATH : GRAPHVIZ_ENGINE_PATH;
+function resolveEnginePath(name) {
+  return name === 'graphviz' ? GRAPHVIZ_ENGINE_PATH : D2_ENGINE_PATH;
+}
+const DIAGRAM_ENGINE_PATH = resolveEnginePath(DIAGRAM_ENGINE);
 
 // Output directory for diagrams
 const OUTPUT_DIR = process.env.DIAGRAM_OUTPUT_DIR || '/tmp/chundu_diagrams';
@@ -69,32 +78,69 @@ function ensureOutputDir() {
  * @param {string} [options.detailLevel='overview'] - Detail level: 'overview' (simple) or 'detailed' (comprehensive)
  * @returns {Promise<Object>} - Diagram result
  */
-export async function generateDiagram({
-  question,
-  cloudProvider = 'auto',
-  difficulty = 'medium',
-  category = 'System Design',
-  format = 'png',
-  detailLevel = 'overview',
-  direction = 'LR'
-}) {
-  const apiKey = getApiKey();
+export async function generateDiagram(opts) {
+  const {
+    question,
+    cloudProvider = 'auto',
+    difficulty = 'medium',
+    category = 'System Design',
+    format = 'png',
+    detailLevel = 'overview',
+    direction = 'LR',
+  } = opts;
 
+  const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY not configured');
   }
-
   ensureOutputDir();
 
+  // Try the configured engine first; if it fails AND fallback is enabled
+  // AND the engines differ, retry once with the other engine. The most
+  // common failure modes for D2 are icon-CDN flakiness and (rarely) the
+  // LLM emitting malformed DSL — both transient enough that a Graphviz
+  // retry rescues the user-facing experience.
+  const tryOrder = (DIAGRAM_ENGINE === 'd2' && FALLBACK_ENABLED)
+    ? ['d2', 'graphviz']
+    : (DIAGRAM_ENGINE === 'graphviz' && FALLBACK_ENABLED)
+      ? ['graphviz', 'd2']
+      : [DIAGRAM_ENGINE];
+
+  let lastError = null;
+  for (const engine of tryOrder) {
+    try {
+      const result = await runEngine(engine, {
+        question, cloudProvider, difficulty, category,
+        format, detailLevel, direction, apiKey,
+      });
+      if (engine !== DIAGRAM_ENGINE) {
+        console.warn(`[PythonDiagrams] Primary engine '${DIAGRAM_ENGINE}' failed; succeeded on fallback '${engine}'`);
+      }
+      result.engine_used = engine;
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[PythonDiagrams] Engine '${engine}' failed: ${err.message}`);
+    }
+  }
+  throw lastError || new Error('All configured diagram engines failed');
+}
+
+/**
+ * Spawn one engine and resolve to the parsed result, or reject. Wrapped
+ * by generateDiagram() so the fallback loop can drive multiple attempts.
+ */
+function runEngine(engine, { question, cloudProvider, difficulty, category, format, detailLevel, direction, apiKey }) {
+  const enginePath = resolveEnginePath(engine);
   return new Promise((resolve, reject) => {
     console.log('[PythonDiagrams] Generating diagram...');
-    console.log('[PythonDiagrams] Engine:', DIAGRAM_ENGINE);
+    console.log('[PythonDiagrams] Engine:', engine);
     console.log('[PythonDiagrams] Detail level:', detailLevel);
-    console.log('[PythonDiagrams] Engine path:', DIAGRAM_ENGINE_PATH);
+    console.log('[PythonDiagrams] Engine path:', enginePath);
     console.log('[PythonDiagrams] Output dir:', OUTPUT_DIR);
 
     const args = [
-      DIAGRAM_ENGINE_PATH,
+      enginePath,
       '--question', question,
       '--provider', cloudProvider,
       '--difficulty', difficulty,
@@ -141,9 +187,13 @@ export async function generateDiagram({
 
       try {
         const result = JSON.parse(stdout.trim());
+        if (!result.success) {
+          reject(new Error(result.error || 'Engine reported failure'));
+          return;
+        }
 
         // Convert absolute path to relative URL path
-        if (result.image_path && result.success) {
+        if (result.image_path) {
           const filename = path.basename(result.image_path);
           result.image_url = `/static/diagrams/${filename}`;
         }

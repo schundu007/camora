@@ -2,28 +2,28 @@
 /**
  * Batch pre-generate architecture diagrams for the Camora system-design catalog.
  *
- * Hits POST /api/diagram/generate (Python diagrams library, falls back to
- * Mermaid if Python fails) for every problem in the catalog so users hit
- * the cache instead of triggering fresh generation.
+ * Hits POST /api/diagram/generate (D2 engine by default; Graphviz fallback
+ * if D2 fails — see DIAGRAM_ENGINE in pythonDiagrams.js) for every problem
+ * in the catalog so users hit the cache instead of triggering fresh
+ * generation.
  *
- * IMPORTANT: /api/diagram/generate is now admin-only. You MUST set
- * API_TOKEN to a JWT minted for an OWNER_EMAILS account (default:
- * chundubabu@gmail.com or babuchundu@gmail.com). Non-admin tokens get
- * 403 ADMIN_ONLY on every call and the script will report failure.
+ * IMPORTANT: /api/diagram/generate is admin-only. You MUST set API_TOKEN
+ * to a JWT minted for an OWNER_EMAILS account. Non-admin tokens get
+ * 403 ADMIN_ONLY on every call and the script will abort.
  *
  * Topic source defaults to the catalog data files
  * (apps/frontend/src/data/capra/topics/systemDesignProblems[Extra].js).
  * Use --source=legacy for the historical hardcoded list (49 topics) or
  * --source=both to merge.
  *
- * Generates LR/TB × overview/detailed (4 variants per topic) by default.
+ * Direction is locked to TB and detail is locked to detailed by the
+ * server (the UI no longer exposes them). The script defaults match.
  *
  * Usage:
  *   API_TOKEN=<admin-jwt> node scripts/pregenerate-diagrams.js \
  *     [--batch-size=3] [--delay=5000] [--dry-run] \
  *     [--source=catalog|legacy|both] [--phrasing=title|title-subtitle] \
- *     [--limit=N] [--directions=LR,TB] [--details=overview,detailed] \
- *     [--providers=auto]
+ *     [--limit=N] [--providers=auto,aws,azure,gcp]
  *
  * Environment:
  *   API_URL    — ascend backend URL (default: https://caprab.cariara.com)
@@ -45,8 +45,10 @@ const DRY_RUN = args.includes('--dry-run');
 const LIMIT = parseInt(flag('limit', '0'), 10) || Infinity;
 const SOURCE = flag('source', 'catalog'); // catalog | legacy | both
 const PHRASING = flag('phrasing', 'title'); // title | title-subtitle
-const DIRECTIONS = flag('directions', 'LR,TB').split(',').map((s) => s.trim()).filter(Boolean);
-const DETAILS = flag('details', 'overview,detailed').split(',').map((s) => s.trim()).filter(Boolean);
+// Direction + detail are locked to TB/detailed server-side; these defaults
+// reflect that. Override only if you're testing the legacy engine path.
+const DIRECTIONS = flag('directions', 'TB').split(',').map((s) => s.trim()).filter(Boolean);
+const DETAILS = flag('details', 'detailed').split(',').map((s) => s.trim()).filter(Boolean);
 const PROVIDERS = flag('providers', 'auto').split(',').map((s) => s.trim()).filter(Boolean);
 const API_URL = process.env.API_URL || 'https://caprab.cariara.com';
 const API_TOKEN = process.env.API_TOKEN;
@@ -197,8 +199,12 @@ async function generateOne(topic, provider, direction, detailLevel) {
       return { ok: false, error: 'ADMIN_ONLY (set API_TOKEN to an owner JWT)', fatal: true };
     }
     if (data.success) {
-      const type = data.mermaid_code ? 'mermaid' : data.image_url ? 'png' : 'unknown';
-      return { ok: true, type, cached: !!data.cached };
+      // Mermaid fallback was removed — every successful response is PNG.
+      // engine_used is set by pythonDiagrams.js so the operator can see
+      // whether D2 (primary) or Graphviz (fallback) actually rendered.
+      const type = data.image_url ? 'png' : 'unknown';
+      const engine = data.engine_used ? ` [${data.engine_used}]` : '';
+      return { ok: true, type: type + engine, cached: !!data.cached };
     }
     return { ok: false, error: data.error || `HTTP ${res.status}` };
   } catch (err) {
