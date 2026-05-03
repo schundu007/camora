@@ -689,109 +689,15 @@ export default function JobsPage() {
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div>
 
-        {/* ── Hero Section — Google Careers-style: clean light surface,
-             bold tagline, two-field search (role + location), small
-             metadata subtitle. Replaces the dark navy band, eyebrow,
-             radial glow, and diagonal divider — those fought the
-             rest of the page's neutral palette. */}
-        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-          <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '48px', paddingBottom: '32px' }}>
-            <h1 style={{
-              fontSize: 'clamp(28px, 3.6vw, 40px)',
-              fontWeight: 600,
-              letterSpacing: '-0.02em',
-              color: 'var(--text-primary)',
-              margin: '0 0 8px',
-              lineHeight: 1.15,
-            }}>
-              Find your next role
-            </h1>
-            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: '0 0 24px', maxWidth: '640px', lineHeight: 1.5 }}>
-              Live engineering roles from Google, Meta, Stripe, OpenAI, and 200+ companies. One click to start prep.
-            </p>
+        {/* Hero / category pills / filter toolbar are now consolidated
+             into the sidebar below — Google Careers' /jobs/results
+             pattern: results count + search + collapsible filter
+             groups in a left rail, single-column cards on the right. */}
 
-            {/* Two-field search — role + location + Search */}
-            <div
-              className="jobs-search-row"
-              style={{
-                display: 'flex',
-                alignItems: 'stretch',
-                gap: '8px',
-                maxWidth: '780px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ flex: '1 1 320px', minWidth: '240px', display: 'flex', alignItems: 'center', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 14px' }}>
-                <svg width="18" height="18" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8} style={{ flexShrink: 0, marginRight: '10px' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Job title, company, or skill"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') fetchJobs(); }}
-                  style={{ flex: 1, fontSize: '15px', color: 'var(--text-primary)', background: 'transparent', border: 'none', outline: 'none', padding: '12px 0' }}
-                />
-              </div>
-              <div style={{ flex: '1 1 220px', minWidth: '180px', display: 'flex', alignItems: 'center', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 14px' }}>
-                <svg width="18" height="18" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8} style={{ flexShrink: 0, marginRight: '10px' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Location"
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') fetchJobs(); }}
-                  list="hero-location-options"
-                  style={{ flex: 1, fontSize: '15px', color: 'var(--text-primary)', background: 'transparent', border: 'none', outline: 'none', padding: '12px 0' }}
-                />
-                <datalist id="hero-location-options">
-                  {availableLocations.map((l) => <option key={l.name} value={l.name}>{`${l.name} (${l.count})`}</option>)}
-                </datalist>
-              </div>
-              <button
-                onClick={fetchJobs}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '0 28px',
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  color: '#fff',
-                  background: 'var(--accent)',
-                  border: '1px solid var(--accent)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s',
-                  height: '44px',
-                  flexShrink: 0,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-hover)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--accent)'; }}
-              >
-                Search
-              </button>
-            </div>
-
-            {/* Metadata subtitle — count + last updated */}
-            <div style={{ marginTop: '14px', fontSize: '13px', color: 'var(--text-muted)' }}>
-              <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{total.toLocaleString()}</strong> jobs
-              {lastUpdated && (
-                <>
-                  {' · Updated '}
-                  {new Date(lastUpdated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Job URL Analysis Section ── */}
+        {/* ── Job URL Analysis Section (kept; Camora-specific feature
+             that has no Google Careers analogue. Stays as a small
+             dismissible banner at the top so it doesn't crowd the
+             list view.) ── */}
         <div style={{ background: 'transparent' }}>
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
             {!showUrlInput ? (
@@ -964,86 +870,211 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* ── Category Chip Pills — Google Careers-style.
-             Neutral chip pills (rounded-full, bg-elevated when inactive,
-             bg-accent + white text when active). No category-color
-             rainbow, no dark band, no gold-leaf border, no tab-underline. */}
-        <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '20px' }}>
-          <div
-            className="jobs-pills-scroll"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              msOverflowStyle: 'none',
-              scrollbarWidth: 'none',
-            }}
-          >
-            {CATEGORIES.map((cat) => {
-              const isActive = role === cat.value;
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() => setRole(cat.value)}
+        {/* ── Layout: filter sidebar (Google Careers exact pattern) +
+             single-column job list. No hero, no category chip strip,
+             no horizontal filter toolbar — all filtering moved into
+             the left sidebar with collapsible <details> sections.
+             Camora's color tokens are preserved per user request. */}
+        <div className="w-full lg:max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '40px' }}>
+          <div className="jobs-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+
+            {/* ── Sidebar — filter rail ── */}
+            <aside
+              className="jobs-sidebar"
+              style={{
+                width: '280px',
+                flexShrink: 0,
+                position: 'sticky',
+                top: '88px',
+                maxHeight: 'calc(100vh - 100px)',
+                overflowY: 'auto',
+                paddingRight: '8px',
+              }}
+            >
+              {/* Result count + clear */}
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div style={{ fontSize: '14px' }}>
+                  <strong style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '15px' }}>{total.toLocaleString()}</strong>
+                  <span style={{ color: 'var(--text-secondary)', marginLeft: '6px' }}>jobs matched</span>
+                </div>
+                {activeFilterCount > 0 && (
+                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    Clear filters
+                  </button>
+                )}
+              </div>
+
+              {/* What do you want to do? — Google's primary search input */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--accent)', marginBottom: '6px', letterSpacing: '0.02em' }}>
+                  What do you want to do?
+                </label>
+                <input
+                  type="text"
+                  placeholder="Software engineering, Design, etc."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') fetchJobs(); }}
                   style={{
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: isActive ? '#fff' : 'var(--text-secondary)',
-                    background: isActive ? 'var(--accent)' : 'var(--bg-elevated)',
-                    border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                    borderRadius: '9999px',
-                    padding: '7px 14px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.15s',
-                    flexShrink: 0,
+                    width: '100%',
+                    fontSize: '14px',
+                    color: 'var(--text-primary)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: '2px solid var(--accent)',
+                    padding: '8px 0',
+                    outline: 'none',
                   }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                />
+              </div>
 
-        {/* ── Filter toolbar — horizontal row of compact dropdowns above
-             the cards. No sidebar (per user). All filters inline. */}
-        <div className="w-full lg:max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="jobs-toolbar-select">
-              <option value="">All locations</option>
-              {availableLocations.map((l) => <option key={l.name} value={l.name}>{l.name} ({l.count})</option>)}
-            </select>
-            <select value={workTypeFilter} onChange={(e) => setWorkTypeFilter(e.target.value)} className="jobs-toolbar-select">
-              {WORK_TYPES.map((wt) => <option key={wt.value} value={wt.value}>{wt.label}</option>)}
-            </select>
-            <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)} className="jobs-toolbar-select">
-              {EXPERIENCE_LEVELS.map((el) => <option key={el.value} value={el.value}>{el.label}</option>)}
-            </select>
-            <select value={postedWithinFilter} onChange={(e) => setPostedWithinFilter(e.target.value)} className="jobs-toolbar-select">
-              {POSTED_WITHIN.map((pw) => <option key={pw.value} value={pw.value}>{pw.label}</option>)}
-            </select>
-            <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="jobs-toolbar-select">
-              <option value="">All platforms</option>
-              {availableSources.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.count})</option>)}
-            </select>
-            {activeFilterCount > 0 && (
-              <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
-                Clear all
-              </button>
-            )}
-          </div>
-          <div style={{ marginTop: '14px', fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
-            {total.toLocaleString()} {total === 1 ? 'job' : 'jobs'}
-          </div>
-        </div>
+              {/* Locations (free-text + datalist autocomplete) */}
+              <details className="jobs-filter-group" open>
+                <summary>Locations</summary>
+                <div className="jobs-filter-body">
+                  <input
+                    type="text"
+                    placeholder="Any location"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    list="sidebar-location-options"
+                    className="jobs-sidebar-input"
+                  />
+                  <datalist id="sidebar-location-options">
+                    {availableLocations.map((l) => <option key={l.name} value={l.name}>{`${l.name} (${l.count})`}</option>)}
+                  </datalist>
+                </div>
+              </details>
 
-        <div className="w-full lg:max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '40px' }}>
-          <main style={{ width: '100%' }}>
+              {/* Job category — replaces the chip pill strip */}
+              <details className="jobs-filter-group" open>
+                <summary>Job category</summary>
+                <div className="jobs-filter-body">
+                  {CATEGORIES.map((cat) => (
+                    <label key={cat.value} className="jobs-filter-radio">
+                      <input
+                        type="radio"
+                        name="role"
+                        checked={role === cat.value}
+                        onChange={() => setRole(cat.value)}
+                      />
+                      <span>{cat.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Experience */}
+              <details className="jobs-filter-group" open>
+                <summary>Experience</summary>
+                <div className="jobs-filter-body">
+                  {EXPERIENCE_LEVELS.map((el) => (
+                    <label key={el.value} className="jobs-filter-radio">
+                      <input
+                        type="radio"
+                        name="experience"
+                        checked={experienceFilter === el.value}
+                        onChange={() => setExperienceFilter(el.value)}
+                      />
+                      <span>{el.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Job types (work type) */}
+              <details className="jobs-filter-group" open>
+                <summary>Job types</summary>
+                <div className="jobs-filter-body">
+                  {WORK_TYPES.map((wt) => (
+                    <label key={wt.value} className="jobs-filter-radio">
+                      <input
+                        type="radio"
+                        name="workType"
+                        checked={workTypeFilter === wt.value}
+                        onChange={() => setWorkTypeFilter(wt.value)}
+                      />
+                      <span>{wt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Date posted */}
+              <details className="jobs-filter-group">
+                <summary>Date posted</summary>
+                <div className="jobs-filter-body">
+                  {POSTED_WITHIN.map((pw) => (
+                    <label key={pw.value} className="jobs-filter-radio">
+                      <input
+                        type="radio"
+                        name="posted"
+                        checked={postedWithinFilter === pw.value}
+                        onChange={() => setPostedWithinFilter(pw.value)}
+                      />
+                      <span>{pw.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Job platform */}
+              <details className="jobs-filter-group">
+                <summary>Job platform</summary>
+                <div className="jobs-filter-body">
+                  <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="jobs-sidebar-input">
+                    <option value="">All platforms</option>
+                    {availableSources.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.count})</option>)}
+                  </select>
+                </div>
+              </details>
+
+              {/* Companies */}
+              <details className="jobs-filter-group">
+                <summary>Companies</summary>
+                <div className="jobs-filter-body">
+                  <input
+                    type="text"
+                    placeholder="Search companies"
+                    value={companyFilter}
+                    onChange={(e) => setCompanyFilter(e.target.value)}
+                    list="company-options"
+                    className="jobs-sidebar-input"
+                  />
+                  <datalist id="company-options">
+                    {availableCompanies.map((c) => <option key={c.name} value={c.name}>{`${c.name} (${c.count})`}</option>)}
+                  </datalist>
+                </div>
+              </details>
+
+              {/* Salary range */}
+              <details className="jobs-filter-group">
+                <summary>Salary range</summary>
+                <div className="jobs-filter-body" style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={salaryMinFilter}
+                    onChange={(e) => setSalaryMinFilter(e.target.value)}
+                    className="jobs-sidebar-input"
+                    style={{ width: '50%' }}
+                    step={10000}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={salaryMaxFilter}
+                    onChange={(e) => setSalaryMaxFilter(e.target.value)}
+                    className="jobs-sidebar-input"
+                    style={{ width: '50%' }}
+                    step={10000}
+                  />
+                </div>
+              </details>
+            </aside>
+
+            {/* ── Main — single-column card list ── */}
+            <main style={{ flex: 1, minWidth: 0 }}>
           {loading ? (
             /* Loading skeleton — single column to match the new card list */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1291,6 +1322,7 @@ export default function JobsPage() {
             </main>
           </div>
         </div>
+      </div>
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`
@@ -1325,28 +1357,99 @@ export default function JobsPage() {
           flex-direction: column;
           gap: 12px;
         }
-        /* Inline filter toolbar selects */
-        .jobs-toolbar-select {
+        /* Sidebar filter <details> groups — Google Careers' collapsible
+           filter sections. Native disclosure widget gives free
+           keyboard a11y + stable scroll positions. */
+        .jobs-filter-group {
+          border-bottom: 1px solid var(--border);
+          padding: 12px 0;
+        }
+        .jobs-filter-group:last-of-type {
+          border-bottom: none;
+        }
+        .jobs-filter-group > summary {
+          list-style: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text-primary);
+          padding: 4px 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .jobs-filter-group > summary::-webkit-details-marker {
+          display: none;
+        }
+        .jobs-filter-group > summary::after {
+          content: "";
+          width: 10px;
+          height: 10px;
+          border-right: 2px solid var(--text-muted);
+          border-bottom: 2px solid var(--text-muted);
+          transform: rotate(45deg);
+          transition: transform 0.15s;
+          margin-right: 4px;
+        }
+        .jobs-filter-group[open] > summary::after {
+          transform: rotate(-135deg);
+          margin-bottom: -4px;
+        }
+        .jobs-filter-body {
+          margin-top: 10px;
+        }
+        .jobs-filter-radio {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 6px 0;
+          font-size: 14px;
+          color: var(--text-primary);
+          cursor: pointer;
+          line-height: 1.4;
+        }
+        .jobs-filter-radio:hover {
+          color: var(--accent);
+        }
+        .jobs-filter-radio input[type="radio"] {
+          accent-color: var(--accent);
+          margin: 0;
+          flex-shrink: 0;
+          width: 16px;
+          height: 16px;
+        }
+        .jobs-sidebar-input {
+          width: 100%;
           padding: 8px 12px;
           font-size: 13px;
           color: var(--text-primary);
           background: var(--bg-elevated);
           border: 1px solid var(--border);
-          border-radius: 8px;
-          cursor: pointer;
+          border-radius: 6px;
           outline: none;
-          appearance: none;
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='M19.5 8.25l-7.5 7.5-7.5-7.5'/></svg>");
-          background-repeat: no-repeat;
-          background-position: right 10px center;
-          padding-right: 28px;
           transition: border-color 0.15s;
         }
-        .jobs-toolbar-select:hover,
-        .jobs-toolbar-select:focus {
+        .jobs-sidebar-input:hover,
+        .jobs-sidebar-input:focus {
           border-color: var(--accent);
+        }
+
+        /* Mobile: collapse sidebar above main as full-width section */
+        @media (max-width: 880px) {
+          .jobs-layout {
+            flex-direction: column;
+            gap: 16px !important;
+          }
+          .jobs-sidebar {
+            width: 100% !important;
+            position: static !important;
+            max-height: none !important;
+            padding-right: 0 !important;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px !important;
+          }
         }
 
         /* Filter form controls */
