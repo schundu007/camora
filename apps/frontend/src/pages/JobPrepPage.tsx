@@ -648,36 +648,38 @@ export default function JobPrepPage() {
 
           {/* ── Tech Stack Extracted ── */}
           {techStack.length > 0 && (
-            <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Inter', system-ui, sans-serif" }}>
-                Tech Stack Extracted
+            <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
+                Tech stack
               </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
-                Technologies identified from the job listing
-              </p>
               <div className="flex flex-wrap gap-2">
                 {techStack.map((tech) => {
                   const key = tech.toLowerCase().trim();
                   const match = TECH_TO_TOPICS[key];
-                  const style = match ? getCategoryStyle(match.category) : { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' };
+                  const chipStyle = {
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'var(--text-primary)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                  } as React.CSSProperties;
                   return match ? (
                     <Link
                       key={tech}
                       to={match.href}
                       style={{
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: style.text,
-                        background: style.bg,
-                        border: `1px solid ${style.border}`,
-                        borderRadius: '8px',
-                        padding: '6px 12px',
+                        ...chipStyle,
                         textDecoration: 'none',
-                        transition: 'opacity 0.15s',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
+                        transition: 'border-color 0.15s, color 0.15s',
                       }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                     >
                       <span>{tech}</span>
                       <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ opacity: 0.5 }}>
@@ -685,20 +687,7 @@ export default function JobPrepPage() {
                       </svg>
                     </Link>
                   ) : (
-                    <span
-                      key={tech}
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        color: style.text,
-                        background: style.bg,
-                        border: `1px solid ${style.border}`,
-                        borderRadius: '8px',
-                        padding: '6px 12px',
-                      }}
-                    >
-                      {tech}
-                    </span>
+                    <span key={tech} style={chipStyle}>{tech}</span>
                   );
                 })}
               </div>
@@ -707,55 +696,33 @@ export default function JobPrepPage() {
 
           {/* ── AI Analysis Insights (shown for URL-analyzed jobs) ── */}
           {urlAnalysis && (
-            <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div style={{ width: '28px', height: '28px', background: 'var(--accent-subtle)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                </div>
-                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
-                  AI Analysis
-                </h2>
-              </div>
+            <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
+                AI analysis
+              </h2>
               {urlAnalysis.summary && (
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 16px' }}>{urlAnalysis.summary}</p>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                {urlAnalysis.coding_focus?.length > 0 && (
-                  <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
+                {[
+                  { label: 'Coding focus', items: urlAnalysis.coding_focus },
+                  { label: 'System design focus', items: urlAnalysis.system_design_focus },
+                  { label: 'Behavioral focus', items: urlAnalysis.behavioral_focus },
+                ].filter(g => g.items?.length > 0).map((group) => (
+                  <div key={group.label} style={{ background: 'var(--bg-elevated)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border)' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>{group.label}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                      {urlAnalysis.coding_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: 'var(--success)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                      {group.items.map((t: string) => (
+                        <span key={t} style={{ fontSize: '12px', color: 'var(--text-primary)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>{t}</span>
                       ))}
                     </div>
                   </div>
-                )}
-                {urlAnalysis.system_design_focus?.length > 0 && (
-                  <div style={{ background: 'var(--accent-subtle)', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>System Design Focus</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                      {urlAnalysis.system_design_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: 'var(--accent)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {urlAnalysis.behavioral_focus?.length > 0 && (
-                  <div style={{ background: 'var(--bg-elevated)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--cam-gold-leaf-text)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                      {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: 'var(--cam-gold-leaf-text)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                ))}
               </div>
               {urlAnalysis.key_requirements?.length > 0 && (
-                <div style={{ marginTop: '12px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Key Requirements</p>
+                <div style={{ marginTop: '16px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Key requirements</p>
                   <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                     {urlAnalysis.key_requirements.map((r: string, i: number) => <li key={i}>{r}</li>)}
                   </ul>
@@ -765,11 +732,12 @@ export default function JobPrepPage() {
           )}
 
           {/* ── Recommended Study Path ── */}
-          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Inter', system-ui, sans-serif" }}>
-              Recommended Study Path
+          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
+              Recommended study path
             </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px', paddingLeft: '12px' }}>
               Personalized for <strong style={{ color: 'var(--text-secondary)' }}>{job.title}</strong> at <strong style={{ color: 'var(--text-secondary)' }}>{job.company_name}</strong>
             </p>
 
@@ -803,13 +771,14 @@ export default function JobPrepPage() {
           </section>
 
           {/* ── JD based Interview Preparation ── */}
-          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-            <div className="flex items-start justify-between mb-1">
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
-                JD based Interview Preparation
+          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
+                Interview prep material
               </h2>
               {Object.keys(generatedSections).length > 0 && !generating && (
-                <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', padding: '2px 8px' }}>
                   {Object.keys(generatedSections).length} / {PREP_SECTIONS.length} sections
                 </span>
               )}
@@ -1086,8 +1055,9 @@ export default function JobPrepPage() {
           </section>
 
           {/* ── Bottom CTAs ── */}
-          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
               Ready to start?
             </h2>
             <div className="flex flex-wrap gap-3">
