@@ -27,7 +27,7 @@ export default function ResumeOptimizer() {
   const [activeTab, setActiveTab] = useState<OutputTab>('resume');
   const [optimizedResume, setOptimizedResume] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
-  const [atsScore, setAtsScore] = useState('');
+  const [atsScore, _setAtsScore] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

@@ -11,7 +11,7 @@ export default function FormattedContent({ content }) {
   if (!translated) return null;
   // Bind the translated text into the existing parser without renaming
   // the variable — keeps the rest of the function unchanged.
-  // eslint-disable-next-line no-param-reassign
+   
   content = translated;
 
   const isDiagramLine = (line) => {

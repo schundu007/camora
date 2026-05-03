@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
 import { SOLUTIONS } from './Blind75PracticePage';
-import SEO from '../components/shared/SEO';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 

@@ -4,7 +4,6 @@ import DocsCallout from '../../components/shared/docs/DocsCallout';
 import DocsTable from '../../components/shared/docs/DocsTable';
 
 const sectionH2 = 'text-2xl font-bold mb-3 mt-2';
-const sectionH3 = 'text-xl font-bold mt-7 mb-2 scroll-mt-24';
 const bodyP = 'text-[15px] leading-relaxed mb-3';
 const bodyColor = { color: 'var(--text-secondary)' };
 

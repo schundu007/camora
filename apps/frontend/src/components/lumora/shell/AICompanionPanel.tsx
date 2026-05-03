@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
-import { getActiveAssistant, buildSystemContext, type LumoraStory } from '@/lib/lumora-assistant';
+import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
@@ -346,7 +346,6 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; origX: number; origY: number; mode: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
   const initialQuestionSent = useRef(false);
 
   // Handle initial question from behavioral button
@@ -583,13 +582,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       return;
     }
     if (opts?.manual) {
-      console.log('[Sona] manual press → firing ask() (isQuestion bypassed):', text.slice(0, 120));
       askRef.current?.(text);
       return;
     }
     // Auto path: gate on isQuestion so monologues / acknowledgments don't fire Sona.
     if (!isQuestion(text)) {
-      console.log('[Sona] auto transcript dropped by isQuestion:', text.slice(0, 120));
       return;
     }
     askRef.current?.(text);

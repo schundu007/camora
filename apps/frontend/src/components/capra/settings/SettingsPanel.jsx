@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import ApiKeyInput from './ApiKeyInput';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
 
 const CLAUDE_MODELS = [

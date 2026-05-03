@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
@@ -29,14 +28,8 @@ const MORE_ITEMS = [
   { id: 'pricing', label: 'Pricing', path: '/lumora/pricing' },
 ];
 
-const BOTTOM_ITEMS = [
-  { id: 'audio-check', label: 'Audio Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
-  { id: 'help', label: 'Help', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
-];
-
-export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {
+export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions }: LumoraIconRailProps) {
   const [accountOpen, setAccountOpen] = useState(false);
-  const location = useLocation();
 
   const isActive = (id: string) => {
     if (id === 'dashboard') return activeTab === 'interview';

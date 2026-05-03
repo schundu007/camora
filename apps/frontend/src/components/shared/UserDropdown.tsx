@@ -50,7 +50,6 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
   // any surface — bypassing data-theme cascade that was occasionally
   // flipping --text-primary to a light value on the white nav.
   const textColor = isDark ? '#FFFFFF' : '#020617';
-  const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : '#475569';
   const hoverBg = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(2,6,23,0.06)';
 
   const positionStyles: Record<string, string> = {

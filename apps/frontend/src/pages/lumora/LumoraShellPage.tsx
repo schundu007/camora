@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
 import { LumoraBottomBar } from '../../components/lumora/shell/LumoraBottomBar';
 import { CodingSonaSidebar, CodingSonaSidebarToggle } from '../../components/lumora/shell/CodingSonaSidebar';
-import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
+import { AICompanionPanel } from '../../components/lumora/shell/AICompanionPanel';
 import { dispatchTranscript } from '../../lib/voice-router';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
 import { SessionSidebar } from '../../components/lumora/interview/SessionSidebar';
@@ -14,7 +13,6 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
-import { useAuth } from '../../contexts/AuthContext';
 import SharedPricingCards from '../../components/shared/PricingCards';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
@@ -24,7 +22,6 @@ import { InterviewerAudioProvider } from '../../components/lumora/audio/Intervie
 import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard';
 import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
 import { useTheme } from '../../hooks/useTheme';
-import type { ParsedBlock } from '../../types';
 import { dialogConfirm } from '../../components/shared/Dialog';
 import { isQuestion } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
@@ -42,14 +39,12 @@ export function LumoraShellPage() {
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const { theme: currentTheme, toggle: toggleTheme } = useTheme();
   const [sessionsOpen, setSessionsOpen] = useState(false);
-  const [docsOpen, setDocsOpen] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [, setCopilotOpen] = useState(false);
   const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
-  const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, removeHistoryEntry, vadThreshold } = useInterviewStore();
+  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, vadThreshold } = useInterviewStore();
   const [settingsDismissed, setSettingsDismissed] = useState(false);
 
   // Sona sidebar (Coding / Design tabs only). Persisted per-surface

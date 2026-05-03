@@ -26,8 +26,8 @@
    Theme: every fill / stroke / text color reads from a CSS var, so
    light↔dark flips automatically with [data-theme="dark"] on <html>.
    ────────────────────────────────────────────────────────────────────── */
-import React, { useMemo } from 'react';
-import { RoughBox, RoughArrow, RoughLabel } from '../features/RoughShapes';
+import { useMemo } from 'react';
+import { RoughBox, RoughArrow } from '../features/RoughShapes';
 
 interface Layer {
   name: string;

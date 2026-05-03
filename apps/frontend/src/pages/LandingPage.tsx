@@ -273,7 +273,7 @@ export default function LandingPage() {
                 key={`${c}-${i}`}
                 src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
                 alt={c}
-                className="h-6 mx-7 shrink-0 object-contain opacity-50 grayscale transition-[opacity,filter] duration-200 hover:opacity-90 hover:grayscale-0"
+                className="h-6 mx-7 shrink-0 object-contain"
                 loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />

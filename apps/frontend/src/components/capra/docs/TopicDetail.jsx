@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
-import DiagramSVG from '../features/DiagramSVG.jsx';
 import { ContentDiagram } from './ContentDiagram';
 import OnThisPage from '../../shared/docs/OnThisPage';
 import DocsTabs from '../../shared/docs/DocsTabs';
@@ -506,7 +505,6 @@ export default function TopicDetail({
         return;
       }
       const data = await res.json();
-      console.log(`[AdminRegen] ${engine} response:`, data);
       if (data.success && data.image_url) {
         const imageUrl = data.image_url.startsWith('http') ? data.image_url : `${CAPRA_API}${data.image_url}`;
         // Directly call generateDiagram to update the diagram state so it shows immediately

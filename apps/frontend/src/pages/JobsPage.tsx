@@ -73,14 +73,6 @@ function getCompanyLogoPath(companyName: string): string | null {
   return null;
 }
 
-/** Generate a deterministic color from company name for the initial fallback */
-function getCompanyColor(name: string): string {
-  const colors = ['var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--text-muted)', 'var(--accent)', 'var(--success)', 'var(--danger)', 'var(--warning)', 'var(--accent)'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-}
-
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -120,36 +112,6 @@ const CATEGORIES = [
   { value: 'tpm', label: 'TPM' },
   { value: 'product_manager', label: 'Product' },
 ];
-
-const CATEGORY_COLORS: Record<string, string> = {
-  devops: 'var(--accent)',
-  backend: 'var(--accent)',
-  frontend: 'var(--accent)',
-  fullstack: 'var(--accent)',
-  data: 'var(--warning)',
-  ml: 'var(--text-muted)',
-  security: 'var(--danger)',
-  mobile: 'var(--accent)',
-  ios: 'var(--accent)',
-  android: 'var(--accent)',
-  qa: 'var(--accent)',
-  sre: 'var(--danger)',
-  platform: 'var(--accent)',
-  cloud: 'var(--accent)',
-  network: 'var(--accent)',
-  blockchain: 'var(--warning)',
-  game_dev: 'var(--text-muted)',
-  tech_lead: 'var(--accent)',
-  staff: 'var(--accent)',
-  principal: 'var(--accent)',
-  em: 'var(--accent)',
-  architect: 'var(--accent)',
-  tpm: 'var(--accent)',
-  product_manager: 'var(--accent)',
-  embedded: 'var(--accent)',
-};
-
-const DEFAULT_COLOR = 'var(--text-muted)';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -247,139 +209,12 @@ function timeAgo(dateStr?: string): string | null {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-function detectCategory(title: string): string {
-  const t = title.toLowerCase();
-  // Order matters — more specific categories first
-  if (t.includes('devops') || t.includes('dev ops') || t.includes('devsecops') || t.includes('release engineer') || t.includes('build engineer') || t.includes('ci/cd')) return 'devops';
-  if (t.includes('sre') || t.includes('site reliability') || t.includes('production engineer') || t.includes('observability')) return 'sre';
-  if (t.includes('security') || t.includes('appsec') || t.includes('infosec') || t.includes('cybersecurity') || t.includes('penetration') || t.includes('threat') || t.includes('vulnerability') || t.includes('soc analyst') || t.includes('security engineer')) return 'security';
-  if (t.includes('machine learning') || t.includes('ml ') || t.includes('ml ops') || t.includes('deep learning') || t.includes('nlp') || t.includes('natural language') || t.includes('artificial intelligence') || t.includes('ai engineer') || t.includes('ai research') || t.includes('computer vision') || t.includes('generative ai') || t.includes('applied scientist') || t.includes('research scientist') || t.includes('research engineer')) return 'ml';
-  if (t.includes('data engineer') || t.includes('data scientist') || t.includes('data analyst') || t.includes('analytics') || t.includes('etl') || t.includes('data platform') || t.includes('data architect') || t.includes('database') || t.includes('dba') || t.includes('data warehouse') || t.includes('business intelligence') || t.includes('bi ')) return 'data';
-  if (t.includes('mobile') || t.includes('ios') || t.includes('android') || t.includes('swift') || t.includes('kotlin') || t.includes('react native') || t.includes('flutter')) return 'mobile';
-  if (t.includes('qa') || t.includes('quality assurance') || t.includes('test engineer') || t.includes('sdet') || t.includes('automation test') || t.includes('test automation') || t.includes('quality engineer')) return 'qa';
-  if (t.includes('embedded') || t.includes('firmware') || t.includes('hardware') || t.includes('fpga') || t.includes('rtos') || t.includes('iot engineer') || t.includes('robotics')) return 'embedded';
-  if (t.includes('full stack') || t.includes('fullstack') || t.includes('full-stack')) return 'fullstack';
-  if (t.includes('frontend') || t.includes('front-end') || t.includes('front end') || t.includes('ui engineer') || t.includes('ui developer') || t.includes('ux engineer') || t.includes('javascript engineer') || t.includes('typescript engineer') || t.includes('web engineer')) return 'frontend';
-  if (t.includes('platform engineer') || t.includes('platform architect') || t.includes('developer experience') || t.includes('developer tools') || t.includes('dx engineer') || t.includes('internal tools')) return 'platform';
-  if (t.includes('cloud engineer') || t.includes('cloud architect') || t.includes('infrastructure engineer') || t.includes('infra engineer') || t.includes('network engineer') || t.includes('solutions architect')) return 'cloud';
-  if (t.includes('backend') || t.includes('back-end') || t.includes('back end') || t.includes('server engineer') || t.includes('api engineer') || t.includes('distributed systems') || t.includes('systems engineer')) return 'backend';
-  if (t.includes('software engineer') || t.includes('software developer') || t.includes('application engineer') || t.includes('web developer')) return 'fullstack';
-  return 'fullstack';
-}
-
-function getCategoryColor(category: string): string {
-  return CATEGORY_COLORS[category] || DEFAULT_COLOR;
-}
-
-// Text-safe overrides for categories whose fill color fails WCAG AA on
-// white (gold). Use the bright gold for the pill background/border, the
-// darkened sibling for the label text inside the pill.
-const CATEGORY_TEXT_OVERRIDES: Record<string, string> = {
-  data: 'var(--warning-text)',
-  blockchain: 'var(--warning-text)',
-};
-
-function getCategoryTextColor(category: string): string {
-  return CATEGORY_TEXT_OVERRIDES[category] || getCategoryColor(category);
-}
-
-function getCategoryLabel(category: string): string {
-  const found = CATEGORIES.find((c) => c.value === category);
-  return found ? found.label : 'Engineering';
-}
-
 function detectWorkType(location?: string): string {
   if (!location) return 'Onsite';
   const l = location.toLowerCase();
   if (l.includes('remote')) return 'Remote';
   if (l.includes('hybrid')) return 'Hybrid';
   return 'Onsite';
-}
-
-/* ──────────────────────────────── SVG Icons ──────────────────────────────── */
-
-function CategoryIcon({ category, size = 28 }: { category: string; size?: number }) {
-  const props = { width: size, height: size, fill: 'none', stroke: '#ffffff', strokeWidth: 1.8, viewBox: '0 0 24 24', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-
-  switch (category) {
-    case 'devops':
-      return (
-        <svg {...props}>
-          <path d="M18.178 8c5.096 5.096-2.066 12.258-7.178 7.996C5.89 20.258-1.272 13.096 3.822 8 8.918 2.904 13.082 2.904 18.178 8z" />
-          <path d="M11 12a1 1 0 102 0 1 1 0 00-2 0" />
-        </svg>
-      );
-    case 'backend':
-      return (
-        <svg {...props}>
-          <rect x="3" y="4" width="18" height="6" rx="1" />
-          <rect x="3" y="14" width="18" height="6" rx="1" />
-          <circle cx="7" cy="7" r="1" fill="#ffffff" stroke="none" />
-          <circle cx="7" cy="17" r="1" fill="#ffffff" stroke="none" />
-        </svg>
-      );
-    case 'frontend':
-      return (
-        <svg {...props}>
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <path d="M8 21h8M12 17v4" />
-        </svg>
-      );
-    case 'fullstack':
-      return (
-        <svg {...props}>
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      );
-    case 'data':
-      return (
-        <svg {...props}>
-          <rect x="3" y="12" width="4" height="9" rx="0.5" />
-          <rect x="10" y="7" width="4" height="14" rx="0.5" />
-          <rect x="17" y="3" width="4" height="18" rx="0.5" />
-        </svg>
-      );
-    case 'ml':
-      return (
-        <svg {...props}>
-          <path d="M12 2a4 4 0 014 4c0 1.5-.8 2.8-2 3.5" />
-          <path d="M12 2a4 4 0 00-4 4c0 1.5.8 2.8 2 3.5" />
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 15v4M8 20h8" />
-          <path d="M9 9.5L6 12M15 9.5l3 2.5" />
-        </svg>
-      );
-    case 'sre':
-      return (
-        <svg {...props}>
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="M9 12l2 2 4-4" />
-        </svg>
-      );
-    case 'platform':
-      return (
-        <svg {...props}>
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      );
-    case 'cloud':
-      return (
-        <svg {...props}>
-          <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" />
-        </svg>
-      );
-    default:
-      return (
-        <svg {...props}>
-          <path d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
-        </svg>
-      );
-  }
 }
 
 /* ──────────────────────────────── Component ──────────────────────────────── */
@@ -449,14 +284,13 @@ export default function JobsPage() {
   const [postedWithinFilter, setPostedWithinFilter] = useState('');
   const [salaryMinFilter, setSalaryMinFilter] = useState('');
   const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Filter options from API
   const [availableSources, setAvailableSources] = useState<FilterOption[]>([]);
   const [availableLocations, setAvailableLocations] = useState<FilterOption[]>([]);
-  const [availableDepartments, setAvailableDepartments] = useState<FilterOption[]>([]);
+  const [, setAvailableDepartments] = useState<FilterOption[]>([]);
   const [availableCompanies, setAvailableCompanies] = useState<FilterOption[]>([]);
-  const [salaryRange, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
+  const [, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
 
   // Set role from user profile once auth loads
   useEffect(() => {
@@ -470,7 +304,7 @@ export default function JobsPage() {
   // Data
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [, setLastUpdated] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);

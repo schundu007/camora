@@ -9,7 +9,6 @@ function migrateStorage() {
   const oldData = localStorage.getItem(OLD_STORAGE_KEY);
   if (oldData && !localStorage.getItem(STORAGE_KEY)) {
     localStorage.setItem(STORAGE_KEY, oldData);
-    console.log('[CodingHistory] Migrated from ascend_coding_history');
   }
 }
 migrateStorage();

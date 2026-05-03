@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
-import CamoraLogo from '../../shared/CamoraLogo';
 import TopicIllustration from './TopicIllustration';
 import { DatabricksThumb } from '../../shared/DatabricksThumb';
 
@@ -50,7 +49,6 @@ import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capr
 import { loadTopicsForPage } from '../../../data/capra/topics/loader.js';
 
 import TopicDetail from './TopicDetail.jsx';
-import ProgressTracker from './ProgressTracker.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 

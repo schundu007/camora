@@ -6,20 +6,16 @@ import { useCloudProvider } from '@/hooks/useCloudProvider';
 import { getSystemContext } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
-import { StreamingAnswer } from '@/components/lumora/interview/StreamingAnswer';
-import { transcriptionAPI } from '@/lib/api-client';
 import {
-  type SystemDesign,
   type DesignResult,
   parseTagsToDesign,
   extractTagMap,
   extractReadableProse,
-  parseMetricHighlight,
 } from './parsers';
-import { useTheme, formatTime, humanizeNumber, humanizeBytes } from './theme';
+import { useTheme, formatTime } from './theme';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { ScaleCalculator } from './scale-calculator';
-import { SectionIcon, tierColors, layerAccents, SectionCopyBtn } from './section-helpers';
+import { SectionCopyBtn } from './section-helpers';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -141,8 +137,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [inputCollapsed, setInputCollapsed] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [expandedFollowup, setExpandedFollowup] = useState<number | null>(null);
-  const [expandedTiers, setExpandedTiers] = useState<Set<string>>(new Set());
+  const [, setExpandedFollowup] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -305,7 +300,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 if (Object.keys(tagMap).length > 0) {
                   const partial = parseTagsToDesign(tagMap);
                   if (partial?.systemDesign) {
-                    setResult((prev) => partial);
+                    setResult(partial);
                     return;
                   }
                 }
@@ -326,7 +321,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   try {
                     const obj = JSON.parse(candidate);
                     if (obj?.systemDesign) {
-                      setResult((prev) => obj);
+                      setResult(obj);
                     }
                   } catch {
                     /* incomplete JSON — fine, wait for more tokens */
@@ -460,7 +455,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       handleSubmitRef.current(text);
     };
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [onVoiceProblemRef]);
 
   // Auto-submit after voice input sets problemText

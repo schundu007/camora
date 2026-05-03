@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { setStoredToken } from '../utils/tokenStore';
 import { isOwnerEmail } from '../lib/owner';
 
-const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 // Auth + billing-subscription must call the SAME backend that mints the cookie
 // during OAuth — otherwise a JWT_SECRET drift between services causes silent

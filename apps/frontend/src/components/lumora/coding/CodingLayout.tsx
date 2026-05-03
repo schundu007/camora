@@ -54,8 +54,8 @@ function extractTestCases(content: string): Array<{ input: string; expected: str
 
     const arrowMatch = cleaned.match(/^(.+?)\s*[-=]+>\s*(.+)$/);
     if (arrowMatch) {
-      let input = arrowMatch[1].trim().replace(/^Input[:\s]*/i, '').trim();
-      let expected = arrowMatch[2].trim().replace(/^(Output|Expected)[:\s]*/i, '').trim();
+      const input = arrowMatch[1].trim().replace(/^Input[:\s]*/i, '').trim();
+      const expected = arrowMatch[2].trim().replace(/^(Output|Expected)[:\s]*/i, '').trim();
       if (input && expected) testCases.push({ input, expected });
     }
   }
@@ -124,19 +124,6 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-/** Color-code complexity notation from best (green) to worst (red) */
-function getComplexityColor(notation: string): string {
-  const n = notation.toLowerCase().replace(/\s+/g, '');
-  if (/o\(1\)/.test(n)) return 'var(--cam-primary)';           // O(1) - best
-  if (/o\(log/.test(n) && !/o\(n/.test(n)) return 'var(--accent)'; // O(log n) - great
-  if (/o\(n\)$/.test(n)) return 'var(--cam-primary)';           // O(n) - good
-  if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return 'var(--accent)'; // O(n log n)
-  if (/o\(n[\^²]2?\)/.test(n)) return 'var(--warning-text)';     // O(n²) - fair
-  if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return 'var(--danger)'; // O(n³) - poor
-  if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return 'var(--danger)'; // exponential - bad
-  return 'var(--text-muted)';
-}
-
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface TestResult {
@@ -200,7 +187,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [jsonSolution, setJsonSolution] = useState<any>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -871,12 +858,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       setIsProcessing(false);
     }
   }, [token, language, clearStreamChunks, onSubmit]);
-
-  // Manual "Extract Text" button (kept as a fallback / opt-out path).
-  const handleExtractFromImage = useCallback(() => {
-    if (!imageFile) { setError('Select an image first'); return; }
-    void extractAndMaybeGenerate(imageFile, false);
-  }, [imageFile, extractAndMaybeGenerate]);
 
   // Drop/select an image → preview + auto-extract + auto-generate solution.
   // No more manual click chain: image in, answer out.
@@ -1897,7 +1878,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 }
 
 // ── Editor Container — measures its own height via ResizeObserver for Monaco ──
-function EditorContainer({ children, embedded }: { children: (height: number) => React.ReactNode; embedded: boolean }) {
+function EditorContainer({ children, embedded: _embedded }: { children: (height: number) => React.ReactNode; embedded: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(300);
 

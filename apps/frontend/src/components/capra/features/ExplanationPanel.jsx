@@ -165,7 +165,6 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
 
   const transcribeAudio = async (audioBlob) => {
     if (!audioBlob || audioBlob.size < 1000) {
-      console.log('[Q&A] Audio too small, skipping');
       return null;
     }
 
@@ -209,7 +208,6 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
     const isHallucination = q.length < 8 || hallucinations.includes(cleanQ);
 
     if (isHallucination) {
-      console.log('[Q&A] Filtered hallucination:', q);
       return false;
     }
 
@@ -220,9 +218,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
     setQaHistory(prev => [...prev, { question: q, answer: null, pending: true }]);
 
     try {
-      console.log('[Q&A] Submitting question:', q);
       const result = await onFollowUpQuestion(q);
-      console.log('[Q&A] Got result:', result);
 
       setQaHistory(prev => {
         const updated = [...prev];
@@ -277,7 +273,6 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       };
 
       const selectedDevice = audioDevices.find(d => d.deviceId === selectedDeviceId);
-      console.log('[Q&A] Using audio device:', selectedDevice?.label || 'default');
 
       stream = await navigator.mediaDevices.getUserMedia(deviceConstraints);
 
