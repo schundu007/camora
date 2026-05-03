@@ -1267,13 +1267,29 @@ function CodingLayout({
           {/* LEFT PANEL — Problem input + Architecture diagram */}
           <Allotment.Pane minSize={250}>
             <div className="h-full flex flex-col overflow-hidden bg-[var(--bg-surface)] border-r border-[var(--border)]">
-              {/* Header */}
-              <div className="flex-shrink-0 border-b border-[var(--border)]">
-                <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-elevated)]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-4 rounded-full" style={{ background: 'var(--accent)' }} />
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">System Design</h2>
-                    <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
+              {/* Header — global navy-strip + gold-leaf chrome (desktop split layout) */}
+              <div className="flex-shrink-0">
+                <div
+                  className="flex items-center justify-between px-3 py-2"
+                  style={{
+                    background: 'var(--cam-hero-strip)',
+                    borderBottom: '2px solid var(--cam-gold-leaf)',
+                  }}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
+                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">System Design</h2>
+                    <button
+                      onClick={onSavedDesignsClick}
+                      aria-label="View saved designs"
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.16)',
+                        borderRadius: 999,
+                        color: savedDesignsCount > 0 ? 'var(--cam-gold-leaf-lt)' : 'rgba(255,255,255,0.85)',
+                      }}
+                    >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                       Saved ({savedDesignsCount})
                     </button>
