@@ -207,7 +207,7 @@ export function LumoraProfilePage() {
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Quick Links</div>
           <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
-            <Link to="/lumora/pricing" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+            <Link to="/pricing" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
               <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Manage Subscription</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5"><path d="M9 18l6-6-6-6" /></svg>
             </Link>
