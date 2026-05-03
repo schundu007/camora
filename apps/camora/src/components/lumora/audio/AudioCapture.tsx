@@ -316,6 +316,20 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const handleAudioData = useCallback(async (blob: Blob) => {
     if (!token) { setError('Not authenticated'); return; }
 
+    // Read the live values at the moment the blob arrives, NOT the
+    // closure'd ones from when this callback was memoized. Without
+    // this, an auto-enrollment that just landed would still be
+    // invisible to handleAudioData's deps (React batches), and the
+    // very next blob would re-fire the "filter without enrollment"
+    // branch and turn the filter back off — undoing the enrollment
+    // immediately after it succeeded.
+    const live = useInterviewStore.getState();
+    const voiceEnrolled = live.voiceEnrolled;
+    const voiceFilterEnabled = live.voiceFilterEnabled;
+    const voiceMode = live.voiceMode;
+    const autoEnrollPending = live.autoEnrollPending;
+    void live; // silence unused-variable lint when only fields above are read
+
     // Drop blobs that belong to a recording we already abandoned
     // (e.g., AUTO chunk interrupted because the user clicked MIC).
     if (discardNextBlobRef.current) {
@@ -444,7 +458,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         }
       }
     }
-  }, [token, setStatus, setError, onTranscription, voiceEnrolled, voiceFilterEnabled, voiceMode, autoEnrollPending, handleAutoEnroll, scheduleQuestionCheck]);
+    // voiceEnrolled / voiceFilterEnabled / voiceMode / autoEnrollPending are
+    // read live from the store inside the callback (above), so they're
+    // intentionally NOT in the deps array — putting them here would
+    // recreate this callback on every flag flip and re-bind the
+    // recorder's onstop listener mid-recording.
+  }, [token, setStatus, setError, onTranscription, handleAutoEnroll, scheduleQuestionCheck]);
 
   const handleAudioLevel = useCallback((level: number) => {
     setAudioLevel(level);

@@ -104,6 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [teamLoading, setTeamLoading] = useState(true);
 
   useEffect(() => {
+    // Strict-mode double-invocation guard: cancelled flips to true on
+    // unmount, and every setState below is gated on it. Without this,
+    // dev mounts run init() twice in parallel and the slower response
+    // overwrites the faster one — token can flip back to undefined
+    // mid-session in development.
+    let cancelled = false;
     async function init() {
       // Dev mode: auto-authenticate as dev user
       if (DEV_MODE) {
@@ -235,9 +241,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch { /* not logged in or network error */ }
-      setIsLoading(false);
+      if (!cancelled) setIsLoading(false);
     }
     init();
+    return () => { cancelled = true; };
   }, []);
 
   // Fetch subscription status

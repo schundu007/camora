@@ -514,12 +514,18 @@ export default function TopicDetail({
     }
   };
 
-  // Mark topic as read when viewing (only if not locked)
+  // Mark topic as read when viewing (only if not locked).
+  // contentAccess MUST be in deps — its markTopicRead identity is
+  // stable, but `contentAccess` itself is a fresh object literal each
+  // render. Critically, on first mount the auth context may not yet
+  // be ready, so contentAccess can be null; without it in deps the
+  // effect never re-runs once it becomes defined and the topic read
+  // is silently never recorded for users with slow auth init.
   useEffect(() => {
     if (!isLocked && contentAccess && activePage && selectedTopic) {
       contentAccess.markTopicRead(activePage, selectedTopic);
     }
-  }, [selectedTopic, activePage, isLocked]);
+  }, [selectedTopic, activePage, isLocked, contentAccess]);
 
   // Pages that use system-design-style rendering (concepts, keyQuestions, dataModel, etc.)
   const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage);

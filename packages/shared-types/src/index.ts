@@ -1,5 +1,12 @@
 // ── User Types ─────────────────────────────────────────────
 
+// Plan-type union — single source of truth shared by FE+BE so a
+// frontend `plan_type === 'monthly'` check that doesn't match the
+// values ascend-backend actually writes ('pro_monthly') gets caught
+// at compile time rather than silently failing.
+export type PlanType = 'free' | 'pro_monthly' | 'pro_yearly' | 'team' | 'lifetime';
+export type PlanStatus = 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete';
+
 export interface User {
   id: string;
   email: string;
@@ -8,8 +15,8 @@ export interface User {
   provider: string;
   provider_id: string;
   is_active: boolean;
-  plan_type: 'free' | 'monthly' | 'lifetime';
-  plan_status: 'active' | 'canceled' | 'past_due';
+  plan_type: PlanType;
+  plan_status: PlanStatus;
   stripe_customer_id?: string;
   onboarding_completed: boolean;
   job_roles?: string[];
@@ -24,6 +31,10 @@ export interface AuthUser {
   email: string;
   name?: string;
   image?: string;
+  /** Optional fields populated by ascend-backend's /api/v1/auth/me. */
+  picture?: string;
+  onboarding_completed?: boolean;
+  job_roles?: string[];
 }
 
 export interface JWTPayload {
@@ -63,10 +74,13 @@ export interface Subscription {
   user_id: string;
   stripe_customer_id: string;
   stripe_subscription_id?: string;
-  plan_type: string;
-  status: string;
+  plan_type: PlanType;
+  status: PlanStatus;
   current_period_start?: string;
   current_period_end?: string;
+  is_challenger?: boolean;
+  challenger_started_at?: string;
+  trial_ends_at?: string;
 }
 
 // ── Prep Types (Ascend) ───────────────────────────────────

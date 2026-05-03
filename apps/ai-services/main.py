@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from speaker import router as speaker_router
 from diagram import router as diagram_router
+from dot_render import router as dot_render_router
 
 app = FastAPI(title="Camora AI Services", version="1.0.0")
 
@@ -85,3 +86,8 @@ app.include_router(speaker_router)
 
 # Diagram generation endpoints
 app.include_router(diagram_router)
+
+# Runtime DOT renderer (used by Lumora answer pipeline + Capra
+# system-design fallback to draw flow/sequence diagrams without shipping
+# the heavy mermaid client bundle to the browser).
+app.include_router(dot_render_router)

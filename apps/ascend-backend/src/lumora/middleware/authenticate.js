@@ -6,6 +6,7 @@
  */
 import { verifyToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
+import { initUser } from '../../config/database.js';
 
 /**
  * Authenticate request via Bearer token (or cariara_sso cookie).
@@ -74,6 +75,21 @@ export async function authenticate(req, res, next) {
 
     if (!user || user.is_active === false) {
       return res.status(401).json({ error: 'User account inactive' });
+    }
+
+    // Provision ascend_subscriptions / ascend_credits / trial top-up
+    // rows the first time a user enters via the lumora surface — the
+    // ascend authenticate path already does this (via jwtAuth's
+    // initUser call) so a user who first hits lumora was previously
+    // left with no subscription row and treated as free forever, even
+    // if they paid through the ascend checkout.
+    try {
+      await initUser(user.id);
+    } catch (initErr) {
+      // Don't fail the whole request — surface in logs and let the
+      // handler decide. initUser is idempotent so the next request
+      // tries again.
+      console.warn('initUser failed in lumora authenticate:', initErr?.message || initErr);
     }
 
     // Set admin flag for usage bypass

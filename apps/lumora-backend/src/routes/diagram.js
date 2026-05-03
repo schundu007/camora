@@ -136,4 +136,51 @@ router.post('/generate', checkUsage('diagrams'), async (req, res) => {
   }
 });
 
+/**
+ * POST /render-dot
+ *
+ * Server-side Graphviz DOT renderer. Lets the frontend draw diagrams from
+ * raw DOT source without shipping the heavy `mermaid` JS bundle. Used by
+ * GraphvizDiagram on the answer surface — the long-term replacement for
+ * the client-side Mermaid renderer.
+ *
+ * Body:
+ *   dot     – Graphviz DOT source (max 16 KB)
+ *   engine  – dot | neato | sfdp | … (default: dot)
+ *   format  – svg | png (default: svg)
+ *
+ * Returns the ai-services response unchanged (`{ format, content, encoding }`).
+ * Auth-gated like the rest of the diagram routes; no usage metering here —
+ * rendering DOT is cheap, and the cost has already been spent generating
+ * the source on the LLM side.
+ */
+router.post('/render-dot', async (req, res) => {
+  try {
+    const { dot, engine, format } = req.body || {};
+    if (!dot || typeof dot !== 'string') {
+      return res.status(400).json({ success: false, error: '"dot" is required' });
+    }
+    const upstream = await proxyToAIService('/diagram/render-dot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dot,
+        engine: engine || 'dot',
+        format: format || 'svg',
+      }),
+    });
+    const data = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({
+        success: false,
+        error: data.detail || data.error || 'DOT render failed',
+      });
+    }
+    return res.status(200).json({ success: true, ...data });
+  } catch (err) {
+    console.error('diagram render-dot proxy error:', err);
+    return res.status(502).json({ success: false, error: 'Failed to reach ai-services' });
+  }
+});
+
 export default router;

@@ -2,7 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
 import { MermaidDiagram } from './MermaidDiagram';
+import { GraphvizDiagram } from './GraphvizDiagram';
 import SharedDiagram from '@/components/shared/diagrams/SharedDiagram';
+
+/** Sniff the diagram source. DOT graphs always start with `digraph`,
+ *  `graph`, or `strict` (case-insensitive), then a `{` somewhere. Mermaid
+ *  starts with one of `flowchart|sequenceDiagram|classDiagram|stateDiagram|
+ *  erDiagram|gantt|pie|gitGraph` OR a bare `graph TD/LR/...`. We bias
+ *  toward DOT only when the body matches the unambiguous DOT shape so a
+ *  LLM that still emits Mermaid `graph TD ...` keeps falling through to
+ *  MermaidDiagram. */
+function looksLikeDot(content: string): boolean {
+  const head = content.trim().slice(0, 40).toLowerCase();
+  if (!head) return false;
+  // Strip ``` fences if the LLM wrapped the source.
+  const stripped = head.replace(/^```(?:dot|graphviz)?\s*/i, '');
+  return /^(digraph|strict\s+(?:digraph|graph))\b/.test(stripped) ||
+    /^graph\s+\w+\s*\{/.test(stripped);
+}
 import { cleanText } from '@/lib/text-utils';
 
 interface AnswerBlocksProps {
@@ -113,7 +130,12 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
       return (
         <div className="animate-fade-up" style={wrap}>
           <GridCard title="Flow" titleColor="text-[var(--accent)]" collapsible={false}>
-            <MermaidDiagram content={block.content} />
+            {/* Sniff: if the LLM emitted Graphviz DOT, render server-side.
+                Falls through to client-side Mermaid for backwards compat
+                while AI prompts roll out — no flag, no regression. */}
+            {looksLikeDot(block.content)
+              ? <GraphvizDiagram content={block.content} />
+              : <MermaidDiagram content={block.content} />}
           </GridCard>
         </div>
       );
