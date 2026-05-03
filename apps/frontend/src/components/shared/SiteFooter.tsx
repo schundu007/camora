@@ -113,10 +113,10 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   {
     heading: 'Company',
     links: [
-      { label: 'About', href: '/about' },
       { label: 'Careers', href: 'https://jobs.cariara.com', external: true },
-      { label: 'Blog', href: '/blog' },
       { label: 'Contact', href: 'mailto:hello@cariara.com', external: true },
+      { label: 'Brand', href: '/brand' },
+      { label: 'Download', href: '/download' },
     ],
   },
 ];
