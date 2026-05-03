@@ -930,7 +930,7 @@ export default function JobsPage() {
               </div>
 
               {/* Locations (free-text + datalist autocomplete) */}
-              <details className="jobs-filter-group" open>
+              <details className="jobs-filter-group">
                 <summary>Locations</summary>
                 <div className="jobs-filter-body">
                   <input
@@ -948,7 +948,7 @@ export default function JobsPage() {
               </details>
 
               {/* Job category — replaces the chip pill strip */}
-              <details className="jobs-filter-group" open>
+              <details className="jobs-filter-group">
                 <summary>Job category</summary>
                 <div className="jobs-filter-body">
                   {CATEGORIES.map((cat) => (
@@ -966,7 +966,7 @@ export default function JobsPage() {
               </details>
 
               {/* Experience */}
-              <details className="jobs-filter-group" open>
+              <details className="jobs-filter-group">
                 <summary>Experience</summary>
                 <div className="jobs-filter-body">
                   {EXPERIENCE_LEVELS.map((el) => (
@@ -984,7 +984,7 @@ export default function JobsPage() {
               </details>
 
               {/* Job types (work type) */}
-              <details className="jobs-filter-group" open>
+              <details className="jobs-filter-group">
                 <summary>Job types</summary>
                 <div className="jobs-filter-body">
                   {WORK_TYPES.map((wt) => (

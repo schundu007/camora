@@ -163,32 +163,81 @@ router.get('/', async (req, res, next) => {
       paramIdx++;
     }
 
+    // work_type filter — j.work_type column is mostly NULL on the
+    // jobportal dataset (ATS scrapers don't reliably tag this), so the
+    // UI's card label uses location-keyword detection. To keep the
+    // sidebar filter consistent with the displayed labels, match
+    // EITHER the structured column OR the location text. Special-case
+    // "onsite" to also cover "on-site" hyphenation, and treat onsite
+    // as the negation of remote+hybrid keywords (since most onsite
+    // postings just list a city without a tag).
     if (req.query.work_type) {
-      conditions.push(`j.work_type ILIKE $${paramIdx}`);
-      params.push(`%${req.query.work_type}%`);
-      paramIdx++;
+      const wt = String(req.query.work_type).toLowerCase().trim();
+      if (wt === 'remote') {
+        conditions.push(`(j.work_type ILIKE $${paramIdx} OR j.location ILIKE $${paramIdx})`);
+        params.push('%remote%');
+        paramIdx++;
+      } else if (wt === 'hybrid') {
+        conditions.push(`(j.work_type ILIKE $${paramIdx} OR j.location ILIKE $${paramIdx})`);
+        params.push('%hybrid%');
+        paramIdx++;
+      } else if (wt === 'onsite' || wt === 'on-site' || wt === 'on site') {
+        // On-site = neither Remote nor Hybrid in the location/work_type
+        // (job description may still mention the words, but the location
+        // field is the authoritative signal here).
+        conditions.push(
+          `(j.work_type IS NULL OR (j.work_type NOT ILIKE $${paramIdx} AND j.work_type NOT ILIKE $${paramIdx + 1}))`
+          + ` AND (j.location IS NULL OR (j.location NOT ILIKE $${paramIdx} AND j.location NOT ILIKE $${paramIdx + 1}))`,
+        );
+        params.push('%remote%', '%hybrid%');
+        paramIdx += 2;
+      } else {
+        conditions.push(`(j.work_type ILIKE $${paramIdx} OR j.location ILIKE $${paramIdx})`);
+        params.push(`%${wt}%`);
+        paramIdx++;
+      }
     }
 
-    // Experience filter — match against j.title using level-specific keyword
-    // synonyms. Filtering on a dedicated experience_level column was fragile
-    // because the column is mostly NULL (postings rarely tag this explicitly)
-    // and was missing on some jobs schemas, causing 500s. Title patterns are
-    // both more reliable and schema-independent.
+    // Experience filter — match against j.title using level-specific
+    // keyword synonyms. The structured experience_level column is mostly
+    // NULL on the jobportal dataset, so title patterns are both more
+    // reliable and schema-independent.
+    //
+    // For "mid", strict synonym matching (only "mid-level" / "engineer II")
+    // missed almost every plain "Software Engineer" posting. Mirroring the
+    // UI badge logic, "mid" is now NEGATIVE: it's any title that DOES NOT
+    // contain a junior or senior+ keyword. This keeps Mid as the implicit
+    // bucket — same way most candidates read these postings — and brings
+    // the backend filter into agreement with the experience-badge color
+    // shown on each card.
     if (req.query.experience) {
       const level = String(req.query.experience).toLowerCase();
       const SYNONYMS = {
         intern:    ['intern'],
         entry:     ['entry', 'junior', 'jr.', 'associate', 'new grad', 'new-grad', 'graduate'],
-        mid:       ['mid-level', 'mid level', 'engineer ii', 'engineer 2'],
         senior:    ['senior', 'sr.', 'sr '],
         staff:     ['staff'],
         principal: ['principal', 'distinguished'],
         lead:      ['lead', 'manager', 'director', 'head of'],
       };
-      const patterns = SYNONYMS[level] || [level];
-      const orClauses = patterns.map(() => `j.title ILIKE $${paramIdx++}`).join(' OR ');
-      conditions.push(`(${orClauses})`);
-      patterns.forEach((p) => params.push(`%${p}%`));
+      if (level === 'mid') {
+        // Exclude all keywords that mark a non-mid level. Anything left is
+        // assumed to be mid-level (same heuristic the UI uses).
+        const NEGATIVE_KEYWORDS = [
+          'intern', 'junior', 'jr.', 'jr ', 'associate', 'new grad', 'new-grad',
+          'entry', 'senior', 'sr.', 'sr ', 'staff', 'principal', 'distinguished',
+          'lead', 'manager', 'director', 'head of', 'vp ', 'vice president',
+          'chief', 'fellow',
+        ];
+        const notClauses = NEGATIVE_KEYWORDS.map(() => `j.title NOT ILIKE $${paramIdx++}`).join(' AND ');
+        conditions.push(`(j.title IS NOT NULL AND ${notClauses})`);
+        NEGATIVE_KEYWORDS.forEach((p) => params.push(`%${p}%`));
+      } else {
+        const patterns = SYNONYMS[level] || [level];
+        const orClauses = patterns.map(() => `j.title ILIKE $${paramIdx++}`).join(' OR ');
+        conditions.push(`(${orClauses})`);
+        patterns.forEach((p) => params.push(`%${p}%`));
+      }
     }
 
     if (req.query.posted_within) {
