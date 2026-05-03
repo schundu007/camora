@@ -91,7 +91,7 @@ function CodeBlock({ code, language }) {
         {copied ? 'Copied!' : 'Copy'}
       </button>
       <pre className="bg-[#0d1117] rounded p-5 overflow-x-auto border border-[var(--border)]">
-        <code className="text-sm leading-relaxed font-mono text-gray-300 whitespace-pre">
+        <code className="text-sm leading-relaxed font-mono text-[var(--text-muted)] whitespace-pre">
           {code}
         </code>
       </pre>
@@ -339,7 +339,7 @@ export default function ProblemPage({ slug, onBack }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-white/10 rounded transition-colors"
+                className="p-2 hover:bg-[var(--bg-surface)]/10 rounded transition-colors"
                 style={{ color: 'rgba(255,255,255,0.85)' }}
               >
                 <Icon name="arrowLeft" size={18} />
@@ -358,7 +358,7 @@ export default function ProblemPage({ slug, onBack }) {
                   href={problem.leetcodeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-white/10"
+                  className="px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[var(--bg-surface)]/10"
                   style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.25)' }}
                 >
                   <Icon name="externalLink" size={14} />
@@ -732,7 +732,7 @@ export default function ProblemPage({ slug, onBack }) {
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">
                                     {output.success ? 'Output' : 'Error'}
                                   </span>
-                                  <pre className={`mt-1.5 bg-[#0d1117] rounded p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-gray-300' : 'text-red-400'}`}>
+                                  <pre className={`mt-1.5 bg-[#0d1117] rounded p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-[var(--text-muted)]' : 'text-red-400'}`}>
                                     {output.output}
                                   </pre>
                                 </div>
