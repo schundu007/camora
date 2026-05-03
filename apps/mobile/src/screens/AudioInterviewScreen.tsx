@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { startRecording, stopRecording } from '@/lib/audio';
@@ -10,6 +10,7 @@ import { colors, radii, spacing } from '@/theme/colors';
 type Phase = 'idle' | 'recording' | 'transcribing' | 'thinking';
 
 const CONSENT_KEY = 'camora.audio_consent_v1';
+const MAX_RECORDING_MS = 10 * 60 * 1000; // 10 minutes — hard cap. No auto-loop.
 
 export function AudioInterviewScreen() {
   const { token } = useAuth();
@@ -19,22 +20,50 @@ export function AudioInterviewScreen() {
   const [error, setError] = useState<string | null>(null);
   const [hasConsent, setHasConsent] = useState<boolean | null>(null);
   const [showConsent, setShowConsent] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  const startedAtRef = useRef<number | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const capRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     SecureStore.getItemAsync(CONSENT_KEY).then(v => setHasConsent(v === 'granted'));
+  }, []);
+
+  const clearTimers = useCallback(() => {
+    if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
+    if (capRef.current) { clearTimeout(capRef.current); capRef.current = null; }
+  }, []);
+
+  // Mounting cleanup — if the user backgrounds the app or unmounts mid-record,
+  // make sure we don't leave the mic hot or a setInterval ticking.
+  useEffect(() => {
+    return () => {
+      clearTimers();
+      if (phase === 'recording') void stopRecording().catch(() => {});
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const beginRecording = useCallback(async () => {
     setError(null);
     setAnswer(null);
     setTranscript('');
+    setElapsedMs(0);
     try {
       await startRecording();
+      startedAtRef.current = Date.now();
       setPhase('recording');
+      tickRef.current = setInterval(() => {
+        if (startedAtRef.current) setElapsedMs(Date.now() - startedAtRef.current);
+      }, 250);
+      // Hard cap so a forgotten recording can't run forever — battery + privacy.
+      capRef.current = setTimeout(() => { void handleStop(true); }, MAX_RECORDING_MS);
     } catch (e: any) {
       setError(e?.message || 'Could not start recording');
       setPhase('idle');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleStart = useCallback(() => {
@@ -52,26 +81,24 @@ export function AudioInterviewScreen() {
     void beginRecording();
   }, [beginRecording]);
 
-  const handleStop = useCallback(async () => {
+  const handleStop = useCallback(async (autoCapped = false) => {
+    clearTimers();
     if (!token) {
       setError('You must be signed in.');
       setPhase('idle');
       return;
     }
     setPhase('transcribing');
+    if (autoCapped) {
+      setError(`Recording auto-stopped at ${MAX_RECORDING_MS / 60_000} minutes. Tap Start again to continue.`);
+    }
     try {
       const uri = await stopRecording();
-      if (!uri) {
-        setPhase('idle');
-        return;
-      }
+      if (!uri) { setPhase('idle'); return; }
       const t = await transcribeAudio(uri, token);
       const text = (t.text || '').trim();
       setTranscript(text || '(no speech detected)');
-      if (!text) {
-        setPhase('idle');
-        return;
-      }
+      if (!text) { setPhase('idle'); return; }
       setPhase('thinking');
       const a = await askSona(text, token);
       setAnswer(a);
@@ -80,19 +107,30 @@ export function AudioInterviewScreen() {
       setError(e?.message || 'Something went wrong');
       setPhase('idle');
     }
-  }, [token]);
+  }, [token, clearTimers]);
 
   const recording = phase === 'recording';
   const busy = phase === 'transcribing' || phase === 'thinking';
-  const buttonLabel = recording ? 'Stop & ask Sona' : busy ? phaseLabel(phase) : 'Start listening';
-  const onPress = recording ? handleStop : busy ? undefined : handleStart;
+  const buttonLabel = recording ? 'Stop' : busy ? phaseLabel(phase) : 'Start listening';
+  const onPress = recording ? () => handleStop(false) : busy ? undefined : handleStart;
+
+  const elapsedLabel = formatDuration(elapsedMs);
+  const remainingLabel = formatDuration(Math.max(0, MAX_RECORDING_MS - elapsedMs));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      {recording && (
+        <View style={styles.recordingBanner} accessibilityLiveRegion="polite">
+          <View style={styles.recordingDotPulse} />
+          <Text style={styles.recordingBannerText}>Recording — {elapsedLabel}</Text>
+          <Text style={styles.recordingBannerMeta}>auto-stops in {remainingLabel}</Text>
+        </View>
+      )}
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Audio Interview</Text>
         <Text style={styles.sub}>
-          Sona listens through your phone's mic. Put the call on speaker so both voices are picked up.
+          Camora transcribes the conversation through your phone's mic and surfaces relevant context
+          from your prep. Put the call on speaker so both sides are picked up.
         </Text>
 
         <View style={styles.tipBox}>
@@ -106,6 +144,7 @@ export function AudioInterviewScreen() {
           style={[styles.recordBtn, recording && styles.recordBtnActive, busy && styles.recordBtnBusy]}
           onPress={onPress}
           disabled={busy}
+          accessibilityLabel={recording ? 'Stop recording' : 'Start recording'}
         >
           {busy ? <ActivityIndicator color="#fff" /> : (
             <View style={[styles.recordDot, recording && styles.recordDotActive]} />
@@ -127,10 +166,13 @@ export function AudioInterviewScreen() {
         </View>
 
         <View style={styles.sonaBox}>
-          <Text style={styles.sonaLabel}>Sona</Text>
-          {phase === 'thinking' && <Text style={styles.sonaEmpty}>Thinking…</Text>}
+          <Text style={styles.sonaLabel}>Context from your prep</Text>
+          {phase === 'thinking' && <Text style={styles.sonaEmpty}>Looking up relevant prep…</Text>}
           {!answer && phase !== 'thinking' && (
-            <Text style={styles.sonaEmpty}>Sona's answer appears here when a question is detected.</Text>
+            <Text style={styles.sonaEmpty}>
+              Sona surfaces what you've already studied that's relevant to the question. You decide what
+              to say with it.
+            </Text>
           )}
           {answer && <SonaAnswerView answer={answer} />}
         </View>
@@ -141,12 +183,15 @@ export function AudioInterviewScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Before you start</Text>
             <Text style={styles.modalBody}>
-              Camora records audio from your phone's microphone so it can transcribe questions.
-              Recording the other party of a conversation may be regulated where you live.
+              Camora records audio from your phone's microphone so it can transcribe the conversation.
+              Recording the other party of a phone call is regulated where you live.
             </Text>
             <Text style={styles.modalBody}>
-              By tapping Continue, you confirm that you have informed the other party that audio
-              is being captured and that you have the legal right to record.
+              By tapping Continue, you confirm that you have informed the other party that audio is
+              being captured and that you have the legal right to record.
+            </Text>
+            <Text style={styles.modalBody}>
+              Recording auto-stops after {MAX_RECORDING_MS / 60_000} minutes. You can stop earlier any time.
             </Text>
             <View style={styles.modalActions}>
               <Pressable style={styles.modalCancel} onPress={() => setShowConsent(false)}>
@@ -165,8 +210,15 @@ export function AudioInterviewScreen() {
 
 function phaseLabel(p: Phase): string {
   if (p === 'transcribing') return 'Transcribing…';
-  if (p === 'thinking') return 'Sona is thinking…';
+  if (p === 'thinking') return 'Looking up your prep…';
   return 'Working…';
+}
+
+function formatDuration(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r.toString().padStart(2, '0')}`;
 }
 
 function SonaAnswerView({ answer }: { answer: SonaAnswer }) {
@@ -188,12 +240,23 @@ function SonaAnswerView({ answer }: { answer: SonaAnswer }) {
     );
   }
   if (summary || raw) return <Text style={styles.sonaSectionBody}>{summary || raw}</Text>;
-  return <Text style={styles.sonaEmpty}>Sona returned an empty answer.</Text>;
+  return <Text style={styles.sonaEmpty}>No relevant prep found for this question.</Text>;
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl * 2 },
+  recordingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.danger,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  recordingDotPulse: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' },
+  recordingBannerText: { color: '#fff', fontWeight: '700', fontSize: 13, flex: 1 },
+  recordingBannerMeta: { color: '#FECACA', fontSize: 12 },
   title: { color: colors.text, fontSize: 32, fontWeight: '700' },
   sub: { color: colors.textMuted, fontSize: 15, lineHeight: 22, marginTop: spacing.xs },
   tipBox: {
@@ -249,7 +312,7 @@ const styles = StyleSheet.create({
     minHeight: 140,
   },
   sonaLabel: { color: colors.navySoft, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm },
-  sonaEmpty: { color: colors.textMuted, fontSize: 14 },
+  sonaEmpty: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
   sonaSummary: { color: colors.text, fontSize: 15, fontWeight: '600', lineHeight: 22 },
   sonaSectionTitle: { color: colors.navySoft, fontSize: 12, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.xs },
   sonaSectionBody: { color: colors.text, fontSize: 15, lineHeight: 22 },

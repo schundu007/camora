@@ -25,8 +25,8 @@ export function LoginScreen() {
           {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Continue with Google</Text>}
         </Pressable>
         <Text style={styles.fineprint}>
-          Video and coding interviews work best on the desktop app or web.
-          On mobile, Camora supports audio interviews and prep.
+          On mobile, Camora is for prep and audio transcription. Video, coding, and screen-share
+          interviews work on the Camora desktop app or camora.cariara.com.
         </Text>
       </View>
     </SafeAreaView>

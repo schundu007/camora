@@ -7,12 +7,15 @@ export function PracticeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Practice</Text>
-        <Text style={styles.sub}>Pick a problem to review. Coding pad lives on the desktop app.</Text>
+        <Text style={styles.sub}>
+          Walk through prep topics on the Prep tab. The interactive coding pad and system-design
+          diagrams live on desktop and web — they don't translate to a phone screen.
+        </Text>
         <View style={styles.notice}>
-          <Text style={styles.noticeTitle}>Coding on mobile?</Text>
+          <Text style={styles.noticeTitle}>Where to code</Text>
           <Text style={styles.noticeBody}>
-            For full coding interviews — multi-file editor, run/diff, system-design diagrams —
-            use the Camora desktop app or camora.cariara.com on a laptop.
+            Open camora.cariara.com on a laptop, or install the Camora desktop app, for the full
+            coding workflow — multi-file editor, run/diff, system-design diagrams.
           </Text>
         </View>
       </ScrollView>
