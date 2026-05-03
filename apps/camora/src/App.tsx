@@ -67,6 +67,7 @@ const AdminLumoraLivePage = lazy(() => import('./pages/docs/admin/AdminLumoraLiv
 const AdminLumoraCodingPage = lazy(() => import('./pages/docs/admin/AdminLumoraCodingPage'));
 const AdminLumoraDesignPage = lazy(() => import('./pages/docs/admin/AdminLumoraDesignPage'));
 const FlyerPage = lazy(() => import('./pages/FlyerPage'));
+const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
 
 function Loading() {
   return (
@@ -296,6 +297,10 @@ export function App() {
           <Route path="/legal/terms" element={<LegalPage />} />
           <Route path="/legal/privacy" element={<LegalPage />} />
           <Route path="/legal/security" element={<LegalPage />} />
+
+          {/* Mobile app token handoff — bounces through Google OAuth if needed
+              and redirects to the camora:// scheme with a fresh access token. */}
+          <Route path="/mobile/auth" element={<MobileAuthPage />} />
 
           {/* ── Team / group sharing (auth required) ─────────── */}
           <Route path="/account/team" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
