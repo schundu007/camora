@@ -491,7 +491,7 @@ export function LumoraShellPage() {
                   background:
                     'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(34,211,238,0.14), transparent 60%),' +
                     'var(--cam-hero-strip)',
-                  borderBottom: '2px solid var(--cam-gold-leaf)',
+                  borderBottom: '1px solid var(--cam-gold-leaf)',
                 }}
               >
                 <div className="max-w-3xl mx-auto px-6 py-6 w-full relative">
@@ -627,7 +627,7 @@ export function LumoraShellPage() {
           {/* Credits page */}
           {activeTab === 'credits' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                 <div className="max-w-2xl mx-auto px-6 py-6 w-full">
                   <h2 className="text-3xl font-extrabold mb-2 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Track your AI usage and remaining credits.</p>

@@ -514,7 +514,7 @@ function GridCard({
           background:
             'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(34,211,238,0.18), transparent 60%),' +
             'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
         {/* Animated gold shimmer line riding the gold border-bottom — a
@@ -563,7 +563,7 @@ function ArchitectureCard({ question }: { question: string }) {
         className="flex items-center gap-2 px-3 py-2 shrink-0"
         style={{
           background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />

@@ -28,7 +28,7 @@ export default function SectionHero({
       className={`rounded-xl overflow-hidden ${className}`}
       style={{
         background: 'var(--cam-hero-strip)',
-        borderBottom: '2px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
       <div className="px-5 py-4 flex items-end justify-between gap-4 flex-wrap">

@@ -38,7 +38,7 @@ function LcStripHeader({ icon, label, hint, count, right }: {
       className="flex items-center gap-2 px-3 py-2"
       style={{
         background: 'var(--cam-hero-strip)',
-        borderBottom: '2px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
       {icon ?? (
@@ -225,7 +225,7 @@ function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
       className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg"
       style={{
         background: 'var(--cam-hero-strip)',
-        borderBottom: '2px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full"
@@ -452,7 +452,7 @@ function RichText({ text }: { text: string }) {
     >
       <div
         className="flex items-center gap-2 px-3 py-1.5"
-        style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}
+        style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
       >
         <span className="flex gap-1 items-center">
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(239,68,68,0.65)' }} />
@@ -510,14 +510,14 @@ function RichText({ text }: { text: string }) {
     }
     if (t.startsWith('## ')) {
       return (
-        <h3 key={key} className="mt-5 mb-2 pb-1.5" style={{ ...headingBase, fontSize: '15.5px', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+        <h3 key={key} className="mt-5 mb-2 pb-1.5" style={{ ...headingBase, fontSize: '15.5px', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           {t.slice(3)}
         </h3>
       );
     }
     if (t.startsWith('# ')) {
       return (
-        <h2 key={key} className="mt-5 mb-2 pb-1.5" style={{ ...headingBase, fontSize: '17px', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+        <h2 key={key} className="mt-5 mb-2 pb-1.5" style={{ ...headingBase, fontSize: '17px', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           {t.slice(2)}
         </h2>
       );

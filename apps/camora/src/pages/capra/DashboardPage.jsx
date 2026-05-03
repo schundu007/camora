@@ -958,7 +958,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       style={{
         height: '52px',
         background: 'var(--cam-hero-strip)',
-        borderBottom: '2px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
       {/* Left: mode indicator */}
@@ -975,7 +975,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
             to={tab.href}
             className="px-3 py-1.5 text-sm font-medium transition-colors"
             style={tab.label === activeAppaTab
-              ? { color: 'var(--cam-gold-leaf-lt)', borderBottom: '2px solid var(--cam-gold-leaf)' }
+              ? { color: 'var(--cam-gold-leaf-lt)', borderBottom: '1px solid var(--cam-gold-leaf)' }
               : { color: 'rgba(255,255,255,0.85)' }
             }
           >
@@ -1138,7 +1138,7 @@ function CodingLayout({
           className="flex items-center justify-between px-4 sm:px-5 py-2.5 gap-2 min-h-[44px] flex-wrap"
           style={{
             background: 'var(--cam-hero-strip)',
-            borderBottom: '2px solid var(--cam-gold-leaf)',
+            borderBottom: '1px solid var(--cam-gold-leaf)',
           }}
         >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -1272,7 +1272,7 @@ function CodingLayout({
                   className="flex items-center justify-between px-3 py-2"
                   style={{
                     background: 'var(--cam-hero-strip)',
-                    borderBottom: '2px solid var(--cam-gold-leaf)',
+                    borderBottom: '1px solid var(--cam-gold-leaf)',
                   }}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">

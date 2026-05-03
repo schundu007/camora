@@ -33,7 +33,7 @@ export default function HeroBand({
       className={className}
       style={{
         background: 'var(--cam-hero-strip)',
-        borderBottom: '2px solid var(--cam-gold-leaf)',
+        borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
       <div className={`w-full ${maxWidth} mx-auto px-4 sm:px-6 lg:px-8 ${py}`}>

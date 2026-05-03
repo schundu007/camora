@@ -123,7 +123,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
               className="px-3 py-2.5"
               style={{
                 background: 'var(--cam-hero-strip)',
-                borderBottom: '2px solid var(--cam-gold-leaf)',
+                borderBottom: '1px solid var(--cam-gold-leaf)',
               }}
             >
               <p className="text-xs font-bold truncate text-white">{user.name || 'User'}</p>

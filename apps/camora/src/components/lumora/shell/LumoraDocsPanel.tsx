@@ -2585,7 +2585,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
       {/* Sidebar */}
       <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         {/* LeetCode-style sidebar header */}
-        <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+        <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
             {/* Sync indicator — proves writes are reaching the lumora

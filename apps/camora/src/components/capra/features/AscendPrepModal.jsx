@@ -1235,7 +1235,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
           className="prep-header"
           style={{
             background: 'var(--cam-hero-strip)',
-            borderBottom: '2px solid var(--cam-gold-leaf)',
+            borderBottom: '1px solid var(--cam-gold-leaf)',
             padding: '8px 12px',
           }}
         >
@@ -1750,7 +1750,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               className="flex items-center justify-between px-4 py-2.5 cursor-move select-none"
               style={{
                 background: 'var(--cam-hero-strip)',
-                borderBottom: '2px solid var(--cam-gold-leaf)',
+                borderBottom: '1px solid var(--cam-gold-leaf)',
               }}
               onMouseDown={(e) => {
                 if (e.target.closest('button')) return; // Don't drag when clicking buttons

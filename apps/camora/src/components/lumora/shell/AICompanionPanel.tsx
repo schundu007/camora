@@ -771,7 +771,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
         style={{
           background: 'var(--cam-hero-strip)',
-          borderBottom: '2px solid var(--cam-gold-leaf)',
+          borderBottom: '1px solid var(--cam-gold-leaf)',
           borderRadius: embedded || maximized ? 0 : '16px 16px 0 0',
         }}
         onMouseDown={embedded ? undefined : startDrag}
@@ -1033,7 +1033,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                       className="flex items-center gap-2 px-4 py-2"
                       style={{
                         background: 'var(--cam-hero-strip)',
-                        borderBottom: '2px solid var(--cam-gold-leaf)',
+                        borderBottom: '1px solid var(--cam-gold-leaf)',
                       }}
                     >
                       <SonaAvatar size={16} />
@@ -1072,7 +1072,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                       className="flex items-center gap-2 px-4 py-2"
                       style={{
                         background: 'var(--cam-hero-strip)',
-                        borderBottom: '2px solid var(--cam-gold-leaf)',
+                        borderBottom: '1px solid var(--cam-gold-leaf)',
                       }}
                     >
                       <SonaAvatar size={16} active />
@@ -1139,7 +1139,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     className="flex items-center gap-1.5 px-3 py-1.5"
                     style={{
                       background: 'var(--cam-hero-strip)',
-                      borderBottom: '2px solid var(--cam-gold-leaf)',
+                      borderBottom: '1px solid var(--cam-gold-leaf)',
                     }}
                   >
                     <SonaAvatar size={14} />
@@ -1161,7 +1161,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     className="flex items-center gap-1.5 px-3 py-1.5"
                     style={{
                       background: 'var(--cam-hero-strip)',
-                      borderBottom: '2px solid var(--cam-gold-leaf)',
+                      borderBottom: '1px solid var(--cam-gold-leaf)',
                     }}
                   >
                     <SonaAvatar size={14} active />

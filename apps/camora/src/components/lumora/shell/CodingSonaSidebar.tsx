@@ -198,7 +198,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
               app's other tool-window chrome. */}
           <div
             className="flex items-center gap-2 h-10 px-3 shrink-0"
-            style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}
+            style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
           >
             <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-white">
               Sona · Follow-ups
@@ -285,7 +285,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                   >
                     <div
                       className="flex items-center gap-2 px-3 py-1.5"
-                      style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}
+                      style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                     >
                       <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-white">Sona</span>
                       {m.fromCache && (
@@ -309,7 +309,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
               >
                 <div
                   className="flex items-center gap-2 px-3 py-1.5"
-                  style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}
+                  style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                 >
                   <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-white">Sona is answering…</span>
                   <span className="ml-auto w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
