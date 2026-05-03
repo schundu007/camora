@@ -18,5 +18,6 @@
 export { default as SectionCard } from './SectionCard.jsx';
 export { default as SectionHero } from './SectionHero.jsx';
 export { default as CategoryHeader } from './CategoryHeader.jsx';
+export { default as ContentHeading } from './ContentHeading.jsx';
 export { default as HeroBand, HeroAccent } from './HeroBand.jsx';
 export { PillToggleGroup, PillToggle, GlassPill } from './PillToggle.jsx';
