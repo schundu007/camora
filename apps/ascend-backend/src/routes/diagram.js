@@ -93,7 +93,11 @@ router.post('/eraser/lookup', async (req, res) => {
       [problemHash],
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ cached: false });
+      // 200 with cached:false instead of 404 — keeps Chrome's console
+      // clean. The frontend already treats {cached: false} as "no
+      // cache, fall through to Graphviz" regardless of status code,
+      // so no behavior change beyond the HTTP status.
+      return res.json({ cached: false });
     }
     res.json({
       imageUrl: result.rows[0].image_url,
