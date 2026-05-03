@@ -674,20 +674,24 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   }
 
   return (
-    <div className="p-2 rounded-lg animate-fade-in bg-[var(--bg-surface)] border border-[var(--border)] h-full flex flex-col overflow-hidden">
-      {/* Compact Header */}
-      <div className="flex-shrink-0 mb-2 pb-1.5 flex items-center justify-between border-b border-[var(--border)]">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-brand-400" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">System Design</span>
-        </div>
+    <div className="rounded-lg animate-fade-in bg-[var(--bg-surface)] border border-[var(--border)] h-full flex flex-col overflow-hidden">
+      {/* Header — same navy-strip + gold-leaf chrome as every section
+          card below, so the panel reads as a single design vocabulary. */}
+      <div
+        className="flex-shrink-0 flex items-center justify-between px-3 py-2"
+        style={{
+          background: 'var(--cam-hero-strip)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+        }}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white">System Design</span>
         {/* Cloud-platform selector — same instance as the docs header,
             backed by useCloudProvider so a flip here propagates to every
             other diagram surface in the same browser. */}
         <CloudProviderSelector variant="compact" />
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-3">
         {/* Focused Answer Mode - For SLI/SLO/concept questions */}
         {systemDesign.focusedAnswer && systemDesign.categories && (
           <div className="space-y-2">
@@ -739,41 +743,28 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 1: Explanation */}
             {systemDesign.overview && (
-              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                <h4 className="text-sm font-semibold mb-2 text-[var(--text-primary)]">Overview</h4>
+              <SectionCard title="Overview" className="col-span-full">
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{fmtCloud(systemDesign.overview)}</p>
-              </div>
+              </SectionCard>
             )}
             {hasScalability && (
-              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                <div className="flex items-start gap-4 flex-wrap">
-                  <h4 className="text-sm font-semibold text-[var(--text-primary)] whitespace-nowrap flex items-center gap-2">
-                    <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    Scalability
-                  </h4>
-                  <div className="flex-1 flex flex-wrap gap-1.5">
-                    {systemDesign.scalability.map((item, i) => (
-                      <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)]" title={item}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
-                        {item}
-                      </span>
-                    ))}
-                  </div>
+              <SectionCard title="Scalability" className="col-span-full">
+                <div className="flex flex-wrap gap-1.5">
+                  {systemDesign.scalability.map((item, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)]" title={item}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                      {item}
+                    </span>
+                  ))}
                 </div>
-              </div>
+              </SectionCard>
             )}
 
             {/* Row 2: Requirements + Tradeoffs + Edge Cases (4 columns) */}
             {(hasRequirements || hasTradeoffs || hasEdgeCases) && (
               <>
                 {systemDesign.requirements?.functional?.length > 0 && (
-                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
-                      <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
-                      Functional
-                    </h4>
+                  <SectionCard title="Functional" className="col-span-full sm:col-span-3" accent="var(--accent)">
                     <ul className="space-y-1.5">
                       {systemDesign.requirements.functional.map((req, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -782,14 +773,10 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </SectionCard>
                 )}
                 {systemDesign.requirements?.nonFunctional?.length > 0 && (
-                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
-                      <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
-                      Non-Functional
-                    </h4>
+                  <SectionCard title="Non-Functional" className="col-span-full sm:col-span-3" accent="var(--accent)">
                     <ul className="space-y-1.5">
                       {systemDesign.requirements.nonFunctional.map((req, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -798,17 +785,10 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </SectionCard>
                 )}
                 {hasTradeoffs && (
-                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
-                      <span className="w-1 h-4 rounded-full bg-amber-500" />
-                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                      </svg>
-                      Tradeoffs
-                    </h4>
+                  <SectionCard title="Tradeoffs" className="col-span-full sm:col-span-3" accent="#f59e0b">
                     <ul className="space-y-1.5">
                       {systemDesign.tradeoffs.slice(0, 5).map((tradeoff, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -817,17 +797,10 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </SectionCard>
                 )}
                 {hasEdgeCases && (
-                  <div className="col-span-full sm:col-span-3 rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                    <h4 className="text-sm font-semibold mb-3 text-[var(--text-primary)] flex items-center gap-2">
-                      <span className="w-1 h-4 rounded-full bg-rose-500" />
-                      <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      Edge Cases
-                    </h4>
+                  <SectionCard title="Edge Cases" className="col-span-full sm:col-span-3" accent="#f43f5e">
                     <ul className="space-y-1.5">
                       {systemDesign.edgeCases.slice(0, 5).map((edge, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -836,16 +809,15 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </SectionCard>
                 )}
               </>
             )}
 
             {/* Row 3: Architecture Components */}
             {hasArchitecture && (
-              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Architecture Components</h4>
-                <div className="flex flex-wrap gap-1 mb-1.5">
+              <SectionCard title="Architecture Components" className="col-span-full">
+                <div className="flex flex-wrap gap-1 mb-2">
                   {systemDesign.architecture.components?.map((component, i) => (
                     <span key={i} className="px-1.5 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs rounded border border-[var(--border)]">
                       {component}
@@ -855,20 +827,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 {systemDesign.architecture.description && (
                   <p className="text-xs text-[var(--text-secondary)] leading-snug">{fmtCloud(systemDesign.architecture.description)}</p>
                 )}
-              </div>
+              </SectionCard>
             )}
 
 
             {/* Row 3b: API Design */}
             {hasApiDesign && (
-              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-[var(--text-muted)]">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  API Design
-                  <span className="px-1 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs">{systemDesign.apiDesign.length}</span>
-                </h4>
+              <SectionCard title="API Design" count={systemDesign.apiDesign.length} className="col-span-full">
                 <div className="space-y-1.5">
                   {systemDesign.apiDesign.map((api, i) => (
                     <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded p-2">
@@ -902,19 +867,12 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     </div>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
             )}
 
             {/* Row 3c: Data Model */}
             {hasDataModel && (
-              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-[var(--text-muted)]">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                  </svg>
-                  Data Model
-                  <span className="px-1 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs">{systemDesign.dataModel.length}</span>
-                </h4>
+              <SectionCard title="Data Model" count={systemDesign.dataModel.length} className="col-span-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 items-start">
                   {systemDesign.dataModel.map((model, i) => (
                     <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded overflow-hidden">
@@ -944,7 +902,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     </div>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
             )}
 
             {/* Row 3d: System Flow Diagram — REMOVED.
@@ -958,30 +916,29 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 without new information. */}
 
             {/* Row 4: ASCII Diagram - Full Width */}
-            <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                  <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
-                  Architecture Flow
-                </h4>
+            <SectionCard
+              title="Architecture Flow"
+              className="col-span-full"
+              actions={
                 <button
                   onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
-                  className="px-3 py-1.5 text-xs font-medium rounded-md border bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border)] hover:border-[var(--accent)] transition-colors"
+                  className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
+                  style={{
+                    background: 'var(--cam-gold-leaf)',
+                    color: '#020617',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                  }}
                 >
                   {diagramDetailLevel === 'detailed' ? 'Detailed' : 'Overview'}
                 </button>
-              </div>
+              }
+            >
               <ASCIIDiagram systemDesign={systemDesign} detailed={diagramDetailLevel === 'detailed'} />
-            </div>
+            </SectionCard>
 
             {/* Row 5: Tech Justifications (compact grid) */}
             {hasTechJustifications && (
-              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-[var(--text-primary)]">
-                  <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
-                  Technologies
-                  <span className="ml-1 px-2 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)] rounded-md text-xs font-medium">{systemDesign.techJustifications.length}</span>
-                </h4>
+              <SectionCard title="Technologies" count={systemDesign.techJustifications.length} className="col-span-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {systemDesign.techJustifications.map((item, i) => (
                     <div key={i} className="rounded-lg p-3 bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
@@ -994,18 +951,17 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     </div>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
             )}
 
-            {/* Row 6: Comparison (side by side, compact) */}
+            {/* Row 6: Comparison (side by side) */}
             {systemDesign.comparison && (
-              <div className="col-span-full grid grid-cols-2 gap-2">
+              <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-3">
                 {systemDesign.comparison.approach1 && (
-                  <div className="rounded p-2 bg-[var(--bg-elevated)] border border-[var(--border)]">
-                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-info-400"></span>
-                      {systemDesign.comparison.approach1.name || 'Approach 1'}
-                    </h5>
+                  <SectionCard
+                    title={systemDesign.comparison.approach1.name || 'Approach 1'}
+                    bodyClassName="p-3"
+                  >
                     <div className="grid grid-cols-2 gap-2">
                       {systemDesign.comparison.approach1.pros?.length > 0 && (
                         <div>
@@ -1034,14 +990,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         </div>
                       )}
                     </div>
-                  </div>
+                  </SectionCard>
                 )}
                 {systemDesign.comparison.approach2 && (
-                  <div className="rounded p-2 bg-[var(--bg-elevated)] border border-[var(--border)]">
-                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent-purple"></span>
-                      {systemDesign.comparison.approach2.name || 'Approach 2'}
-                    </h5>
+                  <SectionCard
+                    title={systemDesign.comparison.approach2.name || 'Approach 2'}
+                    bodyClassName="p-3"
+                  >
                     <div className="grid grid-cols-2 gap-2">
                       {systemDesign.comparison.approach2.pros?.length > 0 && (
                         <div>
@@ -1070,28 +1025,19 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                         </div>
                       )}
                     </div>
-                  </div>
+                  </SectionCard>
                 )}
               </div>
             )}
 
             {/* Row 7: Follow-up Questions — canonical questions an
-                interviewer would ask after this design. Driven by the
-                LLM's `followUpQuestions` field; the previous "Interviewer
-                Q&A" panel was an audio-capture surface that had no place
-                on the prep page (no live interviewer here). */}
+                interviewer would ask after this design. */}
             {Array.isArray(systemDesign.followUpQuestions) && systemDesign.followUpQuestions.length > 0 && (
-              <div className="col-span-full rounded-xl p-5 bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm">
-                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-[var(--text-primary)]">
-                  <span className="w-1 h-4 rounded-full bg-[var(--accent)]" />
-                  <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Follow-up Questions
-                  <span className="ml-1 px-2 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)] rounded-md text-xs font-medium">
-                    {systemDesign.followUpQuestions.length}
-                  </span>
-                </h4>
+              <SectionCard
+                title="Follow-up Questions"
+                count={systemDesign.followUpQuestions.length}
+                className="col-span-full"
+              >
                 <ol className="space-y-2.5">
                   {systemDesign.followUpQuestions.map((q, i) => (
                     <li key={i} className="rounded-lg p-3 bg-[var(--bg-elevated)] border border-[var(--border)] flex items-start gap-3">
@@ -1102,7 +1048,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     </li>
                   ))}
                 </ol>
-              </div>
+              </SectionCard>
             )}
           </div>
         )}

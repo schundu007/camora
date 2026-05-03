@@ -1132,12 +1132,33 @@ function CodingLayout({
   const problemPane = (
     <div className="h-full flex flex-col overflow-y-auto" style={{ background: 'var(--bg-elevated)' }}>
       <div className="flex-shrink-0">
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-[var(--border)] gap-2 min-h-[48px] flex-wrap" style={{ background: 'var(--bg-surface)' }}>
+        {/* Panel header — global navy-strip + gold-leaf chrome shared by
+            every Capra surface (matches SectionCard, HeroBand, Cloud
+            Architecture toolbar). Same vocabulary across pages. */}
+        <div
+          className="flex items-center justify-between px-4 sm:px-5 py-2.5 gap-2 min-h-[44px] flex-wrap"
+          style={{
+            background: 'var(--cam-hero-strip)',
+            borderBottom: '2px solid var(--cam-gold-leaf)',
+          }}
+        >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ background: ascendMode === 'system-design' ? 'var(--accent)' : 'var(--accent)' }} />
-            <h2 className="landing-display text-sm font-bold truncate text-[var(--text-primary)]">{ascendMode === 'system-design' ? 'System Design' : 'Problem'}</h2>
+            <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
+            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
+              {ascendMode === 'system-design' ? 'System Design' : 'Problem'}
+            </h2>
             {ascendMode === 'system-design' && (
-              <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
+              <button
+                onClick={onSavedDesignsClick}
+                aria-label="View saved designs"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  borderRadius: 999,
+                  color: savedDesignsCount > 0 ? 'var(--cam-gold-leaf-lt)' : 'rgba(255,255,255,0.85)',
+                }}
+              >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                 Saved ({savedDesignsCount})
               </button>
