@@ -690,10 +690,59 @@ export default function JobsPage() {
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div>
 
-        {/* Hero / category pills / filter toolbar are now consolidated
-             into the sidebar below — Google Careers' /jobs/results
-             pattern: results count + search + collapsible filter
-             groups in a left rail, single-column cards on the right. */}
+        {/* Hero band — matches the Camora navy + gold-leaf pattern used
+             on the Lumora pricing/credits/sessions pages. Without this,
+             the area between SiteNav and the job grid felt empty
+             (top of the page was just chrome above content). The
+             stats line uses the live `total` so it reflects the
+             current filter set, not a stale marketing number. */}
+        <div style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
+          <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '32px' }}>
+            <div className="flex items-end justify-between gap-6 flex-wrap">
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 mb-3 px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)', boxShadow: '0 0 8px rgba(217,181,67,0.55)' }} />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/85">A · Apply</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 text-white tracking-tight leading-tight">
+                  Find your{' '}
+                  <span style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 16px rgba(217,181,67,0.45)' }}>next role</span>
+                </h1>
+                <p className="text-sm sm:text-[15px] max-w-2xl" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  {total > 0 ? (
+                    <>
+                      <strong className="text-white font-bold">{total.toLocaleString()}</strong>
+                      {' '}open roles, curated from top tech companies and refreshed daily. Filter by role, location, or company — or paste any job URL to get a personalized prep plan.
+                    </>
+                  ) : (
+                    'Curated open roles from top tech companies — refreshed daily. Filter by role, location, or company, or paste any job URL to get a personalized prep plan.'
+                  )}
+                </p>
+              </div>
+              <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-medium text-white/85">Live feeds</span>
+                </div>
+                <button
+                  onClick={() => setShowUrlInput(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                  style={{
+                    background: 'var(--cam-gold-leaf)',
+                    color: '#1a1a1a',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" />
+                  </svg>
+                  Paste job URL
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ── Job URL Analysis Section (kept; Camora-specific feature
              that has no Google Careers analogue. Stays as a small
@@ -701,9 +750,13 @@ export default function JobsPage() {
              list view.) ── */}
         <div style={{ background: 'transparent' }}>
           <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+            {/* Mobile-only fallback CTA. Desktop has the gold "Paste job URL"
+                pill in the hero band; that's hidden on mobile via
+                `hidden sm:flex`, so this stays for narrow viewports. */}
             {!showUrlInput ? (
               <button
                 onClick={() => setShowUrlInput(true)}
+                className="sm:hidden"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
