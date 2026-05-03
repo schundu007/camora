@@ -17,7 +17,7 @@
       "bundleIdentifier": "com.cariara.camora",
       "supportsTablet": false,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Camora listens to interview audio so Sona can transcribe questions and surface answers in real time.",
+        "NSMicrophoneUsageDescription": "Camora records audio when you tap the record button on the Interview tab so it can transcribe the conversation and surface relevant context from your prep. Recording does not start automatically.",
         "UIBackgroundModes": ["audio"],
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -32,7 +32,14 @@
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS",
         "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_MICROPHONE"
+        "FOREGROUND_SERVICE_MICROPHONE",
+        "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_CONTACTS",
+        "CAMERA"
       ]
     },
     "plugins": [
@@ -41,7 +48,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "Camora listens to interview audio so Sona can transcribe questions and surface answers in real time."
+          "microphonePermission": "Camora records audio when you tap the record button on the Interview tab so it can transcribe the conversation and surface relevant context from your prep. Recording does not start automatically."
         }
       ]
     ],

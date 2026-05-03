@@ -7,7 +7,7 @@ Camora — Interview Prep & Audio
 Apply, Prepare, Practice, Attend
 
 ## Promotional text (170 char max — editable post-release)
-Prep DSA, system design, and behavioral on the go. During phone screens, Sona transcribes the call and surfaces context — you stay in the conversation.
+Prep DSA, system design, and behavioral on the go. During phone screens, Camora transcribes the call and surfaces relevant context from your own prep notes.
 
 ## Description
 Camora is a focused interview-prep companion built around four moments: Apply, Prepare, Practice, Attend.
@@ -18,11 +18,13 @@ Browse curated topics for data structures and algorithms, system design, behavio
 PRACTICE
 Review problems you've worked. The full coding pad and system-design diagrams live on the desktop and web apps, so the practice tab on mobile is for review, not deep coding sessions.
 
-ATTEND — Audio Interview
-For phone-screen interviews, Camora can listen through your phone's microphone, transcribe the conversation, and surface context from your prep. Tap to start, tap to stop. Put the call on speaker so both sides are captured.
+ATTEND — Audio transcription for phone interviews
+For phone-screen interviews, Camora records audio through your phone's microphone (only when you tap the record button), transcribes the conversation, and surfaces relevant prep topics you've already studied. The recording auto-stops after 10 minutes and you can stop earlier any time. A red banner stays visible whenever audio is being captured.
 
 WHAT THIS APP IS NOT
-Camora does not give you the answers during a real interview. Sona surfaces your own prep notes and relevant context — what you do with it is up to you. Recording the other party of a phone call is regulated in many places; you are responsible for following local law and for informing the other party that audio is being captured.
+- Camora does not write or speak interview answers for you. It surfaces context from your own prep notes — what you say is up to you.
+- Camora is for job interviews and professional contexts. It is not for academic exams or any setting where assistance would violate the rules.
+- Recording the other party of a phone call is regulated in many places. You confirm consent on first use, and you are responsible for following local law and for informing the other party that audio is being captured.
 
 WHY MOBILE IS AUDIO-ONLY
 Camora's video, screen-share, and live-coding features depend on capturing audio and video from other apps running on the same machine. iOS does not allow apps to access another app's audio or screen. For full-feature interviews, use the Camora desktop app or camora.cariara.com on a laptop.
@@ -71,7 +73,32 @@ See `privacy-answers.md`.
 ## Sign-in for review
 - Email: review@cariara.com (create a real account before submission)
 - Password: provide via App Store Connect "Sign-In Information"
-- Notes for reviewer: "Tap the Interview tab → Start listening to test transcription. Mic permission and a one-time consent dialog appear on first use."
+- Notes for reviewer: see the dedicated reviewer-notes block below.
+
+## Notes for App Review (paste into "Notes" in App Store Connect)
+
+PURPOSE
+Camora is an interview *prep* app. The Audio Interview tab is for transcribing job-interview phone screens — not for academic exams. The app does not generate answers for the user; it transcribes audio and surfaces relevant topics from the user's prep notes.
+
+HOW TO TEST THE FULL FLOW
+1. Open the app → tap "Continue with Google" → sign in with the test credentials provided in App Store Connect.
+2. Tab "Prep" → tap "Data Structures & Algorithms" → tap "Two pointers" → confirm the topic body renders.
+3. Tab "Interview":
+   a. Tap "Start listening" — a one-time consent modal appears. Tap "I understand — continue."
+   b. iOS shows the standard mic permission prompt. Tap "Allow."
+   c. A red banner "Recording — 0:0X" appears at the top.
+   d. Speak any question into the phone, e.g. "What is dynamic programming?"
+   e. Tap "Stop". The transcript renders. The "Context from your prep" panel populates with relevant material from the user's prep.
+4. Tab "Account":
+   a. Verify "Manage subscription on web" is NOT shown on iOS (it's hidden per Guideline 3.1.3 — reader-app rule).
+   b. Tap "Delete account" → confirmation modal → "Delete forever". The user is signed out and the account is permanently removed (Guideline 5.1.1(v)).
+
+EXPECTED PERMISSIONS
+- Microphone (one-time prompt on first record). Used only while the user is actively recording. Recording auto-stops after 10 minutes.
+- No location, contacts, camera, photos, or tracking permissions are requested.
+
+NO TRACKING / NO ANALYTICS SDK
+Camora does not collect any data classified as "tracking" under App Tracking Transparency. No third-party advertising or analytics SDKs are integrated.
 
 ## Export compliance
 ITSAppUsesNonExemptEncryption is set to false in app.json — Camora uses only HTTPS (standard exempt encryption). No additional ATS exception needed.

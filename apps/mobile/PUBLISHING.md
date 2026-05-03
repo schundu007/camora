@@ -109,12 +109,25 @@ When the TestFlight build is solid:
 3. Release notes (use the latest commit summary)
 4. Roll out at 20% initially, monitor for crashes for 24 hrs, then ramp to 100%
 
-## Likely Apple rejection causes (be ready)
+## Likely Apple rejection causes — current mitigation status
 
-1. **Reader-app rule (3.1.3)** — already mitigated: the iOS Account screen does not link to the web subscription page (see `src/screens/AccountScreen.tsx`). Don't undo this.
-2. **Guideline 5.6.1 — academic dishonesty** — App Privacy + description must frame Camora as **interview prep + audio transcription**, never "answers your interview." Reviewer notes should explicitly say "this is for job interviews, not academic exams."
-3. **Guideline 4.2 — minimum functionality** — first version must be usable without server changes. The Audio Interview tab is real (records, transcribes, asks Sona). The Practice tab is currently a placeholder pointing at desktop — that's borderline. Prep tab placeholder is even thinner. **Risk: reviewers may flag Prep + Practice as "demo content."** Mitigation before submitting v1: wire Prep tab to actually fetch and render at least one topic from `caprab.cariara.com`.
-4. **Privacy nutrition label mismatch** — if `privacy-answers.md` says "no analytics" but a Sentry SDK lands later, App Store Connect needs an updated declaration.
+| Risk | Guideline | Mitigation in code |
+|------|-----------|--------------------|
+| Reader-app rule | 3.1.3 | iOS Account screen no longer deep-links to web checkout (`AccountScreen.tsx` Platform.OS check). |
+| Academic dishonesty | 5.6.1 | All copy reframed: "transcribes + surfaces context from your prep", never "Sona answers". Reviewer notes (in `store/app-store.md`) state explicitly "for job interviews, not academic exams". |
+| Minimum functionality | 4.2 | Prep tab is wired to real, navigable bundled topic content (`src/data/topics.ts` — 4 categories × 6 topics with full bodies). No "Coming soon" placeholders remain. |
+| Account deletion missing | 5.1.1(v) | Account screen → "Delete account" → confirmation → DELETE /api/auth/account. Backend endpoint already exists. |
+| Privacy nutrition label mismatch | 5.1.2 | `store/privacy-answers.md` is the source of truth. Update it AND App Store Connect on the same day if a tracking SDK is ever added. |
+| Recording without visible indicator | 5.1.1(ix) | Red sticky banner shows "Recording — M:SS" during active record + auto-stop in countdown. iOS system orange dot also appears. |
+| Background recording surprise | 5.1.1(ix) | Hard 10-minute cap (`MAX_RECORDING_MS` in `AudioInterviewScreen.tsx`). No auto-loop, no continuous mode. Mic releases on stop and on screen unmount. |
+
+## Likely Play Store rejection causes — current mitigation status
+
+| Risk | Policy | Mitigation in code |
+|------|--------|--------------------|
+| Sensitive permissions without disclosure | Permissions & APIs | Mic permission string explains exactly what it's for. Foreground-service mic declared in app.json. `blockedPermissions` removes location/contacts/camera so they can't be auto-merged from native libraries. |
+| Data Safety form mismatch | Data Safety | `store/privacy-answers.md` is the source of truth. Audio is "Collected, not shared." |
+| Account deletion missing | User Data — Account Deletion | In-app delete flow same as iOS; web alternative documented in support page. |
 
 ## After v1 is live
 
