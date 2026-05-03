@@ -62,7 +62,11 @@ router.get('/google/login', (req, res) => {
     path: '/',
   });
 
-  const state = `${nonce}:${returnTo}`;
+  // Embed an issued-at timestamp in state so the callback can reject
+  // stale callbacks even if the browser somehow held onto the state
+  // cookie past its maxAge (defense-in-depth on top of cookie expiry).
+  const issuedAt = Date.now();
+  const state = `${nonce}:${issuedAt}:${returnTo}`;
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: GOOGLE_REDIRECT_URI,
@@ -81,16 +85,30 @@ router.get('/google/login', (req, res) => {
 router.get('/google/callback', async (req, res) => {
   const { code, state } = req.query;
 
-  // CSRF check — state must be `<nonce>:<returnTo>` and nonce must match
-  // the value we set in the cookie at /login. Backwards-compatible: legacy
-  // logins where state was just the returnTo path (no colon) get a 400 so
-  // they re-enter the login flow with the new nonce.
+  // CSRF check — state shape is `<nonce>:<issuedAt>:<returnTo>`. Nonce must
+  // match the cookie, and issuedAt must be within OAUTH_STATE_MAX_AGE_MS so
+  // a replay attempt with an old (cookie-still-present) state fails closed.
+  // Backwards-compatible:
+  //   - legacy two-segment shape `<nonce>:<returnTo>` (no timestamp) is
+  //     accepted but logged so we can spot stragglers
+  //   - legacy bare-path state from the very old flow is rejected outright
   let nonce = '';
+  let issuedAt = 0;
   let returnToFromState = '/';
   if (typeof state === 'string' && state.includes(':')) {
-    const idx = state.indexOf(':');
-    nonce = state.slice(0, idx);
-    returnToFromState = state.slice(idx + 1);
+    const parts = state.split(':');
+    if (parts.length >= 3 && /^\d+$/.test(parts[1])) {
+      // New shape — nonce:timestamp:returnTo (returnTo may itself contain ':')
+      nonce = parts[0];
+      issuedAt = Number(parts[1]);
+      returnToFromState = parts.slice(2).join(':');
+    } else {
+      // Legacy two-segment shape — accept but record for telemetry
+      const idx = state.indexOf(':');
+      nonce = state.slice(0, idx);
+      returnToFromState = state.slice(idx + 1);
+      logger.info({ ip: req.ip }, '[oauth] legacy two-segment state accepted');
+    }
   } else if (typeof state === 'string' && state.startsWith('/')) {
     // Legacy flow — fail closed.
     res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
@@ -101,6 +119,14 @@ router.get('/google/callback', async (req, res) => {
     res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
     logger.warn({ ip: req.ip }, '[oauth] state nonce mismatch — possible CSRF attempt');
     return res.redirect(`${FRONTEND_URL}?error=oauth_state_invalid`);
+  }
+  // Reject states older than the cookie's stated max age. issuedAt=0
+  // means we accepted a legacy two-segment state — skip the age check
+  // for backwards compatibility.
+  if (issuedAt > 0 && Date.now() - issuedAt > OAUTH_STATE_MAX_AGE_MS) {
+    res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
+    logger.warn({ ip: req.ip, ageMs: Date.now() - issuedAt }, '[oauth] state expired');
+    return res.redirect(`${FRONTEND_URL}?error=oauth_state_expired`);
   }
   // One-time use: clear cookie now that we've validated it
   res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });

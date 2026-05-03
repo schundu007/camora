@@ -1,16 +1,17 @@
 /**
  * Pre-generated diagram lookup.
  *
- * apps/frontend/public/diagrams/<slug>/eraser-{aws,azure,gcp}.png contains
+ * apps/camora/public/diagrams/<slug>/eraser-{aws,azure,gcp}.png contains
  * 80+ team-curated, eraser-style architecture diagrams that match common
- * system-design problems. The /capra/design page generates fresh D2
- * diagrams via the LLM by default — but those are inferior to the
- * pre-curated ones for problems we already have art for.
+ * system-design problems. The /capra/design page generates fresh Graphviz
+ * diagrams server-side as a last resort — but those are inferior to the
+ * pre-curated ones for problems we already have art for. (D2 was removed;
+ * this comment used to reference it.)
  *
  * This module fuzzy-maps a free-text question ("Design a tiny URL System")
  * to one of the topic slugs, then returns a public URL to the matching
  * pre-generated PNG. handleGenerateDiagram() tries this FIRST and only
- * falls back to the LLM if no slug matches.
+ * falls back to the runtime path if no slug matches.
  *
  * To grow: add a (regex, slug) tuple to QUESTION_PATTERNS. Patterns are
  * matched in order — put more specific patterns first.

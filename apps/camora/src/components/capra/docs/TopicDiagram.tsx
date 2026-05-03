@@ -40,7 +40,15 @@ export default function TopicDiagram({
         src={src}
         alt={alt || `${topicId} ${kind} diagram`}
         loading="lazy"
-        onError={() => setFailed(true)}
+        onError={() => {
+          // Surface missing PNGs in the console so we can grep dev/prod
+          // logs for topics that haven't been baked yet — silent absence
+          // was hiding gaps in the bake script's coverage.
+          if (typeof console !== 'undefined') {
+            console.warn(`[TopicDiagram] missing PNG: ${src}`);
+          }
+          setFailed(true);
+        }}
         style={{ display: 'block', width: '100%', height: 'auto' }}
       />
       {caption && (
