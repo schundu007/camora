@@ -8655,7 +8655,11 @@ lookup_audit: audit_id (PK), caller_id, caller_role (leo|insurer|public|internal
     ],
     basicImplementation: {
       title: 'Single-Region DMV',
-      diagramSrc: '/diagrams/vehicle-registration/impl-basic.png',
+      // diagramSrc intentionally omitted — no curated PNG exists for this
+      // topic and the bake script can't generate one without a `components`
+      // field. ContentDiagram returns null on falsy src, so the section
+      // renders the description + problems list without a broken-image
+      // placeholder.
       description: 'PostgreSQL primary with synchronous lookups and a single web tier — the architecture a state would actually deploy first.',
       svgTemplate: null,
       problems: [
@@ -8667,7 +8671,7 @@ lookup_audit: audit_id (PK), caller_id, caller_role (leo|insurer|public|internal
     },
     advancedImplementation: {
       title: 'Production Vehicle Registration Platform',
-      diagramSrc: '/diagrams/vehicle-registration/impl-advanced.png',
+      // See basicImplementation for why diagramSrc is omitted.
       description: 'Write-side relational primary with CDC into a regionally-replicated lookup read model, policy-enforced API gateway, and an event-driven renewal state machine.',
       svgTemplate: null,
       keyPoints: [

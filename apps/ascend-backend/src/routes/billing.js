@@ -143,12 +143,10 @@ router.get('/prices', (req, res) => {
  */
 router.get('/_health', jwtAuth, async (req, res) => {
   // Owner-only — exposes which Stripe IDs are missing/wrong, useful for
-  // an attacker enumerating mode (test/live) so we lock it down.
-  const ownerEmails = new Set(
-    (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || 'chundubabu@gmail.com')
-      .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
-  );
-  if (!ownerEmails.has(String(req.user?.email || '').toLowerCase())) {
+  // an attacker enumerating mode (test/live) so we lock it down. Reuse
+  // the module-level ADMIN_EMAILS (env-only, no hardcoded fallback) so
+  // owner identity is consistent across the whole billing surface.
+  if (ADMIN_EMAILS.length === 0 || !ADMIN_EMAILS.includes(String(req.user?.email || '').toLowerCase())) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

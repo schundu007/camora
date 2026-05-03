@@ -4,6 +4,14 @@ import { query } from '../lib/shared-db.js';
 
 const router = Router();
 
+// Public GET; redact PII for unauthenticated callers so the endpoint
+// can't be enumerated to harvest commenter names + avatars across
+// every topicId. Authenticated callers get the full record.
+function initialsFromName(name) {
+  if (!name) return 'A';
+  return String(name).trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase() || '').join('') || 'A';
+}
+
 // GET /api/topic-comments?topicId=xxx — list comments for a topic
 router.get('/', async (req, res) => {
   try {
@@ -17,7 +25,29 @@ router.get('/', async (req, res) => {
        ORDER BY created_at ASC`,
       [topicId]
     );
-    res.json({ comments: result.rows });
+
+    // jwtAuth not applied at the mount — try a lightweight verify so
+    // signed-in users see real names. Anonymous callers get initials
+    // and no avatar URL so the endpoint can't be scraped for PII.
+    let isAuthed = false;
+    try {
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : req.cookies?.cariara_sso;
+      if (token) {
+        const { verifyJWT } = await import('../middleware/jwtAuth.js');
+        const decoded = await verifyJWT(token);
+        isAuthed = !!decoded?.id;
+      }
+    } catch { /* anonymous */ }
+
+    const comments = isAuthed
+      ? result.rows
+      : result.rows.map((c) => ({
+          ...c,
+          user_name: initialsFromName(c.user_name),
+          user_image: null,
+        }));
+    res.json({ comments });
   } catch (err) {
     console.error('[TopicComments] GET error:', err.message);
     res.status(500).json({ error: 'Failed to fetch comments' });

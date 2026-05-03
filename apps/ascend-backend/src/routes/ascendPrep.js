@@ -9,8 +9,10 @@ import { cacheGet, cacheSet } from '../services/redis.js';
 
 const router = Router();
 
-// Admin emails bypass all limits
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+// Admin emails bypass all limits. Read from env only — fail closed
+// when ADMIN_EMAILS is unset rather than baking an owner identity
+// into source. Operators set OWNER_EMAILS / ADMIN_EMAILS on Railway.
+const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 
 // Daily prep cap: 1/day free, 3/day paid, unlimited for admins
 const PREP_DAILY_LIMIT_FREE = 1;
