@@ -7,7 +7,6 @@ import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
 import SharedPricingCards from '../components/shared/PricingCards';
-import { DiagonalDivider } from '../components/shared/DiagonalDivider';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -504,56 +503,144 @@ export default function JobPrepPage() {
       {/* ── Page Content ── */}
       <div>
 
-        {/* ── Header — LeetCode-style dark navy band w/ diagonal cut ── */}
-        <div style={{
-          position: 'relative',
-          overflow: 'hidden',
-          background: 'var(--cam-hero-bg)',
-        }}>
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)',
-            }}
-          />
-          <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: '64px', paddingBottom: '88px' }}>
-            {/* Breadcrumb on dark */}
-            <div className="flex items-center gap-2 flex-wrap mb-4" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
-              <Link to="/" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
-              <span>/</span>
-              <Link to="/jobs" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Jobs</Link>
-              <span>/</span>
-              <span style={{ color: 'rgba(255,255,255,0.7)' }}>{job.company_name}</span>
-              <span>/</span>
-              <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 600 }}>Prepare</span>
+        {/* ── Header — Google Careers detail page style.
+             Clean light surface, "Back to jobs" arrow, big title,
+             compact metadata row with icons, primary Apply CTA on
+             right. No dark navy band, no gold-leaf accent, no
+             diagonal divider. */}
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
+          <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '32px' }}>
+            {/* Back link — matches Google's "← Back to jobs search" */}
+            <Link
+              to="/jobs"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
+                textDecoration: 'none',
+                marginBottom: '20px',
+                padding: '6px 0',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Back to jobs
+            </Link>
+
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 480px', minWidth: 0 }}>
+                <h1 style={{
+                  fontSize: 'clamp(22px, 3vw, 30px)',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.01em',
+                  lineHeight: 1.25,
+                  margin: 0,
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                  wordBreak: 'break-word',
+                }}>
+                  {job.title}
+                </h1>
+
+                {/* Metadata row — company · location · work type · posted */}
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 18px', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '12px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m4.5-6H16.5m-1.5 3H16.5m-1.5 3H16.5M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                    </svg>
+                    {job.company_name}
+                  </span>
+                  {job.location && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      {job.location.length > 60 ? job.location.slice(0, 60) + '…' : job.location}
+                    </span>
+                  )}
+                  {(() => {
+                    const wt = (job.location || '').toLowerCase().includes('remote') ? 'Remote' : (job.location || '').toLowerCase().includes('hybrid') ? 'Hybrid' : 'Onsite';
+                    return (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                          <rect x="3" y="6" width="18" height="13" rx="2" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                        </svg>
+                        {wt}
+                      </span>
+                    );
+                  })()}
+                  {job.salary_min && job.salary_max && (
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                      ${Math.round(job.salary_min / 1000)}K – ${Math.round(job.salary_max / 1000)}K
+                    </span>
+                  )}
+                </div>
+
+                {/* Primary Apply CTA + secondary Resume link.
+                    Apply opens external job_url; Resume opens the
+                    capra resume builder pre-populated for this role. */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '20px', flexWrap: 'wrap' }}>
+                  {job.job_url && (
+                    <a
+                      href={job.job_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 28px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#fff',
+                        background: 'var(--accent)',
+                        border: '1px solid var(--accent)',
+                        borderRadius: '9999px',
+                        textDecoration: 'none',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-hover)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--accent)'; }}
+                    >
+                      Apply
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  )}
+                  <Link
+                    to={`/capra/resume?company=${encodeURIComponent(job.company_name || '')}&role=${encodeURIComponent(job.title || '')}&url=${encodeURIComponent(job.job_url || '')}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '10px 22px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: 'var(--accent)',
+                      background: 'transparent',
+                      border: '1px solid var(--border)',
+                      borderRadius: '9999px',
+                      textDecoration: 'none',
+                      transition: 'border-color 0.15s, background 0.15s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                  >
+                    Tailor resume
+                  </Link>
+                </div>
+              </div>
             </div>
-
-            <h1 style={{
-              fontSize: 'clamp(24px, 5vw, 36px)',
-              fontWeight: 800,
-              color: '#FFFFFF',
-              letterSpacing: '-0.02em',
-              margin: 0,
-              fontFamily: "'Inter', system-ui, sans-serif",
-              wordBreak: 'break-word',
-            }}>
-              {job.company_name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>&mdash; {job.title}</span>
-            </h1>
-
-            <p style={{
-              fontSize: '16px',
-              color: 'rgba(255,255,255,0.85)',
-              marginTop: '10px',
-              lineHeight: 1.6,
-              maxWidth: '640px',
-            }}>
-              This preparation plan is based on the job requirements and tech stack.
-            </p>
           </div>
-          <DiagonalDivider fill="var(--bg-surface)" slope="tr-to-bl" position="bottom" height="6vh" />
         </div>
 
         {/* ── Main content area ── */}
