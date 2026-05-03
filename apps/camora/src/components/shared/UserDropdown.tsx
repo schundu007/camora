@@ -99,11 +99,21 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div role="menu" aria-label="Account menu" className={`absolute ${positionStyles[position]} w-52 rounded-xl overflow-hidden z-50`} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
-            {/* User info header */}
-            <div className="px-3 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-              <p className="text-xs font-bold truncate" style={{ color: '#0F172A' }}>{user.name || 'User'}</p>
-              <p className="text-[10px] truncate" style={{ color: '#64748B' }}>{user.email}</p>
+          <div role="menu" aria-label="Account menu" className={`absolute ${positionStyles[position]} w-52 rounded-xl overflow-hidden z-50`} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>
+            {/* User info header — navy-strip + gold-leaf bottom border, the
+                same chrome grammar used by every Camora SectionCard so the
+                popup reads as part of the same surface family. Sole navy
+                hit on the popup; body stays neutral charcoal per the
+                global Charcoal + Navy Accent rule. */}
+            <div
+              className="px-3 py-2.5"
+              style={{
+                background: 'var(--cam-hero-strip)',
+                borderBottom: '2px solid var(--cam-gold-leaf)',
+              }}
+            >
+              <p className="text-xs font-bold truncate text-white">{user.name || 'User'}</p>
+              <p className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.72)' }}>{user.email}</p>
             </div>
 
             {/* Menu items */}
@@ -113,11 +123,11 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 to={item.href}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors"
-                style={{ color: '#1E293B' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(2,6,23,0.05)')}
+                style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="#64748B" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                 </svg>
                 {item.label}
@@ -125,10 +135,10 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
             ))}
 
             {/* Sign out */}
-            <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+            <div style={{ borderTop: '1px solid var(--border)' }}>
               <button
                 onClick={() => { logout(); setOpen(false); }}
-                className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50"
+                className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-500/10"
               >
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

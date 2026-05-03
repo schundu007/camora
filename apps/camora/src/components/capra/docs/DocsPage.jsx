@@ -7,7 +7,7 @@ import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import TopicIllustration from './TopicIllustration';
 import { DatabricksThumb } from '../../shared/DatabricksThumb';
-import { SectionHero } from '../ui';
+import { SectionHero, CategoryHeader } from '../ui';
 
 /* ── Per-category color family for DatabricksThumb tiles on the
    Prepare overview. Stays inside the existing Camora palette —
