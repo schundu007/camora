@@ -882,10 +882,32 @@ export default function DocsPage({ onBack }) {
                       })()}
 
                       {/* Category Cards Grid — bento layout with the largest
-                          category (Coding) spanning two columns on desktop. */}
+                          category (Coding) spanning two columns on desktop.
+                          Section divider uses the global navy-strip + gold-leaf
+                          chrome to match every other Capra surface. */}
                       <div className="mb-8">
-                        <p className="text-[16px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>BROWSE</p>
-                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-7" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Topic categories</h2>
+                        <div
+                          className="flex items-center gap-2 px-3 py-2 mb-5"
+                          style={{
+                            background: 'var(--cam-hero-strip)',
+                            borderBottom: '2px solid var(--cam-gold-leaf)',
+                            borderRadius: '12px 12px 0 0',
+                          }}
+                        >
+                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Topic Categories</span>
+                          <span
+                            className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
+                            style={{
+                              background: 'rgba(255,255,255,0.08)',
+                              border: '1px solid rgba(255,255,255,0.16)',
+                              borderRadius: 999,
+                              color: 'rgba(255,255,255,0.85)',
+                            }}
+                          >
+                            Browse
+                          </span>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                           {overviewCategories.map((cat) => {
                             const radius = 20;
@@ -961,7 +983,10 @@ export default function DocsPage({ onBack }) {
 
                       {/* Learning Path */}
                       <div className="mb-8">
-                        <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Learning Path</h2>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Path</span>
+                        </div>
                         <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: 'none' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
@@ -993,7 +1018,10 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Resources */}
                       <div className="mb-8">
-                        <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Interview Resources</h2>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Interview Resources</span>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'checklist', hexColor: 'navy',    title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
@@ -1033,7 +1061,10 @@ export default function DocsPage({ onBack }) {
 
                       {/* Interview Cheatsheet — Before / During / After */}
                       <div className="mb-8">
-                        <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Survival Guide</h2>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Survival Guide</span>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', hexColor: 'navy',    step: 'Prep' },
@@ -1083,7 +1114,10 @@ export default function DocsPage({ onBack }) {
                         if (recentItems.length === 0) return null;
                         return (
                           <div className="mb-8">
-                            <h2 className="text-base font-bold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>Continue Where You Left Off</h2>
+                            <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                              <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+                              <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Continue Where You Left Off</span>
+                            </div>
                             <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                               {recentItems.map((topic) => (
                                 <Link
