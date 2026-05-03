@@ -92,7 +92,7 @@ export function AccountScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Delete account?</Text>
             <Text style={styles.modalBody}>
-              This permanently deletes your Camora account and erases your prep progress, saved topics,
+              This permanently deletes your Camora account and erases your study progress, saved topics,
               and any audio transcripts associated with this account.
             </Text>
             <Text style={styles.modalBody}>

@@ -2194,6 +2194,13 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
   const [cloudProvider] = useCloudProvider();
   const [prepData, setPrepData] = useState<PrepData>(loadPrepData);
   const [activeSection, setActiveSection] = useState('input');
+  // Mobile sidebar collapse — on phones the sidebar (10 section
+  // labels + company dropdown + Generate / Download buttons)
+  // stacked above the content takes ~80% of the viewport, leaving
+  // ~10% for the actual section content. The flag below collapses
+  // the sidebar to a single-row chip when a section is being read,
+  // and the user taps a chevron to re-open the full list.
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'generating' | 'done' | 'error'>>({});
   const [showNewCompany, setShowNewCompany] = useState(false);
@@ -2580,14 +2587,66 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
 
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
 
+  // Active section's display name — used for the mobile collapsed
+  // chip so the user can tell what they're reading without expanding
+  // the full sidebar.
+  const activeSectionLabel = SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label || 'Section';
+
   return (
     <div className="h-full flex flex-col sm:flex-row" style={{ background: 'var(--bg-surface)' }}>
-      {/* Sidebar */}
-      <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+      {/* Mobile collapsed-sidebar pill — only shows when the sidebar is
+          collapsed on phones. Tap to expand. The desktop sidebar at
+          sm:w-[180px] stays visible always; this pill is mobile-only. */}
+      {!mobileSidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen(true)}
+          className="sm:hidden flex items-center justify-between gap-2 px-3 py-2 shrink-0"
+          style={{
+            background: 'var(--cam-hero-strip)',
+            borderBottom: '2px solid var(--cam-gold-leaf)',
+          }}
+          aria-expanded="false"
+          aria-label="Open prep sections"
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/70 shrink-0">Section</span>
+            <span className="text-[12px] font-bold text-white truncate">{activeSectionLabel}</span>
+          </span>
+          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/85 shrink-0">
+            Sections
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </button>
+      )}
+
+      {/* Sidebar — collapsed-out on mobile by default. Auto-shows on
+          ≥sm screens via sm:flex. */}
+      <div
+        className={`${mobileSidebarOpen ? 'flex' : 'hidden'} sm:flex w-full sm:w-[180px] flex-col shrink-0 sm:shrink-0`}
+        style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}
+      >
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
+            {/* Mobile-only collapse button so users can dismiss the
+                sidebar without picking a different section. Hidden on
+                ≥sm where the sidebar is permanent chrome. */}
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(false)}
+              className="sm:hidden shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+              style={{ color: 'rgba(255,255,255,0.85)' }}
+              aria-label="Close sections"
+              title="Close"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
             {/* Sync indicator — proves writes are reaching the lumora
                 backend (lumora_prep_state). "Saved" means the JD/resume/
                 companies have landed in Postgres and will be available
@@ -2695,7 +2754,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
             const isActive = s.id === activeSection;
             const hasContent = s.id === 'input' ? hasRequiredDocs : !!state.sections[s.id];
             return (
-              <button key={s.id} onClick={() => setActiveSection(s.id)}
+              <button key={s.id} onClick={() => { setActiveSection(s.id); setMobileSidebarOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
                   background: isActive ? 'var(--accent-subtle)' : 'transparent',

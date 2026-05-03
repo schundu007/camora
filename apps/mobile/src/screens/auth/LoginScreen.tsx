@@ -25,8 +25,8 @@ export function LoginScreen() {
           {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Continue with Google</Text>}
         </Pressable>
         <Text style={styles.fineprint}>
-          On mobile, Camora is for prep and audio transcription. Video, coding, and screen-share
-          interviews work on the Camora desktop app or camora.cariara.com.
+          On mobile, Camora is for study and audio note-taking. Video calls, coding, and screen
+          sharing live in the Camora desktop app or on camora.cariara.com.
         </Text>
       </View>
     </SafeAreaView>

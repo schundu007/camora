@@ -1,0 +1,18 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.com.cariara.camora"],
+        "components": [
+          {
+            "/": "/mobile/auth*",
+            "comment": "Universal link for the post-OAuth token handoff to the Expo app"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_WITH_TEAM_ID.com.cariara.camora"]
+  }
+}

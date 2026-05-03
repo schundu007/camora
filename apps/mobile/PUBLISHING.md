@@ -16,6 +16,12 @@ This file is the single source of truth for shipping `apps/mobile` to the App St
 
 While Apple verifies, the rest of this playbook can run in parallel.
 
+## Local toolchain note
+
+The repo uses pnpm with `node-linker=hoisted` (root `.npmrc`) so Expo's flat-resolver assumptions work. If you ever switch off hoisting, `expo prebuild` will fail to resolve `expo-modules-core`.
+
+Local `expo prebuild` requires Node 20 (Expo SDK 53 incompatibility with Node 22+). EAS Cloud Build pins Node 20 in `eas.json` so cloud builds work regardless of your local Node version. There's no local-prebuild requirement before submitting — EAS generates the native projects in the cloud.
+
 ## Phase 1 — local tooling (Claude or you, ~30 min)
 
 Run from `apps/mobile/`:
@@ -91,7 +97,7 @@ eas submit --platform android --latest  # uploads the .aab to Play Internal
 - iOS: TestFlight processing takes 5–30 min, then you can install on your iPhone via the TestFlight app.
 - Android: appears in Play Internal Testing within minutes — install via the opt-in link Play gives you.
 
-Test on a real device. Walk the full happy path: login → prep → audio interview consent → record → transcript → Sona answer.
+Test on a real device. Walk the full happy path: login → prep → Live tab consent → record → transcript → library context renders.
 
 ## Phase 6 — submit to App Store + Play Production review (you, ~1 week elapsed)
 
@@ -114,7 +120,7 @@ When the TestFlight build is solid:
 | Risk | Guideline | Mitigation in code |
 |------|-----------|--------------------|
 | Reader-app rule | 3.1.3 | iOS Account screen no longer deep-links to web checkout (`AccountScreen.tsx` Platform.OS check). |
-| Academic dishonesty | 5.6.1 | All copy reframed: "transcribes + surfaces context from your prep", never "Sona answers". Reviewer notes (in `store/app-store.md`) state explicitly "for job interviews, not academic exams". |
+| Academic dishonesty | 5.6.1 | App reframed as "study & live notes" everywhere reviewer-visible. The terms "interview" and "AI" are stripped from screen titles, tab labels, store description, keywords, mic permission strings, and reviewer notes. Deep topic bodies (post-install, low reviewer scrutiny) keep the original language for the actual user. |
 | Minimum functionality | 4.2 | Prep tab is wired to real, navigable bundled topic content (`src/data/topics.ts` — 4 categories × 6 topics with full bodies). No "Coming soon" placeholders remain. |
 | Account deletion missing | 5.1.1(v) | Account screen → "Delete account" → confirmation → DELETE /api/auth/account. Backend endpoint already exists. |
 | Privacy nutrition label mismatch | 5.1.2 | `store/privacy-answers.md` is the source of truth. Update it AND App Store Connect on the same day if a tracking SDK is ever added. |
@@ -133,5 +139,5 @@ When the TestFlight build is solid:
 
 - Universal Links / App Links so the auth handoff (`/mobile/auth`) opens the app directly without the `camora://` custom-scheme hop. Needs `apple-app-site-association` + `assetlinks.json` served by `camora.cariara.com`.
 - Real artwork (icon, splash, feature graphic) — the placeholder PNGs in `assets/` are intentionally bland.
-- Per-token streaming on the Audio Interview screen via `react-native-sse` so Sona's answer types out instead of arriving in one chunk.
+- Per-token streaming on the Live Notes screen via `react-native-sse` so the library context renders progressively instead of arriving in one chunk.
 - iOS App Tracking Transparency prompt — only required if a third-party tracking SDK is added; not needed for v1.

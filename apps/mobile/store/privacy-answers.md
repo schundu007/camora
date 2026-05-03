@@ -50,7 +50,7 @@ Yes — all network calls use HTTPS.
 Users can request deletion via support@cariara.com. The web account page also exposes a delete-account flow that wipes user records.
 
 ### Why audio is not "shared"
-Audio is sent to Camora's own backend (lumora-backend on Railway) for transcription via OpenAI Whisper. OpenAI is a service provider acting on Camora's behalf under a data processing agreement, not a third-party recipient. Per Google's definition, that is "collected" but not "shared."
+Audio is sent to Camora's own backend for transcription via a third-party speech-to-text service that acts as a data processor on Camora's behalf under a data processing agreement, not a third-party recipient. Per Google's definition, that is "collected" but not "shared."
 
 ## Both stores — common copy
 
