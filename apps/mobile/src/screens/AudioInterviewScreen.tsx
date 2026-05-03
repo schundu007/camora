@@ -1,6 +1,7 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { startRecording, stopRecording } from '@/lib/audio';
 import { transcribeAudio, askSona, type SonaAnswer } from '@/lib/sona';
@@ -8,14 +9,22 @@ import { colors, radii, spacing } from '@/theme/colors';
 
 type Phase = 'idle' | 'recording' | 'transcribing' | 'thinking';
 
+const CONSENT_KEY = 'camora.audio_consent_v1';
+
 export function AudioInterviewScreen() {
   const { token } = useAuth();
   const [phase, setPhase] = useState<Phase>('idle');
   const [transcript, setTranscript] = useState<string>('');
   const [answer, setAnswer] = useState<SonaAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasConsent, setHasConsent] = useState<boolean | null>(null);
+  const [showConsent, setShowConsent] = useState(false);
 
-  const handleStart = useCallback(async () => {
+  useEffect(() => {
+    SecureStore.getItemAsync(CONSENT_KEY).then(v => setHasConsent(v === 'granted'));
+  }, []);
+
+  const beginRecording = useCallback(async () => {
     setError(null);
     setAnswer(null);
     setTranscript('');
@@ -27,6 +36,21 @@ export function AudioInterviewScreen() {
       setPhase('idle');
     }
   }, []);
+
+  const handleStart = useCallback(() => {
+    if (!hasConsent) {
+      setShowConsent(true);
+      return;
+    }
+    void beginRecording();
+  }, [hasConsent, beginRecording]);
+
+  const grantConsent = useCallback(async () => {
+    await SecureStore.setItemAsync(CONSENT_KEY, 'granted');
+    setHasConsent(true);
+    setShowConsent(false);
+    void beginRecording();
+  }, [beginRecording]);
 
   const handleStop = useCallback(async () => {
     if (!token) {
@@ -61,7 +85,6 @@ export function AudioInterviewScreen() {
   const recording = phase === 'recording';
   const busy = phase === 'transcribing' || phase === 'thinking';
   const buttonLabel = recording ? 'Stop & ask Sona' : busy ? phaseLabel(phase) : 'Start listening';
-
   const onPress = recording ? handleStop : busy ? undefined : handleStart;
 
   return (
@@ -80,11 +103,7 @@ export function AudioInterviewScreen() {
         </View>
 
         <Pressable
-          style={[
-            styles.recordBtn,
-            recording && styles.recordBtnActive,
-            busy && styles.recordBtnBusy,
-          ]}
+          style={[styles.recordBtn, recording && styles.recordBtnActive, busy && styles.recordBtnBusy]}
           onPress={onPress}
           disabled={busy}
         >
@@ -111,13 +130,35 @@ export function AudioInterviewScreen() {
           <Text style={styles.sonaLabel}>Sona</Text>
           {phase === 'thinking' && <Text style={styles.sonaEmpty}>Thinking…</Text>}
           {!answer && phase !== 'thinking' && (
-            <Text style={styles.sonaEmpty}>
-              Sona's answer appears here when a question is detected.
-            </Text>
+            <Text style={styles.sonaEmpty}>Sona's answer appears here when a question is detected.</Text>
           )}
           {answer && <SonaAnswerView answer={answer} />}
         </View>
       </ScrollView>
+
+      <Modal visible={showConsent} transparent animationType="fade" onRequestClose={() => setShowConsent(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Before you start</Text>
+            <Text style={styles.modalBody}>
+              Camora records audio from your phone's microphone so it can transcribe questions.
+              Recording the other party of a conversation may be regulated where you live.
+            </Text>
+            <Text style={styles.modalBody}>
+              By tapping Continue, you confirm that you have informed the other party that audio
+              is being captured and that you have the legal right to record.
+            </Text>
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalCancel} onPress={() => setShowConsent(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.modalContinue} onPress={grantConsent}>
+                <Text style={styles.modalContinueText}>I understand — continue</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -212,4 +253,35 @@ const styles = StyleSheet.create({
   sonaSummary: { color: colors.text, fontSize: 15, fontWeight: '600', lineHeight: 22 },
   sonaSectionTitle: { color: colors.navySoft, fontSize: 12, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.xs },
   sonaSectionBody: { color: colors.text, fontSize: 15, lineHeight: 22 },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  modalCard: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxWidth: 420,
+    width: '100%',
+    gap: spacing.md,
+  },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700' },
+  modalBody: { color: colors.textMuted, fontSize: 14, lineHeight: 21 },
+  modalActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  modalCancelText: { color: colors.textMuted, fontWeight: '600' },
+  modalContinue: {
+    flex: 2,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: colors.navy,
+    alignItems: 'center',
+  },
+  modalContinueText: { color: '#fff', fontWeight: '600' },
 });

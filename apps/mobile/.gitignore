@@ -19,3 +19,5 @@ android/
 
 # OS
 .DS_Store
+play-service-account.json
+store/play-service-account.json
