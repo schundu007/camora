@@ -1314,146 +1314,157 @@ export default function JobsPage() {
             >
               {filteredJobs.map((job) => {
                 const category = detectCategory(job.title);
-                const color = getCategoryColor(category);
-                const textColor = getCategoryTextColor(category);
                 const categoryLabel = getCategoryLabel(category);
                 const workType = detectWorkType(job.location);
                 const salary = formatSalary(job.salary_min, job.salary_max);
+                const posted = timeAgo(job.posted_date || job.date_found);
 
                 return (
-                  <div
+                  <Link
                     key={job.id}
-                    className="jobs-card card-glow"
+                    to={`/jobs/${job.id}/prepare`}
+                    className="jobs-card"
                     style={{
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
-                      borderRadius: '16px',
+                      borderRadius: '8px',
                       display: 'flex',
                       flexDirection: 'column',
-                      cursor: 'default',
-                      boxShadow: 'none',
-                      '--glow-hover': '0 20px 60px var(--accent-subtle)',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      transition: 'border-color 0.15s, background 0.15s',
                     } as React.CSSProperties}
                   >
-                    {/* Compact colored strip + title row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
+                    {/* Header — logo · title · company · category badge */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 18px 12px' }}>
                       {(() => {
                         const logoPath = getCompanyLogoPath(job.company_name);
+                        const logoBox = { width: '44px', height: '44px', borderRadius: '8px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' } as React.CSSProperties;
                         if (logoPath) {
                           return (
-                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
-                              <img src={logoPath} alt={job.company_name} width={26} height={26} style={{ objectFit: 'contain', borderRadius: 4 }} loading="lazy" />
+                            <div style={logoBox}>
+                              <img src={logoPath} alt={job.company_name} width={28} height={28} style={{ objectFit: 'contain', borderRadius: 4 }} loading="lazy" />
                             </div>
                           );
                         }
-                        // Dynamic logo via logo.dev API
                         const domain = job.company_name.toLowerCase()
                           .replace(/\s+(inc|corp|ltd|llc|co|group|technologies|labs|systems|platform|platforms|solutions)\.?$/i, '')
                           .replace(/[^a-z0-9]/g, '') + '.com';
                         const logoDevUrl = `https://img.logo.dev/${domain}?token=pk_WTNVbqXXTuqc9alm89LirQ&size=64&format=png`;
                         return (
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
+                          <div style={logoBox}>
                             <img
                               src={logoDevUrl}
                               alt={job.company_name}
-                              width={26} height={26}
+                              width={28} height={28}
                               style={{ objectFit: 'contain', borderRadius: 4 }}
                               loading="lazy"
                               onError={(e) => {
                                 const target = e.currentTarget;
                                 target.style.display = 'none';
-                                target.parentElement!.innerHTML = `<span style="color: var(--text-primary); font-size: 16px; font-weight: 800;">${job.company_name.charAt(0).toUpperCase()}</span>`;
+                                target.parentElement!.innerHTML = `<span style="color: var(--text-primary); font-size: 16px; font-weight: 700;">${job.company_name.charAt(0).toUpperCase()}</span>`;
                               }}
                             />
                           </div>
                         );
                       })()}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                           {job.title}
                         </h3>
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.company_name}</div>
-                      </div>
-                      <div className="flex gap-1" style={{ flexShrink: 0 }}>
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: textColor, background: `${color}14`, padding: '2px 8px', borderRadius: '9999px', border: `1px solid ${color}30` }}>{categoryLabel}</span>
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {job.company_name}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Card details */}
-                    <div style={{ padding: '12px 16px 0' }}>
-                      {/* Location + Work Type + Posted */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {job.location && (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <svg width="12" height="12" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                            </svg>
-                            {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
+                    {/* Metadata row — location · work type · posted */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '0 18px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {job.location && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                          </svg>
+                          {job.location.length > 32 ? job.location.slice(0, 32) + '…' : job.location}
+                        </span>
+                      )}
+                      {workType && (
+                        <>
+                          <span style={{ color: 'var(--text-muted)' }}>·</span>
+                          <span>{workType}</span>
+                        </>
+                      )}
+                      {posted && (
+                        <>
+                          <span style={{ color: 'var(--text-muted)' }}>·</span>
+                          <span style={{ color: 'var(--text-muted)' }}>{posted}</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Salary + category — neutral, single line */}
+                    {(salary || categoryLabel) && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '8px 18px 0', flexWrap: 'wrap' }}>
+                        {salary ? (
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{salary}</span>
+                        ) : <span />}
+                        {categoryLabel && (
+                          <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                            {categoryLabel}
                           </span>
                         )}
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? 'var(--accent)' : workType === 'Hybrid' ? 'var(--cam-gold-leaf-text)' : 'var(--text-muted)', background: workType === 'Remote' ? 'var(--accent-subtle)' : workType === 'Hybrid' ? 'var(--cam-gold-leaf-50)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
+                    )}
 
-                      {/* Salary + Posted date row */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
-                        {salary ? (
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)' }}>{salary}</span>
-                        ) : (
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Salary not listed</span>
-                        )}
-                        {timeAgo(job.posted_date || job.date_found) && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{timeAgo(job.posted_date || job.date_found)}</span>
+                    {/* Tech stack tags — neutral chips */}
+                    {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', padding: '10px 18px 0' }}>
+                        {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
+                          <span key={tech} style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                            {tech}
+                          </span>
+                        ))}
+                        {job.ai_tech_stack.length > 5 && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', padding: '3px 4px' }}>+{job.ai_tech_stack.length - 5}</span>
                         )}
                       </div>
+                    )}
 
-                      {/* Department + Source */}
-                      {(job.department || job.source) && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
-                          {job.department && (
-                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '4px' }}>
-                              {job.department.length > 25 ? job.department.slice(0, 25) + '...' : job.department}
-                            </span>
-                          )}
-                          {job.source && (
-                            <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)' }}>
-                              via {job.source}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Tech stack tags */}
-                      {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
-                          {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
-                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'var(--accent-subtle)', padding: '2px 7px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-                              {tech}
-                            </span>
-                          ))}
-                          {job.ai_tech_stack.length > 5 && (
-                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{job.ai_tech_stack.length - 5}</span>
-                          )}
-                        </div>
-                      )}
+                    {/* Footer — primary "View job" + secondary actions.
+                        e.preventDefault on the secondary link clicks so they
+                        don't also trigger the parent <Link>'s navigation. */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderTop: '1px solid var(--border)', padding: '12px 18px', marginTop: '14px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--accent)' }}>
+                        View job
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <a
+                          href={job.job_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                          Apply
+                        </a>
+                        <Link
+                          to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                          Resume
+                        </Link>
+                      </div>
                     </div>
-
-                    {/* Action links */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', padding: '10px 16px', marginTop: '10px' }}>
-                      <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        Apply
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
-                      </a>
-                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        Resume
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                      </Link>
-                      <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        Prepare
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                      </Link>
-                    </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -1499,18 +1510,21 @@ export default function JobsPage() {
           display: none;
         }
 
-        /* Card hover — expand only the hovered card */
+        /* Card hover — Google-careers-style subtle bg shift, no heavy
+           shadow. The card is now an entire <Link> to the prep page; the
+           secondary action links inside use stopPropagation so they
+           don't double-navigate. */
         .jobs-card {
-          transition: box-shadow 0.3s, border-color 0.3s;
+          transition: border-color 0.15s, background 0.15s, transform 0.15s;
           position: relative;
           z-index: 1;
           break-inside: avoid;
           margin-bottom: 20px;
         }
         .jobs-card:hover {
-          box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
-          border-color: var(--border-hover) !important;
-          z-index: 10;
+          border-color: var(--accent) !important;
+          background: var(--bg-elevated) !important;
+          z-index: 2;
         }
         .jobs-grid { column-count: 4; }
         @media (max-width: 1280px) {
