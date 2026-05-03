@@ -465,8 +465,8 @@ export default function TopicDetail({
   // Layered-design fallback: when a topic data file doesn't carry an inline
   // `layeredDesign` array, fall through to the build-time generated map
   // populated by apps/frontend/scripts/extract-layered-design.mjs (Phase 1
-  // of the diagram pipeline). The renderer (RoughLayeredDiagram) reads
-  // this exact shape so swapping in the generated array is invisible.
+  // of the diagram pipeline). TopicDiagram uses topicId + the same
+  // shape via the pre-baked PNG, so the runtime path is invisible.
   const effectiveLayeredDesign = (Array.isArray(topicDetails.layeredDesign) && topicDetails.layeredDesign.length)
     ? topicDetails.layeredDesign
     : (selectedTopic && GENERATED_LAYERED_DESIGN[selectedTopic])
