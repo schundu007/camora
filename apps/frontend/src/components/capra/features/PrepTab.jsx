@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getToken } from '../../../utils/authHeaders.js';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-const isElectron = false; // Electron removed in unified frontend
 
 // Platform categories - using initials instead of generic icons
 const CODING_PLATFORMS = {
@@ -23,94 +22,49 @@ const PREP_PLATFORMS = {
 };
 
 export default function PrepTab({ isOpen, onClose }) {
-  // State for both webapp and desktop
   const [platformStatus, setPlatformStatus] = useState({});
   const [loading, setLoading] = useState(true);
-  const [loggingIn, setLoggingIn] = useState(null);
   const [activeTab, setActiveTab] = useState('coding');
   const [fetchUrl, setFetchUrl] = useState('');
   const [fetching, setFetching] = useState(false);
   const [fetchedContent, setFetchedContent] = useState(null);
   const [showExtensionInfo, setShowExtensionInfo] = useState(false);
 
-  // Load platform status - works for both webapp and desktop
   useEffect(() => {
     if (!isOpen) return;
 
     async function loadStatus() {
       setLoading(true);
-
-      if (isElectron && window.electronAPI?.getPlatformStatus) {
-        // Desktop: get status from Electron
-        try {
-          const status = await window.electronAPI.getPlatformStatus();
-          setPlatformStatus(status);
-        } catch (err) {
-          console.error('Failed to load platform status:', err);
+      try {
+        const token = getToken();
+        const headers = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await fetch(API_URL + '/api/auth/status', {
+          credentials: 'include',
+          headers,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPlatformStatus(data);
         }
-      } else {
-        // Webapp: get status from backend (synced via extension)
-        try {
-          const token = getToken();
-          const headers = {};
-          if (token) headers.Authorization = `Bearer ${token}`;
-          const res = await fetch(API_URL + '/api/auth/status', {
-        credentials: 'include',
-        headers: { ...getAuthHeaders() }, headers });
-          if (res.ok) {
-            const data = await res.json();
-            setPlatformStatus(data);
-          }
-        } catch (err) {
-          console.error('Failed to load platform status:', err);
-        }
+      } catch (err) {
+        console.error('Failed to load platform status:', err);
       }
-
       setLoading(false);
     }
 
     loadStatus();
   }, [isOpen]);
 
-  const handleLogin = async (platform) => {
-    if (!isElectron || !window.electronAPI?.platformLogin) return;
-
-    setLoggingIn(platform);
-    try {
-      const result = await window.electronAPI.platformLogin(platform);
-      if (result.success) {
-        const status = await window.electronAPI.getPlatformStatus();
-        setPlatformStatus(status);
-      }
-    } catch (err) {
-      console.error('Login failed:', err);
-    } finally {
-      setLoggingIn(null);
-    }
-  };
-
-  const handleLogout = async (platform) => {
-    if (!isElectron || !window.electronAPI?.platformLogout) return;
-
-    try {
-      await window.electronAPI.platformLogout(platform);
-      const status = await window.electronAPI.getPlatformStatus();
-      setPlatformStatus(status);
-    } catch (err) {
-      console.error('Logout failed:', err);
-    }
-  };
-
   const handleRefreshStatus = async () => {
-    if (isElectron) return;
-
     try {
       const token = getToken();
       const headers = {};
       if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch(API_URL + '/api/auth/status', {
         credentials: 'include',
-        headers: { ...getAuthHeaders() }, headers });
+        headers,
+      });
       if (res.ok) {
         const data = await res.json();
         setPlatformStatus(data);
@@ -133,7 +87,6 @@ export default function PrepTab({ isOpen, onClose }) {
 
       const res = await fetch(API_URL + '/api/fetch', {
         credentials: 'include',
-        headers: { ...getAuthHeaders() },
         method: 'POST',
         headers,
         body: JSON.stringify({ url: fetchUrl }),
@@ -209,9 +162,8 @@ export default function PrepTab({ isOpen, onClose }) {
 
         {/* Content */}
         <div className="p-4 max-h-[60vh] overflow-y-auto bg-[var(--bg-elevated)]">
-          {/* Browser Extension Notice - Webapp only */}
-          {!isElectron && (
-            <div className="mb-4 p-4 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {/* Browser Extension Notice */}
+          <div className="mb-4 p-4 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--warning)' }}>
                   <svg className="w-4 h-4" style={{ color: '#FFFFFF' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -269,7 +221,6 @@ export default function PrepTab({ isOpen, onClose }) {
                 </div>
               )}
             </div>
-          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
@@ -281,7 +232,6 @@ export default function PrepTab({ isOpen, onClose }) {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {Object.entries(platforms).map(([key, platform]) => {
                   const isAuthenticated = platformStatus[key]?.authenticated;
-                  const isLoggingIn = loggingIn === key;
                   const initials = platform.name.split(/(?=[A-Z])/).map(w => w[0]).join('').slice(0, 2);
 
                   return (
@@ -305,30 +255,7 @@ export default function PrepTab({ isOpen, onClose }) {
                           </div>
                         </div>
 
-                        {/* Desktop: show login/logout buttons */}
-                        {isElectron && (
-                          isAuthenticated ? (
-                            <button
-                              onClick={() => handleLogout(key)}
-                              className="px-2 py-1 text-xs font-medium rounded transition-colors"
-                              style={{ color: 'var(--danger)', background: 'transparent' }}
-                            >
-                              Disconnect
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleLogin(key)}
-                              disabled={isLoggingIn}
-                              className="px-2 py-1 text-xs font-medium rounded transition-colors disabled:opacity-50"
-                              style={{ background: platform.color, color: '#FFFFFF' }}
-                            >
-                              {isLoggingIn ? '...' : 'Login'}
-                            </button>
-                          )
-                        )}
-
-                        {/* Webapp: show checkmark for connected */}
-                        {!isElectron && isAuthenticated && (
+                        {isAuthenticated && (
                           <svg className="w-5 h-5" style={{ color: 'var(--accent)' }} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
@@ -391,10 +318,7 @@ export default function PrepTab({ isOpen, onClose }) {
         {/* Footer */}
         <div className="px-4 py-3 bg-[var(--bg-elevated)] border-t border-[var(--border)]">
           <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-            {isElectron
-              ? 'Connect to platforms to auto-fetch problems • Sessions persist across restarts'
-              : 'Install the browser extension to sync your platform logins and auto-fetch problems'
-            }
+            Install the browser extension to sync your platform logins and auto-fetch problems
           </p>
         </div>
       </div>

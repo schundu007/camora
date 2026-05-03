@@ -408,12 +408,8 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
   const [jdPopupPos, setJdPopupPos] = useState({ x: 0, y: 0 });
   const [isDraggingJD, setIsDraggingJD] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [accountLinked, setAccountLinked] = useState(false);
-  const [linkingAccount, setLinkingAccount] = useState(false);
   const dropdownRef = useRef(null);
   const newCompanyInputRef = useRef(null);
-
-  const isElectron = false; // Electron removed in unified frontend
 
   // Get filtered sections based on active company (e.g., RRK only for Google)
   const sections = getFilteredSections(activeCompany);
@@ -1249,75 +1245,6 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Interview Prep</h2>
             </div>
             <div className="flex items-center gap-2">
-              {/* Cloud Sync Status (Electron only) */}
-              {isElectron && (
-                <button
-                  onClick={async () => {
-                    if (accountLinked) {
-                      const ok = await dialogConfirm({
-                        title: 'Unlink your cloud account?',
-                        message: 'Your data stays on this device only. Sign back in any time to re-enable cloud sync.',
-                        confirmLabel: 'Unlink',
-                        tone: 'danger',
-                      });
-                      if (ok) {
-                        await window.electronAPI.accountLogout();
-                        setAccountLinked(false);
-                      }
-                    } else {
-                      setLinkingAccount(true);
-                      try {
-                        const result = await window.electronAPI.accountLogin('google');
-                        if (result.success) {
-                          setAccountLinked(true);
-                          // Reload data from cloud
-                          setIsLoadingCompany(true);
-                          const cloudData = await loadCloudData();
-                          if (cloudData) {
-                            setCompanies(cloudData.companies);
-                            setActiveCompany(cloudData.activeCompany);
-                            if (cloudData.activeCompany && cloudData.data[cloudData.activeCompany]) {
-                              setInputs(cloudData.data[cloudData.activeCompany].inputs || { ...EMPTY_INPUTS });
-                              setGenerated(cloudData.data[cloudData.activeCompany].generated || { ...EMPTY_GENERATED });
-                              setCustomSections(cloudData.data[cloudData.activeCompany].customSections || []);
-                            }
-                            saveCompanyData(cloudData);
-                          }
-                          setTimeout(() => setIsLoadingCompany(false), 100);
-                        }
-                      } finally {
-                        setLinkingAccount(false);
-                      }
-                    }
-                  }}
-                  disabled={linkingAccount}
-                  className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg transition-colors"
-                  style={{
-                    background: 'var(--accent-subtle)',
-                    color: 'var(--accent)',
-                    border: '1px solid var(--border)',
-                  }}
-                  title={accountLinked ? 'Cloud sync enabled - click to unlink' : 'Link account for cloud sync'}
-                >
-                  {linkingAccount ? (
-                    <span className="animate-spin">⟳</span>
-                  ) : accountLinked ? (
-                    <>
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z" />
-                      </svg>
-                      <span>Synced</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      <span>Link</span>
-                    </>
-                  )}
-                </button>
-              )}
               {!isDedicatedWindow && (
                 <button
                   onClick={onClose}

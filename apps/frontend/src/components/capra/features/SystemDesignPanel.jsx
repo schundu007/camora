@@ -300,7 +300,6 @@ function ASCIIDiagram({ systemDesign, detailed = false }) {
 }
 
 export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGenerateEraser = false, onGenerateEraserDiagram, question, cloudProvider = 'auto', qaHistory = [], onFollowUpQuestion, isProcessingFollowUp = false, diagramOnly = false }) {
-  const isElectron = false; // Electron removed in unified frontend
   // Cloud-aware text translator. AWS service names embedded in the LLM
   // response (overview, architecture descriptions, API blurbs) get
   // swapped to the chosen cloud's equivalents at render time. This is a
