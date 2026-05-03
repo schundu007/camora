@@ -257,31 +257,33 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           }}
         />
         <div className="relative px-3 sm:px-4 md:px-6 pt-5 md:pt-7 pb-10 md:pb-12">
-          <div className="flex items-baseline gap-2 leading-none" style={{ color: '#FFFFFF', fontFamily: 'var(--font-code)' }}>
-            <span
-              className="font-bold tabular-nums"
-              style={{
-                fontSize: 'clamp(48px, 8vw, 72px)',
-                letterSpacing: '-0.02em',
-                textShadow: '0 0 24px rgba(255,255,255,0.18)',
-              }}
-            >
-              {hh12}:{mm}
-            </span>
-            <span
-              className="font-semibold tabular-nums"
-              style={{
-                fontSize: 'clamp(18px, 2.5vw, 24px)',
-                color: 'var(--cam-gold-leaf-lt)',
-                textShadow: '0 0 18px rgba(217,181,67,0.35)',
-              }}
-            >
-              {ampm}
-            </span>
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="flex items-baseline justify-center gap-2 leading-none" style={{ color: '#FFFFFF', fontFamily: 'var(--font-code)' }}>
+              <span
+                className="font-bold tabular-nums"
+                style={{
+                  fontSize: 'clamp(48px, 8vw, 72px)',
+                  letterSpacing: '-0.02em',
+                  textShadow: '0 0 24px rgba(255,255,255,0.18)',
+                }}
+              >
+                {hh12}:{mm}
+              </span>
+              <span
+                className="font-semibold tabular-nums"
+                style={{
+                  fontSize: 'clamp(18px, 2.5vw, 24px)',
+                  color: 'var(--cam-gold-leaf-lt)',
+                  textShadow: '0 0 18px rgba(217,181,67,0.35)',
+                }}
+              >
+                {ampm}
+              </span>
+            </div>
+            <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.78)' }}>{dateStr}</div>
+            <h1 className="mt-4 text-xl font-bold text-white">{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Launch an AI assistant for your next interview.</p>
           </div>
-          <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.78)' }}>{dateStr}</div>
-          <h1 className="mt-4 text-xl font-bold text-white">{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Launch an AI assistant for your next interview.</p>
         </div>
         {/* Soft fade into the body — replaces the diagonal divider */}
         <div
@@ -291,7 +293,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         />
       </div>
 
-      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-2 md:pb-3">
+      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-2 md:pb-3 max-w-5xl mx-auto w-full">
 
       {/* Launch Now */}
       <div className="mb-8">
