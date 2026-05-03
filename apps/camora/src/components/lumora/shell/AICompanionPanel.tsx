@@ -1244,11 +1244,15 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           // On phones (<sm) the side cells stack into a column so the mic
           // pill never gets squeezed into a single tile-wide strip.
           return (
-            <div className="w-full grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 py-2 rounded-xl"
+            <div
+              className="w-full grid grid-cols-[auto_auto] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 py-2 rounded-xl"
               style={{ background: bg, border: `1px solid ${border}` }}
             >
-              {/* LEFT — status icon + title + hint */}
-              <div className="flex items-center gap-2 min-w-0 justify-self-start">
+              {/* LEFT — status icon + title. Hint paragraph only renders
+                  on ≥sm so phones don't lose ~40 vertical px to a
+                  one-line subtitle that pushes the mic + enroll button
+                  off screen. */}
+              <div className="flex items-center gap-2 min-w-0 justify-self-start col-span-2 sm:col-span-1">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
                   <path d="M19 10v2a7 7 0 01-14 0v-2" />
@@ -1257,13 +1261,13 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                 </svg>
                 <div className="min-w-0">
                   <p className="text-[12px] md:text-[11px] font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</p>
-                  <p className="text-[10px] leading-tight truncate" style={{ color: 'var(--text-muted)' }}>{hint}</p>
+                  <p className="hidden sm:block text-[10px] leading-tight truncate" style={{ color: 'var(--text-muted)' }}>{hint}</p>
                 </div>
               </div>
               {/* MIDDLE — MIC + AUTO controls. Owns its own pill chrome
                   so it reads as the primary action even on a tinted
                   banner background. */}
-              <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl shrink-0 justify-self-center"
+              <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl shrink-0 justify-self-start sm:justify-self-center"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 <AudioCapture onTranscription={handleAutoTranscription} />
               </div>
@@ -1298,7 +1302,17 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: 'var(--cam-primary)' }} title="Assistant">
+    <button
+      onClick={onClick}
+      className="fixed right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105"
+      style={{
+        // Float above the mobile bottom nav (56px + safe-area-inset)
+        // so the toggle never overlaps the Home/Code/Design/Prep tabs.
+        bottom: 'calc(80px + env(safe-area-inset-bottom))',
+        background: 'var(--cam-primary)',
+      }}
+      title="Assistant"
+    >
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}
     </button>
