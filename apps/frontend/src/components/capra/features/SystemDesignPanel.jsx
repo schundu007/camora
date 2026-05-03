@@ -321,7 +321,12 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   // ASCII fallback) keeps reading values, just with no setter wired to
   // user input.
   const [diagramDetailLevel, setDiagramDetailLevel] = useState('detailed');
-  const [diagramDirection] = useState('TB');
+  // direction is locked to TB on the server-side rendering pipeline,
+  // but the local state still gets toggled when a user picks a cached
+  // detail variant. Keep both reader + setter so handleGenerateDiagram
+  // can reflect the active direction in cacheKey lookups without
+  // throwing ReferenceError on the dropped setter.
+  const [diagramDirection, setDiagramDirection] = useState('TB');
   const [showASCII, setShowASCII] = useState(true);
   const [diagramScale, setDiagramScale] = useState(1);
   const [diagramTranslate, setDiagramTranslate] = useState({ x: 0, y: 0 });
