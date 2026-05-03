@@ -201,15 +201,24 @@ LAYOUT DIRECTION: {direction.upper()} ({direction_word}-flowing).
 The first line of the body MUST be:
   direction: {direction_word}
 
-ICON PALETTE — for any node whose label matches a service in this list,
-add the matching `icon` directive verbatim (do not modify the URL,
-do not invent new URLs):
+ICON PALETTE — MANDATORY for every service node whose label matches an
+entry in this list. Without icons the diagram is just labeled
+rectangles; with them it's a real architecture sketch. Treat the
+`icon:` directive as REQUIRED, not optional. Copy the URL verbatim —
+do not modify, do not URL-decode, do not invent new URLs.
 
 {icons_palette}
 
-If a service is NOT in the palette, omit the icon directive — D2 will
-render a labeled rectangle, which is fine. NEVER fabricate an
-icons.terrastruct.com URL.
+REQUIREMENTS:
+1. Every node whose label appears in the palette above MUST include
+   the matching `icon:` directive. If the diagram has 7 service
+   nodes and 5 of them match palette entries, 5 of them MUST carry
+   icons. NO EXCEPTIONS.
+2. If a service is not in the palette (e.g. "Counter Service",
+   "Custom Worker"), omit the icon directive — D2 renders a labeled
+   rectangle and that's fine.
+3. NEVER fabricate icons.terrastruct.com URLs — only use URLs from
+   the palette above.
 
 OUTPUT — D2 SOURCE ONLY. No prose, no markdown fences. Example shape:
 
