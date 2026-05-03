@@ -8,7 +8,7 @@ function micDebug(...args: unknown[]) {
   try {
     if (typeof localStorage === 'undefined') return;
     if (localStorage.getItem('lumora_mic_debug') !== 'on') return;
-    // eslint-disable-next-line no-console
+     
     console.log('[mic]', ...args);
   } catch { /* ignore */ }
 }

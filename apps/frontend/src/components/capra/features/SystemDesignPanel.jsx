@@ -5,7 +5,7 @@ import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
 import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
-import { SectionCard, GlassPill } from '../ui';
+import { SectionCard } from '../ui';
 import { resolvePreGeneratedDiagram } from '../../../lib/preGeneratedDiagrams.ts';
 
 
@@ -76,7 +76,6 @@ function CloudArchitectureDiagram({
           console.error('[CloudDiagram] Image load error:', imageUrl, e);
           setImageError(true);
         }}
-        onLoad={() => console.log('[CloudDiagram] Image loaded successfully:', imageUrl)}
       />
     </div>
   );

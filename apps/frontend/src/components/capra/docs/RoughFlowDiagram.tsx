@@ -20,7 +20,7 @@
    light↔dark flips automatically. Stable per-step seeds (hash of index
    + step text) keep the wobble identical across re-renders.
    ────────────────────────────────────────────────────────────────────── */
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { RoughBox, RoughArrow } from '../features/RoughShapes';
 
 interface RoughFlowDiagramProps {

@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import ScoreCard from '../components/capra/features/ScoreCard';
-import CamoraLogo from '../components/shared/CamoraLogo';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 

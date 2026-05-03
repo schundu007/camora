@@ -61,7 +61,7 @@ function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolea
 }
 
 export default function AnalyticsPage() {
-  const { token, user: authUser } = useAuth();
+  const { token } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {

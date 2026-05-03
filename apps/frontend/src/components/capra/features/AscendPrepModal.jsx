@@ -30,7 +30,6 @@ const cacheDiagramImages = async (content) => {
             reader.readAsDataURL(blob);
           });
           q.diagramBase64 = base64;
-          console.log('[DiagramCache] Cached diagram for:', q.title);
         }
       } catch (err) {
         console.warn('[DiagramCache] Failed to cache diagram:', err.message);
@@ -263,7 +262,6 @@ async function loadCloudData() {
       };
     }
 
-    console.log('[CloudSync] Loaded', preps.length, 'companies from cloud');
     return { companies, activeCompany, data };
   } catch (error) {
     console.error('[CloudSync] Error loading cloud data:', error);
@@ -294,7 +292,6 @@ async function createCloudCompany(companyName) {
     }
 
     const { prep } = await response.json();
-    console.log('[CloudSync] Created company in cloud:', companyName);
     return { success: true, id: prep.id };
   } catch (error) {
     console.error('[CloudSync] Error creating company:', error);
@@ -377,7 +374,6 @@ async function renameCloudCompany(cloudId, newName) {
       return false;
     }
 
-    console.log('[CloudSync] Renamed company to:', newName);
     return true;
   } catch (error) {
     console.error('[CloudSync] Error renaming company:', error);
@@ -433,7 +429,6 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
         // Try cloud sync for authenticated users (webapp or Electron with token)
         const isAuth = await checkAuthenticated();
         if (isAuth) {
-          console.log('[CloudSync] Authenticated user, loading from cloud...');
           const cloudData = await loadCloudData();
           if (cloudData) {
             data = cloudData;
@@ -441,7 +436,6 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             saveCompanyData(data);
           } else {
             // Fall back to localStorage if cloud fails
-            console.log('[CloudSync] Cloud load failed, falling back to localStorage');
             data = loadCompanyData();
           }
         } else {
@@ -546,7 +540,6 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
     if (systemDesign && systemDesign.questions) {
       const needsCaching = systemDesign.questions.some(q => q.diagramUrl && !q.diagramBase64);
       if (needsCaching) {
-        console.log('[DiagramCache] Found uncached diagrams, caching...');
         cacheDiagramImages(systemDesign).then(cachedResult => {
           if (cachedResult !== systemDesign) {
             setGenerated(prev => ({ ...prev, 'system-design': cachedResult }));

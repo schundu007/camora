@@ -16,7 +16,7 @@ interface TopBarProps {
 }
 
 export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const [cmdOpen, setCmdOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,15 +36,6 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   // wires them up for back-compat, but the mobile hamburger now opens
   // a TopBar-owned dropdown instead of the Sidebar's mobile drawer.
   void onToggleSidebar; void sidebarOpen;
-
-  const initials = user?.name
-    ? user.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : '?';
 
   // Global Cmd+K / Ctrl+K listener
   const handleGlobalKeyDown = useCallback(

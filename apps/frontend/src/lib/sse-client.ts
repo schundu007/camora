@@ -2,7 +2,7 @@
  * SSE (Server-Sent Events) client for streaming Claude responses.
  */
 
-import type { SSEEvent, StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
+import type { StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 

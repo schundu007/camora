@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { dialogConfirm } from '../shared/Dialog';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-import { getAuthHeaders as getBaseAuthHeaders } from '../../utils/authHeaders.js';
 
 
 const ROLES = ['user', 'developer', 'manager', 'admin'];

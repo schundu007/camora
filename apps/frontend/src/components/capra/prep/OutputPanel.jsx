@@ -321,35 +321,21 @@ export default function OutputPanel({ section, content, streamingContent, isGene
     // If content is an object with rawContent, try to parse it as JSON
     if (typeof content === 'object' && content !== null) {
       if (content.rawContent) {
-        console.log('[OutputPanel] rawContent type:', typeof content.rawContent);
-        console.log('[OutputPanel] rawContent first 100 chars:', String(content.rawContent).substring(0, 100));
-        console.log('[OutputPanel] rawContent starts with {:', String(content.rawContent).trim().startsWith('{'));
-        console.log('[OutputPanel] rawContent length:', String(content.rawContent).length);
-        // Log the area around position 11126 where the error typically occurs
-        const raw = String(content.rawContent);
-        if (raw.length > 11100) {
-          console.log('[OutputPanel] Content around error position 11126:', JSON.stringify(raw.substring(11100, 11150)));
-        }
-
         const parsed = tryParseJSON(content.rawContent);
         if (parsed) {
-          console.log('[OutputPanel] Parsed rawContent as JSON, keys:', Object.keys(parsed));
           return parsed;
         }
         // rawContent exists but isn't valid JSON - try extracting JSON manually
-        console.log('[OutputPanel] Direct parse failed, trying to extract JSON...');
         const rawStr = String(content.rawContent);
         const jsonMatch = rawStr.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           try {
             const extracted = JSON.parse(jsonMatch[0]);
-            console.log('[OutputPanel] Extracted JSON successfully, keys:', Object.keys(extracted));
             return extracted;
           } catch (e) {
             console.error('[OutputPanel] Extract JSON failed:', e.message);
           }
         }
-        console.log('[OutputPanel] rawContent is not valid JSON');
       }
       return content;
     }
@@ -358,7 +344,6 @@ export default function OutputPanel({ section, content, streamingContent, isGene
     if (typeof content === 'string') {
       const parsed = tryParseJSON(content);
       if (parsed) {
-        console.log('[OutputPanel] Parsed string content as JSON');
         return parsed;
       }
     }

@@ -11,7 +11,6 @@ import { useAppShell } from '../../components/capra/layout/AppShellContext';
 import MobileBottomNav from '../../components/capra/layout/MobileBottomNav';
 import MobileTabView from '../../components/capra/layout/MobileTabView';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
-import CamoraLogo from '../../components/shared/CamoraLogo';
 
 // Lazy-loaded components (modals, panels rendered on demand)
 const AdminPanel = lazy(() => import('../../components/capra/AdminPanel'));

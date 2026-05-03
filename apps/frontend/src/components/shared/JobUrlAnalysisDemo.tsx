@@ -105,8 +105,6 @@ export default function JobUrlAnalysisDemo() {
   const typed = useTypewriter(URL_TEXT, phase === 'typing', 45);
   const showAnalyzing = phase === 'analyzing';
   const showTech = ['techstack', 'focus', 'studypath'].includes(phase);
-  const showFocus = ['focus', 'studypath'].includes(phase);
-  const showStudy = phase === 'studypath';
 
   const showHeader = ['techstack', 'focus', 'studypath'].includes(phase);
 

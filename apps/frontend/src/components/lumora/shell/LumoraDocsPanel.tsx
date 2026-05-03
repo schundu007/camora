@@ -189,7 +189,7 @@ function escapeJsonStringControls(s: string): string {
 /** Aggressively extract a JSON object from any string */
 function extractJSON(raw: string): any {
   if (!raw || typeof raw !== 'string') return null;
-  let s = stripFences(raw);
+  const s = stripFences(raw);
   // Try direct parse
   try { const p = JSON.parse(s); if (p && typeof p === 'object') return p; } catch {}
   // Try with literal-newline rescue (most common model-output failure mode)
@@ -248,18 +248,6 @@ function safeText(v: any): string {
       .join(' • ');
   }
   return String(v);
-}
-
-/** Render a leaf that *might* be an object — if it is, recurse through
- *  ValueRenderer (which handles structure properly); if it's primitive,
- *  render as text. Use this anywhere a model field could legally vary
- *  between string and object. */
-function SafeLeaf({ val, className, style }: { val: any; className?: string; style?: React.CSSProperties }) {
-  if (val === null || val === undefined) return null;
-  if (typeof val === 'object') {
-    return <div className={className} style={style}><ValueRenderer val={val} /></div>;
-  }
-  return <span className={className} style={style}>{safeText(val)}</span>;
 }
 
 /** Recursively render any value: string, array (of strings or objects), or object.
@@ -407,15 +395,6 @@ function paperCard(accent: string) {
     background: `linear-gradient(180deg, ${accent}24 0%, ${accent}10 100%), var(--bg-surface)`,
     border: `1px solid ${accent}55`,
     boxShadow: `0 1px 0 ${accent}1A, 0 2px 8px -3px rgba(0,0,0,0.08)`,
-  };
-}
-
-/** LC-landing-style "hero header" used at the top of every question.
- *  Solid colored band, bright label text. */
-function sectionHero(accent: string) {
-  return {
-    background: `${accent}14`,
-    borderBottom: `2px solid ${accent}`,
   };
 }
 
@@ -1680,7 +1659,7 @@ function savePrepData(s: PrepData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
-function UploadZone({ label, required, value, fileName, onUpload, onPaste, onClickOverride }: {
+function UploadZone({ label, required, value, fileName, onUpload, onPaste: _onPaste, onClickOverride }: {
   label: string; required?: boolean; value: string; fileName?: string;
   onUpload: (file: File) => void; onPaste: (text: string) => void;
   onClickOverride?: () => void;
@@ -2207,7 +2186,7 @@ function FormattedJD({ text }: { text: string }) {
   );
 }
 
-export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
+export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void }) {
   const { token } = useAuth();
   // Cloud-platform choice for prep-section generation. Sent to the backend
   // so the LLM names services correctly (Cosmos DB vs DynamoDB) instead of

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { dialogConfirm } from '../../shared/Dialog';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
@@ -503,7 +503,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         isSpeakingRef.current = true;
         speechStartTimeRef.current = now;
         setIsSpeaking(true);
-        console.log('[VAD] Speech started');
       }
     } else {
       // Silence detected
@@ -519,9 +518,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
             // Only transcribe if enough time has passed (cooldown)
             if (timeSinceLastTranscription < TRANSCRIPTION_COOLDOWN) {
-              console.log('[VAD] Cooldown active, skipping. Time since last:', timeSinceLastTranscription, 'ms');
             } else {
-              console.log('[VAD] Speech ended, duration:', speechDuration, 'ms');
               // Trigger transcription - include header chunks for valid file format
               const newChunks = allChunksRef.current.slice(lastTranscribedChunkIndexRef.current);
               if (newChunks.length > 0) {
@@ -531,17 +528,14 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 const audioBlob = new Blob(chunksToTranscribe, { type: mimeType });
                 // Only transcribe if we have enough new audio
                 if (audioBlob.size > 10000) {
-                  console.log('[VAD] Transcribing with headers, chunks:', chunksToTranscribe.length, 'size:', audioBlob.size);
                   lastTranscriptionTimeRef.current = now;
                   transcribeAudio(audioBlob, true);
                   lastTranscribedChunkIndexRef.current = allChunksRef.current.length;
                 } else {
-                  console.log('[VAD] Audio too small, skipping:', audioBlob.size);
                 }
               }
             }
           } else {
-            console.log('[VAD] Speech too short, ignoring:', speechDuration, 'ms');
           }
 
           // Reset speech tracking (but keep collecting chunks!)
@@ -570,13 +564,11 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
   // Transcribe audio blob - this transcribes a complete speech segment
   const transcribeAudio = async (audioBlob, isSegmentEnd = false) => {
     if (!audioBlob || audioBlob.size < 1000) {
-      console.log('[Transcribe] Skipping small audio chunk:', audioBlob?.size);
       return;
     }
 
     const extension = getExtensionFromMime(currentMimeTypeRef.current);
     const filename = `recording.${extension}`;
-    console.log('[Transcribe] Sending audio blob, size:', audioBlob.size, 'as:', filename, 'segmentEnd:', isSegmentEnd);
     setIsTranscribing(true);
 
     try {
@@ -596,7 +588,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       }
 
       const data = await response.json();
-      console.log('[Transcribe] Response:', data);
 
       if (data.text && data.text.trim()) {
         let newText = data.text.trim();
@@ -605,7 +596,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         const fillerPhrases = ['you', 'yeah', 'yes', 'no', 'okay', 'ok', 'um', 'uh', 'hmm', 'ah', 'oh', 'right', 'so', 'and', 'the', 'thank you', 'thanks'];
         const lowerText = newText.toLowerCase();
         if (fillerPhrases.includes(lowerText) || newText.length < 5) {
-          console.log('[Transcribe] Skipping filler:', newText);
           return;
         }
 
@@ -618,13 +608,11 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           const secondHalf = words.slice(halfLen, halfLen * 2).join(' ').toLowerCase();
           if (firstHalf === secondHalf) {
             newText = words.slice(0, halfLen).join(' ');
-            console.log('[Transcribe] Removed repeated phrase, cleaned:', newText);
           }
         }
 
         // Only process if this is a completed speech segment with meaningful content (at least 3 words)
         if (isSegmentEnd && newText.length > 10 && words.length >= 3) {
-          console.log('[Transcribe] Got text:', newText);
 
           // Always show the current transcription
           setTranscription(newText);
@@ -664,7 +652,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           });
 
           if (!isDuplicate) {
-            console.log('[Transcribe] New question detected:', newText);
             askedQuestionsRef.current.add(normalizedText);
             lastTranscriptionRef.current = newText;
             setQuestions(prev => [...prev, newText]);
@@ -672,7 +659,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
             // Auto-generate answer for the new question
             autoGenerateAnswer(newText);
           } else {
-            console.log('[Transcribe] Duplicate question, skipping:', newText);
           }
         }
       }
@@ -694,7 +680,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
       if (audioSource === 'system') {
         // Capture system audio via BlackHole or similar virtual audio device
-        console.log('[Recording] Capturing system audio via virtual device...');
         try {
           // First, get all audio devices and look for BlackHole or system audio
           const devices = await navigator.mediaDevices.enumerateDevices();
@@ -709,7 +694,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           );
 
           if (virtualDevice) {
-            console.log('[Recording] Found virtual audio device:', virtualDevice.label);
             stream = await navigator.mediaDevices.getUserMedia({
               audio: {
                 deviceId: { exact: virtualDevice.deviceId },
@@ -720,7 +704,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
             });
           } else {
             // Fallback to screen share for tab audio
-            console.log('[Recording] No virtual device found, trying screen share...');
             stream = await navigator.mediaDevices.getDisplayMedia({
               video: true,
               audio: {
@@ -737,7 +720,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
             throw new Error('No audio track available.');
           }
 
-          console.log('[Recording] System audio captured successfully');
         } catch (err) {
           console.error('[Recording] System audio capture failed:', err);
           setError('BLACKHOLE_SETUP_NEEDED');
@@ -762,16 +744,13 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         // Use selected microphone if it exists, otherwise use default
         if (selectedMic && selectedMicExists) {
           audioConstraints.deviceId = { exact: selectedMic };
-          console.log('[Recording] Using selected mic:', selectedMic);
         } else if (inputs.length > 0) {
           // Fall back to first available device
           const fallbackDevice = inputs[0].deviceId;
           audioConstraints.deviceId = { ideal: fallbackDevice };
           setSelectedMic(fallbackDevice);
-          console.log('[Recording] Selected mic not found, using fallback:', fallbackDevice);
         }
 
-        console.log('[Recording] Getting microphone stream...');
 
         try {
           stream = await navigator.mediaDevices.getUserMedia({
@@ -779,7 +758,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           });
         } catch (firstErr) {
           // If exact device fails, try without device constraint
-          console.log('[Recording] First attempt failed, trying default mic');
           stream = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
@@ -792,7 +770,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
       streamRef.current = stream;
 
-      console.log('[Recording] Started successfully');
 
       // Set up audio analyzer (only if not already created for 'both' mode)
       if (!audioContextRef.current) {
@@ -823,7 +800,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         }
       }
 
-      console.log('[Recording] Using mimeType:', mimeType);
       currentMimeTypeRef.current = mimeType;
 
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -852,14 +828,12 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       };
 
       mediaRecorder.onstop = async () => {
-        console.log('[Recording] Stopped');
         // Transcribe any remaining speech when stopped (with headers for valid format)
         const newChunks = allChunksRef.current.slice(lastTranscribedChunkIndexRef.current);
         if (newChunks.length > 0 && isSpeakingRef.current) {
           const chunksToTranscribe = [...headerChunksRef.current, ...newChunks];
           const audioBlob = new Blob(chunksToTranscribe, { type: mimeType });
           if (audioBlob.size > 5000) {
-            console.log('[Recording] Final transcription, chunks:', chunksToTranscribe.length, 'size:', audioBlob.size);
             await transcribeAudio(audioBlob, true);
           }
         }
@@ -880,7 +854,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
           // Transcribe if we have at least 3KB of new audio
           if (audioBlob.size > 3000) {
-            console.log('[Periodic] Transcribing, chunks:', chunksToTranscribe.length, 'size:', audioBlob.size);
             transcribeAudio(audioBlob, true);
             lastTranscribedChunkIndexRef.current = allChunksRef.current.length;
           }
@@ -904,7 +877,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       // Start level monitoring
       monitorAudioLevel();
 
-      console.log('[Recording] Started successfully');
     } catch (err) {
       console.error('[Recording] Error:', err);
       // Provide helpful error messages
@@ -920,7 +892,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
   // Stop recording
   const stopRecording = () => {
-    console.log('[Recording] Stopping...');
 
 
     // Clear periodic transcription
@@ -1006,20 +977,17 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
     const wordCount = text.trim().split(/\s+/).length;
 
     if (wordCount < minWords) {
-      console.log('[AutoAnswer] Not enough words yet:', wordCount);
       return;
     }
 
     // Don't re-generate for the same text
     if (text === lastAnsweredTextRef.current) {
-      console.log('[AutoAnswer] Already answered this text');
       return;
     }
 
     // Debounce - wait 3s after last transcription before generating
     // This ensures the full question is captured before generating
     autoAnswerTimeoutRef.current = setTimeout(() => {
-      console.log('[AutoAnswer] Auto-generating answer for:', text.substring(0, 50) + '...');
       lastAnsweredTextRef.current = text;
       generateAnswerForText(text);
     }, 3000);
@@ -1031,7 +999,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
     // CRITICAL: Use ref for sync check to prevent race conditions with async state
     if (isGeneratingRef.current) {
-      console.log('[AutoAnswer] Queuing question while generating:', text.substring(0, 30) + '...');
       pendingQuestionsRef.current.push(text);
       return;
     }
@@ -1114,7 +1081,6 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       // Check if there are pending questions to process (FIFO)
       if (pendingQuestionsRef.current.length > 0) {
         const pendingText = pendingQuestionsRef.current.shift(); // Get first in queue
-        console.log('[AutoAnswer] Processing queued question:', pendingText.substring(0, 30) + '...', `(${pendingQuestionsRef.current.length} remaining)`);
         // CRITICAL: Reset isGeneratingRef BEFORE calling generateAnswerForText
         setTimeout(() => {
           isGeneratingRef.current = false;

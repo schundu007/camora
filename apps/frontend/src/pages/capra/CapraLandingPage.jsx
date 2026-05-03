@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import CamoraLogo from '../../components/shared/CamoraLogo';
 
 export default function CapraLandingPage() {
   const { loading } = useAuth();

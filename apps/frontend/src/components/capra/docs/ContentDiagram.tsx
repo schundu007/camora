@@ -22,7 +22,6 @@
        small brightness pull + contrast bump (rule lives in globals.css)
        so the white-authored PNG doesn't outshine the dark page.
    ────────────────────────────────────────────────────────────────────── */
-import React from 'react';
 import DiagramSVG from '../features/DiagramSVG';
 
 interface ContentDiagramProps {

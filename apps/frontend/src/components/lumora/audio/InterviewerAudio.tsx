@@ -64,12 +64,10 @@ export function InterviewerAudioProvider({
         return;
       }
       if (blob.size < 200) {
-        console.log('[InterviewerAudio] blob too small, skipping', { bytes: blob.size });
         return;
       }
       const filterUserVoice = resolvedMethodRef.current === 'room-mic' && voiceEnrolled && voiceFilterEnabled;
       try {
-        console.log('[InterviewerAudio] transcribing', { bytes: blob.size, method: resolvedMethodRef.current, filterUserVoice });
         const result = await transcriptionAPI.transcribe(token, blob, 'interviewer.webm', filterUserVoice);
         const text = result.text?.trim();
         if (result.skipped) {
@@ -80,7 +78,6 @@ export function InterviewerAudioProvider({
           console.warn('[InterviewerAudio] empty transcription', { result });
           return;
         }
-        console.log('[InterviewerAudio] → forwarding to Sona:', text.slice(0, 120));
         onTranscriptionRef.current?.(text);
       } catch (err) {
         console.error('[InterviewerAudio] transcription failed', err);

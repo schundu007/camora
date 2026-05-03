@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Icon } from '../../components/shared/Icons.jsx';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 
@@ -529,7 +528,6 @@ export default function CompanyPrepPage() {
   }
 
   const totalQuestions = companyData.sections.reduce((sum, s) => sum + s.questions.length, 0);
-  const diffStyle = getDifficultyStyle(companyData.stats.difficulty);
 
   return (
     <div className="company-prep-root" style={{ background: 'var(--bg-surface)', minHeight: '100vh' }}>

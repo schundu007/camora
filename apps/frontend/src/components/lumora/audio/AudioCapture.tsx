@@ -3,7 +3,6 @@ import { useAudioCapture } from './hooks/useAudioCapture';
 import { useAudioDevices } from './hooks/useAudioDevices';
 import { useInterviewStore } from '@/stores/interview-store';
 import { transcriptionAPI, speakerAPI } from '@/lib/api-client';
-import { MicrophoneSelector } from './MicrophoneSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { isQuestion } from '@/lib/questionDetector';
 import { InterviewerAudioPill } from './InterviewerAudio';
@@ -35,7 +34,6 @@ function dlog(event: string, data?: Record<string, unknown>) {
   try {
     if (typeof localStorage === 'undefined') return;
     if (localStorage.getItem('lumora_mic_debug') !== 'on') return;
-    // eslint-disable-next-line no-console
     console.log(`[mic] ${event}`, data ?? {});
   } catch { /* noop */ }
 }
@@ -221,7 +219,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();
     if (text.length > 5) {
-      console.log('[Live] Flushing accumulated question:', text.slice(0, 100));
       onTranscription?.(text);
       setStatus('ready', 'Question sent');
     }
@@ -430,7 +427,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           }
         }
         if (result.text) {
-          console.log('[mic] manual transcription:', result.text.slice(0, 120));
           onTranscription?.(result.text, { manual: true });
           setStatus('ready', 'Transcription complete');
         } else {
@@ -538,7 +534,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   const {
     isSupported,
-    error,
     audioLevel,
     startRecording,
     stopRecording,

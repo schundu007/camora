@@ -203,7 +203,7 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
+export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
   // ── State ───────────────────────────────────────────────────────────────
   const [db, setDb] = useState<SqlJsDatabase | null>(null);
   const [dbReady, setDbReady] = useState(false);
@@ -222,7 +222,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
   });
   const [submitResult, setSubmitResult] = useState<'correct' | 'wrong' | null>(null);
   const [selectedCategory, setSelectedCategory] = useState(SQL_CATEGORIES[0]?.id ?? 'basic-joins');
-  const [showHints, setShowHints] = useState(false);
+  const [, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -390,12 +390,6 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [runQuery]);
-
-  // ── Grouped problems by category ───────────────────────────────────────
-  const grouped = SQL_CATEGORIES.map((cat) => ({
-    ...cat,
-    problems: SQL_PROBLEMS.filter((p) => p.category === cat.id),
-  }));
 
   // ── Category problems ───────────────────────────────────────────────────
   const categoryProblems = SQL_PROBLEMS.filter((p) => p.category === selectedCategory);

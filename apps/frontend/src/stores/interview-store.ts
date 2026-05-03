@@ -278,7 +278,7 @@ export const useInterviewStore = create<InterviewState>()(
   setVoiceMode: (mode) => set({ voiceMode: mode }),
 
   setVoiceEnrolled: (enrolled) =>
-    set((state) => ({
+    set(() => ({
       voiceEnrolled: enrolled,
       // Stamp the time on enroll so we can surface a "refresh enrollment"
       // nudge after ~7d (Resemblyzer embeddings drift with mic / room

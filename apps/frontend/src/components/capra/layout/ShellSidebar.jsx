@@ -1,6 +1,5 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
-import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 import { useAppShell } from './AppShellContext.jsx';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile.js';

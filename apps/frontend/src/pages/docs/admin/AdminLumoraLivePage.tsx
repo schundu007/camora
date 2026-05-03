@@ -4,18 +4,6 @@ import DocsCallout from '../../../components/shared/docs/DocsCallout';
 import DocsTable from '../../../components/shared/docs/DocsTable';
 import DocsDiagram from '../../../components/shared/docs/DocsDiagram';
 
-const codeBlockStyle = {
-  background: 'var(--bg-elevated)',
-  border: '1px solid var(--border)',
-  borderRadius: 6,
-  padding: '14px 16px',
-  fontSize: 12.5,
-  fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)',
-  color: 'var(--text-primary)',
-  overflowX: 'auto' as const,
-  lineHeight: 1.55,
-};
-
 const inlineCodeStyle = {
   background: 'var(--bg-elevated)',
   border: '1px solid var(--border)',

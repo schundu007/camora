@@ -23,8 +23,6 @@ const CapraPractice = lazy(() => import('./pages/capra/PracticePage'));
 const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
-const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
-const AchievementsPage = lazy(() => import('./pages/capra/AchievementsPage'));
 const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
@@ -228,16 +226,6 @@ function OwnerRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/" replace />;
   }
   return <>{children}</>;
-}
-
-function PaidShellRoute({ children, feature = 'this feature' }: { children: React.ReactNode; feature?: string }) {
-  return (
-    <ProtectedRoute>
-      <RootShell>
-        <PaywallGate feature={feature}>{children}</PaywallGate>
-      </RootShell>
-    </ProtectedRoute>
-  );
 }
 
 function ScrollToTop() {

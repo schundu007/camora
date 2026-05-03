@@ -11,7 +11,7 @@
    Public API matches the original primitives in DiagramSVG.jsx so all
    ~107 templates auto-upgrade by swapping the import.
    ────────────────────────────────────────────────────────────────────── */
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import rough from 'roughjs/bundled/rough.esm.js';
 
 const generator = rough.generator();

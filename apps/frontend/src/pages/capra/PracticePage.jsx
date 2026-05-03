@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { Link } from 'react-router-dom';
 import { dialogConfirm } from '../../components/shared/Dialog';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { DatabricksThumb } from '../../components/shared/DatabricksThumb';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
-import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
-import GamificationWidget from '../../components/capra/features/GamificationWidget';
 import { SectionCard } from '../../components/capra/ui';
 import { InterviewTimer } from '../../components/shared/timer/InterviewTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
@@ -983,7 +980,6 @@ export default function PracticePage() {
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
 
                 const autoGenerate = async () => {
-                  console.log('[AutoGenerate] clicked, starting...');
                   const q = questions[currentIdx];
                   if (!q) { console.error('[AutoGenerate] No question found'); return; }
                   setSdGenerating(true);

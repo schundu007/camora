@@ -17,11 +17,11 @@ interface PaywallGateProps {
  * Free users see an upgrade prompt instead of the content.
  * Handles post-checkout polling to wait for webhook sync.
  */
-export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
+export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
   const { token, user, subscription, subscriptionLoading, hasTeamAccess, refreshSubscription } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const [polling, setPolling] = useState(false);
+  const [, setPolling] = useState(false);
   const [pollCount, setPollCount] = useState(0);
   // Round-trip token: gated URL → /pricing?returnTo= → Stripe → back here.
   const returnTo = encodeURIComponent(location.pathname + location.search);

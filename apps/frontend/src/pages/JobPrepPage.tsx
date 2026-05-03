@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { detectRoleFromTitle } from '../data/capra/jobRoleTopicMapping';
-import CamoraLogo from '../components/shared/CamoraLogo';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
@@ -242,26 +241,6 @@ function buildStudyPath(job: any): StudyRound[] {
 }
 
 /* ──────────────────────────────── Helpers ──────────────────────────────── */
-
-function slugifyCompany(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-}
-
-/* ──────────────────────────────── Styles ──────────────────────────────── */
-
-const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
-  'Coding': { bg: 'var(--accent-subtle)', text: 'var(--accent-text)', border: 'var(--border)' },
-  'System Design': { bg: 'var(--bg-elevated)', text: 'var(--cam-gold-leaf-text)', border: 'var(--border)' },
-  'Database': { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' },
-  'Architecture': { bg: 'var(--accent-subtle)', text: 'var(--accent-text)', border: 'var(--border)' },
-  'DevOps': { bg: 'var(--accent-subtle)', text: 'var(--accent-text)', border: 'var(--border)' },
-  'API': { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' },
-  'Data': { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' },
-};
-
-function getCategoryStyle(category: string) {
-  return categoryColors[category] || { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' };
-}
 
 /* ──────────────────────────────── Component ──────────────────────────────── */
 
@@ -887,12 +866,9 @@ export default function JobPrepPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: generating && Object.keys(generatedSections).length === 0 ? '0' : '4px' }}>
                 {PREP_SECTIONS.map((sec) => {
                   const isDone = !!generatedSections[sec.key];
-                  const isGenerating = generating && !isDone;
                   const isExpanded = expandedSection === sec.key;
                   const isPending = !generating && !isDone;
 
-                  // Determine status indicator
-                  const currentlyGenerating = generating && !isDone && !Object.keys(generatedSections).includes(sec.key);
                   // Find the first non-completed section to mark as "active"
                   const firstPendingKey = PREP_SECTIONS.find(s => !generatedSections[s.key])?.key;
                   const isActive = generating && sec.key === firstPendingKey;
