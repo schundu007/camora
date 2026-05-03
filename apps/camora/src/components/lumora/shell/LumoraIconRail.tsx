@@ -38,14 +38,18 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
     return false;
   };
 
+  // Active = solid gold-leaf fill with dark text (matches PillToggle).
+  // Inactive = glassy capsule sitting on the navy strip — same rgba(white)
+  // glaze used by GlassPill / SectionCard count badges so the rail reads
+  // as one piece with the answer-section chrome.
   const itemStyle = (active: boolean): React.CSSProperties => ({
-    color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
-    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
-    // Active items get an outward gold glow so the current tab reads
-    // unmistakably across the rail's deep navy gradient.
+    color: active ? '#020617' : 'rgba(255,255,255,0.92)',
+    background: active ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.06)',
+    border: active ? '1px solid var(--cam-gold-leaf)' : '1px solid rgba(255,255,255,0.16)',
+    borderRadius: 999,
     boxShadow: active
       ? '0 0 0 1px rgba(217,181,67,0.55), 0 4px 14px rgba(217,181,67,0.32), inset 0 1px 0 rgba(255,255,255,0.18)'
-      : 'none',
+      : 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.18)',
     fontWeight: active ? 700 : 500,
     transition: 'background-color 200ms, color 200ms, box-shadow 200ms, transform 150ms',
   });
@@ -67,13 +71,19 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       className="hidden md:flex flex-col shrink-0 transition-all duration-200 relative"
       style={{
         width: expanded ? 200 : 60,
-        // Layered atmospheric rail:
-        //   1. Cyan glow at top-right (catches the eye when the rail expands)
-        //   2. Vertical navy gradient with a brighter mid (the existing look)
-        //   3. Soft gold halo behind the gold border line (warmth)
+        // Navy-strip palette — same fixed-hex range as --cam-hero-strip
+        // (used by every Capra SectionCard header), rotated 180deg for the
+        // tall rail and bookended with gold radial caps at top + bottom so
+        // the rail visually mirrors the section-strip chrome instead of
+        // reading as a separate light-blue column. Hardcoded hex keeps the
+        // navy depth consistent across light + dark themes — the previous
+        // gradient leaned on --cam-primary-dk which dark-mode redefines as
+        // a light blue, washing out the rail.
         background:
-          'radial-gradient(circle at 100% 0%, rgba(34,211,238,0.14), transparent 55%),' +
-          'linear-gradient(180deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-dk) 100%)',
+          'radial-gradient(ellipse 220% 30% at 50% 0%, rgba(201,162,39,0.32), transparent 70%),' +
+          'radial-gradient(ellipse 200% 25% at 50% 100%, rgba(201,162,39,0.24), transparent 70%),' +
+          'radial-gradient(ellipse 140% 80% at 0% 50%, rgba(110,150,192,0.18), transparent 75%),' +
+          'linear-gradient(180deg, #051C40 0%, #0B2A5A 30%, #1A4F86 50%, #0B2A5A 70%, #051C40 100%)',
         borderRight: '2px solid var(--cam-gold-leaf)',
         boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.06), 4px 0 24px rgba(0,0,0,0.25)',
         paddingTop: needsMacChromeOffset ? 32 : 12,
