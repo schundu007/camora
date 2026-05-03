@@ -5,7 +5,10 @@ import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import SEO from '../../components/shared/SEO';
 
-const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+// /api/v1/teams/* routes live on the ascend (Capra) backend, not lumora.
+// The previous lumora URL only happened to work because lumorab.cariara.com
+// mirrors ascend in production — local dev with the real lumora-backend would 404.
+const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 type Status = 'pending' | 'accepting' | 'success' | 'error';
 

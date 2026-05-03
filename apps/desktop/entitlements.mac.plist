@@ -6,5 +6,17 @@
     <true/>
     <key>com.apple.security.network.client</key>
     <true/>
+    <!-- Apple Events / Screen capture: needed by Electron's
+         desktopCapturer + setDisplayMediaRequestHandler so the
+         interviewer-audio loopback path works on macOS 14+. Without
+         these, getDisplayMedia silently returns a dead stream and the
+         user sees no error. -->
+    <key>com.apple.security.scripting-targets</key>
+    <dict>
+        <key>com.apple.systemevents</key>
+        <array>
+            <string>com.apple.systemevents.screensharing</string>
+        </array>
+    </dict>
 </dict>
 </plist>

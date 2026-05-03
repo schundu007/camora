@@ -32,6 +32,13 @@ const {
 const APP_URL = process.env.CAMORA_URL || 'https://camora.cariara.com';
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 
+// Electron 40+ regression: setDisplayMediaRequestHandler with
+// audio:'loopback' returns a silent stream when Chromium routes through
+// CoreAudio Tap (the default on macOS 14.2+). Force the legacy
+// ScreenCaptureKit loopback path so interviewer audio actually has
+// signal. See electron/electron#49607.
+app.commandLine.appendSwitch('disable-features', 'MacCatapLoopbackAudioForScreenShare');
+
 // ── Single instance ─────────────────────────────────────────────────────
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 

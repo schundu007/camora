@@ -616,16 +616,15 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       // Reading store directly inside the interval avoids re-running
       // this effect on every isRecording flip (which would cancel and
       // re-create the timer in a tight loop).
+      // lastHealthyAtRef is bumped from handleAudioLevel — it only
+      // fires while the analyser loop is actually running. So even
+      // when the store says isRecording=true, a stale lastHealthyAt
+      // means the analyser stopped (laptop sleep/wake, OS audio
+      // context suspended). Only short-circuit when BOTH the store
+      // says recording AND we got a recent level bump.
       const state = useInterviewStore.getState();
-      if (state.isRecording) {
-        // Note: lastHealthyAtRef is bumped from the audio-level
-        // callback in handleAudioLevel — that fires only while the
-        // analyser loop is actually running. We treat store-says-
-        // recording as a soft signal; the audio-level bump is the
-        // ground truth.
-        return;
-      }
       const stalledMs = Date.now() - lastHealthyAtRef.current;
+      if (state.isRecording && stalledMs < 4000) return;
       if (stalledMs > 4000 && !isStartingRef.current) {
         // Only the AUTO loop is self-healing. A stalled MANUAL
         // recording belongs to the user — they pressed the button,

@@ -43,7 +43,7 @@ export function LumoraShellPage() {
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
-  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, vadThreshold } = useInterviewStore();
+  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useInterviewStore();
   const [settingsDismissed, setSettingsDismissed] = useState(false);
 
   // Sona sidebar (Coding / Design tabs only). Persisted per-surface

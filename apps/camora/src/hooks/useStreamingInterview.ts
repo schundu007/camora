@@ -49,8 +49,12 @@ export function useStreamingInterview() {
   }, []);
 
   const resetForNewQuestion = useCallback(() => {
+    // Abort the in-flight controller but DON'T null the ref — the
+    // unmount cleanup at the top of this hook reads the ref to abort
+    // any still-running stream; nulling it here means a re-mount
+    // mid-stream leaks the SSE reader (setState-on-unmounted spam).
+    // The next ask() reassigns the ref to a fresh AbortController.
     abortControllerRef.current?.abort();
-    abortControllerRef.current = null;
     clearStreamChunks();
     setParsedBlocks([]);
     setLastFromCache(null);
