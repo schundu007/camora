@@ -170,9 +170,19 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
       // startRecording() has already run cleanup; the old recorder still
       // owns its own data.
       const localChunks: Blob[] = [];
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-      });
+      // Pick the first supported mime — webm/opus is what Chromium +
+      // Electron uses; Safari (and certain WebView contexts) rejects
+      // it with NotSupportedError. Falling through to the platform
+      // default keeps recording working everywhere; the backend
+      // handles either content-type.
+      const PREFERRED_MIMES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+      const supportedMime = PREFERRED_MIMES.find(
+        (m) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(m)
+      );
+      const mediaRecorder = new MediaRecorder(
+        stream,
+        supportedMime ? { mimeType: supportedMime } : undefined,
+      );
       mediaRecorderRef.current = mediaRecorder;
 
       // Snapshot the speechStartTime that is RELEVANT to this recording.

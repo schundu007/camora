@@ -98,9 +98,18 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
   } = options;
 
   const abortController = new AbortController();
-  // Wire external signal so caller can abort this stream
+  // Wire external signal so caller can abort this stream. Use a
+  // single { once: true } listener so the registration goes away after
+  // it fires — without that, every question over the lifetime of an
+  // externalSignal would accumulate a closure referencing this
+  // request's controller, and the long-lived signal pinned dead
+  // controllers in memory.
   if (externalSignal) {
-    externalSignal.addEventListener('abort', () => abortController.abort());
+    if (externalSignal.aborted) {
+      abortController.abort();
+    } else {
+      externalSignal.addEventListener('abort', () => abortController.abort(), { once: true });
+    }
   }
 
   const endpoint = conversationId
@@ -288,7 +297,11 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
 
   const abortController = new AbortController();
   if (externalSignal) {
-    externalSignal.addEventListener('abort', () => abortController.abort());
+    if (externalSignal.aborted) {
+      abortController.abort();
+    } else {
+      externalSignal.addEventListener('abort', () => abortController.abort(), { once: true });
+    }
   }
 
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;

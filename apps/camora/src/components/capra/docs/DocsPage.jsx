@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
@@ -242,8 +242,10 @@ export default function DocsPage({ onBack }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Wrapped setters
-  const setActivePage = (page) => {
+  // Wrapped setters — memoized so passing them as props (sidebar,
+  // breadcrumbs, command palette, etc.) doesn't force every consumer
+  // to re-render on every parent state change.
+  const setActivePage = useCallback((page) => {
     setActivePageState(page);
     setSelectedTopicState(null);
     setActiveSection(page);
@@ -254,7 +256,7 @@ export default function DocsPage({ onBack }) {
     setAiQuestion('');
     setAiAnswer('');
     setShowAskAI(false);
-  };
+  }, [setActiveSection]);
 
   // Clear job-role filter
   const clearJobFilter = () => {
@@ -423,6 +425,11 @@ export default function DocsPage({ onBack }) {
   };
 
   // Generate architecture diagram
+  // Per-call AbortController so a fast topic-switch mid-generation
+  // cancels the in-flight fetch — without this, both responses raced
+  // setDiagramData and the *previous* topic's diagram could land
+  // *after* the user already moved to a new topic.
+  const diagramAbortRef = useRef(null);
   const handleGenerateDiagram = async (topicTitle, detailLevel = 'overview', provider = diagramCloudProvider) => {
     if (!topicTitle) return;
 
@@ -435,6 +442,11 @@ export default function DocsPage({ onBack }) {
       return;
     }
 
+    diagramAbortRef.current?.abort();
+    const controller = new AbortController();
+    diagramAbortRef.current = controller;
+    const requestedTopic = selectedTopic;
+
     setGeneratingDiagram(true);
     setDiagramError(null);
     setDiagramDetailLevel(detailLevel);
@@ -446,6 +458,7 @@ export default function DocsPage({ onBack }) {
       const response = await fetch(`${API_URL}/api/diagram/generate`, {
         credentials: 'include',
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
@@ -470,6 +483,10 @@ export default function DocsPage({ onBack }) {
       }
 
       const data = await response.json();
+      // Drop the response if the user already moved on — without this
+      // a slow generation for the previous topic overwrites the user's
+      // current topic's diagram with the wrong picture.
+      if (controller.signal.aborted || requestedTopic !== selectedTopic) return;
       if (data.success && data.image_url) {
         const imageUrl = data.image_url.startsWith('http') ? data.image_url : `${API_URL}${data.image_url}`;
         const result = { imageUrl, cloudProvider: data.cloud_provider || provider, cached: data.cached };
@@ -479,10 +496,14 @@ export default function DocsPage({ onBack }) {
         throw new Error(data.error || 'Python diagram generation failed on server');
       }
     } catch (err) {
+      if (err?.name === 'AbortError') return;
       console.error('Diagram generation error:', err);
       setDiagramError(err.message);
     } finally {
-      setGeneratingDiagram(false);
+      if (diagramAbortRef.current === controller) {
+        diagramAbortRef.current = null;
+        setGeneratingDiagram(false);
+      }
     }
   };
 
@@ -1019,7 +1040,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'checklist', hexColor: 'navy',    title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
                             { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
                             { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (

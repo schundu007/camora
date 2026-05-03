@@ -32,6 +32,12 @@ export function InterviewPage() {
   // Emergency blank: Cmd+B
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // In the desktop build, main.js registers Cmd+B as a global
+      // shortcut that hides/shows the whole window. If we ALSO toggle
+      // `blanked` here, both fire — the window comes back showing the
+      // in-page blank overlay, requiring a second press to clear it.
+      const camo = (window as { camo?: { isDesktop?: boolean } }).camo;
+      if (camo?.isDesktop) return;
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         const el = e.target as HTMLElement;
         if (el.closest('.monaco-editor') || el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
@@ -247,7 +253,6 @@ export function InterviewPage() {
                 )}
               </div>
               <div className="flex items-center gap-3 text-[10px] font-code" style={{ color: 'var(--text-muted)' }}>
-                <span><kbd className="px-1 py-0.5 rounded" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>⌘M</kbd> mic</span>
                 <span><kbd className="px-1 py-0.5 rounded" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>⌘K</kbd> focus</span>
                 <span><kbd className="px-1 py-0.5 rounded" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank</span>
               </div>
