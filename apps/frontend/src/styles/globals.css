@@ -239,8 +239,12 @@
       /* Center accent — soft white halo across the brighter navy waist */
       radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.12), transparent 75%),
       radial-gradient(ellipse 60% 200% at 50% 50%, rgba(110,150,192,0.22), transparent 70%),
-      /* Multi-stop horizontal navy with brighter cam-primary-dk waist */
-      linear-gradient(95deg, #020617 0%, #03132E 25%, var(--cam-primary-dk) 50%, #03132E 75%, #020617 100%);
+      /* Horizontal navy gradient. Edges previously sat at #020617
+         (near-black), which made narrow strips read as a black bar
+         with a navy waist instead of a uniformly-navy strip. New
+         range stays in true navy from edge to edge so every strip
+         looks navy regardless of viewport width. */
+      linear-gradient(95deg, #051C40 0%, #0B2A5A 30%, var(--cam-primary-dk) 50%, #0B2A5A 70%, #051C40 100%);
   }
 
   /* ──────────────────────────────────────────────────────────
