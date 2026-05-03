@@ -349,23 +349,55 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     }
   }, [eraserDiagram?.imageUrl]);
 
-  // Auto-load cached diagram on page load. Cache key follows the same
-  // `${detail}_${direction}` shape used elsewhere in the panel — must
-  // match the live state defaults (overview + LR), otherwise the
-  // auto-fetch hits a different cache slot than the one the panel
-  // renders from.
+  // Locally-cached Eraser diagram from the cache-only lookup. We prefer
+  // this over Graphviz when an Eraser row exists for the question because
+  // Eraser produces cleaner architectures, but we never trigger a fresh
+  // Eraser generation from auto-load (those calls cost Eraser API
+  // credits). The "Auto Pro" pill remains the only way to spend on a
+  // fresh Eraser render.
+  const [cachedEraser, setCachedEraser] = useState(null);
+
+  // Auto-load: try Eraser cache FIRST (free read), fall back to Graphviz
+  // generation if the Eraser row doesn't exist. Eraser cache hits skip
+  // the Graphviz call entirely, saving Anthropic credits and producing
+  // a noticeably better diagram on warmed-up topics.
   useEffect(() => {
-    if (
-      systemDesign?.included &&
-      question &&
-      !diagramCache[diagramKey] &&
-      !generatingDiagram &&
-      autoLoadedRef.current !== question
-    ) {
-      autoLoadedRef.current = question;
-      handleGenerateDiagram(diagramDetailLevel, diagramDirection);
-    }
-  }, [systemDesign?.included, question, diagramKey, diagramDetailLevel, diagramDirection]);
+    if (!systemDesign?.included || !question) return;
+    if (autoLoadedRef.current === question) return;
+    autoLoadedRef.current = question;
+
+    let cancelled = false;
+    (async () => {
+      // 1) Cache-only Eraser lookup (returns 404 if nothing cached).
+      try {
+        const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() };
+        const r = await fetch(`${API_URL}/api/diagram/eraser/lookup`, {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({ description: question, detailLevel: 'overview' }),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (!cancelled && data?.imageUrl) {
+            setCachedEraser({ imageUrl: data.imageUrl, editUrl: data.editUrl });
+            return; // skip Graphviz generation — Eraser is the chosen render
+          }
+        }
+      } catch {
+        // network error — fall through to Graphviz
+      }
+
+      // 2) No Eraser cache → kick off Graphviz with current state defaults.
+      if (cancelled) return;
+      if (!diagramCache[diagramKey] && !generatingDiagram) {
+        handleGenerateDiagram(diagramDetailLevel, diagramDirection);
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemDesign?.included, question]);
 
   const handleGenerateEraser = async () => {
     if (!onGenerateEraserDiagram) return;
