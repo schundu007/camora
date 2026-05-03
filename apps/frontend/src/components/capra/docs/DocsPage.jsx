@@ -7,6 +7,7 @@ import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import TopicIllustration from './TopicIllustration';
 import { DatabricksThumb } from '../../shared/DatabricksThumb';
+import { SectionHero } from '../ui';
 
 /* ── Per-category color family for DatabricksThumb tiles on the
    Prepare overview. Stays inside the existing Camora palette —
@@ -1560,10 +1561,11 @@ export default function DocsPage({ onBack }) {
 
                   {/* Quick Reference */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Cheat Sheet</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Quick Reference</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Cheat Sheet"
+                      title="Quick Reference"
+                      className="mb-4"
+                    />
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
                       <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
@@ -1644,10 +1646,11 @@ export default function DocsPage({ onBack }) {
                 <>
                   {/* Core Concepts Section - Grouped by Category */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Foundations</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Core Concepts</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Foundations"
+                      title="Core Concepts"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {systemDesignCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => systemDesignCategoryMap[t.id] === category.id);
@@ -1714,10 +1717,11 @@ export default function DocsPage({ onBack }) {
 
                   {/* System Design Problems Section - Grouped by Category */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Real-World</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Common System Designs</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Real-World"
+                      title="Common System Designs"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {systemDesignProblemCategories.map((category) => {
                       const roleSDProblemIds = !showAllContent && jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
@@ -1816,11 +1820,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* Low Level Design Problems Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Object-Oriented</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Low Level Design</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Class diagrams, design patterns, and OOP implementations</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Object-Oriented"
+                      title="Low Level Design"
+                      subtitle="Class diagrams, design patterns, and OOP implementations"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {lldProblemCategories.map((category) => {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
@@ -1880,11 +1885,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* Distributed System Patterns Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Advanced</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Distributed System Patterns</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Consistency, availability, and data integrity patterns for distributed systems</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Advanced"
+                      title="Distributed System Patterns"
+                      subtitle="Consistency, availability, and data integrity patterns for distributed systems"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {systemDesignPatternCategories.map((category) => {
                       const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
@@ -1932,11 +1938,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* Microservices Patterns Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Architecture</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Microservices Patterns</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Service communication, resilience, data management, and deployment patterns</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Architecture"
+                      title="Microservices Patterns"
+                      subtitle="Service communication, resilience, data management, and deployment patterns"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {microservicesCategories.map((category) => {
                       const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
@@ -1984,11 +1991,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* System Design Trade-offs Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Critical</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">System Design Trade-offs</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Key architectural decisions and when to choose each approach</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Critical"
+                      title="System Design Trade-offs"
+                      subtitle="Key architectural decisions and when to choose each approach"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {tradeoffCategories.map((category) => {
                       const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
@@ -2036,11 +2044,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* Scalable Systems Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Senior</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Scalable Systems</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Advanced caching, networking, data, and operational patterns for production systems</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Senior"
+                      title="Scalable Systems"
+                      subtitle="Advanced caching, networking, data, and operational patterns for production systems"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {scalableSystemsCategories.map((category) => {
                       const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
@@ -2088,11 +2097,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* Concurrency Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Advanced</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Concurrency & Multithreading</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Advanced"
+                      title="Concurrency & Multithreading"
+                      subtitle="Thread-safe programming, synchronization, and classic problems"
+                      className="mb-4"
+                    />
                     <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                         {concurrencyTopics.map((topic) => (
@@ -2158,10 +2168,11 @@ export default function DocsPage({ onBack }) {
                 <>
                   {/* LLD Learning Topics - Grouped by Category */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Learn</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Concepts & Patterns</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Learn"
+                      title="Concepts & Patterns"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {lldCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => lldCategoryMap[t.id] === category.id);
@@ -2215,11 +2226,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* LLD Practice Problems Section */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Practice</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Design Problems</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Apply OOP and design patterns to real-world systems</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Practice"
+                      title="Design Problems"
+                      subtitle="Apply OOP and design patterns to real-world systems"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {lldProblemCategories.map((category) => {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
@@ -2368,10 +2380,11 @@ export default function DocsPage({ onBack }) {
 
                   {/* Question Categories Section - Grouped by Category with Progress */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Categories</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Question Topics</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Categories"
+                      title="Question Topics"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {behavioralCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => topicCategoryMap[t.id] === category.id);
@@ -2436,11 +2449,12 @@ export default function DocsPage({ onBack }) {
 
                   {/* Company-Specific Section — Upgraded with progress */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Companies</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Company-Specific Prep</h2>
-                      <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Tailored guidance for top tech companies</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Companies"
+                      title="Company-Specific Prep"
+                      subtitle="Tailored guidance for top tech companies"
+                      className="mb-4"
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {companyPrep.map((company) => (
                         <div
@@ -2492,10 +2506,11 @@ export default function DocsPage({ onBack }) {
 
                   {/* Interview Day Playbook — Modern data-point presentation */}
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Game Day</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Interview Day Playbook</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Game Day"
+                      title="Interview Day Playbook"
+                      className="mb-4"
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       {[
                         { icon: 'user', title: 'Use "I" not "We"', desc: 'Own your contribution. Interviewers evaluate you, not your team.', metric: '#1 Rule' },
@@ -2523,10 +2538,11 @@ export default function DocsPage({ onBack }) {
               {activePage === 'microservices' && (
                 <>
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Architecture</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Microservices Patterns</h2>
-                    </div>
+                    <SectionHero
+                      eyebrow="Architecture"
+                      title="Microservices Patterns"
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {microservicesCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => microservicesCategoryMap[t.id] === category.id);
@@ -2678,11 +2694,12 @@ export default function DocsPage({ onBack }) {
               {activePage === 'projects' && (
                 <>
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Build</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Projects</h2>
-                      <p className="text-sm text-[var(--text-muted)] mt-1">24 projects across portfolio, take-home, full-stack, system design, and frontend challenges.</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Build"
+                      title="Projects"
+                      subtitle="24 projects across portfolio, take-home, full-stack, system design, and frontend challenges."
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {projectCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => projectCategoryMap[t.id] === category.id);
@@ -2748,11 +2765,12 @@ export default function DocsPage({ onBack }) {
               {activePage === 'roadmaps' && (
                 <>
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Learning Paths</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Roadmaps</h2>
-                      <p className="text-sm text-[var(--text-muted)] mt-1">12 structured learning paths with visual phase diagrams from beginner to advanced.</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Learning Paths"
+                      title="Roadmaps"
+                      subtitle="12 structured learning paths with visual phase diagrams from beginner to advanced."
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {roadmapCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => roadmapCategoryMap[t.id] === category.id);
@@ -2815,11 +2833,12 @@ export default function DocsPage({ onBack }) {
               {activePage === 'eng-blogs' && (
                 <>
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs tracking-widest uppercase" style={{ color: 'var(--accent)' }}>Learn from the Best</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Engineering Blogs</h2>
-                      <p className="text-sm text-[var(--text-muted)] mt-1">300+ curated articles from 35 top tech companies. Learn how real systems are built at scale.</p>
-                    </div>
+                    <SectionHero
+                      eyebrow="Learn from the Best"
+                      title="Engineering Blogs"
+                      subtitle="300+ curated articles from 35 top tech companies. Learn how real systems are built at scale."
+                      className="mb-4"
+                    />
                     <div className="space-y-3">
                     {engBlogCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => engBlogCategoryMap[t.id] === category.id);
