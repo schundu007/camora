@@ -6,6 +6,7 @@ import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
 import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
 import { SectionCard, GlassPill } from '../ui';
+import { resolvePreGeneratedDiagram } from '../../../lib/preGeneratedDiagrams.ts';
 
 
 /**
@@ -420,13 +421,36 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
       return;
     }
 
-    setGeneratingDiagram(true);
-    setDiagramError(null);
-    setDiagramImgLoaded(false);
     setDiagramDetailLevel(detailLevel);
     setDiagramDirection(direction);
     setDiagramScale(1);
     setDiagramTranslate({ x: 0, y: 0 });
+
+    // 1. Pre-generated team diagrams take priority. apps/frontend/public/diagrams/
+    //    has 80+ eraser-style PNGs hand-curated for common system-design problems.
+    //    These are visually superior to anything the LLM produces, so we serve
+    //    them directly when the question matches a known slug — no API call,
+    //    no Anthropic spend, no LLM latency.
+    const preGeneratedUrl = resolvePreGeneratedDiagram(question, cloudProvider || 'auto');
+    if (preGeneratedUrl) {
+      setDiagramError(null);
+      setDiagramImgLoaded(false);
+      setDiagramCache(prev => ({
+        ...prev,
+        [cacheKey]: {
+          imageUrl: preGeneratedUrl,
+          cloudProvider: cloudProvider || 'auto',
+          detailLevel,
+          direction,
+          source: 'pre-generated',
+        },
+      }));
+      return;
+    }
+
+    setGeneratingDiagram(true);
+    setDiagramError(null);
+    setDiagramImgLoaded(false);
 
     try {
       const response = await fetch(`${API_URL}/api/diagram/generate`, {
