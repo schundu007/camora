@@ -85,22 +85,29 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}
     >
+      {/* Mac Electron traffic-light offset — when the desktop build hides
+          the title bar, render a transparent spacer above the wordmark so
+          the brand mark doesn't sit under the red/yellow/green buttons.
+          Kept as a separate strip so the wordmark itself can match the
+          shell topbar height (h-12) exactly — matching the cam-hero-strip
+          + 2px gold-leaf border chrome on both elements. */}
+      {needsMacChromeOffset && <div aria-hidden="true" className="h-5 shrink-0" />}
+
       {/* Wordmark — sole navy strip on the rail, same chrome grammar as
           every other Camora header (cam-hero-strip + 2px gold-leaf bottom
-          border). Carries the only "navy" hit on the sidebar so the rest
-          stays neutral charcoal per the global color rule. */}
+          border). Height locked to h-12 to match the LumoraShell topbar
+          immediately to the right so the two strips read as one continuous
+          band of chrome instead of staggered boxes. */}
       <Link
         to="/"
-        className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4`}
+        className={`h-12 flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
         style={{
           background: 'var(--cam-hero-strip)',
           borderBottom: '2px solid var(--cam-gold-leaf)',
-          paddingTop: needsMacChromeOffset ? 32 : 14,
-          paddingBottom: 14,
         }}
         title="Camora home"
       >
-        <CamoraLogo size={expanded ? 28 : 24} />
+        <CamoraLogo size={expanded ? 22 : 20} />
         {expanded && <span className="text-sm font-bold whitespace-nowrap text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>}
       </Link>
 
