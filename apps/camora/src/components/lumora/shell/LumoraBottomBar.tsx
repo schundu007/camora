@@ -16,7 +16,7 @@
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { useInterviewStore } from '@/stores/interview-store';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface LumoraBottomBarProps {
   /** Forwarded to AudioCapture — receives `(text, { manual })`. The
@@ -31,6 +31,15 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
   const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
   const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
   const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
+  // Shared dismissal key with AICompanionPanel — same banner copy in
+  // both places, so dismissing once should hide everywhere.
+  const [dismissed, setDismissedState] = useState<boolean>(() => {
+    try { return localStorage.getItem('lumora_voice_banner_dismissed') === '1'; } catch { return false; }
+  });
+  const dismiss = () => {
+    setDismissedState(true);
+    try { localStorage.setItem('lumora_voice_banner_dismissed', '1'); } catch {}
+  };
 
   // Stale enrollment — Resemblyzer embeddings drift with mic / room
   // changes; nudge after ~7 d so the filter stays accurate.
@@ -52,6 +61,26 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
                !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
                enrollmentStale ? 'Voice prints drift over time — re-enroll to keep filtering accurate.' :
                'Sona ignores you and replies only to the interviewer.';
+
+  // When the banner is dismissed, render only the mic so the user
+  // can still talk — the warning copy + enrollment buttons collapse
+  // out. The mic stays visible because it IS the primary action of
+  // this row; without it the whole bottom bar is empty.
+  if (dismissed) {
+    return (
+      <div
+        className="w-full flex items-center justify-center px-3 py-2"
+        aria-label="Audio controls"
+      >
+        <div
+          className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl"
+          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+        >
+          <AudioCapture onTranscription={onTranscription} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -84,10 +113,23 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
         <AudioCapture onTranscription={onTranscription} />
       </div>
 
-      {/* RIGHT — enrollment buttons. Manual route switch removed; voice
-          routing is now driven by Sona's open / minimized state. */}
-      <div className="flex items-center gap-2 justify-end justify-self-end">
+      {/* RIGHT — enrollment buttons + dismiss X. Banner persists its
+          dismissal in localStorage so the same nag isn't shown on
+          every page load once the user has seen it. */}
+      <div className="flex items-center gap-1 justify-end justify-self-end">
         <VoiceEnrollment disabled={false} variant="light" />
+        <button
+          type="button"
+          onClick={dismiss}
+          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+          style={{ color: 'var(--text-muted)' }}
+          aria-label="Dismiss this hint"
+          title="Dismiss"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
       </div>
     </div>
   );
