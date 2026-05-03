@@ -7,6 +7,7 @@ import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
 import SharedPricingCards from '../components/shared/PricingCards';
+import { Icon } from '../components/shared/Icons';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -527,9 +528,7 @@ export default function JobPrepPage() {
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
+              <Icon name="arrowLeft" size={16} />
               Back to jobs
             </Link>
 
@@ -551,17 +550,12 @@ export default function JobPrepPage() {
                 {/* Metadata row — company · location · work type · posted */}
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 18px', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '12px' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m4.5-6H16.5m-1.5 3H16.5m-1.5 3H16.5M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-                    </svg>
+                    <Icon name="building" size={14} />
                     {job.company_name}
                   </span>
                   {job.location && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                      </svg>
+                      <Icon name="mapPin" size={14} />
                       {job.location.length > 60 ? job.location.slice(0, 60) + '…' : job.location}
                     </span>
                   )}
@@ -569,10 +563,7 @@ export default function JobPrepPage() {
                     const wt = (job.location || '').toLowerCase().includes('remote') ? 'Remote' : (job.location || '').toLowerCase().includes('hybrid') ? 'Hybrid' : 'Onsite';
                     return (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                          <rect x="3" y="6" width="18" height="13" rx="2" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                        </svg>
+                        <Icon name="briefcase" size={14} />
                         {wt}
                       </span>
                     );
@@ -611,9 +602,7 @@ export default function JobPrepPage() {
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--accent)'; }}
                     >
                       Apply
-                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                      </svg>
+                      <Icon name="externalLink" size={14} />
                     </a>
                   )}
                   <Link
