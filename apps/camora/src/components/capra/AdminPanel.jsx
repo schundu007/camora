@@ -61,6 +61,14 @@ export default function AdminPanel({ token, onClose }) {
     fetchUsers();
   }, []);
 
+  // Escape key closes the panel — without this, a user staring at a hung
+  // load state can only escape via backdrop-click, which isn't obvious.
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const handleUpdateRoles = async (username, newRoles) => {
     try {
       setError('');

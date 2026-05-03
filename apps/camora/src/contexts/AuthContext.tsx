@@ -56,7 +56,14 @@ interface AuthContextType {
   subscription: SubscriptionInfo | null;
   subscriptionLoading: boolean;
   team: TeamInfo | null;
+  teamLoading: boolean;
   hasTeamAccess: boolean;
+  /** True while EITHER subscription OR team membership is still hydrating —
+   *  PaywallGate reads this to avoid flashing "Upgrade" between the
+   *  subscription fetch resolving and the team fetch resolving (a free-tier
+   *  user who is on a paid team would otherwise see a paywall flash on
+   *  hard refresh of /lumora). */
+  accessLoading: boolean;
   refreshSubscription?: () => void;
   refreshTeam?: () => void;
   logout: () => void;
@@ -71,7 +78,9 @@ const AuthContext = createContext<AuthContextType>({
   subscription: null,
   subscriptionLoading: true,
   team: null,
+  teamLoading: true,
   hasTeamAccess: false,
+  accessLoading: true,
   logout: () => {},
 });
 
@@ -92,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [team, setTeam] = useState<TeamInfo | null>(null);
+  const [teamLoading, setTeamLoading] = useState(true);
 
   useEffect(() => {
     async function init() {
@@ -292,6 +302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // in team_members). Used by PaywallGate so a free user joining a Pro Max
   // team actually gets access to gated features.
   const fetchTeam = useCallback(async (authToken: string, userId: number | undefined) => {
+    setTeamLoading(true);
     try {
       const res = await fetch(`${AUTH_API_URL}/api/v1/teams/me`, {
         credentials: 'include',
@@ -310,11 +321,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch {
       setTeam(null);
+    } finally {
+      setTeamLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!token) { setTeam(null); return; }
+    if (!token) { setTeam(null); setTeamLoading(false); return; }
     fetchTeam(token, user?.id);
   }, [token, user?.id, fetchTeam]);
 
@@ -326,6 +339,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // belong to a team. PaywallGate reads this flag.
   const teamGrantsAccess = !!team && team.plan_type === 'team';
   const hasTeamAccess = (subscription?.plan && subscription.plan !== 'free') || teamGrantsAccess;
+  // Combined hydration flag for paywall gates — true while EITHER fetch
+  // is in flight, false only when both have resolved. Avoids the brief
+  // "Upgrade" flash when subscription resolves first as `free` but the
+  // team fetch is still pending and would have granted access.
+  const accessLoading = subscriptionLoading || teamLoading;
 
   const logout = useCallback(() => {
     setToken(null);
@@ -337,6 +355,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // fetch that's never coming back.
     setSubscriptionLoading(false);
     setTeam(null);
+    setTeamLoading(false);
     // The cariara_sso cookie is httpOnly so JS can't clear it — hit the backend
     // /logout endpoint which returns a Set-Cookie with an expired cookie.
     fetch(`${CAPRA_API_URL}/api/auth/logout`, {
@@ -347,7 +366,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, team, hasTeamAccess, refreshSubscription, refreshTeam, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, team, teamLoading, hasTeamAccess, accessLoading, refreshSubscription, refreshTeam, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -531,7 +531,17 @@ export function LumoraShellPage() {
                       </svg>
                     </div>
                     <p className="text-sm font-medium">No sessions yet</p>
-                    <p className="text-xs mt-1">Start an interview to see your history here.</p>
+                    <p className="text-xs mt-1 mb-4">Start an interview to see your history here.</p>
+                    <Link
+                      to="/lumora"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90"
+                      style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      Start interview
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-2.5">

@@ -18,7 +18,7 @@ interface PaywallGateProps {
  * Handles post-checkout polling to wait for webhook sync.
  */
 export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
-  const { token, user, subscription, subscriptionLoading, hasTeamAccess, refreshSubscription } = useAuth();
+  const { token, user, subscription, accessLoading, hasTeamAccess, refreshSubscription } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [, setPolling] = useState(false);
@@ -69,8 +69,10 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
     return () => clearInterval(timer);
   }, [isCheckoutReturn, hasAccess, pollSubscription]);
 
-  // Loading states
-  if (subscriptionLoading || (isCheckoutReturn && !hasAccess && pollCount <= 15)) {
+  // Loading states — wait for BOTH subscription + team fetches to resolve
+  // before deciding whether to show the gate. accessLoading collapses both
+  // hydration signals so we don't flash "Upgrade" between them.
+  if (accessLoading || (isCheckoutReturn && !hasAccess && pollCount <= 15)) {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4">
         <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
