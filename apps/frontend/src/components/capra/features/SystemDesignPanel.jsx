@@ -743,12 +743,12 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 1: Explanation */}
             {systemDesign.overview && (
-              <SectionCard title="Overview" className="col-span-full">
+              <SectionCard title="Overview" className="col-span-full" accent="var(--cam-gold-leaf)">
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{fmtCloud(systemDesign.overview)}</p>
               </SectionCard>
             )}
             {hasScalability && (
-              <SectionCard title="Scalability" className="col-span-full">
+              <SectionCard title="Scalability" className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="flex flex-wrap gap-1.5">
                   {systemDesign.scalability.map((item, i) => (
                     <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)]" title={item}>
@@ -764,7 +764,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {(hasRequirements || hasTradeoffs || hasEdgeCases) && (
               <>
                 {systemDesign.requirements?.functional?.length > 0 && (
-                  <SectionCard title="Functional" className="col-span-full sm:col-span-3" accent="var(--accent)">
+                  <SectionCard title="Functional" className="col-span-full sm:col-span-3" accent="var(--cam-gold-leaf)">
                     <ul className="space-y-1.5">
                       {systemDesign.requirements.functional.map((req, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -776,7 +776,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </SectionCard>
                 )}
                 {systemDesign.requirements?.nonFunctional?.length > 0 && (
-                  <SectionCard title="Non-Functional" className="col-span-full sm:col-span-3" accent="var(--accent)">
+                  <SectionCard title="Non-Functional" className="col-span-full sm:col-span-3" accent="var(--cam-gold-leaf)">
                     <ul className="space-y-1.5">
                       {systemDesign.requirements.nonFunctional.map((req, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -788,7 +788,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </SectionCard>
                 )}
                 {hasTradeoffs && (
-                  <SectionCard title="Tradeoffs" className="col-span-full sm:col-span-3" accent="#f59e0b">
+                  <SectionCard title="Tradeoffs" className="col-span-full sm:col-span-3" accent="var(--cam-gold-leaf)">
                     <ul className="space-y-1.5">
                       {systemDesign.tradeoffs.slice(0, 5).map((tradeoff, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -800,7 +800,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </SectionCard>
                 )}
                 {hasEdgeCases && (
-                  <SectionCard title="Edge Cases" className="col-span-full sm:col-span-3" accent="#f43f5e">
+                  <SectionCard title="Edge Cases" className="col-span-full sm:col-span-3" accent="var(--cam-gold-leaf)">
                     <ul className="space-y-1.5">
                       {systemDesign.edgeCases.slice(0, 5).map((edge, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
@@ -816,7 +816,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3: Architecture Components */}
             {hasArchitecture && (
-              <SectionCard title="Architecture Components" className="col-span-full">
+              <SectionCard title="Architecture Components" className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="flex flex-wrap gap-1 mb-2">
                   {systemDesign.architecture.components?.map((component, i) => (
                     <span key={i} className="px-1.5 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs rounded border border-[var(--border)]">
@@ -833,7 +833,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3b: API Design */}
             {hasApiDesign && (
-              <SectionCard title="API Design" count={systemDesign.apiDesign.length} className="col-span-full">
+              <SectionCard title="API Design" count={systemDesign.apiDesign.length} className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="space-y-1.5">
                   {systemDesign.apiDesign.map((api, i) => (
                     <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded p-2">
@@ -872,7 +872,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3c: Data Model */}
             {hasDataModel && (
-              <SectionCard title="Data Model" count={systemDesign.dataModel.length} className="col-span-full">
+              <SectionCard title="Data Model" count={systemDesign.dataModel.length} className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 items-start">
                   {systemDesign.dataModel.map((model, i) => (
                     <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded overflow-hidden">
@@ -926,6 +926,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <SectionCard
                 title="Architecture Flow"
                 className="col-span-full"
+                accent="var(--cam-gold-leaf)"
                 actions={
                   <button
                     onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
@@ -946,7 +947,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 5: Tech Justifications (compact grid) */}
             {hasTechJustifications && (
-              <SectionCard title="Technologies" count={systemDesign.techJustifications.length} className="col-span-full">
+              <SectionCard title="Technologies" count={systemDesign.techJustifications.length} className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {systemDesign.techJustifications.map((item, i) => (
                     <div key={i} className="rounded-lg p-3 bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
@@ -969,6 +970,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   <SectionCard
                     title={systemDesign.comparison.approach1.name || 'Approach 1'}
                     bodyClassName="p-3"
+                    accent="var(--cam-gold-leaf)"
                   >
                     <div className="grid grid-cols-2 gap-2">
                       {systemDesign.comparison.approach1.pros?.length > 0 && (
@@ -1004,6 +1006,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   <SectionCard
                     title={systemDesign.comparison.approach2.name || 'Approach 2'}
                     bodyClassName="p-3"
+                    accent="var(--cam-gold-leaf)"
                   >
                     <div className="grid grid-cols-2 gap-2">
                       {systemDesign.comparison.approach2.pros?.length > 0 && (
@@ -1045,6 +1048,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 title="Follow-up Questions"
                 count={systemDesign.followUpQuestions.length}
                 className="col-span-full"
+                accent="var(--cam-gold-leaf)"
               >
                 <ol className="space-y-2.5">
                   {systemDesign.followUpQuestions.map((q, i) => (
