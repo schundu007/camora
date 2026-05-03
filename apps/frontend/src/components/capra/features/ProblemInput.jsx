@@ -200,28 +200,39 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header Row */}
-      <div className="flex items-center justify-between gap-3 mb-3 flex-shrink-0">
+      {/* Header Row — global navy-strip + gold-leaf chrome. Pills inside
+          a glassy capsule with gold-leaf active state, matching the
+          Lumora design Input Tab Header pattern. */}
+      <div
+        className="flex items-center justify-between gap-3 mb-3 flex-shrink-0 px-3 py-2 -mx-4"
+        style={{
+          background: 'var(--cam-hero-strip)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+          marginTop: '-16px',
+        }}
+      >
         {/* Tabs */}
         <div className="flex items-center gap-2">
-          <div className="flex gap-0.5 p-1 rounded-xl border border-[var(--border)]" style={{ background: 'var(--bg-elevated)' }}>
+          <div
+            className="inline-flex items-center gap-1 px-1 py-1"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.16)',
+              borderRadius: 999,
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+            }}
+          >
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabSwitch(tab.id)}
-                  className={`
-                    landing-body flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all duration-200 min-h-[36px] touch:min-h-[40px]
-                    ${activeTab === tab.id
-                      ? 'shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
-                    }
-                  `}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all"
                   style={
                     activeTab === tab.id
-                      ? { background: 'var(--cam-gold-leaf)', color: '#020617' }
-                      : undefined
+                      ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                      : { color: 'rgba(255,255,255,0.85)', borderRadius: 999, background: 'transparent' }
                   }
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -235,7 +246,8 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
           {onToggleExpand && (
             <button
               onClick={onToggleExpand}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors min-h-[36px] min-w-[36px] touch:min-h-[40px] touch:min-w-[40px] flex items-center justify-center"
+              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}
               title="Collapse"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,7 +266,8 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 onClear?.();
               }}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 transition-colors min-h-[36px] min-w-[36px] touch:min-h-[40px] touch:min-w-[40px] flex items-center justify-center"
+              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}
               title="Clear"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
