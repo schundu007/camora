@@ -55,12 +55,14 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
 
   return (
     <div
-      className="w-full grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 py-2 rounded-xl"
+      className="w-full grid grid-cols-[auto_auto] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 py-2 rounded-xl"
       style={{ background: bg, border: `1px solid ${border}` }}
       aria-label="Audio controls"
     >
-      {/* LEFT — voice-filter status icon + title + hint */}
-      <div className="flex items-center gap-2 min-w-0 justify-self-start">
+      {/* LEFT — voice-filter status icon + title. Hint paragraph hides
+          on phones so the banner stays one-row-tall instead of eating
+          ~40 vertical px when stacked. */}
+      <div className="flex items-center gap-2 min-w-0 justify-self-start col-span-2 sm:col-span-1">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
           <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
           <path d="M19 10v2a7 7 0 01-14 0v-2" />
@@ -69,14 +71,14 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
         </svg>
         <div className="min-w-0">
           <p className="text-[12px] md:text-[11px] font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</p>
-          <p className="text-[10px] leading-tight truncate" style={{ color: 'var(--text-muted)' }}>{hint}</p>
+          <p className="hidden sm:block text-[10px] leading-tight truncate" style={{ color: 'var(--text-muted)' }}>{hint}</p>
         </div>
       </div>
 
       {/* CENTER — MIC + AUTO + meter. Owns its own pill chrome so it
           reads as the primary action even on a tinted banner. */}
       <div
-        className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl shrink-0 justify-self-center"
+        className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl shrink-0 justify-self-start sm:justify-self-center"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
       >
         <AudioCapture onTranscription={onTranscription} />

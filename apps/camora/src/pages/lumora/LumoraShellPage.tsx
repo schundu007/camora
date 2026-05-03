@@ -716,9 +716,21 @@ export function LumoraShellPage() {
         />
       )}
 
-      {/* Mobile bottom navigation — visible only on small screens */}
+      {/* Mobile bottom navigation — visible only on small screens.
+          Charcoal chrome with a 2px gold-leaf top rail (the canonical
+          Camora navy-strip / gold-leaf grammar) instead of the solid
+          lapis fill it used to have. Active tab uses the gold-leaf
+          accent; inactive is theme-aware muted text so it stays
+          legible in both light and dark modes. */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 z-40 items-center justify-around"
-        style={{ background: 'var(--cam-primary)', borderTop: '1px solid rgba(255,255,255,0.2)', height: 'calc(56px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        style={{
+          background: 'var(--bg-surface)',
+          borderTop: '2px solid var(--cam-gold-leaf)',
+          boxShadow: '0 -4px 16px rgba(0,0,0,0.18)',
+          height: 'calc(56px + env(safe-area-inset-bottom))',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
@@ -727,11 +739,21 @@ export function LumoraShellPage() {
         ].map(tab => {
           const isActive = activeTab === tab.id;
           return (
-            <Link key={tab.id} to={tab.path} className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1"
-              style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }}>
+            <Link
+              key={tab.id}
+              to={tab.path}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1"
+              style={{ color: isActive ? 'var(--cam-gold-leaf-text, #7A5C0A)' : 'var(--text-muted)' }}
+            >
               {tab.icon}
               <span className="text-[10px] font-bold">{tab.label}</span>
-              {isActive && <span aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b" style={{ background: '#FFFFFF' }} />}
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b"
+                  style={{ background: 'var(--cam-gold-leaf)' }}
+                />
+              )}
             </Link>
           );
         })}

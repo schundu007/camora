@@ -388,7 +388,11 @@ export function CodingSonaSidebarToggle({ open, onToggle, hasSolve }: { open: bo
       className="fixed z-30 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 select-none"
       style={{
         right: 24,
-        bottom: 80,
+        // Mobile: the bottom nav is 56px + safe-area-inset-bottom, so
+        // a fixed 80px sits inside the nav on devices with a software
+        // gesture bar. Add the safe-area inset so the FAB always
+        // floats above the tabs instead of overlapping them.
+        bottom: 'calc(80px + env(safe-area-inset-bottom))',
         background:
           'radial-gradient(circle at 30% 25%, rgba(217,181,67,0.35) 0%, transparent 55%),' +
           'radial-gradient(circle at 70% 80%, rgba(38,97,156,0.55) 0%, transparent 70%),' +
