@@ -1010,217 +1010,57 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* ── Advanced Filter Bar ── */}
-        <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '12px' }}>
-          {/* Toggle + active pills row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
-                background: activeFilterCount > 0 ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
-                border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-              </svg>
-              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </button>
-
-            {/* Active filter pills — neutral chips with × dismiss button */}
-            {[
-              { val: locationFilter, set: setLocationFilter, label: locationFilter },
-              { val: sourceFilter, set: setSourceFilter, label: sourceFilter },
-              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label },
-              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter },
-              { val: companyFilter, set: setCompanyFilter, label: companyFilter },
-              { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label },
-              { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label },
-              { val: salaryMinFilter, set: setSalaryMinFilter, label: `Min $${Math.round(Number(salaryMinFilter) / 1000)}K` },
-              { val: salaryMaxFilter, set: setSalaryMaxFilter, label: `Max $${Math.round(Number(salaryMaxFilter) / 1000)}K` },
-            ].filter(f => f.val).map((f, i) => (
-              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 4px 5px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', background: 'var(--bg-elevated)', borderRadius: '9999px', border: '1px solid var(--border)' }}>
-                {f.label}
-                <button
-                  onClick={() => f.set('')}
-                  aria-label="Remove filter"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '9999px', padding: 0, fontSize: '14px', lineHeight: 1 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+        {/* ── Filter toolbar — horizontal row of compact dropdowns above
+             the cards. No sidebar (per user). All filters inline. */}
+        <div className="w-full lg:max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="jobs-toolbar-select">
+              <option value="">All locations</option>
+              {availableLocations.map((l) => <option key={l.name} value={l.name}>{l.name} ({l.count})</option>)}
+            </select>
+            <select value={workTypeFilter} onChange={(e) => setWorkTypeFilter(e.target.value)} className="jobs-toolbar-select">
+              {WORK_TYPES.map((wt) => <option key={wt.value} value={wt.value}>{wt.label}</option>)}
+            </select>
+            <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)} className="jobs-toolbar-select">
+              {EXPERIENCE_LEVELS.map((el) => <option key={el.value} value={el.value}>{el.label}</option>)}
+            </select>
+            <select value={postedWithinFilter} onChange={(e) => setPostedWithinFilter(e.target.value)} className="jobs-toolbar-select">
+              {POSTED_WITHIN.map((pw) => <option key={pw.value} value={pw.value}>{pw.label}</option>)}
+            </select>
+            <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="jobs-toolbar-select">
+              <option value="">All platforms</option>
+              {availableSources.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.count})</option>)}
+            </select>
             {activeFilterCount > 0 && (
-              <button onClick={clearAllFilters} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', padding: '6px 8px' }}>
+              <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
                 Clear all
               </button>
             )}
           </div>
-
-          {/* Expandable advanced filter panel */}
-          {showFilters && (
-            <div style={{
-              marginTop: '12px',
-              padding: '20px',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-            }}>
-              {/* Row 1: Location, Work Type, Experience, Posted */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
-                <div>
-                  <label className="jobs-filter-label">Location</label>
-                  <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="jobs-filter-select">
-                    <option value="">All Locations</option>
-                    {availableLocations.map((l) => (
-                      <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="jobs-filter-label">Work Type</label>
-                  <select value={workTypeFilter} onChange={(e) => setWorkTypeFilter(e.target.value)} className="jobs-filter-select">
-                    {WORK_TYPES.map((wt) => <option key={wt.value} value={wt.value}>{wt.label}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="jobs-filter-label">Experience Level</label>
-                  <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)} className="jobs-filter-select">
-                    {EXPERIENCE_LEVELS.map((el) => <option key={el.value} value={el.value}>{el.label}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="jobs-filter-label">Date Posted</label>
-                  <select value={postedWithinFilter} onChange={(e) => setPostedWithinFilter(e.target.value)} className="jobs-filter-select">
-                    {POSTED_WITHIN.map((pw) => <option key={pw.value} value={pw.value}>{pw.label}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 2: Platform, Department, Company */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
-                <div>
-                  <label className="jobs-filter-label">Job Platform</label>
-                  <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="jobs-filter-select">
-                    <option value="">All Platforms</option>
-                    {availableSources.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.count})</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="jobs-filter-label">Department</label>
-                  <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="jobs-filter-select">
-                    <option value="">All Departments</option>
-                    {availableDepartments.map((d) => <option key={d.name} value={d.name}>{d.name} ({d.count})</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="jobs-filter-label">Company</label>
-                  <input
-                    type="text"
-                    placeholder="Search companies..."
-                    value={companyFilter}
-                    onChange={(e) => setCompanyFilter(e.target.value)}
-                    list="company-options"
-                    className="jobs-filter-input"
-                  />
-                  <datalist id="company-options">
-                    {availableCompanies.map((c) => <option key={c.name} value={c.name}>{`${c.name} (${c.count})`}</option>)}
-                  </datalist>
-                </div>
-
-                {/* Salary Range */}
-                <div>
-                  <label className="jobs-filter-label">
-                    Salary Range
-                    {salaryRange.min != null && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}> (${Math.round(salaryRange.min / 1000)}K–${Math.round((salaryRange.max || 0) / 1000)}K)</span>}
-                  </label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={salaryMinFilter}
-                      onChange={(e) => setSalaryMinFilter(e.target.value)}
-                      className="jobs-filter-input"
-                      style={{ width: '50%' }}
-                      step={10000}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={salaryMaxFilter}
-                      onChange={(e) => setSalaryMaxFilter(e.target.value)}
-                      className="jobs-filter-input"
-                      style={{ width: '50%' }}
-                      step={10000}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Result count + clear */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  {total} job{total !== 1 ? 's' : ''} found
-                </span>
-                {activeFilterCount > 0 && (
-                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', padding: '4px 8px' }}>
-                    Clear all filters
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          <div style={{ marginTop: '14px', fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+            {total.toLocaleString()} {total === 1 ? 'job' : 'jobs'}
+          </div>
         </div>
 
-        {/* ── Job Cards Grid ── */}
-        <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="w-full lg:max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '40px' }}>
+          <main style={{ width: '100%' }}>
           {loading ? (
-            /* Loading skeleton */
-            <div
-              className="grid gap-5"
-              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            /* Loading skeleton — single column to match the new card list */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
                   className="jobs-skeleton-card"
                   style={{
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border)',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
+                    borderRadius: '12px',
+                    padding: '24px',
                   }}
                 >
-                  <div style={{ height: '80px', background: 'var(--bg-elevated)', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
-                  <div style={{ padding: '20px' }}>
-                    <div style={{ width: '75%', height: '16px', background: 'var(--bg-elevated)', borderRadius: '6px', marginBottom: '12px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
-                    <div style={{ width: '55%', height: '12px', background: 'var(--bg-elevated)', borderRadius: '6px', marginBottom: '10px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
-                    <div style={{ width: '40%', height: '12px', background: 'var(--bg-elevated)', borderRadius: '6px', marginBottom: '16px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
-                    <div className="flex gap-2">
-                      <div style={{ width: '60px', height: '24px', background: 'var(--bg-elevated)', borderRadius: '12px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
-                      <div style={{ width: '60px', height: '24px', background: 'var(--bg-elevated)', borderRadius: '12px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
-                    </div>
-                  </div>
+                  <div style={{ width: '60%', height: '20px', background: 'var(--bg-elevated)', borderRadius: '6px', marginBottom: '14px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
+                  <div style={{ width: '45%', height: '13px', background: 'var(--bg-elevated)', borderRadius: '6px', marginBottom: '20px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
+                  <div style={{ width: '120px', height: '32px', background: 'var(--bg-elevated)', borderRadius: '9999px', animation: 'jobs-pulse 2s ease-in-out infinite' }} />
                 </div>
               ))}
             </div>
@@ -1287,141 +1127,121 @@ export default function JobsPage() {
               className="jobs-grid"
             >
               {filteredJobs.map((job) => {
-                const category = detectCategory(job.title);
-                const categoryLabel = getCategoryLabel(category);
                 const workType = detectWorkType(job.location);
                 const salary = formatSalary(job.salary_min, job.salary_max);
                 const posted = timeAgo(job.posted_date || job.date_found);
 
+                const renderLogo = () => {
+                  const logoPath = getCompanyLogoPath(job.company_name);
+                  if (logoPath) {
+                    return <img src={logoPath} alt={job.company_name} width={16} height={16} style={{ objectFit: 'contain', borderRadius: 2 }} loading="lazy" />;
+                  }
+                  const domain = job.company_name.toLowerCase()
+                    .replace(/\s+(inc|corp|ltd|llc|co|group|technologies|labs|systems|platform|platforms|solutions)\.?$/i, '')
+                    .replace(/[^a-z0-9]/g, '') + '.com';
+                  return (
+                    <img
+                      src={`https://img.logo.dev/${domain}?token=pk_WTNVbqXXTuqc9alm89LirQ&size=32&format=png`}
+                      alt={job.company_name}
+                      width={16} height={16}
+                      style={{ objectFit: 'contain', borderRadius: 2 }}
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  );
+                };
+
                 return (
-                  <Link
+                  <article
                     key={job.id}
-                    to={`/jobs/${job.id}/prepare`}
                     className="jobs-card"
                     style={{
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'border-color 0.15s, background 0.15s',
+                      borderRadius: '12px',
+                      padding: '24px 28px',
+                      transition: 'border-color 0.15s, box-shadow 0.15s',
                     } as React.CSSProperties}
                   >
-                    {/* Header — logo · title · company · category badge */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 18px 12px' }}>
-                      {(() => {
-                        const logoPath = getCompanyLogoPath(job.company_name);
-                        const logoBox = { width: '44px', height: '44px', borderRadius: '8px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' } as React.CSSProperties;
-                        if (logoPath) {
-                          return (
-                            <div style={logoBox}>
-                              <img src={logoPath} alt={job.company_name} width={28} height={28} style={{ objectFit: 'contain', borderRadius: 4 }} loading="lazy" />
-                            </div>
-                          );
-                        }
-                        const domain = job.company_name.toLowerCase()
-                          .replace(/\s+(inc|corp|ltd|llc|co|group|technologies|labs|systems|platform|platforms|solutions)\.?$/i, '')
-                          .replace(/[^a-z0-9]/g, '') + '.com';
-                        const logoDevUrl = `https://img.logo.dev/${domain}?token=pk_WTNVbqXXTuqc9alm89LirQ&size=64&format=png`;
-                        return (
-                          <div style={logoBox}>
-                            <img
-                              src={logoDevUrl}
-                              alt={job.company_name}
-                              width={28} height={28}
-                              style={{ objectFit: 'contain', borderRadius: 4 }}
-                              loading="lazy"
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                target.style.display = 'none';
-                                target.parentElement!.innerHTML = `<span style="color: var(--text-primary); font-size: 16px; font-weight: 700;">${job.company_name.charAt(0).toUpperCase()}</span>`;
-                              }}
-                            />
-                          </div>
-                        );
-                      })()}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                          {job.title}
-                        </h3>
-                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {job.company_name}
-                        </div>
-                      </div>
-                    </div>
+                    {/* Title — bold, larger, room for 2 lines */}
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
+                      margin: '0 0 12px',
+                      lineHeight: 1.35,
+                      letterSpacing: '-0.01em',
+                    }}>
+                      {job.title}
+                    </h3>
 
-                    {/* Metadata row — location · work type · posted */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '0 18px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    {/* Compact metadata row — icon + value, separated by gaps.
+                        Mirrors Google Careers' "Google · Sunnyvale, CA · Mid"
+                        rhythm. Uses neutral text-secondary for the row. */}
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 18px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        {renderLogo()}
+                        <span style={{ fontWeight: 500 }}>{job.company_name}</span>
+                      </span>
                       {job.location && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                           </svg>
-                          {job.location.length > 32 ? job.location.slice(0, 32) + '…' : job.location}
+                          {job.location.length > 60 ? job.location.slice(0, 60) + '…' : job.location}
                         </span>
                       )}
                       {workType && (
-                        <>
-                          <span style={{ color: 'var(--text-muted)' }}>·</span>
-                          <span>{workType}</span>
-                        </>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                            <rect x="3" y="6" width="18" height="13" rx="2" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                          </svg>
+                          {workType}
+                        </span>
                       )}
                       {posted && (
-                        <>
-                          <span style={{ color: 'var(--text-muted)' }}>·</span>
-                          <span style={{ color: 'var(--text-muted)' }}>{posted}</span>
-                        </>
+                        <span style={{ color: 'var(--text-muted)' }}>{posted}</span>
+                      )}
+                      {salary && (
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{salary}</span>
                       )}
                     </div>
 
-                    {/* Salary + category — neutral, single line */}
-                    {(salary || categoryLabel) && (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '8px 18px 0', flexWrap: 'wrap' }}>
-                        {salary ? (
-                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{salary}</span>
-                        ) : <span />}
-                        {categoryLabel && (
-                          <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                            {categoryLabel}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Tech stack tags — neutral chips */}
-                    {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', padding: '10px 18px 0' }}>
-                        {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
-                          <span key={tech} style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                            {tech}
-                          </span>
-                        ))}
-                        {job.ai_tech_stack.length > 5 && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', padding: '3px 4px' }}>+{job.ai_tech_stack.length - 5}</span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Footer — primary "View job" + secondary actions.
-                        e.preventDefault on the secondary link clicks so they
-                        don't also trigger the parent <Link>'s navigation. */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderTop: '1px solid var(--border)', padding: '12px 18px', marginTop: '14px' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--accent)' }}>
-                        Prepare
+                    {/* Footer CTA — outlined "Learn more" pill button +
+                        secondary text links for Apply / Resume. Mirrors
+                        Google Careers' single-pill CTA pattern. */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                      <Link
+                        to={`/jobs/${job.id}/prepare`}
+                        className="jobs-card-cta"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 18px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          color: 'var(--accent)',
+                          background: 'transparent',
+                          border: '1px solid var(--border)',
+                          borderRadius: '9999px',
+                          textDecoration: 'none',
+                          transition: 'background 0.15s, border-color 0.15s',
+                        }}
+                      >
+                        Learn more
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                         </svg>
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      </Link>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
                         <a
                           href={job.job_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none' }}
+                          style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none' }}
                           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
                         >
@@ -1429,8 +1249,7 @@ export default function JobsPage() {
                         </a>
                         <Link
                           to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none' }}
+                          style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none' }}
                           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
                         >
@@ -1438,7 +1257,7 @@ export default function JobsPage() {
                         </Link>
                       </div>
                     </div>
-                  </Link>
+                  </article>
                 );
               })}
             </div>
@@ -1469,8 +1288,9 @@ export default function JobsPage() {
               </button>
             </div>
           )}
+            </main>
+          </div>
         </div>
-      </div>
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`
@@ -1484,31 +1304,49 @@ export default function JobsPage() {
           display: none;
         }
 
-        /* Card hover — Google-careers-style subtle bg shift, no heavy
-           shadow. The card is now an entire <Link> to the prep page; the
-           secondary action links inside use stopPropagation so they
-           don't double-navigate. */
+        /* Card hover — Google Careers-style subtle border-color shift +
+           soft shadow. Cards are now <article>; the "Learn more" Link
+           inside owns the click target for the prep page. */
         .jobs-card {
-          transition: border-color 0.15s, background 0.15s, transform 0.15s;
-          position: relative;
-          z-index: 1;
-          break-inside: avoid;
-          margin-bottom: 20px;
+          transition: border-color 0.15s, box-shadow 0.15s;
         }
         .jobs-card:hover {
+          border-color: var(--accent);
+          box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+        }
+        /* "Learn more" pill button hover */
+        .jobs-card-cta:hover {
+          background: var(--bg-elevated);
           border-color: var(--accent) !important;
-          background: var(--bg-elevated) !important;
-          z-index: 2;
         }
-        .jobs-grid { column-count: 4; }
-        @media (max-width: 1280px) {
-          .jobs-grid { column-count: 3; }
+        /* Single-column list — cards stack vertically with breathing room */
+        .jobs-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
         }
-        @media (max-width: 960px) {
-          .jobs-grid { column-count: 2; }
+        /* Inline filter toolbar selects */
+        .jobs-toolbar-select {
+          padding: 8px 12px;
+          font-size: 13px;
+          color: var(--text-primary);
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          cursor: pointer;
+          outline: none;
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='M19.5 8.25l-7.5 7.5-7.5-7.5'/></svg>");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          padding-right: 28px;
+          transition: border-color 0.15s;
         }
-        @media (max-width: 640px) {
-          .jobs-grid { column-count: 1; }
+        .jobs-toolbar-select:hover,
+        .jobs-toolbar-select:focus {
+          border-color: var(--accent);
         }
 
         /* Filter form controls */
