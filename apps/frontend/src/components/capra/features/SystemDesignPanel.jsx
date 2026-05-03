@@ -349,15 +349,23 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     }
   }, [eraserDiagram?.imageUrl]);
 
-  // Auto-load cached diagram on page load (DB cache makes this instant).
-  // Direction + detail are locked to TB/detailed (PR #1) so the cache key
-  // is fixed; we only check the one cache slot we'll ever request.
+  // Auto-load cached diagram on page load. Cache key follows the same
+  // `${detail}_${direction}` shape used elsewhere in the panel — must
+  // match the live state defaults (overview + LR), otherwise the
+  // auto-fetch hits a different cache slot than the one the panel
+  // renders from.
   useEffect(() => {
-    if (systemDesign?.included && question && !diagramCache['detailed_TB'] && !generatingDiagram && autoLoadedRef.current !== question) {
+    if (
+      systemDesign?.included &&
+      question &&
+      !diagramCache[diagramKey] &&
+      !generatingDiagram &&
+      autoLoadedRef.current !== question
+    ) {
       autoLoadedRef.current = question;
-      handleGenerateDiagram('detailed', 'TB');
+      handleGenerateDiagram(diagramDetailLevel, diagramDirection);
     }
-  }, [systemDesign?.included, question]);
+  }, [systemDesign?.included, question, diagramKey, diagramDetailLevel, diagramDirection]);
 
   const handleGenerateEraser = async () => {
     if (!onGenerateEraserDiagram) return;
