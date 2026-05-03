@@ -24,6 +24,7 @@ import {
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
 import TopicComments from './TopicComments';
+import { ContentHeading, GlassPill } from '../ui';
 
 /**
  * Simple regex-based syntax highlighter for Python code.
@@ -93,9 +94,7 @@ function CapacityPlanningGrid({ estimation }) {
 
   return (
     <div className="">
-      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{estimation.title || 'Capacity Planning'}</h3>
-      </div>
+      <ContentHeading title={estimation.title || 'Capacity Planning'} />
       {estimation.assumptions && (
         <div className="px-3 py-1.5 text-xs text-[var(--text-muted)] bg-[var(--bg-elevated)]/30 border-b border-[var(--border)]">
           <span className="font-semibold text-[var(--text-secondary)]">Assumptions:</span> {estimation.assumptions}
@@ -245,10 +244,7 @@ function DataModelSection({ schema, examples }) {
   if (tables.length > 0) {
     return (
       <div id="data-model" className="scroll-mt-24 mt-14 first:mt-0">
-        <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-          <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Data Model</h3>
-          <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{tables.length} tables</span>
-        </div>
+        <ContentHeading title="Data Model" actions={<GlassPill>{tables.length} tables</GlassPill>} />
         <div className="p-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
           {tables.map((table, ti) => (
             <div key={ti} className="rounded border border-[var(--border)] overflow-hidden">
@@ -863,9 +859,7 @@ export default function TopicDetail({
           {/* Preview: full introduction */}
           {topicDetails.introduction && (
             <div className="mb-3">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h2 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Introduction</h2>
-              </div>
+              <ContentHeading title="Introduction" />
               <div className="pt-2">
                 <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
                   <FormattedContent content={topicDetails.introduction} color="blue" />
@@ -877,9 +871,7 @@ export default function TopicDetail({
           {/* Preview: key concepts */}
           {topicDetails.concepts && topicDetails.concepts.length > 0 && (
             <div className="mb-3">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h2 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Concepts</h2>
-              </div>
+              <ContentHeading title="Key Concepts" />
               <div className="p-3 flex flex-wrap gap-1.5">
                 {topicDetails.concepts.map((concept, i) => (
                   <span key={i} className="px-2.5 py-1 rounded text-xs landing-mono font-medium text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border)]">
@@ -896,10 +888,7 @@ export default function TopicDetail({
             const previewQuestions = topicDetails.keyQuestions.slice(0, previewCount);
             return (
               <div className="mb-3">
-                <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                  <h2 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Questions</h2>
-                  <span className="text-[10px] text-white/80 ml-1">({previewCount} of {topicDetails.keyQuestions.length})</span>
-                </div>
+                <ContentHeading title="Key Questions" pills={[`${previewCount} of ${topicDetails.keyQuestions.length}`]} />
                 <div className="divide-y divide-[var(--border)]">
                   {previewQuestions.map((qa, i) => (
                     <div key={i} className="px-3 py-2.5">
@@ -1020,10 +1009,7 @@ export default function TopicDetail({
           {/* Articles List */}
           {topicDetails.articles && topicDetails.articles.length > 0 && (
             <div id="articles" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Articles</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded">{topicDetails.articles.length}</span>
-              </div>
+              <ContentHeading title="Articles" pills={[topicDetails.articles.length]} />
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.articles.map((article, i) => (
                   <a
@@ -1049,9 +1035,7 @@ export default function TopicDetail({
           {/* Key Takeaways */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Takeaways</h3>
-              </div>
+              <ContentHeading title="Key Takeaways" />
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.keyQuestions.map((qa, i) => (
                   <div key={i} className="px-4 py-3">
@@ -1084,11 +1068,13 @@ export default function TopicDetail({
           {/* Overview */}
           {topicDetails.introduction && (
             <div id="overview" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Overview</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded">{topicDetails.phases?.length || 0} phases</span>
-                <span className="text-[10px] landing-mono text-white/80">{topicDetails.phases?.reduce((a, p) => a + p.topics.length, 0) || 0} topics total</span>
-              </div>
+              <ContentHeading
+                title="Overview"
+                pills={[
+                  `${topicDetails.phases?.length || 0} phases`,
+                  `${topicDetails.phases?.reduce((a, p) => a + p.topics.length, 0) || 0} topics total`,
+                ]}
+              />
               <div className="pt-2">
                 <div className="text-[15px] leading-[1.75] text-[var(--text-secondary)] landing-body">
                   <FormattedContent content={topicDetails.introduction} color="amber" />
@@ -1100,10 +1086,10 @@ export default function TopicDetail({
           {/* Visual Roadmap — dark spine with branching topics */}
           {topicDetails.phases && topicDetails.phases.length > 0 && (
             <div id="roadmap-phases" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.title} Roadmap</h3>
-                <span className="text-[10px] landing-mono text-white/80">{topicDetails.phases.length} phases, {topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics</span>
-              </div>
+              <ContentHeading
+                title={`${topicDetails.title} Roadmap`}
+                pills={[`${topicDetails.phases.length} phases, ${topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics`]}
+              />
 
               {/* Horizontal flow — phase badges connected by arrows */}
               <div className="px-4 py-4 border-b border-[var(--border)] overflow-x-auto">
@@ -1151,9 +1137,7 @@ export default function TopicDetail({
           {/* Key Questions / FAQ */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">FAQ</h3>
-              </div>
+              <ContentHeading title="FAQ" />
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.keyQuestions.map((qa, i) => (
                   <div key={i} className="px-4 py-3">
@@ -1186,9 +1170,7 @@ export default function TopicDetail({
         <div className="space-y-3">
           {/* Header: Difficulty + Tech Stack + Time */}
           <div id="overview" className="scroll-mt-24 mt-14 first:mt-0">
-            <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-              <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Project Overview</h3>
-            </div>
+            <ContentHeading title="Project Overview" />
             <div className="pt-2">
               {/* Difficulty + Time badges */}
               <div className="flex items-center gap-2 flex-wrap mb-3">
@@ -1222,9 +1204,7 @@ export default function TopicDetail({
           {/* Learning Objectives */}
           {topicDetails.learningObjectives && topicDetails.learningObjectives.length > 0 && (
             <div id="learning-objectives" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">What You'll Learn</h3>
-              </div>
+              <ContentHeading title="What You'll Learn" />
               <div className="pt-2">
                 <ul className="space-y-2.5">
                   {topicDetails.learningObjectives.map((obj, i) => (
@@ -1243,9 +1223,7 @@ export default function TopicDetail({
           {/* Interview Relevance */}
           {topicDetails.interviewRelevance && (
             <div id="interview-relevance" className="rounded overflow-hidden scroll-mt-24 border border-[var(--accent)]/20 bg-[var(--accent)]/10/50">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Interview Relevance</h3>
-              </div>
+              <ContentHeading title="Interview Relevance" />
               <div className="pt-2">
                 <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
               </div>
@@ -1255,10 +1233,7 @@ export default function TopicDetail({
           {/* Key Questions */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Questions</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded">{topicDetails.keyQuestions.length}</span>
-              </div>
+              <ContentHeading title="Key Questions" pills={[topicDetails.keyQuestions.length]} />
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.keyQuestions.map((qa, i) => (
                   <div key={i} className="px-4 py-3">
@@ -1303,9 +1278,7 @@ export default function TopicDetail({
           {/* 1. Overview / Introduction */}
           {topicDetails.introduction && (
             <div id="overview" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Overview</h3>
-              </div>
+              <ContentHeading title="Overview" />
               <div className="pt-2">
                 <div className="text-[15px] leading-[1.75] text-[var(--text-secondary)] landing-body">
                   <FormattedContent content={topicDetails.introduction} color="blue" />
@@ -1317,10 +1290,7 @@ export default function TopicDetail({
           {/* 2. Key Patterns — what to recognize */}
           {topicDetails.keyPatterns && (
             <div id="key-patterns" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Patterns</h3>
-                <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.keyPatterns.length}</span>
-              </div>
+              <ContentHeading title="Key Patterns" actions={<GlassPill>{topicDetails.keyPatterns.length}</GlassPill>} />
               <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
                   {topicDetails.keyPatterns.map((pattern, i) => (
@@ -1336,10 +1306,7 @@ export default function TopicDetail({
           {/* 3. When to Use — when to apply */}
           {topicDetails.whenToUse && (
             <div id="when-to-use" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">When to Use</h3>
-                <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.whenToUse.length}</span>
-              </div>
+              <ContentHeading title="When to Use" actions={<GlassPill>{topicDetails.whenToUse.length}</GlassPill>} />
               <div className="p-3 grid grid-cols-1 gap-1.5">
                 {topicDetails.whenToUse.map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5 p-2.5 rounded hover:bg-gray-50 transition-colors landing-body">
@@ -1356,10 +1323,7 @@ export default function TopicDetail({
           {/* 4. Visual Explanation — see it */}
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
             <div id="visual" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Visual Explanation</h3>
-                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">{topicDetails.visualizations.length}</span>
-              </div>
+              <ContentHeading title="Visual Explanation" pills={[topicDetails.visualizations.length]} />
               <div className={`p-4 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : ''}`}>
                 {topicDetails.visualizations.map((viz, vi) => (
                   <div key={vi} className="rounded border border-[var(--border)] overflow-hidden">
@@ -1377,10 +1341,7 @@ export default function TopicDetail({
           {/* 5. Step-by-Step Approach — how to solve */}
           {topicDetails.approach && (
             <div id="approach" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Step-by-Step Approach</h3>
-                <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.approach.length}</span>
-              </div>
+              <ContentHeading title="Step-by-Step Approach" actions={<GlassPill>{topicDetails.approach.length}</GlassPill>} />
               <div className="pt-2">
                 <div className="relative">
                   {topicDetails.approach.map((step, i) => (
@@ -1529,10 +1490,7 @@ export default function TopicDetail({
           {/* 8. Common Mistakes — avoid pitfalls */}
           {topicDetails.commonMistakes && (
             <div id="common-mistakes" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Common Mistakes</h3>
-                <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.commonMistakes.length}</span>
-              </div>
+              <ContentHeading title="Common Mistakes" actions={<GlassPill>{topicDetails.commonMistakes.length}</GlassPill>} />
               <div className="p-3 grid grid-cols-1 gap-1.5">
                 {topicDetails.commonMistakes.map((mistake, i) => (
                   <div key={i} className="flex items-start gap-3 py-2 border-b border-[var(--border)] last:border-b-0">
@@ -1549,10 +1507,7 @@ export default function TopicDetail({
           {/* 9. Practice Problems — self practice */}
           {topicDetails.commonProblems && (
             <div id="practice" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Practice Problems</h3>
-                <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.commonProblems.length}</span>
-              </div>
+              <ContentHeading title="Practice Problems" actions={<GlassPill>{topicDetails.commonProblems.length}</GlassPill>} />
               <div className="overflow-hidden">
                 {/* Table header */}
                 <div className="grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] text-[10px] font-bold text-[var(--text-muted)] landing-mono uppercase tracking-wider">
@@ -1601,22 +1556,24 @@ export default function TopicDetail({
           {/* 10. Theory Questions — deeper review */}
           {topicDetails.theoryQuestions && topicDetails.theoryQuestions.length > 0 && (
             <div id="theory" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Theory Questions</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded-full">{topicDetails.theoryQuestions.length}</span>
-                <button
-                  className="ml-auto text-[10px] landing-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
-                  onClick={() => {
-                    const newVal = !codingAllQsExpanded;
-                    setCodingAllQsExpanded(newVal);
-                    const newState = {};
-                    topicDetails.theoryQuestions.forEach((_, idx) => { newState[`${selectedTopic}-${idx}`] = newVal; });
-                    setExpandedTheoryQuestions(prev => ({ ...prev, ...newState }));
-                  }}
-                >
-                  {codingAllQsExpanded ? 'Collapse All' : 'Expand All'}
-                </button>
-              </div>
+              <ContentHeading
+                title="Theory Questions"
+                pills={[topicDetails.theoryQuestions.length]}
+                actions={
+                  <button
+                    className="text-[10px] landing-mono text-white/85 hover:text-white transition-colors font-medium"
+                    onClick={() => {
+                      const newVal = !codingAllQsExpanded;
+                      setCodingAllQsExpanded(newVal);
+                      const newState = {};
+                      topicDetails.theoryQuestions.forEach((_, idx) => { newState[`${selectedTopic}-${idx}`] = newVal; });
+                      setExpandedTheoryQuestions(prev => ({ ...prev, ...newState }));
+                    }}
+                  >
+                    {codingAllQsExpanded ? 'Collapse All' : 'Expand All'}
+                  </button>
+                }
+              />
               <div className="pt-2">
                 <div className="grid grid-cols-1 gap-2">
                   {topicDetails.theoryQuestions.map((q, i) => {
@@ -1660,10 +1617,7 @@ export default function TopicDetail({
           {/* 11. Tips & Interview Tips — final checklist */}
           {(topicDetails.tips || topicDetails.interviewTips) && (
             <div id="tips" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Tips & Interview Checklist</h3>
-                <span className="text-[10px] font-bold text-white bg-white/20 border border-white/30 px-1.5 py-0.5 rounded-full landing-mono ml-auto">PRO</span>
-              </div>
+              <ContentHeading title="Tips & Interview Checklist" actions={<GlassPill>PRO</GlassPill>} />
               <div className="p-3 grid grid-cols-1 gap-1.5">
                 {topicDetails.tips && topicDetails.tips.map((tip, i) => (
                   <div key={`tip-${i}`} className="flex items-start gap-2.5 p-2 rounded hover:bg-gray-50 transition-colors">
@@ -1753,9 +1707,7 @@ export default function TopicDetail({
                     </div>
                   )}
                   {/* Introduction header */}
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3" style={topicDetails.productMeta ? { borderTop: `1px solid var(--border)` } : {}}>
-                    <h2 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.productMeta ? 'Why This Design Problem?' : 'Introduction'}</h2>
-                  </div>
+                  <ContentHeading title={topicDetails.productMeta ? 'Why This Design Problem?' : 'Introduction'} />
                   <div className="pt-2">
                     <div className="text-[var(--text-secondary)] text-base leading-relaxed landing-body">
                       <FormattedContent content={topicDetails.introduction} color="blue" />
@@ -1779,9 +1731,7 @@ export default function TopicDetail({
               {/* 2. Key Concepts — separate card below introduction */}
               {topicDetails.concepts && !topicDetails.concepts[0]?.name && (
                 <div id="concepts" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h2 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Concepts</h2>
-                  </div>
+                  <ContentHeading title="Key Concepts" />
                   <div className="p-3 flex flex-wrap gap-1.5">
                     {topicDetails.concepts.map((concept, i) => (
                       <span key={i} className="px-2.5 py-1 rounded text-xs landing-mono font-medium text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border)]">
@@ -1798,10 +1748,10 @@ export default function TopicDetail({
                 {/* Functional Requirements */}
                 {(topicDetails.functionalRequirements || topicDetails.requirements) && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Functional Requirements</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{(topicDetails.functionalRequirements || topicDetails.requirements).length} requirements</span>
-                  </div>
+                  <ContentHeading
+                    title="Functional Requirements"
+                    actions={<GlassPill>{(topicDetails.functionalRequirements || topicDetails.requirements).length} requirements</GlassPill>}
+                  />
                   <div className="pt-2">
                     <div className="grid grid-cols-1 gap-1.5">
                       {(topicDetails.functionalRequirements || topicDetails.requirements).map((req, i) => (
@@ -1820,10 +1770,10 @@ export default function TopicDetail({
                 {/* Non-Functional Requirements */}
                 {topicDetails.nonFunctionalRequirements && (
                   <div className="">
-                    <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                      <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Non-Functional Requirements</h3>
-                      <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.nonFunctionalRequirements.length} requirements</span>
-                    </div>
+                    <ContentHeading
+                      title="Non-Functional Requirements"
+                      actions={<GlassPill>{topicDetails.nonFunctionalRequirements.length} requirements</GlassPill>}
+                    />
                     <div className="pt-2">
                       <div className="grid grid-cols-1 gap-1.5">
                         {topicDetails.nonFunctionalRequirements.map((req, i) => {
@@ -1890,9 +1840,7 @@ export default function TopicDetail({
               {/* 5b. Architecture Layers + Layered Design — immediately after architecture diagram */}
               {topicDetails.architectureLayers && (
                 <div id="arch-layers" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Architecture Layers</h3>
-                  </div>
+                  <ContentHeading title="Architecture Layers" />
                   <div className="p-3 space-y-1.5">
                     {topicDetails.architectureLayers.map((layer, i) => (
                       <div key={i} className="flex items-start gap-3 p-2.5 rounded border border-[var(--border)]">
@@ -1911,10 +1859,10 @@ export default function TopicDetail({
 
               {effectiveLayeredDesign && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{effectiveLayeredDesign.length} layers</span>
-                  </div>
+                  <ContentHeading
+                    title="Layered Design"
+                    actions={<GlassPill>{effectiveLayeredDesign.length} layers</GlassPill>}
+                  />
                   <RoughLayeredDiagram
                     layers={effectiveLayeredDesign}
                     title="Layered Design"
@@ -1959,10 +1907,10 @@ export default function TopicDetail({
                 <div id="implementation" className={`grid gap-3 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                   {topicDetails.basicImplementation && (
                     <div className="">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-wider landing-mono">Basic</span>
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
-                      </div>
+                      <ContentHeading
+                        title={topicDetails.basicImplementation.title || 'Basic Approach'}
+                        pills={['Basic']}
+                      />
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
                         {topicDetails.basicImplementation.components && !topicDetails.basicImplementation.diagramSrc && !topicDetails.basicImplementation.svgTemplate ? (
@@ -1997,10 +1945,10 @@ export default function TopicDetail({
                   )}
                   {topicDetails.advancedImplementation && (
                     <div className="">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-wider landing-mono">Advanced</span>
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
-                      </div>
+                      <ContentHeading
+                        title={topicDetails.advancedImplementation.title || 'Scalable Solution'}
+                        pills={['Advanced']}
+                      />
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
                         {topicDetails.advancedImplementation.components && !topicDetails.advancedImplementation.diagramSrc && !topicDetails.advancedImplementation.svgTemplate ? (
@@ -2041,9 +1989,7 @@ export default function TopicDetail({
                 <div id="flows" className="space-y-3 scroll-mt-24">
                   {topicDetails.createFlow && (
                     <div className="">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.createFlow.title}</h3>
-                      </div>
+                      <ContentHeading title={topicDetails.createFlow.title} />
                       {topicDetails.createFlow.diagramSrc ? (
                         <div className="pt-2">
                           <ContentDiagram src={topicDetails.createFlow.diagramSrc} alt={topicDetails.createFlow.title} />
@@ -2071,9 +2017,7 @@ export default function TopicDetail({
                   )}
                   {topicDetails.redirectFlow && (
                     <div className="">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.redirectFlow.title}</h3>
-                      </div>
+                      <ContentHeading title={topicDetails.redirectFlow.title} />
                       {topicDetails.redirectFlow.diagramSrc ? (
                         <div className="pt-2">
                           <ContentDiagram src={topicDetails.redirectFlow.diagramSrc} alt={topicDetails.redirectFlow.title} />
@@ -2116,10 +2060,10 @@ export default function TopicDetail({
                   {/* API Design — Stripe-style endpoint cards */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
                     <div id="api-design" className="scroll-mt-24 mt-14 first:mt-0">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">API Design</h3>
-                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
-                      </div>
+                      <ContentHeading
+                        title="API Design"
+                        actions={<GlassPill>{topicDetails.apiDesign.endpoints.length} endpoints</GlassPill>}
+                      />
                       <div className="pt-2">
                         <div className="grid grid-cols-1 gap-2">
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
@@ -2162,9 +2106,7 @@ export default function TopicDetail({
               {/* 10. Deep Dive Topics + System Components + Key Design Decisions */}
               {topicDetails.deepDiveTopics && (
                 <div id="deep-dive" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Deep Dive Topics</h3>
-                  </div>
+                  <ContentHeading title="Deep Dive Topics" />
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
@@ -2191,9 +2133,7 @@ export default function TopicDetail({
                   {/* System Components */}
                   {!topicDetails.introduction && topicDetails.components && (
                     <div className="">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">System Components</h3>
-                      </div>
+                      <ContentHeading title="System Components" />
                       <div className="pt-2">
                         <div className="flex flex-wrap gap-2">
                           {topicDetails.components.map((comp, i) => (
@@ -2209,10 +2149,10 @@ export default function TopicDetail({
                   {/* Key Design Decisions — Diagram + Numbered cards */}
                   {topicDetails.keyDecisions && (
                     <div className="">
-                      <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                        <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Design Decisions</h3>
-                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.keyDecisions.length}</span>
-                      </div>
+                      <ContentHeading
+                        title="Key Design Decisions"
+                        actions={<GlassPill>{topicDetails.keyDecisions.length}</GlassPill>}
+                      />
                       {/* Decision architecture diagram */}
                       {(() => {
                         const diagSrc = `/diagrams/${selectedTopic}/key-decisions.png`;
@@ -2280,9 +2220,7 @@ export default function TopicDetail({
               {/* 12. Trade-offs + Edge Cases */}
               {topicDetails.tradeoffDecisions && (
                 <div id="tradeoff-decisions" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Trade-off Decisions</h3>
-                  </div>
+                  <ContentHeading title="Trade-off Decisions" />
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.tradeoffDecisions.map((d, i) => (
                       <div key={i} className="p-3 rounded border border-[var(--border)]">
@@ -2302,10 +2240,10 @@ export default function TopicDetail({
 
               {topicDetails.tradeoffs && (
                 <div id="tradeoffs" className="rounded overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Tradeoffs</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.tradeoffs.length} decisions</span>
-                  </div>
+                  <ContentHeading
+                    title="Tradeoffs"
+                    actions={<GlassPill>{topicDetails.tradeoffs.length} decisions</GlassPill>}
+                  />
                   <div className="p-2.5 space-y-2">
                     {topicDetails.tradeoffs.map((t, i) => (
                       <div key={i} className="rounded border border-[var(--border)] bg-white hover:border-[var(--border)] transition-colors overflow-hidden">
@@ -2341,10 +2279,10 @@ export default function TopicDetail({
 
               {topicDetails.edgeCases && (
                 <div id="edge-cases" className="rounded overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Edge Cases</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.edgeCases.length} cases</span>
-                  </div>
+                  <ContentHeading
+                    title="Edge Cases"
+                    actions={<GlassPill>{topicDetails.edgeCases.length} cases</GlassPill>}
+                  />
                   <div className="p-2.5 space-y-2">
                     {topicDetails.edgeCases.map((ec, i) => (
                       <div key={i} className="rounded border border-[var(--border)] bg-white transition-colors overflow-hidden">
@@ -2372,10 +2310,10 @@ export default function TopicDetail({
                 const TOPIC_COLORS = ['var(--accent)'];
                 return (
                 <div id="discussion" className="rounded overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Discussion Points</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.discussionPoints.length} topics</span>
-                  </div>
+                  <ContentHeading
+                    title="Discussion Points"
+                    actions={<GlassPill>{topicDetails.discussionPoints.length} topics</GlassPill>}
+                  />
                   <div className="p-2.5 space-y-2">
                     {topicDetails.discussionPoints.map((point, i) => {
                       const dotColor = TOPIC_COLORS[i % TOPIC_COLORS.length];
@@ -2422,9 +2360,7 @@ export default function TopicDetail({
 
               {topicDetails.interviewFollowups && (
                 <div id="followups" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Common Follow-up Questions</h3>
-                  </div>
+                  <ContentHeading title="Common Follow-up Questions" />
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
@@ -2454,9 +2390,7 @@ export default function TopicDetail({
 
               {topicDetails.algorithmApproaches && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Algorithm Approaches</h3>
-                  </div>
+                  <ContentHeading title="Algorithm Approaches" />
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.algorithmApproaches.map((app, i) => (
                       <div key={i} className="p-3 rounded border border-[var(--border)]">
@@ -2481,9 +2415,7 @@ export default function TopicDetail({
                   into the panel header so the tabs row stays clean. */}
               {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
                 <div id="code-examples" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Implementation Code</h3>
-                  </div>
+                  <ContentHeading title="Implementation Code" />
                   <DocsTabs
                     tabs={Object.entries(topicDetails.codeExamples).map(([lang, code]) => ({
                       id: lang,
@@ -2508,26 +2440,28 @@ export default function TopicDetail({
               {/* 15. Key Questions — Accordion (self-test/review) */}
               {topicDetails.keyQuestions && (
                 <div id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Key Questions</h3>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.keyQuestions.length} topics</span>
-                    <button
-                      onClick={() => {
-                        if (sdAllQsExpanded) {
-                          setSdExpandedQs({});
-                        } else {
-                          const all = {};
-                          topicDetails.keyQuestions.forEach((_, i) => { all[i] = true; });
-                          setSdExpandedQs(all);
-                        }
-                        setSdAllQsExpanded(!sdAllQsExpanded);
-                      }}
-                      className="ml-auto text-[11px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
-                    >
-                      {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
-                      <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                    </button>
-                  </div>
+                  <ContentHeading
+                    title="Key Questions"
+                    pills={[`${topicDetails.keyQuestions.length} topics`]}
+                    actions={
+                      <button
+                        onClick={() => {
+                          if (sdAllQsExpanded) {
+                            setSdExpandedQs({});
+                          } else {
+                            const all = {};
+                            topicDetails.keyQuestions.forEach((_, i) => { all[i] = true; });
+                            setSdExpandedQs(all);
+                          }
+                          setSdAllQsExpanded(!sdAllQsExpanded);
+                        }}
+                        className="text-[11px] font-medium text-white/85 hover:text-white transition-colors landing-mono flex items-center gap-1"
+                      >
+                        {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
+                        <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                    }
+                  />
                   <div className="p-2.5 space-y-1.5">
                     {topicDetails.keyQuestions.map((q, i) => {
                       const isOpen = sdExpandedQs[i] || false;
@@ -2558,9 +2492,7 @@ export default function TopicDetail({
               {/* 16. Interview Tips — very last SD card */}
               {topicDetails.tips && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Interview Tips</h3>
-                  </div>
+                  <ContentHeading title="Interview Tips" />
                   <div className="grid gap-1 p-3">
                     {topicDetails.tips.map((tip, i) => (
                       <div key={i} className="px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-elevated)] transition-colors rounded">
@@ -2576,9 +2508,7 @@ export default function TopicDetail({
               {/* LLD Core Entities */}
               {topicDetails.coreEntities && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Core Entities</h3>
-                  </div>
+                  <ContentHeading title="Core Entities" />
                   <div className="pt-2">
                     <div className="grid grid-cols-1 gap-2">
                     {topicDetails.coreEntities.map((entity, i) => (
@@ -2595,9 +2525,7 @@ export default function TopicDetail({
               {/* LLD Design Patterns */}
               {topicDetails.designPatterns && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Design Patterns</h3>
-                  </div>
+                  <ContentHeading title="Design Patterns" />
                   <div className="pt-2">
                     <ul className="grid grid-cols-1 gap-1">
                       {topicDetails.designPatterns.map((pattern, i) => (
@@ -2614,9 +2542,7 @@ export default function TopicDetail({
               {/* LLD Implementation Code */}
               {topicDetails.implementation && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Implementation</h3>
-                  </div>
+                  <ContentHeading title="Implementation" />
                   <div className="overflow-x-auto bg-[#0d1117]">
                     <pre
                       className="p-4 text-sm leading-6 text-gray-300 landing-mono"
@@ -2635,9 +2561,7 @@ export default function TopicDetail({
               {/* Concurrency Concepts */}
               {topicDetails.concepts && Array.isArray(topicDetails.concepts) && topicDetails.concepts[0]?.name && (
                 <div id="concepts" className="scroll-mt-24 mt-14 first:mt-0">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Core Concepts</h3>
-                  </div>
+                  <ContentHeading title="Core Concepts" />
                   <div className="p-4 grid gap-2">
                     {topicDetails.concepts.map((concept, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded border border-[var(--border)]">
@@ -2652,9 +2576,7 @@ export default function TopicDetail({
               {/* Concurrency Primitives */}
               {topicDetails.primitives && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Synchronization Primitives</h3>
-                  </div>
+                  <ContentHeading title="Synchronization Primitives" />
                   <div className="p-4 grid gap-2">
                     {topicDetails.primitives.map((prim, i) => (
                       <div key={i} className="p-3 rounded border border-[var(--border)]">
@@ -2672,9 +2594,7 @@ export default function TopicDetail({
               {/* Concurrency Classic Problems */}
               {topicDetails.problems && topicDetails.problems[0]?.solution && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Classic Problems</h3>
-                  </div>
+                  <ContentHeading title="Classic Problems" />
                   <div className="grid gap-2 p-3">
                     {topicDetails.problems.map((problem, i) => (
                       <div key={i} className="p-4 rounded border border-[var(--border)]">
@@ -2693,9 +2613,7 @@ export default function TopicDetail({
               {/* Concurrency Data Structures */}
               {topicDetails.structures && (
                 <div className="">
-                  <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                    <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Concurrent Data Structures</h3>
-                  </div>
+                  <ContentHeading title="Concurrent Data Structures" />
                   <div className="p-4 grid gap-2">
                     {topicDetails.structures.map((struct, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded bg-white border border-[var(--border)]">
@@ -2811,13 +2729,10 @@ export default function TopicDetail({
           {/* 4. Example Response — see the method applied */}
           {topicDetails.exampleResponse && (
             <div id="example-response" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
-                  <Icon name="messageSquare" size={12} className="text-[var(--text-muted)]" />
-                </div>
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Example Response</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">Ready to use</span>
-              </div>
+              <ContentHeading
+                title="Example Response"
+                actions={<GlassPill>Ready to use</GlassPill>}
+              />
               <div className="pt-2">
                 <div className="pl-4 border-l-2 border-[var(--border)] space-y-3">
                   {topicDetails.exampleResponse.split('\n\n').map((paragraph, i) => (
@@ -2843,13 +2758,10 @@ export default function TopicDetail({
           {/* 5. Questions & Answers — practice AFTER learning the framework */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
-                  <Icon name="messageSquare" size={12} className="text-[var(--text-muted)]" />
-                </div>
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Questions & Answers</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.keyQuestions.length} questions</span>
-              </div>
+              <ContentHeading
+                title="Questions & Answers"
+                actions={<GlassPill>{topicDetails.keyQuestions.length} questions</GlassPill>}
+              />
               <div className="p-2.5 space-y-2">
                 {topicDetails.keyQuestions.map((item, index) => {
                   const questionKey = `behavioral-${index}`;
@@ -2986,13 +2898,10 @@ export default function TopicDetail({
           {/* 6. Practice Questions — more practice */}
           {topicDetails.sampleQuestions && topicDetails.sampleQuestions.length > 0 && (
             <div id="sample-questions" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
-                  <Icon name="helpCircle" size={12} className="text-[var(--text-muted)]" />
-                </div>
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Practice Questions</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">{topicDetails.sampleQuestions.length} questions</span>
-              </div>
+              <ContentHeading
+                title="Practice Questions"
+                actions={<GlassPill>{topicDetails.sampleQuestions.length} questions</GlassPill>}
+              />
               <div className="p-2.5 space-y-1.5">
                 {topicDetails.sampleQuestions.map((q, i) => (
                   <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded border border-transparent hover:bg-[var(--bg-elevated)] hover:border-[var(--border)] transition-colors group cursor-default">
@@ -3007,15 +2916,10 @@ export default function TopicDetail({
           {/* 7. Tips for Success — final review checklist, LAST card */}
           {topicDetails.tips && (
             <div id="tips" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="pb-3 mb-6 border-b border-[var(--border)] flex items-baseline gap-3">
-                <div className="w-6 h-6 rounded flex items-center justify-center bg-white/20">
-                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-[18px] font-bold text-[var(--text-primary)] landing-display tracking-tight">Tips for Success</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] landing-mono">{topicDetails.tips.length} tips</span>
-              </div>
+              <ContentHeading
+                title="Tips for Success"
+                actions={<GlassPill>{topicDetails.tips.length} tips</GlassPill>}
+              />
               <div className="p-2.5 space-y-1.5">
                 {topicDetails.tips.map((tip, i) => (
                   <div key={i} className="flex items-start gap-2.5 px-3.5 py-3 rounded bg-[var(--accent)]/10/40 border border-[var(--accent)]/20 hover:bg-[var(--accent)]/10/70 hover:border-[var(--accent)]/20 transition-colors group">
