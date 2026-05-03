@@ -346,7 +346,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
       <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
         <div className="flex items-center justify-between px-2 sm:px-4 py-2 gap-2" style={{ minHeight: '44px', background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-gray-400" />
+            <div className="w-2 h-2 rounded-full bg-white/40" />
             <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Code</span>
           </div>
         </div>

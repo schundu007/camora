@@ -45,8 +45,10 @@ export async function authenticate(req, res, next) {
     // Reject non-access tokens (e.g., a future refresh-type token must NOT
     // pass the access-route gate). Ascend's jwtAuth enforces this — lumora
     // wasn't, so a parallel token-type with a valid signature would have
-    // been accepted here.
-    if (payload?.type && payload.type !== 'access') {
+    // been accepted here. The previous condition `payload?.type && payload.type !== 'access'`
+    // also let tokens with NO type claim through; matching Ascend's strict
+    // shape now (token without an explicit `type: 'access'` is rejected).
+    if (!payload?.type || payload.type !== 'access') {
       return res.status(401).json({ error: 'Wrong token type' });
     }
 

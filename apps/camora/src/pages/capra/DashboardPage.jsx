@@ -1037,7 +1037,7 @@ function SwitchNotificationBanner({ notification, onDismiss }) {
 function LoadingProgress() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <div className="h-1 overflow-hidden bg-gray-200">
+      <div className="h-1 overflow-hidden bg-[var(--bg-elevated)]">
         <div className="h-full w-1/3 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-400 rounded-full" style={{ animation: 'progress-indeterminate 1.5s ease-in-out infinite' }} />
       </div>
     </div>
@@ -1196,7 +1196,7 @@ function CodingLayout({
             <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
           <span className="landing-body text-sm font-medium text-[var(--text-muted)]">Enter a system design question</span>
-          <span className="landing-body text-xs text-gray-600 mt-1">e.g. "Design a URL shortener like bit.ly"</span>
+          <span className="landing-body text-xs text-[var(--text-muted)] mt-1">e.g. "Design a URL shortener like bit.ly"</span>
         </div>
       )}
     </div>

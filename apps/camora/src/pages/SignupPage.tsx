@@ -13,8 +13,11 @@ export default function SignupPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   // Already signed in? Skip the signup form — they have an account already.
+  // Send to /capra/prepare (the free dashboard) rather than /lumora, which
+  // is paywalled and would bounce a free-tier returning user straight into
+  // the upsell modal — bad first-touch UX for someone refreshing /signup.
   if (!isLoading && isAuthenticated) {
-    return <Navigate to="/lumora" replace />;
+    return <Navigate to="/capra/prepare" replace />;
   }
 
   return (

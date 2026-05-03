@@ -424,7 +424,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       case 'recording': return 'bg-error-500 animate-pulse';
       case 'transcribing': return 'bg-warning-500';
       case 'answering': return 'bg-info-500';
-      default: return 'bg-gray-300';
+      default: return 'bg-[var(--border)]';
     }
   };
 
@@ -434,7 +434,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       <div className="h-full flex flex-col overflow-hidden bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
         <div className="flex items-center justify-between px-4 py-2.5 min-h-[44px]" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-gray-400" />
+            <div className="w-2 h-2 rounded-full bg-white/40" />
             <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Explanation</span>
           </div>
         </div>
