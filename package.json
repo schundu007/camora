@@ -4,10 +4,10 @@
   "private": true,
   "description": "Cariara Platform — Lumora + Ascend unified monorepo",
   "scripts": {
-    "dev:frontend": "cd apps/frontend && npx vite",
+    "dev:camora": "cd apps/camora && npx vite",
     "dev:lumora": "cd apps/lumora-backend && node src/index.js",
     "dev:ascend": "cd apps/ascend-backend && node src/index.js",
-    "build:frontend": "cd apps/frontend && npx vite build",
+    "build:camora": "cd apps/camora && npx vite build",
     "prepare": "git config --local core.hooksPath .githooks 2>/dev/null || true"
   },
   "packageManager": "pnpm@9.15.0",
