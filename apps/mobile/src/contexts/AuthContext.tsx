@@ -86,27 +86,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, [hydrateFromToken]);
 
-  // Deep-link handler. The web handoff page (to be added at
-  // ${WEB_APP_URL}/mobile/auth) should redirect to:
-  //   camora://auth?token=<jwt>
-  // after a successful Google OAuth round-trip. Until that page exists,
-  // signIn() opens the regular web login and a manual paste flow can be
-  // added later.
+  // Deep-link handler. Two URL shapes can deliver a token:
+  //   1. https://camora.cariara.com/mobile/auth?token=<jwt> — Universal/App Link.
+  //      Apple AASA + Android assetlinks.json verify domain ownership so a
+  //      malicious app can't claim this URL. Preferred path.
+  //   2. camora://auth?token=<jwt> — custom-scheme fallback when the OS
+  //      doesn't have AASA cached yet (first install, weak network during
+  //      verification, etc.).
   useEffect(() => {
-    const sub = Linking.addEventListener('url', ({ url }) => {
+    const handle = (url: string) => {
       const parsed = Linking.parse(url);
-      if (parsed.hostname === 'auth' || parsed.path === 'auth') {
-        const t = parsed.queryParams?.token;
-        if (typeof t === 'string' && t.length > 0) {
-          void hydrateFromToken(t);
-        }
+      const isAuthPath =
+        parsed.hostname === 'auth' || parsed.path === 'auth' || parsed.path === 'mobile/auth';
+      if (!isAuthPath) return;
+      const t = parsed.queryParams?.token;
+      if (typeof t === 'string' && t.length > 0) {
+        void hydrateFromToken(t);
       }
-    });
+    };
+    const sub = Linking.addEventListener('url', ({ url }) => handle(url));
+    // Cold-start: if the app was opened by tapping a link, getInitialURL
+    // returns the URL once. The 'url' event only fires for warm starts.
+    Linking.getInitialURL().then(url => { if (url) handle(url); });
     return () => sub.remove();
   }, [hydrateFromToken]);
 
   const signIn = useCallback(async () => {
-    const redirect = Linking.createURL('auth');
+    // Prefer the verified Universal/App Link as the redirect target. The
+    // OS will route this back into the app without the camora:// scheme
+    // hop. WebBrowser still wraps the OAuth round-trip so the in-app
+    // browser closes itself once the redirect fires.
+    const redirect = `${WEB_APP_URL}/mobile/auth`;
     const url = `${WEB_APP_URL}/mobile/auth?redirect=${encodeURIComponent(redirect)}`;
     await WebBrowser.openAuthSessionAsync(url, redirect);
   }, []);

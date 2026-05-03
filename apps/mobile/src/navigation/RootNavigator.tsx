@@ -50,7 +50,7 @@ function AuthedTabs() {
     >
       <Tabs.Screen name="Prep" component={PrepScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Prep" focused={focused} /> }} />
       <Tabs.Screen name="Practice" component={PracticeScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Practice" focused={focused} /> }} />
-      <Tabs.Screen name="Interview" component={AudioInterviewScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Interview" focused={focused} /> }} />
+      <Tabs.Screen name="Live" component={AudioInterviewScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Live" focused={focused} /> }} />
       <Tabs.Screen name="Account" component={AccountScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Account" focused={focused} /> }} />
     </Tabs.Navigator>
   );

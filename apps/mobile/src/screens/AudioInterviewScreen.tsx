@@ -1,10 +1,11 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator, Modal, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { startRecording, stopRecording } from '@/lib/audio';
 import { transcribeAudio, askSona, type SonaAnswer } from '@/lib/sona';
+import { SAMPLE_TRANSCRIPT, SAMPLE_ANSWER } from '@/data/demoSample';
 import { colors, radii, spacing } from '@/theme/colors';
 
 type Phase = 'idle' | 'recording' | 'transcribing' | 'thinking';
@@ -35,8 +36,8 @@ export function AudioInterviewScreen() {
     if (capRef.current) { clearTimeout(capRef.current); capRef.current = null; }
   }, []);
 
-  // Mounting cleanup — if the user backgrounds the app or unmounts mid-record,
-  // make sure we don't leave the mic hot or a setInterval ticking.
+  // Mounting cleanup — if the user unmounts mid-record, make sure we don't
+  // leave the mic hot or a setInterval ticking.
   useEffect(() => {
     return () => {
       clearTimers();
@@ -44,6 +45,24 @@ export function AudioInterviewScreen() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // App-state guard: when the user backgrounds the app mid-record, stop the
+  // recording cleanly. iOS's background-audio entitlement keeps the mic
+  // technically alive, but reviewers (and most users) expect it to release
+  // when they leave the app — we honor that expectation explicitly. A
+  // surprise battery drain or the orange "in use" pill is the kind of
+  // thing that surfaces in privacy-related rejection rounds.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state !== 'active' && phase === 'recording') {
+        clearTimers();
+        void stopRecording().catch(() => {});
+        setPhase('idle');
+        setError('Recording stopped because the app went to the background.');
+      }
+    });
+    return () => sub.remove();
+  }, [phase, clearTimers]);
 
   const beginRecording = useCallback(async () => {
     setError(null);
@@ -81,6 +100,13 @@ export function AudioInterviewScreen() {
     void beginRecording();
   }, [beginRecording]);
 
+  const handleSample = useCallback(() => {
+    setError(null);
+    setTranscript(SAMPLE_TRANSCRIPT);
+    setAnswer(SAMPLE_ANSWER);
+    setPhase('idle');
+  }, []);
+
   const handleStop = useCallback(async (autoCapped = false) => {
     clearTimers();
     if (!token) {
@@ -100,7 +126,14 @@ export function AudioInterviewScreen() {
       setTranscript(text || '(no speech detected)');
       if (!text) { setPhase('idle'); return; }
       setPhase('thinking');
-      const a = await askSona(text, token);
+      // Stream tokens into a placeholder answer as they arrive. The final
+      // structured answer (with parsed sections) replaces it when the
+      // server emits the `answer` event.
+      setAnswer({ raw: '' });
+      const a = await askSona(text, {
+        token,
+        onProgress: (acc) => setAnswer({ raw: acc }),
+      });
       setAnswer(a);
       setPhase('idle');
     } catch (e: any) {
@@ -127,17 +160,17 @@ export function AudioInterviewScreen() {
         </View>
       )}
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Audio Interview</Text>
+        <Text style={styles.title}>Live Notes</Text>
         <Text style={styles.sub}>
-          Camora transcribes the conversation through your phone's mic and surfaces relevant context
-          from your prep. Put the call on speaker so both sides are picked up.
+          Camora records audio when you tap below, transcribes what's said, and surfaces relevant
+          material from your study library. Put any call on speaker so the mic picks up both sides.
         </Text>
 
         <View style={styles.tipBox}>
           <Text style={styles.tipTitle}>Best results</Text>
           <Text style={styles.tipBody}>• Use speakerphone, or a Bluetooth headset</Text>
           <Text style={styles.tipBody}>• Keep the phone within arm's length</Text>
-          <Text style={styles.tipBody}>• For video / screen share, use the desktop app</Text>
+          <Text style={styles.tipBody}>• For video calls or screen sharing, use the desktop app</Text>
         </View>
 
         <Pressable
@@ -152,6 +185,12 @@ export function AudioInterviewScreen() {
           <Text style={styles.recordText}>{buttonLabel}</Text>
         </Pressable>
 
+        {!recording && !busy && (
+          <Pressable style={styles.sampleBtn} onPress={handleSample} accessibilityLabel="Try a sample">
+            <Text style={styles.sampleText}>Try a sample (no recording)</Text>
+          </Pressable>
+        )}
+
         {error && (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{error}</Text>
@@ -159,19 +198,18 @@ export function AudioInterviewScreen() {
         )}
 
         <View style={styles.transcriptBox}>
-          <Text style={styles.transcriptLabel}>Question (transcript)</Text>
+          <Text style={styles.transcriptLabel}>Transcript</Text>
           <Text style={transcript ? styles.transcriptText : styles.transcriptEmpty}>
             {transcript || (recording ? 'Listening…' : 'Tap Start to begin.')}
           </Text>
         </View>
 
         <View style={styles.sonaBox}>
-          <Text style={styles.sonaLabel}>Context from your prep</Text>
-          {phase === 'thinking' && <Text style={styles.sonaEmpty}>Looking up relevant prep…</Text>}
+          <Text style={styles.sonaLabel}>From your library</Text>
+          {phase === 'thinking' && <Text style={styles.sonaEmpty}>Looking up your library…</Text>}
           {!answer && phase !== 'thinking' && (
             <Text style={styles.sonaEmpty}>
-              Sona surfaces what you've already studied that's relevant to the question. You decide what
-              to say with it.
+              Camora surfaces material you've already studied that's relevant to what was said.
             </Text>
           )}
           {answer && <SonaAnswerView answer={answer} />}
@@ -183,12 +221,12 @@ export function AudioInterviewScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Before you start</Text>
             <Text style={styles.modalBody}>
-              Camora records audio from your phone's microphone so it can transcribe the conversation.
-              Recording the other party of a phone call is regulated where you live.
+              Camora records audio from your phone's microphone so it can transcribe what's said.
+              Recording another person without consent is regulated in many places.
             </Text>
             <Text style={styles.modalBody}>
-              By tapping Continue, you confirm that you have informed the other party that audio is
-              being captured and that you have the legal right to record.
+              By tapping Continue, you confirm that anyone within range has been informed that audio
+              is being captured and that you have the legal right to record.
             </Text>
             <Text style={styles.modalBody}>
               Recording auto-stops after {MAX_RECORDING_MS / 60_000} minutes. You can stop earlier any time.
@@ -210,7 +248,7 @@ export function AudioInterviewScreen() {
 
 function phaseLabel(p: Phase): string {
   if (p === 'transcribing') return 'Transcribing…';
-  if (p === 'thinking') return 'Looking up your prep…';
+  if (p === 'thinking') return 'Looking up your library…';
   return 'Working…';
 }
 
@@ -240,7 +278,7 @@ function SonaAnswerView({ answer }: { answer: SonaAnswer }) {
     );
   }
   if (summary || raw) return <Text style={styles.sonaSectionBody}>{summary || raw}</Text>;
-  return <Text style={styles.sonaEmpty}>No relevant prep found for this question.</Text>;
+  return <Text style={styles.sonaEmpty}>Nothing in your library matched this clip.</Text>;
 }
 
 const styles = StyleSheet.create({
@@ -284,6 +322,14 @@ const styles = StyleSheet.create({
   recordDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff', opacity: 0.85 },
   recordDotActive: { opacity: 1 },
   recordText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  sampleBtn: {
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  sampleText: { color: colors.textMuted, fontWeight: '600', fontSize: 14 },
   errorBox: {
     backgroundColor: '#2A1517',
     borderRadius: radii.md,

@@ -19,8 +19,12 @@ apps/
   ai-services/     # FastAPI (Python) — speaker verification, diagrams (Docker on Railway)
                    #   non-/health routes require X-API-Key in AI_SERVICES_API_KEY env
   desktop/         # Electron 41 shell that loads camora.cariara.com (arm64 DMG)
-  mobile/          # Expo (React Native) — iOS + Android, audio interviews + Capra prep
-                   #   video/coding interviews redirect to desktop or web by design
+  mobile/          # Expo (React Native) — iOS + Android. Reviewer-facing
+                   #   framing is "Study & Live Notes" (not "interview AI") to
+                   #   reduce App Store rejection risk under Guideline 5.6.1.
+                   #   Underlying functionality is identical to web Lumora audio:
+                   #   mic capture → /api/v1/transcribe → /api/v1/inference/stream.
+                   #   Video/coding redirect to desktop or web by design.
 packages/
   shared-types/    # TypeScript types (User, Conversation, Subscription, PlanType, etc.)
   shared-db/       # PostgreSQL pool (getPool, query, closePool) + migrations

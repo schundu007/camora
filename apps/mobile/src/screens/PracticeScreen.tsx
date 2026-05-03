@@ -8,8 +8,8 @@ export function PracticeScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Practice</Text>
         <Text style={styles.sub}>
-          Walk through prep topics on the Prep tab. The interactive coding pad and system-design
-          diagrams live on desktop and web — they don't translate to a phone screen.
+          Walk through topics on the Prep tab. The interactive coding pad and system-design diagrams
+          live on desktop and web — they don't fit a phone screen.
         </Text>
         <View style={styles.notice}>
           <Text style={styles.noticeTitle}>Where to code</Text>

@@ -17,10 +17,12 @@
       "bundleIdentifier": "com.cariara.camora",
       "supportsTablet": false,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Camora records audio when you tap the record button on the Interview tab so it can transcribe the conversation and surface relevant context from your prep. Recording does not start automatically.",
+        "NSMicrophoneUsageDescription": "Camora records audio when you tap the record button on the Live tab so it can transcribe what's said and surface relevant material from your study library. Recording does not start automatically.",
         "UIBackgroundModes": ["audio"],
-        "ITSAppUsesNonExemptEncryption": false
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSUserActivityTypes": ["NSUserActivityTypeBrowsingWeb"]
+      },
+      "associatedDomains": ["applinks:camora.cariara.com", "webcredentials:camora.cariara.com"]
     },
     "android": {
       "package": "com.cariara.camora",
@@ -28,6 +30,14 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F1115"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "camora.cariara.com", "pathPrefix": "/mobile/auth" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "permissions": [
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS",
@@ -48,7 +58,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "Camora records audio when you tap the record button on the Interview tab so it can transcribe the conversation and surface relevant context from your prep. Recording does not start automatically."
+          "microphonePermission": "Camora records audio when you tap the record button on the Live tab so it can transcribe what's said and surface relevant material from your study library. Recording does not start automatically."
         }
       ]
     ],

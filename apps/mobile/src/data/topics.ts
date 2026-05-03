@@ -17,7 +17,7 @@ export const CATEGORIES: Category[] = [
   {
     key: 'dsa',
     title: 'Data Structures & Algorithms',
-    description: 'Patterns that show up across most coding interviews.',
+    description: 'Patterns that show up across most technical-screening problems.',
     topics: [
       {
         slug: 'two-pointers',
@@ -165,12 +165,12 @@ Don't chase a clever bottom-up version on a whiteboard. Write the top-down memoi
   {
     key: 'system-design',
     title: 'System Design',
-    description: 'High-level architecture questions for senior interviews.',
+    description: 'High-level architecture topics for senior-level evaluations.',
     topics: [
       {
         slug: 'design-framework',
         title: 'A framework for any system design question',
-        summary: 'Five steps you walk every design interview through, regardless of the prompt.',
+        summary: 'Five steps you walk every design discussion through, regardless of the prompt.',
         estimatedMinutes: 18,
         body: `1. Clarify requirements (functional + non-functional). Ask about scale, read/write ratios, latency targets, consistency needs. Write them on the board — interviewers grade on whether you re-check assumptions later.
 
@@ -290,7 +290,7 @@ Quorum reads/writes (R + W > N) give tunable consistency. Cassandra exposes this
   {
     key: 'behavioral',
     title: 'Behavioral',
-    description: 'Stories you tell about yourself, structured for the interview.',
+    description: 'Stories you tell about yourself, structured for any professional conversation.',
     topics: [
       {
         slug: 'star-method',
@@ -312,7 +312,7 @@ Time budget: 90 seconds for short questions, 3 minutes max for big ones. Practic
       {
         slug: 'tell-me-about-yourself',
         title: '"Tell me about yourself"',
-        summary: 'The first 90 seconds set the frame for the whole interview.',
+        summary: 'The first 90 seconds set the frame for the whole conversation.',
         estimatedMinutes: 8,
         body: `This isn't an autobiography — it's a pitch. Three beats, 90 seconds total:
 
@@ -367,7 +367,7 @@ Frame the story around the *system* you built or the *practice* you established,
       {
         slug: 'failure-stories',
         title: 'Failure stories',
-        summary: 'The interviewer is checking for self-awareness, not screening out people who have failed.',
+        summary: 'They are checking for self-awareness, not screening out people who have failed.',
         estimatedMinutes: 10,
         body: `"Tell me about a time you failed." Two failure modes when answering: (1) the humblebrag fake-failure ("I worked too hard"), (2) the genuine failure that makes the interviewer wince.
 
@@ -386,8 +386,8 @@ Don't pick a story where the lesson is "I should have followed the established p
       },
       {
         slug: 'questions-to-ask',
-        title: 'Questions you ask the interviewer',
-        summary: 'Your questions are graded too — they reveal what you actually care about.',
+        title: 'Questions to ask back',
+        summary: 'The questions you ask reveal what you actually care about — they are graded too.',
         estimatedMinutes: 9,
         body: `Have 6+ questions ready, pick 2–3 per round based on who's interviewing.
 
@@ -415,8 +415,8 @@ Don't ask things you can find on the website (mission, products, headcount). Don
   },
   {
     key: 'company',
-    title: 'Company-specific prep',
-    description: 'How to prepare differently for the bar each company sets.',
+    title: 'Company-specific notes',
+    description: 'How different companies set their bar, and how to study for each.',
     topics: [
       {
         slug: 'amazon-leadership-principles',
@@ -480,7 +480,7 @@ Behavioral (1 round). Two themes they probe: (1) "move fast" — when did you sh
 For senior+ (E5+): expect a "tell me about a project" round that goes deep into one project for 30+ minutes. They'll probe technical decisions, tradeoffs, what you'd change. Pick a project where you had real ownership and can defend every choice.`,
       },
       {
-        slug: 'startup-interviews',
+        slug: 'startup-conversations',
         title: 'Startups — generalist signal + culture fit',
         summary: 'Less rubric, more "would I want to work with you tomorrow."',
         estimatedMinutes: 12,

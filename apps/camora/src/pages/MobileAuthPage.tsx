@@ -3,13 +3,18 @@ import { useAuth } from '../contexts/AuthContext';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-// Only hand the token off to the official mobile app's URL scheme. Custom
-// schemes can be claimed by any installed app, so we still treat this as
-// best-effort — App Links / Universal Links is the proper long-term fix.
+// Hand the token off to either:
+//   - The verified Universal Link / App Link target on our own domain (preferred —
+//     ownership proven by AASA/assetlinks.json under apps/camora/public/.well-known).
+//   - The legacy custom scheme (only if AASA hasn't propagated yet).
+// Anything else is rejected.
 const ALLOWED_SCHEMES = ['camora://'];
+const ALLOWED_HTTPS_PREFIXES = ['https://camora.cariara.com/mobile/auth'];
 
 function isAllowedRedirect(target: string): boolean {
-  return ALLOWED_SCHEMES.some(scheme => target.startsWith(scheme));
+  if (ALLOWED_SCHEMES.some(scheme => target.startsWith(scheme))) return true;
+  if (ALLOWED_HTTPS_PREFIXES.some(prefix => target.startsWith(prefix))) return true;
+  return false;
 }
 
 /**
@@ -41,6 +46,9 @@ export default function MobileAuthPage() {
     if (isLoading) return;
 
     if (token) {
+      // If the redirect IS this page (Universal Link round-trip), append the
+      // token as a query param. The mobile app's Linking handler reads it on
+      // cold start via getInitialURL() and on warm start via the 'url' event.
       const sep = redirect.includes('?') ? '&' : '?';
       window.location.replace(`${redirect}${sep}token=${encodeURIComponent(token)}`);
       return;
