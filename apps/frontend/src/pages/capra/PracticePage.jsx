@@ -810,35 +810,52 @@ export default function PracticePage() {
               {/* Challenge History */}
               {stats.history && stats.history.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Challenge History</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {scoreTrend.length >= 2 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Score trend</span>
-                          <Sparkline data={scoreTrend} width={80} height={24} />
-                        </div>
-                      )}
-                      <button
-                        onClick={async () => {
-                          const ok = await dialogConfirm({
-                            title: 'Reset challenge history?',
-                            message: 'Clears every past challenge score and streak. This cannot be undone.',
-                            confirmLabel: 'Reset',
-                            tone: 'danger',
-                          });
-                          if (ok) {
-                            localStorage.removeItem('camora_challenge_stats');
-                            setStats(getStats());
-                          }
-                        }}
-                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: 'var(--danger)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
-                      >
-                        Reset History
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gap: 10 }}>
+                  <SectionCard
+                    title="Challenge History"
+                    count={stats.history.length}
+                    bodyClassName="p-0"
+                    actions={
+                      <>
+                        {scoreTrend.length >= 2 && (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
+                            style={{
+                              background: 'rgba(255,255,255,0.08)',
+                              border: '1px solid rgba(255,255,255,0.16)',
+                              borderRadius: 999,
+                              color: 'rgba(255,255,255,0.85)',
+                            }}>
+                            <span>Trend</span>
+                            <Sparkline data={scoreTrend} width={48} height={14} />
+                          </span>
+                        )}
+                        <button
+                          onClick={async () => {
+                            const ok = await dialogConfirm({
+                              title: 'Reset challenge history?',
+                              message: 'Clears every past challenge score and streak. This cannot be undone.',
+                              confirmLabel: 'Reset',
+                              tone: 'danger',
+                            });
+                            if (ok) {
+                              localStorage.removeItem('camora_challenge_stats');
+                              setStats(getStats());
+                            }
+                          }}
+                          className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
+                          style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(255,255,255,0.16)',
+                            borderRadius: 999,
+                            color: 'rgba(255,255,255,0.9)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Reset
+                        </button>
+                      </>
+                    }
+                  >
+                    <div style={{ display: 'grid', gap: 10, padding: 16 }}>
                     {stats.history.slice(0, 10).map((h, i) => {
                       const hDC = diffColor(h.difficulty || 'medium');
                       const companyObj = COMPANIES.find(c => c.id === h.company);
@@ -882,6 +899,7 @@ export default function PracticePage() {
                       );
                     })}
                   </div>
+                  </SectionCard>
                 </div>
               )}
             </>
@@ -1369,11 +1387,11 @@ export default function PracticePage() {
               )}
 
               {/* ── Question Breakdown ── */}
-              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'none' }}>
-                <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Question Breakdown</h3>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{passed} of {total} passed</span>
-                </div>
+              <SectionCard
+                title="Question Breakdown"
+                count={`${passed} / ${total}`}
+                bodyClassName="p-0"
+              >
                 {questions.map((q, i) => {
                   const isExpanded = expandedHistory === `result-${i}`;
                   const dims = aiDimensions[i] || {};
@@ -1427,7 +1445,7 @@ export default function PracticePage() {
                     </div>
                   );
                 })}
-              </div>
+              </SectionCard>
             </div>
             );
           })()}
