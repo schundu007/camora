@@ -166,8 +166,14 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
   req.setTimeout(120000);
   res.setTimeout(120000);
   try {
-    const { question, cloudProvider, difficulty, category, format, detailLevel = 'overview', direction = 'LR', cacheKey } = req.body;
+    const { question, cloudProvider, difficulty, category, format, cacheKey } = req.body;
     const provider = cloudProvider || 'auto';
+    // Direction + detail are locked to TB/detailed: those are the only knob
+    // values the UI sends now, and pinning them server-side prevents stale
+    // clients (or curl callers) from spawning cache rows the UI can never
+    // hit. Inbound values are ignored on purpose.
+    const direction = 'TB';
+    const detailLevel = 'detailed';
 
     if (!question) {
       throw new AppError('Question is required', ErrorCode.VALIDATION_ERROR);
@@ -175,8 +181,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
 
     // 1. Check DB cache first — cached diagrams cost nothing to serve.
     // Only treat a row as a hit when we actually have a PNG (image_url or
-    // image_data). A mermaid-only row means Python was down at cache time;
-    // we'd rather pay to regenerate to PNG than permanently serve text.
+    // image_data).
     const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
     try {
       const cached = await query(
@@ -212,10 +217,11 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
       throw new AppError('Diagram generation not configured — ANTHROPIC_API_KEY is not set', ErrorCode.EXTERNAL_API_ERROR);
     }
 
-    // 4. Try Python diagrams first, fall back to Mermaid code generation.
-    // Wall-clock starts here so the AI-hours meter reflects real generation
-    // time (Python + retries + Mermaid fallback if it fires) instead of a
-    // hardcoded 30s approximation.
+    // 4. Generate via Python diagrams (Graphviz). The previous Mermaid
+    // fallback violated the "No Mermaid Diagrams" + "No Text Arrow Diagrams"
+    // rules — text-graph fallback was confusing for users, and admins can
+    // simply retry once Python is back. If Python fails, we surface the
+    // error and let the admin act, rather than silently degrading.
     const genStartedAt = new Date();
     let pythonResult = null;
     let pythonError = null;
@@ -235,55 +241,14 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
       }
     } catch (err) {
       pythonError = err.message || 'Python diagram generation failed';
-      console.warn('[Diagram] Python generation failed, trying Mermaid fallback:', pythonError);
+      console.warn('[Diagram] Python generation failed:', pythonError);
     }
 
-    // Python failed — try Mermaid fallback
     if (!pythonResult) {
-      console.warn('[Diagram] Python failed, trying Mermaid fallback:', pythonError);
-      try {
-        const { default: claude } = await import('../services/claude.js');
-        const mermaidPrompt = `Generate a Mermaid.js architecture diagram for: ${question}
-Provider: ${provider === 'auto' ? 'generic cloud' : provider}
-Detail: ${detailLevel}
-Direction: ${direction}
-
-Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" or "flowchart ${direction}". No markdown fences, no explanation. Use short node labels.`;
-        const mermaidCode = await claude.generateText(mermaidPrompt, { maxTokens: 2000 });
-        if (mermaidCode && mermaidCode.trim().length > 20) {
-          // Cache the mermaid code
-          try {
-            await query(
-              `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, mermaid_code, description)
-               VALUES ($1, $2, $3, $4, $5, $6)
-               ON CONFLICT (problem_hash) DO UPDATE SET mermaid_code = $5`,
-              [problemHash, detailLevel, provider, direction, mermaidCode.trim(), (cacheKey || question).slice(0, 500)]
-            );
-          } catch { /* ignore cache error */ }
-          if (req.user?.id) {
-            // Mermaid path — wall-clock covers the failed Python attempt(s)
-            // plus the Mermaid retry. tokens kept for analytics, seconds is
-            // the source of truth for the meter.
-            recordUsage({
-              userId: req.user.id,
-              surface: 'capra_diagram',
-              seconds: (Date.now() - genStartedAt.getTime()) / 1000,
-              tokensIn: Math.ceil(mermaidPrompt.length / 4),
-              tokensOut: Math.ceil(mermaidCode.length / 4),
-              model: 'claude-sonnet-4-6',
-              startedAt: genStartedAt,
-            });
-          }
-          return res.json({ success: true, type: 'mermaid', mermaid_code: mermaidCode.trim(), cloud_provider: provider, cached: false });
-        }
-      } catch (mermaidErr) {
-        console.error('[Diagram] Mermaid fallback also failed:', mermaidErr.message);
-      }
-      // Both failed
       throw new AppError(
         pythonError || 'Diagram generation failed',
         ErrorCode.EXTERNAL_API_ERROR,
-        'Python and Mermaid fallback both failed'
+        'Python diagram generation failed'
       );
     }
 
@@ -340,41 +305,30 @@ Return ONLY a valid Mermaid graph definition starting with "graph ${direction}" 
  */
 router.post('/lookup', async (req, res) => {
   try {
-    const { question, cloudProvider = 'auto', detailLevel = 'overview', direction = 'TB' } = req.body;
+    const { question, cloudProvider = 'auto' } = req.body;
     if (!question) return res.status(400).json({ error: 'Question required' });
 
-    // Try multiple hash combinations across provider + direction only.
-    // detailLevel is NOT iterated: when the user picks 'detailed', they want
-    // detailed — returning a cached 'overview' would make the toggle look
-    // broken. Provider/direction are visually similar enough that a cached
-    // hit on a sibling key is still useful.
-    const providers = [cloudProvider, 'auto'];
-    const directions = [direction, direction === 'TB' ? 'LR' : 'TB'];
+    // Direction + detail are locked to TB/detailed (matches /generate).
+    // Iterate provider only — fall back to 'auto' so a request for AWS still
+    // returns the auto-generated diagram if no cloud-specific row exists yet.
+    const direction = 'TB';
+    const detailLevel = 'detailed';
+    const providers = cloudProvider === 'auto' ? ['auto'] : [cloudProvider, 'auto'];
     const tried = new Set();
 
     for (const p of providers) {
-      for (const d of directions) {
-        const hash = hashProblem(`${question}::${p}::${d}::${detailLevel}`);
-        if (tried.has(hash)) continue;
-        tried.add(hash);
+      const hash = hashProblem(`${question}::${p}::${direction}::${detailLevel}`);
+      if (tried.has(hash)) continue;
+      tried.add(hash);
 
-        // Prefer rows with a PNG (image_url/image_data). Mermaid-only rows
-        // are a cached fallback from a Python outage — only return them
-        // when nothing better is found.
-        const result = await query(
-          'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) ORDER BY (image_url IS NOT NULL OR image_data IS NOT NULL) DESC LIMIT 1',
-          [hash]
-        );
+      const result = await query(
+        'SELECT image_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL) LIMIT 1',
+        [hash]
+      );
 
-        if (result.rows.length > 0) {
-          console.log(`[DiagramLookup] Cache hit for: ${question.slice(0, 50)} (${p}/${d}/${detailLevel})`);
-          if (result.rows[0].image_url) {
-            return res.json({ success: true, image_url: result.rows[0].image_url, cached: true });
-          }
-          if (result.rows[0].mermaid_code) {
-            return res.json({ success: true, type: 'mermaid', mermaid_code: result.rows[0].mermaid_code, cached: true });
-          }
-        }
+      if (result.rows.length > 0 && result.rows[0].image_url) {
+        console.log(`[DiagramLookup] Cache hit for: ${question.slice(0, 50)} (${p}/${direction}/${detailLevel})`);
+        return res.json({ success: true, image_url: result.rows[0].image_url, cached: true });
       }
     }
 
@@ -430,8 +384,7 @@ router.get('/cache-stats', async (req, res) => {
     const stats = await query(`
       SELECT problem_hash, description, detail_level, cloud_provider, direction,
              image_url IS NOT NULL as has_url,
-             image_data IS NOT NULL as has_data,
-             mermaid_code IS NOT NULL as has_mermaid
+             image_data IS NOT NULL as has_data
       FROM ascend_diagram_cache
       ORDER BY problem_hash
       LIMIT 50

@@ -19,8 +19,11 @@ const diagramCache = new Map();
 const CACHE_MAX_SIZE = 200;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-function getCacheKey(question, provider, detailLevel) {
-  const str = `${question}::${provider || 'auto'}::${detailLevel || 'overview'}`;
+// Cache key bakes in the locked detail-level so future loosening (separate
+// cache per detail level) doesn't silently collide with old keys.
+const LOCKED_DETAIL = 'detailed';
+function getCacheKey(question, provider) {
+  const str = `${question}::${provider || 'auto'}::${LOCKED_DETAIL}`;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
@@ -57,29 +60,22 @@ router.use(authenticate);
  *
  * Body:
  *   question       – the interview question / architecture prompt
- *   cloud_provider – "aws" | "gcp" | "azure" (default: "aws")
- *   detail_level   – "high" | "medium" | "low" (optional)
+ *   cloud_provider – "aws" | "gcp" | "azure" | "auto" (default: "aws")
+ *
+ * detail_level + direction are no longer accepted; the UI no longer exposes
+ * them and the server pins both to detailed/TB so callers can't fragment the
+ * cache.
  */
-// Map frontend detail levels to ai-services values
-const DETAIL_LEVEL_MAP = {
-  overview: 'low',
-  detailed: 'high',
-  // Also accept ai-services values directly
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-};
-
 router.post('/generate', checkUsage('diagrams'), async (req, res) => {
   try {
-    const { question, cloud_provider = 'aws', detail_level } = req.body;
+    const { question, cloud_provider = 'aws' } = req.body;
 
     if (!question) {
       return res.status(400).json({ success: false, error: '"question" is required' });
     }
 
     // Check in-memory cache first
-    const cacheKey = getCacheKey(question, cloud_provider, detail_level);
+    const cacheKey = getCacheKey(question, cloud_provider);
     const cached = getCachedDiagram(cacheKey);
     if (cached) {
       console.log('[DiagramCache] Lumora cache hit');
@@ -89,11 +85,9 @@ router.post('/generate', checkUsage('diagrams'), async (req, res) => {
     const payload = {
       question,
       cloud_provider,
+      detail_level: 'high',
       user_id: req.user.id,
     };
-    if (detail_level) {
-      payload.detail_level = DETAIL_LEVEL_MAP[detail_level] || detail_level;
-    }
 
     const upstream = await proxyToAIService('/diagram/generate', {
       method: 'POST',

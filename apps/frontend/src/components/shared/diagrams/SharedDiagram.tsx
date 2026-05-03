@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDiagramCache, setDiagramCache } from '@/hooks/useDiagramCache';
+import { useCloudProvider } from '@/hooks/useCloudProvider';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -8,9 +9,6 @@ interface SharedDiagramProps {
   question: string;
   className?: string;
   showControls?: boolean;
-  defaultProvider?: string;
-  defaultDirection?: 'LR' | 'TB';
-  defaultDetail?: 'overview' | 'detailed';
 }
 
 /**
@@ -20,18 +18,19 @@ interface SharedDiagramProps {
  * Features:
  * - Cache-first lookup (no per-request generation)
  * - Cloud provider selector (Auto/AWS/Azure/GCP)
- * - Direction toggle (LR/TB)
- * - Detail level (Overview/Detailed)
  * - Pan & zoom on image
  * - Generate button for cache misses
+ *
+ * Direction is locked to LR and detail-level to detailed — extra knobs added
+ * confusion without changing perceived quality. One layout, one density.
  */
+const DIRECTION = 'TB';
+const DETAIL = 'detailed';
+
 export default function SharedDiagram({
   question,
   className = '',
   showControls = true,
-  defaultProvider = 'auto',
-  defaultDirection = 'TB',
-  defaultDetail = 'overview',
 }: SharedDiagramProps) {
   const { token } = useAuth();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -39,9 +38,7 @@ export default function SharedDiagram({
   const [generating, setGenerating] = useState(false);
   const [noCache, setNoCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [provider, setProvider] = useState(defaultProvider);
-  const [direction, setDirection] = useState(defaultDirection);
-  const [detail, setDetail] = useState(defaultDetail);
+  const [provider, setProvider] = useCloudProvider();
 
   // Pan & zoom
   const [scale, setScale] = useState(1);
@@ -54,7 +51,7 @@ export default function SharedDiagram({
   // Cache lookup
   useEffect(() => {
     if (!question || !token) return;
-    const key = `${question}::${provider}::${direction}::${detail}`;
+    const key = `${question}::${provider}::${DIRECTION}::${DETAIL}`;
     const mem = getDiagramCache(key);
     if (mem) { setImageUrl(mem.data); setNoCache(false); setLoading(false); resetView(); return; }
 
@@ -67,7 +64,7 @@ export default function SharedDiagram({
           credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ question, cloudProvider: provider, detailLevel: detail, direction }),
+          body: JSON.stringify({ question, cloudProvider: provider, detailLevel: DETAIL, direction: DIRECTION }),
         });
         const data = await r.json();
         if (!cancelled) {
@@ -82,7 +79,7 @@ export default function SharedDiagram({
       } catch { if (!cancelled) { setNoCache(true); setLoading(false); } }
     })();
     return () => { cancelled = true; };
-  }, [question, token, provider, direction, detail, resetView]);
+  }, [question, token, provider, resetView]);
 
   // Generate
   const handleGenerate = async () => {
@@ -93,13 +90,13 @@ export default function SharedDiagram({
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ question, cloudProvider: provider, detailLevel: detail, direction }),
+        body: JSON.stringify({ question, cloudProvider: provider, detailLevel: DETAIL, direction: DIRECTION }),
       });
       const data = await r.json();
       if (data.success && data.image_url) {
         const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
         setImageUrl(url);
-        setDiagramCache(`${question}::${provider}::${direction}::${detail}`, { type: 'png', data: url, timestamp: Date.now() });
+        setDiagramCache(`${question}::${provider}::${DIRECTION}::${DETAIL}`, { type: 'png', data: url, timestamp: Date.now() });
         resetView();
       } else { setError(data.error || 'Generation failed'); }
     } catch (e: any) { setError(e.message); }
@@ -111,27 +108,13 @@ export default function SharedDiagram({
       {showControls && (
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <select value={provider} onChange={e => setProvider(e.target.value)}
+            <select value={provider} onChange={e => setProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
               className="text-xs font-mono bg-transparent border border-gray-200 rounded px-2.5 py-1.5 min-h-[36px] text-[var(--text-secondary)]">
               <option value="auto">Auto</option>
               <option value="aws">AWS</option>
               <option value="azure">Azure</option>
               <option value="gcp">GCP</option>
             </select>
-            <div className="flex border border-gray-200 rounded overflow-hidden">
-              {(['LR', 'TB'] as const).map(d => (
-                <button key={d} onClick={() => setDirection(d)}
-                  className={`px-2.5 py-1.5 min-h-[36px] text-xs font-mono ${d !== 'LR' ? 'border-l border-gray-200' : ''} ${
-                    direction === d ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-secondary)]'}`}>{d}</button>
-              ))}
-            </div>
-            <div className="flex border border-gray-200 rounded overflow-hidden">
-              {(['overview', 'detailed'] as const).map(d => (
-                <button key={d} onClick={() => setDetail(d)}
-                  className={`px-2.5 py-1.5 min-h-[36px] text-xs font-mono capitalize ${d !== 'overview' ? 'border-l border-gray-200' : ''} ${
-                    detail === d ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-secondary)]'}`}>{d}</button>
-              ))}
-            </div>
           </div>
           {imageUrl && (
             <div className="flex items-center gap-1">
