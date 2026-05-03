@@ -6,7 +6,11 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Satoshi', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
-        display: ['Winter Kei', 'Clash Display', 'Satoshi', 'system-ui', 'sans-serif'],
+        // `font-display` is the headline face for marketing surfaces. Winter
+        // Kei is preserved as `font-marquee` for cases where the more
+        // editorial / decorative cut is wanted (one-off splash titles).
+        display: ['Clash Display', 'Satoshi', 'system-ui', 'sans-serif'],
+        marquee: ['Winter Kei', 'Clash Display', 'system-ui', 'sans-serif'],
         code: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         mono: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         logo: ['Clash Display', 'system-ui', 'sans-serif'],
