@@ -900,7 +900,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
   return (
     <div
-      className={embedded ? 'flex-1 flex flex-col min-h-0 relative' : 'h-screen w-full flex flex-col lumora-app-bg relative'}
+      className={embedded ? 'flex-1 flex flex-col min-h-0 relative' : 'h-dvh w-full flex flex-col lumora-app-bg relative'}
       style={
         embedded
           ? {
@@ -1016,14 +1016,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               top bar grammar. Navy band + gold underline + bezelled pill
               container holding the Description / Solution toggles. */}
           <div
-            className="flex items-center px-3 py-2"
+            className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar"
             style={{
               background: 'var(--cam-hero-strip)',
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
             <div
-              className="flex items-center gap-1 px-1 py-1"
+              className="flex items-center gap-1 px-1 py-1 shrink-0"
               style={{
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.16)',
@@ -1062,7 +1062,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 stream as part of the reset. */}
             <button
               onClick={handleNewProblem}
-              className="ml-auto flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors"
+              className="ml-auto shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors"
               style={{
                 color: 'rgba(255,255,255,0.92)',
                 background: 'rgba(255,255,255,0.10)',
