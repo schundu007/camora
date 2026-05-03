@@ -50,7 +50,21 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
   // any surface — bypassing data-theme cascade that was occasionally
   // flipping --text-primary to a light value on the white nav.
   const textColor = isDark ? '#FFFFFF' : '#020617';
-  const hoverBg = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(2,6,23,0.06)';
+  const hoverBg = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(2,6,23,0.06)';
+  // Glass-pill capsule treatment when the trigger sits on a navy strip
+  // (rail bottom). Matches GlassPill / PillToggle grammar so the trigger
+  // reads as part of the same chrome family.
+  const triggerBase: React.CSSProperties = isDark
+    ? {
+        background: 'rgba(255,255,255,0.08)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        borderRadius: 999,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.20)',
+      }
+    : {
+        background: 'transparent',
+        border: '1px solid transparent',
+      };
 
   const positionStyles: Record<string, string> = {
     'below-right': 'right-0 top-full mt-2',
@@ -65,13 +79,13 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
       {/* Trigger */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-lg transition-colors px-1.5 py-1"
-        style={{ color: textColor }}
+        className="flex items-center gap-2 transition-colors px-1.5 py-1"
+        style={{ color: textColor, ...triggerBase }}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
         onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        onMouseLeave={e => (e.currentTarget.style.background = (triggerBase.background as string) || 'transparent')}
       >
         {(user.image || (user as any).picture) ? (
           <img src={user.image || (user as any).picture} alt="" className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full object-cover`} style={{ boxShadow: `0 0 0 1px ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}` }} referrerPolicy="no-referrer" />

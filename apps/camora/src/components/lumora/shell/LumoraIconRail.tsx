@@ -194,9 +194,20 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         ))}
       </div>
 
-      {/* User */}
-      <div className="px-1.5 pt-2 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
-        <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} showName={expanded} compact={!expanded} position="above-left" />
+      {/* User — navy-strip + gold-leaf chrome, mirrors the wordmark band
+          at the top of the rail so the column is bookended by two strips
+          of the same grammar (cam-hero-strip + 2px gold-leaf border,
+          h-12 fixed). UserDropdown forced to `dark` variant so the
+          trigger glass-pill reads on the navy strip regardless of the
+          page theme. */}
+      <div
+        className={`h-12 flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
+        style={{
+          background: 'var(--cam-hero-strip)',
+          borderTop: '2px solid var(--cam-gold-leaf)',
+        }}
+      >
+        <UserDropdown variant="dark" showName={expanded} compact={!expanded} position="above-left" />
       </div>
 
       <AudioCheckModal isOpen={audioCheckOpen} onClose={() => setAudioCheckOpen(false)} />
