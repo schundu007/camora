@@ -2,10 +2,9 @@
 /**
  * Batch pre-generate architecture diagrams for the Camora system-design catalog.
  *
- * Hits POST /api/diagram/generate (D2 engine by default; Graphviz fallback
- * if D2 fails — see DIAGRAM_ENGINE in pythonDiagrams.js) for every problem
- * in the catalog so users hit the cache instead of triggering fresh
- * generation.
+ * Hits POST /api/diagram/generate (Python diagrams + Graphviz, see
+ * pythonDiagrams.js + diagram_engine.py) for every problem in the
+ * catalog so users hit the cache instead of triggering fresh generation.
  *
  * IMPORTANT: /api/diagram/generate is admin-only. You MUST set API_TOKEN
  * to a JWT minted for an OWNER_EMAILS account. Non-admin tokens get
