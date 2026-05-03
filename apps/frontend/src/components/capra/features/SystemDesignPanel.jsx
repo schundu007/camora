@@ -315,8 +315,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const [diagramCache, setDiagramCache] = useState({});
   const [diagramError, setDiagramError] = useState(null);
   const autoLoadedRef = useRef(null);
-  const [diagramDetailLevel, setDiagramDetailLevel] = useState('overview');
-  const [diagramDirection, setDiagramDirection] = useState('LR');
+  // Detail + direction were user-toggleable in the legacy toolbar but are
+  // now server-pinned to detailed/TB (PR #1 cutover). Kept as state so the
+  // dependent code (diagramKey, handleGenerateDiagram retry, fullscreen
+  // ASCII fallback) keeps reading values, just with no setter wired to
+  // user input.
+  const [diagramDetailLevel, setDiagramDetailLevel] = useState('detailed');
+  const [diagramDirection] = useState('TB');
   const [showASCII, setShowASCII] = useState(true);
   const [diagramScale, setDiagramScale] = useState(1);
   const [diagramTranslate, setDiagramTranslate] = useState({ x: 0, y: 0 });
@@ -334,11 +339,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     }
   }, [eraserDiagram?.imageUrl]);
 
-  // Auto-load cached diagram on page load (DB cache makes this instant)
+  // Auto-load cached diagram on page load (DB cache makes this instant).
+  // Direction + detail are locked to TB/detailed (PR #1) so the cache key
+  // is fixed; we only check the one cache slot we'll ever request.
   useEffect(() => {
-    if (systemDesign?.included && question && !diagramCache['overview_LR'] && !generatingDiagram && autoLoadedRef.current !== question) {
+    if (systemDesign?.included && question && !diagramCache['detailed_TB'] && !generatingDiagram && autoLoadedRef.current !== question) {
       autoLoadedRef.current = question;
-      handleGenerateDiagram('overview', 'LR');
+      handleGenerateDiagram('detailed', 'TB');
     }
   }, [systemDesign?.included, question]);
 
@@ -446,41 +453,50 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const showProDiagram = autoGenerateEraser || eraserDiagram;
 
   // Diagram-only mode: render just the cloud architecture diagram with controls
+  //
+  // The Overview/Detailed and LR/TB toggles were removed in lockstep with
+  // PR #1 — direction is server-pinned to TB and detail to detailed, so
+  // those buttons would've sent a body that the backend ignores. The
+  // CloudProviderSelector at the top now controls AWS/Azure/GCP; everything
+  // else is auto.
   if (diagramOnly) {
     return (
-      <div className="h-full flex flex-col overflow-hidden">
-        {/* Diagram Controls */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex-wrap gap-2 flex-shrink-0">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">
-            Cloud Architecture {diagramData?.cloudProvider && `(${diagramData.cloudProvider.toUpperCase()})`}
-          </h4>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <div className="flex rounded border border-[var(--border)] overflow-hidden">
-              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Overview</button>
-              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Detailed</button>
-            </div>
-            <div className="flex rounded border border-[var(--border)] overflow-hidden">
-              <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'LR')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'LR' ? 'bg-blue-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`} title="Left to Right">L→R</button>
-              <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'TB')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'TB' ? 'bg-blue-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`} title="Top to Bottom">T↓B</button>
-            </div>
-            {diagramData && (
-              <div className="flex items-center gap-1">
-                <button onClick={() => setDiagramScale(s => Math.max(0.3, s - 0.15))} className="w-6 h-6 flex items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-bold">−</button>
-                <span className="text-[10px] font-mono text-[var(--text-muted)] w-8 text-center">{Math.round(diagramScale * 100)}%</span>
-                <button onClick={() => setDiagramScale(s => Math.min(4, s + 0.15))} className="w-6 h-6 flex items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-bold">+</button>
-                <button onClick={() => { setDiagramScale(1); setDiagramTranslate({ x: 0, y: 0 }); }} className="px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[10px] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]">Fit</button>
-              </div>
-            )}
-            {diagramData && (
-              <button onClick={() => setDiagramModal(true)} className="w-6 h-6 flex items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]" title="Full Screen">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-              </button>
+      <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-app)' }}>
+        {/* Compact LeetCode-style toolbar — single row, dense, no wrap */}
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] flex-shrink-0" style={{ background: 'var(--bg-surface)' }}>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-1 h-3 rounded-full" style={{ background: 'var(--accent)' }} />
+            <h4 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-primary)] whitespace-nowrap">
+              Cloud Architecture
+            </h4>
+            {diagramData?.cloudProvider && (
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded text-[var(--text-muted)]" style={{ background: 'var(--bg-elevated)' }}>
+                {diagramData.cloudProvider.toUpperCase()}
+              </span>
             )}
           </div>
+          {diagramData && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => setDiagramScale(s => Math.max(0.3, s - 0.15))} className="w-6 h-6 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-bold" title="Zoom out">−</button>
+              <span className="text-[10px] font-mono text-[var(--text-muted)] w-9 text-center tabular-nums">{Math.round(diagramScale * 100)}%</span>
+              <button onClick={() => setDiagramScale(s => Math.min(4, s + 0.15))} className="w-6 h-6 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-bold" title="Zoom in">+</button>
+              <button onClick={() => { setDiagramScale(1); setDiagramTranslate({ x: 0, y: 0 }); }} className="px-2 h-6 rounded text-[10px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]" title="Reset to fit">Fit</button>
+              <div className="w-px h-4 mx-1" style={{ background: 'var(--border)' }} />
+              <button onClick={() => setDiagramModal(true)} className="w-6 h-6 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]" title="Full screen">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+              </button>
+            </div>
+          )}
         </div>
-        {/* Diagram with Pan+Zoom */}
+        {/* Diagram with Pan+Zoom — fixed viewport-relative max-height so the
+            container itself never grows beyond the visible pane. The image
+            inside fits-to-container at scale=1 (object-contain), then the
+            user can zoom/pan from there. The previous implementation rendered
+            the image at native pixel size (maxWidth:'none') which produced
+            multi-page scrolls for tall TB diagrams. */}
         <div
-          className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing relative" style={{ minHeight: '500px' }}
+          className="flex-1 min-h-0 overflow-hidden cursor-grab active:cursor-grabbing relative flex items-center justify-center"
+          style={{ background: 'var(--bg-app)', maxHeight: 'calc(100vh - 220px)' }}
           onWheel={(e) => { if (diagramData) { e.preventDefault(); setDiagramScale(s => Math.min(4, Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)))); } }}
           onMouseDown={(e) => { if (diagramData) { setIsDragging(true); setDragStart({ x: e.clientX - diagramTranslate.x, y: e.clientY - diagramTranslate.y }); } }}
           onMouseMove={(e) => { if (isDragging) { setDiagramTranslate({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y }); } }}
@@ -491,15 +507,33 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             diagramData.imageUrl ? (
               <>
                 {!diagramImgLoaded && (
-                  <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-muted)]">
                     <svg className="w-6 h-6 animate-spin text-[var(--accent)] mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
                     <span className="text-xs">Loading diagram...</span>
                   </div>
                 )}
-                <img src={diagramData.imageUrl} alt="Cloud Architecture" className="select-none" draggable={false} style={{ transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`, transformOrigin: '0 0', maxWidth: 'none', display: diagramImgLoaded ? 'block' : 'none' }} onLoad={() => setDiagramImgLoaded(true)} onError={() => { setDiagramImgLoaded(false); setDiagramError({ message: 'Image failed to load. Click Retry to regenerate.', subscriptionRequired: false }); }} />
+                <img
+                  src={diagramData.imageUrl}
+                  alt="Cloud Architecture"
+                  className="select-none"
+                  draggable={false}
+                  style={{
+                    // Fit-to-container at scale=1, then user-zoom multiplies
+                    // from there. transformOrigin center keeps zoom anchored
+                    // on the visible center instead of the top-left corner.
+                    transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`,
+                    transformOrigin: 'center center',
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    display: diagramImgLoaded ? 'block' : 'none',
+                  }}
+                  onLoad={() => setDiagramImgLoaded(true)}
+                  onError={() => { setDiagramImgLoaded(false); setDiagramError({ message: 'Image failed to load. Click Retry to regenerate.', subscriptionRequired: false }); }}
+                />
               </>
             ) : diagramData.mermaidCode ? (
-              <div className="p-2 bg-[var(--bg-surface)] rounded" style={{ transform: `scale(${diagramScale})`, transformOrigin: '0 0' }}>
+              <div className="p-2 bg-[var(--bg-surface)] rounded" style={{ transform: `scale(${diagramScale})`, transformOrigin: 'center center' }}>
                 <MermaidDiagram content={diagramData.mermaidCode} />
               </div>
             ) : null
