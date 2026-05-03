@@ -40,6 +40,7 @@ const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage'));
+const LegalPage = lazy(() => import('./pages/LegalPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const TeamSettingsPage = lazy(() => import('./pages/account/TeamSettingsPage'));
 const JoinTeamPage = lazy(() => import('./pages/account/JoinTeamPage'));
@@ -296,6 +297,9 @@ export function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
           <Route path="/download" element={<DownloadPage />} />
+          <Route path="/legal/terms" element={<LegalPage />} />
+          <Route path="/legal/privacy" element={<LegalPage />} />
+          <Route path="/legal/security" element={<LegalPage />} />
 
           {/* ── Team / group sharing (auth required) ─────────── */}
           <Route path="/account/team" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
