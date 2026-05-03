@@ -1239,10 +1239,22 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
       )}
       {/* Sidebar Navigation */}
       <div className={`${isMobile ? 'fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300' : 'w-64'} flex flex-col prep-sidebar ${isDedicatedWindow && !embedded ? 'pt-7' : ''} ${isMobile && !prepSidebarOpen ? '-translate-x-full' : 'translate-x-0'}`}>
-        {/* Header with Company Selector */}
-        <div className="prep-header">
+        {/* Header with Company Selector — global navy-strip + gold-leaf chrome.
+            The prep-header CSS class no longer carries any defined styles, so
+            inline navy strip styling is the source of truth. */}
+        <div
+          className="prep-header"
+          style={{
+            background: 'var(--cam-hero-strip)',
+            borderBottom: '2px solid var(--cam-gold-leaf)',
+            padding: '8px 12px',
+          }}
+        >
           {!embedded && <div className="flex items-center justify-between mb-3">
-            <h2 className="prep-header-title landing-display">Interview Prep</h2>
+            <div className="flex items-center gap-2">
+              <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Interview Prep</h2>
+            </div>
             <div className="flex items-center gap-2">
               {/* Cloud Sync Status (Electron only) */}
               {isElectron && (
@@ -1813,9 +1825,13 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               }}
             />
 
-            {/* Header - Also Draggable */}
-            <div 
-              className="flex items-center justify-between px-6 py-5 cursor-move select-none"
+            {/* Header — global navy-strip + gold-leaf chrome (also draggable) */}
+            <div
+              className="flex items-center justify-between px-4 py-2.5 cursor-move select-none"
+              style={{
+                background: 'var(--cam-hero-strip)',
+                borderBottom: '2px solid var(--cam-gold-leaf)',
+              }}
               onMouseDown={(e) => {
                 if (e.target.closest('button')) return; // Don't drag when clicking buttons
                 e.preventDefault();
@@ -1823,35 +1839,32 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 setDragStart({ x: e.clientX - jdPopupPos.x, y: e.clientY - jdPopupPos.y });
               }}
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%)' }}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
+                <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Job Description</h2>
+                <span
+                  className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.16)',
+                    borderRadius: 999,
+                    color: 'rgba(255,255,255,0.85)',
+                  }}
                 >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-[var(--text-primary)] landing-display">Job Description</h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                      {activeCompany || 'No company'}
-                    </span>
-                    {inputs.jobDescription?.trim() && (
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {inputs.jobDescription.length.toLocaleString()} chars
-                      </span>
-                    )}
-                  </div>
-                </div>
+                  {activeCompany || 'No company'}
+                </span>
+                {inputs.jobDescription?.trim() && (
+                  <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    {inputs.jobDescription.length.toLocaleString()} chars
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => setShowJDPopup(false)}
-                className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-[var(--bg-elevated)]"
-                style={{ color: 'var(--text-muted)' }}
+                className="w-7 h-7 rounded-md flex items-center justify-center transition-all"
+                style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
