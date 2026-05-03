@@ -318,10 +318,10 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
     return (
       <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
         {/* Header for Design Mode */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+        <div className="flex items-center justify-between px-4 py-2.5 min-h-[44px]" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-brand-400" />
-            <span className="text-sm font-semibold text-[var(--text-primary)]">System Design</span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">System Design</span>
           </div>
         </div>
 
@@ -363,10 +363,10 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
   if (!code && !isStreaming) {
     return (
       <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
-        <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)] gap-2" style={{ minHeight: '44px' }}>
+        <div className="flex items-center justify-between px-2 sm:px-4 py-2 gap-2" style={{ minHeight: '44px', background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gray-400" />
-            <span className="text-sm font-semibold text-[var(--text-primary)]">Code</span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Code</span>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center bg-[var(--bg-surface)]">
@@ -385,10 +385,10 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
   if (isStreaming && !code) {
     return (
       <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+        <div className="flex items-center justify-between px-4 py-2.5 min-h-[44px]" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-brand-400" />
-            <span className="text-sm font-semibold text-[var(--text-primary)]">Code</span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Code</span>
             <div className="flex gap-0.5 ml-1.5">
               <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '0ms' }} />
               <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '150ms' }} />
