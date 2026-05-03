@@ -976,7 +976,7 @@ export default function DocsPage({ onBack }) {
                               { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
                               { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
                             ].map((phase, idx) => (
-                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-4 transition-colors hover:bg-white/50" style={{ borderRight: idx < 3 ? '1px solid rgba(38,97,156,0.1)' : 'none' }}>
+                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-4 transition-colors hover:bg-[var(--bg-surface)]/50" style={{ borderRight: idx < 3 ? '1px solid rgba(38,97,156,0.1)' : 'none' }}>
                                 <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
                                   <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
                                 </div>
@@ -1536,9 +1536,9 @@ export default function DocsPage({ onBack }) {
                                 const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
                                 return (
                                   <div className="flex items-center gap-1">
-                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-white border border-[var(--border)] font-medium text-[var(--text-muted)]">{easy}E</span>}
-                                    {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-white border border-[var(--border)] font-semibold text-[var(--text-primary)]">{med}M</span>}
-                                    {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-white border border-[var(--border)] font-bold text-[var(--accent)]">{hard}H</span>}
+                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] font-medium text-[var(--text-muted)]">{easy}E</span>}
+                                    {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] font-semibold text-[var(--text-primary)]">{med}M</span>}
+                                    {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] font-bold text-[var(--accent)]">{hard}H</span>}
                                   </div>
                                 );
                               })()}
@@ -1575,11 +1575,11 @@ export default function DocsPage({ onBack }) {
                             <tbody>
                               {[
                                 { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20' },
-                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]' },
-                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]' },
-                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]' },
-                                { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]' },
-                                { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' },
+                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]' },
+                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]' },
+                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]' },
+                                { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]' },
+                                { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]' },
                               ].map((item, i) => (
                                 <tr key={i} className="border-b border-[var(--border)] last:border-0">
                                   <td className="py-2 landing-mono text-xs text-[var(--accent)]">{item.complexity}</td>
@@ -1706,9 +1706,9 @@ export default function DocsPage({ onBack }) {
                       const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
-                        'Easy': 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]',
-                        'Medium': 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]',
-                        'Hard': 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]',
+                        'Easy': 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]',
+                        'Medium': 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]',
+                        'Hard': 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]',
                       };
                       return (
                         <div key={category.id} className="rounded overflow-hidden border-0">
@@ -1814,7 +1814,7 @@ export default function DocsPage({ onBack }) {
                           />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]';
+                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -2213,7 +2213,7 @@ export default function DocsPage({ onBack }) {
                           />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]';
+                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -2682,7 +2682,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded bg-white border border-[var(--border)] uppercase tracking-[0.1em] ${
+                                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] uppercase tracking-[0.1em] ${
                                           topic.difficulty === 'beginner' ? 'font-medium text-[var(--text-muted)]' :
                                           topic.difficulty === 'intermediate' ? 'font-semibold text-[var(--text-primary)]' :
                                           'font-bold text-[var(--accent)]'
