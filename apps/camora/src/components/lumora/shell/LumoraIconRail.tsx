@@ -39,17 +39,17 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
   };
 
   // Active = solid gold-leaf fill with dark text (matches PillToggle).
-  // Inactive = glassy capsule sitting on the navy strip — same rgba(white)
-  // glaze used by GlassPill / SectionCard count badges so the rail reads
-  // as one piece with the answer-section chrome.
+  // Inactive = subtle capsule sitting on the charcoal rail — themed
+  // borders/hover so the rail reads as neutral chrome with navy + gold
+  // reserved for accents (matches the global Charcoal + Navy Accent rule).
   const itemStyle = (active: boolean): React.CSSProperties => ({
-    color: active ? '#020617' : 'rgba(255,255,255,0.92)',
-    background: active ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.06)',
-    border: active ? '1px solid var(--cam-gold-leaf)' : '1px solid rgba(255,255,255,0.16)',
+    color: active ? '#020617' : 'var(--text-secondary)',
+    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
+    border: active ? '1px solid var(--cam-gold-leaf)' : '1px solid transparent',
     borderRadius: 999,
     boxShadow: active
       ? '0 0 0 1px rgba(217,181,67,0.55), 0 4px 14px rgba(217,181,67,0.32), inset 0 1px 0 rgba(255,255,255,0.18)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.18)',
+      : 'none',
     fontWeight: active ? 700 : 500,
     transition: 'background-color 200ms, color 200ms, box-shadow 200ms, transform 150ms',
   });
@@ -71,31 +71,35 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       className="hidden md:flex flex-col shrink-0 transition-all duration-200 relative"
       style={{
         width: expanded ? 200 : 60,
-        // Navy-strip palette — same fixed-hex range as --cam-hero-strip
-        // (used by every Capra SectionCard header), rotated 180deg for the
-        // tall rail and bookended with gold radial caps at top + bottom so
-        // the rail visually mirrors the section-strip chrome instead of
-        // reading as a separate light-blue column. Hardcoded hex keeps the
-        // navy depth consistent across light + dark themes — the previous
-        // gradient leaned on --cam-primary-dk which dark-mode redefines as
-        // a light blue, washing out the rail.
-        background:
-          'radial-gradient(ellipse 220% 30% at 50% 0%, rgba(201,162,39,0.32), transparent 70%),' +
-          'radial-gradient(ellipse 200% 25% at 50% 100%, rgba(201,162,39,0.24), transparent 70%),' +
-          'radial-gradient(ellipse 140% 80% at 0% 50%, rgba(110,150,192,0.18), transparent 75%),' +
-          'linear-gradient(180deg, #051C40 0%, #0B2A5A 30%, #1A4F86 50%, #0B2A5A 70%, #051C40 100%)',
+        // Charcoal chrome — navy is reserved for ACCENT strips only
+        // (the wordmark band below + the gold-leaf right rail). The body
+        // of the sidebar inherits the neutral surface so it doesn't read
+        // as a lapis column next to the charcoal app shell.
+        background: 'var(--bg-surface)',
         borderRight: '2px solid var(--cam-gold-leaf)',
-        boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.06), 4px 0 24px rgba(0,0,0,0.25)',
-        paddingTop: needsMacChromeOffset ? 32 : 12,
+        boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.04), 4px 0 24px rgba(0,0,0,0.18)',
+        paddingTop: 0,
         paddingBottom: 12,
       }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}
     >
-      {/* Logo — points to landing page (per consistent app-wide rule).
-          Camora landing is the canonical "home" target for the wordmark. */}
-      <Link to="/" className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-5`} title="Camora home">
+      {/* Wordmark — sole navy strip on the rail, same chrome grammar as
+          every other Camora header (cam-hero-strip + 2px gold-leaf bottom
+          border). Carries the only "navy" hit on the sidebar so the rest
+          stays neutral charcoal per the global color rule. */}
+      <Link
+        to="/"
+        className={`flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4`}
+        style={{
+          background: 'var(--cam-hero-strip)',
+          borderBottom: '2px solid var(--cam-gold-leaf)',
+          paddingTop: needsMacChromeOffset ? 32 : 14,
+          paddingBottom: 14,
+        }}
+        title="Camora home"
+      >
         <CamoraLogo size={expanded ? 28 : 24} />
         {expanded && <span className="text-sm font-bold whitespace-nowrap text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>}
       </Link>
@@ -105,7 +109,13 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {MAIN_ITEMS.map(item => {
           const active = isActive(item.id);
           return (
-            <Link key={item.id} to={item.path} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all`} style={itemStyle(active)} title={expanded ? undefined : item.label}>
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              style={itemStyle(active)}
+              title={expanded ? undefined : item.label}
+            >
               {item.icon}
               {expanded && <span className="whitespace-nowrap">{item.label}</span>}
             </Link>
@@ -114,13 +124,18 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       </div>
 
       {/* Divider */}
-      <div className="mx-4 my-3 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
+      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
 
       {/* More section */}
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.55)' }}>More</p>}
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>More</p>}
         {/* Account dropdown */}
-        <button onClick={() => setAccountOpen(!accountOpen)} className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-all hover:bg-white/10`} style={{ color: 'rgba(255,255,255,0.85)' }} title={expanded ? undefined : 'Account'}>
+        <button
+          onClick={() => setAccountOpen(!accountOpen)}
+          className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-all hover:bg-[var(--bg-elevated)]`}
+          style={{ color: 'var(--text-secondary)' }}
+          title={expanded ? undefined : 'Account'}
+        >
           <div className="flex items-center gap-3">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
             {expanded && 'Account'}
@@ -130,7 +145,12 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {accountOpen && expanded && (
           <div className="ml-5 flex flex-col gap-0.5">
             {MORE_ITEMS.map(item => (
-              <Link key={item.id} to={item.path} className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <Link
+                key={item.id}
+                to={item.path}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all hover:bg-[var(--bg-elevated)]"
+                style={{ color: 'var(--text-muted)' }}
+              >
                 {item.label}
               </Link>
             ))}
@@ -154,7 +174,13 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>,
             onClick: toggleTheme },
         ].map(item => (
-          <button key={item.label} onClick={item.onClick} className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium hover:bg-white/10 transition-all text-left w-full`} style={{ color: 'rgba(255,255,255,0.85)' }} title={expanded ? undefined : item.label}>
+          <button
+            key={item.label}
+            onClick={item.onClick}
+            className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-all text-left w-full`}
+            style={{ color: 'var(--text-secondary)' }}
+            title={expanded ? undefined : item.label}
+          >
             {item.icon}
             {expanded && <span className="whitespace-nowrap">{item.label}</span>}
           </button>
@@ -162,7 +188,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       </div>
 
       {/* User */}
-      <div className="px-1.5 pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.18)' }}>
+      <div className="px-1.5 pt-2 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
         <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} showName={expanded} compact={!expanded} position="above-left" />
       </div>
 
