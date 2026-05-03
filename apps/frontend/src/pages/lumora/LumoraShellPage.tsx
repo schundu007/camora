@@ -13,7 +13,6 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
-import SharedPricingCards from '../../components/shared/PricingCards';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
@@ -75,8 +74,7 @@ export function LumoraShellPage() {
     location.pathname.includes('/sessions') ? 'sessions' :
     location.pathname.includes('/assistants') ? 'assistants' :
     location.pathname.includes('/profile') ? 'profile' :
-    location.pathname.includes('/credits') ? 'credits' :
-    location.pathname.includes('/pricing') ? 'pricing' : 'interview';
+    location.pathname.includes('/credits') ? 'credits' : 'interview';
 
   const showSettingsHint = !settingsDismissed && typeof vadThreshold === 'number' && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
 
@@ -668,23 +666,6 @@ export function LumoraShellPage() {
             </div>
           )}
 
-          {/* Pricing page */}
-          {activeTab === 'pricing' && (
-            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
-              <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
-                <div className="max-w-6xl mx-auto px-6 py-6 w-full">
-                  <h2 className="text-3xl font-extrabold mb-2 text-white"><span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Pricing</span></h2>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Manage your subscription and top-ups.</p>
-                </div>
-              </div>
-              <div className="max-w-6xl mx-auto px-6 py-6 w-full">
-                <Suspense fallback={<div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-                  <SharedPricingCards />
-                </Suspense>
-              </div>
-            </div>
-          )}
-
           {/* AI Assistant — fullscreen mode (behavioral / ask questions) */}
           {copilotFullscreen && (
             <div className="absolute inset-0 z-20 flex flex-col" style={{ background: 'var(--bg-surface)' }}>
@@ -762,7 +743,7 @@ export function LumoraShellPage() {
                 { id: 'assistants', label: 'Assistants', path: '/lumora/assistants' },
                 { id: 'profile',    label: 'Profile',    path: '/lumora/profile' },
                 { id: 'credits',    label: 'Credits',    path: '/lumora/credits' },
-                { id: 'pricing',    label: 'Pricing',    path: '/lumora/pricing' },
+                { id: 'pricing',    label: 'Pricing',    path: '/pricing' },
               ].map(item => (
                 <Link key={item.id} to={item.path} onClick={() => setMobileMoreOpen(false)}
                   className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-black/5"

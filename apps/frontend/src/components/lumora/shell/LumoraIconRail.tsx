@@ -6,7 +6,7 @@ import UserDropdown from '../../shared/UserDropdown';
 import { dialogAlert } from '../../shared/Dialog';
 import { AudioCheckModal } from './AudioCheckModal';
 
-export type LumoraTab = 'interview' | 'coding' | 'design' | 'behavioral' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits' | 'pricing';
+export type LumoraTab = 'interview' | 'coding' | 'design' | 'behavioral' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits';
 
 interface LumoraIconRailProps {
   activeTab: LumoraTab;
@@ -25,7 +25,6 @@ const MAIN_ITEMS = [
 const MORE_ITEMS = [
   { id: 'profile', label: 'Profile', path: '/lumora/profile' },
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
-  { id: 'pricing', label: 'Pricing', path: '/lumora/pricing' },
 ];
 
 export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions }: LumoraIconRailProps) {
