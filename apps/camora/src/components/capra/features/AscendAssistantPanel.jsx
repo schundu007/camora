@@ -1420,7 +1420,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                   else setPrepMaterial(e.target.value);
                 }}
                 placeholder={expandedContext === 'jd' ? 'Paste JD...' : expandedContext === 'resume' ? 'Paste resume...' : 'Prep notes...'}
-                className="flex-1 h-20 px-2 py-1.5 text-xs bg-[var(--bg-elevated)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder-gray-400 focus:outline-none focus:border-info-500 resize-none"
+                className="flex-1 h-20 px-2 py-1.5 text-xs bg-[var(--bg-elevated)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-info-500 resize-none"
               />
               <div className="flex flex-col gap-1">
                 <button

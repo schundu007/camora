@@ -332,6 +332,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setOnboardingCompleted(null);
     setSubscription(null);
+    // Reset subscriptionLoading too — leaving it `true` after logout strands
+    // the next user (or post-redirect render) on a "Loading…" spinner from a
+    // fetch that's never coming back.
+    setSubscriptionLoading(false);
+    setTeam(null);
     // The cariara_sso cookie is httpOnly so JS can't clear it — hit the backend
     // /logout endpoint which returns a Set-Cookie with an expired cookie.
     fetch(`${CAPRA_API_URL}/api/auth/logout`, {

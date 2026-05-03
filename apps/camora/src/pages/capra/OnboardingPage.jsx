@@ -556,7 +556,7 @@ export default function OnboardingPage() {
                       onChange={(e) => setResumeText(e.target.value)}
                       placeholder="Paste your resume text here..."
                       rows={8}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:ring-0 outline-none text-sm text-[var(--text-primary)] placeholder-gray-400 resize-none transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:ring-0 outline-none text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none transition-colors"
                     />
                   </div>
                 )}

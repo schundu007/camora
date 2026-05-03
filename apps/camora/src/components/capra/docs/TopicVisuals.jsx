@@ -388,8 +388,8 @@ export function StaticDiagram({ diagram }) {
           key={currentSrc}
           src={currentSrc}
           alt={`${diagram.title} — ${provider.toUpperCase()}`}
-          className={`rounded transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'} ${diagram.type === 'ui' ? 'max-h-[320px] mx-auto' : 'w-full'}`}
-          style={diagram.type === 'ui' ? { width: 'auto', maxHeight: '320px' } : { maxHeight: '500px', objectFit: 'contain', width: '100%' }}
+          className={`rounded transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+          style={{ display: 'block', margin: '0 auto', maxWidth: '100%', maxHeight: diagram.type === 'ui' ? '420px' : '520px', width: 'auto', height: 'auto' }}
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
           loading="lazy"
@@ -443,9 +443,9 @@ export function FlowchartCard({ flowchart }) {
         <p className="px-3 pt-2 text-xs text-[var(--text-muted)] landing-body">{flowchart.description}</p>
       )}
       <div className="p-3">
-        {/* Diagram image — primary visual, constrained height */}
+        {/* Diagram image — primary visual, fills card width for readability */}
         {hasDiagram && (
-          <div className="flex justify-center">
+          <>
             {!imgLoaded && (
               <div className="w-full h-40 bg-[var(--bg-elevated)] rounded animate-pulse" />
             )}
@@ -453,12 +453,12 @@ export function FlowchartCard({ flowchart }) {
               src={flowchart.src}
               alt={flowchart.title}
               className={`rounded border border-[var(--border)] transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0 h-0'}`}
-              style={{ maxHeight: '320px', maxWidth: '100%', objectFit: 'contain' }}
+              style={{ display: 'block', margin: '0 auto', maxWidth: '100%', maxHeight: '520px', width: 'auto', height: 'auto' }}
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
               loading="lazy"
             />
-          </div>
+          </>
         )}
         {/* Step list — compact vertical list, only when toggled or no diagram */}
         {flowchart.steps && (!hasDiagram || showSteps) && (
@@ -539,7 +539,7 @@ export function ChartCard({ chart }) {
                     <div className="h-full flex items-center justify-center" style={{ width: `${readPct}%`, background: `${d.color}` }}>
                       <span className="text-[8px] landing-mono text-white font-bold">READ</span>
                     </div>
-                    <div className="h-full flex items-center justify-center bg-gray-300" style={{ width: `${writePct}%` }}>
+                    <div className="h-full flex items-center justify-center bg-[var(--border)]" style={{ width: `${writePct}%` }}>
                       {writePct > 15 && <span className="text-[8px] landing-mono text-[var(--text-secondary)] font-bold">WRITE</span>}
                     </div>
                   </div>

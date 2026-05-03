@@ -127,7 +127,7 @@ export default function SavedSystemDesignsModal({
               placeholder="Search saved designs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/30 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/30 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)]"
             />
           </div>
         </div>

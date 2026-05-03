@@ -83,7 +83,14 @@ function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <Loading />;
-  const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
+  // Accept both `redirect` and `returnTo` so the chain survives whichever
+  // upstream surface deep-linked here (PaywallGate → /pricing → /login uses
+  // returnTo; ProtectedRoute → /login uses redirect; OAuth callback may use
+  // either). Validate it's a same-origin path so we can't be coerced into
+  // an open redirect.
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('redirect') || params.get('returnTo') || '/';
+  const redirectTo = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
   if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 
   const oauthUrl = import.meta.env.VITE_OAUTH_URL;
@@ -175,7 +182,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <Loading />;
   if (!isAuthenticated) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
   // Only enforce onboarding for Capra routes that need a role. Read-only
   // surfaces (/capra/prepare/*) are free to browse without onboarding —
@@ -220,7 +227,7 @@ function OwnerRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   if (isLoading) return <Loading />;
   if (!isAuthenticated) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
   if (!isOwner(user?.email)) {
     return <Navigate to="/" replace />;
