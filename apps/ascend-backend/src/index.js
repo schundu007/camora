@@ -107,7 +107,10 @@ async function runMigrations() {
     await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS image_data BYTEA');
     await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS cloud_provider VARCHAR(10) DEFAULT \'auto\'');
     await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS direction VARCHAR(5) DEFAULT \'LR\'');
-    await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS mermaid_code TEXT');
+    // mermaid_code was a Python-fallback caching column; the fallback path
+    // was removed in favor of an explicit error so admins can retry. Drop
+    // the column so future schema reads don't suggest it's a live field.
+    await query('ALTER TABLE ascend_diagram_cache DROP COLUMN IF EXISTS mermaid_code');
     // Purge old cache entries — they point to deleted /tmp files and use old hash keys
     await query(`DELETE FROM ascend_diagram_cache WHERE image_data IS NULL AND image_url LIKE '/static/%'`);
     // New unique constraint: hash now encodes all dimensions (question+provider+direction+detailLevel)

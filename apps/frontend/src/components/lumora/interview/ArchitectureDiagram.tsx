@@ -2,11 +2,19 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isOwner } from '@/lib/owner';
 import { getDiagramCache, setDiagramCache } from '@/hooks/useDiagramCache';
+import { useCloudProvider } from '@/hooks/useCloudProvider';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-function getCacheKey(question: string, provider: string, detail: string, dir: string) {
-  return `${question}::${provider}::${dir}::${detail}`;
+// Direction + detail are locked. Two extra knobs (LR vs TB, overview vs
+// detailed) added confusion without changing perceived quality, and the
+// backend cache hit-rate suffered when users toggled them. One layout, one
+// density.
+const DIRECTION = 'TB';
+const DETAIL = 'detailed';
+
+function getCacheKey(question: string, provider: string) {
+  return `${question}::${provider}::${DIRECTION}::${DETAIL}`;
 }
 
 interface ArchitectureDiagramProps {
@@ -22,14 +30,11 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
   // button so users don't see a tease they can't use.
   const canGenerate = isOwner(user);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [mermaidCode, setMermaidCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noCache, setNoCache] = useState(false);
-  const [detailLevel, setDetailLevel] = useState<'overview' | 'detailed'>('overview');
-  const [cloudProvider, setCloudProvider] = useState<string>('auto');
-  const [direction, setDirection] = useState<'LR' | 'TB'>('TB');
+  const [cloudProvider, setCloudProvider] = useCloudProvider();
 
   // Pan & zoom
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +64,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
   // Step 1: Cache-only lookup (fast, no generation)
   useEffect(() => {
     if (!question || !token) return;
-    const key = getCacheKey(question, cloudProvider, detailLevel, direction);
+    const key = getCacheKey(question, cloudProvider);
 
     // Check in-memory cache
     const mem = getDiagramCache(key);
@@ -83,21 +88,14 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
           credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ question, cloudProvider, detailLevel, direction }),
+          body: JSON.stringify({ question, cloudProvider, detailLevel: DETAIL, direction: DIRECTION }),
         });
         const data = await r.json();
         if (!cancelled) {
           if (data.success && data.image_url) {
             const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
             setImageUrl(url);
-            setMermaidCode(null);
             setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
-            resetView();
-          } else if (data.success && data.type === 'mermaid' && data.mermaid_code) {
-            // Python service was down at cache time — surface the cached Mermaid
-            // as readable source (not rendered, per 'No Mermaid Diagrams' rule)
-            setImageUrl(null);
-            setMermaidCode(data.mermaid_code);
             resetView();
           } else {
             setNoCache(true);
@@ -109,7 +107,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       }
     })();
     return () => { cancelled = true; };
-  }, [question, token, detailLevel, cloudProvider, direction, resetView]);
+  }, [question, token, cloudProvider, resetView]);
 
   // Step 2: Explicit generation (only when user clicks Generate)
   const handleGenerate = async () => {
@@ -123,19 +121,14 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ question, cloudProvider, detailLevel, direction }),
+        body: JSON.stringify({ question, cloudProvider, detailLevel: DETAIL, direction: DIRECTION }),
       });
       const data = await r.json();
       if (data.success && data.image_url) {
         const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
         setImageUrl(url);
-        setMermaidCode(null);
-        const key = getCacheKey(question, cloudProvider, detailLevel, direction);
+        const key = getCacheKey(question, cloudProvider);
         setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
-        resetView();
-      } else if (data.success && data.type === 'mermaid' && data.mermaid_code) {
-        setImageUrl(null);
-        setMermaidCode(data.mermaid_code);
         resetView();
       } else {
         setError(data.error || 'Generation failed');
@@ -151,29 +144,13 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {/* Controls */}
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <select value={cloudProvider} onChange={(e) => setCloudProvider(e.target.value)}
+          <select value={cloudProvider} onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
             className="text-xs font-mono bg-transparent border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text-muted)]">
             <option value="auto">Auto</option>
             <option value="aws">AWS</option>
             <option value="azure">Azure</option>
             <option value="gcp">GCP</option>
           </select>
-          <div className="flex items-center border border-[var(--border)] rounded overflow-hidden">
-            {(['LR', 'TB'] as const).map(d => (
-              <button key={d} onClick={() => setDirection(d)}
-                className={`px-1.5 py-0.5 text-xs font-mono transition-colors ${d !== 'LR' ? 'border-l border-[var(--border)]' : ''} ${
-                  direction === d ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--accent)]'
-                }`}>{d}</button>
-            ))}
-          </div>
-          <div className="flex items-center border border-[var(--border)] rounded overflow-hidden">
-            {(['overview', 'detailed'] as const).map(d => (
-              <button key={d} onClick={() => setDetailLevel(d)}
-                className={`px-2 py-0.5 text-xs font-mono capitalize transition-colors ${d !== 'overview' ? 'border-l border-[var(--border)]' : ''} ${
-                  detailLevel === d ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--accent)]'
-                }`}>{d}</button>
-            ))}
-          </div>
         </div>
         {imageUrl && !loading && (
           <div className="flex items-center gap-1">
@@ -263,32 +240,6 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         </div>
       )}
 
-      {/* Mermaid fallback — cached when Python was down. Rendered as source (not
-          as a rendered diagram, per the 'No Mermaid Diagrams' rule) so the
-          candidate still has a text architecture to talk through. */}
-      {mermaidCode && !imageUrl && !loading && !generating && (
-        <div className="rounded-lg p-3" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--warning)' }}>
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-gold-leaf-text)' }}>Text architecture (diagram service unavailable)</span>
-            {canGenerate && (
-              <button onClick={handleGenerate}
-                className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded"
-                style={{ color: 'var(--warning-text)', border: '1px solid var(--warning)' }}>
-                Retry diagram
-              </button>
-            )}
-          </div>
-          <pre className="text-[11px] leading-[1.5] overflow-auto p-2 rounded font-mono whitespace-pre"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', maxHeight: '600px' }}>
-            {mermaidCode}
-          </pre>
-        </div>
-      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ const STORAGE_PREFIX = 'camora_diagram_';
 const MAX_ENTRIES = 50;
 
 type CacheEntry = {
-  type: 'png' | 'mermaid';
+  type: 'png';
   data: string;
   timestamp: number;
 };
