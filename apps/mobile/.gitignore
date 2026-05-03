@@ -1,0 +1,21 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+*.tsbuildinfo
+
+# Native
+ios/
+android/
+*.jks
+*.p12
+*.key
+*.mobileprovision
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store

@@ -19,6 +19,8 @@ apps/
   ai-services/     # FastAPI (Python) — speaker verification, diagrams (Docker on Railway)
                    #   non-/health routes require X-API-Key in AI_SERVICES_API_KEY env
   desktop/         # Electron 41 shell that loads camora.cariara.com (arm64 DMG)
+  mobile/          # Expo (React Native) — iOS + Android, audio interviews + Capra prep
+                   #   video/coding interviews redirect to desktop or web by design
 packages/
   shared-types/    # TypeScript types (User, Conversation, Subscription, PlanType, etc.)
   shared-db/       # PostgreSQL pool (getPool, query, closePool) + migrations
@@ -44,6 +46,11 @@ node --watch apps/ascend-backend/src/index.js   # Dev with auto-restart
 
 # AI Services (Python)
 uvicorn main:app --reload --port 8001   # From apps/ai-services/
+
+# Mobile (Expo)
+cd apps/mobile && pnpm start             # Dev server (scan QR with Expo Go)
+cd apps/mobile && pnpm ios               # iOS simulator
+cd apps/mobile && pnpm android           # Android emulator
 
 # Tests (both backends use vitest)
 cd apps/lumora-backend && npx vitest

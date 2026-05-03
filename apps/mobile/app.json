@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Camora",
+    "slug": "camora",
+    "scheme": "camora",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F1115"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "com.cariara.camora",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Camora listens to interview audio so Sona can transcribe questions and surface answers in real time.",
+        "UIBackgroundModes": ["audio"],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.cariara.camora",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F1115"
+      },
+      "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MICROPHONE"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Camora listens to interview audio so Sona can transcribe questions and surface answers in real time."
+        }
+      ]
+    ],
+    "extra": {
+      "lumoraApiUrl": "https://lumorab.cariara.com",
+      "capraApiUrl": "https://caprab.cariara.com",
+      "webAppUrl": "https://camora.cariara.com"
+    }
+  }
+}
