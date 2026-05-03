@@ -283,7 +283,8 @@ export function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/premium" element={<PricingPage />} />
+          {/* /premium → /pricing — legacy alias, single source of truth */}
+          <Route path="/premium" element={<Navigate to="/pricing" replace />} />
           <Route path="/download" element={<DownloadPage />} />
           <Route path="/legal/terms" element={<LegalPage />} />
           <Route path="/legal/privacy" element={<LegalPage />} />
@@ -337,10 +338,10 @@ export function App() {
           <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
-          {/* ── Also accessible via /app paths (PAID) ──────────── */}
-          <Route path="/app" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/app/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/app/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          {/* ── /app/* → /lumora/* — legacy aliases collapsed to redirects ── */}
+          <Route path="/app" element={<Navigate to="/lumora" replace />} />
+          <Route path="/app/coding" element={<Navigate to="/lumora/coding" replace />} />
+          <Route path="/app/design" element={<Navigate to="/lumora/design" replace />} />
 
           {/* ── Capra: Preparation (FREE to browse, backend limits solves) ── */}
           {/* Bare /capra: empty → /capra/prepare; legacy ?mode=... → mode's
