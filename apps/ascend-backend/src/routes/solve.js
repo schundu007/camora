@@ -147,7 +147,7 @@ router.post('/', validate('solve'), async (req, res, next) => {
 // Streaming endpoint for faster perceived response
 router.post('/stream', validate('solve'), async (req, res, next) => {
   try {
-    const { problem, provider = 'claude', language = 'auto', detailLevel = 'detailed', model, ascendMode = 'coding', designDetailLevel = 'basic', autoSwitch = false } = req.body;
+    const { problem, provider = 'claude', language = 'auto', detailLevel = 'detailed', model, ascendMode = 'coding', designDetailLevel = 'basic', autoSwitch = false, cloudProvider = 'aws' } = req.body;
 
     logger.debug({ ascendMode, designDetailLevel, provider, autoSwitch, language, detailLevel }, 'Solve stream request params');
 
@@ -296,7 +296,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
     // Helper to stream from a provider
     async function streamFromProvider(service, providerName) {
       let fullText = '';
-      for await (const chunk of service.solveProblemStream(problem, language, detailLevel, userModel, ascendMode, designDetailLevel)) {
+      for await (const chunk of service.solveProblemStream(problem, language, detailLevel, userModel, ascendMode, designDetailLevel, cloudProvider)) {
         fullText += chunk;
         res.write(`data: ${JSON.stringify({ chunk, partial: true, provider: providerName })}\n\n`);
       }

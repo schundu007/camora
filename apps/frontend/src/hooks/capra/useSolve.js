@@ -32,7 +32,8 @@ async function solveWithStream(
   designDetailLevel = 'basic',
   signal = null,
   autoSwitch = false,
-  onSwitch = null
+  onSwitch = null,
+  cloudProvider = 'aws'
 ) {
   const response = await fetch(API_URL + '/api/solve/stream', {
     credentials: 'include',
@@ -47,6 +48,7 @@ async function solveWithStream(
       ascendMode,
       designDetailLevel,
       autoSwitch,
+      cloudProvider,
     }),
     signal,
   });
@@ -135,7 +137,7 @@ async function solveWithStream(
 /**
  * Hook for managing solve operations
  */
-export function useSolve({ provider, model, autoSwitch, ascendMode, designDetailLevel }) {
+export function useSolve({ provider, model, autoSwitch, ascendMode, designDetailLevel, cloudProvider = 'aws' }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingType, setLoadingType] = useState(null);
   const [error, setError] = useState(null);
@@ -213,7 +215,8 @@ export function useSolve({ provider, model, autoSwitch, ascendMode, designDetail
           (from, to, reason) => {
             setSwitchNotification({ from, to, reason });
             setTimeout(() => setSwitchNotification(null), 5000);
-          }
+          },
+          cloudProvider
         );
 
         if (result) {

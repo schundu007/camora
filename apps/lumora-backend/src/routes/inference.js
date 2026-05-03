@@ -55,7 +55,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws' } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -117,6 +117,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
+      cloudProvider,
       plan: userPlan,
       signal: abortController.signal,
     })) {
@@ -220,7 +221,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, bypass_cache: bypassCache } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -330,6 +331,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
+      cloudProvider,
       plan: userPlan,
     })) {
       if (clientDisconnected) break;

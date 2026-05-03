@@ -3,6 +3,7 @@ import { getApiKey as getClaudeApiKey } from './claude.js';
 import { getApiKey as getOpenAIApiKey } from './openai.js';
 import { SECTION_PROMPTS } from './ascend-prep/section-prompts.js';
 import { getSchemaForSection } from './ascend-prep/section-schemas.js';
+import { buildCloudHint } from './cloudHint.js';
 import {
   searchInterviewQuestions,
   extractCompanyName,
@@ -56,6 +57,18 @@ function getModelForSection(sectionType) {
 // Build the context from inputs
 function buildContext(inputs, section = null) {
   let context = '';
+
+  // Cloud-platform hint up front, BEFORE the company/role context, so the
+  // model treats service naming as a hard constraint that overrides any
+  // AWS-by-default phrasing later in the prompt. Skipped for non-technical
+  // sections (behavioral/HR/pitch/hiring-manager) — they don't reference
+  // cloud services and the extra tokens just bloat input.
+  const cloudRelevantSections = ['system-design', 'system_design', 'coding', 'techstack', 'custom'];
+  const isCloudRelevant = !section || cloudRelevantSections.some((t) => section.toLowerCase().includes(t));
+  if (isCloudRelevant) {
+    const cloudHint = buildCloudHint(inputs.cloudProvider);
+    if (cloudHint) context += `${cloudHint}\n\n`;
+  }
 
   // Use explicit company name from frontend, fallback to extraction from JD
   const companyName = inputs.companyName || (inputs.jobDescription ? extractCompanyName(inputs.jobDescription) : null);

@@ -29,6 +29,7 @@ import useKeyboardShortcuts from '../../hooks/capra/useKeyboardShortcuts';
 import { useSystemDesignStorage } from '../../hooks/capra/useSystemDesignStorage';
 import { useCodingHistory } from '../../hooks/capra/useCodingHistory';
 import { useSolve, useAutoTestFix } from '../../hooks/capra/useSolve';
+import { useCloudProvider } from '../../hooks/useCloudProvider';
 
 // Context & Utils
 import { useAuth } from '../../contexts/AuthContext';
@@ -156,6 +157,10 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   // Mode State — URL is source of truth, no localStorage persistence
   // ---------------------------------------------------------------------------
   const [ascendMode, setAscendMode] = useState(appModeFromPath || 'coding');
+  // Cloud platform — single source of truth for the user's choice. Sent
+  // to /api/solve/stream so design generations name services for the
+  // chosen cloud (Cosmos DB / Firestore / etc.).
+  const [cloudProvider] = useCloudProvider();
   const [designDetailLevel, setDesignDetailLevel] = useState('basic');
   const [codingDetailLevel, setCodingDetailLevel] = useState('basic');
   const [codingLanguage, setCodingLanguage] = useState('auto');
@@ -242,7 +247,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     abort: abortSolve,
     setIsLoading,
     setLoadingType,
-  } = useSolve({ provider, model, autoSwitch, ascendMode, designDetailLevel });
+  } = useSolve({ provider, model, autoSwitch, ascendMode, designDetailLevel, cloudProvider });
 
   const { autoTestAndFix } = useAutoTestFix({ provider, model });
 

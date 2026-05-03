@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
+import { useCloudProvider } from '@/hooks/useCloudProvider';
 import { getSystemContext } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -128,6 +129,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const autoSubmittedRef = useRef(false);
   const [inputTab, setInputTab] = useState<'text' | 'url' | 'image'>('text');
   const [detailLevel, setDetailLevel] = useState<'basic' | 'full'>('full');
+  // Cloud platform sent on every Sona design request so the LLM names
+  // services for the chosen cloud (Cosmos DB / Firestore / etc.). Single
+  // source of truth — same hook that powers diagram cloud-filtering.
+  const [cloudProvider] = useCloudProvider();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DesignResult | null>(null);
   const [streamingText, setStreamingText] = useState('');
@@ -277,6 +282,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         useSearch: false,
         systemContext: getSystemContext(),
         detailLevel,
+        cloudProvider,
         token,
         bypassCache: options?.bypassCache,
         onToken: (data) => {

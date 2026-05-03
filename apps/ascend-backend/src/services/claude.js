@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { buildCloudHint } from './cloudHint.js';
 
 export function getApiKey() {
   return process.env.ANTHROPIC_API_KEY;
@@ -791,7 +792,7 @@ INTEGRITY:
 - NEVER hardcode outputs or fake data
 - Solution must be genuinely correct`;
 
-export async function* solveProblemStream(problemText, language = 'auto', detailLevel = 'detailed', model = DEFAULT_MODEL, ascendMode = 'coding', designDetailLevel = 'basic') {
+export async function* solveProblemStream(problemText, language = 'auto', detailLevel = 'detailed', model = DEFAULT_MODEL, ascendMode = 'coding', designDetailLevel = 'basic', cloudProvider = 'aws') {
   const languageInstruction = language === 'auto'
     ? 'Detect the appropriate language from the problem context.'
     : `Write the solution in ${language.toUpperCase()}.`;
@@ -808,6 +809,15 @@ export async function* solveProblemStream(problemText, language = 'auto', detail
   } else {
     systemPrompt = isBrief ? BRIEF_PROMPT : SYSTEM_PROMPT;
     userMessage = `${languageInstruction}\n\nSolve this problem. IMPORTANT: Output ONLY valid JSON starting with { and ending with } - no explanations, no markdown, no text before or after the JSON.\n\n${problemText}`;
+  }
+
+  // Cloud-platform constraint goes first, before the rest of the system
+  // prompt, so the model treats it as a hard constraint when naming
+  // services. Empty for AWS/auto — the existing prompts are AWS-flavored.
+  // Only matters for system-design (coding problems are platform-agnostic).
+  if (ascendMode === 'system-design') {
+    const cloudHint = buildCloudHint(cloudProvider);
+    if (cloudHint) systemPrompt = `${cloudHint}\n\n${systemPrompt}`;
   }
 
   // Prompt caching — the system prompt is the heavy payload on every

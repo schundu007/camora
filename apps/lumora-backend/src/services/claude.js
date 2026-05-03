@@ -5,6 +5,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { parseAnswer } from './answerParser.js';
+import { buildCloudHint } from './cloudHint.js';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -156,7 +157,7 @@ RULES:
 - Use my real experience from resume when available`;
 }
 
-function buildInterviewDesignPrompt(resume, technical, detailLevel = null) {
+function buildInterviewDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws') {
   const isBasic = detailLevel === 'basic';
   const isFull = detailLevel === 'full';
   const detailRules = isBasic
@@ -164,7 +165,13 @@ function buildInterviewDesignPrompt(resume, technical, detailLevel = null) {
     : isFull
     ? `DETAIL MODE: FULL — emit every section. 4-6 bullets per section, with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
     : `DETAIL MODE: STANDARD — emit every section. 3-4 bullets per section.`;
-  return `You ARE the candidate in a LIVE SYSTEM DESIGN interview happening right now. Speak AS the candidate, in their voice, so the candidate can read your output aloud verbatim. You are NOT a sidebar coach.
+  // Cloud-platform hint goes BEFORE the rest of the prompt so the model
+  // treats service naming as a hard constraint (Cosmos DB, not DynamoDB,
+  // when Azure is selected). Empty for AWS — the existing prompt is
+  // already AWS-flavored.
+  const cloudHint = buildCloudHint(cloudProvider);
+  const cloudPrefix = cloudHint ? `${cloudHint}\n\n` : '';
+  return `${cloudPrefix}You ARE the candidate in a LIVE SYSTEM DESIGN interview happening right now. Speak AS the candidate, in their voice, so the candidate can read your output aloud verbatim. You are NOT a sidebar coach.
 
 VOICE — NON-NEGOTIABLE:
 - FIRST PERSON ONLY. Use "I", "I'd", "my", "we" (for past teams).
@@ -370,6 +377,11 @@ export async function* streamResponse(question, history, options = {}) {
     systemContext = null,
     detailLevel = null,
     plan = 'free',
+    // Cloud platform the candidate is interviewing for — drives service-name
+    // choice in design answers (Cosmos DB vs DynamoDB vs Firestore). Sent
+    // by the frontend from useCloudProvider; defaults to 'aws' to match
+    // the existing AWS-flavored prompts.
+    cloudProvider = 'aws',
     // Optional AbortSignal passed from the route so a client disconnect can tear
     // down the Anthropic stream instead of letting it burn tokens to completion.
     signal = null,
@@ -511,7 +523,7 @@ IMPORTANT CODE FORMATTING RULE:
 - Separate explanatory text from code blocks clearly.`;
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
-    systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel);
+    systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel, cloudProvider);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
     systemPrompt = buildGeneralPrompt(resume, technical) + `

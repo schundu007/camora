@@ -187,7 +187,7 @@ router.post('/stream', async (req, res) => {
     return;
   }
 
-  let { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'claude', model } = req.body;
+  let { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'claude', model, cloudProvider = 'aws' } = req.body;
 
   if (!jobDescription) {
     return res.status(400).json({ error: 'Job description is required' });
@@ -220,7 +220,7 @@ router.post('/stream', async (req, res) => {
   }, 15000);
   res.on('close', () => clearInterval(keepalive));
 
-  const inputs = { jobDescription, resume, coverLetter, prepMaterials, documentation };
+  const inputs = { jobDescription, resume, coverLetter, prepMaterials, documentation, cloudProvider };
 
   try {
     for await (const event of ascendPrepService.generateAllSections(inputs, sections, provider, model)) {
@@ -269,7 +269,7 @@ router.post('/section', async (req, res) => {
     return;
   }
 
-  let { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'claude', model } = req.body;
+  let { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'claude', model, cloudProvider = 'aws' } = req.body;
 
   if (!jobDescription) {
     return res.status(400).json({ error: 'Job description is required' });
@@ -302,7 +302,7 @@ router.post('/section', async (req, res) => {
   res.on('close', () => clearInterval(keepalive));
 
   // Include explicit company name for company-specific content generation
-  const inputs = { jobDescription, resume, coverLetter, prepMaterials, documentation, customDocumentContent, customDocumentName, companyName };
+  const inputs = { jobDescription, resume, coverLetter, prepMaterials, documentation, customDocumentContent, customDocumentName, companyName, cloudProvider };
 
   try {
     let finalResult = null;
