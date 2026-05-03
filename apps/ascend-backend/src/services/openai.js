@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { buildCloudHint } from './cloudHint.js';
 
 export function getApiKey() {
   return process.env.OPENAI_API_KEY;
@@ -432,7 +433,7 @@ export async function solveProblem(problemText, language = 'auto', fast = true, 
   }
 }
 
-export async function* solveProblemStream(problemText, language = 'auto', detailLevel = 'detailed', model = DEFAULT_MODEL, ascendMode = 'coding', designDetailLevel = 'basic') {
+export async function* solveProblemStream(problemText, language = 'auto', detailLevel = 'detailed', model = DEFAULT_MODEL, ascendMode = 'coding', designDetailLevel = 'basic', cloudProvider = 'aws') {
   const languageInstruction = language === 'auto'
     ? 'Detect the appropriate language from the problem context.'
     : `Write the solution in ${language.toUpperCase()}.`;
@@ -451,6 +452,13 @@ export async function* solveProblemStream(problemText, language = 'auto', detail
     // CODING MODE - Code only, no system design
     systemPrompt = isBrief ? BRIEF_PROMPT : CODING_PROMPT;
     userMessage = `${languageInstruction}\n\nSolve this coding problem and return the response as JSON:\n\n${problemText}`;
+  }
+
+  // Cloud-platform constraint — hard-frame service naming for Azure/GCP.
+  // Only matters for system-design (coding problems are platform-agnostic).
+  if (ascendMode === 'system-design') {
+    const cloudHint = buildCloudHint(cloudProvider);
+    if (cloudHint) systemPrompt = `${cloudHint}\n\n${systemPrompt}`;
   }
 
   const stream = await getClient().chat.completions.create({

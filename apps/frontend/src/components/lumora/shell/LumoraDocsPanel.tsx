@@ -8,6 +8,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';
 import { prepAPI } from '../../../lib/api-client';
 import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '../../../lib/prepDownload';
+import { useCloudProvider } from '../../../hooks/useCloudProvider';
+import CloudProviderSelector from '../../shared/CloudProviderSelector';
 
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -2207,6 +2209,10 @@ function FormattedJD({ text }: { text: string }) {
 
 export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const { token } = useAuth();
+  // Cloud-platform choice for prep-section generation. Sent to the backend
+  // so the LLM names services correctly (Cosmos DB vs DynamoDB) instead of
+  // relying on render-time substitution alone.
+  const [cloudProvider] = useCloudProvider();
   const [prepData, setPrepData] = useState<PrepData>(loadPrepData);
   const [activeSection, setActiveSection] = useState('input');
   const [generating, setGenerating] = useState(false);
@@ -2520,6 +2526,9 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           // Backend reads `documentation` as a {name,content}[] array and
           // injects every entry into the prompt — see ascendPrep.js.
           documentation: state.studyDocs,
+          // Cloud platform — picked once via useCloudProvider, applied by
+          // the backend to system-design / coding / techstack sections.
+          cloudProvider,
         }),
       });
 
@@ -2536,7 +2545,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
       setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
       setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error generating ${label}` } } }));
     }
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token]);
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, cloudProvider]);
 
   /** Generate ALL sections in parallel — each runs independently */
   const handleGenerate = useCallback(async () => {
@@ -2753,6 +2762,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
           )}
+          {/* Cloud-platform selector — drives service naming for the
+              generated system-design / coding / techstack sections. The
+              same useCloudProvider state is shared with every diagram
+              and topic surface, so picking once is enough. */}
+          <div className="mb-2 flex items-center justify-center">
+            <CloudProviderSelector variant="compact" />
+          </div>
           <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
             style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
