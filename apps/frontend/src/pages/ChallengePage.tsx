@@ -276,7 +276,7 @@ export default function ChallengePage() {
   return (
     <div className="ch-root">
       <SEO title="The Camora Challenge" description="Find bugs, build features, win $21,812 in prizes. Join the founding engineering team." path="/challenge" />
-      <SiteNav variant="light" />
+      <SiteNav />
 
       {/* ═══ HERO — Dark gradient mesh with floating orbs ═══ */}
       <section className="ch-hero">
@@ -738,7 +738,7 @@ export default function ChallengePage() {
         </div>
       </section>
 
-      <SiteFooter variant="light" />
+      <SiteFooter />
 
       {/* ═══ STYLES ═══
            All hex literals replaced with design tokens so the page flips
