@@ -672,12 +672,12 @@ export function LumoraShellPage() {
           {activeTab === 'pricing' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '2px solid var(--cam-gold-leaf)' }}>
-                <div className="max-w-3xl mx-auto px-6 py-6 w-full">
+                <div className="max-w-6xl mx-auto px-6 py-6 w-full">
                   <h2 className="text-3xl font-extrabold mb-2 text-white"><span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Pricing</span></h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Manage your subscription and top-ups.</p>
                 </div>
               </div>
-              <div className="max-w-3xl mx-auto px-6 py-6 w-full">
+              <div className="max-w-6xl mx-auto px-6 py-6 w-full">
                 <Suspense fallback={<div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
                   <SharedPricingCards />
                 </Suspense>
