@@ -212,17 +212,23 @@ graph_attr = {
     "fontname": "DejaVu Sans Bold",
     "fontcolor": "#111827",
     "bgcolor": "white",
-    "pad": "0.3",
-    # Reduced from dpi=200 size=18,12 (3600x2400 px) to dpi=110 size=14,8
-    # (1540x880 px). Previous output overflowed the in-app viewport and
-    # forced users to zoom out manually. New size still prints crisply
-    # and fits naturally in the design panel.
+    "pad": "0.4",
+    # Layout tuning, post user-feedback:
+    # - splines=ortho: right-angle connectors; previous "spline" produced
+    #   diagonal crossings that read as spaghetti when the diagram had
+    #   8+ nodes.
+    # - nodesep / ranksep raised so labels don't touch their neighbors
+    #   and clusters have visible gaps.
+    # - ratio dropped: compress forced graphviz to flatten the layout
+    #   into a tall narrow rectangle on TB direction; default
+    #   (no ratio) lets the engine pick a natural aspect.
+    # - size kept at 14,8 with the fixed-aspect ! marker so the panel
+    #   has a stable canvas to fit-to-width against.
     "dpi": "110",
-    "nodesep": "0.7",
-    "ranksep": "0.9",
-    "splines": "spline",
+    "nodesep": "0.9",
+    "ranksep": "1.1",
+    "splines": "ortho",
     "size": "14,8!",
-    "ratio": "compress",
 }
 
 node_attr = {
@@ -340,13 +346,40 @@ def get_prompt(question, provider, detail_level, direction):
     example = examples_by_provider.get(provider, examples_by_provider["aws"])
 
     if detail_level == "overview":
-        scope = """OVERVIEW MODE: Generate 8-12 nodes in 3 clusters.
-Clusters: "Edge & CDN", "Application", "Data Stores"
-Show the main request flow from clients to data and back."""
+        scope = """OVERVIEW MODE: 8-11 nodes in 3 clusters. Tight, readable, no spaghetti.
+Clusters (left to right): "Edge" (1-2 nodes), "Application" (3-5 nodes), "Data" (2-4 nodes).
+Goal: a candidate could explain this in 30 seconds.
+
+Connection discipline (CRITICAL):
+- Each node has AT MOST 2-3 outgoing edges. Aggressively dedupe.
+- The diagram has ONE primary forward request path. Don't draw the same
+  request flowing into every backend if it conceptually fans out — pick
+  the most important downstream and draw that one edge.
+- NO crossing edges. If two edges would cross, restructure clusters or
+  drop the less essential edge.
+- NO bidirectional arrows. Use Edge() with one direction; if a flow is
+  duplex, label it ("read+write") instead of drawing two edges.
+- Keep async / monitoring / replicas OUT of overview entirely.
+
+Preserve the real architectural points: load balancer, primary store,
+cache layer, async queue (if domain demands it). Don't over-simplify."""
     else:
-        scope = """DETAILED MODE: Generate 15-25 nodes in 5-6 clusters.
-Clusters: "Edge & Security", "Application Tier" (with nested "Auto Scaling" sub-cluster), "Data Tier", "Async Processing", "Observability"
-Show: CDN, WAF, auth, API gateway, multiple app instances, cache, primary DB + replica, message queue, workers, log storage, monitoring."""
+        scope = """DETAILED MODE: 12-16 nodes in 4-5 clusters MAX.
+Clusters: "Edge & Security" (CDN + WAF), "Application Tier" (LB + 2-4 services),
+"Data Tier" (cache + DB), "Async Processing" (queue + workers if applicable),
+"Observability" (one metrics + one logs node). Skip "Observability" if the
+core architecture doesn't depend on it.
+
+Connection discipline:
+- Each node 2-4 edges max. NO mesh / fully-connected clusters.
+- Async path is its OWN flow — don't connect every app service to the queue,
+  pick the one that publishes and draw a single edge to the queue.
+- NO replica nodes (group them as "DB Cluster" with 1 node).
+- NO nested sub-clusters.
+- Keep the layout linear-with-side-branches: main path goes Edge → App → Data,
+  side cluster (Async or Observability) reaches in once.
+
+Goal: senior interview-grade diagram that's still scannable in 60 seconds."""
 
     direction_hint = (
         "LAYOUT DIRECTION: Left-to-right (LR). Position upstream nodes (clients, DNS, CDN) on the LEFT and downstream data stores on the RIGHT."

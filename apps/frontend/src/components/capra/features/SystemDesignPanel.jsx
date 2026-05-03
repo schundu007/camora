@@ -320,13 +320,18 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   // dependent code (diagramKey, handleGenerateDiagram retry, fullscreen
   // ASCII fallback) keeps reading values, just with no setter wired to
   // user input.
-  const [diagramDetailLevel, setDiagramDetailLevel] = useState('detailed');
+  // Default to overview + LR. detailed/TB produced 15-25 nodes stacked
+  // vertically — far too dense for the design panel. Overview is 6-9
+  // nodes in a 2-3 cluster left-to-right flow that fits the panel
+  // without horizontal scroll and stays readable at fit-to-width zoom.
+  const [diagramDetailLevel, setDiagramDetailLevel] = useState('overview');
   // direction is locked to TB on the server-side rendering pipeline,
   // but the local state still gets toggled when a user picks a cached
   // detail variant. Keep both reader + setter so handleGenerateDiagram
   // can reflect the active direction in cacheKey lookups without
   // throwing ReferenceError on the dropped setter.
-  const [diagramDirection, setDiagramDirection] = useState('TB');
+  // LR (wide) reads better than TB (tall) in the side-by-side panel.
+  const [diagramDirection, setDiagramDirection] = useState('LR');
   const [showASCII, setShowASCII] = useState(true);
   const [diagramScale, setDiagramScale] = useState(1);
   const [diagramTranslate, setDiagramTranslate] = useState({ x: 0, y: 0 });
