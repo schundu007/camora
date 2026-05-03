@@ -374,26 +374,39 @@ export function StaticDiagram({ diagram }) {
         <p className="px-3 pt-2 text-xs text-[var(--text-muted)] landing-body">{diagram.description}</p>
       )}
       <div className="p-3">
-        {!loaded && !error && (
-          <div className="w-full h-48 bg-[var(--bg-elevated)] rounded animate-pulse flex items-center justify-center">
-            <Icon name="loader" size={20} className="text-[var(--text-muted)] animate-spin" />
-          </div>
-        )}
-        {error && isCloudDiagram && (
+        {/* Missing src — render an inline "no diagram" hint instead of a
+            forever-spinning loader. Without this guard, an entry that
+            forgets to set `src` (or has a broken backend reference)
+            shows the pulse + spinner indefinitely because <img src={undefined}>
+            never fires onLoad or onError. */}
+        {!currentSrc ? (
           <div className="w-full h-32 bg-[var(--bg-elevated)] rounded flex items-center justify-center text-[var(--text-muted)] text-xs landing-mono">
-            {CLOUD_PROVIDERS.find(p => p.id === provider)?.label} diagram not available
+            Diagram not available
           </div>
+        ) : (
+          <>
+            {!loaded && !error && (
+              <div className="w-full h-48 bg-[var(--bg-elevated)] rounded animate-pulse flex items-center justify-center">
+                <Icon name="loader" size={20} className="text-[var(--text-muted)] animate-spin" />
+              </div>
+            )}
+            {error && isCloudDiagram && (
+              <div className="w-full h-32 bg-[var(--bg-elevated)] rounded flex items-center justify-center text-[var(--text-muted)] text-xs landing-mono">
+                {CLOUD_PROVIDERS.find(p => p.id === provider)?.label} diagram not available
+              </div>
+            )}
+            <img
+              key={currentSrc}
+              src={currentSrc}
+              alt={`${diagram.title} — ${provider.toUpperCase()}`}
+              className={`rounded transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'}`}
+              style={{ display: 'block', margin: '0 auto', maxWidth: '100%', maxHeight: diagram.type === 'ui' ? '420px' : '520px', width: 'auto', height: 'auto' }}
+              onLoad={() => setLoaded(true)}
+              onError={() => setError(true)}
+              loading="lazy"
+            />
+          </>
         )}
-        <img
-          key={currentSrc}
-          src={currentSrc}
-          alt={`${diagram.title} — ${provider.toUpperCase()}`}
-          className={`rounded transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'}`}
-          style={{ display: 'block', margin: '0 auto', maxWidth: '100%', maxHeight: diagram.type === 'ui' ? '420px' : '520px', width: 'auto', height: 'auto' }}
-          onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-          loading="lazy"
-        />
       </div>
     </div>
   );
