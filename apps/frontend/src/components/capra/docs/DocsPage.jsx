@@ -1569,14 +1569,7 @@ export default function DocsPage({ onBack }) {
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
                       <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                        <div className="px-4 py-3 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                          <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--accent)]/15">
-                              <Icon name="clock" size={12} className="text-[var(--accent)]" />
-                            </div>
-                            Time Complexity Cheat Sheet
-                          </h3>
-                        </div>
+                        <CategoryHeader icon="clock" title="Time Complexity Cheat Sheet" />
                         <div className="p-4 overflow-x-auto">
                           <table className="w-full text-sm">
                             <tbody>
@@ -1604,14 +1597,7 @@ export default function DocsPage({ onBack }) {
                       </div>
                       {/* Data Structure Selection Card */}
                       <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                        <div className="px-4 py-3 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                          <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--accent)]/15">
-                              <Icon name="database" size={12} className="text-[var(--accent)]" />
-                            </div>
-                            When to Use What
-                          </h3>
-                        </div>
+                        <CategoryHeader icon="database" title="When to Use What" />
                         <div className="p-4 overflow-x-auto">
                           <table className="w-full text-sm">
                             <tbody>
@@ -1658,24 +1644,11 @@ export default function DocsPage({ onBack }) {
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                           {/* Category Header with Progress */}
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            {(() => {
-                              const done = categoryTopics.filter(t => completedTopics[t.id]).length;
-                              const pct = Math.round((done / categoryTopics.length) * 100);
-                              return (
-                                <>
-                                  <span className="text-[10px] landing-mono text-[var(--text-muted)]">{done}/{categoryTopics.length}</span>
-                                  <div className="h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden max-w-[100px] flex-shrink-0">
-                                    <div className="h-full bg-[var(--accent)] rounded-full transition-colors duration-500" style={{ width: `${pct}%` }} />
-                                  </div>
-                                </>
-                              );
-                            })()}
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            progress={{ done: categoryTopics.filter(t => completedTopics[t.id]).length, total: categoryTopics.length }}
+                          />
                           {/* Topics in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => {
@@ -1833,13 +1806,12 @@ export default function DocsPage({ onBack }) {
                       // diffStyle is computed inline per-problem below
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryProblems.length}
+                            countLabel="problems"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]';
@@ -1897,13 +1869,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="patterns"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
@@ -1950,13 +1921,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="patterns"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
@@ -2003,13 +1973,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="topics"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
@@ -2056,13 +2025,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="topics"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
@@ -2179,13 +2147,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="topics"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => {
                               const locked = contentAccess.isTopicLocked(activePage, topic.id);
@@ -2238,13 +2205,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryProblems.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryProblems.length}
+                            countLabel="problems"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-white border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-white border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-white border border-[var(--border)]';
@@ -2389,28 +2355,14 @@ export default function DocsPage({ onBack }) {
                     {behavioralCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => topicCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
-                      const catCompleted = categoryTopics.filter(t => completedTopics[t.id]).length;
-                      const catPercent = Math.round((catCompleted / categoryTopics.length) * 100);
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                           {/* Category Header with Progress */}
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
-                            <div className="ml-auto flex items-center gap-2">
-                              {catCompleted > 0 && (
-                                <span className="text-[10px] landing-mono font-medium" style={{ color: 'var(--accent)' }}>
-                                  {catCompleted}/{categoryTopics.length}
-                                </span>
-                              )}
-                              <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                                <div className="h-full rounded-full transition-colors duration-500" style={{ width: `${catPercent}%`, background: 'var(--accent)' }} />
-                              </div>
-                            </div>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            progress={{ done: categoryTopics.filter(t => completedTopics[t.id]).length, total: categoryTopics.length }}
+                          />
                           {/* Topics in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
@@ -2549,13 +2501,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="patterns"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => (
                               <div
@@ -2600,13 +2551,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="topics"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => {
                               const locked = contentAccess.isTopicLocked(activePage, topic.id);
@@ -2646,13 +2596,12 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                              <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                            countLabel="topics"
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryTopics.map((topic) => {
                               const locked = contentAccess.isTopicLocked(activePage, topic.id);
@@ -2706,11 +2655,11 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)]">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
                             {categoryTopics.map((topic) => {
                               const isCompleted = completedTopics[topic.id];
@@ -2777,11 +2726,11 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)]">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
                             {categoryTopics.map((topic) => {
                               const isCompleted = completedTopics[topic.id];
@@ -2845,11 +2794,11 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                          <div className="px-4 py-2.5 flex items-center gap-2.5 border-b border-[var(--border)]" style={{ background: 'transparent' }}>
-                            <Icon name={category.icon} size={14} style={{ color: 'var(--accent)' }} />
-                            <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)]">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
-                          </div>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
                             {categoryTopics.map((topic) => {
                               const isCompleted = completedTopics[topic.id];
