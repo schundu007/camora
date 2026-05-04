@@ -770,12 +770,33 @@ function PrepContentRenderer({ content }: { content: any }) {
     );
   }
 
-  // Questions — LeetCode-inspired card layout
-  if (data.questions?.length > 0) {
+  // Questions — LeetCode-inspired card layout.
+  //
+  // Defensive: the previous guard `data.questions?.length > 0` let through any
+  // value with a length (strings, length-bearing objects), then crashed at
+  // `.map`. Hiring-manager responses sometimes arrive as a string paragraph
+  // or a `{ items: [...] }` wrapper, hence this normalization.
+  const rawQuestions = data.questions;
+  let questionsArr: any[] | null = null;
+  if (Array.isArray(rawQuestions)) {
+    questionsArr = rawQuestions;
+  } else if (rawQuestions && typeof rawQuestions === 'object') {
+    const wrapped = (rawQuestions as any).items ?? (rawQuestions as any).list ?? (rawQuestions as any).questions;
+    if (Array.isArray(wrapped)) questionsArr = wrapped;
+  }
+  if (!questionsArr && typeof rawQuestions === 'string' && rawQuestions.trim()) {
+    mark('questions');
+    els.push(
+      <div key="questions" className="rounded-xl p-4" style={paperCard(LC.navy)}>
+        <SectionHeading label="Questions" color={LC.navy} />
+        <p className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{rawQuestions}</p>
+      </div>
+    );
+  } else if (questionsArr && questionsArr.length > 0) {
     mark('questions');
     els.push(
       <div key="questions" className="space-y-5">
-        {data.questions.map((q: any, i: number) => {
+        {questionsArr.map((q: any, i: number) => {
           const title = q.question || q.title || q.text || q.scenario || `Question ${i + 1}`;
           const qRendered = new Set(['question', 'title', 'text', 'scenario']);
 
