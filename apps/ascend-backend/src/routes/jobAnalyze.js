@@ -280,6 +280,55 @@ function stripHtml(html) {
   return $.text();
 }
 
+/**
+ * Convert a candidate cheerio element into clean prose. We can't just
+ * call `.text()` on the matched element because Greenhouse / Workday /
+ * SmartRecruiters serve their job description as an HTML-encoded
+ * string nested inside a wrapper div — the inner content is parsed as
+ * TEXT, not as HTML, so cheerio's text extractor returns the raw
+ * angle-bracket markup. Two-step approach instead:
+ *   1. Inject newlines around block-level boundaries so paragraphs
+ *      survive when text() collapses them.
+ *   2. Re-parse the extracted text once more if it still contains
+ *      tag-shaped substrings — that catches the embedded-HTML case.
+ */
+function elementToCleanText($, el) {
+  // Wrap in a synthetic root so we can mutate without touching the
+  // original document. Append \n after block-level elements so
+  // text() doesn't smash everything onto one line.
+  const $clone = cheerio.load(`<div id="__r"></div>`);
+  $clone('#__r').append($.html(el));
+  $clone('#__r p, #__r li, #__r br, #__r h1, #__r h2, #__r h3, #__r h4, #__r div').each((_, e) => {
+    $clone(e).append('\n');
+  });
+  return stripHtmlIfPresent($clone('#__r').text());
+}
+
+/**
+ * Catches the case where extracted text itself contains literal
+ * angle-bracket markup. Idempotent — early-returns when input is
+ * already clean prose.
+ */
+function stripHtmlIfPresent(text) {
+  if (!text || typeof text !== 'string') return text;
+  if (!/<[a-z][^>]{0,300}>/i.test(text)) return text;
+  try {
+    const $ = cheerio.load(`<div id="__r">${text}</div>`);
+    $('#__r p, #__r li, #__r br, #__r h1, #__r h2, #__r h3, #__r h4, #__r div').each((_, el) => {
+      $(el).append('\n');
+    });
+    return $('#__r').text()
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  } catch {
+    return text;
+  }
+}
+
 function extractJobTextFromHtml(html) {
   const $ = cheerio.load(html);
 
@@ -299,19 +348,22 @@ function extractJobTextFromHtml(html) {
   ];
 
   for (const sel of selectors) {
-    const el = $(sel);
-    if (el.length && el.text().trim().length > 200) {
-      return cleanText(el.text());
+    const el = $(sel).first();
+    if (el.length) {
+      const candidate = cleanText(elementToCleanText($, el.get(0)));
+      if (candidate.length > 200) return candidate;
     }
   }
 
-  return cleanText($('body').text());
+  return cleanText(elementToCleanText($, $('body').get(0)));
 }
 
 function cleanText(text) {
-  return text
+  return stripHtmlIfPresent(text || '')
     .replace(/\t/g, ' ')
     .replace(/[ ]{2,}/g, ' ')
+    .replace(/\n[ ]+/g, '\n')
+    .replace(/[ ]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
     .slice(0, 12000);
