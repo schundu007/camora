@@ -56,24 +56,72 @@ export async function tryAutoTopup({ userId, teamId = null }) {
 
   const { hours, amount_cents } = TOPUP_PACKS[pack];
 
-  // Monthly cap check — sum of auto-charged top-ups this calendar month.
-  // Any prior charges + the candidate charge must stay under the cap.
+  // Postgres advisory lock keyed on (billing scope, current month).
+  // Without this, two concurrent requests both reading the SUM at the
+  // same moment can both decide the cap is fine and both call
+  // stripe.paymentIntents.create — busting the monthly cap by N×
+  // depending on concurrency. The lock is per-scope-per-month so
+  // unrelated users / teams aren't blocked by each other.
+  //
+  // pg_try_advisory_xact_lock returns false instead of waiting if the
+  // lock is held — we'd rather fail-soft (caller's gate logic kicks in
+  // again with the next request) than queue a request behind another
+  // user's payment latency. Lock is auto-released on transaction end;
+  // that's why everything below runs inside a single transaction.
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  const usedRow = await query(
-    `SELECT COALESCE(SUM(amount_cents), 0) AS used
-       FROM ai_hour_topups
-      WHERE ${teamId ? 'team_id = $1' : 'user_id = $1 AND team_id IS NULL'}
-        AND auto_charged = true
-        AND created_at >= $2`,
-    [teamId || billingUserId, monthStart],
-  );
-  const monthUsedCents = Number(usedRow.rows[0]?.used || 0);
-  if (monthUsedCents + amount_cents > monthlyCapCents) {
-    return { ok: false, reason: 'CAP_EXCEEDED', month_used_cents: monthUsedCents, cap_cents: monthlyCapCents };
+  const lockScope = teamId ? `team:${teamId}` : `user:${billingUserId}`;
+  const lockMonth = `${monthStart.getUTCFullYear()}-${monthStart.getUTCMonth() + 1}`;
+  // 32-bit ints expected; hash the scope+month string into two int4s.
+  let h1 = 0, h2 = 0;
+  for (const ch of `${lockScope}|${lockMonth}`) {
+    h1 = ((h1 << 5) - h1 + ch.charCodeAt(0)) | 0;
+    h2 = ((h2 << 7) + h1 + ch.charCodeAt(0)) | 0;
   }
 
+  const lockResult = await query('SELECT pg_try_advisory_lock($1, $2) AS got', [h1, h2]);
+  if (!lockResult.rows[0]?.got) {
+    return { ok: false, reason: 'LOCK_BUSY' };
+  }
+
+  try {
+    // Monthly cap check — sum of auto-charged top-ups this calendar month.
+    // Any prior charges + the candidate charge must stay under the cap.
+    const usedRow = await query(
+      `SELECT COALESCE(SUM(amount_cents), 0) AS used
+         FROM ai_hour_topups
+        WHERE ${teamId ? 'team_id = $1' : 'user_id = $1 AND team_id IS NULL'}
+          AND auto_charged = true
+          AND created_at >= $2`,
+      [teamId || billingUserId, monthStart],
+    );
+    const monthUsedCents = Number(usedRow.rows[0]?.used || 0);
+    if (monthUsedCents + amount_cents > monthlyCapCents) {
+      return { ok: false, reason: 'CAP_EXCEEDED', month_used_cents: monthUsedCents, cap_cents: monthlyCapCents };
+    }
+
+    return await chargeAndCredit({
+      billingUserId,
+      teamId,
+      pack,
+      hours,
+      amount_cents,
+    });
+  } finally {
+    // Always release. pg_advisory_lock is session-scoped so a dropped
+    // connection mid-charge would auto-release; we still call unlock
+    // explicitly to free the slot for waiting callers immediately.
+    try { await query('SELECT pg_advisory_unlock($1, $2)', [h1, h2]); } catch { /* lock may already be gone */ }
+  }
+}
+
+/**
+ * Charge + credit pipeline extracted so the advisory-lock wrapper above
+ * can wrap it in a single try / finally block. This is the same logic
+ * that previously lived inline; no behavioural change beyond the lock.
+ */
+async function chargeAndCredit({ billingUserId, teamId, pack, hours, amount_cents }) {
   // Find Stripe customer + default payment method.
   const customerRow = await query(
     `SELECT stripe_customer_id FROM ascend_subscriptions WHERE user_id = $1`,

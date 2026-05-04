@@ -101,8 +101,19 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
-    allow_credentials=True,
+    # X-API-Key removed from allow_headers so the browser cannot send it
+    # cross-origin even if XSS landed on an allowlisted Camora domain.
+    # ai-services traffic is server-to-server (lumora-backend / ascend-
+    # backend → ai-services); browsers should never need to call us
+    # directly. Authorization stays for future browser-issued bearer
+    # auth on uniquely browser-facing endpoints (none today).
+    allow_headers=["Authorization", "Content-Type"],
+    # Disabled: ai-services doesn't use cookies — auth is X-API-Key
+    # over server-to-server. Keeping credentials=True invites the
+    # exact XSS-exfil pattern described in the security audit
+    # (XSS on camora.cariara.com → fetch ai-services with
+    # credentials: 'include' and steal the API key).
+    allow_credentials=False,
 )
 
 @app.get("/health")
