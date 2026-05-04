@@ -1,0 +1,17 @@
+{
+  "date": "2026-05-04",
+  "note": "PageSpeed API returned 429 RESOURCE_EXHAUSTED for all 4 calls (quota_limit_value=0 on project 583797351490). No scores recorded this week.",
+  "homepage": {
+    "mobile": null,
+    "desktop": null
+  },
+  "pricing": {
+    "mobile": null,
+    "desktop": null
+  },
+  "api_error": {
+    "code": 429,
+    "message": "Quota exceeded for quota metric 'Queries' and limit 'Queries per day' of service 'pagespeedonline.googleapis.com' for consumer 'project_number:583797351490'.",
+    "status": "RESOURCE_EXHAUSTED"
+  }
+}
