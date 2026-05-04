@@ -60,77 +60,29 @@ async function getOrCreateProfile(userId) {
 }
 
 // ---------------------------------------------------------------------------
-// POST /sync — create or update user from OAuth data, return JWT
+// POST /sync — DISABLED (CRITICAL auth-bypass).
+//
+// The previous implementation accepted arbitrary { email, provider,
+// provider_id } from request body and minted a 30-day Bearer JWT for
+// the matching user — without ever verifying the OAuth credential.
+// Any caller who knew a victim's Google `sub` could request a token
+// for that account.
+//
+// CLAUDE.md states ascend-backend (apps/ascend-backend/src/routes/auth.js)
+// is the canonical OAuth host. The lumora-backend `/sync` legacy path
+// has no remaining valid use case in production. Returning 410 Gone
+// fails loudly so any caller still wired to this path notices and
+// switches to the ascend OAuth flow.
+//
+// For local dev where you want a non-OAuth account, mint tokens via
+// the ascend-backend dev flow or directly via createToken() in a
+// scripted seed — never via an unauthenticated route.
 // ---------------------------------------------------------------------------
-router.post('/sync', async (req, res) => {
-  try {
-    const { email, name, image, provider, provider_id } = req.body;
-
-    if (!email || !provider || !provider_id) {
-      return res.status(400).json({ error: 'email, provider, and provider_id are required' });
-    }
-
-    // Check if user exists by provider + provider_id
-    let result = await query(
-      'SELECT * FROM users WHERE provider = $1 AND provider_id = $2 LIMIT 1',
-      [provider, provider_id],
-    );
-    let user = result.rows[0];
-
-    if (!user) {
-      // Check if email exists with a different provider
-      result = await query(
-        'SELECT * FROM users WHERE email = $1 LIMIT 1',
-        [email],
-      );
-      const existing = result.rows[0];
-
-      if (existing) {
-        // Allow reusing dev accounts with different provider_id
-        if (provider === 'dev' && existing.provider === 'dev') {
-          result = await query(
-            `UPDATE users SET provider_id = $1, name = $2 WHERE id = $3 RETURNING *`,
-            [provider_id, name || existing.name, existing.id],
-          );
-          user = result.rows[0];
-        } else {
-          return res.status(409).json({
-            error: `Email already registered with provider: ${existing.provider}`,
-          });
-        }
-      } else {
-        // Create new user
-        result = await query(
-          `INSERT INTO users (email, name, image, provider, provider_id)
-           VALUES ($1, $2, $3, $4, $5)
-           RETURNING *`,
-          [email, name || null, image || null, provider, provider_id],
-        );
-        user = result.rows[0];
-      }
-    } else {
-      // Update existing user
-      result = await query(
-        `UPDATE users SET name = $1, image = $2 WHERE id = $3 RETURNING *`,
-        [name || user.name, image || user.image, user.id],
-      );
-      user = result.rows[0];
-    }
-
-    // Generate JWT — include `type: 'access'` so the ascend authenticate
-    // middleware (which strictly checks `payload.type === 'access'`) accepts
-    // this token on cross-service requests.
-    const token = createToken({ sub: user.id, email: user.email, type: 'access' });
-
-    return res.json({
-      access_token: token,
-      token_type: 'bearer',
-      user: formatUserResponse(user),
-    });
-  } catch (err) {
-    console.error('POST /sync error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
+router.post('/sync', (req, res) => {
+  return res.status(410).json({
+    error: 'Endpoint removed. Authenticate via ascend-backend OAuth flow.',
+    code: 'AUTH_SYNC_REMOVED',
+  });
 });
 
 // ---------------------------------------------------------------------------

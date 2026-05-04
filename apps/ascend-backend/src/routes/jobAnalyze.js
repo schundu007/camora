@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as cheerio from 'cheerio';
 import Anthropic from '@anthropic-ai/sdk';
+import dns from 'node:dns/promises';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { recordTokens } from '../services/aiHoursMeter.js';
 
@@ -21,11 +22,67 @@ const FETCH_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
 };
 
+/**
+ * SSRF guard. Reject any URL that resolves to a non-routable IP — RFC1918,
+ * loopback, link-local, the cloud metadata endpoint (169.254.169.254),
+ * carrier-grade NAT (100.64/10), unique-local IPv6 (fc00::/7), etc.
+ *
+ * Without this, an authenticated user can ask the backend to fetch
+ * arbitrary internal URLs ("http://10.0.0.x:5432" → reach Postgres,
+ * "http://localhost:8001" → reach ai-services bypassing X-API-Key when
+ * AI_SERVICES_DEV_OPEN is on, "http://169.254.169.254/latest/meta-data/"
+ * → exfiltrate cloud credentials).
+ */
+function isPrivateIp(ip) {
+  if (!ip) return true;
+  if (ip === '127.0.0.1' || ip === '::1') return true;
+  if (ip.startsWith('169.254.')) return true;            // link-local + AWS/GCP metadata
+  if (ip.startsWith('10.')) return true;                  // RFC1918
+  if (ip.startsWith('192.168.')) return true;             // RFC1918
+  // 172.16.0.0 – 172.31.255.255
+  if (ip.startsWith('172.')) {
+    const n = parseInt(ip.split('.')[1], 10);
+    if (n >= 16 && n <= 31) return true;
+  }
+  if (ip.startsWith('100.')) {                            // 100.64.0.0/10 (CGNAT)
+    const n = parseInt(ip.split('.')[1], 10);
+    if (n >= 64 && n <= 127) return true;
+  }
+  if (ip === '0.0.0.0') return true;
+  if (ip.startsWith('::ffff:')) return isPrivateIp(ip.slice(7)); // v4-mapped v6
+  if (ip.toLowerCase().startsWith('fc') || ip.toLowerCase().startsWith('fd')) return true; // ULA
+  if (ip.toLowerCase().startsWith('fe80:')) return true;  // link-local v6
+  return false;
+}
+
+async function assertPublicHost(rawUrl) {
+  const parsed = new URL(rawUrl);
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('blocked: bad protocol');
+  let addrs;
+  try {
+    addrs = await dns.lookup(parsed.hostname, { all: true });
+  } catch {
+    throw new Error('blocked: dns');
+  }
+  for (const a of addrs) {
+    if (isPrivateIp(a.address)) throw new Error('blocked: private ip');
+  }
+}
+
 async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  // Reject internal targets before the connect attempt. Note: this is
+  // a best-effort check — DNS rebind attacks could still flip the IP
+  // between this resolve and the actual connect — but this catches
+  // every common SSRF probe.
+  await assertPublicHost(url);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { signal: controller.signal, redirect: 'follow', ...options });
+    // `redirect: 'manual'` so an open redirect on a job board can't
+    // chain to an internal target. Callers that legitimately need
+    // redirects can re-validate the Location header through
+    // assertPublicHost before fetching it.
+    const res = await fetch(url, { signal: controller.signal, redirect: 'manual', ...options });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res;
   } finally {

@@ -380,8 +380,16 @@ router.get('/:id', async (req, res, next) => {
 
 /**
  * POST /backfill-salaries — Bulk extract salaries from job descriptions.
+ *
+ * Admin-gated: this issues up to 2000 UPDATE writes against the jobs DB
+ * per call. Without the admin check any authenticated free-tier user
+ * could trigger destructive bulk writes / scrape rate-limit upstream
+ * services on demand.
  */
 router.post('/backfill-salaries', async (req, res, next) => {
+  if (!req.user?.is_admin) {
+    return res.status(403).json({ error: 'Admin access required', code: 'ADMIN_REQUIRED' });
+  }
   try {
     const batchSize = Math.min(parseInt(req.query.limit) || 500, 2000);
     const result = await queryJobs(

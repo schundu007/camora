@@ -54,21 +54,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/topic-comments — add a comment (auth required)
+// POST /api/topic-comments — add a comment (auth required).
+//
+// Identity (`user_name`, `user_image`) is derived from the authenticated
+// JWT, NOT from the request body. The previous implementation accepted
+// userName/userImage from req.body and stored them verbatim — letting
+// any authenticated user claim to be admin / set userImage to a
+// `javascript:` URL (stored XSS in any frontend rendering it as `<img>`).
 router.post('/', jwtAuth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { topicId, content, parentId, userName, userImage } = req.body;
+    const { topicId, content, parentId } = req.body;
 
     if (!topicId || !content?.trim()) {
       return res.status(400).json({ error: 'topicId and content are required' });
     }
 
+    const userName = req.user.name || null;
+    const userImage = req.user.picture || req.user.image || null;
+
     const result = await query(
       `INSERT INTO ascend_topic_comments (topic_id, user_id, user_name, user_image, content, parent_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [topicId, userId, userName || null, userImage || null, content.trim(), parentId || null]
+      [topicId, userId, userName, userImage, content.trim(), parentId || null]
     );
     res.json({ comment: result.rows[0] });
   } catch (err) {
