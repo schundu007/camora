@@ -8,6 +8,7 @@ import { ContentDiagram } from './ContentDiagram';
 import OnThisPage from '../../shared/docs/OnThisPage';
 import DocsTabs from '../../shared/docs/DocsTabs';
 import DocsPrevNext from '../../shared/docs/DocsPrevNext';
+import ZoomableImage from '../../shared/docs/ZoomableImage';
 import TopicDiagram from './TopicDiagram';
 import { GENERATED_LAYERED_DESIGN } from '../../../data/capra/topics/__generated/layered-design';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
@@ -358,7 +359,6 @@ function DataModelSection({ schema, examples }) {
  */
 function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
   const [imgError, setImgError] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => { setImgError(false); }, [topicId, provider]);
 
@@ -391,28 +391,20 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
     );
   }
 
-  // Static pre-generated PNG — original collapsed preview with click to expand
+  // Static pre-generated PNG — ZoomableImage handles the
+  // scroll-inside + click-to-zoom pattern for tall portrait diagrams.
+  // Replaces the previous manual `expanded` state which inflated the
+  // image inline and forced page scroll past it.
   if (!imgError) {
     return (
       <div>
-        <div className="rounded overflow-hidden cursor-pointer relative" style={{ background: 'white', border: '1px solid var(--border)', maxHeight: expanded ? 'none' : '500px' }} onClick={() => setExpanded(!expanded)}>
-          <img
-            src={staticSrc}
-            alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-            style={{ width: '100%', maxWidth: '700px', height: 'auto', display: 'block', margin: '0 auto', filter: 'contrast(1.4) saturate(1.15)' }}
-            onError={() => setImgError(true)}
-          />
-          {!expanded && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(transparent, white)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'white', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to expand ↓</span>
-            </div>
-          )}
-          {expanded && (
-            <div style={{ textAlign: 'center', padding: '8px 0' }}>
-              <span style={{ fontSize: 11, fontWeight: 500, padding: '4px 12px', borderRadius: 99, background: 'white', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Click to collapse ↑</span>
-            </div>
-          )}
-        </div>
+        <ZoomableImage
+          src={staticSrc}
+          alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
+          maxHeight={520}
+          frameStyle={{ background: 'white' }}
+          imgStyle={{ filter: 'contrast(1.4) saturate(1.15)' }}
+        />
         <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
           <span>{provider.toUpperCase()} Architecture</span>
           <div className="flex items-center gap-3">
@@ -2176,18 +2168,20 @@ export default function TopicDetail({
                         title="Key Design Decisions"
                         actions={<GlassPill>{topicDetails.keyDecisions.length}</GlassPill>}
                       />
-                      {/* Decision architecture diagram */}
+                      {/* Decision architecture diagram — wrapped in
+                          ZoomableImage so tall portrait Graphviz PNGs
+                          scroll inside their own viewport instead of
+                          dominating the page; click-to-zoom opens the
+                          full image in a lightbox for unhindered
+                          reading. */}
                       {(() => {
                         const diagSrc = `/diagrams/${selectedTopic}/key-decisions.png`;
                         return (
                           <div className="p-3 pb-0">
-                            <img
+                            <ZoomableImage
                               src={diagSrc}
                               alt="Key Design Decisions"
-                              className="w-full rounded border border-[var(--border)]"
-                              style={{ maxHeight: '500px', objectFit: 'contain' }}
-                              loading="lazy"
-                              onError={(e) => { e.target.style.display = 'none'; }}
+                              maxHeight={520}
                             />
                           </div>
                         );
