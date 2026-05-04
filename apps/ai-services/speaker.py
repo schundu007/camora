@@ -7,6 +7,7 @@ speaker verification using resemblyzer voice embeddings.
 import base64
 import io
 import os
+import secrets
 import subprocess
 import tempfile
 import wave
@@ -153,7 +154,17 @@ async def speaker_enroll(
         print(f"[Speaker] Enrolling user {user_id}, file={fname}, size={len(audio_bytes)}, suffix={suffix}")
 
         embedding = _embed_audio(audio_bytes, suffix=suffix)
-        np.save(str(_embedding_path(user_id)), embedding)
+
+        # Atomic write — np.save is open + write_header + write_body + close,
+        # which is non-atomic. Two concurrent enrolls (same user double-clicks
+        # / mobile retry) can interleave header/body bytes and produce an
+        # unparseable .npy that 500s every subsequent verify/diarize call.
+        # Write to a per-process temp file and os.replace into place
+        # (atomic on POSIX same-fs).
+        final = _embedding_path(user_id)
+        tmp = final.with_suffix(f".npy.{os.getpid()}.{secrets.token_hex(4)}.tmp")
+        np.save(str(tmp), embedding)
+        os.replace(tmp, final)
         return {"success": True, "message": "Voice enrolled successfully"}
     except HTTPException:
         raise
@@ -243,7 +254,7 @@ async def speaker_diarize(
                 "interviewer_ratio": 1.0,
             }
 
-        stored_embedding = np.load(str(path))
+        stored_embedding = np.load(str(path), allow_pickle=False)
         encoder = _get_encoder()
 
         # Sliding window diarization
@@ -385,7 +396,7 @@ async def speaker_verify(
         if not audio_bytes:
             raise HTTPException(status_code=400, detail="Empty audio file")
 
-        stored_embedding = np.load(str(path))
+        stored_embedding = np.load(str(path), allow_pickle=False)
         fname = file.filename or "audio.webm"
         suffix = "." + fname.rsplit(".", 1)[-1] if "." in fname else ".webm"
         current_embedding = _embed_audio(audio_bytes, suffix=suffix)
