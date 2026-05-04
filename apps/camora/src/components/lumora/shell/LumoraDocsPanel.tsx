@@ -776,8 +776,23 @@ function PrepContentRenderer({ content }: { content: any }) {
   // value with a length (strings, length-bearing objects), then crashed at
   // `.map`. Hiring-manager responses sometimes arrive as a string paragraph
   // or a `{ items: [...] }` wrapper, hence this normalization.
-  const rawQuestions = data.questions;
+  let rawQuestions = data.questions;
   let questionsArr: any[] | null = null;
+  // Heal stringified questions arrays — generation sometimes returns the
+  // entire `[{...}, {...}]` payload as a JSON string, which would otherwise
+  // dump as raw `[{"question":...}]` in the UI.
+  if (typeof rawQuestions === 'string') {
+    const trimmed = rawQuestions.trim();
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      const parsed = tryParseJsonValue(trimmed);
+      if (Array.isArray(parsed)) {
+        rawQuestions = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        const wrapped = parsed.items ?? parsed.list ?? parsed.questions;
+        if (Array.isArray(wrapped)) rawQuestions = wrapped;
+      }
+    }
+  }
   if (Array.isArray(rawQuestions)) {
     questionsArr = rawQuestions;
   } else if (rawQuestions && typeof rawQuestions === 'object') {
