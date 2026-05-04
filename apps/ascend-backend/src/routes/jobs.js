@@ -6,6 +6,7 @@
  */
 import { Router } from 'express';
 import { queryJobs } from '../services/jobsDb.js';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { extractSalary } from '../services/salaryExtractor.js';
 
@@ -331,8 +332,17 @@ router.get('/:id', async (req, res, next) => {
 
 /**
  * POST /backfill-salaries — Bulk extract salaries from job descriptions.
+ * Admin-gated (see lumora-backend/src/routes/jobs.js for rationale).
  */
 router.post('/backfill-salaries', async (req, res, next) => {
+  try {
+    const adminCheck = await query('SELECT is_admin FROM users WHERE id = $1', [req.user?.id]);
+    if (!adminCheck.rows[0]?.is_admin) {
+      return res.status(403).json({ error: 'Admin access required', code: 'ADMIN_REQUIRED' });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Admin check failed' });
+  }
   try {
     const batchSize = Math.min(parseInt(req.query.limit) || 500, 2000);
     const result = await queryJobs(

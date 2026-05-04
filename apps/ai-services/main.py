@@ -24,9 +24,22 @@ from dot_render import router as dot_render_router
 
 app = FastAPI(title="Camora AI Services", version="1.0.0")
 
-# Routes that don't require the X-API-Key gate. /health is the Railway
-# healthcheck target; OpenAPI docs are kept open in dev for inspection.
-_OPEN_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
+# Routes that don't require the X-API-Key gate.
+#
+# In prod (default): only /health is unauthenticated — that's the
+# Railway healthcheck target. OpenAPI / Swagger docs are auth-gated to
+# avoid leaking the full route inventory + parameters to attackers
+# scanning the public Railway URL.
+#
+# In dev: AI_SERVICES_DEV_OPEN=1 ALSO opens /docs, /redoc, /openapi.json
+# for local inspection. The env var is checked at request time below.
+#
+# `/` was previously in this set as a catch-all for "any path that
+# normalizes to root" — but that left a future-handler footgun (e.g.
+# adding a default root handler later would silently expose it) and
+# bought no value over /health.
+_OPEN_PATHS = {"/health"}
+_DEV_OPEN_PATHS = {"/docs", "/redoc", "/openapi.json"}
 
 
 class ApiKeyAuth(BaseHTTPMiddleware):
@@ -37,6 +50,9 @@ class ApiKeyAuth(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path.rstrip("/") or "/"
         if path in _OPEN_PATHS or request.method == "OPTIONS":
+            return await call_next(request)
+        # OpenAPI docs paths only opened in dev when AI_SERVICES_DEV_OPEN=1.
+        if path in _DEV_OPEN_PATHS and os.getenv("AI_SERVICES_DEV_OPEN") == "1":
             return await call_next(request)
         expected = os.getenv("AI_SERVICES_API_KEY", "").strip()
         if not expected:

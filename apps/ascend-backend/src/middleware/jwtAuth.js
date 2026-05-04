@@ -85,6 +85,43 @@ export async function jwtAuth(req, res, next) {
       });
     }
 
+    // Token-generation revocation check.
+    //
+    // The `users.token_generation` column exists specifically to
+    // invalidate every outstanding JWT for a user — admin sets a new
+    // value, all old tokens (which carry the OLD `gen` claim) reject
+    // here. Without this check an exfiltrated 30-day token stays
+    // valid for the full TTL even after an admin "revoke all sessions"
+    // action.
+    //
+    // Tolerated cases:
+    //   • Tokens minted before this column existed don't carry `gen`
+    //     — `payload.gen === undefined` skips the check (legacy compat).
+    //   • DB lookup failure → fail closed: 503 so the caller retries.
+    //     (Failing open here would silently bypass revocation under
+    //     transient DB issues.)
+    if (payload.gen !== undefined) {
+      try {
+        const userRow = await query(
+          'SELECT token_generation FROM users WHERE id = $1',
+          [userId],
+        );
+        const dbGen = userRow.rows[0]?.token_generation;
+        if (dbGen !== undefined && dbGen !== null && Number(dbGen) !== Number(payload.gen)) {
+          return res.status(401).json({
+            error: 'Session revoked',
+            code: 'SESSION_REVOKED',
+          });
+        }
+      } catch (err) {
+        logger.warn({ error: err.message, userId }, 'token_generation check failed');
+        return res.status(503).json({
+          error: 'Auth verification temporarily unavailable',
+          code: 'AUTH_VERIFY_UNAVAILABLE',
+        });
+      }
+    }
+
     // Attach user info to request
     req.user = {
       id: userId,
