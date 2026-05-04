@@ -640,6 +640,18 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
       logCacheEvent('HIT', cacheKey, { route: 'solve', plan: planType, lang });
       sendEvent('answer', { ...cachedAnswer, fromCache: true });
       sendEvent('done', { ok: true, fromCache: true });
+
+      // Meter the cached replay too. coding_usage drives the daily-limit
+      // counter consulted at the top of /solve; without this insert, free
+      // users could blow past their daily cap as long as the problem was
+      // cached. Charge zero tokens (LLM didn't run) but increment the
+      // row count so the day-limit check sees the request.
+      try {
+        await recordCodingUsage(userId, lang, 0, 0, 0);
+      } catch (mErr) {
+        console.warn('[coding/solve] cached-answer metering failed:', mErr.message);
+      }
+
       return res.end();
     }
     logCacheEvent('MISS', cacheKey, { route: 'solve', plan: planType, lang });

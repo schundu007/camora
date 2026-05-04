@@ -135,7 +135,15 @@ export function LumoraShellPage() {
     }
   }, [activeTab]);
 
-  // Document title
+  // Document title.
+  //
+  // No cleanup — RouteTitle in App.tsx already sets a sane fallback on
+  // every route change, and the destination page's own useEffect runs
+  // on mount to set its own title. The previous `return () => {
+  // document.title = 'Camora'; }` raced with the next page's mount
+  // effect (React 19 cleanup ordering vs new-mount effect), so
+  // /lumora/* → /pricing would briefly land on "Camora" instead of
+  // "Pricing — Camora".
   useEffect(() => {
     const titles: Record<string, string> = {
       interview: 'Live Interview | Camora',
@@ -146,7 +154,6 @@ export function LumoraShellPage() {
       calendar: 'Calendar | Camora',
     };
     document.title = titles[activeTab] || 'Camora';
-    return () => { document.title = 'Camora'; };
   }, [activeTab]);
 
   // Global keyboard shortcuts
