@@ -258,13 +258,37 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
+    // Flush headers immediately so Cloudflare / Railway edge sees the
+    // 200 OK before the first token. Without this the edge can hold
+    // headers for ~5s waiting for body, eating into the timeout budget
+    // before any content streams.
+    if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
     let finalAnswer = null;
     let clientDisconnected = false;
+    // AbortController so a client navigating away mid-answer cancels
+    // the upstream Anthropic call instead of letting it run to
+    // completion (still billing tokens that the browser never sees).
+    const abortController = new AbortController();
+
+    // SSE keepalive — Railway / Cloudflare edge proxies close idle
+    // connections at ~30s. When Anthropic stalls between tokens (model
+    // overload), the user sees the SSE truncate. A 15s comment frame
+    // (`: ka\n\n`) keeps the socket alive without affecting parsing.
+    const keepaliveTimer = setInterval(() => {
+      try { res.write(': ka\n\n'); } catch { /* socket gone */ }
+    }, 15000);
+
+    const cleanupStream = () => {
+      clearInterval(keepaliveTimer);
+    };
 
     req.on('close', () => {
       clientDisconnected = true;
+      abortController.abort();
+      cleanupStream();
     });
+    res.on('finish', cleanupStream);
 
     // ── Answer-cache lookup ─────────────────────────────────────────────
     // Repeated questions (e.g., "design a tiny URL") used to fire the
@@ -359,7 +383,10 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     }
     logCacheEvent('MISS', cacheKey, { route: 'stream', plan: userPlan });
 
-    // Stream tokens (empty history for new conversation)
+    // Stream tokens (empty history for new conversation).
+    // Pass abortController.signal so the Anthropic call halts when the
+    // client disconnects — without this, navigating away mid-answer
+    // keeps tokens billing to completion.
     for await (const evt of streamResponse(question, [], {
       useSearch,
       resumeContext: user.resume_text || null,
@@ -368,6 +395,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
       cloudProvider,
       plan: userPlan,
+      signal: abortController.signal,
     })) {
       if (clientDisconnected) break;
 
