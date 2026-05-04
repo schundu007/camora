@@ -1366,7 +1366,19 @@ img { max-width: 100%; height: auto; }
  *                        eyebrows, callout labels, sidebar mode toggle.
  */
 
-.docs-page {
+/*
+ * Shared content rules — applied to both .docs-page (the /docs/* tree) and
+ * .prep-content (Capra prep topic body, e.g. system design / coding /
+ * behavioral / database content rendered by FormattedContent.jsx). These
+ * are the rules that DON'T conflict with the prep surface's own styled
+ * blocks: typography, headings, code, lists, links.
+ *
+ * Rules that DO conflict (table headers, topic-highlight cards) live below
+ * scoped to .docs-page only — prep keeps its bespoke tables and cards.
+ */
+
+.docs-page,
+.prep-content {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, sans-serif;
   font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02';
@@ -1375,17 +1387,24 @@ img { max-width: 100%; height: auto; }
 
 /* ── Body typography ─────────────────────────────────────────────── */
 .docs-page p,
-.docs-page li {
+.docs-page li,
+.prep-content p,
+.prep-content li {
   font-size: 15px;
   line-height: 1.72;
   letter-spacing: -0.002em;
 }
-.docs-page p { color: var(--text-primary); }
-.docs-page strong { color: var(--text-primary); font-weight: 700; }
-.docs-page em { color: var(--text-primary); }
+.docs-page p,
+.prep-content p { color: var(--text-primary); }
+.docs-page strong,
+.prep-content strong { color: var(--text-primary); font-weight: 700; }
+.docs-page em,
+.prep-content em { color: var(--text-primary); }
 
 /* ── H2 — section heading: navy strip + gold-leaf hairline ───────── */
-.docs-page section > h2 {
+.docs-page section > h2,
+.prep-content > h2,
+.prep-content > section > h2 {
   position: relative;
   font-size: 26px;
   line-height: 1.18;
@@ -1397,8 +1416,11 @@ img { max-width: 100%; height: auto; }
   margin-bottom: 1.1rem;
   scroll-margin-top: 6rem;
 }
-.docs-page section:first-child > h2 { margin-top: 0.5rem; }
-.docs-page section > h2::before {
+.docs-page section:first-child > h2,
+.prep-content > h2:first-child { margin-top: 0.5rem; }
+.docs-page section > h2::before,
+.prep-content > h2::before,
+.prep-content > section > h2::before {
   content: '';
   position: absolute;
   left: 0;
@@ -1410,7 +1432,9 @@ img { max-width: 100%; height: auto; }
     var(--cam-primary) 0%,
     var(--cam-primary-dk) 100%);
 }
-.docs-page section > h2::after {
+.docs-page section > h2::after,
+.prep-content > h2::after,
+.prep-content > section > h2::after {
   content: '';
   display: block;
   height: 1px;
@@ -1424,7 +1448,8 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── H3 — subsection: gold hex glyph + navy text ─────────────────── */
-.docs-page section h3 {
+.docs-page section h3,
+.prep-content h3 {
   position: relative;
   font-size: 19px;
   line-height: 1.32;
@@ -1436,7 +1461,8 @@ img { max-width: 100%; height: auto; }
   margin-bottom: 0.6rem;
   scroll-margin-top: 6rem;
 }
-.docs-page section h3::before {
+.docs-page section h3::before,
+.prep-content h3::before {
   content: '';
   position: absolute;
   left: 2px;
@@ -1448,7 +1474,8 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── H4 — small lead inside a subsection ─────────────────────────── */
-.docs-page section h4 {
+.docs-page section h4,
+.prep-content h4 {
   font-size: 15px;
   line-height: 1.4;
   font-weight: 700;
@@ -1459,7 +1486,8 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── Inline code — gold-leaf-tinted token ────────────────────────── */
-.docs-page :not(pre) > code {
+.docs-page :not(pre) > code,
+.prep-content :not(pre) > code {
   font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.86em;
   line-height: 1.4;
@@ -1472,13 +1500,15 @@ img { max-width: 100%; height: auto; }
   font-feature-settings: 'liga' 0;
   white-space: nowrap;
 }
-[data-theme='dark'] .docs-page :not(pre) > code {
+[data-theme='dark'] .docs-page :not(pre) > code,
+[data-theme='dark'] .prep-content :not(pre) > code {
   color: var(--cam-gold-leaf-text);
   border-color: color-mix(in srgb, var(--cam-gold-leaf) 35%, transparent);
 }
 
 /* ── Pre / code blocks — navy strip + gold-leaf border ───────────── */
-.docs-page pre {
+.docs-page pre,
+.prep-content pre {
   position: relative;
   border-radius: 10px;
   padding: 14px 16px 14px 22px;
@@ -1490,7 +1520,8 @@ img { max-width: 100%; height: auto; }
   overflow-x: auto;
   margin: 1.1rem 0;
 }
-.docs-page pre::before {
+.docs-page pre::before,
+.prep-content pre::before {
   content: '';
   position: absolute;
   left: 0;
@@ -1500,7 +1531,8 @@ img { max-width: 100%; height: auto; }
   border-radius: 0 9999px 9999px 0;
   background: var(--cam-primary);
 }
-.docs-page pre code {
+.docs-page pre code,
+.prep-content pre code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 12.5px;
   line-height: 1.55;
@@ -1513,23 +1545,31 @@ img { max-width: 100%; height: auto; }
 
 /* ── Lists — better spacing + gold leaf bullets ──────────────────── */
 .docs-page ul,
-.docs-page ol {
+.docs-page ol,
+.prep-content ul,
+.prep-content ol {
   margin: 0.5rem 0 0.85rem;
 }
 .docs-page ul > li,
-.docs-page ol > li { margin-bottom: 0.35rem; }
-.docs-page ul > li::marker { color: var(--cam-gold-leaf); }
-.docs-page ol > li::marker { color: var(--cam-primary); font-weight: 700; }
+.docs-page ol > li,
+.prep-content ul > li,
+.prep-content ol > li { margin-bottom: 0.35rem; }
+.docs-page ul > li::marker,
+.prep-content ul > li::marker { color: var(--cam-gold-leaf); }
+.docs-page ol > li::marker,
+.prep-content ol > li::marker { color: var(--cam-primary); font-weight: 700; }
 
 /* ── Anchor links inside body copy — keep accent + gentle hover ──── */
-.docs-page a:not([class]) {
+.docs-page a:not([class]),
+.prep-content a:not([class]) {
   color: var(--accent);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--cam-gold-leaf) 50%, transparent);
   text-underline-offset: 2px;
   transition: text-decoration-color 0.15s ease;
 }
-.docs-page a:not([class]):hover {
+.docs-page a:not([class]):hover,
+.prep-content a:not([class]):hover {
   text-decoration-color: var(--cam-gold-leaf);
 }
 
