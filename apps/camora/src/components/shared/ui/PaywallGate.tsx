@@ -70,12 +70,20 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
   }, [token, isCheckoutReturn, pollCount, refreshSubscription]);
 
   useEffect(() => {
-    if (!isCheckoutReturn || hasAccess) return;
-    // Poll every 2 seconds for up to 30 seconds
+    // Poll every 2 seconds for up to 30 seconds (15 attempts).
+    //
+    // The `pollCount > 15` guard here mirrors the early-return inside
+    // pollSubscription so the interval actually stops after 15 attempts.
+    // Previous version listed only [isCheckoutReturn, hasAccess,
+    // pollSubscription] in deps; pollSubscription's identity changed
+    // with pollCount, but the early-return inside it didn't bump
+    // pollCount, so the count never crossed the cap and the interval
+    // ran indefinitely until the user navigated away.
+    if (!isCheckoutReturn || hasAccess || pollCount > 15) return;
     const timer = setInterval(pollSubscription, 2000);
     pollSubscription(); // immediate first check
     return () => clearInterval(timer);
-  }, [isCheckoutReturn, hasAccess, pollSubscription]);
+  }, [isCheckoutReturn, hasAccess, pollSubscription, pollCount]);
 
   // Loading states — wait for BOTH subscription + team fetches to resolve
   // before deciding whether to show the gate. accessLoading collapses both

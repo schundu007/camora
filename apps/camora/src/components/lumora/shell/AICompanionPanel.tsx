@@ -634,12 +634,18 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // Drain the queued question when the current answer finishes streaming.
   // Auto-mic can capture follow-ups while Sona is mid-stream — we hold only
   // the latest in `pendingQuestionRef` and fire it here.
+  //
+  // Fire SYNCHRONOUSLY — the previous setTimeout(…, 0) introduced a race
+  // where streaming flipping false plus a manual press at the same instant
+  // could fire the same question twice (manual fires direct via ask;
+  // drain fires the queued copy via the timer). Synchronous flush
+  // ensures the pending ref is null'd in the same microtask and any
+  // immediate manual press sees an empty queue.
   useEffect(() => {
     if (!streaming && pendingQuestionRef.current) {
       const q = pendingQuestionRef.current;
       pendingQuestionRef.current = null;
-      const timer = setTimeout(() => askRef.current?.(q), 0);
-      return () => clearTimeout(timer);
+      askRef.current?.(q);
     }
   }, [streaming]);
 

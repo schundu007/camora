@@ -320,6 +320,41 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       } catch (persistErr) {
         console.warn('[inference/stream] cached-answer persist failed:', persistErr.message);
       }
+
+      // Meter the cached replay too. The previous code emitted the
+      // answer and `return res.end()`-ed before any of the four
+      // metering calls below, so:
+      //   • free users could blow past the daily cap as long as the
+      //     question was cached (recordUsage row never written →
+      //     checkDailyFreeLimit kept returning allowed=true)
+      //   • paid AI-hour pools under-counted every cache hit
+      // Charge zero tokens / seconds (the LLM didn't actually fire),
+      // but increment the request count so daily limits + audit logs
+      // see the request.
+      try {
+        await recordUsage({
+          userId: user.id,
+          endpoint: 'stream',
+          questionType: cached.is_coding ? 'coding' : (cached.is_design ? 'design' : 'general'),
+          tokensUsed: 0,
+          latencyMs: 0,
+          fromCache: true,
+        });
+        recordAiHours({
+          userId: user.id,
+          surface: 'lumora_inference',
+          seconds: 0,
+          tokensIn: 0,
+          tokensOut: 0,
+          model: MODEL,
+          planAtCharge: userPlan,
+          fromCache: true,
+        });
+        await recordUsageCount(user.id, 'questions');
+      } catch (mErr) {
+        console.warn('[inference/stream] cached-answer metering failed:', mErr.message);
+      }
+
       return res.end();
     }
     logCacheEvent('MISS', cacheKey, { route: 'stream', plan: userPlan });

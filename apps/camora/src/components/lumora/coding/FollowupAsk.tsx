@@ -47,7 +47,10 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
         token,
         signal: controller.signal,
         onToken: (d) => { if (d.t) { acc += d.t; setAnswer(acc); } },
-        onError: (d) => setError(d.msg || 'Follow-up failed'),
+        // SSE error event closes the stream without firing onComplete,
+        // so we must clear loading here too — otherwise the Ask button
+        // stays in the `…` state forever and the input stays disabled.
+        onError: (d) => { setError(d.msg || 'Follow-up failed'); setLoading(false); },
         onComplete: () => setLoading(false),
       });
     } catch (e: any) {
