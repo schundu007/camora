@@ -61,7 +61,7 @@ def playback_flow():
 def key_decisions():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9', splines='spline',
-           rankdir='TB', label='  Netflix — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Netflix — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'client', 'Client Device\n(Smart TV, Mobile,\nBrowser)', 'blue')
     n(g, 'api', 'API Gateway\n(Zuul)', 'gray')
     n(g, 'rec', 'Recommendation\nEngine\n(ML: 80% of\ncontent watched)', 'purple')

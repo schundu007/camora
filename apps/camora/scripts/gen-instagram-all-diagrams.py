@@ -53,7 +53,7 @@ def dd_cdn():
 
 # Deep Dive 3: Hybrid Fan-out
 def dd_fanout():
-    g = mk(rankdir='TB', label='  Hybrid Fan-out for Feed  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Hybrid Fan-out for Feed  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'post', 'New Post', 'blue')
     g.node('check', 'Follower\nCount?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Neue', fontsize='12', height='0.7')
     n(g, 'push', 'Push to\nfollower feeds\n(Redis ZADD)', 'green')

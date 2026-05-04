@@ -65,7 +65,7 @@ def feed_flow():
 def key_decisions():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9', splines='spline',
-           rankdir='TB', label='  Instagram — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Instagram — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'client', 'Mobile App\n(iOS/Android)', 'blue')
     n(g, 'api', 'API Gateway\n+ CDN', 'gray')
     n(g, 'upload', 'Upload Service\n(S3 pre-signed URLs\nfor direct upload)', 'green')

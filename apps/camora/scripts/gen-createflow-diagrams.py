@@ -102,7 +102,7 @@ def twitter_read():
 # ── UBER ──
 def uber_request():
     OUT = os.path.join(BASE, 'uber')
-    g, path = mk(OUT, 'flow-ride-request', 'Ride Request Flow', rankdir='TB')
+    g, path = mk(OUT, 'flow-ride-request', 'Ride Request Flow', rankdir='LR')
     n(g, 'rider', 'Rider\nopens app', 'blue')
     n(g, 'api', 'API Gateway', 'gray')
     n(g, 'pricing', 'Pricing Service\n(surge × ETA\n× distance)', 'yellow')
