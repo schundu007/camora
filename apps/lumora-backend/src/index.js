@@ -158,8 +158,23 @@ async function runMigrations() {
       // schema).
     ];
 
+    // Postgres error codes for "already exists" — the legitimate swallow
+    // cases. Anything else (syntax error, permission denied, FK violation,
+    // bad column type after a wrong manual edit) gets logged at warn so
+    // a real schema problem actually surfaces instead of being absorbed
+    // silently into "everything caught up".
+    //   42P07 = duplicate_table          42710 = duplicate_object
+    //   42P06 = duplicate_schema         42701 = duplicate_column
+    //   42P16 = invalid_table_definition (already-has-pk on ALTER ADD)
+    const ALREADY_EXISTS_CODES = new Set(['42P07', '42710', '42P06', '42701', '42P16']);
     for (const sql of migrations) {
-      try { await query(sql); } catch (e) { /* table/index may already exist */ }
+      try {
+        await query(sql);
+      } catch (e) {
+        if (!ALREADY_EXISTS_CODES.has(e.code)) {
+          logger.warn({ err: e.message, code: e.code, sql: sql.slice(0, 120) }, '[migrations] non-trivial migration error');
+        }
+      }
     }
 
     // Usage tracking tables (plan limits, topups, active sessions)

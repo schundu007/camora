@@ -164,7 +164,40 @@ async function chargeAndCredit({ billingUserId, teamId, pack, hours, amount_cent
     });
   } catch (err) {
     logger.warn({ err: err.message, billingUserId, pack }, '[autoTopup] charge failed');
+    // Off-session 3DS failures throw with .code === 'authentication_required'
+    // — disable auto-topup eagerly so the next request doesn't retry the
+    // same broken flow. The async webhook (payment_intent.payment_failed)
+    // doesn't always fire for these (the PI sits in requires_action); we
+    // handle the sync path here.
+    if (err.code === 'authentication_required' || err.code === 'card_declined') {
+      try {
+        await query(
+          `UPDATE ascend_subscriptions SET auto_topup_pack = NULL WHERE user_id = $1`,
+          [billingUserId],
+        );
+        logger.info({ billingUserId, code: err.code }, '[autoTopup] disabled after sync 3DS / decline failure');
+      } catch (uErr) {
+        logger.warn({ err: uErr.message, billingUserId }, '[autoTopup] disable-after-fail UPDATE errored');
+      }
+    }
     return { ok: false, reason: 'CHARGE_FAILED', stripe_error: err.message };
+  }
+
+  // 3DS challenge required + we're off-session: PI sits in `requires_action`
+  // forever, no async event arrives, and the next request retries the same
+  // broken card. Treat as a hard failure AND disable auto-topup so the
+  // user notices via the next paywall prompt instead of silently retrying.
+  if (pi.status === 'requires_action' || pi.status === 'requires_payment_method') {
+    try {
+      await query(
+        `UPDATE ascend_subscriptions SET auto_topup_pack = NULL WHERE user_id = $1`,
+        [billingUserId],
+      );
+      logger.info({ billingUserId, status: pi.status, pi: pi.id }, '[autoTopup] disabled after off-session requires_action');
+    } catch (uErr) {
+      logger.warn({ err: uErr.message, billingUserId }, '[autoTopup] disable-after-stuck UPDATE errored');
+    }
+    return { ok: false, reason: 'CHARGE_FAILED', payment_status: pi.status };
   }
 
   if (pi.status !== 'succeeded') {
