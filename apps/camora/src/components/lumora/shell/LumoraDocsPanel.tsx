@@ -815,14 +815,11 @@ function PrepContentRenderer({ content }: { content: any }) {
   } else if (questionsArr && questionsArr.length > 0) {
     mark('questions');
     els.push(
-      // Multi-column flow on wider viewports — each question card is
-      // independent so they pack nicely. items-start so a tall card
-      // (lots of STAR / code) doesn't stretch its short neighbour.
-      <div
-        key="questions"
-        className="grid gap-4 items-start"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))' }}
-      >
+      // Single column — earlier multi-column grid hurt readability on
+      // narrow viewports and tablets. Question cards have variable
+      // heights (STAR + code + chips) and read more naturally one at
+      // a time.
+      <div key="questions" className="space-y-5">
         {questionsArr.map((q: any, i: number) => {
           const title = q.question || q.title || q.text || q.scenario || `Question ${i + 1}`;
           const qRendered = new Set(['question', 'title', 'text', 'scenario']);
@@ -2083,21 +2080,16 @@ function FormattedJD({ text }: { text: string }) {
     />
   );
 
-  // Long-list sections (10+ items) stay full-width because cramming them
-  // into a half-column squashes the bullets. Short / medium sections flow
-  // in a 2-up grid so the JD page reads in roughly half the vertical
-  // space. Tweak threshold here if list density changes.
-  const isLongList = (s: { items: string[] }) => s.items.length > 10;
-
+  // Single column flow — the multi-column grid we tried earlier hurt
+  // readability across web / desktop / mobile (cards squashed, bullets
+  // truncated, hierarchy lost). Reverted to a clean vertical stack;
+  // each card already wears the unified navy/gold/glassy chrome.
   return (
-    <div
-      className="grid gap-3 md:gap-4"
-      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))' }}
-    >
+    <div className="flex flex-col gap-3 md:gap-4">
       {heroTitle && (
         <div
           className="relative rounded-2xl overflow-hidden px-6 pl-7 py-6"
-          style={{ ...cardChrome, gridColumn: '1 / -1' }}
+          style={cardChrome}
         >
           <NavyStrip />
           <span
@@ -2128,8 +2120,10 @@ function FormattedJD({ text }: { text: string }) {
           className="relative rounded-2xl px-5 pl-7 py-4 grid gap-x-6 gap-y-4 overflow-hidden"
           style={{
             ...cardChrome,
+            // Inner metadata pairs flow at minmax 180 — these ARE small
+            // labels (Location / Compensation / Posted On) so a couple
+            // sit side-by-side comfortably without hurting readability.
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gridColumn: '1 / -1',
           }}
         >
           <NavyStrip />
@@ -2177,12 +2171,11 @@ function FormattedJD({ text }: { text: string }) {
       {content.map((sec, i) => {
         const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
         const icon = iconForSection(sec.title, tone);
-        const wide = isLongList(sec);
         return (
           <div
             key={i}
             className="relative rounded-2xl overflow-hidden"
-            style={{ ...cardChrome, ...(wide ? { gridColumn: '1 / -1' } : null) }}
+            style={cardChrome}
           >
             <NavyStrip />
             {sec.title && (
