@@ -231,14 +231,12 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // MUST come after activeAssistant — `const` has TDZ, minified references crash
   // at runtime with 'Cannot access … before initialization' if this block runs first.
   const storageKey = useMemo(() => activeAssistant?.id ? `lumora_behavioral_${activeAssistant.id}` : 'lumora_behavioral_default', [activeAssistant?.id]);
-  const [messages, setMessages] = useState<CopilotMessage[]>(() => {
+  // Helper — pulls + sanitises a messages bucket from sessionStorage.
+  const loadMessages = (key: string): CopilotMessage[] => {
     try {
-      const saved = sessionStorage.getItem(storageKey);
+      const saved = sessionStorage.getItem(key);
       if (!saved) return [];
       const parsed = JSON.parse(saved) as Array<{ role: 'user' | 'ai'; text: unknown; time: string }>;
-      // Filter persisted bad entries (e.g. "[object Object]" or non-string
-      // text from earlier buggy versions) so they don't keep haunting the
-      // QUESTIONS panel across sessions.
       return parsed
         .filter((m) =>
           (m.role === 'user' || m.role === 'ai') &&
@@ -249,10 +247,32 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         )
         .map((m) => ({ role: m.role, text: m.text as string, time: new Date(m.time) }));
     } catch { return []; }
-  });
+  };
+  const [messages, setMessages] = useState<CopilotMessage[]>(() => loadMessages(storageKey));
 
-  // Persist on every messages change
+  // Tracks which bucket the current `messages` array was loaded from.
+  // The persist effect only writes when it matches `storageKey` —
+  // otherwise a switch from "Nvidia" to "Fireworks" would clobber the
+  // Fireworks bucket with the previous Nvidia messages before the
+  // reload effect has a chance to swap in the Fireworks data. The
+  // reload effect updates this ref to mark the new bucket as live.
+  const loadedKeyRef = useRef(storageKey);
+
+  // Reload messages when the active assistant — and therefore the
+  // storage bucket — changes. Switching company in the picker flows
+  // through here; the previous assistant's messages stay safely in
+  // their own bucket for when the user switches back.
   useEffect(() => {
+    if (loadedKeyRef.current === storageKey) return;
+    loadedKeyRef.current = storageKey;
+    setMessages(loadMessages(storageKey));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  // Persist on every messages change — guarded so it never writes to a
+  // bucket that doesn't match what's currently loaded.
+  useEffect(() => {
+    if (loadedKeyRef.current !== storageKey) return;
     try { sessionStorage.setItem(storageKey, JSON.stringify(messages.map(m => ({ ...m, time: m.time.toISOString() })))); } catch { /* quota */ }
   }, [messages, storageKey]);
 
