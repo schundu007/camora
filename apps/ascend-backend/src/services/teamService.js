@@ -585,19 +585,34 @@ export async function createTeamForUser({ userId, planType, name, seats = null }
 }
 
 export async function canAddMember(teamId) {
+  // Pending non-expired invites count toward the seat limit. Without
+  // this, two owners (or two browser tabs) racing on the last seat
+  // can each pass the gate (members count was N-1 in both reads),
+  // each create an invite, and end up with N+1 implicit seats. The
+  // second invitee's accept hits the gate again and fails — but by
+  // then both invites have been emailed and the owner sees confusing
+  // UX. Counting pending invites stops the over-issue at creation.
   const r = await query(
-    `SELECT t.seat_limit, COUNT(tm.id) AS active_members
+    `SELECT
+        t.seat_limit,
+        (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS active_members,
+        (SELECT COUNT(*) FROM team_invites
+          WHERE team_id = t.id
+            AND accepted_at IS NULL
+            AND expires_at > NOW()) AS pending_invites
        FROM teams t
-       LEFT JOIN team_members tm ON tm.team_id = t.id
-      WHERE t.id = $1
-      GROUP BY t.seat_limit`,
+      WHERE t.id = $1`,
     [teamId],
   );
   if (!r.rows[0]) return { ok: false, reason: 'NO_TEAM' };
   const seats = Number(r.rows[0].seat_limit);
   const active = Number(r.rows[0].active_members);
-  if (active >= seats) return { ok: false, reason: 'SEAT_LIMIT', seats, active };
-  return { ok: true, seats, active };
+  const pending = Number(r.rows[0].pending_invites);
+  const occupied = active + pending;
+  if (occupied >= seats) {
+    return { ok: false, reason: 'SEAT_LIMIT', seats, active, pending };
+  }
+  return { ok: true, seats, active, pending };
 }
 
 // ── Invites ────────────────────────────────────────────────────────────────

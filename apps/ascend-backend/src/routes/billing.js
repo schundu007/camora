@@ -920,10 +920,27 @@ router.post('/webhook', async (req, res) => {
           logger.info({ type: event.type }, 'Unhandled webhook event');
       }
     } catch (handlerError) {
-      // Delete idempotency row so Stripe can retry this event
-      await query('DELETE FROM ascend_stripe_events WHERE id = $1', [event.id]);
-      logger.error({ error: handlerError.message, eventId: event.id }, 'Webhook handler failed, idempotency row removed for retry');
-      return res.status(500).json({ error: 'Webhook handler failed' });
+      // Keep the idempotency row. The previous version DELETE'd it on
+      // handler failure so Stripe could retry — but the handler may
+      // have already committed partial side effects (UPDATE on
+      // ascend_subscriptions, INSERT into ai_hour_topups, etc.) that
+      // are non-idempotent. Stripe's retry then ran the handler again
+      // on top of those side effects, double-applying them.
+      //
+      // Now: row stays, Stripe's retry hits the ON CONFLICT skip and
+      // becomes a no-op. Failed events require manual replay via the
+      // Stripe Dashboard once the underlying issue is fixed; the
+      // alternative (auto-retry) was the bigger pain in practice.
+      logger.error({
+        error: handlerError.message,
+        stack: handlerError.stack,
+        eventId: event.id,
+        eventType: event.type,
+      }, 'Webhook handler failed; idempotency row preserved — manual replay required from Stripe Dashboard');
+      // 200 (not 500) so Stripe doesn't retry. The row + log is the
+      // signal for ops; we'd rather a known-failed event sit visible
+      // than burn the retry budget against a partial-state target.
+      return res.status(200).json({ received: true, handler_error: true });
     }
 
     res.json({ received: true });
