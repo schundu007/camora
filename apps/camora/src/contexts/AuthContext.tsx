@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch team membership. A user can be in 0 or 1 team (UNIQUE on user_id
   // in team_members). Used by PaywallGate so a free user joining a Pro Max
   // team actually gets access to gated features.
-  const fetchTeam = useCallback(async (authToken: string, userId: number | undefined) => {
+  const fetchTeam = useCallback(async (authToken: string, userId: string | number | undefined) => {
     setTeamLoading(true);
     try {
       const res = await fetch(`${AUTH_API_URL}/api/v1/teams/me`, {
@@ -319,12 +319,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
       const t = data.team;
       if (!t) { setTeam(null); return; }
+      // String-vs-number compare on the previous code (AuthUser.id is
+      // string, t.owner_user_id is number) made is_owner always false
+      // for the actual owner — every future "owner-only" affordance
+      // (manage seats, transfer ownership, billing edit) would have
+      // been hidden from the team owner. Coerce both sides.
       setTeam({
         id: t.id,
         plan_type: t.plan_type,
         seat_limit: Number(t.seat_limit),
         hours_pool_total: t.hours_pool_total != null ? Number(t.hours_pool_total) : null,
-        is_owner: t.owner_user_id === userId,
+        is_owner: userId != null && String(t.owner_user_id) === String(userId),
       });
     } catch {
       setTeam(null);

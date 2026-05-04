@@ -621,7 +621,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           setJsonSolution(json);
           if (json.solutions?.length > 0) {
             setActiveSolutionIdx(0);
-            setCode(json.solutions[0].code);
+            // Some streamed multi-section formats omit a top-level `code`
+            // on solutions[0] (only `explanations: [{code, ...}]`). Calling
+            // setCode(undefined) flashed an empty editor for one paint
+            // frame before the reconstruct effect (line ~547) re-filled
+            // from explanations. Fall back to the same shape inline so
+            // the editor never goes blank.
+            const sol0 = json.solutions[0];
+            const fallback = sol0?.code
+              || sol0?.implementation
+              || (Array.isArray(sol0?.explanations)
+                ? sol0.explanations.map((e: any) => e?.code).filter(Boolean).join('\n')
+                : null);
+            if (fallback) setCode(fallback);
           } else if (json.code) {
             setCode(json.code);
           }
