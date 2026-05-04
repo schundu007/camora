@@ -667,8 +667,18 @@ app.use(requestLogger);
 // Cookie parsing (needed for cariara_sso SSO cookie auth)
 app.use(cookieParser());
 
-// Raw body parsing for Stripe webhooks (must be before json middleware for /api/billing/webhook)
-app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+// Raw body parsing for Stripe webhooks. MUST run before express.json so
+// stripe.webhooks.constructEvent sees the original bytes for signature
+// verification. The router is mounted at BOTH /api/billing AND /api/v1/billing
+// (additive alias for the lumorab.cariara.com host that runs ascend code),
+// so the raw-body handler must register on both paths — otherwise webhook
+// deliveries to the v1 alias get parsed by express.json first and signature
+// verification fails for every event delivered to that path. Adding both
+// paths is idempotent and matches the dual mount of the billing router below.
+app.use(
+  ['/api/billing/webhook', '/api/v1/billing/webhook'],
+  express.raw({ type: 'application/json' }),
+);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

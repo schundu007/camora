@@ -77,10 +77,14 @@ router.post('/enroll', upload.any(), async (req, res) => {
 
     const enrollHeaders = { 'Content-Type': `multipart/form-data; boundary=${boundary}` };
     if (process.env.AI_SERVICES_API_KEY) enrollHeaders['X-API-Key'] = process.env.AI_SERVICES_API_KEY;
+    // 30s timeout — without this a wedged Python worker (graphviz hung,
+    // resemblyzer GPU stuck, etc.) holds the Express worker indefinitely.
+    // Concurrent enrolls then exhaust the event loop.
     const upstream = await fetch(url, {
       method: 'POST',
       headers: enrollHeaders,
       body,
+      signal: AbortSignal.timeout(30000),
     });
     const data = await upstream.json();
     console.log(`[Speaker] Response: ${upstream.status}`, JSON.stringify(data));

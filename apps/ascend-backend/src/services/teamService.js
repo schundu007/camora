@@ -637,6 +637,25 @@ export async function acceptInvite({ token, userId }) {
     throw Object.assign(new Error('Invite expired'), { code: 'INVITE_EXPIRED' });
   }
 
+  // Email-match check. The previous flow accepted any authenticated user
+  // who held the link — so a corp invite emailed to alice@corp.com could
+  // be redeemed by mallory@gmail.com if the link leaked (forwarded email,
+  // browser history, link-scanner preview). Compare the invite's
+  // recipient email against the authenticated user's email; reject on
+  // mismatch. The owner can still hand-add a different user via the
+  // team-management UI; this only blocks token-only redemption.
+  if (row.email) {
+    const userRow = await query('SELECT email FROM users WHERE id = $1', [userId]);
+    const userEmail = (userRow.rows[0]?.email || '').toLowerCase().trim();
+    const inviteEmail = String(row.email).toLowerCase().trim();
+    if (!userEmail || userEmail !== inviteEmail) {
+      throw Object.assign(
+        new Error('This invite is for a different email address. Sign in with the invited account.'),
+        { code: 'INVITE_EMAIL_MISMATCH' },
+      );
+    }
+  }
+
   const seatCheck = await canAddMember(row.team_id);
   if (!seatCheck.ok && seatCheck.reason === 'SEAT_LIMIT') {
     throw Object.assign(new Error('Team is at seat limit'), { code: 'SEAT_LIMIT' });

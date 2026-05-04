@@ -69,9 +69,14 @@ async function verifySpeaker(userId, audioBuffer, filename) {
     parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="user_id"\r\n\r\n${userId}\r\n`));
     parts.push(Buffer.from(`--${boundary}--\r\n`));
 
+    // X-API-Key required by ai-services on every non-/health request.
+    // The proxy helper injects it for proxyToAIService callers; this
+    // raw fetch was forked without that fix and was 401-ing in prod.
+    const headers = { 'Content-Type': `multipart/form-data; boundary=${boundary}` };
+    if (process.env.AI_SERVICES_API_KEY) headers['X-API-Key'] = process.env.AI_SERVICES_API_KEY;
     const res = await fetch(`${AI_SERVICES_URL}/api/v1/speaker/verify`, {
       method: 'POST',
-      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      headers,
       body: Buffer.concat(parts),
       signal: AbortSignal.timeout(5000),
     });
@@ -105,9 +110,11 @@ async function diarizeSpeaker(userId, audioBuffer, filename) {
     parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="user_id"\r\n\r\n${userId}\r\n`));
     parts.push(Buffer.from(`--${boundary}--\r\n`));
 
+    const headers = { 'Content-Type': `multipart/form-data; boundary=${boundary}` };
+    if (process.env.AI_SERVICES_API_KEY) headers['X-API-Key'] = process.env.AI_SERVICES_API_KEY;
     const res = await fetch(`${AI_SERVICES_URL}/speaker/diarize`, {
       method: 'POST',
-      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      headers,
       body: Buffer.concat(parts),
       signal: AbortSignal.timeout(10000), // diarization takes longer
     });
