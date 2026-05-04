@@ -320,15 +320,20 @@ function getDefaultTechnicalContext() {
 // ---------------------------------------------------------------------------
 // Web search helper
 // ---------------------------------------------------------------------------
-async function runSearch(question, history) {
+async function runSearch(question, history, plan) {
   try {
     const messages = [
       ...history.slice(-CONTEXT_TURNS),
       { role: 'user', content: question },
     ];
 
+    // Use the paid-tier model when the caller is on a paid plan. The
+    // search step grounds the answer; running it on Haiku for paid
+    // users measurably degraded answer quality vs running on Sonnet.
+    // Free callers keep Haiku to avoid double-charging.
+    const searchModel = (plan && plan !== 'free') ? MODEL_PAID : MODEL;
     const response = await client.messages.create({
-      model: MODEL,
+      model: searchModel,
       max_tokens: 4096,
       system: (
         'You are a research assistant. Use web_search to find current facts, ' +
@@ -545,7 +550,7 @@ IMPORTANT CODE FORMATTING RULE:
   let searchContext = null;
   if (useSearch) {
     yield { event: 'status', data: { state: 'search', msg: 'Searching web...' } };
-    searchContext = await runSearch(question, history);
+    searchContext = await runSearch(question, history, plan);
   }
 
   if (searchContext) {

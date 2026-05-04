@@ -83,6 +83,14 @@ router.post('/generate', checkUsage('diagrams'), async (req, res) => {
     const cached = getCachedDiagram(cacheKey);
     if (cached) {
       console.log('[DiagramCache] Lumora cache hit');
+      // Meter the cache hit too. The previous code returned early
+      // here without calling recordUsageCount; only cache misses
+      // (line ~115) counted. Free users could blow past the daily
+      // diagrams cap as long as the question was cached. Increment
+      // with zero LLM cost.
+      try {
+        if (req.user?.id) await recordUsageCount(req.user.id, 'diagrams');
+      } catch { /* metering failures shouldn't break cache hits */ }
       return res.json(cached);
     }
 
