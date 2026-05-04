@@ -4,7 +4,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import SiteNav from './components/shared/SiteNav';
 import RootShell from './components/layout/RootShell';
 import { PaywallGate } from './components/shared/ui/PaywallGate';
-import { isOwner } from './lib/owner';
+import { isOwnerEmail } from './lib/owner';
 import { usePageTracker } from './hooks/usePageTracker';
 import { DialogProvider } from './components/shared/Dialog';
 import { CelebrationProvider } from './components/shared/Celebration';
@@ -230,7 +230,7 @@ function OwnerRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
-  if (!isOwner(user?.email)) {
+  if (!isOwnerEmail(user?.email)) {
     return <Navigate to="/" replace />;
   }
   return <>{children}</>;

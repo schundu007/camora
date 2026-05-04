@@ -21,18 +21,26 @@ export default function AdminDeploymentPage() {
     >
       <section id="auto-deploy" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Auto-deploy on main</h2>
-        <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          Every push to <code>main</code> on <code>github.com/schundu007/camora</code> triggers all four
-          services. There is no staging environment — preview branches on Vercel for the frontend, branch
-          deploys on Railway for the backends.
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Every push to <code>main</code> on <code>github.com/schundu007/camora</code> triggers all
+          backend services on Railway. There is no staging environment.
         </p>
+        <DocsCallout variant="warning" label="Vercel auto-deploy is unreliable">
+          Vercel&apos;s GitHub auto-deploy occasionally misses pushes on this project. After every
+          push, watch the Vercel dashboard &mdash; if the deployment is missing or skipped, run
+          <code className="ml-1">vercel --prod</code> from the repo root manually. The
+          <code className="mx-1">.vercel</code> link is at the repo root (not
+          <code className="mx-1">apps/camora/</code>) because the Vercel project&apos;s Root
+          Directory is set to <code>apps/camora</code> server-side.
+        </DocsCallout>
       </section>
 
       <section id="frontend" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Frontend (Vercel)</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li>Build command: <code>pnpm build:frontend</code></li>
-          <li>Output: <code>apps/frontend/dist</code></li>
+          <li>Build command: <code>pnpm build:camora</code></li>
+          <li>Output: <code>apps/camora/dist</code></li>
+          <li>Vercel project Root Directory: <code>apps/camora</code></li>
           <li>SPA rewrite rule sends every path to <code>index.html</code></li>
           <li>Failed builds: check Vercel dashboard, almost always TypeScript errors or missing imports</li>
         </ul>
@@ -98,28 +106,19 @@ export default function AdminDeploymentPage() {
           and only installed site-packages ship to runtime. Functional behavior unchanged.
         </p>
 
-        <h3 className="text-lg font-bold mt-6 mb-2">lumora-backend: 1.4 GB</h3>
+        <h3 className="text-lg font-bold mt-6 mb-2">lumora-backend: post-slimdown</h3>
         <p className="text-[15px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
-          <strong>Why it's large:</strong> the multi-language code-runner (<code>services/codeRunner.js</code>)
-          installs interpreters/compilers for ~20 languages so users can hit <strong>Run</strong> on any
-          generated solution. The heaviest contributors:
+          The lumora-backend Dockerfile previously installed interpreters / compilers for ~20
+          languages (GHC, R, Mono, Scala, Clojure, OCaml, Elixir, Julia, plus the standard core)
+          so the <strong>Run</strong> button worked on any generated solution. That image was
+          ~1.4 GB.
         </p>
-        <ul className="list-disc pl-6 space-y-1 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li>GHC (Haskell) — ~800 MB</li>
-          <li>OpenJDK 17 + Scala + Clojure (JVM family) — ~600 MB</li>
-          <li>R (<code>r-base-core</code>) — ~400 MB</li>
-          <li>Mono (.NET runtime) — ~300 MB</li>
-          <li>Go — ~300 MB</li>
-          <li>Julia (via juliaup) — ~200 MB</li>
-          <li>Rust + Cargo — ~150 MB</li>
-          <li>OCaml, Elixir, Erlang, TCL — ~200 MB combined</li>
-        </ul>
-        <p className="text-[15px] leading-relaxed mt-3" style={{ color: 'var(--text-secondary)' }}>
-          <strong>Trade-off:</strong> dropping a language disables the <strong>Run</strong> button for
-          problems in it (the LLM still <em>generates</em> the code). Pending decision: which low-usage
-          languages to remove. Keeping the always-needed core (Python, Node, Ruby, Java, C/C++, Go, Rust,
-          PHP, Perl, Lua, SQL) and dropping GHC, R, Mono, Scala, Clojure, OCaml, Elixir, Julia would
-          land the image around ~700 MB.
+        <p className="text-[15px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
+          The Dockerfile has since been slimmed: the rare-language tier (Haskell, R, Mono, Scala,
+          Clojure, OCaml, Elixir, Julia, TCL) was removed. The image now keeps only the
+          high-traffic runtimes &mdash; Python, Node, Ruby, Java, Go, Rust, PHP, Perl, Lua, plus
+          C/C++ via <code>build-essential</code>. Run-button availability for the dropped
+          languages is gone (the LLM still <em>generates</em> the code).
         </p>
 
         <h3 className="text-lg font-bold mt-6 mb-2">General Docker hygiene checklist</h3>
