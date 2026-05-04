@@ -7,63 +7,105 @@ export default function DesktopDocsPage() {
   return (
     <DocsPageLayout
       title="Desktop app"
-      description="Stealth-mode Camora client with global hotkey, system audio, screen-share invisibility, and BYOK API keys."
+      description="Native macOS shell that adds system audio loopback, native screenshot capture, real PDF/DOCX export, and a global show/hide hotkey."
       path="/docs/desktop"
       eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Desktop app' }]}
       onThisPage={[
         { id: 'why-desktop', label: 'Why use the desktop app' },
         { id: 'install', label: 'Install' },
-        { id: 'features', label: 'Features' },
-        { id: 'byok', label: 'Bring your own keys (BYOK)' },
-        { id: 'business-license', label: 'Business 10-seat license' },
+        { id: 'features', label: 'What you get' },
+        { id: 'hotkeys', label: 'Hotkeys' },
+        { id: 'privacy', label: 'Hiding the window' },
+        { id: 'limits', label: 'Current limitations' },
       ]}
     >
       <DocsSection id="why-desktop" title="Why use the desktop app">
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-primary)' }}>
+          The desktop app is the same Camora web frontend embedded in a native shell. It exists for
+          a few capabilities that browsers can't provide cleanly:
+        </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-primary)' }}>
-          <li><strong>Screen-share invisible</strong> — the window is excluded from screen capture by OS-level APIs. Interviewers literally can't see Camora when you full-screen share.</li>
-          <li><strong>Global hotkey</strong> — Cmd+Shift+C (or Ctrl+Shift+C on Windows) summons Camora over any app, even when it's hidden.</li>
-          <li><strong>System tray</strong> — closes to tray, not quit. Your session stays alive across calls.</li>
-          <li><strong>Native mic permission</strong> — no browser prompt mid-call.</li>
+          <li><strong>System audio loopback</strong> — capture interviewer audio from Zoom / Meet / Teams
+          without virtual cables (BlackHole, VoiceMeeter). The app routes loopback through ScreenCaptureKit
+          on macOS.</li>
+          <li><strong>Native screenshot capture</strong> — interactive window picker via macOS&apos;s built-in
+          <code className="mx-1 px-1.5 py-0.5 text-[12px]" style={{ background: 'var(--bg-elevated)', borderRadius: 4 }}>screencapture -W</code>,
+          producing a real PNG at full resolution.</li>
+          <li><strong>Cmd+B global hotkey</strong> — instantly hide or show the window from any app.</li>
+          <li><strong>Real PDF / DOCX export</strong> — uses Chromium&apos;s printToPDF and the
+          <code className="mx-1 px-1.5 py-0.5 text-[12px]" style={{ background: 'var(--bg-elevated)', borderRadius: 4 }}>docx</code> package
+          for proper documents (not browser screenshots).</li>
+          <li><strong>Mic permission at launch</strong> — one-time prompt when the app first opens, so
+          you&apos;re not surprised by a permission dialog mid-interview.</li>
         </ul>
       </DocsSection>
 
       <DocsSection id="install" title="Install">
-        <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-          Visit <Link to="/download" className="text-[var(--accent)] underline">/download</Link> and pick your platform.
-          Camora auto-detects macOS (Apple Silicon vs Intel), Windows, and Linux. Auto-update is built in,
-          so you'll always have the latest features without re-downloading.
-        </p>
-      </DocsSection>
-
-      <DocsSection id="features" title="Features">
-        <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-          The desktop app is the same Camora web frontend embedded in an Electron shell. All features
-          (live interview, coding helper, system design, prep) work identically. The differences are
-          OS-level capabilities the browser can't provide: invisibility to screen capture, global hotkeys,
-          tray integration.
-        </p>
-      </DocsSection>
-
-      <DocsSection id="byok" title="Bring your own keys (BYOK)">
-        <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-          Desktop Lifetime ($99) is a BYOK-only license — you supply your own OpenAI / Anthropic API keys
-          in the desktop app's settings, and AI calls go directly from your machine to those providers.
-          No Camora-side metering, no AI hour pool. Useful for power users who already pay for
-          ChatGPT Plus or Claude Pro.
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-primary)' }}>
+          Visit <Link to="/download" className="text-[var(--accent)] underline">/download</Link> and grab
+          the macOS DMG. Currently the desktop app ships <strong>Apple Silicon only</strong> (M1 / M2 /
+          M3 / M4). Intel Macs, Windows, and Linux builds are on the roadmap.
         </p>
         <DocsCallout variant="note">
-          BYOK isn't free either — you're paying API costs to OpenAI / Anthropic per token. For most
-          interview prep, the regular Pro Max pool is cheaper.
+          On first launch, macOS will prompt for microphone access. Approve it. If you
+          plan to use the screenshot feature, also approve the Screen Recording permission
+          when prompted &mdash; it&apos;s required for full-resolution capture.
         </DocsCallout>
       </DocsSection>
 
-      <DocsSection id="business-license" title="Business 10-seat license">
+      <DocsSection id="features" title="What you get">
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-          Business Desktop Lifetime ($999) lets you install on up to 10 machines. Useful for bootcamps,
-          recruiting teams, or coaching agencies that want all their candidates on the desktop client.
-          Same BYOK model — each install uses its own API keys.
+          All Camora features &mdash; live interview, coding helper, system design, prep &mdash; work
+          identically to the web app, because the desktop shell loads the same frontend at
+          camora.cariara.com. The differences are OS-level capabilities the browser can&apos;t reach:
+          system audio loopback, native screenshots, real document export, and a global show/hide
+          hotkey.
         </p>
+        <p className="text-[15px] leading-relaxed mt-3" style={{ color: 'var(--text-primary)' }}>
+          The HTTP cache is wiped on every launch so a fresh Vercel deploy never shows you stale
+          chunks &mdash; you don&apos;t have to manually quit-and-relaunch after we ship a fix.
+        </p>
+      </DocsSection>
+
+      <DocsSection id="hotkeys" title="Hotkeys">
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-primary)' }}>
+          <li><strong>Cmd+B</strong> &mdash; toggle window visibility (works from any app, even
+          when Camora is hidden).</li>
+          <li><strong>Cmd+R</strong> &mdash; hard-reload, ignoring cache. Use if a chunk-hash
+          mismatch ever happens.</li>
+          <li><strong>Cmd+Shift+R</strong> &mdash; same as Cmd+R (alternate binding for muscle
+          memory from browsers).</li>
+        </ul>
+      </DocsSection>
+
+      <DocsSection id="privacy" title="Hiding the window">
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-primary)' }}>
+          The desktop app does <strong>not</strong> hide itself from screen-capture APIs &mdash; if you
+          full-screen share your display, the Camora window will be visible to whoever you&apos;re
+          sharing with. The recommended workflow is:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-primary)' }}>
+          <li>Share only the meeting tab (Zoom &ldquo;Share Window&rdquo;, Meet share-tab) instead of
+          your whole screen.</li>
+          <li>If you must share the whole screen, hit <strong>Cmd+B</strong> to hide Camora before
+          starting the share. Cmd+B again to bring it back when you need it.</li>
+        </ol>
+        <DocsCallout variant="warning">
+          Don&apos;t rely on positioning, opacity tricks, or virtual desktops for invisibility &mdash;
+          screen-capture APIs see all of it. Use Cmd+B and tab-share-only as your discipline.
+        </DocsCallout>
+      </DocsSection>
+
+      <DocsSection id="limits" title="Current limitations">
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-primary)' }}>
+          <li><strong>macOS Apple Silicon only</strong> &mdash; no Intel Mac, Windows, or Linux
+          builds yet.</li>
+          <li><strong>No auto-update</strong> &mdash; when we ship a new desktop release, you&apos;ll
+          need to download a fresh DMG. We&apos;ll email subscribers when that happens.</li>
+          <li><strong>No system tray</strong> &mdash; close button quits the window. Cmd+B is the
+          recommended way to keep Camora alive in the background.</li>
+        </ul>
       </DocsSection>
     </DocsPageLayout>
   );
