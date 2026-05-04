@@ -672,8 +672,16 @@ export default function TopicDetail({
   return (
     <div className="landing-root animate-fade-in flex gap-8">
       {/* Right: Topic content (rendered first; OnThisPage rail anchors to
-          the right per NVIDIA-style docs convention). */}
-      <div className="flex-1 min-w-0">
+          the right per NVIDIA-style docs convention).
+          `prep-content` opts this surface into the docs design system —
+          headings/p/li/code/pre/lists/links picked up via globals.css.
+          The CSS uses direct-child + section-wrapper + .prep-section-heading
+          marker selectors so deeply-nested bespoke chrome (Data Model
+          card field labels, Code Example dark theme, scope cards) is
+          NOT auto-restyled. Use <h2/h3/h4 className="prep-section-heading">
+          to opt a specific heading into the navy-strip + hex-glyph
+          treatment. */}
+      <div className="prep-content flex-1 min-w-0">
       {/* Topic Header — flush left, no card */}
       <div className="pb-4 mb-6 border-b border-[var(--border)]">
         <div className="flex items-center justify-between mb-2 gap-2">
@@ -2655,7 +2663,7 @@ export default function TopicDetail({
             const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
             return (
               <section id="overview" className="scroll-mt-24 mt-14 first:mt-0">
-                <h2 className="text-[20px] font-bold text-[var(--text-primary)] landing-display tracking-tight pb-3 mb-5 border-b border-[var(--border)]">Overview</h2>
+                <h2 className="prep-section-heading landing-display pb-3 mb-5 border-b border-[var(--border)]">Overview</h2>
                 {quoteMatch ? (
                   <>
                     <div className="pl-4 border-l-2 border-[var(--accent)] mb-4">
@@ -2962,7 +2970,7 @@ export default function TopicDetail({
         return (
           <div className="mt-10 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-1.5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>RELATED</p>
-            <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>You might also explore</h3>
+            <h3 className="prep-section-heading mb-4" style={{ fontFamily: 'var(--font-display)' }}>You might also explore</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {related.map(t => (
                 <button

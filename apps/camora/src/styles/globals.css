@@ -1386,20 +1386,34 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── Body typography ─────────────────────────────────────────────── */
+/*
+ * .docs-page uses descendant selectors (broad — every paragraph in a
+ * doc page is prose). .prep-content uses direct-child + section-wrapper
+ * selectors so it doesn't override Tailwind text-xs / text-sm classes
+ * inside TopicDetail's bespoke cards.
+ */
 .docs-page p,
 .docs-page li,
-.prep-content p,
-.prep-content li {
+.prep-content > p,
+.prep-content > li,
+.prep-content > section > p,
+.prep-content > section > li,
+.prep-content > section > ul > li,
+.prep-content > section > ol > li,
+.prep-content > ul > li,
+.prep-content > ol > li {
   font-size: 15px;
   line-height: 1.72;
   letter-spacing: -0.002em;
 }
 .docs-page p,
-.prep-content p { color: var(--text-primary); }
+.prep-content > p,
+.prep-content > section > p { color: var(--text-primary); }
 .docs-page strong,
-.prep-content strong { color: var(--text-primary); font-weight: 700; }
-.docs-page em,
-.prep-content em { color: var(--text-primary); }
+.prep-content > p strong,
+.prep-content > li strong,
+.prep-content > section strong { color: var(--text-primary); font-weight: 700; }
+.docs-page em { color: var(--text-primary); }
 
 /* ── H2 — section heading: navy strip + gold-leaf hairline ───────── */
 .docs-page section > h2,
@@ -1448,8 +1462,18 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── H3 — subsection: gold hex glyph + navy text ─────────────────── */
+/*
+ * In .prep-content, only fire on direct children, on h3 inside a marker
+ * <section> wrapper, or on h3 explicitly marked with .prep-section-heading.
+ * This protects the bespoke H3 labels nested inside cards (Data Model
+ * field-type pills, In Scope / Out of Scope, etc.) from picking up the
+ * navy-strip + hex-glyph treatment when the wider .prep-content scope
+ * wraps a whole topic page.
+ */
 .docs-page section h3,
-.prep-content h3 {
+.prep-content > h3,
+.prep-content > section > h3,
+.prep-content h3.prep-section-heading {
   position: relative;
   font-size: 19px;
   line-height: 1.32;
@@ -1462,7 +1486,9 @@ img { max-width: 100%; height: auto; }
   scroll-margin-top: 6rem;
 }
 .docs-page section h3::before,
-.prep-content h3::before {
+.prep-content > h3::before,
+.prep-content > section > h3::before,
+.prep-content h3.prep-section-heading::before {
   content: '';
   position: absolute;
   left: 2px;
@@ -1473,9 +1499,54 @@ img { max-width: 100%; height: auto; }
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
+/* H2 in .prep-content also marked-only when not at the document root */
+.prep-content h2.prep-section-heading {
+  position: relative;
+  font-size: 26px;
+  line-height: 1.18;
+  font-weight: 800;
+  letter-spacing: -0.012em;
+  color: var(--cam-primary);
+  padding-left: 18px;
+  margin-top: 2.5rem;
+  margin-bottom: 1.1rem;
+  scroll-margin-top: 6rem;
+}
+.prep-content h2.prep-section-heading::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  bottom: 0.25em;
+  width: 4px;
+  border-radius: 0 9999px 9999px 0;
+  background: linear-gradient(180deg,
+    var(--cam-primary) 0%,
+    var(--cam-primary-dk) 100%);
+}
+.prep-content h2.prep-section-heading::after {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-top: 0.7rem;
+  margin-left: -18px;
+  max-width: 18rem;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--cam-primary) 50%, transparent) 0%,
+    color-mix(in srgb, var(--cam-gold-leaf) 55%, transparent) 38%,
+    transparent 100%);
+}
+
 /* ── H4 — small lead inside a subsection ─────────────────────────── */
+/*
+ * Same scoping discipline as H3 — only style direct children, h4 inside
+ * a marker section, or explicitly-marked h4. Protects bespoke item-label
+ * h4s in TopicDetail (phase title, decision, scenario, problem name).
+ */
 .docs-page section h4,
-.prep-content h4 {
+.prep-content > h4,
+.prep-content > section > h4,
+.prep-content h4.prep-section-heading {
   font-size: 15px;
   line-height: 1.4;
   font-weight: 700;
@@ -1486,8 +1557,23 @@ img { max-width: 100%; height: auto; }
 }
 
 /* ── Inline code — gold-leaf-tinted token ────────────────────────── */
+/*
+ * Same scoping discipline: .docs-page broad, .prep-content tightened to
+ * prose paths (direct child of root, inside a marker section, or inside
+ * direct-child p/li). TopicDetail's Code Example card and Mono labels
+ * stay untouched.
+ */
 .docs-page :not(pre) > code,
-.prep-content :not(pre) > code {
+.prep-content > p code,
+.prep-content > li code,
+.prep-content > section > p code,
+.prep-content > section > li code,
+.prep-content > section > ul > li code,
+.prep-content > section > ol > li code,
+.prep-content > ul > li code,
+.prep-content > ol > li code,
+.prep-content > h3 code,
+.prep-content h3.prep-section-heading code {
   font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.86em;
   line-height: 1.4;
@@ -1501,14 +1587,17 @@ img { max-width: 100%; height: auto; }
   white-space: nowrap;
 }
 [data-theme='dark'] .docs-page :not(pre) > code,
-[data-theme='dark'] .prep-content :not(pre) > code {
+[data-theme='dark'] .prep-content > p code,
+[data-theme='dark'] .prep-content > li code,
+[data-theme='dark'] .prep-content > section > p code {
   color: var(--cam-gold-leaf-text);
   border-color: color-mix(in srgb, var(--cam-gold-leaf) 35%, transparent);
 }
 
 /* ── Pre / code blocks — navy strip + gold-leaf border ───────────── */
 .docs-page pre,
-.prep-content pre {
+.prep-content > pre,
+.prep-content > section > pre {
   position: relative;
   border-radius: 10px;
   padding: 14px 16px 14px 22px;
@@ -1521,7 +1610,8 @@ img { max-width: 100%; height: auto; }
   margin: 1.1rem 0;
 }
 .docs-page pre::before,
-.prep-content pre::before {
+.prep-content > pre::before,
+.prep-content > section > pre::before {
   content: '';
   position: absolute;
   left: 0;
@@ -1532,7 +1622,8 @@ img { max-width: 100%; height: auto; }
   background: var(--cam-primary);
 }
 .docs-page pre code,
-.prep-content pre code {
+.prep-content > pre code,
+.prep-content > section > pre code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 12.5px;
   line-height: 1.55;
@@ -1546,22 +1637,31 @@ img { max-width: 100%; height: auto; }
 /* ── Lists — better spacing + gold leaf bullets ──────────────────── */
 .docs-page ul,
 .docs-page ol,
-.prep-content ul,
-.prep-content ol {
+.prep-content > ul,
+.prep-content > ol,
+.prep-content > section > ul,
+.prep-content > section > ol {
   margin: 0.5rem 0 0.85rem;
 }
 .docs-page ul > li,
 .docs-page ol > li,
-.prep-content ul > li,
-.prep-content ol > li { margin-bottom: 0.35rem; }
+.prep-content > ul > li,
+.prep-content > ol > li,
+.prep-content > section > ul > li,
+.prep-content > section > ol > li { margin-bottom: 0.35rem; }
 .docs-page ul > li::marker,
-.prep-content ul > li::marker { color: var(--cam-gold-leaf); }
+.prep-content > ul > li::marker,
+.prep-content > section > ul > li::marker { color: var(--cam-gold-leaf); }
 .docs-page ol > li::marker,
-.prep-content ol > li::marker { color: var(--cam-primary); font-weight: 700; }
+.prep-content > ol > li::marker,
+.prep-content > section > ol > li::marker { color: var(--cam-primary); font-weight: 700; }
 
 /* ── Anchor links inside body copy — keep accent + gentle hover ──── */
 .docs-page a:not([class]),
-.prep-content a:not([class]) {
+.prep-content > p a:not([class]),
+.prep-content > li a:not([class]),
+.prep-content > section > p a:not([class]),
+.prep-content > section > li a:not([class]) {
   color: var(--accent);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--cam-gold-leaf) 50%, transparent);
@@ -1569,7 +1669,8 @@ img { max-width: 100%; height: auto; }
   transition: text-decoration-color 0.15s ease;
 }
 .docs-page a:not([class]):hover,
-.prep-content a:not([class]):hover {
+.prep-content > p a:not([class]):hover,
+.prep-content > li a:not([class]):hover {
   text-decoration-color: var(--cam-gold-leaf);
 }
 
