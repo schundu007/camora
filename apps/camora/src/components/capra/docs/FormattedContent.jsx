@@ -330,5 +330,8 @@ export default function FormattedContent({ content }) {
     }
   });
 
-  return <div className="formatted-content">{elements}</div>;
+  // `prep-content` opts this surface into the docs design system (navy
+  // strip headings, gold-leaf code, glassy chrome) without inheriting
+  // the docs-only table + topic-card styles. See globals.css.
+  return <div className="formatted-content prep-content">{elements}</div>;
 }
