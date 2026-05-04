@@ -74,7 +74,7 @@ def dd_transcode():
 
 # DD3: Open Connect CDN
 def dd_oc():
-    g = mk(rankdir='TB', label='  Open Connect CDN Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Open Connect CDN Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'aws', 'AWS Control Plane\n(API, auth, catalog,\nrecommendations)', 'blue')
     n(g, 'steer', 'CDN Steering\nService\n(pick best OCA)', 'green')
     with g.subgraph() as s:

@@ -45,7 +45,7 @@ def search_flow():
 
 # ── DEEP DIVE: Hybrid Fan-out ──
 def dd_fanout():
-    g = mk('fanout', rankdir='TB', label='  Hybrid Fan-out Strategy  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('fanout', rankdir='LR', label='  Hybrid Fan-out Strategy  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'tweet', 'New Tweet\nPosted', 'blue')
     g.node('check', 'Follower\nCount?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Neue', fontsize='12', height='0.7')
     n(g, 'push', 'Fan-out on Write\nPush to all follower\ntimeline caches', 'green')
