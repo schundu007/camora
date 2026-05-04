@@ -2,6 +2,8 @@ import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
+import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
+import CompanyContextPicker from './CompanyContextPicker';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
@@ -136,7 +138,16 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const { token } = useAuth();
 
   // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
-  const activeAssistant = useMemo(() => getActiveAssistant(), []);
+  // Bumped whenever the picker writes a new company prep into the
+  // assistant — forces activeAssistant to re-read from localStorage so
+  // the next streamed answer carries the new context.
+  const [assistantVersion, setAssistantVersion] = useState(0);
+  useEffect(() => {
+    const onUpdate = () => setAssistantVersion((v) => v + 1);
+    window.addEventListener(ASSISTANT_UPDATED_EVENT, onUpdate);
+    return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, onUpdate);
+  }, []);
+  const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
   const baseSystemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
 
   // Live solve context — when the user just solved a coding/design
@@ -904,7 +915,17 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           </div>
         </div>
 
-        {/* Right: minimize + maximize (floating only) */}
+        {/* Right: company-context picker (embedded/behavioral only) +
+            minimize/maximize (floating only). The picker writes its
+            selected company prep into the active assistant's studyDocs
+            so buildSystemContext picks it up on the next stream — Sona
+            then leans on that company's material as authoritative
+            reference for behavioral answers. */}
+        {embedded && (
+          <div className="flex items-center gap-1.5 mr-1">
+            <CompanyContextPicker />
+          </div>
+        )}
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
