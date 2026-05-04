@@ -2023,181 +2023,189 @@ function FormattedJD({ text }: { text: string }) {
     }
   }
 
-  // Section accent inference — pick an LC-palette color based on what the
-  // section is talking about. Falls back to navy for unknown sections.
-  const accentForSection = (title: string | null, explicitTone?: string): string => {
-    if (explicitTone === 'success') return LC.api;
-    if (explicitTone === 'warning') return LC.medium.fg;
-    if (explicitTone === 'muted')   return 'var(--text-muted)';
-    if (!title) return LC.navy;
+  // Section type → glyph. The chrome is identical across every section
+  // (navy strip + gold-leaf border + glassy pill label, per docs design
+  // system); the glyph + uppercase title is what distinguishes a section
+  // visually. No rainbow accents — every JD card reads as part of the
+  // same illuminated-manuscript family.
+  const iconForSection = (title: string | null, explicitTone?: string): string => {
+    if (explicitTone === 'success') return '$';   // compensation
+    if (explicitTone === 'warning') return '⚑';   // application / deadline
+    if (explicitTone === 'muted')   return '·';   // boilerplate
+    if (!title) return '◆';
     const t = title.toLowerCase();
-    if (/(about|company|who\s+we\s+are|overview|introduction)/i.test(t)) return LC.navy;
-    if (/(responsib|what\s+you'?ll?\s+do|key\s+role|day[- ]to[- ]day)/i.test(t)) return LC.problem;
-    if (/(requirement|qualification|must\s+have|what\s+we\s+need|what\s+we\s+expect)/i.test(t)) return LC.approach;
-    if (/(preferred|nice\s+to\s+have|bonus|stand\s+out|plus)/i.test(t)) return LC.examples;
-    if (/(benefit|perk|what\s+we\s+offer|reward)/i.test(t)) return LC.gold;
-    if (/(tech\s+stack|technolog|tool|stack)/i.test(t)) return LC.architecture;
-    if (/(experience|skill|expertise)/i.test(t)) return LC.scalability;
-    if (/(team|culture|values)/i.test(t)) return LC.tradeoffs;
-    return LC.navy;
-  };
-
-  // LC-style icon assigner per section type — adds homepage-feel iconography
-  const iconForSection = (accent: string): string => {
-    if (accent === LC.navy)         return '◆';   // about/company
-    if (accent === LC.problem)      return '▸';   // responsibilities
-    if (accent === LC.approach)     return '◉';   // requirements
-    if (accent === LC.examples)     return '★';   // preferred / stand out
-    if (accent === LC.gold)         return '✦';   // benefits
-    if (accent === LC.architecture) return '⬢';   // tech stack
-    if (accent === LC.scalability)  return '⌘';   // experience / skills
-    if (accent === LC.tradeoffs)    return '◈';   // team / culture
-    if (accent === LC.api)          return '$';   // compensation
+    if (/(about|company|who\s+we\s+are|overview|introduction)/i.test(t)) return '◆';
+    if (/(responsib|what\s+you'?ll?\s+do|key\s+role|day[- ]to[- ]day)/i.test(t)) return '▸';
+    if (/(requirement|qualification|must\s+have|what\s+we\s+need|what\s+we\s+expect)/i.test(t)) return '◉';
+    if (/(preferred|nice\s+to\s+have|bonus|stand\s+out|plus)/i.test(t)) return '★';
+    if (/(benefit|perk|what\s+we\s+offer|reward)/i.test(t)) return '✦';
+    if (/(tech\s+stack|technolog|tool|stack)/i.test(t)) return '⬢';
+    if (/(experience|skill|expertise)/i.test(t)) return '⌘';
+    if (/(team|culture|values)/i.test(t)) return '◈';
     return '·';
   };
+
+  // Shared chrome for every JD card — navy left strip, gold-leaf border,
+  // soft navy→gold gradient bg, gentle inner glow. Unified across hero,
+  // metadata, and every parsed section so the JD reads as one piece of
+  // illuminated manuscript instead of a rainbow.
+  const cardChrome: React.CSSProperties = {
+    background:
+      'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(201,162,39,0.05) 100%)',
+    border: '1px solid var(--cam-gold-leaf)',
+    boxShadow:
+      '0 1px 0 color-mix(in srgb, var(--cam-gold-leaf) 18%, transparent),' +
+      ' 0 8px 24px -16px rgba(38,97,156,0.18),' +
+      ' inset 0 1px 0 rgba(255,255,255,0.35)',
+  };
+
+  // The navy strip on the left edge — same recipe as the docs hero card.
+  const NavyStrip = () => (
+    <span
+      aria-hidden="true"
+      className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full pointer-events-none"
+      style={{
+        background:
+          'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
+      }}
+    />
+  );
 
   return (
     <div className="flex flex-col gap-4">
       {heroTitle && (
         <div
-          className="rounded-2xl relative overflow-hidden"
-          style={{
-            background: `linear-gradient(135deg, ${LC.navy} 0%, ${LC.problem} 60%, ${LC.gold} 100%)`,
-            boxShadow: `0 8px 32px -12px ${LC.navy}50`,
-          }}
+          className="relative rounded-2xl overflow-hidden px-6 pl-7 py-6"
+          style={cardChrome}
         >
-          {/* Hexagon decoration — LC homepage iconography */}
+          <NavyStrip />
           <span
-            className="absolute -top-6 -right-6 opacity-20"
+            className="inline-flex items-center px-3 py-1 mb-3 rounded-full text-[10.5px] font-extrabold uppercase tracking-[0.18em]"
             style={{
-              width: 120,
-              height: 120,
-              background: '#FFFFFF',
-              clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--cam-gold-leaf)',
+              color: 'var(--cam-gold-leaf-text)',
+              boxShadow:
+                '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
             }}
-          />
-          <span
-            className="absolute -bottom-8 -left-4 opacity-10"
-            style={{
-              width: 80,
-              height: 80,
-              background: '#FFFFFF',
-              clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-            }}
-          />
-          <div className="relative px-6 py-7">
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className="block flex-shrink-0"
-                style={{
-                  width: 12,
-                  height: 12,
-                  background: '#FFFFFF',
-                  clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                }}
-              />
-              <span
-                className="text-[11px] font-extrabold uppercase tracking-[0.22em]"
-                style={{ color: '#FFFFFF', opacity: 0.85 }}
-              >
-                Position
-              </span>
-            </div>
-            <h3 className="text-[24px] md:text-[28px] font-extrabold leading-tight tracking-tight" style={{ color: '#FFFFFF' }}>
-              {heroTitle}
-            </h3>
-          </div>
+          >
+            Position
+          </span>
+          <h3
+            className="text-[22px] md:text-[26px] font-extrabold leading-tight tracking-tight"
+            style={{ color: 'var(--cam-primary)' }}
+          >
+            {heroTitle}
+          </h3>
         </div>
       )}
 
       {metadata.length > 0 && (
         <div
-          className="rounded-2xl px-5 py-4 grid gap-x-6 gap-y-4"
+          className="relative rounded-2xl px-5 pl-7 py-4 grid gap-x-6 gap-y-4 overflow-hidden"
           style={{
-            ...paperCard(LC.navy),
+            ...cardChrome,
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           }}
         >
-          {metadata.map((m, i) => {
-            const meta_colors = [LC.navy, LC.problem, LC.examples, LC.gold, LC.approach, LC.tradeoffs];
-            const c = meta_colors[i % meta_colors.length];
-            return (
-              <div key={i} className="flex items-start gap-2.5 min-w-0">
+          <NavyStrip />
+          {metadata.map((m, i) => (
+            <div key={i} className="flex items-start gap-2.5 min-w-0">
+              <span
+                className="flex-shrink-0 inline-flex items-center justify-center rounded-lg mt-0.5"
+                style={{
+                  width: 28,
+                  height: 28,
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--cam-gold-leaf)',
+                }}
+              >
                 <span
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-lg mt-0.5"
+                  className="block"
                   style={{
-                    width: 28,
-                    height: 28,
-                    background: `${c}18`,
-                    border: `1px solid ${c}40`,
-                    color: c,
+                    width: 10,
+                    height: 10,
+                    background: 'var(--cam-gold-leaf)',
+                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                   }}
+                />
+              </span>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span
+                  className="text-[10px] font-extrabold uppercase tracking-[0.14em]"
+                  style={{ color: 'var(--cam-gold-leaf-text)' }}
                 >
-                  <span
-                    className="block"
-                    style={{
-                      width: 10,
-                      height: 10,
-                      background: c,
-                      clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                    }}
-                  />
+                  {m.label.replace(/^[a-z]/, (ch) => ch.toUpperCase())}
                 </span>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: c }}>
-                    {m.label.replace(/^[a-z]/, (ch) => ch.toUpperCase())}
-                  </span>
-                  <span className="text-[13.5px] font-semibold truncate" style={{ color: 'var(--text-primary)' }} title={m.value}>{m.value}</span>
-                </div>
+                <span
+                  className="text-[13.5px] font-semibold truncate"
+                  style={{ color: 'var(--text-primary)' }}
+                  title={m.value}
+                >
+                  {m.value}
+                </span>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
 
       {content.map((sec, i) => {
         const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
-        const accent = accentForSection(sec.title, tone);
-        const icon = iconForSection(accent);
+        const icon = iconForSection(sec.title, tone);
         return (
           <div
             key={i}
-            className="rounded-2xl overflow-hidden"
-            style={paperCard(accent)}
+            className="relative rounded-2xl overflow-hidden"
+            style={cardChrome}
           >
+            <NavyStrip />
             {sec.title && (
               <div
-                className="px-5 py-3 flex items-center gap-3"
+                className="px-5 pl-7 py-3 flex items-center gap-3"
                 style={{
-                  background: `linear-gradient(90deg, ${accent}28 0%, ${accent}10 100%)`,
-                  borderBottom: `2px solid ${accent}`,
+                  borderBottom: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 30%, transparent)',
                 }}
               >
+                {/* Glassy pill capsule label — gold-leaf border, gold-leaf-text colour */}
                 <span
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-lg text-base font-bold"
+                  className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-[0.14em]"
                   style={{
-                    width: 32,
-                    height: 32,
-                    background: accent,
-                    color: '#FFFFFF',
-                    boxShadow: `0 2px 6px ${accent}50`,
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--cam-gold-leaf)',
+                    color: 'var(--cam-gold-leaf-text)',
+                    boxShadow:
+                      '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
                   }}
                 >
-                  {icon}
-                </span>
-                <h4 className="text-[14px] font-extrabold tracking-tight uppercase" style={{ color: accent, letterSpacing: '0.04em' }}>
+                  <span aria-hidden style={{ fontSize: 11 }}>{icon}</span>
                   {sec.title.replace(/^[a-z]/, (c) => c.toUpperCase())}
-                </h4>
+                </span>
                 <span className="flex-1" />
-                <span className="text-[10px] font-mono font-bold" style={{ color: accent, opacity: 0.7 }}>
+                <span
+                  className="text-[10px] font-mono font-bold"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   {String(sec.items.length).padStart(2, '0')}
                 </span>
               </div>
             )}
-            <div className="px-5 py-4 flex flex-col gap-2">
+            <div className="px-5 pl-7 py-4 flex flex-col gap-2">
               {sec.items.map((item, j) => {
                 if (i === 0 && !sec.title) {
-                  return <p key={j} className="text-[14.5px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>{item}</p>;
+                  return (
+                    <p
+                      key={j}
+                      className="text-[14.5px] leading-[1.7]"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {item}
+                    </p>
+                  );
                 }
                 return (
                   <div key={j} className="flex gap-2.5 items-start">
@@ -2206,11 +2214,17 @@ function FormattedJD({ text }: { text: string }) {
                       style={{
                         width: 6,
                         height: 6,
-                        background: accent,
-                        clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                        background: 'var(--cam-gold-leaf)',
+                        clipPath:
+                          'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                       }}
                     />
-                    <span className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-primary)' }}>{item}</span>
+                    <span
+                      className="text-[13px] leading-[1.6]"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {item}
+                    </span>
                   </div>
                 );
               })}
