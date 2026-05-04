@@ -75,10 +75,15 @@ router.post('/enroll', upload.any(), async (req, res) => {
     const body = Buffer.concat(parts);
     console.log(`[Speaker] Sending ${body.length} bytes to ${url}`);
 
+    // X-API-Key required by ai-services. Plus AbortSignal.timeout so a
+    // wedged Python worker can't hold this Express worker forever.
+    const headers = { 'Content-Type': `multipart/form-data; boundary=${boundary}` };
+    if (process.env.AI_SERVICES_API_KEY) headers['X-API-Key'] = process.env.AI_SERVICES_API_KEY;
     const upstream = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      headers,
       body,
+      signal: AbortSignal.timeout(30000),
     });
     const data = await upstream.json();
     console.log(`[Speaker] Response: ${upstream.status}`, JSON.stringify(data));

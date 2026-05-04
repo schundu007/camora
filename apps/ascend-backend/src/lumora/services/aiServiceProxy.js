@@ -7,6 +7,11 @@
  */
 
 const AI_SERVICES_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
+// ai-services rejects every non-/health request without a matching
+// X-API-Key. The lumora-backend copy of this proxy injects the header;
+// the ascend-backend mirror was forked without that fix, so every
+// /lumora/* call to ai-services from this service was 401-ing in prod.
+const AI_SERVICES_API_KEY = process.env.AI_SERVICES_API_KEY || '';
 
 // Defaults chosen for resemblyzer / diagrams calls — speaker enroll takes a
 // few seconds, diagram generation can take 10–20s. Override per-call via opts.
@@ -58,10 +63,17 @@ export async function proxyToAIService(path, options = {}) {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAULT_RETRIES, ...fetchOpts } = options;
   const url = `${AI_SERVICES_URL}${path}`;
 
+  // Inject X-API-Key on every call. Done at the proxy layer so individual
+  // routes can't accidentally forget it; if the env is unset (dev), pass
+  // no header and let ai-services either accept (AI_SERVICES_DEV_OPEN=1)
+  // or reject with a clear 401.
+  const headers = { ...(fetchOpts.headers || {}) };
+  if (AI_SERVICES_API_KEY) headers['X-API-Key'] = AI_SERVICES_API_KEY;
+
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(url, { ...fetchOpts, signal: AbortSignal.timeout(timeoutMs) });
+      const response = await fetch(url, { ...fetchOpts, headers, signal: AbortSignal.timeout(timeoutMs) });
       // Retry only on 5xx; 4xx is a real answer we should surface to the caller.
       if (response.status >= 500 && attempt < retries) {
         lastErr = new Error(`ai-services ${response.status}`);
