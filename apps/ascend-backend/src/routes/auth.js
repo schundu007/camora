@@ -712,6 +712,27 @@ router.delete('/account', authenticate, async (req, res) => {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   try {
+    // GDPR Article 17 / CCPA right to deletion. Voice embeddings live
+    // outside Postgres on ai-services' /data/embeddings/{userId}.npy.
+    // Delete those FIRST so we don't leave orphaned biometric data
+    // (resemblyzer 256-dim embedding = "sensitive personal information"
+    // under both regimes). Best-effort: failures here log but don't
+    // block account deletion — the user's primary intent is removing
+    // their data; we surface ai-services issues to ops separately.
+    try {
+      const aiUrl = process.env.AI_SERVICES_URL || 'http://localhost:8001';
+      const headers = { 'Content-Type': 'application/json' };
+      if (process.env.AI_SERVICES_API_KEY) headers['X-API-Key'] = process.env.AI_SERVICES_API_KEY;
+      await fetch(`${aiUrl}/speaker/enroll`, {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ user_id: String(userId) }),
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch (aiErr) {
+      logger.warn({ aiErr: aiErr.message, userId }, 'Voice embedding cleanup failed during account deletion');
+    }
+
     await query('DELETE FROM users WHERE id = $1', [userId]);
     res.clearCookie('cariara_sso', {
       domain: process.env.COOKIE_DOMAIN || '.cariara.com',
