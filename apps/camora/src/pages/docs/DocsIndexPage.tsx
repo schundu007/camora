@@ -1,8 +1,7 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import SiteNav from '../../components/shared/SiteNav';
-import SiteFooter from '../../components/shared/SiteFooter';
-import SEO from '../../components/shared/SEO';
+import DocsPageLayout from './_layout';
+import { useAuth } from '../../contexts/AuthContext';
+import { isOwnerEmail } from '../../lib/owner';
 
 interface DocCard {
   title: string;
@@ -44,10 +43,6 @@ function DocCardLink({ card }: { card: DocCard }) {
     >
       <div className="flex items-start justify-between gap-3 mb-1.5">
         <h3 className="text-base font-bold group-hover:underline" style={{ color: 'var(--text-primary)' }}>{card.title}</h3>
-        {/* Visible URL path next to the title — the previous design hid
-            the link inside the <Link> wrapper, which made docs harder
-            to scan / share. The chip is click-to-copy (doesn't navigate
-            so the parent <Link> still owns the row). */}
         <span
           role="button"
           tabIndex={0}
@@ -86,30 +81,32 @@ function DocCardLink({ card }: { card: DocCard }) {
 }
 
 export default function DocsIndexPage() {
-  useEffect(() => { document.title = 'Documentation — Camora'; }, []);
+  const { user } = useAuth();
+  const isOwner = isOwnerEmail(user?.email);
+
+  const onThisPage = [
+    { id: 'user-guides', label: 'User guides' },
+    ...(isOwner ? [{ id: 'admin-runbooks', label: 'Administration & runbooks' }] : []),
+    { id: 'feedback', label: 'Help & feedback' },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
-      <SEO title="Documentation" description="Camora user guides and admin runbooks — everything you need to use, configure, and operate the platform." path="/docs" />
-      <SiteNav variant="light" />
+    <DocsPageLayout
+      title="Camora documentation"
+      description="User guides for everyone using Camora, plus internal runbooks for operators. Pick a topic below or use the sidebar."
+      path="/docs"
+      eyebrow="DOCUMENTATION"
+      onThisPage={onThisPage}
+    >
+      <section id="user-guides" className="mb-12 scroll-mt-24">
+        <h2 className="text-[12px] font-bold uppercase tracking-[0.16em] mb-4" style={{ color: 'var(--text-muted)' }}>User guides</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {USER_GUIDES.map((card) => <DocCardLink key={card.href} card={card} />)}
+        </div>
+      </section>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12 md:py-16" style={{ paddingTop: 96 }}>
-        <header className="mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)' }}>DOCUMENTATION</p>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">Camora docs</h1>
-          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
-            User guides and admin runbooks for every Camora surface — pick a topic to dive in.
-          </p>
-        </header>
-
-        <section className="mb-12">
-          <h2 className="text-[12px] font-bold uppercase tracking-[0.16em] mb-4" style={{ color: 'var(--text-muted)' }}>User guides</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {USER_GUIDES.map((card) => <DocCardLink key={card.href} card={card} />)}
-          </div>
-        </section>
-
-        <section className="mb-12">
+      {isOwner && (
+        <section id="admin-runbooks" className="mb-12 scroll-mt-24">
           <h2 className="text-[12px] font-bold uppercase tracking-[0.16em] mb-4" style={{ color: 'var(--text-muted)' }}>Administration &amp; runbooks</h2>
           <p className="text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
             For Camora operators. Most pages assume access to the Stripe dashboard, Railway services, and the
@@ -119,17 +116,14 @@ export default function DocsIndexPage() {
             {ADMIN_RUNBOOKS.map((card) => <DocCardLink key={card.href} card={card} />)}
           </div>
         </section>
+      )}
 
-        <section className="rounded-xl p-6" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <h2 className="text-base font-bold mb-2">Need something not covered here?</h2>
-          <p className="text-[13px] mb-3" style={{ color: 'var(--text-secondary)' }}>
-            Open a GitHub issue at <a href="https://github.com/anthropics/claude-code/issues" className="text-[var(--accent)] underline">anthropics/claude-code/issues</a>{' '}
-            or email <a href="mailto:hi@cariara.com" className="text-[var(--accent)] underline">hi@cariara.com</a> with what you were trying to do.
-          </p>
-        </section>
-      </main>
-
-      <SiteFooter variant="light" />
-    </div>
+      <section id="feedback" className="rounded-xl p-6 scroll-mt-24" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        <h2 className="text-base font-bold mb-2">Need something not covered here?</h2>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Email <a href="mailto:hi@cariara.com" className="text-[var(--accent)] underline">hi@cariara.com</a> with what you were trying to do and we'll get a doc page up for it.
+        </p>
+      </section>
+    </DocsPageLayout>
   );
 }
