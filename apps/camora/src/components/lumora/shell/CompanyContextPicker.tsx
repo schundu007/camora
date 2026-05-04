@@ -1,92 +1,58 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import {
-  fetchCompanyPreps,
-  fetchCompanyPrep,
-  applyPrepToActiveAssistant,
-  getActivePrepId,
+  listCompanyPreps,
+  getActiveCompanyKey,
+  setActiveCompanyKey,
   ASSISTANT_UPDATED_EVENT,
   type CompanyPrepListItem,
 } from '../../../lib/companyContext';
 
 /**
- * Behavioral-tab picker for "scope Sona to one company's generated
- * prep". A pill capsule in the AICompanionPanel header shows the
- * active company; clicking opens a dialog with the user's saved
- * company-preps. Picking one writes it into the active Lumora
- * assistant's studyDocs (as a single `Company Prep — <name>` entry)
- * so buildSystemContext picks it up on the very next stream.
+ * Behavioral-tab quick switcher for Lumora Prep Kit company workspaces.
+ * Reads from `lumora_prep_v8` localStorage — the same store the
+ * /lumora/prepkit page writes to. Picking a workspace here is identical
+ * to opening Prep Kit, switching the dropdown to that company, and
+ * coming back: Sona's next stream uses that workspace's JD / resume /
+ * prep materials / study docs / generated sections as authoritative
+ * reference.
  *
- * Lean-toward semantics, not refuse: the existing studyDocs prompt
- * tells Sona to "treat as authoritative reference material when
- * relevant — quote, cite by filename, and prefer them over your
- * priors when they overlap." General-knowledge questions still get
- * answered.
+ * Wears the docs design system chrome (navy strip, gold-leaf border,
+ * glassy pill capsules) to match the rest of Lumora.
  */
 export default function CompanyContextPicker() {
-  const { token } = useAuth();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [preps, setPreps] = useState<CompanyPrepListItem[] | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(getActivePrepId());
-  const [activeName, setActiveName] = useState<string | null>(null);
-  const [pickingId, setPickingId] = useState<string | null>(null);
+  const [preps, setPreps] = useState<CompanyPrepListItem[]>(() => listCompanyPreps());
+  const [activeKey, setActiveKey] = useState<string | null>(() => getActiveCompanyKey());
 
-  // When the picker first lands, look up the saved active id's name so
-  // the chip can show "📋 Acme" without forcing the user to open the
-  // dialog.
+  // Refresh whenever the picker opens — covers the case where the user
+  // adds a new workspace in /lumora/prepkit and switches back here
+  // without a page reload.
+  const refresh = () => {
+    setPreps(listCompanyPreps());
+    setActiveKey(getActiveCompanyKey());
+  };
+
+  // Sync to assistant-updated events fired anywhere in the app.
   useEffect(() => {
-    if (!activeId || !token || activeName) return;
-    let alive = true;
-    fetchCompanyPreps(token).then((list) => {
-      if (!alive) return;
-      setPreps(list);
-      const found = list.find((p) => p.id === activeId);
-      if (found) setActiveName(found.company_name);
-    });
-    return () => { alive = false; };
-  }, [activeId, token, activeName]);
+    const onUpdate = () => refresh();
+    window.addEventListener(ASSISTANT_UPDATED_EVENT, onUpdate);
+    // Also listen to storage events so a change in another tab is
+    // reflected here.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'lumora_prep_v8') refresh();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(ASSISTANT_UPDATED_EVENT, onUpdate);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
-  const refreshList = async () => {
-    if (!token) return;
-    setLoading(true);
-    const list = await fetchCompanyPreps(token);
-    setPreps(list);
-    if (activeId) {
-      const found = list.find((p) => p.id === activeId);
-      setActiveName(found?.company_name || null);
-    }
-    setLoading(false);
-  };
-
-  const handleOpen = () => {
-    setOpen(true);
-    if (!preps) refreshList();
-  };
-
-  const handlePick = async (prepId: string) => {
-    if (!token) return;
-    setPickingId(prepId);
-    const prep = await fetchCompanyPrep(prepId, token);
-    if (prep) {
-      applyPrepToActiveAssistant(prep);
-      setActiveId(prep.id);
-      setActiveName(prep.company_name);
-    }
-    setPickingId(null);
-    setOpen(false);
-  };
-
-  const handleClear = () => {
-    applyPrepToActiveAssistant(null);
-    setActiveId(null);
-    setActiveName(null);
-    setOpen(false);
-  };
-
-  // Esc to close + body scroll lock.
+  // Esc to close + body scroll lock + refresh on open.
   useEffect(() => {
     if (!open) return;
+    refresh();
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
@@ -97,26 +63,27 @@ export default function CompanyContextPicker() {
     };
   }, [open]);
 
-  // Listen for cross-window assistant updates so two open behavioral
-  // tabs stay in sync.
-  useEffect(() => {
-    const sync = () => setActiveId(getActivePrepId());
-    window.addEventListener(ASSISTANT_UPDATED_EVENT, sync);
-    return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, sync);
-  }, []);
+  const handlePick = (key: string) => {
+    setActiveCompanyKey(key);
+    setActiveKey(key);
+    setOpen(false);
+  };
 
-  const label = activeId
-    ? activeName
-      ? `Company: ${activeName}`
-      : 'Loading company...'
-    : 'Pick Company Prep';
+  const handleClear = () => {
+    setActiveCompanyKey(null);
+    setActiveKey(null);
+    setOpen(false);
+  };
+
+  const activeName = activeKey || null;
+  const label = activeName ? `Company: ${activeName}` : 'Pick Company';
 
   return (
     <>
       <button
         type="button"
-        onClick={handleOpen}
-        title="Scope Sona to one of your saved company preps"
+        onClick={() => setOpen(true)}
+        title="Switch which Prep Kit workspace Sona uses for context"
         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors"
         style={{
           background: 'rgba(255,255,255,0.12)',
@@ -142,7 +109,7 @@ export default function CompanyContextPicker() {
           className="fixed inset-0 z-[100] flex items-center justify-center p-6"
           role="dialog"
           aria-modal="true"
-          aria-label="Pick company prep for Sona context"
+          aria-label="Pick Prep Kit workspace for Sona"
           onClick={() => setOpen(false)}
           style={{
             background: 'rgba(0,0,0,0.55)',
@@ -197,44 +164,53 @@ export default function CompanyContextPicker() {
                   className="text-[18px] font-extrabold tracking-tight"
                   style={{ color: 'var(--cam-primary)' }}
                 >
-                  Pick a company prep for Sona
+                  Pick Prep Kit workspace for Sona
                 </h2>
                 <p className="text-[12.5px] mt-1" style={{ color: 'var(--text-secondary)' }}>
-                  Sona will lean on the picked company&apos;s prep material as authoritative
-                  reference for behavioral answers.
+                  Sona will lean on the picked workspace&apos;s JD, resume, prep notes, study
+                  docs, and generated sections as authoritative reference for behavioral answers.
                 </p>
               </div>
             </div>
 
             {/* List body — scrolls inside the dialog */}
             <div className="flex-1 overflow-y-auto px-2 py-2">
-              {loading && (
-                <div className="px-4 py-10 text-center text-[13px]" style={{ color: 'var(--text-muted)' }}>
-                  Loading your company preps&hellip;
-                </div>
-              )}
-              {!loading && preps && preps.length === 0 && (
+              {preps.length === 0 && (
                 <div className="px-4 py-10 text-center">
                   <p className="text-[14px] mb-2" style={{ color: 'var(--text-primary)' }}>
-                    You haven&apos;t generated any company preps yet.
+                    No Prep Kit workspaces yet.
                   </p>
-                  <p className="text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
-                    Create one from <strong>Prepare → Company-specific prep</strong> first, then
-                    come back here to scope Sona to it.
+                  <p className="text-[12.5px] mb-3" style={{ color: 'var(--text-muted)' }}>
+                    Open <strong>Documents (Prep Kit)</strong> in Lumora to add a company workspace
+                    with JD, resume, and prep materials.
                   </p>
+                  <Link
+                    to="/lumora/prepkit"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex items-center px-3 py-1.5 rounded-md text-[12px] font-bold"
+                    style={{
+                      background: 'var(--cam-primary)',
+                      color: '#fff',
+                    }}
+                  >
+                    Open Prep Kit →
+                  </Link>
                 </div>
               )}
-              {!loading && preps && preps.length > 0 && (
+              {preps.length > 0 && (
                 <ul className="space-y-1">
                   {preps.map((p) => {
-                    const isActive = p.id === activeId;
-                    const isPicking = p.id === pickingId;
+                    const isActive = p.key === activeKey;
+                    const stats = [
+                      p.hasJd && 'JD',
+                      p.hasResume && 'Resume',
+                      p.hasGeneratedSections && 'Generated sections',
+                    ].filter(Boolean) as string[];
                     return (
-                      <li key={p.id}>
+                      <li key={p.key}>
                         <button
                           type="button"
-                          onClick={() => handlePick(p.id)}
-                          disabled={!!pickingId}
+                          onClick={() => handlePick(p.key)}
                           className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-start gap-3"
                           style={{
                             background: isActive
@@ -243,8 +219,6 @@ export default function CompanyContextPicker() {
                             border: isActive
                               ? '1px solid var(--cam-gold-leaf)'
                               : '1px solid transparent',
-                            cursor: pickingId ? 'wait' : 'pointer',
-                            opacity: pickingId && !isPicking ? 0.5 : 1,
                           }}
                         >
                           <span
@@ -261,21 +235,23 @@ export default function CompanyContextPicker() {
                             >
                               {p.company_name}
                             </span>
-                            {p.updated_at && (
+                            {stats.length > 0 ? (
                               <span
                                 className="block text-[11px] mt-0.5"
                                 style={{ color: 'var(--text-muted)' }}
                               >
-                                Updated {new Date(p.updated_at).toLocaleDateString()}
+                                {stats.join(' · ')}
+                              </span>
+                            ) : (
+                              <span
+                                className="block text-[11px] mt-0.5 italic"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
+                                Empty workspace — add JD or resume in Prep Kit first.
                               </span>
                             )}
                           </span>
-                          {isPicking && (
-                            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                              Loading&hellip;
-                            </span>
-                          )}
-                          {isActive && !isPicking && (
+                          {isActive && (
                             <span
                               className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
                               style={{
@@ -294,24 +270,34 @@ export default function CompanyContextPicker() {
               )}
             </div>
 
-            {/* Footer — clear + cancel */}
+            {/* Footer — clear + open prep kit + close */}
             <div
               className="flex items-center justify-between px-5 py-3 gap-2 border-t"
               style={{ borderColor: 'var(--border)' }}
             >
-              <button
-                type="button"
-                onClick={handleClear}
-                disabled={!activeId}
-                className="text-[12px] font-semibold transition-colors"
-                style={{
-                  color: activeId ? 'var(--text-secondary)' : 'var(--text-muted)',
-                  opacity: activeId ? 1 : 0.5,
-                  cursor: activeId ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Clear company context
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  disabled={!activeKey}
+                  className="text-[12px] font-semibold transition-colors"
+                  style={{
+                    color: activeKey ? 'var(--text-secondary)' : 'var(--text-muted)',
+                    opacity: activeKey ? 1 : 0.5,
+                    cursor: activeKey ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Clear active
+                </button>
+                <Link
+                  to="/lumora/prepkit"
+                  onClick={() => setOpen(false)}
+                  className="text-[12px] font-semibold"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  Manage in Prep Kit →
+                </Link>
+              </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
