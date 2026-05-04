@@ -1674,30 +1674,25 @@ img { max-width: 100%; height: auto; }
   text-decoration-color: var(--cam-gold-leaf);
 }
 
-/* ── Image sizing — uniform max bounds, never enlarges small images ──
- * Caps oversized PNGs / screenshots so a doc page never alternates
- * between a 200px logo and a 1500px architecture diagram. Uses max-*
- * (not width/height) so naturally small images keep their natural
- * size — only over-tall / over-wide images get clamped.
+/* ── Image sizing — soft bounds only, never break component layout ───
+ * Caps oversized PNGs / screenshots without overriding component-level
+ * width/height. A previous version forced `width: auto, object-fit:
+ * contain` which broke `<img class="w-full">` on portrait architecture
+ * diagrams — the image element shrank to natural aspect inside a
+ * height-capped box, making 800×1500 portraits render at ~270×500
+ * with unreadable text.
  *
- * Opt-out: add the `img-bespoke` class to the <img> when a specific
- * surface explicitly wants its own dimensions (e.g. a 180×220 product
- * thumbnail next to text — the wrapper there already constrains it).
+ * Now: only cap max-width / max-height. Components keep their own
+ * width: 100% / w-full / w-auto choices. Max-height is generous enough
+ * (720px) that portrait diagrams stay readable in their natural width.
+ *
+ * Opt-out: add `img-bespoke` to the <img> for thumbnails / logos that
+ * want their own tight bounds.
  */
 .docs-page img:not(.img-bespoke),
 .prep-content img:not(.img-bespoke) {
   max-width: 100%;
-  max-height: 480px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-/* When the image is the primary visual inside a <figure>, center it and
- * give it a touch more breathing room. */
-.docs-page figure > img:not(.img-bespoke),
-.prep-content figure > img:not(.img-bespoke) {
-  display: block;
-  margin: 0 auto;
+  max-height: 720px;
 }
 
 /* ── Tables — gold-leaf header band ──────────────────────────────── */
