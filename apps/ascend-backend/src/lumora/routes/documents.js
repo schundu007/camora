@@ -10,6 +10,9 @@ import multer from 'multer';
 import fs from 'fs/promises';
 import path from 'path';
 import { authenticate } from '../middleware/authenticate.js';
+import mammoth from 'mammoth';
+// pdf-parse exposes a default function. Imported lazily inside parseDocument
+// so a transient pdfjs init failure doesn't crash the route module on boot.
 
 const router = Router();
 
@@ -56,26 +59,66 @@ function sanitizeFilename(raw) {
   return raw.replace(/[^\w\-.]/g, '_');
 }
 
+// Per-document text cap. Stored extraction is bounded so a 5MB PDF
+// (legitimate or adversarial) doesn't blow up the in-memory keyword
+// search across all of a user's documents. 256 KB ≈ ~50K words —
+// more than enough for resumes / cover letters / JDs.
+const MAX_EXTRACTED_TEXT_BYTES = 256 * 1024;
+
+function clampText(s) {
+  if (s.length > MAX_EXTRACTED_TEXT_BYTES) {
+    return s.slice(0, MAX_EXTRACTED_TEXT_BYTES) + '\n\n[... truncated]';
+  }
+  return s;
+}
+
 /**
  * Parse uploaded file bytes into plain text.
  *
- * For .txt and .md files the buffer is decoded directly.
- * For .docx and .pdf, the raw bytes are stored as-is (spec says "store as-is"
- * for non-txt formats), but we still attempt basic text extraction so that
- * keyword search works on the stored .txt copy.
+ * Previous version did `buffer.toString('utf-8')` on PDF / DOCX bytes.
+ * Two problems:
+ *   1. The output was binary noise dressed up as UTF-8 — "search"
+ *      across a user's docs was effectively grep-on-garbage.
+ *   2. UTF-8 re-encoding of binary bytes can EXPAND the source by
+ *      ~3x via replacement characters, so a 5 MB adversarial PDF
+ *      could land 15 MB on disk; multi-doc search loaded the whole
+ *      set into the Node heap, OOM-killing small Railway instances.
+ *
+ * Now uses pdf-parse / mammoth for real extraction and clamps each
+ * doc to MAX_EXTRACTED_TEXT_BYTES regardless of how much text the
+ * source carried. Errors are swallowed → empty string so a single
+ * malformed doc doesn't fail the whole upload.
  */
-function parseDocument(filename, buffer) {
+async function parseDocument(filename, buffer) {
   const ext = path.extname(filename).toLowerCase();
 
   if (ext === '.txt' || ext === '.md') {
-    return buffer.toString('utf-8');
+    return clampText(buffer.toString('utf-8'));
   }
 
-  // For .docx and .pdf: store the raw bytes as-is is the spec, but we also
-  // write a .txt companion for searchability.  Since we don't want heavy
-  // native deps in the Node runtime, we do a best-effort UTF-8 decode and
-  // note that richer extraction can be layered on later.
-  return buffer.toString('utf-8');
+  if (ext === '.docx') {
+    try {
+      const { value } = await mammoth.extractRawText({ buffer });
+      return clampText(value || '');
+    } catch (err) {
+      console.warn('[documents] mammoth parse failed:', err.message);
+      return '';
+    }
+  }
+
+  if (ext === '.pdf') {
+    try {
+      // Lazy-load to avoid pdfjs init at module-eval time.
+      const { default: pdfParse } = await import('pdf-parse');
+      const data = await pdfParse(buffer, { max: 200 });
+      return clampText(data.text || '');
+    } catch (err) {
+      console.warn('[documents] pdf-parse failed:', err.message);
+      return '';
+    }
+  }
+
+  return '';
 }
 
 /**
@@ -174,7 +217,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     }
 
     const originalName = file.originalname || 'document.txt';
-    const textContent = parseDocument(originalName, file.buffer);
+    const textContent = await parseDocument(originalName, file.buffer);
 
     if (!textContent.trim()) {
       return res.status(400).json({ error: 'Could not extract text from document' });

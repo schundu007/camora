@@ -17,6 +17,14 @@ import { query } from '../lib/shared-db.js';
  *  4. Attach full DB user row to req.user
  */
 export async function authenticate(req, res, next) {
+  // Idempotency guard. Routes are mounted with `authenticate` at the
+  // mount point (index.js) AND many routers also call `router.use(
+  // authenticate)` / per-handler `authenticate` for defense-in-depth.
+  // Without this guard each request would run JWT verify + the users
+  // DB lookup twice on every hot path. Now: if a previous middleware
+  // already populated req.user, skip the second pass.
+  if (req.user?.id) return next();
+
   try {
     // --- Extract token ---------------------------------------------------
     let token = null;
