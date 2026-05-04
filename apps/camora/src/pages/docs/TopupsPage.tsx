@@ -62,33 +62,17 @@ export default function TopupsDocsPage() {
       </section>
 
       <section id="pack-sizes" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Pack sizes &amp; expiry</h2>
+        <h2 className="text-2xl font-bold mb-3">Pricing &amp; expiry</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          One flat per-hour rate, pick any quantity 1–50. Stripe charges $15 × quantity at checkout.
-          Hours never expire — they sit on your account until used.
+          One flat rate, $15 per AI hour. Pick any quantity from 1 to 50 in a single Stripe checkout
+          ($15 × quantity total). Hours <strong>never expire</strong> &mdash; they sit on your
+          account until used, regardless of subscription state.
         </p>
-        <div className="rounded-lg overflow-hidden mb-3" style={{ border: '1px solid var(--border)' }}>
-          <table className="w-full text-sm">
-            <thead style={{ background: 'var(--bg-elevated)' }}>
-              <tr>
-                <th className="text-left px-4 py-2.5 font-semibold">Quantity</th>
-                <th className="text-left px-4 py-2.5 font-semibold">Total</th>
-                <th className="text-left px-4 py-2.5 font-semibold">Per-hour</th>
-                <th className="text-left px-4 py-2.5 font-semibold">Expiry</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">1 hour</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">5 hours</td><td className="px-4 py-2.5">$75</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">10 hours</td><td className="px-4 py-2.5">$150</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
-              <tr style={{ borderTop: '1px solid var(--border)' }}><td className="px-4 py-2.5">N hours (1–50)</td><td className="px-4 py-2.5">$15 × N</td><td className="px-4 py-2.5">$15</td><td className="px-4 py-2.5">Never</td></tr>
-            </tbody>
-          </table>
-        </div>
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           Top-ups stack on top of your subscription pool. Buy from the
-          <Link to="/pricing" className="text-[var(--accent)] underline ml-1">pricing page</Link> or whenever the gate prompts.
-          Top-ups are gated to active subscribers — start with Monthly or Yearly first.
+          <Link to="/pricing" className="text-[var(--accent)] underline ml-1">pricing page</Link> or
+          whenever the AI Hours gate prompts. Top-ups are gated to active subscribers &mdash; start
+          with Monthly or Yearly first.
         </p>
       </section>
 
@@ -96,8 +80,10 @@ export default function TopupsDocsPage() {
         <h2 className="text-2xl font-bold mb-3">Auto top-up</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           When your pool runs out mid-session, Camora can auto-charge a top-up so calls keep flowing.
-          <strong> Off by default.</strong> Enable on <Link to="/account/team" className="text-[var(--accent)] underline">/account/team</Link>{' '}
-          → pick pack size + monthly cap. Cap is required.
+          <strong> Off by default.</strong> Enable on
+          <Link to="/account/team" className="text-[var(--accent)] underline ml-1">/account/team</Link>
+          and set a monthly cap. Each auto-trigger adds <strong>1 hour</strong> ($15); the cap is
+          the hard ceiling on how many auto-charges can happen in a calendar month and is required.
         </p>
         <DocsCallout variant="warning">
           Monthly cap protects you. Camora will <em>never</em> charge more than your cap in a calendar month —
