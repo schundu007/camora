@@ -60,17 +60,22 @@ export async function parseResumeToStories(resume: string, token: string, apiUrl
 
 export function getActiveAssistant(): LumoraAssistant | null {
   try {
+    // Prep Kit (`lumora_prep_v8`) is the canonical source for live
+    // behavioral context — its `activeCompany` is what the user
+    // explicitly switched to in /lumora/prepkit (or via the in-panel
+    // CompanyContextPicker). Reading from `lumora_assistants` first
+    // would silently ignore those switches, which was the original bug:
+    // user picks "Fireworks SRE" in the picker → Sona keeps answering
+    // with whatever was stored in lumora_assistants[0] from a previous
+    // setup. Now Prep Kit wins; lumora_assistants is the fallback for
+    // older flows where no Prep Kit data exists.
+    const fromPrepKit = getAssistantFromPrepKit();
+    if (fromPrepKit) return fromPrepKit;
+
     const stored = localStorage.getItem('lumora_assistants');
     const list = stored ? (JSON.parse(stored) as LumoraAssistant[]) : [];
     const explicit = list[0];
-    // If the user has actually populated an assistant, use it.
-    if (explicit && (explicit.resume || explicit.jobDescription)) return explicit;
-    // Otherwise, fall back to materials uploaded in Prep Kit
-    // (`lumora_prep_v8`). Prep Kit was the disconnect — users uploaded
-    // JD/resume there expecting Sona to read them, but Sona only ever
-    // looked at `lumora_assistants`. Synthesize a virtual assistant
-    // from prep data so the live interview gets the same context.
-    return getAssistantFromPrepKit() || explicit || null;
+    return explicit || null;
   } catch {
     return null;
   }
