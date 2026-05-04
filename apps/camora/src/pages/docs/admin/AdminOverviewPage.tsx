@@ -32,43 +32,65 @@ export default function AdminOverviewPage() {
             </thead>
             <tbody>
               <tr style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5">apps/frontend</td><td className="px-4 py-2.5">Vercel</td>
+                <td className="px-4 py-2.5">apps/camora</td><td className="px-4 py-2.5">Vercel</td>
                 <td className="px-4 py-2.5">camora.cariara.com</td><td className="px-4 py-2.5">React 19 + Vite 8 + Tailwind 4</td>
               </tr>
               <tr style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5">apps/ascend-backend</td><td className="px-4 py-2.5">Railway</td>
-                <td className="px-4 py-2.5">caprab.cariara.com</td><td className="px-4 py-2.5">Node 20 + Express 5</td>
+                <td className="px-4 py-2.5">apps/ascend-backend</td><td className="px-4 py-2.5">Railway (Dockerfile)</td>
+                <td className="px-4 py-2.5">caprab.cariara.com + lumorab.cariara.com (Lumora data plane)</td><td className="px-4 py-2.5">Node 20 + Express 5</td>
               </tr>
               <tr style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5">apps/lumora-backend</td><td className="px-4 py-2.5">Railway</td>
-                <td className="px-4 py-2.5">lumorab.cariara.com</td><td className="px-4 py-2.5">Node 20 + Express 5</td>
+                <td className="px-4 py-2.5">apps/lumora-backend</td><td className="px-4 py-2.5">Railway (Dockerfile)</td>
+                <td className="px-4 py-2.5">lumorab.cariara.com (legacy / fallback)</td><td className="px-4 py-2.5">Node 20 + Express 5</td>
               </tr>
               <tr style={{ borderTop: '1px solid var(--border)' }}>
                 <td className="px-4 py-2.5">apps/ai-services</td><td className="px-4 py-2.5">Railway (Docker)</td>
-                <td className="px-4 py-2.5">internal only</td><td className="px-4 py-2.5">FastAPI + Whisper + diarization</td>
+                <td className="px-4 py-2.5">internal only</td><td className="px-4 py-2.5">FastAPI + resemblyzer (speaker diarization) + Graphviz (diagrams)</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5">apps/desktop</td><td className="px-4 py-2.5">DMG (manual)</td>
+                <td className="px-4 py-2.5">loads camora.cariara.com</td><td className="px-4 py-2.5">Electron 41, macOS arm64 only</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5">apps/mobile</td><td className="px-4 py-2.5">Expo (App Store / Play)</td>
+                <td className="px-4 py-2.5">loads ascend-backend APIs</td><td className="px-4 py-2.5">Expo / React Native (iOS + Android)</td>
               </tr>
             </tbody>
           </table>
         </div>
         <DocsCallout variant="note">
-          The Postgres database is shared across both backends — `@camora/shared-db` workspace package.
-          Both services run their own `runMigrations()` on startup; whichever boots first wins, the other
-          is a no-op due to <code>CREATE TABLE IF NOT EXISTS</code>.
+          <strong>Architecture shift:</strong> ascend-backend now hosts the canonical Lumora data
+          plane via <code>apps/ascend-backend/src/lumora/</code> — <code>/api/v1/transcribe</code>,
+          <code>/api/v1/inference</code>, <code>/api/v1/stream</code>, <code>/api/v1/coding/*</code>,
+          <code>/api/v1/conversations</code>, <code>/api/v1/speaker</code>,
+          <code>/api/v1/diagram</code>. The standalone lumora-backend remains as a fallback /
+          legacy host but production frontends call ascend.
+        </DocsCallout>
+        <DocsCallout variant="note">
+          Postgres is shared via <code>@camora/shared-db</code>. Ascend-backend now owns the
+          canonical migration sequence and additionally provisions the lumora-side tables
+          (<code>lumora_conversations</code>, <code>lumora_messages</code>, <code>lumora_usage_logs</code>,
+          <code>lumora_bookmarks</code>, <code>lumora_quotas</code>, <code>coding_usage</code>) on
+          boot. Lumora-backend&apos;s own <code>runMigrations()</code> is largely vestigial.
         </DocsCallout>
       </section>
 
       <section id="data-flow" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Data flow</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          A typical Lumora live request:
+          A typical Lumora live request, end-to-end:
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li>Browser → ascend-backend `/api/v1/transcribe` with audio chunk + auth.</li>
-          <li>ascend-backend → ai-services FastAPI for speaker diarization (drops user voice).</li>
-          <li>ascend-backend → OpenAI Whisper for speech-to-text.</li>
-          <li>Frontend posts the resulting question to `/api/v1/inference/stream`.</li>
-          <li>ascend-backend → Anthropic Claude with prompt cache + streaming response.</li>
-          <li>Every step records seconds + tokens to `ai_hours_usage` for budget tracking.</li>
+          <li>Browser &rarr; ascend-backend <code>/api/v1/transcribe</code> with audio chunk + auth.</li>
+          <li>ascend-backend &rarr; ai-services FastAPI for speaker diarization (drops user voice).</li>
+          <li>ascend-backend &rarr; OpenAI Whisper for speech-to-text. Deepgram is a configured
+            alternative provider when <code>DEEPGRAM_API_KEY</code> is set.</li>
+          <li>Frontend posts the resulting question to <code>/api/v1/stream</code> (or
+            <code>/api/v1/inference/conversations/:id/stream</code> for follow-ups in the same
+            conversation).</li>
+          <li>ascend-backend &rarr; Anthropic Claude (Sonnet 4.6 / Haiku 4.5) with Anthropic prompt
+            cache + Redis-backed answer cache + SSE streaming.</li>
+          <li>Every step records seconds + tokens to <code>ai_hours_usage</code> for budget tracking.</li>
         </ol>
       </section>
 
@@ -89,8 +111,11 @@ export default function AdminOverviewPage() {
       <section id="admin-access" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Admin access</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Admins are configured via the <code>ADMIN_EMAILS</code> env var on ascend-backend (comma-separated).
-          Default: <code>chundubabu@gmail.com,babuchundu@gmail.com</code>.
+          Admins are configured via the <code>OWNER_EMAILS</code> / <code>ADMIN_EMAILS</code> env
+          vars on ascend-backend (comma-separated). <strong>No hardcoded fallback in source</strong>
+          &mdash; if the env is unset, no one is admin. The frontend mirrors this via
+          <code className="ml-1">VITE_OWNER_EMAILS</code> for UI gating; the backend always
+          enforces the real check.
         </p>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Admin surfaces:
