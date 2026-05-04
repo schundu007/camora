@@ -54,8 +54,8 @@ export default function DocsPageLayout({
         <div className="w-full mx-auto px-6 lg:px-10" style={{ maxWidth: 1440 }}>
           <div className="flex gap-8">
             <aside
-              className="hidden lg:block flex-shrink-0 py-8"
-              style={{ width: 240, borderRight: '1px solid var(--border)' }}
+              className="docs-sidebar-shell hidden lg:block flex-shrink-0 py-8"
+              style={{ width: 248, borderRight: '1px solid var(--border)' }}
               aria-label="Docs navigation"
             >
               <div className="sticky top-6 pr-4">
@@ -64,7 +64,7 @@ export default function DocsPageLayout({
             </aside>
 
             <div className="flex-1 min-w-0 flex gap-10">
-              <main className="flex-1 min-w-0 py-8" style={{ maxWidth: 860 }}>
+              <main className="docs-page flex-1 min-w-0 py-8" style={{ maxWidth: 860 }}>
                 <DocsSidebarMobile />
                 <div className="mb-4">
                   <DocsBreadcrumbs items={fullCrumbs} />
@@ -135,8 +135,8 @@ export default function DocsPageLayout({
               </main>
 
               <aside
-                className="hidden xl:block flex-shrink-0 py-8"
-                style={{ width: 200 }}
+                className="docs-rail-shell hidden xl:block flex-shrink-0 py-8"
+                style={{ width: 220 }}
                 aria-label="On this page"
               >
                 <div className="sticky top-6">
