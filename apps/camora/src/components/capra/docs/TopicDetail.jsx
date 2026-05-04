@@ -1684,7 +1684,7 @@ export default function TopicDetail({
                             <img
                               src={topicDetails.productMeta.screenshotUrl}
                               alt={topicDetails.productMeta.name}
-                              className="rounded border border-[var(--border)]"
+                              className="img-bespoke rounded border border-[var(--border)]"
                               style={{ maxWidth: '180px', maxHeight: '220px', objectFit: 'contain' }}
                             />
                           </div>

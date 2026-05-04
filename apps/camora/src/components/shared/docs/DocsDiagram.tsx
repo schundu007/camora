@@ -11,12 +11,17 @@ export interface DocsDiagramProps {
   label?: string;
   /** Max image width inside the frame. Default: 100%. */
   maxWidth?: string | number;
+  /** Max image height. Tall PNGs scale down to this; small images keep
+   *  their natural size. Default 480px — uniform across docs pages. */
+  maxHeight?: string | number;
 }
 
 /**
  * Standardized figure block for the docs site. Renders a Graphviz-rendered PNG
  * inside a bordered frame with a caption. Wide images scroll horizontally
- * inside the frame rather than overflowing the column.
+ * inside the frame rather than overflowing the column. Tall images cap
+ * at maxHeight so a single doc page doesn't show a 200px screenshot next
+ * to a 1200px architecture diagram.
  */
 export default function DocsDiagram({
   src,
@@ -24,6 +29,7 @@ export default function DocsDiagram({
   caption,
   label,
   maxWidth = '100%',
+  maxHeight = 480,
 }: DocsDiagramProps) {
   return (
     <figure className="my-6">
@@ -52,7 +58,10 @@ export default function DocsDiagram({
             display: 'block',
             margin: '0 auto',
             maxWidth,
+            maxHeight,
+            width: 'auto',
             height: 'auto',
+            objectFit: 'contain',
           }}
         />
       </div>

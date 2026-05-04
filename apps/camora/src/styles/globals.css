@@ -1674,6 +1674,32 @@ img { max-width: 100%; height: auto; }
   text-decoration-color: var(--cam-gold-leaf);
 }
 
+/* ── Image sizing — uniform max bounds, never enlarges small images ──
+ * Caps oversized PNGs / screenshots so a doc page never alternates
+ * between a 200px logo and a 1500px architecture diagram. Uses max-*
+ * (not width/height) so naturally small images keep their natural
+ * size — only over-tall / over-wide images get clamped.
+ *
+ * Opt-out: add the `img-bespoke` class to the <img> when a specific
+ * surface explicitly wants its own dimensions (e.g. a 180×220 product
+ * thumbnail next to text — the wrapper there already constrains it).
+ */
+.docs-page img:not(.img-bespoke),
+.prep-content img:not(.img-bespoke) {
+  max-width: 100%;
+  max-height: 480px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+/* When the image is the primary visual inside a <figure>, center it and
+ * give it a touch more breathing room. */
+.docs-page figure > img:not(.img-bespoke),
+.prep-content figure > img:not(.img-bespoke) {
+  display: block;
+  margin: 0 auto;
+}
+
 /* ── Tables — gold-leaf header band ──────────────────────────────── */
 .docs-page table thead th {
   background: linear-gradient(180deg,
