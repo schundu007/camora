@@ -66,12 +66,17 @@ const INITIAL_STATE: PrepData = {
   data: {},
 };
 
+// All sidebar sections share the docs design palette (navy primary +
+// gold leaf for "done"). The previous setup had HR Questions in
+// warning yellow and Hiring Manager in accent — that rainbow is gone
+// in favour of one uniform palette across the rail. Section identity
+// now reads from the label, not the dot colour.
 const SIDEBAR_SECTIONS = [
   { id: 'input', label: 'Input Materials', color: 'var(--cam-primary)' },
   { id: 'jd-view', label: 'Job Description', color: 'var(--cam-primary)' },
   { id: 'pitch', label: 'Elevator Pitch', color: 'var(--cam-primary)' },
-  { id: 'hr', label: 'HR Questions', color: 'var(--warning-text)' },
-  { id: 'hiring-manager', label: 'Hiring Manager', color: 'var(--accent)' },
+  { id: 'hr', label: 'HR Questions', color: 'var(--cam-primary)' },
+  { id: 'hiring-manager', label: 'Hiring Manager', color: 'var(--cam-primary)' },
   { id: 'coding', label: 'Coding', color: 'var(--cam-primary)' },
   { id: 'system-design', label: 'System Design', color: 'var(--cam-primary)' },
   { id: 'behavioral', label: 'Behavioral', color: 'var(--cam-primary)' },
@@ -810,7 +815,14 @@ function PrepContentRenderer({ content }: { content: any }) {
   } else if (questionsArr && questionsArr.length > 0) {
     mark('questions');
     els.push(
-      <div key="questions" className="space-y-5">
+      // Multi-column flow on wider viewports — each question card is
+      // independent so they pack nicely. items-start so a tall card
+      // (lots of STAR / code) doesn't stretch its short neighbour.
+      <div
+        key="questions"
+        className="grid gap-4 items-start"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))' }}
+      >
         {questionsArr.map((q: any, i: number) => {
           const title = q.question || q.title || q.text || q.scenario || `Question ${i + 1}`;
           const qRendered = new Set(['question', 'title', 'text', 'scenario']);
@@ -2071,12 +2083,21 @@ function FormattedJD({ text }: { text: string }) {
     />
   );
 
+  // Long-list sections (10+ items) stay full-width because cramming them
+  // into a half-column squashes the bullets. Short / medium sections flow
+  // in a 2-up grid so the JD page reads in roughly half the vertical
+  // space. Tweak threshold here if list density changes.
+  const isLongList = (s: { items: string[] }) => s.items.length > 10;
+
   return (
-    <div className="flex flex-col gap-4">
+    <div
+      className="grid gap-3 md:gap-4"
+      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))' }}
+    >
       {heroTitle && (
         <div
           className="relative rounded-2xl overflow-hidden px-6 pl-7 py-6"
-          style={cardChrome}
+          style={{ ...cardChrome, gridColumn: '1 / -1' }}
         >
           <NavyStrip />
           <span
@@ -2108,6 +2129,7 @@ function FormattedJD({ text }: { text: string }) {
           style={{
             ...cardChrome,
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gridColumn: '1 / -1',
           }}
         >
           <NavyStrip />
@@ -2155,11 +2177,12 @@ function FormattedJD({ text }: { text: string }) {
       {content.map((sec, i) => {
         const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
         const icon = iconForSection(sec.title, tone);
+        const wide = isLongList(sec);
         return (
           <div
             key={i}
             className="relative rounded-2xl overflow-hidden"
-            style={cardChrome}
+            style={{ ...cardChrome, ...(wide ? { gridColumn: '1 / -1' } : null) }}
           >
             <NavyStrip />
             {sec.title && (
@@ -2807,15 +2830,25 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
               <button key={s.id} onClick={() => { setActiveSection(s.id); setMobileSidebarOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
-                  background: isActive ? 'var(--accent-subtle)' : 'transparent',
+                  background: isActive
+                    ? 'color-mix(in srgb, var(--cam-gold-leaf) 12%, var(--bg-elevated))'
+                    : 'transparent',
                   color: isActive ? 'var(--cam-primary)' : 'var(--text-muted)',
-                  borderLeft: isActive ? `3px solid var(--cam-primary)` : '3px solid transparent',
+                  borderLeft: isActive
+                    ? `3px solid var(--cam-primary)`
+                    : '3px solid transparent',
+                  borderRight: isActive
+                    ? `1px solid var(--cam-gold-leaf)`
+                    : '1px solid transparent',
                 }}>
-                {/* Status indicator */}
+                {/* Status indicator — gold leaf when done, gold-leaf
+                    spinner when generating, danger red on error,
+                    neutral border tone when empty. No rainbow per
+                    section. */}
                 {sectionStatus[s.id] === 'generating' ? (
-                  <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: s.color, borderTopColor: 'transparent' }} />
+                  <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
                 ) : sectionStatus[s.id] === 'done' || hasContent ? (
-                  <div className="w-3 h-3 rounded-full shrink-0 flex items-center justify-center" style={{ background: s.color }}>
+                  <div className="w-3 h-3 rounded-full shrink-0 flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf)' }}>
                     <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                   </div>
                 ) : sectionStatus[s.id] === 'error' ? (
