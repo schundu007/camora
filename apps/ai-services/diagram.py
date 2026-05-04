@@ -121,18 +121,113 @@ def _extract_python_code(text: str) -> str:
     return text.strip()
 
 
-def _sanitize_code(code: str) -> str:
-    """Block obviously dangerous patterns in LLM-generated code.
+import ast as _ast
 
-    This is a defense-in-depth check ONLY. The real security
-    boundary is the X-API-Key gate on /diagram/generate plus the
-    OS-level sandbox the runner script is executed in (subprocess
-    with capped timeout, no shell, no network egress assumed). The
-    pattern list is intentionally broad to catch the obvious
-    ways LLM output could try to escape the diagrams library —
-    `__import__`, getattr-on-builtins, importlib variants, file IO
-    helpers, network syscalls, dangerous serialisers — even though
-    each is bypassable in isolation.
+
+# Modules the diagrams DSL needs. Anything else is rejected at import
+# time. `diagrams.*` covers Diagram, Cluster, Edge, plus every cloud
+# provider node submodule (diagrams.aws.compute, diagrams.gcp.network,
+# etc.). The `diagrams` parent and the unconditional shape submodules
+# are also added because some prompts use `from diagrams.generic`.
+_ALLOWED_TOP_LEVEL_MODULES = ("diagrams",)
+
+# Names that may NEVER appear as a Name / Attribute access in the
+# generated code, regardless of context. These are the canonical
+# Python sandbox-escape primitives — getting at any one of them is
+# enough to construct a bypass via __subclasses__ / __mro__ etc.
+_FORBIDDEN_NAMES = frozenset({
+    "__import__", "__builtins__", "__loader__", "__spec__",
+    "__class__", "__bases__", "__mro__", "__subclasses__",
+    "__globals__", "__locals__", "__dict__", "__module__",
+    "__init_subclass__", "__getattribute__", "__getattr__",
+    "__base__", "__weakref__",
+    "eval", "exec", "compile", "open",
+    "getattr", "setattr", "delattr", "vars", "globals", "locals",
+    "input", "exit", "quit", "help",
+    "memoryview", "object",
+    "breakpoint",
+})
+
+
+def _ast_walk_safe(tree: _ast.AST) -> None:
+    """Walk every node and reject Python the diagram sandbox shouldn't
+    accept. Defense-in-depth: this catches the bypasses the substring
+    pre-check misses (Unicode escape, string concat, dunder traversal,
+    `().__class__.__bases__[0].__subclasses__()`, etc.).
+
+    Allowed:
+      • Imports of `diagrams` and its submodules.
+      • Name / attribute / call / literal / control flow within the
+        `diagrams` DSL surface.
+    Rejected:
+      • Any Name in _FORBIDDEN_NAMES.
+      • Any Attribute access whose attr is in _FORBIDDEN_NAMES (so
+        `obj.__class__` is blocked even when the obj is unknown).
+      • Any Attribute whose attr starts with `__` and ends with `__`
+        — broad dunder block, no legit diagram code needs them.
+      • Any `from X import Y` / `import X` where X isn't in
+        _ALLOWED_TOP_LEVEL_MODULES.
+      • Any Subscript whose value is a Name in _FORBIDDEN_NAMES
+        (e.g. `__builtins__['eval']`).
+    """
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.Import):
+            for alias in node.names:
+                root = alias.name.split(".", 1)[0]
+                if root not in _ALLOWED_TOP_LEVEL_MODULES:
+                    raise ValueError(
+                        f"Generated code imports disallowed module: {alias.name}"
+                    )
+        elif isinstance(node, _ast.ImportFrom):
+            mod = (node.module or "").split(".", 1)[0]
+            if mod not in _ALLOWED_TOP_LEVEL_MODULES:
+                raise ValueError(
+                    f"Generated code imports disallowed module: {node.module}"
+                )
+        elif isinstance(node, _ast.Name):
+            if node.id in _FORBIDDEN_NAMES:
+                raise ValueError(
+                    f"Generated code references forbidden name: {node.id}"
+                )
+        elif isinstance(node, _ast.Attribute):
+            attr = node.attr
+            if attr in _FORBIDDEN_NAMES:
+                raise ValueError(
+                    f"Generated code accesses forbidden attribute: .{attr}"
+                )
+            # Block every dunder attribute. Legit diagram code never
+            # needs them; the only reason to walk dunder chains is to
+            # break out of the sandbox.
+            if attr.startswith("__") and attr.endswith("__") and len(attr) > 4:
+                raise ValueError(
+                    f"Generated code accesses dunder attribute: .{attr}"
+                )
+        elif isinstance(node, _ast.Subscript):
+            value = node.value
+            if isinstance(value, _ast.Name) and value.id in _FORBIDDEN_NAMES:
+                raise ValueError(
+                    f"Generated code subscripts forbidden name: {value.id}"
+                )
+
+
+def _sanitize_code(code: str) -> str:
+    """Defense-in-depth code review on LLM output before subprocess exec.
+
+    Two layers:
+      1. A fast substring pre-check that rejects obviously dangerous
+         tokens at literal text level. Bypassable in isolation but
+         cheap and catches the common cases without parsing.
+      2. An AST-level walk that catches the pre-check's blind spots —
+         Unicode-escaped names (\\u006fs.system passes step 1), string-
+         concat dunder access (`'ev'+'al'` resolved at runtime via
+         getattr), `__class__.__bases__[0].__subclasses__()` walks,
+         `__builtins__['eval']` subscripts, and disallowed imports.
+
+    The real security boundary is still the OS-level subprocess
+    sandbox (Docker user / seccomp / network namespace), which is
+    NOT implemented here — these checks raise the cost of bypass but
+    aren't a substitute for kernel-level isolation. Track the sandbox
+    work in the security audit follow-ups.
     """
     blocked = [
         # Direct module access
@@ -156,6 +251,14 @@ def _sanitize_code(code: str) -> str:
     for pattern in blocked:
         if pattern.lower() in lowered:
             raise ValueError(f"Generated code contains blocked pattern: {pattern}")
+
+    # AST pass — definitive check. Any parse failure here is itself a
+    # rejection: legit diagrams code is always parseable Python.
+    try:
+        tree = _ast.parse(code, filename="<llm-diagram>", mode="exec")
+    except SyntaxError as exc:
+        raise ValueError(f"Generated code is not valid Python: {exc.msg}") from exc
+    _ast_walk_safe(tree)
 
     # Ensure show=False is present
     if "show=False" not in code:
@@ -256,18 +359,19 @@ async def generate_diagram(request: DiagramRequest):
                 detail=f"Diagram generation failed: {stderr[:500]}",
             )
 
-        # The diagrams library writes <filename>.png
+        # The diagrams library writes <filename>.png. Earlier code fell
+        # back to "first PNG in tmpdir" if output.png was missing — but
+        # that's an exfil channel: a sandbox-bypassed payload could
+        # write arbitrary bytes to any *.png filename in tmpdir and the
+        # API would round-trip them as the answer. Now we only honour
+        # the literal output.png path; missing-file is a 500 with a
+        # clear error so the prompt can be tightened.
         png_path = os.path.join(tmpdir, "output.png")
         if not os.path.exists(png_path):
-            # Sometimes the library appends the diagram name — search for any PNG
-            pngs = [f for f in os.listdir(tmpdir) if f.endswith(".png")]
-            if pngs:
-                png_path = os.path.join(tmpdir, pngs[0])
-            else:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Diagram code ran but no PNG was produced",
-                )
+            raise HTTPException(
+                status_code=500,
+                detail="Diagram code ran but no PNG was produced",
+            )
 
         with open(png_path, "rb") as img:
             image_bytes = img.read()
