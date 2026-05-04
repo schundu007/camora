@@ -34,6 +34,11 @@ router.use(authenticate);
 router.post('/enroll', upload.any(), async (req, res) => {
   // Accept both 'audio' and 'file' field names
   if (req.files?.length > 0) req.file = req.files[0];
+  // Track per-request temp file paths so the finally cleanup can unlink
+  // EXACTLY these files. Declared OUTSIDE the try so finally can see
+  // it even when an early `if (!req.file)` returns before the paths
+  // are populated.
+  const myFiles = [];
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
@@ -44,6 +49,7 @@ router.post('/enroll', upload.any(), async (req, res) => {
     const tmpDir = os.tmpdir();
     const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
     const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
+    myFiles.push(inputPath, wavPath);
 
     fs.writeFileSync(inputPath, req.file.buffer);
 
@@ -93,14 +99,14 @@ router.post('/enroll', upload.any(), async (req, res) => {
     console.error('[Speaker] Enroll error:', err);
     return res.status(500).json({ error: 'Speaker enrollment failed' });
   } finally {
-    try {
-      const tmpDir = os.tmpdir();
-      for (const f of fs.readdirSync(tmpDir)) {
-        if (f.startsWith('enroll-') && (f.endsWith('.webm') || f.endsWith('.wav'))) {
-          try { fs.unlinkSync(path.join(tmpDir, f)); } catch {}
-        }
-      }
-    } catch {}
+    // Per-request cleanup. Previous version readdir'd tmpdir and
+    // unlinked every `enroll-*.{webm,wav}` — concurrent enrollments
+    // racing on the same prefix would destroy each other's
+    // in-flight files (ffmpeg ENOENT mid-conversion → corrupt WAVs
+    // posted to ai-services). Only touch the IDs we created.
+    for (const p of myFiles) {
+      try { fs.unlinkSync(p); } catch { /* missing or busy — fine */ }
+    }
   }
 });
 
