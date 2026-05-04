@@ -112,6 +112,8 @@ export default function AdminLumoraCodingPage() {
             { route: '/api/v1/coding/fix', method: 'POST', purpose: 'Auto-repair code that failed the candidate\'s tests.' },
             { route: '/api/v1/coding/translate', method: 'POST', purpose: 'Translate the current solution to another language without re-solving.' },
             { route: '/api/v1/coding/fetch-problem', method: 'POST', purpose: 'Fetch a URL (LeetCode via GraphQL, others via raw HTML strip + Haiku extraction).' },
+            { route: '/api/v1/coding/extract-from-image', method: 'POST', purpose: 'Anthropic vision (Haiku 4.5) extracts a problem statement from an uploaded screenshot.' },
+            { route: '/api/v1/coding/capture', method: 'POST', purpose: 'Capture-driven flow used by the desktop screenshot path; mirror of fetch-problem for image inputs.' },
           ]}
         />
       </section>
@@ -165,7 +167,7 @@ export default function AdminLumoraCodingPage() {
         </p>
         <DocsDiagram
           src="/diagrams/docs/lumora-coding/three-pass-reliability.png"
-          alt="State machine for the 3-pass reliability strategy: Pass 1 streams from the tier model with up to 2 transport-layer retries on transient 5xx and 429 errors. On parse failure, Pass 2 retries non-streaming with a STRICT_JSON_REMINDER prompt. On still-invalid output, Pass 3 retries non-streaming with the opposite-tier fallback model. Success at any pass emits the answer event with recovery_pass; total failure emits the error event."
+          alt="State machine for the 3-pass reliability strategy: Pass 1 streams from the tier model with up to 2 transport-layer retries on transient 5xx and 429 errors. On parse failure, Pass 2 retries non-streaming with a STRICT_JSON_REMINDER prompt. On still-invalid output, Pass 3 retries non-streaming with the tier's fallback model — paid tier escalates DOWN to Haiku 4.5 (cheaper, often more JSON-reliable); free tier escalates UP to Sonnet 4.6 (more capable). Success at any pass emits the answer event with recovery_pass; total failure emits the error event."
           label="Figure 3 — 3-pass reliability state machine"
           caption="The recovery_pass field on the answer event lets observability dashboards measure how often each pass actually fires. In practice Pass 1 succeeds for the vast majority of requests."
         />

@@ -12,6 +12,7 @@ export default function AdminStripePage() {
       onThisPage={[
         { id: 'price-ids', label: 'Price IDs' },
         { id: 'live-mappings', label: 'Live mappings', depth: 1 },
+        { id: 'team-product', label: 'Team product (dynamic)' },
         { id: 'webhook', label: 'Webhook configuration' },
         { id: 'test-mode', label: 'Test mode walkthrough' },
       ]}
@@ -52,17 +53,35 @@ export default function AdminStripePage() {
                 <td className="px-4 py-2.5"><code>STRIPE_PRICE_TOPUP_1H</code></td>
                 <td className="px-4 py-2.5"><code>price_1THiagITUCNxtMxlG8idH0Cz</code></td>
                 <td className="px-4 py-2.5">$15</td>
-                <td className="px-4 py-2.5">Camora Hr Rate · 1 AI hour, 90-day expiry, no subscription</td>
+                <td className="px-4 py-2.5">Camora Hr Rate · 1 AI hour, never expires, supports quantity 1&ndash;50</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <DocsCallout variant="info">
-          The frontend uses the price keys <code>pro_monthly</code> / <code>pro_yearly</code> /{' '}
+        <DocsCallout variant="note">
+          The frontend uses the price keys <code>pro_monthly</code> / <code>pro_yearly</code> /
           <code>topup_1h</code> as stable internal IDs. The Stripe Dashboard prices behind them
-          can be re-pointed at any time by changing the env vars — no code deploy needed.
+          can be re-pointed at any time by changing the env vars &mdash; no code deploy needed.
         </DocsCallout>
+      </section>
+
+      <section id="team-product" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">Team product (dynamic price)</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          The Team plan is dynamic-priced (5&ndash;50 seats), so it&apos;s a single Stripe
+          <strong> Product</strong> &mdash; not a fixed Price &mdash; with the unit amount computed
+          per checkout via <code>price_data</code>.
+        </p>
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          <li><code>STRIPE_PRODUCT_TEAM</code> &mdash; the Stripe product ID. Required for team
+            checkout; without it, <code>POST /api/v1/billing/checkout</code> with
+            <code> &#123; plan: &apos;team&apos;, seats: N &#125;</code> returns 503.</li>
+          <li>Per-checkout amount: <code>seats × $20 &minus; $1</code> per month
+            (e.g. 10 seats &rarr; $199/mo).</li>
+          <li>Per-checkout included hours: <code>⌈seats × 0.7⌉</code> per month
+            (e.g. 10 seats &rarr; 7 hrs).</li>
+        </ul>
       </section>
 
       <section id="webhook" className="mb-10 scroll-mt-24">
@@ -91,11 +110,24 @@ export default function AdminStripePage() {
 
       <section id="test-mode" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Test mode walkthrough</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Camora doesn&apos;t run a Railway staging environment, so test against your local backend:
+        </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Toggle Stripe Dashboard to test mode. Create the same set of products + prices.</li>
-          <li>Set the <code>STRIPE_PRICE_*</code> env vars on a Railway preview environment to the test IDs.</li>
-          <li>Use Stripe's test cards (e.g. <code>4242 4242 4242 4242</code> any expiry/CVC) to run end-to-end.</li>
-          <li>Use the Stripe CLI to forward webhooks: <code>stripe listen --forward-to localhost:8000/api/billing/webhook</code></li>
+          <li>In your local <code>.env</code> for ascend-backend, set
+            <code className="mx-1">STRIPE_SECRET_KEY</code>,
+            <code className="mx-1">STRIPE_PRICE_PRO_MONTHLY</code>,
+            <code className="mx-1">STRIPE_PRICE_PRO_YEARLY</code>,
+            <code className="mx-1">STRIPE_PRICE_TOPUP_1H</code>,
+            <code className="mx-1">STRIPE_PRODUCT_TEAM</code> to the test-mode IDs.</li>
+          <li>Run <code>pnpm dev:ascend</code>. Use Stripe&apos;s test cards (e.g.
+            <code className="mx-1">4242 4242 4242 4242</code> with any future expiry / CVC) to run
+            end-to-end.</li>
+          <li>Use the Stripe CLI to forward webhooks to your local server:
+            <code className="ml-1">stripe listen --forward-to localhost:3009/api/billing/webhook</code>.
+            Set <code className="mx-1">STRIPE_WEBHOOK_SECRET</code> from <code>stripe listen</code>&apos;s
+            output.</li>
         </ol>
       </section>
     </DocsPageLayout>

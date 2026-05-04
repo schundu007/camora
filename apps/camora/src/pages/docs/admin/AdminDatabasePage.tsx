@@ -23,9 +23,23 @@ export default function AdminDatabasePage() {
         </p>
         <h3 className="text-base font-bold mt-4 mb-2">User &amp; auth</h3>
         <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><code>users</code> — id, email, name, plan_type (free / pro_monthly / pro_yearly / team), provider (google), avatar.</li>
-          <li><code>ascend_subscriptions</code> — Stripe customer/sub IDs, period boundaries, cancel_at_period_end, auto_topup_pack, auto_topup_monthly_cap_cents.</li>
+          <li><code>users</code> &mdash; id, email, name, plan_type
+            (<code>free</code> / <code>pro_monthly</code> / <code>pro_yearly</code> / <code>team</code> / <code>lifetime</code>),
+            provider (google), avatar.</li>
+          <li><code>ascend_subscriptions</code> &mdash; Stripe customer / sub IDs, period
+            boundaries, cancel_at_period_end, auto_topup_pack, auto_topup_monthly_cap_cents,
+            challenger-feature columns (is_challenger, challenger_qualified_at,
+            challenger_quiz_score, challenger_credits_remaining).</li>
         </ul>
+        <DocsCallout variant="warning" label="Bootstrap hazard">
+          The billing-side tables &mdash; <code>ascend_subscriptions</code>,
+          <code>ascend_credits</code>, <code>ascend_stripe_events</code>,
+          <code>ascend_credit_transactions</code>, <code>ascend_free_usage</code> &mdash; are
+          referenced via <code>ALTER TABLE</code> in the in-code migration sequence but their
+          original <code>CREATE TABLE</code> statements no longer live in source. Bootstrapping a
+          brand-new database from current code alone <strong>will not</strong> create them &mdash;
+          they need to be created manually before the backend will fully boot.
+        </DocsCallout>
         <h3 className="text-base font-bold mt-4 mb-2">Hour metering</h3>
         <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
           <li><code>ai_hours_usage</code> — every LLM call. surface, seconds, tokens_in/out, model, plan_at_charge, team_id.</li>
@@ -40,15 +54,39 @@ export default function AdminDatabasePage() {
         </ul>
         <h3 className="text-base font-bold mt-4 mb-2">Lumora content</h3>
         <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><code>lumora_conversations</code>, <code>lumora_messages</code> — conversation history.</li>
-          <li><code>lumora_usage_logs</code> — per-call latency + tokens (legacy, parallels ai_hours_usage).</li>
-          <li><code>ascend_diagram_cache</code> — system design diagrams keyed by problem hash.</li>
+          <li><code>lumora_conversations</code>, <code>lumora_messages</code> &mdash; conversation
+            history.</li>
+          <li><code>lumora_usage_logs</code> &mdash; per-call latency + tokens (legacy, parallels
+            ai_hours_usage).</li>
+          <li><code>lumora_bookmarks</code>, <code>lumora_quotas</code>, <code>coding_usage</code> &mdash;
+            user-state tables.</li>
+          <li><code>lumora_audio_preferences</code> &mdash; persisted audio-setup-wizard choices
+            (capture method, mic, speaker, etc.) so users get the same setup across devices.</li>
+          <li><code>lumora_company_context</code> &mdash; per-user / per-job target-company context
+            for personalized answers.</li>
+          <li><code>lumora_prep_state</code> &mdash; persisted prep-flow state.</li>
+          <li><code>lumora_completion_marks</code> &mdash; topic / problem completion markers.</li>
+          <li><code>ascend_diagram_cache</code> &mdash; system design diagrams keyed by problem
+            hash (L2 cache; the in-memory LRU is L1).</li>
+        </ul>
+        <h3 className="text-base font-bold mt-4 mb-2">Engagement / gamification</h3>
+        <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+          <li><code>ascend_certificates</code>, <code>ascend_challenger_activity</code>,
+            <code>ascend_weekly_leaderboard</code> &mdash; challenger / leaderboard feature.</li>
+          <li><code>ascend_prep_plans</code>, <code>ascend_prep_progress</code> &mdash; user prep
+            plans and progress.</li>
+          <li><code>ascend_referrals</code>, <code>ascend_badges</code>,
+            <code>ascend_score_cards</code> &mdash; gamification.</li>
+        </ul>
+        <h3 className="text-base font-bold mt-4 mb-2">Telemetry</h3>
+        <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+          <li><code>active_sessions</code>, <code>usage_tracking</code>, <code>page_views</code>,
+            <code>site_visitors</code> &mdash; analytics tables.</li>
         </ul>
         <h3 className="text-base font-bold mt-4 mb-2">Misc</h3>
         <ul className="list-disc pl-6 space-y-1.5 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><code>ascend_stripe_events</code> — webhook idempotency.</li>
-          <li><code>ascend_topic_reads</code> — per-user topic read tracking for free-tier gating.</li>
-          <li><code>ascend_referrals</code>, <code>ascend_badges</code>, <code>ascend_score_cards</code> — gamification.</li>
+          <li><code>ascend_stripe_events</code> &mdash; webhook idempotency.</li>
+          <li><code>ascend_topic_reads</code> &mdash; per-user topic read tracking.</li>
         </ul>
       </section>
 
@@ -111,7 +149,10 @@ ORDER BY used / NULLIF(t.hours_pool_total, 0) DESC;`}
       <section id="manual-fixes" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Manual fixes</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li><strong>Grant a user free hours</strong>: <code>INSERT INTO ai_hour_topups (user_id, hours, amount_cents, expires_at) VALUES (X, 5, 0, NOW() + INTERVAL '90 days');</code></li>
+          <li><strong>Grant a user free hours</strong>:
+            <code className="ml-1">INSERT INTO ai_hour_topups (user_id, hours, amount_cents, expires_at, source) VALUES (X, 5, 0, NULL, 'admin_grant');</code>
+            (paid top-ups never expire &mdash; <code>expires_at</code> is nullable; the
+            <code>source</code> column distinguishes admin grants from real purchases.)</li>
           <li><strong>Force-cancel a stuck subscription</strong>: <code>UPDATE ascend_subscriptions SET status = 'cancelled', cancel_at_period_end = true WHERE user_id = X;</code> (don't forget Stripe).</li>
           <li><strong>Reset a team's pool mid-period</strong>: <code>UPDATE teams SET hours_pool_period_start = NOW() WHERE id = X;</code></li>
         </ul>

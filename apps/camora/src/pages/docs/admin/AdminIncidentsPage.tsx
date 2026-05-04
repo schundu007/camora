@@ -11,6 +11,7 @@ export default function AdminIncidentsPage() {
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Incidents' }]}
       onThisPage={[
         { id: 'llm-down', label: 'LLM provider returns 5xx' },
+        { id: 'ai-services-401', label: 'AI services 401 / 403' },
         { id: 'stripe-down', label: 'Stripe down' },
         { id: 'gate-misfire', label: 'Pool gate misfire' },
         { id: 'auto-topup-runaway', label: 'Auto top-up runaway' },
@@ -33,8 +34,35 @@ export default function AdminIncidentsPage() {
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Check Anthropic status page (<code>status.anthropic.com</code>) and OpenAI's.</li>
           <li>If sustained, post a banner via the admin tools (or hardcode in <code>SiteNav</code> for fastest deploy).</li>
-          <li>The auto-fallback (Claude → OpenAI) handles partial failures — see <code>solve.js</code>'s autoSwitch path.</li>
+          <li>Tier fallback (Sonnet 4.6 &rarr; Haiku 4.5) handles partial failures &mdash; see
+            the <code>autoSwitch</code> path in <code>routes/solve.js</code>. There is no
+            cross-provider Claude &rarr; OpenAI fallback today.</li>
         </ol>
+      </section>
+
+      <section id="ai-services-401" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">AI services 401 / 403</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Symptoms: speaker diarization or diagram generation fails with auth errors;
+          ascend / lumora backend logs show 401 or 403 from the ai-services proxy.
+        </p>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Cause: every non-<code>/health</code> request to ai-services must include an
+          <code className="mx-1">X-API-Key</code> header matching <code>AI_SERVICES_API_KEY</code>.
+          When the key drifts between services (e.g. rotated on ai-services but not on the callers,
+          or vice versa), all calls reject. Until 2026-04 a Starlette middleware bug also swallowed
+          <code>HTTPException</code> as 500 instead of returning the correct 401/403; if you see
+          unexplained 500s from ai-services, double-check the dispatch handler returns
+          <code className="mx-1">JSONResponse</code> directly.
+        </p>
+        <p className="text-[15px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
+          Recovery:
+        </p>
+        <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          <li>Verify <code>AI_SERVICES_API_KEY</code> on ai-services, ascend-backend, and
+            lumora-backend match exactly. Single shared secret, never per-service keys.</li>
+          <li>Restart the affected service(s) after rotating.</li>
+        </ul>
       </section>
 
       <section id="stripe-down" className="mb-10 scroll-mt-24">
@@ -137,9 +165,10 @@ export default function AdminIncidentsPage() {
           <li>Verified Railway env vars: if <code>CLAUDE_MODEL_PAID</code> is set there, the env wins over the code default — must also be updated to a current ID.</li>
         </ul>
         <DocsCallout variant="warning">
-          Hardcoded model IDs across the codebase is a recurring tax. The model picker in Lumora Settings
-          (in progress) will let users override per-surface so future model bumps only require updating
-          the central registry in <code>apps/frontend/src/lib/claude-models.ts</code> plus any backend
+          Hardcoded model IDs across the codebase is a recurring tax. The model picker in Lumora
+          Settings (in progress) will let users override per-surface so future model bumps only
+          require updating the central registry in
+          <code className="mx-1">apps/camora/src/lib/claude-models.ts</code> plus any backend
           fallback constants.
         </DocsCallout>
       </section>

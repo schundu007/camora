@@ -178,10 +178,11 @@ export default function AdminLumoraDesignPage() {
 
         <h3 id="lld-sanitizer" className={sectionH3}>Code sanitizer</h3>
         <p className={bodyP} style={bodyColor}>
-          The diagram engine asks Anthropic to emit Python — and then executes it. That's a
-          dangerous shape unless the input is locked down. The sanitizer in{' '}
-          <code style={inlineCode}>apps/ascend-backend/src/services/diagram_engine.py</code> uses
-          two techniques to make false positives rare and bypasses hard:
+          The diagram engine asks Anthropic to emit Python &mdash; and then executes it.
+          That&apos;s a dangerous shape unless the input is locked down. The sanitizer in
+          <code style={inlineCode}>apps/ai-services/diagram.py</code> (the
+          <code style={inlineCode}> _sanitize_code</code> function) uses two techniques to make
+          false positives rare and bypasses hard:
         </p>
         <ol className="list-decimal pl-6 space-y-1.5 text-[14.5px] mb-3" style={bodyColor}>
           <li>

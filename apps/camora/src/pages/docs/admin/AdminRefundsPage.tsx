@@ -74,11 +74,20 @@ export default function AdminRefundsPage() {
 
       <section id="after-approval" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">What happens after approval</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Approve / deny hits the API endpoints
+          <code className="mx-1">POST /api/v1/teams/admin/refund-requests/:id/approve</code> and
+          <code className="mx-1">POST /api/v1/teams/admin/refund-requests/:id/deny</code>. On
+          approval the backend:
+        </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li>Stripe issues the refund to the original payment method (5-10 business days for the user).</li>
-          <li><code>ai_hour_topups.refunded_at = NOW()</code> — pool calc immediately excludes those hours.</li>
-          <li><code>topup_refund_requests.status = 'approved'</code> + Stripe refund ID stored.</li>
-          <li>User's UI badge flips from "pending" to "Refunded".</li>
+          <li>Calls <code>stripe.refunds.create</code> on the original charge (5&ndash;10 business
+            days for the user&apos;s bank to settle).</li>
+          <li>Sets <code>ai_hour_topups.refunded_at = NOW()</code> &mdash; pool calc immediately
+            excludes those hours.</li>
+          <li>Sets <code>topup_refund_requests.status = &apos;approved&apos;</code>,
+            <code> stripe_refund_id</code>, and the matching <code>refunded_at</code> timestamp.</li>
+          <li>User&apos;s UI badge flips from &ldquo;pending&rdquo; to &ldquo;Refunded&rdquo;.</li>
         </ol>
         <DocsCallout variant="warning">
           If the user has already consumed those hours, the team pool may instantly become "exhausted" and

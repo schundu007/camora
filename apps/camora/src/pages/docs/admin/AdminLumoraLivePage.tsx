@@ -129,7 +129,7 @@ export default function AdminLumoraLivePage() {
             },
             {
               name: 'Anthropic API',
-              tech: 'Claude Sonnet 4 / Haiku 4.5',
+              tech: 'Claude Sonnet 4.6 / Haiku 4.5',
               role: 'Streaming answer generation. System prompt sent with cache_control: ephemeral so the 5-minute Anthropic prompt cache reduces TTFT on repeat questions.',
             },
             {
@@ -175,8 +175,8 @@ export default function AdminLumoraLivePage() {
           ]}
           rows={[
             { svc: 'Frontend', host: 'Vercel (auto SPA)', build: 'Vite production build, static rewrite to /index.html', health: 'Vercel platform' },
-            { svc: 'Lumora Backend', host: 'Railway', build: 'Nixpacks: nodejs_20 + ffmpeg', health: 'GET /health' },
-            { svc: 'Ascend Backend', host: 'Railway', build: 'Nixpacks: nodejs_20 + python3 + graphviz + go + rustc + openjdk17', health: 'GET /health' },
+            { svc: 'Lumora Backend', host: 'Railway', build: 'Custom Dockerfile (Node 20 + ffmpeg, multi-language code-runner; legacy/fallback host)', health: 'GET /health' },
+            { svc: 'Ascend Backend', host: 'Railway', build: 'Custom Dockerfile (Node 20 + graphviz + python3; canonical Lumora data plane)', health: 'GET /health' },
             { svc: 'AI Services', host: 'Railway (Docker)', build: 'python:3.11-slim + graphviz + ffmpeg', health: 'GET /health' },
           ]}
         />
@@ -190,7 +190,7 @@ export default function AdminLumoraLivePage() {
         <p className={bodyP} style={bodyColor}>
           Two capture paths exist; both produce <code style={inlineCodeStyle}>audio/webm;codecs=opus</code> via{' '}
           <code style={inlineCodeStyle}>MediaRecorder</code>. The implementation lives in{' '}
-          <code style={inlineCodeStyle}>apps/frontend/src/components/lumora/audio/AudioCapture.tsx</code>{' '}
+          <code style={inlineCodeStyle}>apps/camora/src/components/lumora/audio/AudioCapture.tsx</code>{' '}
           and the hook <code style={inlineCodeStyle}>hooks/useAudioCapture.ts</code>.
         </p>
         <h4 className={sectionH4}>Path A — System audio (preferred)</h4>
@@ -268,19 +268,23 @@ export default function AdminLumoraLivePage() {
           When <code style={inlineCodeStyle}>filter_user_voice=true</code>, the transcription route
           calls <code style={inlineCodeStyle}>diarizeSpeaker()</code> before hitting Whisper.
           The diarizer slides a 1.6 s window across the chunk with a 0.8 s hop, computes cosine
-          similarity against the stored embedding for each window, and labels each window{' '}
-          <code style={inlineCodeStyle}>candidate</code> (similarity ≥ 0.70) or{' '}
-          <code style={inlineCodeStyle}>interviewer</code> (similarity &lt; 0.70). It returns{' '}
+          similarity against the stored embedding for each window, and labels each window
+          <code style={inlineCodeStyle}>candidate</code> (similarity &gt; <strong>0.55</strong>) or
+          <code style={inlineCodeStyle}>interviewer</code> (similarity &le; 0.55). It returns
           <code style={inlineCodeStyle}>&#123; should_transcribe, interviewer_ratio, segments &#125;</code>.
-          The chunk is forwarded to Whisper only when{' '}
-          <code style={inlineCodeStyle}>interviewer_ratio &gt; 0.15</code> — i.e. at least 15% of the
-          windows didn't match the candidate's voice.
+          The chunk is forwarded to Whisper only when
+          <code style={inlineCodeStyle}>interviewer_ratio &ge; <strong>0.5</strong></code> &mdash; i.e.
+          at least half of the windows didn&apos;t match the candidate&apos;s voice. (For full-clip
+          verification on the <code>/speaker/verify</code> endpoint, the threshold is <strong>0.75</strong>:
+          similarity &gt; 0.75 means it IS the user, drop it.)
         </p>
         <DocsCallout variant="warning" label="Threshold trade-off">
-          Tightening the 0.15 ratio reduces false-positive transcription of the candidate but starts
-          dropping interjections from the interviewer that overlap with the candidate's speech.
+          Tightening the 0.5 ratio reduces false-positive transcription of the candidate but starts
+          dropping interjections from the interviewer that overlap with the candidate&apos;s speech.
           The current value was tuned for one-on-one interviews with minimal cross-talk; panel
           interviews with multiple voices need a different threshold or a multi-speaker enrollment.
+          Both thresholds are hard-coded in <code style={inlineCodeStyle}>apps/ai-services/speaker.py</code>
+          &mdash; not env-tuned.
         </DocsCallout>
 
         <h3 id="lld-transcription" className={sectionH3}>Transcription service</h3>
@@ -456,7 +460,7 @@ export default function AdminLumoraLivePage() {
           publishing events the others consume. The boundaries are reflected in the code structure
           — every context maps cleanly to a directory under{' '}
           <code style={inlineCodeStyle}>apps/lumora-backend/src</code> or a hook under{' '}
-          <code style={inlineCodeStyle}>apps/frontend/src</code>.
+          <code style={inlineCodeStyle}>apps/camora/src</code>.
         </p>
         <DocsDiagram
           src="/diagrams/docs/lumora-live/bounded-contexts.png"
