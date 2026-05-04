@@ -88,10 +88,16 @@ export async function getFreeUsageStatus(userId) {
     };
   } catch (error) {
     console.error('Error getting free usage status:', error);
+    // Fail closed. Previous version returned `remaining: 1` for every
+    // feature on DB error, so any caller using this output as a UI
+    // gate (without server-side re-check at decrement time) granted
+    // unlimited free usage during a Postgres outage. Returning
+    // `remaining: 0, error: true` lets callers either show a
+    // "try again" banner OR fall through to the normal gate.
     return {
-      coding: { used: 0, limit: 1, remaining: 1 },
-      design: { used: 0, limit: 1, remaining: 1 },
-      company_prep: { used: 0, limit: 1, remaining: 1 },
+      coding: { used: 0, limit: 1, remaining: 0, error: true },
+      design: { used: 0, limit: 1, remaining: 0, error: true },
+      company_prep: { used: 0, limit: 1, remaining: 0, error: true },
     };
   }
 }
@@ -113,7 +119,14 @@ export async function getSubscriptionStatus(userId) {
                        subscription?.plan_type === 'pro_yearly' ||
                        subscription?.plan_type === 'team';
     const isActive = subscription?.status === 'active';
-    const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
+    // Trial residue guard: only count active trial when plan_type is
+    // 'free'. Stops trial_ends_at from re-granting access to a paid
+    // user who went past_due (card declined) but had a leftover trial
+    // timestamp from before they upgraded.
+    const hasActiveTrial =
+      subscription?.plan_type === 'free' &&
+      subscription?.trial_ends_at &&
+      new Date(subscription.trial_ends_at) > new Date();
 
     return {
       hasSubscription: (isPaidPlan && isActive) || hasActiveTrial,
@@ -123,10 +136,12 @@ export async function getSubscriptionStatus(userId) {
     };
   } catch (error) {
     console.error('Error getting subscription status:', error);
+    // Fail closed (no subscription) on DB error.
     return {
       hasSubscription: false,
       planType: 'free',
       status: 'error',
+      error: true,
     };
   }
 }

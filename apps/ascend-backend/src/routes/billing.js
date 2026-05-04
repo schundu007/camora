@@ -748,12 +748,24 @@ router.get('/verify-subscription/:userId', async (req, res) => {
 
     const subscription = result.rows[0];
 
-    // Check if user has active paid subscription OR active trial. PAID_PLAN_TYPES
-    // is the source of truth — keep it in sync with /prices to avoid the
-    // unreachable-branch bug where production plan_type values silently fail.
+    // Check if user has active paid subscription OR active trial.
+    // PAID_PLAN_TYPES is the source of truth — keep it in sync with
+    // /prices to avoid the unreachable-branch bug where production
+    // plan_type values silently fail.
+    //
+    // Trial residue guard: hasActiveTrial only counts when plan_type is
+    // 'free'. Otherwise, a user who upgraded from trial → paid_monthly
+    // and then went past_due (card declined) would keep getting access
+    // for the remainder of their original trial window because the
+    // trial_ends_at column is never cleared on upgrade. Tying the
+    // trial check to plan_type='free' ensures past_due paid users
+    // actually lose access.
     const isPaidActive = PAID_PLAN_TYPES.has(subscription?.plan_type) &&
                          subscription?.status === 'active';
-    const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
+    const hasActiveTrial =
+      subscription?.plan_type === 'free' &&
+      subscription?.trial_ends_at &&
+      new Date(subscription.trial_ends_at) > new Date();
     const hasAccess = isPaidActive || hasActiveTrial;
 
     res.json({
@@ -1101,8 +1113,12 @@ async function handleInvoicePaid(invoice) {
 async function handleSubscriptionUpdated(subscription) {
   const customerId = subscription.customer;
 
-  // Determine plan type from price ID
-  let planType = 'free';
+  // Determine plan type from price ID. CRITICAL: if the price ID is
+  // unrecognized (legacy price rotated out of env, or STRIPE_PRODUCT_TEAM
+  // unset on a replica during rollout), we MUST NOT downgrade to 'free'.
+  // The previous default fell through to 'free' which silently flipped
+  // active paying users back to the free tier while Stripe kept billing.
+  let planType = null;
   const priceId = subscription.items.data[0]?.price?.id;
 
   if (priceId === STRIPE_PRICES.PRO_MONTHLY) planType = 'pro_monthly';
@@ -1119,6 +1135,33 @@ async function handleSubscriptionUpdated(subscription) {
   let status = subscription.status;
   if (status === 'incomplete' || status === 'incomplete_expired') {
     status = 'past_due';
+  }
+
+  if (planType === null) {
+    // Unrecognized price — log loudly + only update the status / period
+    // fields. Don't touch plan_type so an existing pro_monthly user
+    // stays paid even when the webhook arrives during a price rotation.
+    logger.warn({
+      customerId, priceId, status, productId: subscription.items.data[0]?.price?.product,
+    }, '[billing.webhook] subscription.updated with unknown price — preserving plan_type');
+    await query(
+      `UPDATE ascend_subscriptions SET
+        stripe_subscription_id = $1,
+        status = $2,
+        current_period_start = $3,
+        current_period_end = $4,
+        cancel_at_period_end = $5
+       WHERE stripe_customer_id = $6`,
+      [
+        subscription.id,
+        status,
+        new Date(subscription.current_period_start * 1000),
+        new Date(subscription.current_period_end * 1000),
+        subscription.cancel_at_period_end,
+        customerId,
+      ]
+    );
+    return;
   }
 
   await query(
