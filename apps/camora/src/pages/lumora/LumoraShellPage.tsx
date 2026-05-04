@@ -117,8 +117,12 @@ export function LumoraShellPage() {
     } else {
       setCopilotFullscreen(false);
       setCopilotQuestion(undefined);
-      if (location.search.includes('q=')) {
-        const params = new URLSearchParams(location.search);
+      // Substring check `includes('q=')` was matching `?question=` /
+      // `?fq=true` / etc. and firing replaceState on every render where
+      // those happened to be in the URL. Use URLSearchParams.has so
+      // only an actual `q` query param triggers the rewrite.
+      const params = new URLSearchParams(location.search);
+      if (params.has('q')) {
         params.delete('q');
         const next = params.toString();
         window.history.replaceState(null, '', location.pathname + (next ? `?${next}` : ''));
