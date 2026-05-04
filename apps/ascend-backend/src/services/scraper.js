@@ -71,6 +71,42 @@ const PLATFORM_SELECTORS = {
     '.markdown-body',
     '.description-content',
   ],
+  // Job-board platforms — used by the Lumora prep panel's "Fetch JD"
+  // flow. Selectors target the main job-description container so the
+  // header/footer/related-postings chrome doesn't bleed into the text.
+  greenhouse: [
+    '#content',
+    '.content',
+    '.section-wrapper',
+    '#main',
+    '[data-mapped="content"]',
+  ],
+  lever: [
+    '.content',
+    '.section-wrapper',
+    '[data-qa="job-description"]',
+    '.posting',
+  ],
+  workday: [
+    '[data-automation-id="jobPostingDescription"]',
+    '[data-automation-id="job-posting-details"]',
+    '[data-automation-id="primaryDescription"]',
+  ],
+  ashby: [
+    '#root .description',
+    '[class*="JobPosting_description"]',
+    '[class*="description"]',
+  ],
+  smartrecruiters: [
+    '.job-description',
+    '#st-jobDescription',
+    '.job-content',
+  ],
+  linkedin: [
+    '.description__text',
+    '.show-more-less-html__markup',
+    '.jobs-description__content',
+  ],
   generic: [
     'article',
     'main',
@@ -97,6 +133,14 @@ function detectPlatform(url) {
   if (hostname.includes('codility')) return 'codility';
   if (hostname.includes('neetcode')) return 'neetcode';
 
+  // Job boards — Fetch JD flow.
+  if (hostname.includes('greenhouse.io') || hostname.includes('boards.greenhouse')) return 'greenhouse';
+  if (hostname.includes('lever.co')) return 'lever';
+  if (hostname.includes('myworkdayjobs.com') || hostname.includes('workday.com')) return 'workday';
+  if (hostname.includes('jobs.ashbyhq.com') || hostname.includes('ashbyhq.com')) return 'ashby';
+  if (hostname.includes('smartrecruiters.com')) return 'smartrecruiters';
+  if (hostname.includes('linkedin.com')) return 'linkedin';
+
   return 'generic';
 }
 
@@ -120,10 +164,49 @@ function extractContent($, platform) {
 }
 
 /**
+ * Strip HTML tags + decode entities, even when the input is the
+ * already-text content of a div whose own children are HTML strings
+ * (Greenhouse / Workday / SmartRecruiters JD pages frequently embed
+ * the description as `<div data-html="<p>..."` or as a JSON-LD
+ * `description` value, so cheerio's `.text()` returns the raw
+ * angle-bracket markup as a string).
+ */
+function stripHtmlIfPresent(text) {
+  if (!text || typeof text !== 'string') return text;
+  // Cheap precondition — only re-parse when the text actually
+  // contains tag-shaped substrings. Avoids the cheerio cost on
+  // already-clean LeetCode / HackerRank output.
+  if (!/<[a-z][^>]{0,300}>/i.test(text)) return text;
+  try {
+    // Wrap in a synthetic root so cheerio treats the input as a
+    // fragment, then read the combined text. Sequential block-level
+    // tags get separated by newlines so paragraphs survive.
+    const $ = cheerio.load(`<div id="__r">${text}</div>`);
+    // Insert newlines between block-level boundaries before extracting
+    // text so paragraph spacing isn't lost.
+    $('#__r p, #__r br, #__r li, #__r h1, #__r h2, #__r h3, #__r h4, #__r div').each((_, el) => {
+      $(el).append('\n');
+    });
+    let cleaned = $('#__r').text();
+    // Decode common HTML entities cheerio leaves in attribute-extracted text.
+    cleaned = cleaned
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+    return cleaned;
+  } catch {
+    return text;
+  }
+}
+
+/**
  * Clean and normalize extracted text
  */
 function cleanText(text) {
-  return text
+  return stripHtmlIfPresent(text)
     .replace(/\t/g, ' ')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
